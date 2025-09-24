@@ -70,7 +70,6 @@
 #define COMLIB_SEQUENCE_METHOD_SORT( MethodName, TypeName )                   bool (* MethodName)( struct s_##TypeName##_t *self ) 
 #define COMLIB_SEQUENCE_METHOD_REVERSE( MethodName, TypeName )                bool (* MethodName)( struct s_##TypeName##_t *self ) 
 #define COMLIB_SEQUENCE_METHOD_OPTIMIZE( MethodName, TypeName )               int64_t (* MethodName)( struct s_##TypeName##_t *self ) 
-#define COMLIB_SEQUENCE_METHOD_DIGEST( MethodName, TypeName )                 objectid_t (* MethodName)( struct s_##TypeName##_t *self ) 
 #define COMLIB_SEQUENCE_METHOD_GETERROR( MethodName, TypeName )               const char *(* MethodName)( struct s_##TypeName##_t *self )
 
 
@@ -247,7 +246,6 @@ typedef struct s_##QueueTypeName##_vtable_t {                                   
   COMLIB_SEQUENCE_METHOD_SORT( SortNolock, QueueTypeName );                                                     \
   COMLIB_SEQUENCE_METHOD_REVERSE( ReverseNolock, QueueTypeName );                                               \
   COMLIB_SEQUENCE_METHOD_OPTIMIZE( OptimizeNolock, QueueTypeName );                                             \
-  COMLIB_SEQUENCE_METHOD_DIGEST( DigestNolock, QueueTypeName );                                                 \
                                                                                                                 \
   /* Standard versions */                                                                                       \
   COMLIB_SEQUENCE_METHOD_INDEX( Index, QueueTypeName, QueueUnitType );                                          \
@@ -288,7 +286,6 @@ typedef struct s_##QueueTypeName##_vtable_t {                                   
   COMLIB_SEQUENCE_METHOD_SORT( Sort, QueueTypeName );                                                           \
   COMLIB_SEQUENCE_METHOD_REVERSE( Reverse, QueueTypeName );                                                     \
   COMLIB_SEQUENCE_METHOD_OPTIMIZE( Optimize, QueueTypeName );                                                   \
-  COMLIB_SEQUENCE_METHOD_DIGEST( Digest, QueueTypeName );                                                       \
                                                                                                                 \
   /* misc */                                                                                                    \
   COMLIB_SEQUENCE_METHOD_GETERROR( GetError, QueueTypeName );                                                   \
@@ -348,7 +345,6 @@ typedef COMLIB_SEQUENCE_METHOD_FLUSH( f_##QueueTypeName##_flush, QueueTypeName )
 typedef COMLIB_SEQUENCE_METHOD_SORT( f_##QueueTypeName##_sort, QueueTypeName );                                 \
 typedef COMLIB_SEQUENCE_METHOD_REVERSE( f_##QueueTypeName##_reverse, QueueTypeName );                           \
 typedef COMLIB_SEQUENCE_METHOD_OPTIMIZE( f_##QueueTypeName##_optimize, QueueTypeName );                         \
-typedef COMLIB_SEQUENCE_METHOD_DIGEST( f_##QueueTypeName##_digest, QueueTypeName );                             \
 typedef COMLIB_SEQUENCE_METHOD_GETERROR( f_##QueueTypeName##_geterror, QueueTypeName );                         \
                                                                                                                 \
 typedef COMLIB_SEQUENCE_ELEMENT_COMPARATOR( QueueTypeName, QueueUnitType );                                     \
@@ -568,7 +564,6 @@ typedef struct s_##BufferTypeName##_vtable_t {                                  
   COMLIB_SEQUENCE_METHOD_POP( Pop, BufferTypeName, BufferUnitType );                                            \
   COMLIB_SEQUENCE_METHOD_REVERSE( Reverse, BufferTypeName );                                                    \
   COMLIB_SEQUENCE_METHOD_OPTIMIZE( Optimize, BufferTypeName );                                                  \
-  COMLIB_SEQUENCE_METHOD_DIGEST( Digest, BufferTypeName );                                                      \
 } BufferTypeName##_vtable_t;                                                                                    \
                                                                                                                 \
                                                                                                                 \
@@ -606,7 +601,6 @@ typedef COMLIB_SEQUENCE_METHOD_UNWRITE( f_##BufferTypeName##_unwrite, BufferType
 typedef COMLIB_SEQUENCE_METHOD_POP( f_##BufferTypeName##_pop, BufferTypeName, BufferUnitType );                 \
 typedef COMLIB_SEQUENCE_METHOD_REVERSE( f_##BufferTypeName##_reverse, BufferTypeName );                         \
 typedef COMLIB_SEQUENCE_METHOD_OPTIMIZE( f_##BufferTypeName##_optimize, BufferTypeName );                       \
-typedef COMLIB_SEQUENCE_METHOD_DIGEST( f_##BufferTypeName##_digest, BufferTypeName );                           \
                                                                                                                 \
 X_COMLIB_SEQUENCE_GENERIC_BUFFER_CLASS( BufferTypeName, BufferUnitType );                                       \
                                                                                                                 \
@@ -792,7 +786,6 @@ typedef struct s_##HeapTypeName##_vtable_t {                                    
   COMLIB_SEQUENCE_METHOD_HEAPPOP( HeapPop, HeapTypeName, HeapUnitType );                                        \
   COMLIB_SEQUENCE_METHOD_HEAPREPLACE( HeapReplace, HeapTypeName, HeapUnitType );                                \
   COMLIB_SEQUENCE_METHOD_HEAPPUSHTOPK( HeapPushTopK, HeapTypeName, HeapUnitType );                              \
-  COMLIB_SEQUENCE_METHOD_DIGEST( Digest, HeapTypeName );                                                        \
                                                                                                                 \
 } HeapTypeName##_vtable_t;                                                                                      \
                                                                                                                 \
@@ -813,7 +806,6 @@ typedef COMLIB_SEQUENCE_METHOD_HEAPPUSH( f_##HeapTypeName##_heappush, HeapTypeNa
 typedef COMLIB_SEQUENCE_METHOD_HEAPPOP( f_##HeapTypeName##_heappop, HeapTypeName, HeapUnitType );               \
 typedef COMLIB_SEQUENCE_METHOD_HEAPREPLACE( f_##HeapTypeName##_heapreplace, HeapTypeName, HeapUnitType );       \
 typedef COMLIB_SEQUENCE_METHOD_HEAPPUSHTOPK( f_##HeapTypeName##_heappushtopk, HeapTypeName, HeapUnitType );     \
-typedef COMLIB_SEQUENCE_METHOD_DIGEST( f_##HeapTypeName##_digest, HeapTypeName );                               \
                                                                                                                 \
                                                                                                                 \
 typedef COMLIB_SEQUENCE_ELEMENT_COMPARATOR( HeapTypeName, HeapUnitType );                                       \
@@ -1006,7 +998,6 @@ typedef struct s_##ListTypeName##_vtable_t {                                    
   COMLIB_SEQUENCE_METHOD_SORT( Sort, ListTypeName );                                                            \
   COMLIB_SEQUENCE_METHOD_REVERSE( Reverse, ListTypeName );                                                      \
   COMLIB_SEQUENCE_METHOD_OPTIMIZE( Optimize, ListTypeName );                                                    \
-  COMLIB_SEQUENCE_METHOD_DIGEST( Digest, ListTypeName );                                                        \
                                                                                                                 \
 } ListTypeName##_vtable_t;                                                                                      \
                                                                                                                 \
@@ -1033,7 +1024,6 @@ typedef COMLIB_SEQUENCE_METHOD_DISCARD( f_##ListTypeName##_discard, ListTypeName
 typedef COMLIB_SEQUENCE_METHOD_SORT( f_##ListTypeName##_sort, ListTypeName );                                   \
 typedef COMLIB_SEQUENCE_METHOD_REVERSE( f_##ListTypeName##_reverse, ListTypeName );                             \
 typedef COMLIB_SEQUENCE_METHOD_OPTIMIZE( f_##ListTypeName##_optimize, ListTypeName );                           \
-typedef COMLIB_SEQUENCE_METHOD_DIGEST( f_##ListTypeName##_digest, ListTypeName );                               \
                                                                                                                 \
                                                                                                                 \
 typedef COMLIB_SEQUENCE_ELEMENT_COMPARATOR( ListTypeName, ListUnitType );                                       \

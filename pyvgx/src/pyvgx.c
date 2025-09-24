@@ -439,43 +439,6 @@ static PyObject * PyVGX_strhash128( PyObject *self, PyObject *py_str ) {
 
 
 /******************************************************************************
- * PyVGX_md5
- *
- ******************************************************************************
- */
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-static PyObject * PyVGX_md5( PyObject *self, PyObject *py_str ) {
-  if( !PyVGX_PyObject_CheckString( py_str ) ) {
-    PyVGXError_SetString( PyExc_ValueError, "a string or bytes-like object is required" );
-    return NULL;
-  }
-
-  const char *str;
-  Py_ssize_t sz;
-  Py_ssize_t ucsz;
-  if( (str = PyVGX_PyObject_AsStringAndSize( py_str, &sz, &ucsz )) == NULL ) {
-    return NULL;
-  }
-    
-  if( sz > UINT_MAX ) {
-    PyVGXError_SetString( PyExc_ValueError, "Input string too large" );
-    return NULL;
-  }
-
-  char buf[33];
-  objectid_t obid;
-  BEGIN_PYVGX_THREADS {
-    obid = md5_len( str, (unsigned int)sz );
-    idtostr( buf, &obid );
-  } END_PYVGX_THREADS;
-
-  return PyUnicode_FromStringAndSize( buf, 32 );
-
-}
-
-
-
-/******************************************************************************
  * PyVGX_sha256
  *
  ******************************************************************************
@@ -1949,7 +1912,6 @@ static PyMethodDef pyvgx_methods[] = {
   { "ihash128",           (PyCFunction)PyVGX_ihash128,          METH_O,                         "ihash128( x ) -> str"  },
   { "strhash64",          (PyCFunction)PyVGX_strhash64,         METH_O,                         "strhash64( x ) -> long"  },
   { "strhash128",         (PyCFunction)PyVGX_strhash128,        METH_O,                         "strhash128( x ) -> str"  },
-  { "md5",                (PyCFunction)PyVGX_md5,               METH_O,                         "md5( x ) -> str"  },
   { "sha256",             (PyCFunction)PyVGX_sha256,            METH_O,                         "sha256( x ) -> str"  },
   { "crc32c",             (PyCFunction)PyVGX_crc32c,            METH_O,                         "crc32c( x ) -> long"  },
   

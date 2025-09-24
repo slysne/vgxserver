@@ -312,20 +312,6 @@ def TEST_pyvgxmodule_strhash128():
 
 
 
-def TEST_pyvgxmodule_md5():
-    """
-    pyvgx.md5()
-    test_level=1101
-    """
-    random.seed( 1000 )
-    for n in range( 100000 ):
-        s = ">>> %d <<<" % n
-        m1 = pyvgx.md5( s )
-        m2 = hashlib.md5( s.encode() ).hexdigest()
-        Expect( m1 == m2,                           "md5 sum expected" )
-
-    
-
 def TEST_pyvgxmodule_tokenize():
     """
     pyvgx.tokenize()
