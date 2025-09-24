@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VGX Search</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div style="margin: 8">
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container">
+            <table id="searchsetup">
+                <tr id="graph" class="inputrow">
+                    <td class="col1">
+                        Graph:
+                    </td>
+                    <td class="col2">
+                        <select name="graphlist" id="graphlist">
+                        </select>
+                        <label for="order">Order: <span class="val vint" id="order"></span></label>
+                        <label for="size">Size: <span class="val vint" id="size"></span></label>
+                    </td>
+                </tr>
+                <tr id="mode" class="inputrow">
+                    <td class="col1">
+                        Mode:
+                    </td>
+                    <td class="col2" id="querymethodArea">
+                        <input type="radio" class="querymethod retrigger" id="neighborhood" name="querymethod" value="1" checked>
+                        <label for="neighborhood">Neighborhood</label>
+                        <input type="radio" class="querymethod retrigger" id="vertices" name="querymethod" value="2">
+                        <label for="vertices">Vertices</label>
+                        <input type="radio" class="querymethod retrigger" id="arcs" name="querymethod" value="3">
+                        <label for="arcs">Arcs</label>
+                        <input type="radio" class="querymethod retrigger" id="vertex" name="querymethod" value="4">
+                        <label for="vertex">Vertex</label>
+                        <input type="radio" class="querymethod retrigger" id="expression" name="querymethod" value="5">
+                        <label for="expression">Expression</label>
+                    </td>
+                </tr>
+                <tr id="execute" class="inputrow">
+                    <td id="searcharrow" class="col1">
+                        &#10132;
+                    </td>
+                    <td class="col2">
+                        <button id="submit" type="button">Execute</button>
+                        <label for="autorefresh"><input type="checkbox" id="autorefresh" name="autorefresh">Auto Repeat</label>
+                        <span id="refreshrateArea" style="display: none"><label for="refreshrate"><input type="range" id="refreshrate" name="refreshrate" min="0" max="100" step="5">Fast</label></span>
+                    </td>
+                </tr>
+                <tr id="anchorArea" class="inputrow">
+                    <td class="col1">
+                        Vertex:
+                    </td>
+                    <td class="col2">
+                        <input id="anchor" type="text"></label></span>
+                    </td>
+                </tr>
+                <tr id="arcArea" class="inputrow searchfilter">
+                    <td class="col1">
+                        Arc:
+                    </td>
+                    <td class="col2">
+                        <select class="retrigger arc" name="arcrel" id="arcrel">
+                        </select>
+                        <label for="arcdir"></label>
+                        <select class="retrigger arc" name="arcdir" id="arcdir">
+                            <option value="0">*</option>
+                            <option value="2">OUT</option>
+                            <option value="1">IN</option>
+                        </select>
+                        <label for="arcmod"></label>
+                        <select class="retrigger arc" name="arcmod" id="arcmod">
+                            <option value="0">*</option>
+                            <option value="1">STAT</option>
+                            <optgroup label="Value">
+                                <option value="5">INT</option>
+                                <option value="6">UINT</option>
+                                <option value="23">FLT</option>
+                            </optgroup>
+                            <optgroup label="Accumulator">
+                                <option value="8">CNT</option>
+                                <option value="25">ACC</option>
+                            </optgroup>
+                            <optgroup label="Timestamp">
+                                <option value="12">TMC</option>
+                                <option value="13">TMM</option>
+                                <option value="14">TMX</option>
+                            </optgroup>
+                            <optgroup label="Special">
+                                <option value="18">SIM</option>
+                                <option value="4">LSH</option>
+                                <option value="19">DIST</option>
+                            </optgroup>
+                            <optgroup label="Aggregated">
+                                <option value="10">INTAGGR</option>
+                                <option value="27">FLTAGGR</option>
+                            </optgroup>
+                        </select>
+                        <label for="arcvalcond"></label>
+                        <select class="retrigger arc" name="arcvalcond" id="arcvalcond">
+                            <option value="0">*</option>
+                            <option value="6">&gt;</option>
+                            <option value="8">&ge;</option>
+                            <option value="12">=</option>
+                            <option value="4">&le;</option>
+                            <option value="10">&lt;</option>
+                            <option value="14">&ne;</option>
+                        </select>
+                        <span><label for="arcval"><input id="arcval" type="text"></label></span>
+                    </td>
+                </tr>
+                <tr id="query_box" class="inputrow searchfilter">
+                    <td class="col1">Query:</td>
+                    <td class="col2">
+                        <pre><textarea id="querytext" name="query" rows=3 spellcheck="false">{}</textarea></pre>
+                    </td>
+                </tr>
+                <tr id="simple_output" class="outputrow">
+                    <td class="col1">Result:</td>
+                    <td class="col2">
+                        <pre><textarea id="evalresult" name="eval" rows=1 spellcheck="false" readonly=readonly></textarea></pre>
+                    </td>
+                </tr>
+                <tr id="collectSelect" class="inputrow searchfilter">
+                    <td class="col1">Collect:</td>
+                    <td class="col2">
+                        <select class="retrigger" name="collect" id="collect">
+                            <option class="collect" id="collectArcs" value="1" selected>Arcs</option>
+                            <option class="collect" id="collectVertices" value="2">Vertices</option>
+                            <option class="collect" id="collectScan" value="-1">Scan</option>
+                            <option class="collect" id="collectNone" value="0">None</option>
+                        </select>
+                        <label for="memory">Memory Slots:</label>
+                        <select class="retrigger" name="memory" id="memory">
+                            <option value="0" selected>none</option>
+                            <option value="4">4</option>
+                            <option value="16">16</option>
+                            <option value="64">64</option>
+                            <option value="256">256</option>
+                            <option value="1024">1k</option>
+                            <option value="4096">4k</option>
+                            <option value="16384">16k</option>
+                            <option value="65536">64k</option>
+                            <option value="262144">256k</option>
+                            <option value="1048576">1M</option>
+                            <option value="2097152">2M</option>
+                        </select>
+                        <span id="memorySlotsShowCheck">
+                            <label for="renderMemory"><input class="retrigger" type="checkbox" id="renderMemory" name="renderMemory">Show</label>
+                        </span>
+                        <label for="sharedMemory"><input class="retrigger" type="checkbox" id="sharedMemory" name="sharedMemory">Shared</label></span>
+                    </td>
+                </tr>
+                <tr id="resultControlArea" class="inputrow searchfilter">
+                    <td class="col1">Result:</td>
+                    <td class="col2">
+                        <label for="resultformat">Format:</label>
+                        <select class="retrigger" name="resultformat" id="resultformat">
+                            <option value="0x10000000" selected>String</option>
+                            <option value="0x20000000">List</option>
+                            <option value="0x30000000">Dict</option>
+                            <option value="0x00000000">Simple</option>
+                            <option id="resultformatMemory" value="-1">Memory</option>
+                        </select>
+                        <span id="hitsArea">
+                            <label for="hits">Hits:</label>
+                            <select class="retrigger" name="hits" id="hits">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="100">100</option>
+                                <option value="1000">1000</option>
+                                <option value="-1">All</option>
+                            </select>
+                        </span>
+                        <span id="searchCountsArea"><label for="searchCounts"><input class="retrigger" type="checkbox" id="searchCounts" name="searchCounts">Count</label></span>
+                        <span id="sortArea">
+                            <label for="sorted"><input class="retrigger" type="checkbox" id="sorted" name="sorted">Sort</label>
+                            <label for="sortby">By:</label>
+                            <select class="retrigger" name="sortby" id="sortby">
+                                <optgroup label="Value">
+                                    <option value="16">Arc</option>
+                                    <option value="192">Rank Score</option>
+                                    <option value="1536">Hamming Distance</option>
+                                    <option value="1792">Similarity</option>
+                                </optgroup>
+                                <optgroup label="Identifier">
+                                    <hr>
+                                    <option value="512">Vertex Name</option>
+                                    <option value="256">Vertex Internal</option>
+                                    <option value="96">Tail Name</option>
+                                    <option value="64">Tail Internal</option>
+                                </optgroup>
+                                <optgroup label="Time">
+                                    <option value="2048">Creation</option>
+                                    <option value="2304">Modification</option>
+                                    <option value="2560">Expiration</option>
+                                </optgroup>
+                                <optgroup label="Degree">
+                                    <option value="1024">In</option>
+                                    <option value="1280">Out</option>
+                                    <option value="768">Total</option>
+                                </optgroup>
+                                <optgroup label="Internal">
+                                    <option value="32">Vertex Address</option>
+                                    <option value="128">Native</option>
+                                    <option value="160">Random</option>
+                                </optgroup>
+                            </select>
+                            <span id="sortdirArea">
+                                &udarr;
+                                <label for="S_ASC"><input type="radio" class="sortdir retrigger" id="S_ASC" name="sortdir" value="1" checked></label>
+                                <label for="S_DESC"><input type="radio" class="sortdir retrigger" id="S_DESC" name="sortdir" value="2"></label>
+                            </span>
+                        </span>
+                    </td>
+                </tr>
+                <tr id="rankArea" class="inputrow searchfilter">
+                    <td class="col1">Rank:</td>
+                    <td class="col2">
+                        <input id="rank" type="text" value="1">
+                    </td>
+                </tr>
+                <tr id="selectArea" class="inputrow searchfilter">
+                    <td class="col1">Select:</td>
+                    <td class="col2">
+                        <input id="select" type="text" value="">
+                    </td>
+                </tr>
+                <tr id="fieldsArea" class="inputrow searchfilter">
+                    <td class="col1">Fields:</td>
+                    <td class="col2">
+                        <div id="fields">
+                            <div>
+                                <span class="anchorfield"><label for="F_ANCHOR"><input type="checkbox" id="F_ANCHOR" name="F_ANCHOR" value="0x1">Anchor</label></span>
+                                <label for="F_ID"><input type="checkbox" id="F_ID" name="F_ID" value="0x4">Vertex</label>
+                                <label for="F_TYPE"><input type="checkbox" id="F_TYPE" name="F_TYPE" value="0x10">Type</label>
+                                <label for="F_OBID"><input type="checkbox" id="F_OBID" name="F_OBID" value="0x8">InternalID</label>
+                                <span class="anchorfield"><label for="F_ANCHOR_OBID"><input type="checkbox" id="F_ANCHOR_OBID" name="F_ANCHOR_OBID" value="0x2">Anchor InternalID</label></span>
+                                <label for="F_ADDR"><input type="checkbox" id="F_ADDR" name="F_ADDR" value="0x2000000">Address</label>
+                                <label for="F_DETAILS"><input type="checkbox" id="F_DETAILS" name="F_DETAILS" value="0xd000000">Details</label>
+                            </div>
+                            <div id="arcFields">
+                                <label for="F_ARC"><input type="checkbox" id="F_ARC" name="F_ARC" value="0xf00">Arc</label>
+                                <span id="arcelem">
+                                    (
+                                    <label for="F_ARCDIR">D<input type="checkbox" class="arcelem" id="F_ARCDIR" name="F_ARCDIR" value="0x100"></label>
+                                    <label for="F_REL">R<input type="checkbox" class="arcelem" id="F_REL" name="F_REL" value="0x200"></label>
+                                    <label for="F_MOD">M<input type="checkbox" class="arcelem" id="F_MOD" name="F_MOD" value="0x400"></label>
+                                    <label for="F_VAL">V<input type="checkbox" class="arcelem" id="F_VAL" name="F_VAL" value="0x800"></label>
+                                    )
+                                </span>
+                            </div>
+                            <div>
+                                <label for="F_RANK"><input type="checkbox" id="F_RANK" name="F_RANK" value="0x10000">Rank</label>
+                                <label for="F_TSTAMP"><input type="checkbox" id="F_TSTAMP" name="F_TSTAMP" value="0x700000">Timestamp</label>
+                                <label for="F_DEGREES"><input type="checkbox" id="F_DEGREES" name="F_DEGREES" value="0xe0">Degree</label>
+                                <label for="F_PROP"><input type="checkbox" id="F_PROP" name="F_PROP" value="0x2000">Properties</label>
+                                <label for="F_VEC"><input type="checkbox" id="F_VEC" name="F_VEC" value="0x1000">Vector</label>
+                                <label for="F_RLV"><input type="checkbox" id="F_RLV" name="F_RLV" value="0x70000">Simscore</label>
+                            </div>
+                            <div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <div id="result_box">
+                <label for="resulttext"></label>
+                <pre><textarea class="area" id="resulttext" name="result" rows=20 readonly=readonly></textarea></pre>
+            </div>
+            <div id="message_box">
+                <pre><div class="area" id="infotext"></div></pre>
+                <pre><div class="area" id="errortext"></div></pre>
+            </div>
+            <div class="modal"><span id="busymsg"></span></div>
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+</html>
+
+<style>
+
+    .container {
+        width: 1024;
+    }
+
+    .container.loading .modal {
+        display: block;
+    }
+
+    #querymethodArea label {
+        margin-right: 20px;
+    }
+
+    #searcharrow {
+        text-align: right;
+    }
+
+    #searchsetup {
+        border-spacing: 0px;
+    }
+
+    #searchsetup tbody {
+        border-spacing: 0px;
+    }
+
+    #searchsetup tr {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    #searchsetup td {
+        font-size: 100%;
+        padding-left: 0px;
+    }
+
+    .col1 {
+        min-width: 60px;
+        max-width: 60px;
+        vertical-align: top;
+    }
+
+    .col2 {
+        min-width: 735px;
+        max-width: 735px;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    #submit {
+        width: 90px;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+
+    #execute {
+        margin-top: 15px !important;
+        margin-bottom: 15px !important;
+        height: 30px;
+    }
+
+    #refreshrate {
+        margin-left: 10px;
+        vertical-align: middle;
+        width: 100px;
+    }
+
+    #query_box .col2 {
+        box-sizing: content-box;
+    }
+
+    #querytext {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    #evalresult {
+        font-family: Consolas, monospace;
+        font-size: 100%;
+        font-weight: bold;
+        background-color: #F8F8F8;
+        border: 1px solid #CCCCCC;
+        outline: none;
+        margin-bottom: 30px;
+        min-width: 735px;
+    }
+
+    select {
+        margin-right: 10px;
+    }
+
+    .arc {
+        margin-right: 1px;
+    }
+
+    .arcelem {
+        margin-left: 3px;
+        margin-right: -5px;
+    }
+
+    label {
+        margin-right: 0px;
+    }
+
+    div #fields label {
+        margin-right: 10px;
+    }
+
+    #anchor {
+        width: 400px;
+        font-size: 100%;
+        font-family: Consolas, monospace;
+    }
+
+    #arcval {
+        width: 80px;
+    }
+
+    #querytext {
+        font-size: 100%;
+        font-family: Consolas, monospace;
+    }
+
+    #rank {
+        font-size: 100%;
+        font-family: Consolas, monospace;
+        min-width: 735px;
+    }
+
+    #select {
+        font-size: 100%;
+        font-family: Consolas, monospace;
+        min-width: 735px;
+    }
+
+    .area {
+        min-width: 793px;
+        max-width: 800px;
+    }
+
+    #resulttext {
+        font-size: 95%;
+        font-family: Consolas, monospace;
+        font-weight: bold;
+        color: #333333;
+        background-color: #F8F8F8;
+        border: 1px solid #CCCCCC;
+        outline: none;
+        max-width: 1600px;
+        margin-left: 2px;
+    }
+
+    .val {
+        padding-right: 10px;
+        text-align: right;
+        font-family: Consolas, monospace;
+        font-size: 90%;
+    }
+
+    .vint {
+        color: #0000C0;
+    }
+
+    .vstr {
+        color: #007050;
+    }
+
+    .faded {
+        color: #C0C0C0;
+    }
+</style>
+
+<script>
+    class Progress {
+        t0 = 0;
+        delayer = null;
+        updater = null;
+        display = false;
+
+        constructor() {
+            this.t0 = Date.now();
+            this.delayer = setTimeout(this.refresh.bind(this), 750);
+            this.display = false;
+            $('#submit').prop("disabled", true);
+        }
+
+
+        refresh() {
+            if (this.delayer) {
+                clearTimeout(this.delayer);
+                this.delayer = null;
+            }
+            if (!this.display) {
+                $('.container').addClass("loading");
+                this.display = true;
+                this.updater = setInterval(this.refresh.bind(this), 10);
+            }
+            let t1 = Date.now();
+            let t_100 = Math.floor((t1 - this.t0) / 100.0);
+            let t_elapse = t_100 / 10.0;
+            $('#busymsg').html("" + t_elapse.toFixed(1) + " s");
+        }
+
+
+        stop() {
+            $('#submit').prop("disabled", false);
+            $('#busymsg').html("");
+            $('.container').removeClass("loading");
+            if (this.delayer) {
+                clearTimeout(this.delayer);
+                this.delayer = null;
+            }
+            if (this.updater) {
+                clearInterval(this.updater);
+                this.updater = null;
+            }
+        }
+    }
+
+
+
+    function main() {
+
+        let autoRefresher = null;
+
+        $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+            const names = data["response"]["graphsum"]["names"];
+            let opt = null;
+            let first = null;
+            for (var i = 0; i < names.length; i++) {
+                opt = document.createElement("option");
+                opt.value = names[i];
+                if (first == null) {
+                    first = names[i];
+                }
+                opt.innerHTML = names[i];
+                $('#graphlist').append(opt);
+            }
+            opt = document.createElement("option");
+            opt.value = "system";
+            if (first == null) {
+                first = "system";
+            }
+            opt.innerHTML = "_system";
+            $('#graphlist').append(opt);
+            $('#graphlist').val(first).change();
+        });
+
+        let previousOrder = 0;
+        let previousSize = 0;
+        let graphUpdater = null;
+        function updateGraphInfo() {
+            const graph = $('#graphlist').find(':selected').val();
+            if (graph == null) {
+                return;
+            }
+            const url = "/vgx/builtin/status?simple=1&graph=" + graph;
+            $.get(url, function (data, textStatus, jqXHR) {
+                let pause = 2000;
+                try {
+                    const base = data["response"]["base"];
+                    const order = base["order"];
+                    const size = base["size"];
+                    $('#order').html(order.toLocaleString("en-US"));
+                    $('#size').html(size.toLocaleString("en-US"));
+                    if (order != previousOrder || size != previousSize) {
+                        previousOrder = order;
+                        previousSize = size;
+                        pause = 150;
+                    }
+                }
+                catch (error) {
+                }
+                finally {
+                    if (graphUpdater) {
+                        clearTimeout(graphUpdater);
+                    }
+                    graphUpdater = setTimeout(updateGraphInfo, pause);
+                }
+            }).fail(function (xhr, txt, err) {
+                if (graphUpdater) {
+                    clearTimeout(graphUpdater);
+                }
+                graphUpdater = setTimeout(updateGraphInfo, 5000);
+            });
+        }
+
+        function updateArcRelationships() {
+            const graph = $('#graphlist').find(':selected').val();
+            if (graph == null) {
+                return;
+            }
+            const url = "/vgx/builtin/status?graph=" + graph;
+            $.get(url, function (data, textStatus, jqXHR) {
+                $('#arcrel').find('option').remove();
+                let opt = document.createElement("option");
+                opt.value = "*";
+                opt.innerHTML = "*";
+                $('#arcrel').append(opt);
+                const relsCodec = data["response"]["enum"]["relationship"]["codec"];
+                let rels = Object.keys(relsCodec);
+                rels.sort();
+                for (var i = 0; i < rels.length; i++) {
+                    const rel = rels[i];
+                    opt = document.createElement("option");
+                    opt.value = rel;
+                    opt.innerHTML = rel;
+                    $('#arcrel').append(opt);
+                }
+            });
+        }
+
+        let prevMethodNum = -1;
+        function updateMethodDisplay() {
+            const methodNum = parseInt($('.querymethod:checked').val());
+            let resultFormat = parseInt($('#resultformat').find(':selected').val());
+            const memorySlots = parseInt($('#memory').find(':selected').val());
+            let memDropdown = $('#resultformatMemory');
+            const renderMemory = $('#renderMemory').prop("checked");
+
+            if (prevMethodNum != methodNum) {
+                $('#arcArea select').prop("disabled", false);
+                if (resultFormat < 0 && renderMemory == false) {
+                    $('#resultformat').val("0x10000000");
+                    resultFormat = 0x10000000;
+                }
+            }
+
+            const displayResultControls = resultFormat >= 0 ? "block" : "none";
+
+            // Display Show[x]
+            if (memorySlots > 0) {
+                memDropdown.prop("disabled", false);
+                memDropdown.css("font-style", "normal");
+                $('#memorySlotsShowCheck').css("display", "inline");
+            }
+            // Hide Show[x] and disable Memory in Format dropdown
+            else {
+                memDropdown.prop("disabled", true);
+                memDropdown.css("font-style", "italic");
+                $('#memorySlotsShowCheck').css("display", "none");
+                if (resultFormat < 0) {
+                    $('#resultformat').val("0");
+                }
+            }
+
+            // Format=Memory for non-Expression mode: auto check mem render set and hide counts
+            if (resultFormat < 0 && methodNum != 5) {
+                $('#renderMemory').prop("checked", true);
+                $('#searchCounts').prop("checked", true);
+                $('#searchCountsArea').css("visibility", "hidden");
+            }
+            else {
+                $('#searchCountsArea').css("visibility", "visible");
+            }
+
+            $('#collect').prop("disabled", false);
+            $('.outputrow').css("display", "none");
+            $('#result_box').css("display", "block");
+            switch (methodNum) {
+                case 1: /* Neighborhood */
+                    $('.searchfilter').css("display", "block");
+                    $('#anchorArea').css("display", "block");
+                    $('#arcArea').css("display", "block");
+                    $('#arcFields').css("display", "block");
+                    $('.anchorfield').css("display", "inline");
+                    $('#selectArea').css("display", displayResultControls);
+                    $('#fieldsArea').css("display", displayResultControls);
+                    $('.collect').css("display", "inline");
+                    $('#collectVertices').css("display", "none");
+                    $('#collect').val(1);
+                    $('#anchor').focus();
+                    updateSortDisplay();
+                    updateArcConditionSelection();
+                    break;
+                case 2: /* Vertices */
+                    $('.searchfilter').css("display", "block");
+                    $('#anchorArea').css("display", "none");
+                    $('#arcArea').css("display", "none");
+                    $('#querytext').focus();
+                    $('#arcFields').css("display", "none");
+                    $('#selectArea').css("display", displayResultControls);
+                    $('.anchorfield').css("display", "none");
+                    $('#fieldsArea').css("display", displayResultControls);
+                    $('.collect').css("display", "none");
+                    $('#collectVertices').css("display", "inline");
+                    $('#collect').val(2);
+                    updateSortDisplay();
+                    updateArcConditionSelection();
+                    break;
+                case 3: /* Arcs */
+                    $('.searchfilter').css("display", "block");
+                    $('#anchorArea').css("display", "none");
+                    $('#arcArea').css("display", "block");
+                    $('#arcdir').val(2);
+                    $('#arcdir').prop("disabled", true);
+                    $('#querytext').focus();
+                    $('#arcFields').css("display", "block");
+                    $('.anchorfield').css("display", "inline");
+                    $('#selectArea').css("display", displayResultControls);
+                    $('#fieldsArea').css("display", displayResultControls);
+                    $('.collect').css("display", "none");
+                    $('#collectArcs').css("display", "inline");
+                    $('#collect').val(1);
+                    updateSortDisplay();
+                    updateArcConditionSelection();
+                    break;
+                case 4: /* Vertex */
+                    $('.searchfilter').css("display", "none");
+                    $('#anchorArea').css("display", "block");
+                    $('#rankArea').css("display", "none");
+                    $('#selectArea').css("display", "none");
+                    $('#fieldsArea').css("display", "none");
+                    $('#resultformat').val("0x10000000");
+                    $('.collect').css("display", "none");
+                    break;
+                case 5: /* Expression */
+                    $('.searchfilter').css("display", "none");
+                    $('#anchorArea').css("display", "block");
+                    $('#arcArea').css("display", "block");
+                    $('#arcdir').val(2);
+                    $('#arcdir').prop("disabled", true);
+                    $('#arcvalcond').val(12);
+                    $('#arcvalcond').prop("disabled", true);
+                    $('#query_box').css("display", "block");
+                    $('.outputrow').css("display", "block");
+                    $('.collect').css("display", "none");
+                    $('#collectSelect').css("display", "block");
+                    $('#collect').val(0);
+                    $('#collect').prop("disabled", true);
+                    $('#resultformat').val("-1");
+                    $('#querytext').focus();
+                    if (memorySlots == 0) {
+                        $('#result_box').css("display", "none");
+                    }
+                    updateArcConditionSelection();
+                    break;
+
+            }
+            if (methodNum != prevMethodNum) {
+                switch (methodNum) {
+                    case 1: /* Neighborhood */
+                        $('#querytext').val("{}");
+                        break;
+                    case 2: /* Vertices  */
+                        $('#querytext').val("{'condition':{}}");
+                        break;
+                    case 3: /* Arcs */
+                        $('#querytext').val("{'condition':{}}");
+                        break;
+                    case 4: /* Vertex */
+                        $('#querytext').val("");
+                        break;
+                    case 5: /* Expression */
+                        $('#querytext').val("0");
+                        break;
+                }
+            }
+            prevMethodNum = methodNum;
+        }
+
+        function updateArcConditionSelection() {
+            if ($('#arcmod').val() == 0) {
+                $('#arcvalcond').prop('hidden', true);
+                $('#arcval').prop('hidden', true);
+            }
+            else {
+                $('#arcvalcond').prop('hidden', false);
+                if ($('#arcvalcond').val() != 0) {
+                    $('#arcval').prop('hidden', false);
+                    $('#arcval').focus();
+                    if ($('#arcval').val() == null) {
+                        $('#arcval').html("0");
+                    }
+                }
+                else {
+                    $('#arcval').prop('hidden', true);
+                }
+            }
+        }
+
+        function updateSortDisplay() {
+            const resultFormat = parseInt($('#resultformat').find(':selected').val());
+            if (resultFormat >= 0) {
+                $('#hitsArea').css("display", "inline");
+                $('#sortArea').css("display", "inline");
+                let sortby = 0;
+                if ($('#sorted').prop("checked") == false) {
+                    $('#sortby').prop("disabled", true);
+                    $('#sortdirArea').prop('hidden', true);
+                }
+                else {
+                    $('#sortby').prop("disabled", false);
+                    $('#sortdirArea').prop('hidden', false);
+                    sortby = parseInt($('#sortby').find(':selected').val());
+                    $('#searchCounts').prop("checked", true);
+                }
+
+                if (sortby == 192 && resultFormat >= 0) { /* S_RANK */
+                    $('#rankArea').css("display", "block");
+                    $('#rank').focus();
+                }
+                else {
+                    $('#rankArea').css("display", "none");
+                }
+            }
+            else {
+                $('#hitsArea').css("display", "none");
+                $('#sortArea').css("display", "none");
+                $('#rankArea').css("display", "none");
+            }
+        }
+
+        function updateArcSelection() {
+            if ($('#F_ARC').prop("checked") == true) {
+                $('.arcelem').prop("checked", true);
+            }
+            else {
+                $('.arcelem').prop("checked", false);
+            }
+            performSearch();
+        }
+
+        function updateArcElementSelection() {
+            if ($('#arcelem input:checked').length == 4) {
+                $('#F_ARC').prop("checked", true);
+            }
+            else {
+                $('#F_ARC').prop("checked", false);
+            }
+            performSearch();
+        }
+
+        //function displayLoader() {
+        //  $('#result_box').addClass( "loading" );
+        //}
+
+        let pause_ms = 1000;
+        //let loaderDisplayer = null;
+        function performSearch() {
+            const methodNum = parseInt($('.querymethod:checked').val());
+            const memorySlots = parseInt($('#memory').find(':selected').val());
+            let renderMemory = $('#renderMemory').prop('checked');
+            const sharedMemory = $('#sharedMemory').prop('checked');
+            const graph = $('#graphlist').find(':selected').val();
+            if (graph == null) {
+                return;
+            }
+            const anchor = $('#anchor').val();
+            const arcrel = $('#arcrel').val();
+            const arcdir = parseInt($('#arcdir').val());
+            const arcmod = parseInt($('#arcmod').val());
+            const arcvalcond = parseInt($('#arcvalcond').val());
+            const arcval = $('#arcval').val();
+            const expression = $('#querytext').val();
+            const autorefresh = $('#autorefresh').prop("checked");
+            const refreshrate = parseInt($('#refreshrate').val());
+            let resultFormat = parseInt($('#resultformat').find(':selected').val());
+            const searchCounts = $('#searchCounts').prop("checked");
+            const collect = parseInt($('#collect').find(':selected').val());
+            const hits = parseInt($('#hits').find(':selected').val());
+            let sorted = $('#sorted').prop("checked");
+            let sortby = parseInt($('#sortby').find(':selected').val());
+            const sortdir = parseInt($('.sortdir:checked').val());
+            const rank = $('#rank').val();
+            const select = $('#select').val();
+
+            let fieldsFormat = 0;
+            const fields = $('#fields input:checked');
+            for (var i = 0; i < fields.length; i++) {
+                fieldsFormat |= parseInt(fields[i].value);
+            }
+
+            if (methodNum == 4) {
+                $('#resultformat').val("0x10000000");
+                resultFormat = 0x10000000;
+            }
+
+
+            if (resultFormat >= 0) {
+                if (searchCounts || sorted) {
+                    resultFormat = (resultFormat | 0x80000000) >>> 0;
+                }
+                else {
+                    resultFormat &= 0x7fffffff;
+                }
+            }
+            else if (searchCounts) {
+                sorted = true;
+                sortby = 128;
+            }
+            else {
+                sorted = false;
+            }
+
+            let url = "/vgx/builtin/";
+            let url_query = "&query={ 'timeout':10000";
+
+            switch (methodNum) {
+                case 1:
+                    url += "neighbor?graph=" + graph;
+                    break;
+                case 2:
+                    url += "vertices?graph=" + graph;
+                    break;
+                case 3:
+                    url += "arcs?graph=" + graph;
+                    break;
+                case 4:
+                    url += "vertex?graph=" + graph;
+                    break;
+                case 5:
+                    url += "evaluate?graph=" + graph;
+                    break;
+            }
+
+            // Require anchor vertex for neighborhood and vertex lookup
+            if ((methodNum == 1 || methodNum == 4) && (anchor == null || anchor == "")) {
+                return;
+            }
+
+            if (anchor != null && anchor != "") {
+                if ((methodNum == 1 || methodNum == 4)) {
+                    url += "&id=" + anchor;
+                    if (methodNum == 4) {
+                        url += "&maxarcs=100";
+                    }
+                }
+                else if (methodNum == 5) {
+                    url += "&tail=" + anchor;
+                    url += "&head=" + anchor;
+                }
+            }
+
+            if (methodNum == 1 || methodNum == 3) {
+                let arc = "('" + arcrel + "'," + arcdir + "," + arcmod;
+                if (arcvalcond != 0 && arcmod != 0) {
+                    arc += "," + arcvalcond + "," + arcval + ")";
+                }
+                else {
+                    arc += ")";
+                }
+                if (methodNum == 1) {
+                    url_query += ",'arc':" + arc;
+                }
+                else {
+                    url += "&arc=" + arc;
+                }
+            }
+            else if (methodNum == 5) {
+                let arc = "('" + arcrel + "'," + arcmod + "," + arcval + ")";
+                url += "&arc=" + arc;
+            }
+
+            if (memorySlots > 0) {
+                url += "&memory=(int)" + memorySlots;
+                if (sharedMemory) {
+                    url += "&sharedmem=(int)1";
+                }
+            }
+            else if (methodNum == 5) {
+                url += "&memory=(int)4";
+            }
+
+            if (methodNum == 1) {
+                switch (collect) {
+                    case 0:
+                        url_query += ",'collect':C_NONE";
+                        break;
+                    case 1:
+                        url_query += ",'collect':C_COLLECT";
+                        break;
+                    case -1:
+                        url_query += ",'collect':C_SCAN";
+                        break;
+                }
+            }
+            else if (methodNum == 2 || methodNum == 3) {
+                if (collect == -1 && sorted == false) {
+                    sorted = true;
+                }
+            }
+
+            if (methodNum != 4 && methodNum != 5) {
+                if (resultFormat >= 0) {
+                    url += "&result=(int)" + resultFormat;
+                    url += "&fields=(int)" + fieldsFormat;
+                    url += "&hits=(int)" + hits;
+                }
+                else {
+                    url += "&hits=(int)0";
+                }
+                if (sorted == true) {
+                    url += "&sortby=(int)" + (sortby + (sortby > 0 ? sortdir : 0));
+                    if (sortby == 192 && rank != null) { /* S_RANK */
+                        url += "&rank=" + rank;
+                    }
+                }
+                if (select != null && select != "") {
+                    url += "&select=" + select;
+                }
+                url_query += "}";
+                url += url_query;
+            }
+
+            if (resultFormat < 0 && methodNum != 5) {
+                $('#renderMemory').prop("checked", true);
+                renderMemory = true;
+            }
+
+            if (methodNum == 5 && renderMemory) {
+                url += "&memresult=1";
+            }
+
+            //$('#submit').prop( "disabled", true );
+            //if( loaderDisplayer != null ) {
+            //  clearTimeout( loaderDisplayer );
+            //}
+            //loaderDisplayer = setTimeout( displayLoader, 1000 );
+            let progress = new Progress();
+            $.post( url, expression, function (data, textStatus, jqXHR) {
+                let message = "";
+                let response = "";
+                let nhits = 0;
+                let info = "";
+                try {
+                    const responseRaw = data["response"];
+                    const exec_ms = parseFloat(data["exec_ms"]);
+                    const messageRaw = data["message"];
+                    if (responseRaw != null) {
+                        const counts = responseRaw['counts'];
+                        const memList = responseRaw["memory"];
+                        let objToStringify = null;
+                        if (resultFormat >= 0) {
+                            switch (methodNum) {
+                                case 1:
+                                    objToStringify = responseRaw['neighborhood'];
+                                    nhits = counts ? counts['arcs'] : -1;
+                                    break;
+                                case 2:
+                                    objToStringify = responseRaw['vertices'];
+                                    nhits = counts ? counts['vertices'] : -1;
+                                    break;
+                                case 3:
+                                    objToStringify = responseRaw['arcs'];
+                                    nhits = counts ? counts['arcs'] : -1;
+                                    break;
+                                case 4:
+                                    objToStringify = responseRaw;
+                                    nhits = 1;
+                                    break;
+                                case 5:
+                                    objToStringify = responseRaw;
+                                    nhits = 1;
+                                    break;
+                            }
+                            if (memorySlots > 0 && renderMemory) {
+                                objToStringify = { 'result': objToStringify, 'memory': memList };
+                            }
+                        }
+                        else { /* Result format: show memory */
+                            if (renderMemory) {
+                                objToStringify = memList;
+                            }
+                            else {
+                                objToStringify = [];
+                            }
+                            if (methodNum == 5) {
+                                $('#evalresult').val(responseRaw['result']);
+                            }
+                        }
+                        if (objToStringify == null) {
+                            objToStringify = responseRaw;
+                        }
+                        response = JSON.stringify(objToStringify, null, 4);
+                        if (nhits >= 0 && resultFormat >= 0) {
+                            info = "" + nhits.toLocaleString("en-US") + " hit" + (nhits != 1 ? "s" : "") + " (" + exec_ms.toFixed(2) + " ms)";
+                        }
+                        else {
+                            info = "" + exec_ms.toFixed(2) + " ms";
+                        }
+
+                        const delay = 1000 * (1 - Math.sqrt(refreshrate) / 10.0);
+
+                        if (exec_ms < delay) {
+                            pause_ms = delay;
+                        }
+                        else {
+                            pause_ms = Math.round(exec_ms);
+                        }
+                    }
+                    else if (messageRaw != null) {
+                        const pluginError = messageRaw["plugin"];
+                        if (pluginError != null) {
+                            const value = pluginError["value"];
+                            if (value == null) {
+                                message = pluginError;
+                            }
+                            else {
+                                message = value;
+                            }
+                        }
+                        else {
+                            message = JSON.stringify(messageRaw, null, 4);
+                        }
+                    }
+                    else {
+                        message = data;
+                    }
+                    $('#infotext').html(info);
+                    $('#errortext').html(message);
+                    if (resultFormat >= 0) {
+                        $('#result_box pre #resulttext').css("white-space", "pre");
+                    }
+                    else {
+                        $('#result_box pre #resulttext').css("white-space", "normal");
+                    }
+                }
+                catch (error) {
+                    $('#errortext').html(error);
+                    $('#resulttext').html("");
+                    $('#evalresult').html("");
+                }
+                finally {
+                    progress.stop();
+                    $('#result_box').stop(true);
+                    //$('#submit').prop( "disabled", false );
+                    $('#resulttext').html(response);
+
+                    if (message) {
+                        $('#evalresult').removeClass("vstr");
+                        $('#evalresult').addClass("faded");
+                        pause_ms = 500;
+                    }
+                    else {
+                        $('#evalresult').addClass("vstr");
+                        $('#evalresult').removeClass("faded");
+                    }
+
+                    $('#result_box').removeClass("loading");
+                    //if( loaderDisplayer != null ) {
+                    //  clearTimeout( loaderDisplayer );
+                    //  loaderDisplayer = null;
+                    //}
+                    if (autoRefresher != null) {
+                        clearTimeout(autoRefresher);
+                        autoRefresher = null;
+                    }
+                    if (autorefresh) {
+                        autoRefresher = setTimeout(performSearch, pause_ms);
+                    }
+                }
+            }, "json" ).fail(function (xhr, txt, err) {
+                progress.stop();
+                //$('#submit').prop( "disabled", false );
+                $('#resulttext').html("");
+                $('#infotext').html("Exception:");
+                $('#errortext').html(xhr["responseText"] + " | " + txt + " | " + err);
+                $('#result_box').removeClass("loading");
+                //if( loaderDisplayer != null ) {
+                //  clearTimeout( loaderDisplayer );
+                //  loaderDisplayer = null;
+                //}
+            });
+        }
+
+        $('#graphlist').on("change", updateArcRelationships);
+        $('#graphlist').on("change", updateGraphInfo);
+        $('.querymethod').on("change", updateMethodDisplay);
+        $('#memory').on("change", updateMethodDisplay);
+        $('#submit').click(performSearch);
+        $('#autorefresh').on("change", function () {
+            if ($(this).prop('checked')) {
+                performSearch();
+                $('#refreshrateArea').css("display", "inline");
+            }
+            else if (autoRefresher != null) {
+                clearTimeout(autoRefresher);
+                autoRefresher = null;
+                $('#refreshrateArea').css("display", "none");
+            }
+        });
+        $('#fields input').addClass("retrigger");
+        $('refreshrate').on("input", performSearch);
+        $('.retrigger').on("change", performSearch);
+        $('#resultformat').on("change", updateMethodDisplay);
+        $('#searchCounts').on("change", updateMethodDisplay);
+        $('#sorted').on("change", updateSortDisplay);
+        $('#sortby').on("change", updateSortDisplay);
+        $('#F_ARC').on("change", updateArcSelection)
+        $('.arcelem').on("change", updateArcElementSelection)
+        $('#arcmod').on("change", updateArcConditionSelection)
+        $('#arcvalcond').on("change", updateArcConditionSelection)
+
+
+        function submitOnEnter(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        };
+
+        function submitOnAltEnter(event) {
+            if (event.key === "Enter" && event.shiftKey) {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        };
+
+
+        document.getElementById("anchor").addEventListener("keypress", submitOnEnter);
+        document.getElementById("arcval").addEventListener("keypress", submitOnEnter);
+        document.getElementById("rank").addEventListener("keypress", submitOnEnter);
+        document.getElementById("select").addEventListener("keypress", submitOnEnter);
+        document.getElementById("querytext").addEventListener("keypress", submitOnAltEnter);
+
+        $('#F_ANCHOR').prop("checked", true);
+        $('#F_ID').prop("checked", true);
+        $('#F_ARC').prop("checked", true);
+
+        updateGraphInfo();
+        updateMethodDisplay();
+        updateSortDisplay();
+        updateArcConditionSelection();
+        updateArcSelection();
+        updateArcRelationships();
+
+
+        $('#anchor').focus();
+    }
+
+    CommonHeader.ready(main, 10);
+</script>
+

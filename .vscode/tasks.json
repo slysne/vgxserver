@@ -1,0 +1,138 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "cppbuild",
+      "label": "Compile active file (RELEASE)",
+      "command": "/usr/bin/clang",
+      "args": [
+        "-fcolor-diagnostics",
+        "-fansi-escape-codes",
+        "-c",
+        "${file}",
+        "-o",
+        "${fileDirname}/../build/object_files/src/${fileBasenameNoExtension}.bc",
+        "-std=c99",
+        "-fno-strict-aliasing",
+        "-Wstrict-prototypes",
+        "-Wno-format",
+        "-Wno-unused-function",
+        "-pthread",
+        "-fPIC",
+        "-O3",
+        "-flto",
+        "-arch",
+        "arm64",
+        "-D",
+        "CXLIB_VERSION=3.6",
+        "-D",
+        "COMLIB_VERSION=3.6",
+        "-D",
+        "CXMALLOC_VERSION=3.6",
+        "-D",
+        "FRAMEHASH_VERSION=3.6",
+        "-D",
+        "PYFRAMEHASH_VERSION=3.6",
+        "-D",
+        "PYVGX_VERSION=3.6",
+        "-D",
+        "VGX_VERSION=3.6",
+        "-D",
+        "INCLUDE_UNIT_TESTS=1",
+        "-D",
+        "NDEBUG",
+        "-I",
+        "${env:HOME}/python313/include/python3.13",
+        "-I",
+        "cxlib/src/include",
+        "-I",
+        "vgx/src/include",
+        "-I",
+        "pyvgx/src/include"
+      ],
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: /usr/bin/clang"
+    },
+    {
+      "type": "cppbuild",
+      "label": "Compile active file (DEBUG)",
+      "command": "/usr/bin/clang",
+      "args": [
+        "-fcolor-diagnostics",
+        "-fansi-escape-codes",
+        "-c",
+        "${file}",
+        "-o",
+        "${fileDirname}/../build/object_files/src/${fileBasenameNoExtension}.o",
+        "-std=c99",
+        "-fno-strict-aliasing",
+        "-Wstrict-prototypes",
+        "-Wno-format",
+        "-Wno-unused-function",
+        "-pthread",
+        "-fPIC",
+        "-g",
+        "-arch",
+        "arm64",
+        "-D",
+        "CXLIB_VERSION=3.6",
+        "-D",
+        "COMLIB_VERSION=3.6",
+        "-D",
+        "CXMALLOC_VERSION=3.6",
+        "-D",
+        "FRAMEHASH_VERSION=3.6",
+        "-D",
+        "PYFRAMEHASH_VERSION=3.6",
+        "-D",
+        "PYVGX_VERSION=3.6",
+        "-D",
+        "VGX_VERSION=3.6",
+        "-D",
+        "INCLUDE_UNIT_TESTS=1",
+        "-D",
+        "NDEBUG",
+        "-I",
+        "${env:HOME}/python313/include/python3.13",
+        "-I",
+        "cxlib/src/include",
+        "-I",
+        "vgx/src/include",
+        "-I",
+        "pyvgx/src/include"
+      ],
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": "build"
+    },
+    {
+      "type": "cppbuild",
+      "label": "C/C++: clang build active file",
+      "command": "/usr/bin/clang",
+      "args": [
+        "-fcolor-diagnostics",
+        "-fansi-escape-codes",
+        "-g",
+        "${file}",
+        "-o",
+        "${fileDirname}/${fileBasenameNoExtension}"
+      ],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": "build",
+      "detail": "compiler: /usr/bin/clang"
+    }
+  ]
+}
+

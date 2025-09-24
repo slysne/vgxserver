@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "cxfileio.h": "c",
+        "cxplat.h": "c",
+        "cxsock.h": "c",
+        "pthread.h": "c",
+        "cxexcept.h": "c",
+        "cxmem.h": "c",
+        "cxlib.h": "c",
+        "_framehash.h": "c",
+        "_comlibsequence_header.h": "c",
+        "_noavx.h": "c",
+        "_scalar.h": "c",
+        "pyvgx.h": "c",
+        "python.h": "c",
+        "cxobjbase.h": "c",
+        "_neon.h": "c"
+    }
+}

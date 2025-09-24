@@ -1,0 +1,4428 @@
+<!DOCTYPE html>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>VGX System Overview</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <script src="clock.js"></script>
+    <script src="boxstate.js"></script>
+    <script src="digest.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div>
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container" id="mainBody">
+            <div id="templateArea" style="visibility: hidden">
+                <table>
+                    <tr id="rowTemplate">
+                        <td class="nodennum nodebox nodecell"><input class="nodeident" type="text" value=""></td>
+                        <td class="nodentyp nodebox nodecell"><input type="text" value=""></td>
+                        <td class="nodestat nodebox nodecell"><input type="text" value=""></td>
+                        <td class="nodeuptm nodebox nodecell nodeinfo nodefade"><input type="text" value=""></td>
+                        <td class="nodehost nodecell nodeinfo"><input type="text" value=""></td>
+                        <td class="nodemtrx nodebox nodecell nodeinfo nodefade"><input type="text" value=""></td>
+                        <td class="nodencli nodebox nodecell nodefade"><input type="text" value=""></td>
+                        <td class="nodencha nodebox nodecell nodefade"><input type="text" value=""></td>
+                        <td class="nodeqbal nodebox nodecell nodefade"><input class="nodebars" type="text" value=""></td>
+                        <td class="noderate nodebox nodecell nodevalu nodefade"><input type="text" value=""></td>
+                        <td class="nodeqlat nodebox nodecell nodevalu nodefade"><input type="text" value=""></td>
+                        <td class="nodeload nodebox nodecell nodefade">
+                            <span class="memusage">
+                                <input class="nodemprc nodebars" type="text" value="">
+                                <span class="memnode">
+                                    <input class="nodemmry nodebars" type="text" value="">
+                                    <input class="nodemtot nodebars" type="text" value="">
+                                </span>
+                            </span>
+                        </td>
+                        <td class="nodeordr nodebox nodecell nodevalu nodefade"><input type="text" value=""></td>
+                        <td class="nodesize nodebox nodecell nodevalu nodefade"><input type="text" value=""></td>
+                        <td class="nodetsub nodebox nodecell nodefade">
+                            <input class="nodetx nodesubs nodebars" type="text" value="">
+                        </td>
+                        <td class="nodetout nodebox nodecell nodefade">
+                            <span class="txoutput" >
+                                <input class="nodetx nodetxro nodebars" type="text" value="">
+                                <input class="nodeprov" type="text" value="">
+                            </span>
+                        </td>
+                        <td class="nodetinp nodebox nodecell nodefade">
+                            <span class="txinput" >
+                                <input class="nodetx nodetxri nodebars" type="text" value="">
+                            </span>
+                        </td>
+                        <td class="nodeslag nodebox nodecell nodefade">
+                            <input class="nodetx nodesndf nodebars" type="text" value="">
+                        </td>
+                        <td class="nodedgst nodefade">
+                            <span class="digest">
+                            </span>
+                        </td>
+                        <td class="nodemser nodecell nodeinfo nodefade"><input type="text" value=""></td>
+                        <td class="nodetlog nodebox nodefade">
+                            <input class="nodeztxl nodebars" type="text" value="">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div id="descriptorArea">
+                <div class="systemname">
+                    <div id="descriptorName"></div>
+                </div>
+                <div id="descriptorBottom">
+                  <div id="descriptorSysinfoArea">
+                      <table id="descriptor" class="infolist" style="visibility: hidden">
+                          <tbody>
+                              <tr>
+                                  <td><span class="sysinfoname">Status</span></td>
+                                  <td><span class="sysinfo enable_select" id="systemStatus"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Instances</span></td>
+                                  <td><span class="sysinfo enable_select" id="totalInstances"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Partitions</span></td>
+                                  <td><span class="sysinfo enable_select" id="builderPartitions"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Vertices</span></td>
+                                  <td><span class="sysinfo enable_select" id="builderSumOrder"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Arcs</span></td>
+                                  <td><span class="sysinfo enable_select" id="builderSumSize"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Properties</span></td>
+                                  <td><span class="sysinfo enable_select" id="builderSumProperties"></span></td>
+                              </tr>
+                               <tr>
+                                  <td><span class="sysinfoname">Vectors</span></td>
+                                  <td><span class="sysinfo enable_select" id="builderSumVectors"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">CPU</span></td>
+                                  <td><span class="sysinfo enable_select" id="cpuBrand"></span></td>
+                              </tr>
+                              <tr>
+                                  <td><span class="sysinfoname">Memory</span></td>
+                                  <td><span class="sysinfo enable_select" id="totalMemory"></span></td>
+                              </tr>
+                              <!--tr>
+                                  <td><span class="sysinfoname">ZZZ</span></td>
+                                  <td><span class="sysinfo enable_select" id="zzz"></td>
+                              </tr-->
+
+                          </tbody>
+                      </table>
+                  </div>
+                  <span id="descriptorActionArea">
+                      <textarea class="infolist disable_select scheme-dark1" id="recentAction" name="recentAction" rows="2"  value="" readonly="readonly" style="visibility: hidden"></textarea>
+                  </span>
+                </div>
+            </div>
+
+            <div id="nodeListArea">
+                <table id="nodeList" class="hostlist">
+                    <thead>
+                        <tr>
+                            <th colspan="21"><hr></th>
+                        </tr>
+                        <tr id="nodeListHeader2" class="nodeListHeader">
+                            <th colspan="5"><span class="colSubGroup">Instance</span></th>
+                            <th colspan="6"><span class="colSubGroup">Server Load</span></th>
+                            <th colspan="1"><span class="colSubGroup">Memory</span></th>
+                            <th colspan="2"><span class="colSubGroup">Graph</span></th>
+                            <th colspan="4"><span class="colSubGroup">Interconnect</span></th>
+                            <th colspan="3"><span class="colSubGroup">Transaction</span></th>
+                        </tr>
+                        <tr id="nodeListHeader3" class="nodeListHeader">
+                            <th class="nodennum" title="Unique Instance Identifier">
+                                <span class="colHead">Id</span>
+                            </th>
+                            <th class="nodentyp" title="Instance Type">
+                                <span class="colHead">Type</span>
+                            </th>
+                            <th class="nodestat" title="Instance Status">
+                                <span class="colHead">Status</span>
+                            </th>
+                            <th class="nodeuptm" title="Time Elapsed Since VGX Server Startup">
+                                <span class="colHead">Uptime</span>
+                            </th>
+                            <th class="nodehost" title="Hostname/IP : Admin Port">
+                                <span class="colHead">Address</span>
+                            </th>
+                            <th class="nodemtrx" title="Dispatcher Matrix Shape&#013Service In/Out Indicator">
+                                <span class="colHead">Matrix</span>
+                            </th>
+                            <th class="nodencli" title="Number of Connected Client Sockets">
+                                <span class="colHead">In</span>
+                            </th>
+                            <th class="nodencha" title="Number of Connected Backend&#13Matrix Sockets (channels)">
+                                <span class="colHead">Out</span>
+                            </th>
+                            <th class="nodeqbal" title="Request Load Balance&#13Indicator within Group">
+                                <span class="colHead">Bal</span>
+                            </th>
+                            <th class="noderate" title="Requests per Second">
+                                <span class="colHead">RPS</span>
+                            </th>
+                            <th class="nodeqlat" title="95th Percentile Request&#13Latency (milliseconds)">
+                                <span class="colHead">95th ms</span>
+                            </th>
+                            <th class="nodeload" title="Left: Memory Used by Instance (GiB)&#13Right: Physical Host Memory Usage / Total (GiB)">
+                                <span class="colHead">Instance / Host</span>
+                            </th>
+                            <th class="nodeordr" title="Number of Vertices in Graph(s)">
+                                <span class="colHead">Order</span>
+                            </th>
+                            <th class="nodesize" title="Number of Arcs in Graph(s)">
+                                <span class="colHead">Size</span>
+                            </th>
+                            <th class="nodetsub" title="Subscriber Status for Provider Instance&#13Indicates Number of Attached Subscribers">
+                                <span class="colHead">Subs</span>
+                            </th>
+                            <th class="nodetout" title="Provider Transaction&#13Data Output Indicator">
+                                <span class="colHead">Out</span>
+                            </th>
+                            <th class="nodetinp" title="Subscriber Transaction&#13Data Input Indicator">
+                                <span class="colHead">In</span>
+                            </th>
+                            <th class="nodeslag" title="Subscriber Transaction&#13Input Lag Indicator">
+                                <span class="colHead">Lag</span>
+                            </th>
+                            <th class="nodedgst" title="Identicon Representing Digest&#13of Instance Graph Data">
+                                <span class="colHead">Digest</span>
+                            </th>
+                            <th class="nodemser" title="Most Recent Transaction Serial Number">
+                                <span class="colHead">S/N</span>
+                            </th>
+                            <th class="nodetlog" title="Transaction Log Size Indicator&#13for Durable TXProxy Instance">
+                                <span class="colHead">TX Log</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+
+
+    <!-- Modal HTML -->
+    <div id="modalprompt" class="modalprompt">
+      <div class="modalprompt-content">
+        <div id="modalprompt-title"></div>
+        <div id="modalprompt-message"></div>
+        <div id="modalprompt-inputlabel"></div>
+        <input type="text" id="modalprompt-input" style="display: none;">
+        <div class="modalprompt-buttons">
+            <button id="modalprompt-ok">OK</button>
+            <button id="modalprompt-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+</body>
+</html>
+
+<style>
+
+    .container {
+        overflow: visible;
+    }
+
+    .container .headrow {
+        background-color: #D0D0D0;
+    }
+
+    body {
+        overflow: auto;
+        background-color: #D7D7D7;
+    }
+
+    input[disabled] {
+        pointer-events: none;
+    }
+
+    #commonHeaderTable {
+        position: sticky;
+        left: 0;
+    }
+
+    #templateArea {
+        height: 0px;
+    }
+
+    #nodeList {
+        margin-left: 0px;
+    }
+
+    #nodeList thead {
+        position: sticky;
+        top: 0px;
+        z-index: 1000;
+        background: linear-gradient(
+            to bottom,
+            rgba( 215, 215, 215, 1.0 ) 70%,
+            rgba( 215, 215, 215, 0.5 ) 95%,
+            rgba( 215, 215, 215, 0.0 ) 100%
+        );
+    }
+
+    #nodeListHeader1 th {
+        text-align: center;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-bottom: 3px;
+    }
+
+    #nodeListHeader2 th {
+        text-align: center;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-bottom: 3px;
+    }
+
+    #nodeListHeader3 th {
+        text-align: center;
+        padding-top: 3px;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-bottom: 3px;
+    }
+
+    .colTopGroup {
+        align-items: center;
+        display: inline-block;
+        width: 100%;
+        background: #E0E0E0;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    .colSubGroup {
+        align-items: center;
+        display: inline-block;
+        font-size: 17px;
+        width: 100%;
+        color: #F1F1F1;
+        background: #444444;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    .colHead {
+        align-items: center;
+        display: inline-block;
+        font-size: 15px;
+        width: 100%;
+        color: #F1F1F1;
+        background: #444444;
+        padding: 2px;
+        border-radius: 3px;
+    }
+
+    #rowTemplate {
+        visibility: hidden;
+    }
+
+    tr#rowTemplate td {
+        padding-top: 0px;
+        padding-bottom: 0px;
+    }
+
+    #descriptor td {
+        display: inline-flex;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    #descriptor td, #descriptor td span {
+        vertical-align: middle;
+    }
+
+    .sysinfoname {
+        display: inline-flex;
+        align-items: center;
+        padding-top: 0px;
+        padding-bottom: 0px;
+        padding-left: 5px;
+        border-radius: 3px;
+        font-size: 17px;
+        font-family: Cambria;
+        font-weight: bold;
+        height: 24px;
+        overflow: hidden;
+        max-width: 110px;
+        margin-left: -3px;
+    }
+
+    .sysinfo {
+        display: inline-flex;
+        align-items: center;
+        padding-top: 0px;
+        padding-bottom: 0px;
+        padding-left: 5px;
+        border-radius: 3px;
+        border: solid 1px;
+        font-size: 16px;
+        font-weight: bold;
+        height: 24px;
+        font-family: Consolas, Menlo, courier;
+        overflow: hidden;
+        max-width: 365px;
+    }
+
+    .sysinfo:hover {
+        font-weight: bold;
+    }
+
+    #cpuBrand {
+        text-align: left;
+        text-overflow: ellipsis;
+    }
+
+    .hostlist {
+        border-spacing: 0px;
+        /*margin-top: -20px;*/
+        /*margin-bottom: 30px;*/
+    }
+
+    .hostlist td {
+        font-size: 14px;
+        font-family: Consolas, Menlo, courier;
+    }
+
+    .hostlist input {
+        font-size: 14px;
+        font-family: Consolas, Menlo, courier;
+        font-weight: bold;
+    }
+
+/*
+    .hostlist th {
+        text-align: left;
+        padding-left: 5px;
+    }
+
+    .hostlist tr th {
+        padding-bottom: 15px;
+    }
+*/
+
+    .hostlist tr td {
+        padding-top: 1px;
+        padding-bottom: 1px;
+    }
+
+    .infolist {
+        float: left;
+    }
+
+    .infolist input {
+        font-size: 18px;
+        font-family: Consolas, Menlo, courier;
+        font-weight: bold;
+        /*background-color: transparent;*/
+        border-style: solid;
+        min-width: 24ch;
+        height: 22px;
+        padding-bottom: 1px;
+        border: solid 1px;
+        border-color: #EEEEEE;
+        background: #EEEEEE;
+    }
+
+    #descriptorArea {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        position: sticky;
+        left: 0;
+        width: 900px;
+        min-width: 0px;
+    }
+
+    #descriptorArea, #descriptorArea span {
+        white-space: nowrap;
+        /*vertical-align: top;*/
+    }
+
+    .systemname {
+        display: flex;
+        width: calc(100% - 4px);
+        align-items: center;
+        justify-content: center;
+        margin-left: 4px;
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+        border-radius: 3px;
+        font-size: 19px;
+        font-family: Cambria;
+        font-weight: bold;
+        height: 32px;
+        overflow: hidden;
+    }
+
+    #descriptorName {
+        max-width: 100%;
+        padding-left: 5px;
+        white-space: nowrap;
+        text-align: left;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    #descriptorBottom {
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    #descriptorSysinfoArea {
+/*        display: inline-flex; */
+        margin-right: 15px;
+ /*       flex-shrink: 0; */
+        border-color: #D0D0D0;
+        background: #D7D7D7;
+
+    }
+
+    .hidearea {
+        display: none !important; 
+    }
+
+    #descriptorActionArea {
+        display: flex;
+        flex: 1;
+        min-width: 0px;
+    }
+
+    #recentAction {
+        flex: 1;
+        resize: none;
+        font-size: 12px;
+        font-family: Cambria;
+        font-weight: normal;
+        /*border-style: solid;*/
+        min-width: 0px;
+        width: auto;
+        box-sizing: border-box;
+        padding-bottom: 1px;
+        margin-top: 3px;
+        margin-left: 5px;
+        /*border: solid 1px;*/
+        pointer-events: auto;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .mousedown {
+        transform: translate(1px, 2px);
+        box-shadow: -1px -2px 1px #CCCCCC;
+    }
+
+    .nodebox input {
+        border-style: solid;
+        border: solid 1px;
+        border-radius: 3px;
+        border-color: #444444;
+    }
+
+    .nodecell input {
+        background-color: transparent;
+        height: 20px;
+    }
+
+    .nodeinfo input {
+        font-size: 12px;
+        padding-bottom: 1px;
+        background: #EEEEEE;
+    }
+
+    .nodevalu input {
+        font-size: 12px;
+        text-align: right;
+        padding-right: 4px;
+        padding-left: 4px;
+        color: #0000C0;
+    }
+
+    input.nodeident {
+        font-family: Consolas, Menlo, courier;
+        font-size: 12px;
+        text-align: left;
+        padding-left: 2px;
+        padding-bottom: 2px;
+        margin-top: 4px;
+        margin-bottom: 4px;
+    }
+
+    .nodennum input.localnode {
+        background-color: #444444;
+        color: #F8F8F8;
+        border-color: #888888;
+    }
+
+    .nodennum input.remotenode {
+        color: #000000;
+        background-color: #F8F8F8;
+    }
+
+    input.nodebars {
+        font-family: "Arial Black", sans-serif;
+        letter-spacing: -2px;
+        border-style: none;
+        background-color: #444444;
+        color: rgb(240,240,240);
+        font-size: 10px;
+        text-align: left;
+        padding-left: 4px;
+        padding-bottom: 4px;
+    }
+
+    .groupid {
+        color: #A0A0A0;
+    }
+
+    .grouptitle {
+        display: inline-block;
+        padding-top: 3px;
+        padding-bottom: 7px;
+        font-family: Consolas, Menlo, courier;
+        font-size: 16px;
+        font-weight: bold;
+        color: #000000;
+        margin-right: 10px;
+        z-index: 750;
+    }
+
+    /* Id */
+    .nodennum {
+        position: sticky;
+        left: 0;
+        z-index: 500;
+        background: linear-gradient(
+            to right,
+            rgba( 215, 215, 215, 1.0 ) 70%,
+            rgba( 215, 215, 215, 1.0 ) 80%,
+            rgba( 215, 215, 215, 0.0 ) 100%
+        );
+        /*position: relative;*/
+    }
+
+    .nodennum input {
+        max-width: 40px;
+        min-width: 40px;
+        text-align: center;
+        font-size: 14px;
+        background-color: #F1F1F1;
+        color: #000000;
+        border: solid 2px;
+        border-color: #888888;
+    }
+
+    /* Type */
+    th.nodentyp {
+        text-align: left;
+    }
+
+    .nodentyp input {
+        max-width: 80px;
+        font-weight: bold;
+        text-align: center;
+        text-align: center;
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    /* Status */
+    th.nodestat {
+        text-align: left;
+    }
+
+    .nodestat input {
+        max-width: 80px;
+        font-weight: bold;
+        text-align: center;
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    .nodetlag input {
+        max-width: 50px;
+    }
+
+    /* Uptime */
+    .nodeuptm input {
+        font-family: Consolas, Menlo, courier;
+        font-size: 12px;
+        font-weight: bold;
+        text-align: center;
+        width: 100px;
+        padding-left: 1px;
+        padding-right: 1px;
+        background: #444444;
+        color: #A5F342;
+        border-style: none;
+    }
+
+    /* Host */
+    .nodehost input {
+        text-align: left;
+    }
+    
+    /* Matrix */
+    .nodemtrx input {
+        text-align: center;
+        max-width: 70px;
+    }
+
+    /* I/O Sockets */
+    .iosockets {
+        display: inline-flex;
+        width: 80px;
+    }
+
+    /* Clients */
+    .nodencli input {
+        max-width: 30px;
+        padding-left: 2px;
+        padding-right: 2px;
+        font-family: Consolas, Menlo, courier;
+        font-size: 10px;
+        text-align: center;
+        background-color: #444444;
+        color: rgb(240,240,240);
+    }
+
+    /* Channels */
+    .nodencha input {
+        max-width: 30px;
+        padding-left: 2px;
+        padding-right: 2px;
+        font-family: Consolas, Menlo, courier;
+        font-size: 10px;
+        text-align: center;
+        background-color: #444444;
+        color: rgb(240,240,240);
+    }
+
+    /* Query Balance */
+    .nodeqbal input {
+        max-width: 36px;
+        /*font-size: 11px;
+        text-align: center;
+        padding-left: 5px;
+        padding-right: 5px;
+        font-family: Consolas, Menlo, courier;
+        background-color: #444444;
+        color: rgb(240,240,240);*/
+    }
+
+    /* QPS */
+    .noderate input {
+        max-width: 70px;
+    }
+
+    /* 95th */
+    .nodeqlat input {
+        max-width: 70px;
+    }
+
+    /* Memory */
+    .nodeload {
+        position: relative;
+        max-width: 175px;
+    }
+
+    .memusage {
+        display: inline-flex;
+        width: 146px;
+    }
+
+    .memusage input {
+        vertical-align: middle;
+    }
+
+    .memnode {
+        display: inline-flex;
+    }
+
+    input.nodemprc {
+        max-width: 40px;
+        font-family: Consolas, Menlo, courier;
+        letter-spacing: 0px;
+        font-size: 11px;
+        text-align: center;
+        margin-right: 10px;
+    }
+
+    input.nodemmry {
+        max-width: 70px;
+        z-index:12;
+    }
+
+    input.nodemtot {
+        margin-left: -6px;
+        max-width: 32px;
+        font-family: Consolas, Menlo, courier;
+        letter-spacing: 0px;
+        font-size: 11px;
+        text-align: center;
+        z-index:11;
+    }
+
+    /* Order */
+    .nodeordr input {
+        max-width: 90px;
+    }
+
+    /* Size */
+    .nodesize input {
+        max-width: 90px;
+    }
+
+    /* Subs */
+    .nodetsub {
+        position: relative;
+        max-width: 51px;
+    }
+
+    .nodetsub input {
+        max-width: 41px;
+    }
+
+    input.nodesubs {
+        max-width: 40px;
+        /*font-family: Consolas, Menlo, courier;*/
+        letter-spacing: 0px;
+        font-size: 10px;
+        text-align: center;
+        /*color: #A5F342;*/
+        /*color: #FF8080;*/
+
+    }
+
+    .nodesubs {
+    }
+
+    /* Out */
+    .txoutput {
+        display: inline-block;
+        /* width: 88px; */
+        width: 77px; 
+    }
+
+    .nodetout {
+        position: relative;
+        /*max-width: 23px;*/
+        max-width: 52px;
+    }
+
+    .nodetout input {
+        max-width: 41px;
+    }
+
+    input.nodeprov {
+        position: relative;
+        /* max-width: 20px; */
+        max-width: 22px;
+        /* left: 29px; */
+        left: 3px;
+        padding-left: 2px;
+        padding-bottom: 1px;
+        border-style: none;
+        font-family: "Arial", sans-serif;
+        font-size: 11px;
+        text-align: center;
+        background: transparent;
+        color: #EEEEEE;
+        z-index:10;
+    }
+
+    .nodetxro {
+    }
+
+
+    /* In */
+    .txinput {
+        display: inline-block;
+        width: 88px;
+    }
+
+    .nodetinp {
+        position: relative;
+        /* max-width: 120px; */
+        max-width: 70px;
+    }
+
+    th.nodetinp {
+        /* left: 30px; */
+    }
+
+
+    input.nodetxri {
+        position: relative;
+        max-width: 58px;
+        padding-left: 20px;
+    }
+
+    /* Digest */
+    .nodedgst {
+    }
+
+    .nodedgst .digest {
+        width: 75px;
+        height: 24px;
+    }
+
+    .nodedgst .digestX {
+        font-size: 14px;
+    }
+
+    /* S/N */
+    .nodemser input {
+        text-align: center;
+        width: 150px;
+    }
+
+    /* Lag */
+    .nodeslag {
+        position: relative;
+        max-width: 51px;
+    }
+
+    .nodeslag input {
+        max-width: 41px;
+        padding-right: 5px;
+    }
+
+    .nodesndf {
+        
+    }
+
+
+    /* TXLog */
+    .nodetlog {
+        position: relative;
+        max-width: 80px;
+    }
+
+    .nodetlog input {
+        max-width: 70px;
+    }
+
+    .nodeztxl {
+    }
+
+    input.scheme-nominal, .scheme-nominal {
+        border-color: #444444;
+        color: #0000C0;
+        background-color: #EEEEEE;
+    }
+
+    input.scheme-nominalblack, .scheme-nominalblack {
+        border-color: #444444;
+        color: #444444;
+        background-color: #EEEEEE;
+    }
+
+    input.scheme-disabled, .scheme-disabled {
+        border-color: #B8B8B8;
+        color: #808080;
+        background-color: #E8E8E8;
+    }
+
+    input.scheme-green, .scheme-green {
+        border-color: #007050;
+        color: #007050;
+        background-color: #EAFAF1;
+    }
+
+    input.scheme-greeninv, .scheme-greeninv {
+        border-color: #007050;
+        color: #EAFAF1;
+        background-color: #007050;
+    }
+
+    input.scheme-gray, .scheme-gray {
+        border-color: #AAAAAA;
+        color: #AAAAAA;
+        background-color: #EEEEEE;
+    }
+
+    input.scheme-gray2 {
+        border-color: #888888;
+        color: #888888;
+        background-color: #EEEEEE;
+    }
+
+    input.scheme-gray3, .scheme-gray3 {
+        border-color: #F8F8F8;
+        color: #3F3F3F;
+        background-color: #F8F8F8;
+    }
+
+    input.scheme-gray4, .scheme-gray4 {
+        border-color: #F8F8F8;
+        color: #3F3F3F;
+        background-color: #F1F1F1;
+    }
+
+    input.scheme-grayinv, .scheme-grayinv {
+        border-color: #AAAAAA;
+        color: #EEEEEE;
+        background-color: #AAAAAA;
+    }
+
+    input.scheme-black, .scheme-black {
+        border-color: #000000;
+        color: #000000;
+        background-color: #EEEEEE;
+    }
+
+    input.scheme-blackinv, .scheme-blackinv {
+        border-color: #000000;
+        color: #EEEEEE;
+        background-color: #000000;
+    }
+
+    input.scheme-dark1, .scheme-dark1 {
+        border-color: #AAAAAA;
+        color: #000000;
+        background-color: #CCCCCC;
+    }
+
+    input.scheme-dark2, .scheme-dark2 {
+        border-color: #444444;
+        color: #F1F1F1;
+        background-color: #444444;
+    }
+
+    input.scheme-orange1, .scheme-orange1{
+        border-color: #6E2C00;
+        color: #6E2C00;
+        background-color: #F9E79F;
+    }
+
+    input.scheme-orange2, .scheme-orange2 {
+        border-color: #6E2C00;
+        color: #6E2C00;
+        background-color: #F4D03F;
+    }
+
+    input.scheme-orange3, .scheme-orange3 {
+        border-color: #6E2C00;
+        color: #6E2C00;
+        background-color: #F1C40F;
+    }
+
+    input.scheme-orange4, .scheme-orange4 {
+        border-color: #582300;
+        color: #582300;
+        background-color: #FDA112;
+    }
+
+    input.scheme-orange5, .scheme-orange5 {
+        border-color: #6E2C00;
+        color: #F6DDCC;
+        background-color: #E67E22;
+    }
+
+    input.scheme-orange6, .scheme-orange6 {
+        border-color: #D35400;
+        color: #F6DDCC;
+        background-color: #D35400;
+    }
+
+    input.scheme-orangeinv, .scheme-orangeinv {
+        border-color: #7d6608;
+        color: #F9E79F;
+        background-color: #7d6608;
+    }
+
+    input.scheme-blue, .scheme-blue {
+        border-color: #1F618D;
+        color: #1F618D;
+        background-color: #EAF2F8;
+    }
+
+    input.scheme-blueinv, .scheme-blueinv {
+        border-color: #1F618D;
+        color: #EAF2F8;
+        background-color: #1F618D;
+    }
+
+    input.scheme-purple, .scheme-purple {
+        border-color: #6C3483;
+        color: #6C3483;
+        background-color: #E8DAEF;
+    }
+
+    input.scheme-purpleinv, .scheme-purpleinv {
+        border-color: #6C3483;
+        color: #E8DAEF;
+        background-color: #6C3483;
+    }
+
+    input.scheme-red, .scheme-red {
+        border-color: #DD2000;
+        color: #DD2000;
+        background-color: #FDEDEC;
+    }
+
+    input.scheme-redinv, .scheme-redinv {
+        border-color: #DD2000;
+        color: #FDEDEC;
+        background-color: #DD2000;
+    }
+
+    input.actionable {
+        font-family: Helvetica, sans-serif;
+        font-weight: bold;
+        font-size: 12px !important;
+        background-color: #E8E8E8;
+        color: #000000 !important;
+        text-align: center;
+        border-color: #000000;
+        border-style: groove;
+        border: groove 2px;
+    }
+
+    input.mtrx-actionable {
+        font-family: Helvetica, sans-serif;
+        font-weight: bold;
+        font-size: 12px !important;
+        text-align: center;
+        border-color: #000000;
+        border-style: groove;
+        border: groove 2px;
+    }
+
+    input.txactionable {
+        font-weight: bold !important;
+        font-size: 9px !important;
+        color: #EEEEEE !important;
+        text-align: center !important;
+        border: solid 1px;
+        border-color: #000000;
+
+    }
+
+    input.txactionable-gr {
+        color: #000000 !important;
+        border-color: #000000 !important;
+        background-color: #E0E0E0 !important;
+        opacity: 1.0 !important;
+    }
+
+    input.nodialog {
+        /*color: #260c0c !important;*/
+        border-color: #d7c2c2 !important;
+    }
+
+    input.action-confirming {
+        background-image: linear-gradient(to right, #E0E0E0, #E0E0E0);
+        background-color: unset;
+        color: #000000;
+    }
+
+    input.action-confirmed {
+        background-image: unset;
+        background-color: #E0C0C0;
+        color: #000000 !important;
+    }
+
+    .busy {
+        filter: blur(1px);
+        opacity: 0.5;
+        cursor: progress !important;
+    }
+
+    input.clickable {
+        cursor: pointer !important;
+    }
+
+    td.clickable {
+        cursor: pointer !important;
+    }
+
+
+    .blinktext {
+        animation: softBlinkText 0.5s infinite;
+    }
+
+    @keyframes softBlinkText {
+        0% { color: #ffffff; }
+        90% { color: #ffcccc; }
+        100% { color: #ff0000; }
+    }
+
+    /* Modal Styling */
+    .modalprompt {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modalprompt-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background-color: #F1F1F1;
+        padding: 20px;
+        border-radius: 5px;
+        border: solid 1px;
+        border-color: #444444;
+        width: 435px;
+        text-align: center;
+    }
+
+    .modalprompt-content input {
+        width: 100%;
+        padding: 8px;
+        margin: 10px 0;
+    }
+
+    .modalprompt-content button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        height: 25px;
+        width: 80px;
+        padding: 0 16px;
+        box-sizing: border-box;
+        line-height: 1;
+        font-size: 14px;
+        border: groove 2px;
+        cursor: pointer;
+        background-color: #DCDCDC;
+    }
+
+    /* Wrapper for buttons to place them side by side */
+    .modalprompt-content .modalprompt-buttons {
+        display: flex; /* Flexbox to arrange buttons horizontally */
+        flex-direction: row; /* Side by side */
+        justify-content: center; /* Center buttons in the container */
+        gap: 10px; /* Space between buttons */
+    }
+
+    #modalprompt-ok:hover, #modalprompt-cancel:hover {
+        border: solid 1px;
+    }
+
+    #modalprompt-ok:active, #modalprompt-cancel:active {
+        transform: translate(1px, 1px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    #modalprompt-title {
+        display: flex;
+        margin-top: -10px;
+        background: #444444;
+        color: #F1F1F1;
+        justify-content: center;
+        align-items: center;
+        height: 30px;
+        border-radius: 5px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    #modalprompt-message {
+        display: flex;
+        margin-top: 30px;
+        margin-bottom: 30px;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-family: Consolas, Menlo, courier;
+        font-size: 16px;
+        font-weight: normal;
+        white-space: pre-wrap;
+    }
+
+    #modalprompt-inputlabel {
+        display: flex;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        justify-content: left;
+        align-items: center;
+        font-size: 16px;
+        font-weight: normal;
+    }
+
+    #modalprompt-input {
+        margin-top: 0px;
+        font-family: Consolas, Menlo, courier;
+        font-weight: bold;
+    }
+
+</style>
+
+<script>
+
+
+    async function showModal(title, message, inputlabel, dflt=null, isConfirm=false, isError=false) {
+        return new Promise((resolve) => {
+            // Modal elements
+            const modalPrompt = document.getElementById('modalprompt');
+            const modalTitle = document.getElementById('modalprompt-title');
+            const modalMessage = document.getElementById('modalprompt-message');
+            const modalInputLabel = document.getElementById('modalprompt-inputlabel');
+            const modalInput = document.getElementById('modalprompt-input');
+            const modalOk = document.getElementById('modalprompt-ok');
+            const modalCancel = document.getElementById('modalprompt-cancel');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalMessage.style.fontWeight = isConfirm ? 'bold' : 'normal';
+
+            modalInputLabel.textContent = inputlabel != null ? inputlabel : '';
+            modalInput.style.display = (isConfirm || isError) ? 'none' : 'flex';
+            modalCancel.style.display = isError ? 'none' : 'flex';
+            modalPrompt.style.display = 'flex';
+
+            // Clear input and focus
+            modalInput.value = dflt != null ? dflt : '';
+
+            // Show modal after a microtask to ensure event loop clears
+            queueMicrotask(() => {
+                // Focus appropriate element
+                if (isConfirm || isError) {
+                    modalOk.focus(); // Focus OK button in confirm mode
+                } else {
+                    modalInput.focus(); // Focus input in input mode
+                }
+            });
+
+            // OK button handler
+            const okHandler = () => {
+                modalPrompt.style.display = 'none';
+                resolve((isConfirm || isError) ? true : modalInput.value);
+                cleanup();
+            };
+            modalOk.onclick = okHandler;
+
+            // Cancel button handler
+            const cancelHandler = () => {
+                modalPrompt.style.display = 'none';
+                resolve(false);
+                cleanup();
+            };
+            modalCancel.onclick = cancelHandler;
+
+            // Enter key handler for input mode
+            const enterKeyHandler = (e) => {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault(); // Prevent form submission or other defaults
+                    e.stopPropagation(); // Stop event from bubbling
+                    if (document.activeElement === modalInput || document.activeElement === modalOk) {
+                        okHandler(); // Trigger OK action
+                    }
+                    else if (document.activeElement === modalCancel) {
+                        cancelHandler();
+                    }
+                }
+            };
+            if (isConfirm || isError) {
+                modalPrompt.addEventListener('keydown', enterKeyHandler);
+            }
+            else {
+                modalInput.addEventListener('keydown', enterKeyHandler);
+            }
+
+            // Esc key handler (already in place)
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop event from bubbling
+                    modalPrompt.style.display = 'none';
+                    resolve(false);
+                    cleanup();
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+
+            // Cleanup event listeners
+            function cleanup() {
+                modalOk.onclick = null;
+                modalCancel.onclick = null;
+                if (isConfirm || isError) {
+                    modalPrompt.removeEventListener('keydown', enterKeyHandler);
+                }
+                else {
+                    modalInput.removeEventListener('keydown', enterKeyHandler);
+                }
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+    }
+
+    // getUserInput
+    function getUserInput(title, message, inputlabel, dflt, callback) {
+        showModal(title, message, inputlabel, dflt).then( (result) => callback(result) );
+    }
+
+    // getUserConfirm
+    function getUserConfirm(title, message, inputlabel, dflt, callback) {
+        showModal(title, message, inputlabel, dflt, true).then( (result) => callback(result) );
+    }
+
+    // showUserError
+    function showUserError(title, message, callback) {
+        showModal(title, message, null, null, false, true).then( (result) => callback(result) );
+    }
+
+
+
+
+    class StatusColor {
+
+        static update( elem, colorScheme ) {
+            let classList = elem.attr("class").split(/\s+/);
+            for (let i = classList.length - 1; i >= 0; i--) {
+                const name = classList[i];
+                if (name.startsWith('scheme-')) {
+                    elem.removeClass(name);
+                }
+            }
+            if (colorScheme != null) {
+                elem.addClass("scheme-" + colorScheme);
+            }
+        }
+    }
+
+
+    class NodeStatus {
+        static OK           = Symbol("OK");
+        static Busy         = Symbol("Busy");
+        static SerialDiff   = Symbol("SerialDiff");
+        static NoInput      = Symbol("NoInput");
+        static ServiceOut   = Symbol("ServiceOut");
+        static Sync         = Symbol("Sync");
+        static Persist      = Symbol("Persist");
+        static Down         = Symbol("Down");
+        static Partial      = Symbol("Partial");
+        static Inconsistent = Symbol("Inconsistent");
+        static Degraded     = Symbol("Degraded");
+        static Warning      = Symbol("Warning");
+        static MemWarningLO = Symbol("MemWarningLO");
+        static MemWarningHI = Symbol("MemWarningHI");
+        static MemCritical  = Symbol("MemCritical");
+        static Readonly     = Symbol("Readonly");
+        static Initializing = Symbol("Initializing");
+        static Unknown      = Symbol("Unknown");
+
+        static warnings = new Set([
+            NodeStatus.SerialDiff,
+            NodeStatus.NoInput,
+            NodeStatus.ServiceOut,
+            NodeStatus.Down,
+            NodeStatus.Partial,
+            NodeStatus.Inconsistent,
+            NodeStatus.Degraded,
+            NodeStatus.Warning,
+            NodeStatus.MemWarningHI,
+            NodeStatus.MemCritical
+        ]);
+
+
+        static update(element, state, cache) {
+
+            switch (state) {
+            case NodeStatus.OK:
+                element.val( "OK" );
+                StatusColor.update( element, "green" );
+                break;
+            case NodeStatus.Busy:
+                element.val( "Busy" );
+                StatusColor.update( element, "orange1" );
+                break;
+            case NodeStatus.SerialDiff:
+                if (cache.sndiff < 1000) {
+                    element.val("S/N -" + cache.sndiff);
+                    StatusColor.update(element, "green");
+                }
+                else {
+                    element.val("S/N");
+                    StatusColor.update(element, "orange2");
+                }
+                break;
+            case NodeStatus.NoInput:
+                element.val( "No Input" );
+                StatusColor.update( element, "orange2" );
+                break;
+            case NodeStatus.ServiceOut:
+                element.val( "S-OUT" );
+                StatusColor.update( element, "grayinv" );
+                break;
+            case NodeStatus.Sync:
+                element.val( "Sync " + cache.sync_progress + "%" );
+                StatusColor.update( element, "orange1" );
+                break;
+            case NodeStatus.Persist:
+                element.val( "Snapshot" );
+                StatusColor.update( element, "orange1" );
+                break;
+            case NodeStatus.Down:
+                element.val( "Down" );
+                StatusColor.update( element, "redinv" );
+                break;
+            case NodeStatus.Partial:
+                element.val( "Partial" );
+                StatusColor.update( element, "orange4" );
+                break;
+            case NodeStatus.Inconsistent:
+                element.val( "OK/Delta" );
+                StatusColor.update( element, "orange2" );
+                break;
+            case NodeStatus.Degraded:
+                element.val( "Degraded" );
+                StatusColor.update( element, "orange3" );
+                break;
+            case NodeStatus.Warning:
+                element.val( "Warning" );
+                StatusColor.update( element, "orange2" );
+                break;
+            case NodeStatus.MemWarningLO:
+                element.val( "Memory" );
+                StatusColor.update( element, "orange2" );
+                break;
+            case NodeStatus.MemWarningHI:
+                {
+                const total_pct = (100 * (cache.mem_tot - cache.mem_avail) / cache.mem_tot).toFixed(0);
+                element.val( "Mem " + total_pct + "%" );
+                StatusColor.update( element, "orange4" );
+                }
+                break;
+            case NodeStatus.MemCritical:
+                {
+                const total_pct = (100 * (cache.mem_tot - cache.mem_avail) / cache.mem_tot).toFixed(0);
+                element.val( "! MEM " + total_pct + "%" );
+                StatusColor.update( element, "orange6" );
+                }
+                break;
+            case NodeStatus.Readonly:
+                element.val( "Readonly" );
+                StatusColor.update( element, "purple" );
+                break;
+            case NodeStatus.Initializing:
+                element.val( "Init..." );
+                StatusColor.update( element, "black" );
+                break;
+            case NodeStatus.Unknown:
+                element.val( "..." );
+                StatusColor.update( element, "black" );
+                break;
+            default:
+                element.val( "???" );
+                StatusColor.update( element, "purple" );
+            }
+        }
+
+        static isWarning(state) {
+            return NodeStatus.warnings.has(state);
+        }
+
+    }
+
+
+    class NodeType {
+        static Admin      = Symbol("Admin");
+        static Builder    = Symbol("Builder");
+        static TXProxy    = Symbol("TXProxy");
+        static Search     = Symbol("Search");
+        static Dispatch   = Symbol("Dispatch");
+        static Generic    = Symbol("Generic");
+        static Aggregate  = Symbol("Aggregate");
+
+
+        static update(element, ntyp) {
+            element.addClass("disable-select");
+            element.prop("disabled", true);
+            element.css("text-align", "center");
+
+            switch (ntyp) {
+            case NodeType.Admin:
+                element.val( "Admin" );
+                StatusColor.update( element, "greeninv" );
+                break;
+            case NodeType.Builder:
+                element.val( "Builder" );
+                StatusColor.update( element, "purpleinv" );
+                break;
+            case NodeType.TXProxy:
+                element.val( "TXProxy" );
+                StatusColor.update( element, "purple" );
+                break;
+            case NodeType.Search:
+                element.val( "Search" );
+                StatusColor.update( element, "blueinv" );
+                break;
+            case NodeType.Dispatch:
+                element.val( "Dispatch" );
+                StatusColor.update( element, "blue" );
+                break;
+            case NodeType.Generic:
+                element.val( "Generic" );
+                StatusColor.update( element, "black" );
+                break;
+            case NodeType.Aggregate:
+                element.val( "Aggregate" );
+                StatusColor.update( element, "gray2" );
+                break;
+            default:
+                element.val( "?" );
+            }
+        }
+
+
+        static hasTX(ntyp) {
+            switch (ntyp) {
+            case NodeType.Builder:
+            case NodeType.TXProxy:
+            case NodeType.Search:
+            case NodeType.Generic:
+                return true;
+            }
+            return false;
+        }
+
+
+        static hasData(ntyp) {
+            switch (ntyp) {
+            case NodeType.Builder:
+            case NodeType.TXProxy:
+            case NodeType.Search:
+            case NodeType.Generic:
+                return true;
+            }
+            return false;
+        }
+
+
+        static isSearch(ntyp) {
+            switch (ntyp) {
+            case NodeType.Search:
+            case NodeType.Dispatch:
+            case NodeType.Generic:
+                return true;
+            }
+            return false;
+        }
+
+
+    }
+
+
+
+    // The Page object
+    let page = null;
+
+    function showWelcomeInfo() {
+        const actionBypassToggle = "to bypass dialog for state toggle operations";
+        const actionBypassData = "three times to bypass dialog for data transfer operations";
+        const actionEdit = "Edit instance ID in dialogs to perform multi-node operations (using '*')";
+        const openNewWindow = "to open link in new window";
+        const openThisWindow = "to open link in this window";
+        const openNewTab = "to open link in new tab";
+
+        let shiftAltClick;
+        let ctrlClick;
+        if (window.navigator.platform.toLowerCase().includes("mac")) {
+            shiftAltClick = "Shift-Opt-click ";
+            ctrlClick = "Cmd-click ";
+        }
+        else {
+            shiftAltClick = "Shift-Alt-click ";
+            ctrlClick = "Ctrl-click ";
+        }
+
+        const info =
+            "Actions:\n" +
+            "    * " + shiftAltClick + actionBypassToggle + "\n" +
+            "    * " + shiftAltClick + actionBypassData + "\n" +
+            "    * " + actionEdit + "\n" +
+            "\n" +
+            "Links:\n" +
+            "    * " + "Click " + openNewWindow + "\n" +
+            "    * " + "Shift-click " + openThisWindow + "\n" +
+            "    * " + ctrlClick + openNewTab + "\n";
+
+        $('#descriptorSysinfoArea').removeClass( "hidearea" );
+        $('#recentAction').val(info);
+        $('#recentAction').css("visibility", "visible");
+
+    }
+
+
+
+    function showActionButtons() {
+        page.pause();
+        $('.nodeRow').each(function (i) {
+            let row = $(this);
+            if (row.data('up') == true) {
+                // Matrix
+                let mtrxElem = row.find('.nodemtrx input');
+                let s_in = mtrxElem.data('s_in');
+                if (s_in != null) {
+                    mtrxElem.addClass('actionable');
+                    mtrxElem.data('s_in_txt', mtrxElem.val());
+                    if (s_in) {
+                        mtrxElem.val("S-OUT");
+                    }
+                    else {
+                        mtrxElem.val("S-IN");
+                    }
+                }
+                // Rate
+                let rateElem = row.find('.noderate input');
+                if (rateElem.data('rate') != null) {
+                    rateElem.addClass('actionable');
+                    rateElem.val("\u{21BB} Restart");
+                }
+                // Memory
+                let mmryElem = row.find('.nodemmry');
+                let mprcElem = row.find('.nodemprc');
+                let mtotElem = row.find('.nodemtot');
+                mmryElem.data("rmmry", mmryElem.val());
+                mmryElem.addClass('actionable');
+                mmryElem.removeClass('nodebars');
+                mmryElem.parent().addClass('nodecell nodevalu');
+                mmryElem.data("max-width", mmryElem.css("max-width"));
+                mmryElem.css("max-width", "97px");
+                mmryElem.val("Snapshot");
+                mprcElem.data("rmprc", mprcElem.val());
+                mprcElem.val("\u{2026}");
+                mtotElem.data("rmtot", mtotElem.val());
+                mtotElem.val("\u{2026}");
+                mtotElem.css("visibility", "hidden");
+                // Order
+                let ordrElem = row.find('.nodeordr input');
+                if (ordrElem.data('order') != null && ordrElem.data('subs') == true) {
+                    ordrElem.addClass('actionable');
+                    ordrElem.val("\u{25C0}\u{25C0} RevSync");
+                }
+                // Size
+                let sizeElem = row.find('.nodesize input');
+                if (sizeElem.data('size') != null && sizeElem.data('subs') == true) {
+                    sizeElem.addClass('actionable');
+                    sizeElem.val("FwdSync \u{25B6}\u{25B6}");
+                }
+                // TX
+                let txElem = row.find('.nodetx');
+                txElem.each(function (i) {
+                    let e = $(this);
+                    if (e.attr('id') != null) {
+                        e.addClass('txactionable');
+                        let tx = e.val();
+                        e.data('tx', tx);
+                        switch (e.data('txtype')) {
+                            case "subs":
+                                if (tx == "") {
+                                    //e.val("\u{25EF}");
+                                    e.val("\u{25B6}");
+                                    e.addClass('txactionable-gr');
+                                }
+                                else {
+                                    e.val("\u{2573}");
+                                }
+                                break;
+                            case "out":
+                            case "in":
+                                if (tx != "") {
+                                    if (e.data('tx').includes("\u{258D}")) {
+                                        e.val("\u{25BA}");
+                                    }
+                                    else {
+                                        e.val("\u{258D}\u{258D}");
+                                    }
+                                }
+                                break;
+                            case "lag":
+                                if (tx != "") {
+                                    e.val("\u{23CF}");
+                                }
+                                break;
+                        }
+                    }
+                });
+                // Digest
+                let dgstSpan = row.find('.digest');
+                if (dgstSpan.data('digest') != null && dgstSpan.data('subs') == true) {
+                    let width = dgstSpan.width()-5;
+                    dgstSpan.html('<input class="disable_select actionable" type="text" disabled>');
+                    let elem = dgstSpan.children("input");
+                    elem.val("Repair");
+                    elem.css("width", width + "px");
+                    //elem.css("height", 1+height + "px");
+                    dgstSpan.addClass('nodecell nodevalu');
+                    dgstSpan.off("mousedown");
+                    dgstSpan.off("mouseup");
+                    dgstSpan.on("mousedown", function (eventObj) {
+                        this.addClass("mousedown");
+                    }.bind(elem));
+                    dgstSpan.on("mouseup", function (eventObj) {
+                        this.removeClass("mousedown");
+                    }.bind(elem));
+                }
+                // S/N
+                let mserElem = row.find(".nodemser input");
+                if (mserElem.data('serial') != null && mserElem.data('subs') == true) {
+                    mserElem.addClass('actionable');
+                    mserElem.parent().addClass('nodevalu');
+                    mserElem.val("Rolling Update");
+                }
+            }
+        });
+    }
+
+
+
+    function hideActionButtons() {
+        repeatedActionCounter = 0;
+        $('.nodialog').removeClass("nodialog");
+        $('.nodeRow').each(function (i) {
+            let row = $(this);
+            row.find('input').css('background-image', '');
+            clearActionButtonConfirming();
+            // Matrix
+            let mtrxElem = row.find('.nodemtrx input');
+            mtrxElem.removeClass('actionable');
+            let s_in_txt = mtrxElem.data('s_in_txt');
+            if (s_in_txt != null) {
+                mtrxElem.val(s_in_txt);
+            }
+            // Rate
+            let rateElem = row.find('.noderate input');
+            rateElem.removeClass('actionable');
+            let rate = rateElem.data('rate');
+            if (rate != null) {
+                if (mtrxElem.data('s_in') == true) {
+                    rateElem.val(rate.toFixed(1));
+                }
+                else {
+                    rateElem.val("-.-");
+                }
+            }
+            // Memory
+            let mmryElem = row.find('.nodemmry');
+            let mprcElem = row.find('.nodemprc');
+            let mtotElem = row.find('.nodemtot');
+            mmryElem.removeClass('actionable');
+            mmryElem.css("max-width", mmryElem.data("max-width"));
+            mmryElem.addClass('nodebars');
+            mprcElem.removeClass('txactionable');
+            mtotElem.removeClass('txactionable');
+            mmryElem.parent().removeClass('nodecell nodevalu');
+            let rmmry = mmryElem.data('rmmry');
+            if (rmmry != null) {
+                mmryElem.val(rmmry);
+            }
+            let rmprc = mprcElem.data('rmprc');
+            if (rmprc != null) {
+                mprcElem.val(rmprc);
+            }
+            let rmtot = mtotElem.data('rmtot');
+            if (rmtot != null) {
+                mtotElem.val(rmtot);
+                mtotElem.css("visibility", "visible");
+            }
+            // Order
+            let ordrElem = row.find('.nodeordr input');
+            ordrElem.removeClass('actionable');
+            let order = ordrElem.data('order');
+            if (order != null) {
+                ordrElem.val(order.toLocaleString("en-US"));
+            }
+            // Size
+            let sizeElem = row.find('.nodesize input');
+            sizeElem.removeClass('actionable');
+            let size = sizeElem.data('size');
+            if (size != null) {
+                sizeElem.val(size.toLocaleString("en-US"));
+            }
+            // TX
+            let txElem = row.find('.nodetx');
+            txElem.removeClass('txactionable txactionable-gr');
+            txElem.each(function (i) {
+                let e = $(this);
+                if (e.data('tx') != null) {
+                    e.val(e.data('tx'));
+                }
+            });
+            // Digest
+            let dgstSpan = row.find('.digest');
+            let digest = dgstSpan.data('digest');
+            let elem = dgstSpan.children("input");
+            elem.removeClass('actionable');
+            if (digest != null) {
+                new Digest(dgstSpan).update(digest);
+            }
+            // S/N
+            let mserElem = row.find('.nodemser input');
+            let serial = mserElem.data('serial');
+            if (serial != null) {
+                mserElem.removeClass('actionable');
+                mserElem.parent().removeClass('nodevalu');
+                mserElem.val(serial);
+            }
+        });
+        page.resume();
+    }
+
+
+
+    function bypassDialog() {
+        let a = $('.actionable');
+        a.addClass('nodialog');
+    }
+
+
+
+    function requireDialog() {
+        $('.nodialog').removeClass("nodialog");
+    }
+
+
+
+
+    function clearActionButtonConfirming() {
+        $('.action-confirmed').each(function (i) {
+            $(this).removeClass("action-confirmed");
+        });
+        $('.action-confirming').each(function (i) {
+            $(this).removeClass("action-confirming");
+        });
+    }
+
+
+    function clearActionIndicators() {
+        $('#recentAction').removeClass("softblink");
+        $('#mainBody').removeClass("busy");
+        clearActionButtonConfirming();
+        hideActionButtons();
+    }
+
+
+    function parseIdSpec(idSpec) {
+        let idSpecClean = idSpec.replace(/\s*,\s*/g, ",");
+        idSpecClean = idSpecClean.replace(/\s+/g, ",");
+        let idSpecList = [...new Set(idSpecClean.split(","))];
+        idSpecClean = idSpecList.join(",");
+        const m = idSpecClean.match(/\*/g);
+        if (m !== null && m.length > 1) {
+            throw "Invalid instance name(s)";
+        }
+        return idSpecClean;
+    }
+
+
+    function execVGXAdmin(vgxadmin) {
+        $('#recentAction').val("Performing:\n\n" + vgxadmin + "\n...");
+        $('#recentAction').addClass("softblink");
+        $('#mainBody').addClass("busy");
+        $.get("/vgx/builtin/ADMIN_GetAuthToken", function (data, textStatus, jqXHR) {
+            const authToken = data["response"]["authtoken"];
+            let url = "/vgx/builtin/ADMIN_Console?graph=_system&authtoken=" + authToken;
+            $.post(url, vgxadmin, function (data, textStatus, jqXHR) {
+                try {
+                    const responseRaw = data["response"];
+                    if (responseRaw != null) {
+                        const resultArray = responseRaw["result"];
+                        if (resultArray == null) {
+                            throw "" + responseRaw;
+                        }
+                        else if (!Array.isArray(resultArray)) {
+                            throw "" + resultArray;
+                        }
+                        const resultOutput = resultArray.slice(1);
+                        let results = [];
+                        for (const output of resultOutput) {
+                            let item = null;
+                            if (typeof output === 'string') {
+                                item = output;
+                            }
+                            else {
+                                let instance = output[0].split(" ")[0];
+                                let performed = output[1];
+                                let action = null;
+                                if (performed == null) {
+                                    action = "No Action";
+                                }
+                                else if (typeof performed === 'object' && "action" in performed) {
+                                    action = performed["action"];
+                                }
+                                else if (typeof performed === 'object') {
+                                    action = Object.keys(performed).join(", ");
+                                }
+                                else if (performed) {
+                                    action = JSON.stringify(performed, null, 4);
+                                }
+                                item = instance + ": " + action;
+                            }
+                            results.push(item);
+                        }
+                        results.sort();
+                        let result = "";
+                        for (const item of results) {
+                            result = result + item + "\n";
+                        }
+                        const recent = "Last Action:\n" + vgxadmin + "\n\nResult:\n" + result;
+                        $('#recentAction').val(recent);
+                    }
+                    else {
+                        const messageRaw = data["message"];
+                        if (messageRaw != null) {
+                            const message = JSON.stringify(messageRaw, null, 4);
+                            $('#recentAction').val(message);
+                        }
+                        else {
+                            $('#recentAction').val("" + data);
+                        }
+                    }
+                }
+                catch (error) {
+                    $('#recentAction').val("ERROR: " + error);
+                }
+                finally {
+                    clearActionIndicators();
+                }
+            }, "json").fail(function (xhr, txt, err) {
+                $('#recentAction').val(xhr["responseText"] + " | " + txt + " | " + err);
+                clearActionIndicators();
+            });
+        }).fail(function (xhr, txt, err) {
+            $('#recentAction').val(xhr["responseText"] + " | " + txt + " | " + err);
+            clearActionIndicators();
+        });
+
+    }
+
+
+    function performVGXAdmin(command, idSpec, commandExt = null) {
+        let vgxadmin = "vgxadmin";
+        if (typeof command === 'string') {
+            vgxadmin += " " + command + " " + idSpec;
+        }
+        else {
+            for (let subcmd of command) {
+                vgxadmin += " " + subcmd + " " + idSpec;
+            }
+        }
+        if (commandExt != null) {
+            vgxadmin = vgxadmin + commandExt;
+        }
+        if (idSpec.includes("--")) {
+            $('#recentAction').val("Illegal action: " + vgxadmin);
+            return;
+        }
+
+        if (idSpec.includes("*")) {
+            getUserConfirm("Perform MULTI-NODE command", vgxadmin, null, null, (answer) => {
+                if (answer == true) {
+                    execVGXAdmin(vgxadmin);
+                }
+            }); 
+        }
+        else {
+            execVGXAdmin(vgxadmin);
+        }
+
+    }
+
+
+    function reallyMeanIt(eventObj) {
+        return eventObj.shiftKey && eventObj.altKey;
+    }
+
+
+    function transitionState(idSpec, command, current, next, title, noConfirm) {
+        let idSpecAnswer = idSpec;
+        if (!noConfirm) {
+            const transition = "[" + current + "] \u2794 [" + next + "]";
+            const message = "" + transition;
+            getUserInput(title, message, 'Specify instance(s)', idSpec, (idSpecAnswer) => {
+                if (idSpecAnswer) {
+                    try {
+                        const idSpecClean = parseIdSpec(idSpecAnswer);
+                        const confirmMessage = idSpecClean + " \u2794 [" + next + "]";
+                        getUserConfirm(title, confirmMessage, null, null, (answer) => {
+                            if (answer == true) {
+                                performVGXAdmin( command, idSpecClean );
+                            }
+                        });
+                    }
+                    catch(error) {
+                        showUserError(title, ""+error, () => {
+                        });
+                    }
+                }
+            });
+
+        }
+        else {
+            performVGXAdmin( command, idSpecAnswer );
+        }
+    }
+
+
+    let lastAction = null;
+    let repeatedActionCounter = 0;
+
+    function performOperation(target, idSpec, command, title, commandExt = null, message = null, confirmKey = null, noConfirm = false, repeatToConfirm = 0) {
+        let idSpecAnswer = idSpec;
+        if (!noConfirm) {
+            if (message == null) {
+                message = "";
+            }
+            message += "\n\n";
+
+            getUserInput(title, message, 'Specify instance(s)', idSpec, (idSpecAnswer) => {
+                if (idSpecAnswer) {
+                    const idSpecClean = parseIdSpec(idSpecAnswer);
+                    let question = idSpecClean + " " + "\n\n" + message;
+                    let answer = false;
+                    if (confirmKey == null) {
+                        question = question + "Are You Sure ?";
+                        getUserConfirm(title, question, null, null, (answer) => {
+                            if (answer == true) {
+                                performVGXAdmin( command, idSpecClean, commandExt );
+                            }
+                        });
+
+                    }
+                    else {
+                        const howToConfirm = "Enter '" + confirmKey + "' to proceed";
+                        getUserInput(title, question, howToConfirm, null, (value) => {
+                            if (value == confirmKey) {
+                                performVGXAdmin( command, idSpecClean, commandExt );
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        else {
+            let actionIdent = "";
+            if (typeof command === 'string') {
+                actionIdent += command;
+            }
+            else {
+                actionIdent += command.join("--");
+            }
+            actionIdent += "__" + idSpecAnswer + "__" + (commandExt != null ? commandExt : "");
+            if (actionIdent == lastAction) {
+                repeatedActionCounter += 1;
+            }
+            else {
+                repeatedActionCounter = 1;
+                lastAction = actionIdent;
+            }
+            let inputs = target.getElementsByTagName('input');
+            for (let elem of inputs) {
+                //elem.style.background = "rgb(255," + n + "," + n + ")";
+                let remain = repeatToConfirm - repeatedActionCounter;
+                if (remain > 0) {
+                    elem.classList.remove('action-confirmed');
+                    elem.classList.add('action-confirming');
+                    let pink = "#E0C0C0";
+                    let pivots = [];
+                    for (let i = 0; i < repeatToConfirm; i++) {
+                        pivots.push(pink);
+                    }
+                    for (let i = pivots.length-1; i >= repeatedActionCounter ; i--) {
+                        pivots[i] = "#E0E0E0";
+                    }
+                    pivots.join(",");
+                    elem.style.backgroundImage = "linear-gradient(to right, " + pivots + ")";
+                }
+                else {
+                    elem.style.backgroundImage = "";
+                    elem.classList.remove('action-confirming');
+                    elem.classList.add('action-confirmed');
+                }
+            }
+            if (repeatedActionCounter < repeatToConfirm) {
+                return;
+            }
+            repeatedActionCounter = 0;
+            lastAction = null;
+            performVGXAdmin( command, idSpecAnswer, commandExt );
+        }
+    }
+
+
+    class Nodes {
+
+        // Thresholds
+        static memoryLowThreshold = 0.8;
+        static memoryHighThreshold = 0.83;
+        static memoryCriticalThreshold = 0.9;
+
+        static simulateBars = false;
+
+        lastRender = null;
+        pageDown = true;
+
+        nodeCache = {};
+
+        frozen = false;
+
+        idLabelSize = 2;
+
+        currentGroupInstances = [];
+        currentGroup = -1.0;
+        currentGroupTitle = null;
+        prevGroup = -1.0;
+        builderOrders = [];
+        builderSizes = [];
+        builderProperties = [];
+        builderVectors = [];
+        builderPartitions = 0;
+        totalInstances = 0;
+        uniqueHosts = [];
+        totalConsumedMemory = 0;
+        totalPhysicalMemory = 0;
+        systemStatus = "";
+
+        static noDigest = "0".repeat(32);
+
+        static simLog = {};
+        static simLinear = {}; 
+
+        static maxSerialLag = 1 << 14;
+
+        static simulateLogBars( N ) {
+            if (Nodes.simLog[N] == null) {
+                Nodes.simLog[N] = {
+                    "last": 0,
+                    "dir": 1
+                };
+            }
+            let sim = Nodes.simLog[N];
+            sim.last += sim.dir;
+            if (sim.last >= N) {
+                sim.dir = -1;
+            }
+            else if (sim.last <= 0) {
+                sim.dir = 1;
+            }
+            return sim.last;
+        }
+
+
+        static simulateLinearBars( N ) {
+            if (Nodes.simLinear[N] == null) {
+                Nodes.simLinear[N] = {
+                    "last": 0,
+                    "dir": 1
+                };
+            }
+            let sim = Nodes.simLinear[N];
+            sim.last += sim.dir;
+            if (sim.last >= N) {
+                sim.dir = -1;
+            }
+            else if (sim.last <= 0) {
+                sim.dir = 1;
+            }
+            return sim.last;
+        }
+
+
+        constructor() {
+            this.refreshSoon = true;
+            this.objCount = 0;
+        }
+
+
+        setTitleLink( elem, host, httpPort, page, descr = "" ) {
+            elem.off("click");
+            if (httpPort != null && httpPort > 0) {
+                const path = page ? "/" + page : "";
+                const uri = "http://" + host + ":" + httpPort + path;
+                elem.prop( "title", "" + descr + "\n" + uri );
+                elem.addClass('clickable');
+                elem.off("click");
+                elem.on("click", function(eventObj) {
+                    if( eventObj.shiftKey ) {
+                        window.open( uri, "_parent" );
+                    }
+                    else {
+                        window.open( uri, "_blank", "height=850, width=925" );
+                    }
+                }.bind(this));
+            }
+            else {
+                elem.removeProp("title");
+                elem.removeClass('clickable');
+            }
+        }
+
+
+        setAction( actionElem, visualElem, title, callback, cache ) {
+            actionElem.off("click");
+            actionElem.off("mousedown");
+            actionElem.off("mouseup");
+            if (title != null) {
+                actionElem.prop("title", title);
+            }
+            else {
+                actionElem.removeProp("title");
+            }
+            if (callback != null) {
+                actionElem.addClass('clickable');
+                //actionElem.css("cursor", "pointer");
+                actionElem.off("click");
+                actionElem.off("mousedown");
+                actionElem.off("mouseup");
+                actionElem.on("click", callback.bind(cache));
+                actionElem.on("mousedown", function (eventObj) {
+                    this.addClass("mousedown");
+                }.bind(visualElem));
+                actionElem.on("mouseup", function (eventObj) {
+                    this.removeClass("mousedown");
+                }.bind(visualElem));
+            }
+            else {
+                actionElem.css("cursor", "default");
+            }
+        }
+
+
+        getRGB_0_12( value ) {
+            const n = Math.max(0, Math.min(12, value));
+            let red, green, blue = 0; // Blue is always 0 for green-orange-red transition
+            const pivot = 10;
+            if (n <= pivot) {
+                red = Math.round((n / pivot) * 180); // Red: 0 to 180
+                if (n <= 8) {
+                    green = 230;
+                }
+                // 0 to pivot: Green (0, 230, 0) to less green (180, 220, 0)
+                else {
+                    green = Math.round(230 - (n / pivot) * (230 - 220)); // Green: 230 to 220
+                }
+            } else {
+                // pivot to 12: Orange (255, 165, 0) to Red (255, 0, 0)
+                red = 255; // Red stays 255
+                green = Math.round(165 - ((n - pivot) / 3) * 165); // Green: 165 to 0
+            }
+            let rgb = "rgb(" + red + "," + green + "," + blue + ")";
+            return rgb;
+        }
+
+
+        getLogBars(rate, maxBars, simulate=false) {
+            const x = 126976684; // rate -> 12
+            const a = maxBars / 12;
+            let n;
+            if (!simulate) {
+                n = Math.round( a * Math.log2(1 + (rate)/1024 ) / 1.41 );
+                if (n<1) {
+                    n = 1;
+                }
+                else if (n > maxBars) {
+                    n = maxBars;
+                }
+            }
+            else {
+                n = Nodes.simulateLogBars(maxBars);
+            }
+            let bars = "|".repeat(n);
+            return bars;
+        }
+
+
+        renderLogBars( rateElem, maxBars, rate ) {
+            let mult = 1;
+            if (rateElem.css("letter-spacing") == "-2px") {
+                mult = 3;
+                maxBars = Math.round( maxBars * mult );
+            }
+
+            if (rateElem == null) {
+                return false;
+            }
+            if (rate == null) {
+                rateElem.css("opacity", "0.2");
+                rateElem.val("");
+                return false;
+            }
+            else if (rate < 0) {
+                StatusColor.update(rateElem, "blueinv");
+                rateElem.css("opacity", "0.5");
+                rateElem.css("text-align", "center");
+                const pause = "\u{258D}\u{258D}";
+                rateElem.val( pause );
+                return true;
+            }
+            else {
+                let bars = this.getLogBars(rate, maxBars, Nodes.simulateBars);
+                let rgb = "rgb(66,176,243)";
+                if (rate > 256 || Nodes.simulateBars) {
+                    const n = Math.round(12 * bars.length / maxBars);
+                    rgb = this.getRGB_0_12(n);
+                }
+                rateElem.css("color", rgb);
+                rateElem.val(bars);
+                return true;
+            }
+        }
+
+
+        getLinearBars( maxBars, value, maxValue, simulate=false ) {
+            if (value != null && maxValue != null) {
+                let n;
+                if (!simulate) {
+                    n = Math.round( maxBars * value / maxValue );
+                    if (n>maxBars) {
+                        n = maxBars;
+                    }
+                    else if (n<1) {
+                        n = 1;
+                    }
+                }
+                else {
+                    n = Nodes.simulateLinearBars(maxBars);
+                }
+                let bars = "|".repeat(n);
+                return bars;
+            }
+            else {
+                return "";
+            }
+        }
+
+
+        renderLinearBars(valueElem, maxBars, value, maxValue, right=false, color=null) {
+            if (valueElem.css("letter-spacing") == "-2px") {
+                maxBars = Math.round( maxBars * 3 );
+            }
+            
+            /*if (Math.random() > 0.5) {
+                if (Math.random() > 0.5) {
+                    value = maxValue;
+                }
+                else {
+                    value = maxValue/2;
+                }
+            }*/
+
+            if (valueElem == null) {
+                return false;
+            }
+            if (maxBars == null || value == null) {
+                valueElem.css("opacity", "0.2");
+                valueElem.val("");
+                return false;
+            }
+            else {
+                let bars = this.getLinearBars(maxBars, value, maxValue, Nodes.simulateBars);
+                let rgb = "rgb(66,176,243)";
+                if ((value > 0 && color == null) || Nodes.simulateBars) {
+                    let n = Math.round(12 * bars.length / maxBars);
+                    rgb = this.getRGB_0_12(n);
+                }
+                else if (value > 0) {
+                    rgb = color;
+                }
+                else {
+                    bars = "|";
+                    rgb = "rgb(66,176,243)";
+                }
+                valueElem.css("color", rgb);
+                valueElem.val(bars + " ");
+                if (right) {
+                    valueElem.css("text-align", "right");
+                }
+                return true;
+            }
+        }
+
+
+        bytesToSuffix( bytes ) {
+            let suffix = "";
+            let divisor = 1;
+            if (bytes > 0x80000000) {
+                suffix = "GiB";
+                divisor = 0x40000000;
+            }
+            else if (bytes > 0x200000) {
+                suffix = "MiB";
+                divisor = 0x100000;
+            }
+            else {
+                suffix = "kiB";
+                divisor = 0x400;
+            }
+            let value = bytes / divisor;
+            if (value<999) {
+                return value.toFixed(1) + " " + suffix;
+            }
+            else {
+                return Math.round(value) + " " + suffix;
+            }
+        }
+
+        renderMatrix(cache, elem) {
+            let titleMatrix = cache.id + " Matrix State\n\nToggle S-IN/S-OUT";
+            if (!cache.s_in) {
+                elem.css("text-align", "center");
+                StatusColor.update(elem, "orange6");
+                elem.val("S-OUT");
+            }
+            else if (cache.matrix != null) {
+                const width = cache.matrix.length;
+                const height = width > 0 ? cache.matrix[0].length : 0;
+                let degraded = [];
+                let matrix = [];
+                let partial = false;
+                const dim = "" + height + "R x " + width + "P";
+                elem.val(dim);
+                for (const partition of cache.matrix) {
+                    let row = []
+                    let serving = 0;
+                    for (const replica of partition) {
+                        if (replica["serving"] != true) {
+                            degraded.push( replica["id"] );
+                            row.push(0);
+                        }
+                        else {
+                            serving++;
+                            row.push(1);
+                        }
+                    }
+                    matrix.push(row);
+                    if (serving < 1) {
+                        partial = true;
+                    }
+                }
+                if (height > 1) {
+                    titleMatrix += "\n\n" + height + " Rows, ";
+                }
+                else if (height == 1) {
+                    titleMatrix += "\n\n1 Row,";
+                }
+                else {
+                    titleMatrix += "\n\nEmpty";
+                }
+                if (width > 1) {
+                    titleMatrix += width + " Partitions";
+                }
+                else if (width == 1) {
+                    titleMatrix += "1 Partition";
+                }
+                let missing = "";
+                for (const ident of degraded) {
+                    missing += ident + "\n";
+                }
+                if (partial) {
+                    StatusColor.update(elem, "orange4");
+                    titleMatrix += "\n\nALL Unavailable:\n" + missing;
+                }
+                else if (degraded.length > 0) {
+                    StatusColor.update(elem, "orange2");
+                    titleMatrix += "\n\nUnavailable:\n" + missing;
+                }
+                else if (width > 0) {
+                    if (!(cache.matrix_complete === true)) {
+                        StatusColor.update(elem, "orange4");
+                        titleMatrix += "\n\nA sub-dispatcher is incomplete";
+                    }
+                    else if (!(cache.matrix_degraded === false)) {
+                        StatusColor.update(elem, "orange2");
+                        titleMatrix += "\n\nA sub-dispatcher is degraded";
+                    }
+                    else {
+                        StatusColor.update(elem, "green");
+                    }
+                }
+                else {
+                    StatusColor.update(elem, "disabled");
+                }
+                let matrixArt = "\n\n";
+                for (let r = 0; r < height; r++) {
+                    let symbol = 0x2460 + (r <= 20 ? r : 0x2473);
+                    let row = String.fromCodePoint(symbol) + "    ";
+                    for (let p = 0; p < width; p++) {
+                        try {
+                            if (matrix[p][r] == 1) {
+                                symbol = 0x2705; // v
+                            }
+                            else {
+                                symbol = 0x274C; // x
+                            }
+                        }
+                        catch {
+                            symbol = 0x2753; // ?
+                        }
+                        row += "    " + String.fromCodePoint(symbol) + "    ";
+                    }
+                    matrixArt += row + "\n";
+                }
+                titleMatrix += matrixArt;
+            }
+            else if (NodeType.hasData(cache.ntyp)) {
+                elem.val( "S-IN" );
+                StatusColor.update(elem, "green");
+            }
+            else {
+                elem.closest("td").css( "visibility", "hidden" );
+            }
+            elem.closest("td").prop("title", titleMatrix );
+        }
+
+
+        toggleSinSout(eventObj) {
+            const states = ["S-OUT", "S-IN"];
+            const id = this.id;
+            let DO_SOUT = this.s_in;
+            let cur = DO_SOUT ? states[1] : states[0];
+            let nxt = DO_SOUT ? states[0] : states[1];
+            let cmd = DO_SOUT ? "--serviceout" : "--servicein";
+            let noConfirm = reallyMeanIt(eventObj);
+            transitionState(id, cmd, cur, nxt, "Service In / Service Out", noConfirm);
+        }
+
+
+        performRestartHTTP(eventObj) {
+            const id = this.id;
+            let cmd = "--restarthttp";
+            let noConfirm = reallyMeanIt(eventObj);
+            performOperation(eventObj.target, id, cmd, "Restart HTTP Server", null, "HTTP Server will stop and restart", null, noConfirm, 3 );
+        }
+
+
+        performPersist(eventObj) {
+            const id = this.id;
+            let cmd = "--persist";
+            let noConfirm = reallyMeanIt(eventObj);
+            performOperation(eventObj.target, id, cmd, "Persist to Disk", null, "All graph data will be written to disk", null, noConfirm, 3 );
+        }
+
+
+        performHardSync(eventObj) {
+            const id = this.id;
+            let cmd = "--sync";
+            let subs = this.subscriber_ids.join("\n\u2794 ");
+            let noConfirm = reallyMeanIt(eventObj);
+            let warn = "WARNING: Subscribers will be truncated and synchronized\n\n\u2794 " + subs;
+            performOperation(eventObj.target, id, cmd, "Hard Forward Sync", ",hard", warn, "HARDSYNC", noConfirm, 3);
+        }
+
+
+        performReverseSync(eventObj) {
+            const id = this.id;
+            let cmd = "--reversesync";
+            let noConfirm = reallyMeanIt(eventObj);
+            let warn = "WARNING: Provider instance will be truncated and reverse-synchronized from subscriber with highest serial number";
+            performOperation(eventObj.target, id, cmd, "Hard Reverse Sync", null, warn, "REVERSESYNC", noConfirm, 3);
+        }
+
+
+        toggleAttachDetach(eventObj) {
+            const states = ["Detached", "Attached"];
+            const id = this.id;
+            let DO_DET = this.txout != null;
+            let cur = DO_DET ? states[1] : states[0];
+            let nxt = DO_DET ? states[0] : states[1];
+            let cmd = DO_DET ? "--detach" : "--attach";
+            let noConfirm = reallyMeanIt(eventObj);
+            transitionState(id, cmd, cur, nxt, "Attach / Detach", noConfirm);
+        }
+
+
+        toggleSubscribe(eventObj) {
+            const states = ["Unsubscribed", "Subscribed"];
+            const id = this.id;
+            let NO_SUB = this.provider_id == null;
+            if (NO_SUB) {
+                return;
+            }
+            let cur = NO_SUB ? states[0] : states[1];
+            let nxt = NO_SUB ? states[1] : states[0];
+            let cmd = "--unsubscribe";
+            let noConfirm = reallyMeanIt(eventObj);
+            transitionState(id, cmd, cur, nxt, "Unsubscribe", noConfirm);
+        }
+
+
+        togglePauseResumeOutput(eventObj) {
+            const states = ["Resume", "Pause"];
+            const id = this.id;
+            let IS_RUN = this.txout >= 0;
+            let cur = IS_RUN ? states[0] : states[1];
+            let nxt = IS_RUN ? states[1] : states[0];
+            let cmd = IS_RUN ? "--pauseout" : "--resumeout";
+            let noConfirm = reallyMeanIt(eventObj);
+            transitionState(id, cmd, cur, nxt, "Output Pause / Resume", noConfirm);
+        }
+
+
+        togglePauseResumeInput(eventObj) {
+            const states = ["Resume", "Pause"];
+            const id = this.id;
+            let IS_RUN = this.txin >= 0;
+            let cur = IS_RUN ? states[0] : states[1];
+            let nxt = IS_RUN ? states[1] : states[0];
+            let cmd = IS_RUN ? "--pausein" : "--resumein";
+            let noConfirm = reallyMeanIt(eventObj);
+            transitionState(id, cmd, cur, nxt, "Input Pause / Resume", noConfirm);
+        }
+
+
+        performRollingUpdate(eventObj) {
+            const id = this.id;
+            let cmd = "--rollingupdate";
+            let noConfirm = reallyMeanIt(eventObj);
+            let warn = "Subscribers will Service-OUT and receive hard-sync one by one";
+            performOperation(eventObj.target, id, cmd, "Rolling Update", null, warn, null, noConfirm, 3);
+        }
+
+
+        performSyncRepair(eventObj) {
+            const id = this.id;
+            let cmd = ["--attach", "--waitforidle", "--sync"];
+            let noConfirm = reallyMeanIt(eventObj);
+            performOperation(eventObj.target, id, cmd, "Synchronize / Repair", null, null, null, noConfirm, 3);
+        }
+
+
+        renderIOSockets(cache) {
+            if (cache.ncliElem != null) {
+                if (cache.clients != null) {
+                    if (cache.s_in && cache.clients > 0) {
+                        cache.ncliElem.val(cache.clients);
+                        let sz = cache.clients > 999 ? "9px" : "10px";
+                        cache.ncliElem.css( "font-size", sz );
+                        let redness = cache.clients / 1024;
+                        let gb = redness < 0.2 ? 255 : Math.round(255 * (1 - 0.4*redness));
+                        cache.ncliElem.css("color", "rgb(255," + gb + "," + gb + ")");
+                    }
+                    else {
+                        cache.ncliElem.val("");
+                        //StatusColor.update(cache.ncliElem, "disabled");
+                        cache.ncliElem.css("opacity", "0.2")
+                    }
+                }
+                else if (cache.ncliElem != null) {
+                    cache.ncliElem.val("");
+                }
+            }
+            if (cache.nchaElem != null) {
+                if (cache.ntyp == NodeType.Dispatch && cache.matrix_nch != null) {
+                    if (cache.s_in && cache.matrix_nch > 0) {
+                        cache.nchaElem.val(cache.matrix_nch);
+                        let sz = (cache.matrix_nch > 9999) ? "8px" : (cache.matrix_nch > 999) ? "9px" : "10px";
+                        cache.nchaElem.css( "font-size", sz );
+                        if (cache.matrix_maxch > 0) {
+                            let redness = cache.matrix_nch / cache.matrix_maxch;
+                            let gb = redness < 0.2 ? 240 : Math.round(240 * (1 - 0.4*redness));
+                            cache.nchaElem.css("color", "rgb(240," + gb + "," + gb + ")");
+                            /*if (redness > 0.75) {
+                                cache.nchaElem.addClass("blinktext");
+                            }
+                            else {
+                                cache.nchaElem.removeClass("blinktext");
+                            }*/
+                        }
+                    }
+                    else {
+                        cache.nchaElem.val("");
+                        //StatusColor.update(cache.nchaElem, "disabled");
+                        cache.nchaElem.css("opacity", "0.2")
+                    }
+                }
+                else if (cache.nchaElem != null) {
+                    cache.nchaElem.css("visibility", "hidden");
+                }
+            }
+        }
+
+
+        renderQueryLoadBalance(cache) {
+            if (cache.qbalElem != null) {
+                if (cache.group_size != null && cache.group_size[cache.group] > 1) {
+                    const groupRate = cache.group_rate[cache.group];
+                    if (groupRate > 0) {
+                        const rate = cache.s_in ? cache.rate : 0.0;
+                        const qbal = rate > 0 ? Math.round( 100*rate / groupRate ) : 0;
+                        this.renderLinearBars( cache.qbalElem, 11, qbal, 100, false, "#eafaf1" );
+                    }
+                    else {
+                        cache.qbalElem.val("");
+                        //StatusColor.update(cache.qbalElem, "disabled");
+                    }
+                    cache.qbalElem.css("visibility", "visible");
+                }
+                else {
+                    cache.qbalElem.css("visibility", "hidden");
+                }
+            }
+        }
+
+
+        renderQueryRate(cache) {
+            if (!cache.rateElem.hasClass('actionable')) {
+                if (cache.rate != null) {
+                    if (cache.s_in) {
+                        cache.rateElem.val(cache.rate.toFixed(1));
+                        StatusColor.update(cache.rateElem, "nominal");
+                    }
+                    else {
+                        cache.rateElem.val("-.-");
+                        StatusColor.update(cache.rateElem, "disabled");
+                    }
+                }
+                else {
+                    cache.rateElem.val("");
+                }
+            }
+        }
+
+
+        renderQueryLatency(cache) {
+            if (!cache.qlatElem.hasClass('actionable')) {
+                if (cache.qlat95 != null) {
+                    if (cache.s_in) {
+                        cache.qlatElem.val(cache.qlat95.toFixed(2));
+                        StatusColor.update(cache.qlatElem, "nominal");
+                    }
+                    else {
+                        cache.qlatElem.val("-.--");
+                        StatusColor.update(cache.qlatElem, "disabled");
+                    }
+                }
+                else {
+                    cache.qlatElem.val("");
+                }
+            }
+        }
+
+        counterFontSize(value) {
+            let m = Math.log10( value );
+            if (m < 9) {
+                return "12px";
+            }
+            else if (m < 10) {
+                return "11px";
+            }
+            else if (m < 12) {
+                return "9px";
+            }
+            else {
+                return "8px";
+            }
+        }
+
+
+        renderOrder(cache) {
+            if (cache.ordrElem != null && !cache.ordrElem.hasClass('actionable')) {
+                if (cache.order != null) {
+                    let sz = this.counterFontSize(cache.order);
+                    cache.ordrElem.val(cache.order.toLocaleString("en-US"));
+                    cache.ordrElem.css("font-size", sz);
+                    StatusColor.update(cache.ordrElem, "nominal");
+                }
+                else {
+                    cache.ordrElem.val("");
+                }
+            }
+        }
+
+
+        renderSize(cache) {
+            if (cache.sizeElem != null && !cache.sizeElem.hasClass('actionable')) {
+                if (cache.size != null) {
+                    let sz = this.counterFontSize(cache.size);
+                    cache.sizeElem.val(cache.size.toLocaleString("en-US"));
+                    cache.sizeElem.css("font-size", sz);
+                    StatusColor.update(cache.sizeElem, "nominal");
+                }
+                else {
+                    cache.sizeElem.val("");
+                }
+            }
+        }
+
+
+        renderSerial(cache) {
+            if (!cache.mserElem.hasClass('actionable')) {
+                if (cache.serial != null) {
+                    let rsn = MasterSerial.render(cache.serial);
+                    cache.mserElem.data('serial', rsn);
+                    cache.mserElem.val(rsn);
+                    if (cache.master_serial != null && cache.master_serial != cache.serial) {
+                        let red = Math.round((255 * MasterSerial.diff(cache.master_serial, cache.serial)) / (1 << 14));
+                        if (red > 224) {
+                            red = 224;
+                        }
+                        else if (red < 64) {
+                            red = 64;
+                        }
+                        const rgb = "rgb(" + red + ",0,0)";
+                        cache.mserElem.css("color", rgb);
+                    }
+                    else {
+                        cache.mserElem.css("color", "initial");
+                    }
+                }
+                else {
+                    cache.mserElem.val("");
+                }
+            }
+        }
+
+
+        hide(elem) {
+            elem.find("*").addBack("*").css("visibility", "hidden");
+        }
+
+
+        nextGroup(grp, cache) {
+            this.prevGroup = this.currentGroup;
+            this.currentGroup = grp;
+            if (this.prevGroup >= 0 && cache.group_size != null && cache.group_size[this.prevGroup] > 1) {
+                let has = {};
+                for (let ntyp of this.currentGroupInstances) {
+                    if (ntyp == NodeType.Builder || ntyp == NodeType.TXProxy || ntyp == NodeType.Search) {
+                        has.Engine = true;
+                    }
+                    else if (ntyp == NodeType.Dispatch) {
+                        has.Dispatch = true;
+                    }
+                    else {
+                        has.Other = true;
+                    }
+                }
+                if (Object.keys(has).length == 1) {
+                    this.renderRow("grp_aggr_" + grp, NodeType.Aggregate, null, null, null, cache);
+                }
+                else {
+                }
+            }
+            else {
+            }
+            this.currentGroupInstances = [];
+            this.currentGroupTitle = null;
+        }
+
+
+        renderRow(id, ntyp, host, httpPort, nodeStatus, cache) {
+
+            let nodeList = $('#nodeList tbody');
+
+            let rowTemplate = $('#rowTemplate').html();
+
+            const rowID = "row_" + id;
+
+            const grp = parseFloat(cache.group);
+            if (ntyp != NodeType.Aggregate && !isNaN(grp) && grp > this.currentGroup) {
+                let sep = this.currentGroup >= 0 ? "<hr>" : "<hr>";
+                this.nextGroup(grp, cache);
+                let matrix_mode = "matrix_mode" in cache ? cache.matrix_mode : "---";
+                let groupTitleRow =
+                    '<tr class="nodeRow">' +
+                    '<td colspan="21">' + sep +
+                    '<span class="nodennum"><span class="grouptitle" id="' + grp + '"></span>' +
+                    '<span class="groupid">' + grp + ' ' + matrix_mode + '</span></span></td></tr>';
+                nodeList.append(groupTitleRow);
+            }
+            this.currentGroupInstances.push(ntyp);
+
+            if (this.currentGroupTitle == null) {
+                let groupLabel;
+                if (ntyp == NodeType.Builder) {
+                    let pnum = cache.partition >= 0 ? "" + (cache.partition + 1) : "?";
+                    groupLabel = "Partition " + pnum + "/" + cache.num_partitions;
+                }
+                else {
+                    groupLabel = ntyp.description;
+                }
+                $("#" + $.escapeSelector(""+grp)).html( groupLabel );
+                this.currentGroupTitle = groupLabel + " " + grp + " " + cache.matrix_mode;
+            }
+
+            nodeList.append('<tr class="nodeRow" id="' + rowID + '">' + rowTemplate + '</tr>');
+
+            // Row
+            let row = nodeList.find("#" + $.escapeSelector(rowID));
+            row.find("input").prop("disabled", true);
+            row.find("input").addClass("disable_select");
+            row.find("*").css("vertical-align", "middle");
+
+            // Id | Type | Status | Uptime | Address | Clients | Channels | RPS | 95th ms | Memory | Order | Size | Subs | Out | In | Lag | Digest | S/N | TX Log
+            let nnumElem = row.find(".nodennum input");
+            let ntypElem = row.find(".nodentyp input");
+            let statElem = row.find(".nodestat input");
+            let uptmElem = row.find(".nodeuptm input");
+            let hostElem = row.find(".nodehost input");
+            let mtrxElem = row.find(".nodemtrx input");
+            cache.ncliElem = row.find(".nodencli input");
+            cache.nchaElem = row.find(".nodencha input");
+            cache.qbalElem = row.find(".nodeqbal input");
+            cache.rateElem = row.find(".noderate input");
+            cache.qlatElem = row.find(".nodeqlat input");
+            let loadElem = row.find(".nodeload");
+            let mprcElem = row.find(".nodemprc");
+            let mtotElem = row.find(".nodemtot");
+            let mmryElem = row.find(".nodemmry");
+            cache.ordrElem = row.find(".nodeordr input");
+            cache.sizeElem = row.find(".nodesize input");
+            let tsubElem = row.find(".nodetsub");
+            let subsElem = row.find(".nodesubs");
+            let toutElem = row.find(".nodetout");
+            let txroElem = row.find(".nodetxro");
+            let tinpElem = row.find(".nodetinp");
+            let provElem = row.find(".nodeprov");
+            let txriElem = row.find(".nodetxri");
+            let dgstElem = row.find(".nodedgst");
+            cache.mserElem = row.find(".nodemser input");
+            let slagElem = row.find(".nodeslag");
+            let sndfElem = row.find(".nodesndf");
+            let tlogElem = row.find(".nodetlog");
+            let ztxlElem = row.find(".nodeztxl");
+
+
+            let txNode = NodeType.hasTX(ntyp);
+            let dataNode = NodeType.hasData(ntyp);
+            let hasSubs = (cache.subscriber_ids != null && cache.subscriber_ids.length > 0);
+
+            // Aggregate
+            if (ntyp == NodeType.Aggregate) {
+                row.find("input").css("visibility", "hidden");
+                let aggr = {"s_in":true, "rate":0.0, "qlat95":0.0};
+                aggr.rateElem = row.find(".noderate input");
+                aggr.rateElem.css("visibility","visible");
+                aggr.rateElem.attr("id", "rate_" + id);
+                aggr.qlatElem = row.find(".nodeqlat input");
+                aggr.qlatElem.css("visibility","visible");
+                aggr.qlatElem.attr("id", "qlat_" + id);
+                if (cache.group_rate != null) {
+                    if (this.prevGroup in cache.group_rate) {
+                        aggr.rate = cache.group_rate[this.prevGroup];
+                    }
+                }
+                this.renderQueryRate(aggr);
+                if (cache.group_est_qlat != null) {
+                    if (this.prevGroup in cache.group_est_qlat) {
+                        aggr.qlat95 = cache.group_est_qlat[this.prevGroup];
+                    }
+                }
+                this.renderQueryLatency(aggr);
+                aggr.rateElem.closest("td").prop("title", "Group Total Requests/sec\n\n(" + this.currentGroupTitle + ")");
+                aggr.qlatElem.closest("td").prop("title", "Group 95th ms (estimate)\n\n(" + this.currentGroupTitle + ")");
+                return;
+            }
+
+            // Id
+            let titleId = id + "\n\nOpen Admin Console";
+            if (cache.this_instance) {
+                nnumElem.addClass("localnode");
+                titleId += "\n(This instance)";
+            }
+            else {
+                nnumElem.addClass("remotenode");
+            }
+
+            let nodennumTD = row.find(".nodennum");
+            this.setTitleLink(nodennumTD, host, httpPort, null, titleId );
+            nnumElem.attr("id", "nnum_" + id);
+            nnumElem.val(id);
+            let idLabelSize = 1 + id.length*0.5;
+            if (idLabelSize > this.idLabelSize) {
+                this.idLabelSize = idLabelSize;
+                $(".nodennum input").css("max-width", this.idLabelSize + "em");
+            }
+
+            // Type
+            let nodentypTD = row.find(".nodentyp");
+            ntypElem.attr("id", "ntyp_" + id);
+            if (ntyp != null) {
+                NodeType.update( $('#ntyp_'+$.escapeSelector(id)), ntyp );
+                let titleType = id + " Type\n\nOpen Admin Dashboard";
+                this.setTitleLink(nodentypTD, host, httpPort, "admin", titleType );
+            }
+
+            // Status
+            statElem.attr("id", "stat_" + id);
+            if (nodeStatus != null) {
+                NodeStatus.update( $('#stat_'+$.escapeSelector(id)), nodeStatus, cache );
+                let statTD = row.find(".nodestat");
+                let titleStatus = id + " Status\n\nOpen VGXServer Status";
+                this.setTitleLink(statTD, host, httpPort, "status", titleStatus );
+            }
+            if (nodeStatus == null || nodeStatus == NodeStatus.Down || nodeStatus == NodeStatus.Unknown) {
+                row.find('.nodefade').css("opacity", 0.3);
+                cache.uptime = -1;
+                cache.clock.stop();
+                row.data("up", false);
+            }
+            else {
+                row.data("up", true);
+            }
+
+            // Uptime
+            uptmElem.attr("id", "uptime_" + id);
+            cache.clock.setElement(uptmElem);
+            const uptime = cache.clock.getTime();
+            if (Math.abs(cache.uptime-uptime) > 2) {
+                cache.clock.updateTimeReference(cache.uptime);
+            }
+            cache.clock.refresh();
+            let nodeuptmTD = row.find(".nodeuptm");
+            let titleUptime = id + " Uptime\nddd:hh:mm:ss\n\nSend Ping Request";
+            this.setTitleLink(nodeuptmTD, host, httpPort, "vgx/ping", titleUptime );
+
+
+            // Address
+            let nodehostTD = row.find(".nodehost");
+            hostElem.attr("id", "host_" + id);
+            if (host != null) {
+                this.setTitleLink(nodehostTD, host, httpPort, "index");
+                let address = host + ":" + httpPort;
+                //StatusColor.update( hostElem, "gray4" );
+                hostElem.val(address);
+                hostElem.attr("size",address.length);
+                let totalGiB = cache.mem_tot / 0x40000000;
+                let titleAddress =  id + 
+                                    " Address\n\nhostname: " + cache.hostname + 
+                                    "\nip: " + cache.ip + 
+                                    "\nadmin port: " + httpPort + 
+                                    "\nmain port: " + (httpPort-1) + 
+                                    "\npid: " + cache.pid + 
+                                    "\n\nCPU: " + cache.cpu + 
+                                    "\nMemory: " + totalGiB.toFixed(1) + " GiB";
+                nodehostTD.prop("title", titleAddress );
+            }
+            else {
+                hostElem.val("");
+            }
+
+            if (cache.uptime > 0) {
+
+              // Matrix
+              mtrxElem.data('s_in', cache.s_in);
+              mtrxElem.attr("id", "mtrx_" + id);
+              let nodemtrxTD = row.find(".nodemtrx");
+              this.setAction(nodemtrxTD, mtrxElem, null, this.toggleSinSout, cache);
+              this.renderMatrix(cache, mtrxElem);
+
+              // I/O Sockets
+              cache.ncliElem.data('clients', cache.clients)
+              cache.ncliElem.attr("id", "ncli_" + id);
+              cache.nchaElem.data('active', cache.matrix_nch)
+              cache.nchaElem.data('total', cache.matrix_maxch)
+              this.renderIOSockets(cache);
+              if (cache.clients != null) {
+                  let nodencliTD = row.find(".nodencli");
+                  let titleClients = id + " Connected Clients\nActive: " + cache.clients + "\nMax: " + cache.maxclients;
+                  nodencliTD.prop('title', titleClients);
+              }
+              if (cache.ntyp == NodeType.Dispatch && cache.matrix_nch != null) {
+                  let nodenchaTD = row.find(".nodencha");
+                  const width = cache.matrix.length;
+                  let matrixInfo = [];
+                  if (width > 0) {
+                      let partChannels = 0;
+                      for (const engine of cache.matrix[0]) {
+                          matrixInfo.push(engine.id + " ch: " + engine.channels + " x " + width + " = " + engine.channels * width);
+                          partChannels += engine.channels;
+                      }
+                      matrixInfo.push("Part ch: " + partChannels + " x " + width + " = " + partChannels * width);
+                  }
+
+                  let titleMatrixChannels = id + " Backend Matrix Channels\nActive: " + cache.matrix_nch +
+                                            "\nMax: " + cache.matrix_maxch + "\n" +
+                                            "\nDetail:\n" + matrixInfo.join("\n");
+                  nodenchaTD.prop('title', titleMatrixChannels);
+              }
+
+              // Query Load Balance
+              cache.qbalElem.attr("id", "qbal_" + id);
+              this.renderQueryLoadBalance(cache);
+              if (cache.rate != null && cache.group_size != null && cache.group_size[cache.group] > 1) {
+                  let nodeqbalTD = row.find(".nodeqbal");
+                  let sz = cache.group_size[cache.group];
+                  let R = cache.group_rate[cache.group];
+                  let pct = R > 0 ? Math.round( 100 * cache.rate / R ) : 0;
+                  let titleQBal = id + " Load Balance " + pct + "%\nGroup " + cache.group + " (" + sz + ")";
+                  nodeqbalTD.prop('title', titleQBal);
+              }
+
+              // RPS
+              cache.rateElem.data('rate', cache.rate)
+              cache.rateElem.attr("id", "rate_" + id);
+              this.renderQueryRate(cache);
+              if (cache.rate != null) {
+                  let noderateTD = row.find(".noderate");
+                  let titleRPS = id + " Requests/sec\n\nClick to Restart HTTP";
+                  this.setAction(noderateTD, cache.rateElem, titleRPS, this.performRestartHTTP, cache);
+              }
+
+              // 95th ms
+              cache.qlatElem.attr("id", "qlat_" + id);
+              this.renderQueryLatency(cache);
+              let nodeqlatTD = row.find(".nodeqlat");
+              let title95th = id + " 95th % Latency (ms)";
+              if (cache.qlatAll != null) {
+                  title95th += "\n";
+                  title95th += "\n50th: " + cache.qlatAll["50.0"].toFixed(2) + " ms";
+                  title95th += "\n90th: " + cache.qlatAll["90.0"].toFixed(2) + " ms";
+                  title95th += "\n95th: " + cache.qlatAll["95.0"].toFixed(2) + " ms";
+                  title95th += "\n99th: " + cache.qlatAll["99.0"].toFixed(2) + " ms";
+                  nodeqlatTD.prop('title', title95th);
+              }
+
+              // Memory
+              mprcElem.attr("id", "memuse_" + id);
+              mmryElem.attr("id", "memory_" + id);
+              mtotElem.attr("id", "memtot_" + id);
+              let vgxInstanceGiB = cache.mem_proc / 0x40000000;
+              let totalGiB = cache.mem_tot / 0x40000000;
+              let usedGiB = (cache.mem_tot - cache.mem_avail) / 0x40000000;
+              mprcElem.val( vgxInstanceGiB.toFixed(1) );
+              mtotElem.val( Math.round(totalGiB).toFixed(0) );
+              this.renderLinearBars(mmryElem, 27, cache.mem_tot - cache.mem_avail, cache.mem_tot );
+              const proc_pct = (100 * cache.mem_proc / cache.mem_tot).toFixed(1);
+              const total_pct = (100 * (cache.mem_tot - cache.mem_avail) / cache.mem_tot).toFixed(1);
+              //this.setTitleLink(loadElem, host, httpPort, "vgx/builtin/memory?graph=*");
+              let titleMemory = id + " Memory\n\n" + vgxInstanceGiB.toFixed(1) +
+                  " GiB (" + proc_pct + "%) " + "\nHost: " + usedGiB.toFixed(1) + " GiB / " + totalGiB.toFixed(1) + " GiB (" + total_pct + "%)" +
+                  "\n\nClick to Persist to Disk";
+              this.setAction(loadElem, loadElem, titleMemory, this.performPersist, cache);
+
+              // Order
+              cache.ordrElem.data('order', cache.order);
+              cache.ordrElem.data('subs', hasSubs);
+              if (dataNode || (cache.order > 0)) {
+                  cache.ordrElem.attr("id", "order_" + id);
+                  this.renderOrder(cache);
+                  let nodeordrTD = row.find(".nodeordr");
+                  let titleOrder = id + " Vertex Count";
+                  if (hasSubs) {
+                      titleOrder += "\n\nClick to perform Reverse Sync\nfrom attached subscriber";
+                      this.setAction(nodeordrTD, cache.ordrElem, titleOrder, this.performReverseSync, cache);
+                  }
+                  else {
+                      nodeordrTD.prop('title', titleOrder);
+                  }
+              }
+              else {
+                  this.hide(cache.ordrElem);
+              }
+
+              // Size
+              cache.sizeElem.data('size', cache.size);
+              cache.sizeElem.data('subs', hasSubs);
+              if (dataNode || (cache.size > 0)) {
+                  cache.sizeElem.attr("id", "size_" + id);
+                  this.renderSize(cache);
+                  let nodesizeTD = row.find(".nodesize");
+                  let titleSize = id + " Arc Count";
+                  if (hasSubs) {
+                      titleSize += "\n\nClick to perform Forward Sync\nto attached subscribers";
+                      this.setAction(nodesizeTD, cache.sizeElem, titleSize, this.performHardSync, cache);
+                  }
+                  else {
+                      nodesizeTD.prop('title', titleSize);
+                  }
+              }
+              else {
+                  this.hide(cache.sizeElem);
+              }
+            }
+
+            // Subs
+            if (txNode) {
+                subsElem.attr("id", "subcnt_" + id);
+                let titleSubs = id + " Subscribers\n\n";
+                let color = null;
+                if (hasSubs) {
+                    subsElem.val("\u{25B6} " + cache.subscriber_ids.length);
+                    for (let sub of cache.subscriber_ids) {
+                        titleSubs = titleSubs + sub + "\n";
+                    }
+                    titleSubs = titleSubs + "\n";
+                }
+                else {
+                    subsElem.css("opacity", "0.2");
+                    subsElem.val("");
+                }
+                if (cache.canHaveSubs == true) {
+                    subsElem.data("txtype", "subs");
+                    titleSubs = titleSubs + "Toggle Attach/Detach All";
+                    if (cache.local_only) {
+                        const s = cache.local_only > 1 ? "s" : "";
+                        color = "redinv";
+                        titleSubs += "\n\nWarning: " + cache.local_only + " local only graph" + s + " will not\nbe replicated to subscribers";
+                    }
+                    StatusColor.update( subsElem, color );
+                    this.setAction(tsubElem, subsElem, titleSubs, this.toggleAttachDetach, cache);
+                }
+                else {
+                    subsElem.data("txtype", "leaf");
+                }
+            }
+            else {
+                this.hide(subsElem);
+            }
+
+
+            // Out
+            if (txNode) {
+                txroElem.data("txtype","out");
+                txroElem.attr("id", "txout_" + id);
+                if (cache.uptime > 0) {
+                    let titleOut = id + " Transaction Output Rate\n\nToggle Pause/Resume Output";
+                    if (cache.txout != null) {
+                        this.setAction(toutElem, txroElem, titleOut, this.togglePauseResumeOutput, cache);
+                    }
+                    this.renderLogBars(txroElem, 14, cache.txout);
+                }
+                else {
+                    this.renderLogBars(txroElem, 14, null);
+                }
+            }
+            else {
+                this.hide(txroElem);
+            }
+
+
+            // In
+            if (txNode) {
+                txriElem.data("txtype","in");
+                txriElem.attr("id", "txin_" + id);
+                provElem.attr("id", "nsrc_" + id);
+                if (cache.provider_id != null) {
+                    this.renderLogBars(txriElem, 14, cache.txin);
+                    if (cache.provider_id.length > 3) {
+                        provElem.css("font-size", "7px");
+                    }
+                    else if (cache.provider_id.length > 2) {
+                        provElem.css("font-size", "9px");
+                    }
+                    provElem.val(cache.provider_id);
+                    let titleIn = id + " Transaction Input Rate\n\nProvider: " + cache.provider_id + "\n\nToggle Pause/Resume Input";
+                    this.setAction(tinpElem, txriElem, titleIn, this.togglePauseResumeInput, cache);
+                }
+                else {
+                    this.renderLogBars(txriElem, 14, null);
+                    provElem.val("");
+                }
+            }
+            else {
+                this.hide(txriElem);
+                this.hide(provElem);
+            }
+
+
+            // Lag
+            if (dataNode) {
+                sndfElem.data("txtype","lag");
+                sndfElem.attr("id", "seriallag_" + id);
+                if (cache.provider_id != null && cache.serial != null && cache.master_serial != null) {
+                    const sndiff = MasterSerial.diff(cache.master_serial, cache.serial);
+                    if (this.renderLinearBars(sndfElem, 14, sndiff, Nodes.maxSerialLag, true)) {
+                        this.setTitleLink(slagElem, host, httpPort, "vgx/txstat");
+                    }
+                    let titleLag = id + " Transaction Input Lag\n\nS/N Delta: " + sndiff.toLocaleString("en-US") + "\n\nClick to unsubscribe";
+                    this.setAction(slagElem, sndfElem, titleLag, this.toggleSubscribe, cache);
+                }
+                else {
+                    this.renderLinearBars(sndfElem, null, null, null, true);
+                }
+            }
+            else {
+                this.hide(sndfElem);
+            }
+
+
+            // Digest
+            if (dataNode || (cache.order > 0)) {
+                let dgstSpan = dgstElem.find(".digest");
+                dgstSpan.data('digest', cache.digest);
+                dgstSpan.data('subs', hasSubs);
+                if (cache.digest == null) {
+                    new Digest(dgstSpan).update(Nodes.noDigest);
+                }
+                else {
+                    new Digest(dgstSpan).update(cache.digest);
+                    let titleDigest = id + " Data Digest\n"
+                        + "\nVertices: " + cache.order
+                        + "\nArcs: " + cache.size
+                        + "\nProperties: " + cache.properties
+                        + "\nVectors: " + cache.vectors
+                        + "\nRelationships: " + cache.nrel
+                        + "\nVertex Types: " + cache.nvtx
+                        + "\nDimensions: " + cache.ndim
+                        + "\nKeys: " + cache.nkey
+                        + "\nString Values: " + cache.nval;
+                    if (hasSubs) {
+                        titleDigest += "\n\nClick to Sync / Repair subscribers";
+                        this.setAction(dgstElem, dgstSpan.children(), titleDigest, this.performSyncRepair, cache);
+                    }
+                    else {
+                        dgstElem.prop('title', titleDigest);
+                    }
+                }
+            }
+            else {
+                this.hide(dgstElem);
+            }
+
+            if (cache.uptime > 0) {
+              // S/N
+              if (dataNode) {
+                  cache.mserElem.data('subs', hasSubs);
+                  cache.mserElem.attr("id", "serial_" + id);
+                  this.renderSerial(cache);
+                  let nodemserTD = row.find(".nodemser");
+                  let titleSN = id + " Transaction Serial Number";
+                  if (hasSubs) {
+                      titleSN += "\n\nClick to perform Rolling Update of subscribers";
+                      this.setAction(nodemserTD, cache.mserElem, titleSN, this.performRollingUpdate, cache);
+                  }
+                  else {
+                      nodemserTD.prop('title', titleSN);
+                  }
+              }
+              else {
+                  this.hide(cache.mserElem);
+              }
+            }
+
+            // TX Log
+            if (dataNode) {
+                ztxlElem.attr("id", "sztxlog_" + id);
+                if (cache.durable && cache.durable_txlog != null && cache.durable_max_txlog != null) {
+                    this.renderLinearBars(ztxlElem, 26, cache.durable_txlog, 1.5 * cache.durable_max_txlog);
+                    let sizeMiB = (cache.durable_txlog >> 20).toLocaleString("en-US");
+                    let titleTXLog = id + " Transaction Log\n\nSize: " + sizeMiB + " MiB";
+                    tlogElem.prop("title", titleTXLog);
+                }
+                else {
+                    ztxlElem.val("");
+                }
+                if (!cache.durable) {
+                    ztxlElem.css("opacity", "0.2");
+                }
+            }
+            else {
+                this.hide(ztxlElem);
+            }
+
+        }
+
+
+        getNodeStatus( ntyp, nodestatObj, cache ) {
+            // DOWN
+            if (!cache.clock.running()) {
+                return NodeStatus.Down;
+            }
+            // Unknown
+            if (!nodestatObj) {
+                return NodeStatus.Unknown;
+            }
+            let load = 0;
+            if (cache.mem_tot > 0) {
+                load = (cache.mem_tot - cache.mem_avail) / cache.mem_tot;
+            }
+            // Memory!
+            if (load > 0.93) {
+                return NodeStatus.MemCritical;
+            }
+            // Sync x%
+            if (nodestatObj["synchronizing"]) {
+                cache.sync_progress = nodestatObj["sync-progress"];
+                return NodeStatus.Sync;
+            }
+            // Snapshot
+            if (nodestatObj["snapshot-writing"]) {
+                return NodeStatus.Persist;
+            }
+            // Init...
+            if (cache.ready != true ) {
+                return NodeStatus.Initializing;
+            }
+            // MEMORY!
+            if (load > Nodes.memoryCriticalThreshold) {
+                return NodeStatus.MemCritical;
+            }
+            // Memory
+            if (load > Nodes.memoryHighThreshold) {
+                return NodeStatus.MemWarningHI;
+            }
+            // S-OUT
+            if (!cache.s_in) {
+                return NodeStatus.ServiceOut;
+            }
+            // Incomplete dispatcher matrix
+            if (cache.matrix != null && cache.matrix.length > 0 && cache.matrix_complete === false) {
+                return NodeStatus.Partial;
+            }
+            // Degraded dispatcher matrix
+            if (cache.matrix_degraded === true) {
+                return NodeStatus.Degraded;
+            }
+            // Inconsistent dispatcher matrix
+            if (cache.matrix_consistent === false) {
+                return NodeStatus.Inconsistent;
+            }
+            // Readonly
+            if (cache.readonly === true) {
+                return NodeStatus.Readonly;
+            }
+            if (NodeType.hasData(ntyp)) {
+                // No Input
+                if (cache.provider_id == null && cache.txin != null) {
+                    return NodeStatus.NoInput;
+                }
+                // Delta
+                if (cache.idle_ms > 30000) {
+                    if (cache.master_digest != cache.digest) {
+                        return NodeStatus.Inconsistent;
+                    }
+                    cache.sndiff = MasterSerial.diff(cache.master_serial, cache.serial);
+                    if (cache.sndiff > 1) {
+                        return NodeStatus.SerialDiff;
+                    }
+                }
+                // Busy
+                if (cache.lag > 30000) {
+                    return NodeStatus.Busy;
+                }
+            }
+            // Busy
+            if (cache.busy >= 5) {
+                return NodeStatus.Busy;
+            }
+            // Memory
+            if (load > Nodes.memoryLowThreshold) {
+                return NodeStatus.MemWarningLO;
+            }
+            // OK
+            return NodeStatus.OK;
+        }
+
+
+        getCanHaveSubs(transactionTopology) {
+            let canHaveSubs = {};
+            for (let id of Object.keys(transactionTopology)) {
+                let subs = transactionTopology[id];
+                if (Object.keys(subs).length > 0) {
+                    canHaveSubs[id] = true;
+                    for (let subid of Object.keys(this.getCanHaveSubs(subs))) {
+                        canHaveSubs[subid] = true;
+                    }
+                }
+            }
+            return canHaveSubs;
+        }
+
+
+        refreshFull() {
+
+            $.get("/vgx/builtin/system_overview", function (data, textStatus, jqXHR) {
+                let message = null;
+                let objCount = 0;
+                try {
+
+                    const response = data["response"];
+                    const this_id = response["id"];
+                    const descriptor = response["descriptor"];
+                    const instances = response["instances"];
+                    message = response["message"];
+
+                    if (descriptor == null || response["error"]) {
+                        if (message != null) {
+                            throw message;
+                        }
+                        else {
+                            throw "data error";
+                        }
+                    }
+
+
+                    let nodeTypes = [
+                        [NodeType.Admin,    []], // 0
+                        [NodeType.Dispatch, []], // 1
+                        [NodeType.Builder,  []], // 2
+                        [NodeType.TXProxy,  []], // 3
+                        [NodeType.Search,   []], // 4
+                        [NodeType.Generic,  []]  // 5
+                    ];
+
+                    for (const instance of instances) {
+                        const ntype = instance["nodetype"];
+                        let i;
+                        switch(ntype) {
+                            case "admin":
+                                i = 0;
+                                break;
+                            case "dispatch":
+                                i = 1;
+                                break;
+                            case "builder":
+                                i = 2;
+                                break;
+                            case "txproxy":
+                                i = 3;
+                                break;
+                            case "search":
+                                i = 4;
+                                break;
+                            default:
+                                i = 5;
+                        }
+                        nodeTypes[i][1].push(instance);
+                    }
+
+                    $('#nodeListArea').css("display", "block");
+
+                    let chain = {
+                        "lag": {},
+                        "provider": {}
+                    };
+
+                    let master_digest = {};
+                    let master_serial = {};
+                    let group_rate = {};
+                    let group_wsum_qlat = {};
+                    let group_est_qlat = {};
+                    let group_size = {};
+                    this.builderOrders = [];
+                    this.builderSizes = [];
+                    this.builderProperties = [];
+                    this.builderVectors = [];
+                    this.builderPartitions = 0;
+                    this.totalInstances = 0;
+                    this.uniqueHosts = [];
+                    this.totalConsumedMemory = 0;
+                    this.totalPhysicalMemory = 0;
+                    this.systemStatus = "";
+                    let thisInstanceID = "";
+
+                    for (const tp of nodeTypes) {
+                        const ntyp = tp[0];
+                        const nodeList = tp[1];
+                        for (var i=0; i < nodeList.length; i++) {
+                            let instance = nodeList[i];
+                            let cache = null;
+                            try {
+                                const nodeKey = instance["id"];
+                                if (!(nodeKey in this.nodeCache)) {
+                                    this.nodeCache[nodeKey] = {
+                                        "down": 0,
+                                        "s_in": true,
+                                        "clock": new Clock(),
+                                        "rateElem": null,
+                                        "qlatElem": null,
+                                        "ordrElem": null,
+                                        "sizeElem": null,
+                                        "mserElem": null
+                                    };
+                                }
+
+                                cache = this.nodeCache[nodeKey];
+                                if( nodeKey === this_id ) {
+                                    cache.this_instance = true;
+                                    thisInstanceID = nodeKey;
+                                }
+                                else {
+                                    cache.this_instance = false;
+                                }
+                                cache.ntyp = ntyp;
+                                if (cache.ntyp == NodeType.Builder) {
+                                    cache.partition = this.builderPartitions++;
+                                }
+
+                                if (!("busy" in cache)) {
+                                    cache.busy = 0;
+                                }
+
+                                if (instance["hc"] != "VGX/3") {
+                                    const hc = instance["hc"];
+                                    if (hc != null && hc.startsWith("503")) {
+                                        cache.s_in = false;
+                                    }
+                                    else if (cache.down++ > 3) {
+                                        throw "down";
+                                    }
+                                    cache.hc = false;
+                                }
+                                else {
+                                    cache.hc = true;
+                                    cache.s_in = true;
+                                    cache.down = 0;
+                                }
+
+                                const matrix = instance["matrix"];
+                                const matrixConsistent = instance["matrix-consistent"];
+                                const matrixComplete = instance["matrix-complete"];
+                                const matrixDegraded = instance["matrix-degraded"];
+                                cache.rate = 0.0;
+                                cache.group = instance["group"].toString();
+                                cache.group_rate = group_rate;
+                                cache.group_est_qlat = group_est_qlat;
+                                cache.group_size = group_size;
+
+                                const nodestatObj = instance["nodestat"];
+                                if (nodestatObj && "ready" in nodestatObj) {
+                                    cache.ready = nodestatObj["ready"];
+                                    cache.hostname = nodestatObj["host"];
+                                    cache.ip = nodestatObj["ip"];
+                                    cache.adminport = nodestatObj["adminport"];
+                                    const providerKey = cache.ip + ":" + cache.adminport;
+                                    if (providerKey in chain["provider"]) {
+                                        cache.provider_id = chain["provider"][providerKey];
+                                    }
+                                    else {
+                                        cache.provider_id = null;
+                                    }
+                                    if (providerKey in chain["lag"]) {
+                                        cache.lag = chain["lag"][providerKey];
+
+                                    }
+                                    else {
+                                        cache.lag = 0;
+                                    }
+
+                                    if (cache.lag > 30000) {
+                                        cache.busy = 5;
+                                    }
+                                    else {
+                                        cache.busy = 0;
+                                    }
+
+                                    cache.uptime = nodestatObj["uptime"];
+                                    if (!cache.clock.running()) {
+                                        cache.clock.start(cache.uptime);
+                                    }
+                                    
+                                    cache.pid = nodestatObj["pid"];
+                                    
+                                    cache.service_label = nodestatObj["service-label"];
+
+                                    cache.idle_ms = nodestatObj["idle-ms"];
+                                    cache.digest = nodestatObj["digest"];
+                                    cache.serial = nodestatObj["master-serial"];
+                                    if ((ntyp == NodeType.Builder || ntyp == NodeType.Generic) && !(cache.group in master_serial)) {
+                                        master_serial[cache.group] = cache.serial;
+                                        master_digest[cache.group] = cache.digest;
+                                    }
+                                    if (cache.group in master_serial) {
+                                        cache.master_serial = master_serial[cache.group];
+                                        cache.master_digest = master_digest[cache.group];
+                                    }
+                                    else {
+                                        cache.master_serial = cache.serial;
+                                        cache.master_digest = cache.digest;
+                                    }
+
+                                    // Subscribers
+                                    cache.subscriber_ids = []; // fill IDs during 2nd pass
+                                    let subs = nodestatObj["subscribers"];
+                                    if (subs != null) {
+                                        for (const sub of subs) {
+                                            const subKey = sub["ip"] + ":" + sub["adminport"];
+                                            const subLag = sub["lag_ms"];
+                                            chain["lag"][subKey] = subLag + cache.lag;
+                                            chain["provider"][subKey] = nodeKey;
+                                        }
+                                    }
+                                    // TX Out
+                                    cache.txout = null;
+                                    if (nodestatObj["tx-out-halted"]) {
+                                        cache.txout = -1;
+                                    }
+                                    else if (subs != null && subs.length > 0) {
+                                        cache.txout = nodestatObj["tx-out-rate"];
+                                    }
+                                    // TX In filled during 2nd pass
+                                    cache.txin = null;
+                                    // Graph counts
+                                    cache.order = nodestatObj["graph-order"];
+                                    cache.size = nodestatObj["graph-size"];
+                                    cache.properties = nodestatObj["graph-properties"];
+                                    cache.vectors = nodestatObj["graph-vectors"];
+                                    cache.nrel = nodestatObj["graph-nrel"];
+                                    cache.nvtx = nodestatObj["graph-nvtx"];
+                                    cache.ndim = nodestatObj["graph-ndim"];
+                                    cache.nkey = nodestatObj["graph-nkey"];
+                                    cache.nval = nodestatObj["graph-nval"];
+                                    if (cache.ntyp == NodeType.Builder) {
+                                        this.builderOrders.push( cache.order );
+                                        this.builderSizes.push( cache.size );
+                                        this.builderProperties.push( cache.properties );
+                                        this.builderVectors.push( cache.vectors );
+                                    }
+                                    this.totalInstances++;
+
+                                    const matrix_mode = nodestatObj["matrix"]["mode"];
+                                    cache.matrix_mode = matrix_mode == 'dispatch' ? 'matrix' : matrix_mode;
+
+                                    cache.matrix_nch = nodestatObj["matrix"]["active-channels"];
+                                    cache.matrix_maxch = nodestatObj["matrix"]["total-channels"];
+
+                                    cache.clients = nodestatObj["connected-clients"];
+                                    cache.maxclients = 1024; // TODO: get from server
+                                    cache.rate = nodestatObj["service-rate"];
+                                    cache.qlat95 = nodestatObj["service-95th-ms"];
+                                    //cache.qlatAll = null;
+                                    //cache.rate = Math.round( Math.random() ) * 100;
+                                    //if (nodeKey == "S01" || nodeKey == "B01" ) {
+                                    //    cache.s_in = false;
+                                    //}
+                                    // Group RPS
+                                    if (cache.s_in) {
+                                        if (!(cache.group in group_rate)) {
+                                            group_rate[cache.group] = 0.0;
+                                            group_wsum_qlat[cache.group] = 0.0;
+                                            group_est_qlat[cache.group] = 0.0;
+                                        }
+                                        group_rate[cache.group] += cache.rate;
+                                        group_wsum_qlat[cache.group] += cache.qlat95 * cache.rate;
+                                        if (group_rate[cache.group] > 0) {
+                                            group_est_qlat[cache.group] = group_wsum_qlat[cache.group] / group_rate[cache.group];
+                                        }
+                                    }
+
+                                    cache.cpu = nodestatObj["cpu"];
+                                    cache.mem_tot = nodestatObj["memory-total"];
+                                    cache.mem_proc = nodestatObj["memory-process"];
+                                    cache.mem_avail = nodestatObj["memory-available"];
+                                    //cache.mem_tot = 128 * (1<<30);
+                                    //cache.mem_proc =  Math.random() * 128 * (1<<30);
+                                    //cache.mem_avail = cache.mem_tot - cache.mem_proc;
+                                    cache.durable = nodestatObj["durable"];
+                                    cache.durable_txlog = nodestatObj["durable-txlog"];
+                                    cache.durable_max_txlog = nodestatObj["durable-max-txlog"];
+                                    cache.persisting = nodestatObj["snapshot-writing"];
+                                    cache.snapshot_age = nodestatObj["snapshot-age"];
+                                    cache.readonly = nodestatObj["readonly"];
+                                    cache.local_only = nodestatObj["local-only"];
+                                    cache.matrix = matrix;
+                                    cache.matrix_consistent = matrixConsistent;
+                                    cache.matrix_complete = matrixComplete;
+                                    cache.matrix_degraded = matrixDegraded;
+                                }
+                                else {
+                                    if (cache.busy < 5) {
+                                        cache.busy++;
+                                    }
+                                }
+
+                                if (!(cache.group in group_size)) {
+                                    group_size[cache.group] = 0;
+                                }
+                                group_size[cache.group]++;
+
+                            }
+                            catch (error) {
+                                cache.this_instance = false;
+                                cache.group_rate = {};
+                                cache.group_est_qlat = {};
+                                //cache.group_size = {};
+                                cache.ready = false;
+                                cache.lag = 0;
+                                cache.order = 0;
+                                cache.size = 0;
+                                cache.properties = 0;
+                                //cache.partition = -1;
+                                cache.vectors = 0;
+                                cache.nrel = 0;
+                                cache.nvtx = 0;
+                                cache.ndim = 0;
+                                cache.nkey = 0;
+                                cache.nval = 0;
+                                //cache.matrix_mode = null;
+                                cache.cpu = "";
+                                cache.mem_tot = 0;
+                                cache.mem_proc = 0;
+                                cache.mem_avail = 0;
+                                cache.matrix_nch = 0;
+                                cache.matrix_maxch = 0;
+                                cache.clients = 0;
+                                cache.rate = 0;
+                                cache.qlat95 = 0;
+                                cache.qlatAll = null;
+                                cache.clock.stop();
+                                cache.uptime = -1;
+                                cache.pid = -1;
+                                cache.service_label = null;
+                                cache.digest = null;
+                                cache.serial = 0;
+                                cache.txin = -1;
+                                cache.txout = -1;
+                                cache.master_digest = {};
+                                cache.master_serial = {};
+                                cache.durable = false;
+                                cache.durable_txlog = 0;
+                                cache.durable_max_txlog = 0;
+                                cache.persisting = false;
+                                cache.snapshot_age = -1;
+                                cache.readonly = false;
+                                cache.local_only = 0;
+                                cache.matrix = null;
+                                cache.matrix_consistent = false;
+                                cache.matrix_complete = false;
+                                cache.matrix_degraded = true;
+                            }
+                        }
+                    }
+
+                    // 2nd pass
+                    for (const instance of instances) {
+                        const nodeKey = instance["id"];
+                        let cache = this.nodeCache[nodeKey];
+                        cache.id = nodeKey;
+                        const nodestatObj = instance["nodestat"];
+                        if (nodestatObj) {
+                            // TX In
+                            if (nodestatObj["tx-in-halted"]) {
+                                cache.txin = -1;
+                            }
+                            const providerKey = nodestatObj["ip"] + ":" + nodestatObj["adminport"];
+                            if (providerKey in chain["provider"]) {
+                                const pid = chain["provider"][providerKey];
+                                let pCache = this.nodeCache[pid];
+                                pCache.subscriber_ids.push(cache.id);
+                                cache.provider_id = pid;
+                                if (cache.txin == null && nodestatObj["txport"] > 0)  {
+                                    cache.txin = nodestatObj["tx-in-rate"];
+                                }
+                            }
+                            else {
+                                cache.provider_id = null;
+                            }
+                        }
+                    }
+
+                    // 3rd pass w/render
+                    if (!this.frozen) {
+                        // Descriptor Name
+                        let descriptorName = "System Dashboard (" + thisInstanceID + ") - " + (descriptor ? descriptor["name"] : "?");
+                        $('#descriptorName').html( descriptorName );
+                        this.setTitleLink( $('#descriptorName'), window.location.hostname, window.location.port, "vgx/builtin/system_overview", "Open System Overview (JSON)" );
+
+                        let topology = descriptor["topology"];
+                        let canHaveSubs = {};
+                        if (topology != null) {
+                            canHaveSubs = this.getCanHaveSubs(topology['transaction']);
+                        }
+
+                        $('.nodeRow').remove();
+                        this.idLabelSize = 2;
+                        this.currentGroupInstances = [];
+                        this.currentGroup = -1;
+                        this.currentGroupTitle = null;
+                        this.prevGroup = -1;
+                        let uniqueHostNames = {};
+                        let uniqueCPU = {};
+                        let warnings = {};
+                        for (const instance of instances) {
+                            const host = instance["hostname"];
+                            const hport = instance["adminport"];
+                            const nodeKey = instance["id"];
+                            let cache = this.nodeCache[nodeKey];
+                            cache.num_partitions = this.builderPartitions;
+                            cache.canHaveSubs = canHaveSubs[nodeKey];
+                            this.totalConsumedMemory += cache.mem_proc;
+                            if (!(host in uniqueHostNames)) {
+                                uniqueHostNames[host] = 1;
+                                this.uniqueHosts.push(host);
+                                this.totalPhysicalMemory += cache.mem_tot;
+                            }
+                            objCount += cache.order + cache.size + cache.properties + cache.vectors;
+                            /*if(Math.random() < 0.05) {
+                                if(Math.random() < 0.5) {
+                                    cache.cpu = "TEST CPU #1";
+                                }
+                                else {
+                                    cache.cpu = "TEST CPU #2 A1234 B5678";
+                                }
+                            }*/
+                            if (cache.cpu != null && !(cache.cpu in uniqueCPU)) {
+                                uniqueCPU[cache.cpu] = 1;
+                            }
+
+                            const nodestatObj = instance["nodestat"];
+                            const stat = this.getNodeStatus(cache.ntyp, nodestatObj, cache);
+                            if (NodeStatus.isWarning( stat )) {
+                                if (!(stat in warnings)) {
+                                    warnings[stat] = 0;
+                                }
+                                warnings[stat]++;
+                            }
+                            this.renderRow(nodeKey, cache.ntyp, host, hport, stat, cache);
+                        }
+
+                        this.nextGroup(1000000, {
+                            'group_rate': group_rate,
+                            'group_est_qlat': group_est_qlat,
+                            'group_size': group_size
+                        });
+
+                        let sysinfonameColor = "dark2";
+                        let sysinfoColor = "dark1";
+                        StatusColor.update( $('.systemname'), sysinfonameColor );
+                        StatusColor.update( $('.sysinfoname'), sysinfonameColor );
+                        StatusColor.update( $('.sysinfo'), sysinfoColor );
+
+                        function sumValues( A ) {
+                            return A.reduce((acc,val) => acc+val, 0).toLocaleString("en-US");
+                        }
+
+                        function partitionValues( title, A ) {
+                            return title + "\n\n" + A.map((val, idx) => `Part ${idx+1}: ${val.toLocaleString("en-US")}`).join("\n");
+                        }
+
+                        const plural = this.uniqueHosts.length > 1 ? "s" : "";
+
+                        // Status
+                        if (Reflect.ownKeys(warnings).length == 0) {
+                            this.systemStatus = "OK";
+                            StatusColor.update( $('#systemStatus'), "green" );
+                        }
+                        else {
+                            let wCount = 0;
+                            let wDetail = [];
+                            for( const key of Reflect.ownKeys(warnings)) {
+                                const cnt = warnings[key];
+                                wDetail.push( "" + key.description + ": " + cnt );
+                                wCount += cnt;
+                            }
+                            this.systemStatus = "Check " + wCount + " warnings";
+                            StatusColor.update( $('#systemStatus'), "orange1" );
+                            const statusInfo = wDetail.join( "\n" );
+                            $('#systemStatus').parent().prop("title", statusInfo);
+                        }
+                        $('#systemStatus').html( this.systemStatus );
+
+                        // Instances
+                        $('#totalInstances').html( this.totalInstances + " (" + this.uniqueHosts.length + " host" + plural + ")" );
+                        $('#totalInstances').parent().prop("title", "Hosts\n\n" + this.uniqueHosts.join("\n"));
+
+                        // Partitions
+                        $('#builderPartitions').html( this.builderPartitions );
+
+                        // Vertices
+                        $('#builderSumOrder').html( sumValues(this.builderOrders) );
+                        $('#builderSumOrder').parent().prop("title", partitionValues("Vertices", this.builderOrders));
+
+                        // Arcs
+                        $('#builderSumSize').html( sumValues(this.builderSizes) );
+                        $('#builderSumSize').parent().prop("title", partitionValues("Arcs", this.builderSizes));
+
+                        // Properties
+                        $('#builderSumProperties').html( sumValues(this.builderProperties) );
+                        $('#builderSumProperties').parent().prop("title", partitionValues("Properties", this.builderProperties));
+
+                        // Vectors
+                        $('#builderSumVectors').html( sumValues(this.builderVectors) );
+                        $('#builderSumVectors').parent().prop("title", partitionValues("Vectors", this.builderVectors));
+
+                        // CPU
+                        let cpu;
+                        if (Object.keys(uniqueCPU).length == 1) {
+                            cpu = Object.keys(uniqueCPU)[0];
+                            StatusColor.update( $('#cpuBrand'), sysinfoColor );
+                        }
+                        else {
+                            cpu = "Mixed (" + Object.keys(uniqueCPU).length + ") " + Object.keys(uniqueCPU)[0];
+                            StatusColor.update( $('#cpuBrand'), "orange1" );
+                        }
+                        $('#cpuBrand').html(cpu);
+                        let cpuTypeList = Object.keys(uniqueCPU).join("\n");
+                        $('#cpuBrand').parent().prop("title", cpuTypeList);
+
+                        // Memory
+                        const totalConsumedGiB = this.totalConsumedMemory / Math.pow(2,30);
+                        const totalPhysicalGiB = this.totalPhysicalMemory / Math.pow(2,30);
+                        $('#totalMemory').html( totalConsumedGiB.toFixed(1) + " GiB (" + totalPhysicalGiB.toFixed(0) + " GiB)" );
+                        let memUsageInfo = "Total Used: " + totalConsumedGiB.toFixed(1) + " GiB\nTotal Physical: "  + totalPhysicalGiB.toFixed(0) + " GiB";
+                        $('#totalMemory').parent().prop("title", memUsageInfo);
+                        const memRatio = this.totalConsumedMemory / this.totalPhysicalMemory;
+                        if (memRatio > Nodes.memoryLowThreshold) {
+                            let color;
+                            if (memRatio > Nodes.memoryCriticalThreshold) {
+                                color = "orange6";
+                            }
+                            else if (memRatio > Nodes.memoryHighThreshold) {
+                                color = "orange4";
+                            }
+                            else {
+                                color = "orange2";
+                            }
+                            StatusColor.update( $('#totalMemory'), color );
+                        }
+
+
+                        // Compute width of sysinfo panel
+                        let maxSysinfonameSz = 8;
+                        $('.sysinfoname').each(function () {
+                            let sz = $(this).html().length + 1;
+                            maxSysinfonameSz = Math.max(maxSysinfonameSz, sz);
+                        });
+                        maxSysinfonameSz = Math.min(maxSysinfonameSz, 40);
+                        $('.sysinfoname').css("width", (maxSysinfonameSz+2) + "ch");
+
+                        let maxSysinfoSz = 16;
+                        $('.sysinfo').each(function () {
+                            let sz = $(this).html().length + 1;
+                            maxSysinfoSz = Math.max(maxSysinfoSz, sz);
+                        });
+                        maxSysinfoSz = Math.min(maxSysinfoSz, 40);
+                        $('.sysinfo').css("width", maxSysinfoSz + "ch");
+
+                        // Make sysinfo values copyable on click
+                        $('#descriptorName').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#systemStatus').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#totalInstances').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#builderPartitions').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#builderSumOrder').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
+                        $('#builderSumSize').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
+                        $('#builderSumProperties').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
+                        $('#builderSumVectors').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
+                        $('#cpuBrand').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#totalMemory').mouseup(CommonHeader.copySelectionToClipboard);
+
+
+                    }
+
+
+                    if (objCount != this.objCount) {
+                        this.refreshSoon = true;
+                        this.objCount = objCount;
+                    }
+                    else {
+                        this.refreshSoon = false;
+                    }
+
+                    $('#nodeList').css( "visibility", "visible" );
+                    $('.nodeListHeader').css( "visibility", "visible" );
+
+                    if (initialPageLoad || this.pageDown) {
+                        showWelcomeInfo();
+                        $('#descriptor').css("visibility", "visible");
+                        initialPageLoad = false;
+                        this.pageDown = false;
+                        /*
+                        let descH = $('#descriptorArea').height();
+                        let descW = $('#descriptor').parent().width();
+                        let pageW = $('.nodeListHeader').width();
+                        $('#recentAction').css("height", (descH) + "px");
+                        $('#recentAction').css("width", (pageW - descW - 58) + "px");
+                        */
+                    }
+                    $('#recentAction').off("mouseup");
+                    $('#recentAction').on("mouseup", function (eventObj) {
+                        showWelcomeInfo();
+                        $('#descriptor').css("visibility", "visible");
+                    });
+
+                    repeatedActionCounter = 0;
+
+                    lastAction = null;
+
+                    this.lastRender = new Date();
+
+                }
+                catch (error) {
+                    $('#descriptorName').html( error != null ? error : "internal error" );
+                    $('.nodeRow').remove();
+                    $('#nodeList').css( "visibility", "hidden" );
+                    $('.nodeListHeader').css( "visibility", "hidden" );
+                }
+                finally {
+                }
+            }.bind(this)).fail(function (xhr, txt, err) {
+                try {
+                    $('.nodeRow').remove();
+                    $('#nodeList').css( "visibility", "hidden" );
+                    $('.nodeListHeader').css( "visibility", "hidden" );
+                    $('#descriptorSysinfoArea').addClass( "hidearea" );
+                    const goneMessageList = [
+                        `${window.location.hostname}:${window.location.port} is offline`,
+                        `Last seen: ${this.lastRender.toLocaleString("en-US")}`
+                    ];
+                    $('#recentAction').val(goneMessageList.join("\n"));
+                    this.pageDown = true;
+                }
+                catch(error) {
+                    $('#descriptorName').html( error );
+                }
+            }.bind(this));
+
+        }
+
+        refreshCounts() {
+            let uri = "/vgx/builtin/system_counts?idlist";
+            let sep = "=";
+            for (const rid in this.nodeCache) {
+                if (this.nodeCache[rid].hc) {
+                    uri += sep + rid;
+                    sep = ",";
+                }
+            }
+            $.get(uri, function (data, textStatus, jqXHR) {
+                try {
+                    const response = data["response"];
+                    const instances = response["instances"];
+                    for (const instance of instances) {
+                        try {
+                            const id = instance["id"];
+                            const objcnt = instance["objcnt"];
+                            let cache = this.nodeCache[id];
+                            cache.order = objcnt["order"];
+                            cache.size = objcnt["size"];
+                            cache.properties = objcnt["properties"];
+                            cache.vectors = objcnt["vectors"];
+                            cache.serial = objcnt["master-serial"];
+                            this.renderOrder(cache);
+                            this.renderSize(cache);
+                            this.renderSerial(cache);
+                        }
+                        catch (error) {
+                        }
+                    }
+                }
+                catch (error) {
+                }
+                finally {
+                }
+            }.bind(this));
+        }
+
+        refreshRates() {
+            let uri = "/vgx/builtin/system_rates?idlist";
+            let sep = "=";
+            for (const rid in this.nodeCache) {
+                if (this.nodeCache[rid].hc) {
+                    uri += sep + rid;
+                    sep = ",";
+                }
+            }
+            $.get(uri, function (data, textStatus, jqXHR) {
+                try {
+                    const response = data["response"];
+                    const instances = response["instances"];
+                    let skip = false;
+                    for (const instance of instances) {
+                        const id = instance["id"];
+                        let cache = this.nodeCache[id];
+                        if (cache.group_rate != null && cache.group != null) {
+                            cache.group_rate[cache.group] = 0.0;
+                        }
+                    }
+                    for (const instance of instances) {
+                        try {
+                            const id = instance["id"];
+                            let cache = this.nodeCache[id];
+                            let rates = instance["rates"];
+                            const matrix = instance["matrix"];
+                            const clients = instance["clients"];
+                            if (!rates || !matrix || !clients) {
+                                skip = true;
+                                break;
+                            }
+                            cache.matrix_nch = matrix["active-channels"];
+                            cache.matrix_maxch = matrix["total-channels"];
+                            cache.clients = clients["connected"];
+                            /*
+                            if(Math.random() > 0.0 ){
+                                cache.clients = Math.round( 1024 * Math.random() );
+                                cache.matrix_nch = Math.round( cache.matrix_maxch * Math.random() );
+                            }
+                            */
+                            cache.rate = rates["rate"];
+                            cache.qlat95 = rates["95.0"];
+                            cache.qlatAll = rates;
+                            if (cache.group_rate != null && cache.group != null && cache.s_in) {
+                                cache.group_rate[cache.group] += cache.rate;
+                            }
+                        }
+                        catch (error) {
+                        }
+                    }
+                    if (!skip) {
+                        for (const instance of instances) {
+                            try {
+                                const id = instance["id"];
+                                let cache = this.nodeCache[id];
+                                this.renderIOSockets(cache)
+                                this.renderQueryLoadBalance(cache);
+                                this.renderQueryRate(cache);
+                                this.renderQueryLatency(cache);
+                            }
+                            catch (error) {
+                            }
+                        }
+                    }
+                }
+                catch (error) {
+                }
+                finally {
+                }
+            }.bind(this));
+        }
+
+        freeze() {
+            this.frozen = true;
+        }
+
+        unfreeze() {
+            this.frozen = false;
+        }
+    }
+
+    class Page {
+
+        refresher = null;
+        freeze = false;
+        rendering = false;
+        static refreshTimeoutInterval = 333;
+        static fullRefreshCountdown = 12;
+        static ratesRefreshCountdown = 3;
+
+        constructor(nodes) {
+            this.nodes = nodes;
+            $('#descriptorName').html("Loading...");
+            $('.nodeListHeader').css("visibility", "hidden");
+        }
+
+
+        refresh() {
+            if (!this.freeze) {
+                this.rendering = true;
+                if ((--Page.fullRefreshCountdown) <= 0) {
+                    this.nodes.refreshFull();
+                    Page.fullRefreshCountdown = 12;
+                    Page.ratesRefreshCountdown = 3;
+                }
+                else {
+                    if (this.nodes.refreshSoon) {
+                        this.nodes.refreshCounts();
+                    }
+                    if ((--Page.ratesRefreshCountdown) <= 0) {
+                        this.nodes.refreshRates();
+                        Page.ratesRefreshCountdown = 3;
+                    }
+                }
+                this.rendering = false;
+            }
+
+            clearTimeout(this.refresher);
+            this.refresher = setTimeout(this.refresh.bind(this), Page.refreshTimeoutInterval);
+        }
+
+
+        pause() {
+            this.freeze = true;
+            this.nodes.freeze();
+        }
+
+
+        isPaused() {
+            return this.freeze;
+        }
+
+
+        resume() {
+            this.freeze = false;
+            this.nodes.unfreeze();
+            Page.fullRefreshCountdown = 0;
+        }
+
+
+        busy() {
+            return this.rendering;
+        }
+
+
+        stop() {
+            if (this.refresher != null) {
+                clearInterval(this.refresher);
+                this.refresher = null;
+            }
+        }
+
+
+        start() {
+            this.stop();
+            this.refresher = setTimeout(this.refresh.bind(this), Page.refreshTimeoutInterval);
+        }
+    }
+
+
+    function main() {
+
+        let nodes = new Nodes();
+        nodes.refreshFull();
+
+        page = new Page(nodes);
+        page.start();
+
+        document.addEventListener("keydown", function (eventObj) {
+            //let page = this;
+            if (eventObj.shiftKey == true && !page.isPaused()) {
+                showActionButtons();
+            }
+            if (eventObj.altKey == true) {
+                bypassDialog();
+            }
+        });
+        //}.bind(page));
+
+        document.addEventListener("keyup", function (eventObj) {
+            //let page = this;
+            if (eventObj.shiftKey == false && page.isPaused()) {
+                hideActionButtons();
+            }
+            else if (eventObj.altKey == false) {
+                requireDialog();
+            }
+        });
+        //}.bind(page));
+
+
+    }
+
+
+    function animateSoftBlink() {
+        $('.softblink').fadeOut(500);
+        $('.softblink').fadeIn(200);
+    }
+
+    setInterval(animateSoftBlink, 2000);
+
+    let initialPageLoad = true;
+
+    CommonHeader.ready(main, 3);
+</script>
+

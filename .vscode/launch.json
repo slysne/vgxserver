@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to C Process",
+      "type": "cppdbg",
+      "request": "attach",
+      "program": "${env:HOME}/venv312/bin/python",
+      "processId": "${command:pickProcess}",
+      "MIMode": "lldb",
+      "stopOnEntry": true
+    }
+  ]
+}

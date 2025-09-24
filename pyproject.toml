@@ -1,0 +1,24 @@
+[build-system]
+requires = [
+    "setuptools>=78",
+    "wheel",
+    "cmake",
+    "build"
+]
+
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyvgx"
+dynamic = ["version"]
+requires-python = ">= 3.12"
+authors = [{ name = "Stian Lysne", email = "stianlysne@gmail.com" }]
+description = "PyVGX - Vector Graph Index Python Extensions"
+readme = { file = "README.md", content-type = "text/markdown" }
+
+[project.scripts]
+vgxadmin = "pyvgx_scripts.vgxadmin:main"
+
+[tool.setuptools]
+script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
+

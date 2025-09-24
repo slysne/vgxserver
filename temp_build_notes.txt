@@ -1,0 +1,20 @@
+
+
+
+# Remember to build Python with:
+# export MACOSX_DEPLOYMENT_TARGET=14.0
+#
+#./configure \
+#  --prefix=$HOME/python312 \
+#  --enable-shared \
+#  --enable-optimizations \
+#  --with-openssl=$(brew --prefix openssl) \
+#  LDFLAGS="-Wl,-rpath,@loader_path -Wl,-install_name,@rpath/libpython3.12.dylib"
+#
+# make -j8
+# make install
+#
+# install_name_tool -id @rpath/libpython3.12.dylib $HOME/python312/lib/libpython3.12.dylib
+
+
+

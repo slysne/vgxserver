@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VGX</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <script src="clock.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div style="margin: 8">
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container" id="mainBody">
+            <table id="links">
+                <tbody>
+                    <tr>
+                        <td class="admin category">Local</td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell" id="uptime"><input class="disable_select" type="text" value=""></td>
+                        <td class="admin"><button class="link uilink" type=button id="uiAdmin" onclick="openSelfDelayed('/admin',75)">Admin</button></td>
+                        <td class="admin"><button class="link uilink" type=button id="uiStatus" onclick="openSelfDelayed('/status',75)">Status</button></td>
+                        <td class="admin"><button class="link uilink" type=button id="uiConsole" onclick="openSelfDelayed('/console',75)">Console</button></td>
+                        <td class="admin"><button class="link uilink" type=button id="uiSearch" onclick="openSelfDelayed('/search',75)">Search</button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell" id="nodetype"><input class="disable_select" type="text" value=""></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jNodestat" onclick="openBlank('/vgx/nodestat')">Nodestat {}</button></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jDispatch" onclick="openBlank('/vgx/dispatch')">Dispatch {}</button></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jMatrix" onclick="openBlank('/vgx/matrix')">Matrix {}</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="category" colspan="5"><hr/></td>
+                    </tr>
+
+                    <tr>
+                        <td class="admin category" id="system">System</td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell" id="sysorder"><input class="disable_select" type="text" value=""></td>
+                        <td class="admin"><button class="link uilink" type=button id="uiDashboard" onclick="openSelfDelayed('/system',75)">Dashboard</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell" id="syssize"><input class="disable_select" type="text" value=""></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jDescriptor" onclick="openBlank('/vgx/builtin/system_descriptor')">Descriptor {}</button></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jOverview" onclick="openBlank('/vgx/builtin/system_overview')">Overview {}</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="category" colspan="5"><hr/></td>
+                    </tr>
+
+
+                    <!--
+                    <tr>
+                        <td class="admin category">Docs</td>
+                        <td class="admin"><button class="link" type=button onclick="openHostedDocs()">Reference</button></td>
+                        <td class="admin"><button class="link" type=button onclick="openAIAssistant()">AI Assistant</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="category">&nbsp;</td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    -->
+                    <tr>
+                        <td class="admin category">Plugin</td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell">&nbsp;</td>
+                        <td class="admin"><button class="link uilink" type=button id="uiTestUI" onclick="openSelfDelayed('/plugin',75,true)">Test UI</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="admin infocell">&nbsp;</td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jLocalPlugins" onclick="openBlank('/vgx/plugins',true)">Local Plugins {}</button></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jLocalBuiltins" onclick="openBlank('/vgx/builtins',true)">Local Builtins {}</button></td>
+                        <td class="admin"><button class="link jsonlink" type=button id="jMatrixPlugins" onclick="openBlank('/vgx/builtin/matrixplugins',true)">Matrix Plugins {}</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <!--
+                    <tr>
+                        <td class="json category">JSON</td>
+                        <td class="admin"><button class="link" type=button onclick="openBlank('/vgx/nodestat')">Nodestat</button></td>
+                        <td class="admin"><button class="link" type=button onclick="openBlank('/vgx/dispatch')">Dispatch</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    <tr>
+                        <td class="json category"></td>
+                        <td class="admin"><button class="link" type=button onclick="openBlank('/vgx/ping')">Ping</button></td>
+                        <td class="admin"><button class="link" type=button onclick="openBlank('/vgx/builtin/echo')">Echo</button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                        <td class="empty"><button class="link" type=button style="visibility: hidden"></button></td>
+                    </tr>
+                    -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+</html>
+<style>
+    #links {
+        border-spacing: 0px;
+    }
+
+    #links td {
+        height: 50px;
+    }
+
+    .category {
+        /*font-family: cambria;*/
+        font-weight: bold;
+        font-size: 140%;
+        width: 190px;
+    }
+
+    td.category {
+        color: #676767;
+    }
+
+    td.empty {
+    }
+
+    input[disabled] {
+        pointer-events: none;
+    }
+
+    /* Uptime */
+    .infocell input {
+        font-family: Consolas, Menlo, courier;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        height: 25px;
+        width: 140px;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-bottom: 1px;
+        background: #FFFFFF;
+        color: #676767;
+        border-radius: 4px;
+    }
+
+    .downcell input {
+        border-color: #DD2000;
+        color: #FDEDEC;
+        background-color: #DD2000;
+    }
+
+
+    #links td {
+    }
+
+    .link {
+        font-family: Cambria;
+        font-size: 110%;
+        font-weight: normal;
+        border: none;
+        border-radius: 3px;
+        color: #F8F8F8;
+        background-color: #7F7F7F;
+        text-align: center;
+        width: 140px;
+        height: 25px;
+        margin: auto;
+        margin-left: 10px;
+        display: block;
+        padding-left: 1px;
+        padding-right: 1px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+        cursor: pointer;
+        transition: background-color 70ms ease-in, color 10ms ease-in, font-size 70ms ease-in;
+    }
+
+    .link:hover {
+        border: solid 1px;
+        color: #FEFEFE;
+        background-color: #707070;
+        border-color: #000000;
+    }
+
+    .link:active {
+        color: #FFFFFF;
+        background-color: #808080;
+    }
+
+    .uilink {
+        color: #F8F8F8;
+        background-color: #7F7F7F;
+        font-weight: bold;
+    }
+
+    .uilink:hover {
+        color: #FEFEFE;
+        background-color: #707070;
+    }
+
+    .uilink:active {
+        color: #FFFFFF;
+        background-color: #808080;
+    }
+
+    .jsonlink {
+        color: #F8F8F8;
+        background-color: #4e4e4e;
+        font-family: monospace;
+    }
+
+    .jsonlink:hover {
+        color: #FEFEFE;
+        background-color: #404040;
+    }
+
+    .jsonlink:active {
+        color: #FFFFFF;
+        background-color: #808080;
+    }
+
+
+</style>
+
+<script>
+
+    function openSelf(link, where) {
+        setTimeout(function () {
+            $('body').removeClass("leavepage");
+        }, 1000);
+
+        window.open(link, "_self");
+    }
+
+    function openSelfDelayed(link, delay, baseport=false) {
+        if (baseport) {
+            link = "http://" + window.location.hostname + ":" + CommonHeader.baseport + link;
+        }
+        $('body').addClass('leavepage');
+        setTimeout(openSelf.bind(null, link), delay);
+    }
+
+    function openBlank(link, baseport=false) {
+        if (baseport) {
+            link = "http://" + window.location.hostname + ":" + CommonHeader.baseport + link;
+        }
+        window.open(link, "_blank");
+    }
+
+
+    function openHostedDocs() {
+        const hosted = null;
+        window.open( hosted, "_blank" );
+    }
+
+    function openAIAssistant() {
+        const assistant = null;
+        window.open( assistant, "_blank" );
+    }
+
+    function openDocs() {
+        const docroot = "/docs/index.html";
+        $.get(docroot, function () {
+            window.open(docroot, "_blank");
+        }).fail(function () {
+            openHostedDocs();
+            window.alert("Local reference documentation not installed.\nPlace under <vgxroot>/WEB-ROOT/docs to enable.\n");
+        });
+    }
+
+    let inputs = $(document).find(".infocell input");
+    inputs.prop("disabled", true);
+    inputs.addClass("disable_select");
+
+    $("#uptime").prop("title",      "Local Instance Uptime");
+    $("#nodetype").prop("title",    "Local Instance Node Type and Identifier");
+    $("#uiAdmin").prop("title",     "Local Instance Admin");
+    $("#uiStatus").prop("title",    "Local Instance Server Status");
+    $("#uiConsole").prop("title",   "Local Instance Console");
+    $("#uiSearch").prop("title",    "Local Instance Search");
+    $("#jNodestat").prop("title",   "Local Instance Status Information (JSON)");
+    $("#jDispatch").prop("title",   "Local Instance Dispatcher Information (JSON)");
+    $("#jMatrix").prop("title",     "Local Instance Dispatch Matrix Information (JSON)");
+
+    $("#system").prop("title",      "System Instance Count");
+    $("#sysorder").prop("title",    "System Total Vertex Count");
+    $("#syssize").prop("title",     "System Total Arc Count");
+    $("#uiDashboard").prop("title", "System Overview Dashboard");
+    $("#jDescriptor").prop("title", "System Descriptor (JSON)");
+    $("#jOverview").prop("title",   "System Overview (JSON)");
+
+    $("#uiTestUI").prop("title",        "Test Local Instance Plugins");
+    $("#jLocalPlugins").prop("title",   "List Available Plugins (JSON)");
+    $("#jLocalBuiltins").prop("title",  "List Available Builtins (JSON)");
+    $("#jMatrixPlugins").prop("title",  "List Available Deep Matrix Plugins (JSON)");
+
+
+
+    let refresher = null;
+
+    let state = {
+        'err': 0,
+        'local': {
+            'uptime': -1,
+            'label': null,
+            'ident': '-',
+            'nodetype': '-'
+        },
+        'system': {
+            'instances': 0,
+            'order': 0,
+            'size': 0,
+            'partitions': 0
+        },
+        'next': 0
+    };
+
+    let clock = new Clock();
+    let uptmElem = $(document).find("#uptime input");
+    clock.setElement(uptmElem);
+    clock.start(state.local.uptime);
+    clock.refresh();
+
+
+    function down() {
+        clock.stop();
+        $('button').prop('disabled', true);
+        $('button').css('font-style', 'italic');
+        $('button').css('opacity', 0.5);
+        let nodetypeElem = $("#nodetype input")
+        let nodetypeTD = $("#nodetype")
+        let sysElem = $("#system");
+        let sysorderElem = $("#sysorder input");
+        let syssizeElem = $("#syssize input");
+        nodetypeElem.val("Down");
+        nodetypeTD.addClass("downcell");
+        sysElem.html("System");
+        sysorderElem.val("");
+        syssizeElem.val("");
+
+    }
+
+
+
+    function up() {
+        let nodetypeTD = $("#nodetype")
+        nodetypeTD.removeClass("downcell");
+        $('button').prop('disabled', false);
+        $('button').css('font-style', 'normal');
+        $('button').css('opacity', 1.0);
+    }
+
+
+    function refreshNodestat() {
+        $.get("/vgx/nodestat", function (data, textStatus, jqXHR) {
+            try {
+                if (!clock.running()) {
+                    clock.start(state.local.uptime);
+                }
+                const response = data["response"];
+                // Uptime
+                state.local.uptime = response["uptime"];
+                const uptime = clock.getTime();
+                if (Math.abs(state.local.uptime - uptime) > 2) {
+                    clock.updateTimeReference(state.local.uptime);
+                }
+                // Service Label
+                state.local.label = response["service-label"];
+                // OK
+                state.err = 0;
+            }
+            catch (error) {
+                state.local.uptime = -1;
+            }
+            finally {
+                clock.refresh();
+            }
+        }).fail(function (xhr, txt, err) {
+            if (state.err++ > 3) {
+                state.local.uptime = -1;
+                down();
+            }
+        });
+    }
+
+
+    function refreshSystem() {
+        $.get("/vgx/builtin/system_overview", function (data, textStatus, jqXHR) {
+            try {
+                const response = data["response"];
+                const instances = response["instances"];
+
+                state.system.instances = instances.length;
+                let totalOrder = 0;
+                let totalSize = 0;
+                let partitions = 0;
+
+                for (const instance of instances) {
+                    const ident = instance["id"];
+                    const nodetype = instance["nodetype"];
+                    const nodestat = instance["nodestat"];
+                    if (nodetype == "builder") {
+                        totalOrder += nodestat["graph-order"];
+                        totalSize += nodestat["graph-size"];
+                        partitions++;
+                    }
+                    if (nodestat["service-label"] == state.local.label) {
+                        state.local.ident = ident;
+                        state.local.nodetype = nodetype;
+                    }
+                }
+
+                state.system.order = totalOrder;
+                state.system.size = totalSize;
+                state.system.partitions = partitions;
+                // OK
+                state.err = 0;
+            }
+            catch (error) {
+                state.local.uptime = -1;
+            }
+            finally {
+                const nI = "I: " + state.system.instances;
+                const nV = "V: " + state.system.order.toLocaleString("en-US");
+                const nA = "A: " + state.system.size.toLocaleString("en-US");
+                const nP = "P: " + state.system.partitions;
+
+                let nodetypeElem = $("#nodetype input")
+                let sysElem = $("#system");
+                let sysorderElem = $("#sysorder input");
+                let syssizeElem = $("#syssize input");
+                nodetypeElem.val( state.local.nodetype + "/" + state.local.ident );
+                sysElem.html("System (" + nI + ")");
+                sysorderElem.val(nV);
+                syssizeElem.val(nA);
+            }
+        }).fail(function (xhr, txt, err) {
+            if (state.err++ > 3) {
+                state.local.uptime = -1;
+                down();
+            }
+        });
+    }
+
+
+    function refreshPage() {
+
+        clearTimeout(refresher);
+        refresher = setTimeout(refreshPage, 2500);
+
+        if (state.err == 0) {
+            up();
+        }
+
+        switch (state.next) {
+            case 0:
+                refreshNodestat();
+                break;
+            case 1:
+                refreshSystem();
+                break;
+            default:
+                break;
+        }
+        if (++state.next > 1) {
+            state.next = 0;
+        }
+    }
+
+
+    function main() {
+        refreshNodestat();
+        refreshSystem();
+        refresher = setTimeout(refreshPage, 1);
+    }
+
+
+    CommonHeader.ready(main, 12);
+</script>
+
+
+

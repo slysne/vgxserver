@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VGX Status</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <script src="uptime.js"></script>
+    <script src="digest.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div style="margin: 8">
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container">
+            <div id="http_server">
+                <h3>Service</h3>
+                <table id="server_metrics" class="databox">
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Status</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Name</td>
+                        <td colspan="2" class="val vstr"><span id="service_name"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Uptime</td>
+                        <td colspan="2" class="val vstr"><span id="uptime"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Service</td>
+                        <td colspan="2" class="val vstr"><span id="service_in"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Mode</td>
+                        <td colspan="2" class="val vstr"><span id="service_mode"></span></td>
+                    </tr>
+
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Request</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Rate</td>
+                        <td class="val vfloat"><span id="qps"></span></td>
+                        <td class="unit">qps</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Total</td>
+                        <td class="val vint"><span id="total"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Plugin</td>
+                        <td class="val vint"><span id="plugin"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Response Time</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Mean</td>
+                        <td class="val vfloat"><span id="mean"></span></td>
+                        <td class="unit">ms</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Median</td>
+                        <td class="val vfloat"><span id="pct50_0"></span></td>
+                        <td class="unit">ms</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">90%</td>
+                        <td class="val vfloat"><span id="pct90_0"></span></td>
+                        <td class="unit">ms</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">95%</td>
+                        <td class="val vfloat"><span id="pct95_0"></span></td>
+                        <td class="unit">ms</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">99%</td>
+                        <td class="val vfloat"><span id="pct99_0"></span></td>
+                        <td class="unit">ms</td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Dispatch</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">ExecLoad</td>
+                        <td class="val vint"><span class="alertable" id="loadfactor"></span></td>
+                        <td class="unit">%</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">ExecWait</td>
+                        <td class="val vint"><span id="waiting"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Matrix</td>
+                        <td class="val vint"><span id="matrix_channels"></span></td>
+                        <td class="unit">channels</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">MatrixWait</td>
+                        <td class="val vint"><span id="matrix_backlog"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Connection</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Connected</td>
+                        <td class="val vint"><span id="clients"></span></td>
+                        <td class="unit">clients</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Lifetime</td>
+                        <td class="val vint"><span id="total_clients"></span></td>
+                        <td class="unit">clients</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Inbound</td>
+                        <td class="val vkib"><span id="data_in"></span></td>
+                        <td class="unit">kiB</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Outbound</td>
+                        <td class="val vkib"><span id="data_out"></span></td>
+                        <td class="unit">kiB</td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="3" class="superlabel">Error</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Rate</td>
+                        <td class="val vfloat"><span id="err_rate"></span></td>
+                        <td class="unit">err/s</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Service</td>
+                        <td class="val vint"><span id="err_service"></span></td>
+                        <td class="unit">errors</td>
+                    </tr>
+                    <tr class="datarow" id="http_codes_row">
+                        <td class="sublabel">HTTP Code</td>
+                        <td class="val vint"><span id="err_http"></span></td>
+                        <td class="vlist vstr wrap-list wrap-codes"><span id="http_codes"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="transaction_io">
+                <h3>Transaction</h3>
+                <div class="transaction_metrics">
+                    <table id="transaction_status" class="transaction_panel databox">
+                        <tr class="headrow">
+                            <td colspan="2" class="superlabel">Data Input Service</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Persistence</td>
+                            <td class="val vstr"><span id="tx_durable"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Expiration</td>
+                            <td class="val vstr"><span id="tx_events"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Snapshot Age</td>
+                            <td class="val vstr"><span id="snapshot_age"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Execution</td>
+                            <td class="val vstr"><span id="tx_exec"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Master Serial</td>
+                            <td class="val vstr"><span id="masterSerial"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Fingerprint</td>
+                            <td class="val vstr"><span id="fingerprint"></span></td>
+                        </tr>
+                    </table>
+                    <table id="transaction_metrics_data" class="transaction_panel databox">
+                        <tr class="headrow">
+                            <td class="superlabel">In</td>
+                            <td class="superlabel">Out</td>
+                            <td class="empty"></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="val vkib"><span id="tx_in_kib_rate"></span></td>
+                            <td class="val vkib"><span id="tx_out_kib_rate"></span></td>
+                            <td class="unit">kiB/sec<span id="tx_out_kib_multiplier"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="val vkib"><span id="tx_in_kib"></span></td>
+                            <td class="val vkib"><span id="tx_out_kib"></span></td>
+                            <td class="unit">kiB</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="val vkib"><span id="tx_in_codes"></span></td>
+                            <td class="val vkib"><span id="tx_out_codes"></span></td>
+                            <td class="unit">opcodes</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="val vkib"><span id="tx_in_ops"></span></td>
+                            <td class="val vkib"><span id="tx_out_ops"></span></td>
+                            <td class="unit">operations</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="val vkib"><span id="tx_in_txs"></span></td>
+                            <td class="val vkib"><span id="tx_out_txs"></span></td>
+                            <td class="unit">transactions</td>
+                        </tr>
+                    </table>
+                    <table id="transaction_input_throttle" class="transaction_panel databox">
+                        <tr class="headrow">
+                            <td colspan="3" class="superlabel">Throttle</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="empty"></td>
+                            <td class="val vfloat"><span id="tx_in_bytes_throttle"></span></td>
+                            <td class="unit">bytes/sec</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="empty"></td>
+                            <td class="val vfloat"><span id="tx_in_opcodes_throttle"></span></td>
+                            <td class="unit">opcodes/sec</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="empty"></td>
+                            <td class="val vfloat"><span id="tx_in_operations_throttle"></span></td>
+                            <td class="unit">operations/sec</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="empty"></td>
+                            <td class="val vfloat"><span id="tx_in_transactions_throttle"></span></td>
+                            <td class="unit">transactions/sec</td>
+                        </tr>
+                    </table>
+                    <table id="transaction_connection_status" class="transaction_panel databox">
+                        <tr class="headrow">
+                            <td colspan="3" class="superlabel">Connection Status</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Listen Port</td>
+                            <td class="val vint"><span id="tx_port"></span></td>
+                            <td class="val vstr"><span id="tx_status"></span></td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Input Lag</td>
+                            <td class="val vfloat"><span id="tx_lag"></span></td>
+                            <td class="unit">seconds</td>
+                        </tr>
+                        <tr class="datarow">
+                            <td class="sublabel">Data Provider</td>
+                            <td class="val vstr" colspan="2"><span id="txprovider"></span></td>
+                        </tr>
+                        <tr class="datarow" id="subscribers_row">
+                            <td class="sublabel">Subscribers</td>
+                            <td id="txsubscribers_td" class="vstr" colspan="2"><pre class="val vstr" id="txsubscribers"></pre></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="graph_engine">
+                <h3>Graph</h3>
+                <table id="graph_status" class="databox">
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Resident</td>
+                    </tr>
+                    <tr class="datarow" id="graph_names_row">
+                        <td class="sublabel"><span id="graphs_label">-</span></td>
+                        <td class="val vlist vstr"><span id="graph_names"></span></td>
+                    </tr>
+                    <tr class="datarow" id="local_graph_names_row">
+                        <td class="sublabel"><span id="local_graphs_label">Local Only</span></td>
+                        <td class="val vlist vstr"><span id="local_graph_names"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Digest</td>
+                        <td class="sublabel" style="text-align:center">
+                            <span style="position: relative; text-align: left" id="digest"></span>
+                        </td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Object Summary</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Vertex</td>
+                        <td class="val vint"><span id="order"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Arc</td>
+                        <td class="val vint"><span id="size"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Property</td>
+                        <td class="val vint"><span id="nprop"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Vector</td>
+                        <td class="val vint"><span id="nvec"></span></td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Enumerator Summary</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Relationship</td>
+                        <td class="val vint"><span id="nrel"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Vertex Type</td>
+                        <td class="val vint"><span id="nvtx"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Property Key</td>
+                        <td class="val vint"><span id="nkey"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">String Value</td>
+                        <td class="val vint"><span id="nval"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Dimension</td>
+                        <td class="val vint"><span id="ndim"></span></td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Virtual Property</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Count</td>
+                        <td class="val vint"><span id="vprop_count"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Bytes</td>
+                        <td class="val vint"><span id="vprop_bytes"></span></td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Internal Query</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Total Count</td>
+                        <td class="val vint"><span id="qcnt"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Latency (&#956;s)</td>
+                        <td class="val vint"><span id="qtime"></span></td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Exception Count</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Warning</td>
+                        <td class="val vint"><span id="nWarning"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Error</td>
+                        <td class="val vint" id="errorcell"><span id="nError"></span></td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Critical</td>
+                        <td class="val vint" id="criticalcell"><span id="nCritical"></span></td>
+                    </tr>
+                </table>
+            </div>
+            <div id="memory_usage">
+                <h3>Memory</h3>
+                <table id="memory_status" class="databox">
+                    <tr class="headrow">
+                        <td class="superlabel" id="usage">Usage</td>
+                        <td class="superlabel" id="vgx_memory" colspan="2">VGX Memory</td>
+                        <td class="superlabel" id="of_total" colspan="3">of Total</td>
+                        <td class="superlabel" id="total_usage" colspan="2">Total Usage</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Current</td>
+                        <td class="val vint"><span id="mem_MiB"></span></td>
+                        <td class="unit">MiB</td>
+                        <td class="unit">=</td>
+                        <td class="val vfloat"><span id="mempct_total"></span></td>
+                        <td class="unit">%</td>
+                        <td class="val vfloat"><span id="mempct_used"></span></td>
+                        <td class="unit">%</td>
+                    </tr>
+                    <tr class="datarow">
+                        <td class="sublabel">Peak</td>
+                        <td class="val vint"><span id="max_mem_MiB"></span></td>
+                        <td class="unit">MiB</td>
+                        <td class="unit">=</td>
+                        <td class="val vfloat"><span id="max_mempct_total"></span></td>
+                        <td class="unit">%</td>
+                        <td class="val vfloat"><span id="max_mempct_used"></span></td>
+                        <td class="unit">%</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+</html>
+
+<style>
+    .container {
+        width: 1024px;
+    }
+
+    .container > div {
+        float: left;
+    }
+
+    .databox {
+        border: 3px solid #D0D0D0;
+        border-collapse: collapse;
+    }
+
+    #graph_engine {
+        margin-bottom: 0px;
+    }
+
+    #memory_usage {
+        /* width: 850px; */
+        margin-top: -18px;
+    }
+
+    .container .headrow {
+        background-color: #D0D0D0;
+    }
+
+    .container .datarow:nth-child(odd) {
+        background-color: #F4F4F4;
+    }
+
+    .container .datarow:nth-child(even) {
+        background-color: #FCFCFC;
+    }
+
+    .superlabel {
+        font-size: 105%;
+        font-weight: bold;
+        padding-left: 10px;
+    }
+
+    .sublabel {
+        text-align: right;
+        padding-left: 10px;
+    }
+
+    .val {
+        min-width: 70px;
+        padding-right: 10px;
+        text-align: right;
+        font-family: Consolas, monospace;
+        font-size: 90%;
+        transition: transform 200ms;
+    }
+
+    .val.highlight {
+        transform: scale(1.1);
+        background: transparent;
+        font-weight: bold;
+    }
+
+    .vstr {
+        text-align: left;
+    }
+
+    .vemph {
+        font-weight: bold;
+    }
+
+    .unit {
+        padding-right: 10px;
+    }
+
+    .wrap-list {
+        word-wrap: break-word;
+    }
+
+    .wrap-codes {
+        max-width: 120px;
+        text-align: left;
+    }
+
+    .wrap-hosts {
+        min-width: 150px;
+        max-width: 298px;
+        text-align: left;
+    }
+
+    .transaction_panel {
+        min-width: 298px;
+    }
+
+    #transaction_status .sublabel {
+       width: 120px;
+    }
+
+    #memory_status .val {
+        min-width: 40px;
+    }
+
+    #memory_status td.superlabel#usage {
+        padding-left: 44px;
+        padding-right: 23px;
+    }
+
+    #memory_status td.superlabel#vgx_memory {
+        padding-left: 12px;
+        padding-right: 20px;
+    }
+
+    #memory_status td.superlabel {
+        padding-left: 49px;
+        padding-right: 18px;
+    }
+
+    #memory_status td.sublabel {
+        text-align: center;
+        padding-left: 26px;
+    }
+
+    #http_codes_row {
+        height: 30px;
+        vertical-align: top;
+    }
+
+    #subscribers_row {
+        height: 59px;
+        vertical-align: top;
+    }
+
+    #digest {
+        font-size: 14px;
+    }
+
+    #masterSerial {
+        font-size: 13px;
+    }
+</style>
+
+<script>
+
+    function main() {
+        const goneopacity = 0.25;
+        const fadein_duration = 200;
+        const fadeout_duration = 1500;
+        const color_critical = "#FF0000";
+        const color_high = "#FF6000";
+        const color_normal = "#0000C0";
+
+        let digestObj = new Digest($('#digest'));
+
+        let timeDown = false;
+        let graphDown = false;
+        let metricsDown = false;
+        let txDown = false;
+        let txPeersDown = false;
+        let memoryDown = false;
+
+        let loadfactor = -1.0;
+
+        function blinkAlert() {
+            $('.alertable').fadeOut(100);
+            $('.alertable').fadeIn(10);
+            $('.alertable').fadeOut(500);
+            $('.alertable').fadeIn(10);
+            setTimeout(blinkAlert, 800);
+        }
+        setTimeout(blinkAlert, 800);
+
+        let uptimeRefresher = new UptimeRefresher('uptime', function () {
+            if (timeDown) {
+                $("#commonHeaderDiv").fadeTo(fadein_duration, 1);
+                $("#commonFooterDiv").fadeTo(fadein_duration, 1);
+                timeDown = false;
+            }
+        }, function (err) {
+            $("#commonHeaderDiv").fadeTo(fadeout_duration, goneopacity);
+            $("#commonFooterDiv").fadeTo(fadeout_duration, goneopacity);
+            timeDown = true;
+        });
+
+        uptimeRefresher.start();
+
+        // Graph Info
+        let last_digest = null;
+        function updateGraph() {
+            $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+                if (graphDown) {
+                    $("#graph_engine").fadeTo(fadein_duration, 1);
+                    graphDown = false;
+                }
+
+                const graphs = data["response"]["graphsum"];
+                const names = graphs["names"];
+                const local_names = graphs["local-only"];
+                const enums = graphs["enumerator"];
+                const vprop = graphs["vprop"];
+                const query = graphs["query"];
+                const engine = graphs["engine"];
+                const exceptions = engine["exceptions"];
+                let graph_names = "-";
+                let local_graph_names = "-";
+                let digest = null;
+                let masterSerial = null;
+                let order = 0;
+                let size = 0;
+                let nprop = 0;
+                let nvec = 0;
+                let nrel = 0;
+                let nvtx = 0;
+                let nkey = 0;
+                let nval = 0;
+                let ndim = 0;
+                let vprop_bytes = 0;
+                let vprop_count = 0;
+                let qcnt = 0;
+                let qns = 0.0;
+                let nWarning = 0;
+                let nError = 0;
+                let nCritical = 0;
+                let orderstr = "-";
+                let sizestr = "-";
+                let propstr = "-";
+                let vecstr = "-";
+                let relstr = "-";
+                let vtxstr = "-";
+                let keystr = "-";
+                let valstr = "-";
+                let dimstr = "-";
+                let vprop_bytes_str = "-";
+                let vprop_count_str = "-";
+                let qcntstr = "-";
+                let qtimestr = "-";
+                let warningStr = "-";
+                let errorStr = "-";
+                let criticalStr = "-";
+                if (names.length > 0) {
+                    $('#graphs_label').html(names.length > 1 ? "Graphs" : "Graph");
+                    graph_names = names.length > 1 ? "[" : "";
+                    graph_names += names.join(", ");
+                    graph_names += names.length > 1 ? "]" : "";
+                    digest = graphs["digest"];
+                    masterSerial = graphs["master-serial"];
+                    order = parseInt(graphs["order"]);
+                    size = parseInt(graphs["size"]);
+                    nprop = parseInt(graphs["properties"]);
+                    nvec = parseInt(graphs["vectors"]);
+                    nrel = parseInt(enums["relationship"]);
+                    nvtx = parseInt(enums["vertextype"]);
+                    nkey = parseInt(enums["key"]);
+                    nval = parseInt(enums["string"]);
+                    ndim = parseInt(enums["dimension"]);
+                    vprop_bytes = parseInt(vprop["bytes"]);
+                    vprop_count = parseInt(vprop["count"]);
+                    qcnt = parseInt(query["count"]);
+                    qns = parseInt(query["ns-acc"]);
+                    nWarning = parseInt(exceptions["warning"]);
+                    nError = parseInt(exceptions["error"]);
+                    nCritical = parseInt(exceptions["critical"]);
+                    orderstr = order.toLocaleString("en-US");
+                    sizestr = size.toLocaleString("en-US");
+                    propstr = nprop.toLocaleString("en-US");
+                    vecstr = nvec.toLocaleString("en-US");
+                    relstr = nrel.toLocaleString("en-US");
+                    vtxstr = nvtx.toLocaleString("en-US");
+                    keystr = nkey.toLocaleString("en-US");
+                    valstr = nval.toLocaleString("en-US");
+                    dimstr = ndim.toLocaleString("en-US");
+                    vprop_bytes_str = vprop_bytes.toLocaleString("en-US");
+                    vprop_count_str = vprop_count.toLocaleString("en-US");
+                    qcntstr = qcnt.toLocaleString("en-US");
+                    if (qcnt > 0) {
+                        qtimestr = ((qns / qcnt) / 1000).toFixed(2);
+                    }
+
+                    warningStr = nWarning.toLocaleString("en-US");
+                    errorStr = nError.toLocaleString("en-US");
+                    criticalStr = nCritical.toLocaleString("en-US");
+                }
+                else {
+                    $('#graphs_label').html("No Graph");
+                }
+                if (local_names.length > 0) {
+                    local_graph_names = local_names.length > 1 ? "[" : "";
+                    local_graph_names += local_names.join(", ");
+                    local_graph_names += local_names.length > 1 ? "]" : "";
+                }
+                $('#graph_names').html(graph_names);
+                $('#local_graph_names').html(local_graph_names);
+                $('#order').html(orderstr);
+                $('#size').html(sizestr);
+                $('#nprop').html(propstr);
+                $('#nvec').html(vecstr);
+                $('#nrel').html(relstr);
+                $('#nvtx').html(vtxstr);
+                $('#nkey').html(keystr);
+                $('#nval').html(valstr);
+                $('#ndim').html(dimstr);
+                $('#vprop_bytes').html(vprop_bytes_str);
+                $('#vprop_count').html(vprop_count_str);
+                $('#qcnt').html(qcntstr);
+                $('#qtime').html(qtimestr);
+                $('#nWarning').html(warningStr);
+                $('#nError').html(errorStr);
+                $('#nCritical').html(criticalStr);
+
+                digestObj.update(digest);
+                $('#masterSerial').html( MasterSerial.render( masterSerial ) );
+                $('#fingerprint').html( digest.slice(14) );
+
+                if (nError > 0) {
+                    $('#nError').css("color", "#FF6000");
+                }
+                if (nCritical > 0) {
+                    $('#nCritical').css("color", "#FF0000");
+                }
+
+                if (digest === last_digest) {
+                    setTimeout(updateGraph, 500);
+                }
+                else {
+                    setTimeout(updateGraph, 57);
+                    last_digest = digest;
+                }
+
+                let enginebox = $('#graph_engine');
+                let fontsize = 90;
+                $('#graph_engine').find('td.vstr').css("font-size", "90%");
+                while (enginebox.width() > 300 && fontsize > 3) {
+                    fontsize -= 1;
+                    $('#graph_engine').find('td.vstr').css("font-size", fontsize + "%");
+                }
+
+
+            }).fail(function (xhr, txt, err) {
+                $("#graph_engine").fadeTo(fadeout_duration, goneopacity);
+                graphDown = true;
+                setTimeout(updateGraph, 5000);
+            });
+        }
+
+        let last_tx_count = 0;
+        // Transaction Metrics
+        function updateTX() {
+            $.get("/vgx/txstat", function (data, textStatus, jqXHR) {
+                if (txDown) {
+                    $("#transaction_io").fadeTo(fadein_duration, 1);
+                    $("#transaction_metrics_data").fadeTo(fadein_duration, 1);
+                    txDown = false;
+                }
+                const response = data["response"];
+                const iodata = response["data"];
+                const input_lag_ms = parseInt(response["input-lag"]);
+                const bytes = iodata["bytes"];
+                const rate = iodata["rate"];
+                const opcodes = iodata["opcodes"];
+                const operations = iodata["operations"];
+                const transactions = iodata["transactions"];
+                const bytes_throttle = parseFloat(bytes["throttle"]).toFixed(1);
+                const bytes_in = parseInt(bytes["in"]);
+                const bytes_out = parseInt(bytes["out"]);
+                const rate_in = parseFloat(rate["in"]);
+                const rate_out = parseFloat(rate["out"]);
+                const opcodes_throttle = parseFloat(opcodes["throttle"]).toFixed(1);
+                const opcodes_in = parseInt(opcodes["in"]);
+                const opcodes_out = parseInt(opcodes["out"]);
+                const operations_throttle = parseFloat(operations["throttle"]).toFixed(1);
+                const operations_in = parseInt(operations["in"]);
+                const operations_out = parseInt(operations["out"]);
+                const transactions_throttle = parseFloat(transactions["throttle"]).toFixed(1);
+                const transactions_in = parseInt(transactions["in"]);
+                const transactions_out = parseInt(transactions["out"]);
+                const tx_lag_sec = input_lag_ms / 1024;
+                const kiB_in = Math.round(bytes_in / 1024);
+                const kiB_out = Math.round(bytes_out / 1024);
+                const kiB_rate_in = Math.round(rate_in / 1024);
+                const kiB_rate_out = Math.round(rate_out / 1024);
+
+                if (tx_lag_sec > 120.0) {
+                    $('#tx_lag').css("color", color_critical);
+                    $('#tx_lag').addClass("alertable");
+                }
+                else {
+                    if (tx_lag_sec > 30.0) {
+                        $('#tx_lag').css("color", color_high);
+                    }
+                    else {
+                        $('#tx_lag').css("color", color_normal);
+                    }
+                    $('#tx_lag').removeClass("alertable");
+                }
+
+                $('#tx_lag').html(tx_lag_sec.toFixed(3));
+                $('#tx_in_kib').html(kiB_in.toLocaleString("en-US"));
+                $('#tx_out_kib').html(kiB_out.toLocaleString("en-US"));
+                $('#tx_in_kib_rate').html(kiB_rate_in.toLocaleString("en-US"));
+                $('#tx_out_kib_rate').html(kiB_rate_out.toLocaleString("en-US"));
+                $('#tx_in_codes').html(opcodes_in.toLocaleString("en-US"));
+                $('#tx_out_codes').html(opcodes_out.toLocaleString("en-US"));
+                $('#tx_in_ops').html(operations_in.toLocaleString("en-US"));
+                $('#tx_out_ops').html(operations_out.toLocaleString("en-US"));
+                $('#tx_in_txs').html(transactions_in.toLocaleString("en-US"));
+                $('#tx_out_txs').html(transactions_out.toLocaleString("en-US"));
+
+                let throttled = 0;
+                if( bytes_throttle <= 0.0 ) {
+                    $('#tx_in_bytes_throttle').closest("tr").hide();
+                }
+                else {
+                    $('#tx_in_bytes_throttle').html(bytes_throttle.toLocaleString("en-US"));
+                    $('#tx_in_bytes_throttle').closest("tr").show();
+                    throttled++;
+                }
+                if( opcodes_throttle <= 0.0 ) {
+                    $('#tx_in_opcodes_throttle').closest("tr").hide();
+                }
+                else {
+                    $('#tx_in_opcodes_throttle').html(opcodes_throttle.toLocaleString("en-US"));
+                    $('#tx_in_opcodes_throttle').closest("tr").show();
+                    throttled++;
+                }
+                if( operations_throttle <= 0.0 ) {
+                    $('#tx_in_operations_throttle').closest("tr").hide();
+                }
+                else {
+                    $('#tx_in_operations_throttle').html(operations_throttle.toLocaleString("en-US"));
+                    $('#tx_in_operations_throttle').closest("tr").show();
+                    throttled++;
+                }
+                if( transactions_throttle <= 0.0 ) {
+                    $('#tx_in_transactions_throttle').closest("tr").hide();
+                }
+                else {
+                    $('#tx_in_transactions_throttle').html(transactions_throttle.toLocaleString("en-US"));
+                    $('#tx_in_transactions_throttle').closest("tr").show();
+                    throttled++;
+                }
+                if (throttled>0) {
+                    $('#transaction_input_throttle').show();
+                }
+                else {
+                    $('#transaction_input_throttle').hide();
+                }
+
+
+                const tx_count = bytes_in + bytes_out + opcodes_in + opcodes_out + operations_in + operations_out + transactions_in + transactions_out;
+                if (tx_count != last_tx_count) {
+                    setTimeout(updateTX, 200);
+                    last_tx_count = tx_count;
+                }
+                else {
+                    setTimeout(updateTX, 1300);
+                }
+
+                let metricsbox = $('#transaction_metrics_data');
+                let fontsize = 90;
+                $('#transaction_metrics_data').find('td.vint').css("font-size", "90%");
+                while (metricsbox.width() > 296 && fontsize > 3) {
+                    fontsize -= 1;
+                    $('#transaction_metrics_data').find('td.val').css("font-size", fontsize + "%");
+                }
+
+            }).fail(function (xhr, txt, err) {
+                $("#transaction_metrics_data").fadeTo(fadeout_duration, goneopacity);
+                txDown = true;
+                setTimeout(updateTX, 5000);
+            });
+        }
+
+        // Transaction Peers
+        function updateTXPeers() {
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                if (txPeersDown) {
+                    $("#transaction_metrics_data").fadeTo(fadein_duration, 1);
+                    $("#transaction_io").fadeTo(fadein_duration, 1);
+                    txPeersDown = false;
+                }
+                const response = data["response"];
+                const port = parseInt(response["port"]);
+                const durable = response["durable"];
+                const events = response["events"];
+                const executing = response["executing"];
+                const persist_age = response["persist-age"];
+                const persisting = response["persisting"];
+                let provider = response["provider"];
+                let subscribers = response["subscribers"];
+                let statusStr = null;
+
+                if (provider != null) {
+                    statusStr = "attached";
+                }
+                else if (port > 0) {
+                    statusStr = "detached";
+                }
+                else {
+                    statusStr = "down";
+                }
+                $('#tx_status').html(statusStr);
+
+                $('#tx_port').html(port > 0 ? port : "-");
+                $('#tx_durable').html(durable ? "durable" : "volatile");
+                $('#tx_events').html(events ? "auto" : "passive");
+
+                let execStr = null;
+
+                if (parseInt(persisting) > 0) {
+                    execStr = "persisting";
+                }
+                else if (provider == null) {
+                    execStr = "idle";
+                }
+                else if (executing) {
+                    execStr = "running";
+                }
+                else {
+                    execStr = "suspended";
+                }
+                $('#tx_exec').html(execStr);
+
+                $('#snapshot_age').html(persist_age);
+
+                if (provider != null) {
+                    const preRex = /vgx:\/\//;
+                    const postRex = /:(\d+)/;
+                    provider = provider.replace(preRex, "").replace(postRex, "");
+                    $('#txprovider').html(provider);
+                }
+                else {
+                    $('#txprovider').html("-");
+                }
+
+                if (subscribers.length > 0) {
+                    let sub_names = "";
+                    let max_len = 0;
+                    for (var i = 0; i < subscribers.length; i++) {
+                        let sub_name = subscribers[i][0];
+                        if (sub_name.length > max_len) {
+                            max_len = sub_name.length;
+                        }
+                        if (i == 0) {
+                            sub_names += sub_name;
+                        }
+                        else {
+                            sub_names += "\n" + sub_name;
+                        }
+                    }
+                    $('#txsubscribers').html(sub_names);
+                    let txbox = $('#transaction_connection_status');
+                    let fontsize = 90;
+                    $('#txsubscribers').css("font-size", "90%");
+                    while (txbox.width() > 296 && fontsize > 1) {
+                        fontsize -= 1;
+                        $('#txsubscribers').css("font-size", fontsize + "%");
+                    }
+                    while (txbox.width() > 296 && max_len > 10) {
+                        sub_names = "";
+                        max_len -= 1;
+                        for (var i = 0; i < subscribers.length; i++) {
+                            let sub_name = subscribers[i][0];
+                            if (sub_name.startsWith("vgx://")) {
+                                sub_name = sub_name.slice(6);
+                            }
+                            if (sub_name.length > max_len) {
+                                sub_name = sub_name.slice(0, max_len);
+                            }
+                            if (i == 0) {
+                                sub_names += sub_name;
+                            }
+                            else {
+                                sub_names += "\n" + sub_name;
+                            }
+                        }
+                        $('#txsubscribers').html(sub_names);
+                    }
+                }
+                else {
+                    $('#txsubscribers').html("-");
+                }
+
+                let multiplier = "";
+                if (subscribers.length > 1) {
+                    multiplier = " (x" + subscribers.length + ")";
+                }
+                $('#tx_out_kib_multiplier').html(multiplier);
+
+                setTimeout(updateTXPeers, 5000);
+            }).fail(function (xhr, txt, err) {
+                $("#transaction_io").fadeTo(fadeout_duration, goneopacity);
+                txPeersDown = true;
+                setTimeout(updateTXPeers, 5000);
+            });
+        }
+
+
+        // Server Info
+        function updateMetrics() {
+            $.get("/vgx/status", function (data, textStatus, jqXHR) {
+                if (metricsDown) {
+                    $("#http_server").fadeTo(fadein_duration, 1);
+                    metricsDown = false;
+                }
+                const response = data["response"];
+                let service_name = response["name"];
+                const bytes_in = response["data"]["in"];
+                const bytes_out = response["data"]["out"];
+                const clients = response["connected_clients"];
+                const total_clients = response["total_clients"];
+                const request = response["request"];
+                const service_in = request["serving"] > 0 ? true : false;
+                const rate = parseFloat(request["rate"]);
+                const waiting = request["waiting"];
+                const working = parseFloat(request["working"]);
+                const executors = request["executors"];
+                const total = request["count"];
+                const plugin = request["plugin"];
+                const dispatcher = response["dispatcher"];
+                const matrix_enabled = dispatcher["enabled"];
+                const main_port = dispatcher["front-port"];
+                const matrix_width = dispatcher["matrix-width"];
+                const matrix_height = dispatcher["matrix-height"];
+                const matrix_backlog = dispatcher["matrix-backlog"];
+                const matrix_channels = dispatcher["matrix-active-channels"];
+                const proxy = dispatcher["proxy"];
+                const errors = response["errors"];
+                const err_service = errors["service"];
+                const err_http = errors["http"];
+                const err_rate = parseFloat(errors["rate"]);
+                const codes = errors["codes"];
+                let http_error_codes = "-";
+                if (Object.keys(codes).length > 0) {
+                    http_error_codes = "[";
+                    let first = true;
+                    for (const err_code in codes) {
+                        if (first == true) {
+                            http_error_codes += err_code + ":" + codes[err_code];
+                            first = false;
+                        }
+                        else {
+                            http_error_codes += ", " + err_code + ":" + codes[err_code];
+                        }
+                    }
+                    http_error_codes += "]";
+                }
+                const latency = response["response_ms"];
+                const mean = parseFloat(latency["mean"]);
+                const pct50_0 = parseFloat(latency["50.0"]);
+                const pct90_0 = parseFloat(latency["90.0"]);
+                const pct95_0 = parseFloat(latency["95.0"]);
+                const pct99_0 = parseFloat(latency["99.0"]);
+                const kiB_in = Math.round(bytes_in / 1024);
+                const kiB_out = Math.round(bytes_out / 1024);
+
+                const wratio = working / executors;
+                if (loadfactor < 0.0) {
+                    loadfactor = wratio;
+                }
+                else {
+                    loadfactor = (0.95 * loadfactor) + (0.05 * working / executors);
+                    if (loadfactor > 1.0) {
+                        loadfactor = 1.0;
+                    }
+                }
+
+                if (loadfactor > 0.9) {
+                    $('#loadfactor').css("color", color_critical);
+                    $('#loadfactor').addClass("alertable");
+                }
+                else {
+                    if (loadfactor > 0.75) {
+                        $('#loadfactor').css("color", color_high);
+                    }
+                    else {
+                        $('#loadfactor').css("color", color_normal);
+                    }
+                    $('#loadfactor').removeClass("alertable");
+                }
+
+                if (service_name.length > 32) {
+                    service_name = service_name.slice(0, 29) + "...";
+                }
+
+                $('#service_name').html(service_name);
+                const S_in_out = service_in ? "S-IN" : "S-OUT";
+                $('#service_in').html(S_in_out + " (" + (main_port ? main_port : "?") + ")" );
+                if (matrix_enabled) {
+                    if (proxy) {
+                        $('#service_mode').html("Proxy (" + matrix_height + "R)" );
+                    }
+                    else {
+                        const dim = "" + matrix_height + "R x " + matrix_width + "P";
+                        $('#service_mode').html("Dispatch (" + dim + ")" );
+                    }
+                }
+                else {
+                    $('#service_mode').html("Engine");
+                }
+                $('#qps').html(rate.toFixed(1));
+                $('#loadfactor').html((100.0 * loadfactor).toFixed(1));
+                $('#waiting').html(waiting);
+                if (matrix_backlog >= 0) {
+                    $('#matrix_backlog').html(matrix_backlog);
+                }
+                else {
+                    $('#matrix_backlog').html("N/A");
+                }
+                if (matrix_enabled  && matrix_channels >= 0) {
+                    $('#matrix_channels').html(matrix_channels);
+                }
+                else {
+                    $('#matrix_channels').html("N/A");
+                }
+                $('#total').html(total.toLocaleString("en-US"));
+                $('#plugin').html(plugin.toLocaleString("en-US"));
+                $('#mean').html(mean.toFixed(2));
+                $('#pct50_0').html(pct50_0.toFixed(2));
+                $('#pct90_0').html(pct90_0.toFixed(2));
+                $('#pct95_0').html(pct95_0.toFixed(2));
+                $('#pct99_0').html(pct99_0.toFixed(2));
+                $('#clients').html(clients);
+                $('#total_clients').html(total_clients);
+                $('#data_in').html(kiB_in.toLocaleString("en-US"));
+                $('#data_out').html(kiB_out.toLocaleString("en-US"));
+                $('#err_service').html(err_service.toLocaleString("en-US"));
+                $('#err_http').html(err_http.toLocaleString("en-US"));
+                $('#err_rate').html(err_rate.toFixed(1));
+                $('#http_codes').html(http_error_codes);
+                setTimeout(updateMetrics, 2300);
+
+                let serverbox = $('#http_server');
+                let fontsize = 90;
+                $('#service_name').css("font-size", "90%");
+                while (serverbox.width() > 300 && fontsize > 3) {
+                    fontsize -= 1;
+                    $('#service_name').css("font-size", fontsize + "%");
+                }
+
+            }).fail(function (xhr, txt, err) {
+                $("#http_server").fadeTo(fadeout_duration, goneopacity);
+                metricsDown = true;
+                setTimeout(updateMetrics, 5000);
+            });
+        }
+
+        // Memory Info
+        function updateMemory() {
+            $.get("/vgx/meminfo", function (data, textStatus, jqXHR) {
+                if (memoryDown) {
+                    $("#memory_usage").fadeTo(fadein_duration, 1);
+                    memoryDown = false;
+                }
+                const mem = data["response"]["memory"];
+                const total = parseInt(mem["total"]);
+                // current
+                const current = mem["current"];
+                const current_avail = parseInt(current["available"]);
+                const current_process = parseInt(current["process"]);
+                const current_usage_total = current_process / total;
+                const mempct_used = 100.0 - 100.0 * (current_avail / total);
+                const mempct_total = 100.0 * current_usage_total
+                const MiB_proc = Math.round(current_process / (1024 * 1024))
+                $('#mem_MiB').html(MiB_proc.toLocaleString("en-US"));
+                $('#mempct_used').html(mempct_used.toFixed(0));
+                $('#mempct_total').html(mempct_total.toFixed(1));
+                // worst-case
+                const worst_case = mem["worst-case"];
+                const min_avail = parseInt(worst_case["available"]);
+                const max_process = parseInt(worst_case["process"]);
+                const max_usage_total = max_process / total;
+                const max_mempct_used = 100.0 - 100.0 * (min_avail / total);
+                const max_mempct_total = 100.0 * max_usage_total;
+                const max_MiB_proc = Math.round(max_process / (1024 * 1024))
+                $('#max_mem_MiB').html(max_MiB_proc.toLocaleString("en-US"));
+                $('#max_mempct_used').html(max_mempct_used.toFixed(0));
+                $('#max_mempct_total').html(max_mempct_total.toFixed(1));
+                // Color
+                const pct_critical = 90.0;
+                const pct_high = 75.0;
+                const fields = [[mempct_used, '#mempct_used'],
+                [mempct_total, '#mempct_total'],
+                [max_mempct_used, '#max_mempct_used'],
+                [max_mempct_total, '#max_mempct_total']];
+                for (var i = 0; i < fields.length; i++) {
+                    const value = fields[i][0];
+                    const dest = fields[i][1];
+                    if (value > pct_critical) {
+                        $(dest).css("color", color_critical);
+                        $(dest).addClass("alertable");
+                    }
+                    else {
+                        if (value > pct_high) {
+                            $(dest).css("color", color_high);
+                        }
+                        else {
+                            $(dest).css("color", color_normal);
+                        }
+                        $(dest).removeClass("alertable");
+                    }
+                }
+
+                setTimeout(updateMemory, 3100);
+            }).fail(function (xhr, txt, err) {
+                $("#memory_usage").fadeTo(fadeout_duration, goneopacity);
+                memoryDown = true;
+                setTimeout(updateMemory, 5000);
+            });
+        }
+
+        const params = new Proxy(new URLSearchParams(window.location.search), {
+            get: (searchParams, prop) => searchParams.get(prop),
+        });
+
+        //updateTime();
+        updateGraph();
+        updateMetrics();
+        updateTX();
+        updateTXPeers();
+        updateMemory();
+
+        $('.label').css("color", "#000000");
+        $('.superlabel').css("color", "#000000");
+        $('.sublabel').css("color", "#000000");
+        $('.unit').css("color", "#808080");
+        $('.vint').css("color", "#0000C0");
+        $('.vfloat').css("color", "#0000C0");
+        $('.vstr').css("color", "#007050");
+        $('.vkib').css("color", "#0000C0");
+        $('.datarow').on("mouseover", function () {
+            $(this).find('.val').addClass("highlight");
+        });
+        $('.datarow').on("mouseout", function () {
+            $(this).find('.val').removeClass("highlight");
+        });
+
+    }
+
+    CommonHeader.ready(main, 12);
+
+</script>
+
+
+
+
+
+
+
