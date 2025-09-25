@@ -1,8 +1,11 @@
 # VGX Server
 
-This project is used to build the:
+NOTE: Incomplete
 
-- PyVGX pip package
+
+TBD
+
+
 
 ## Prerequisites
 
