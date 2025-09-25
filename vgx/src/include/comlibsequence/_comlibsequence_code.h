@@ -426,13 +426,7 @@ static int64_t ComlibSequence_optimize( _CSEQ_TYPENAME *self );
 #endif
 #endif
 
-// digest
-#if defined( _CSEQ_FEATURE_DIGEST_METHOD )
-static objectid_t ComlibSequence_digest_nolock( _CSEQ_TYPENAME *self );
-#if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-static objectid_t ComlibSequence_digest( _CSEQ_TYPENAME *self );
-#endif
-#endif
+
 
 
 
@@ -949,9 +943,6 @@ static _CSEQ_VTABLETYPE ComlibSequenceMethods = {
 #if defined( _CSEQ_FEATURE_OPTIMIZE_METHOD )
   .Optimize                 = ComlibSequence_optimize_nolock,           /* OptimizeNolock         */
 #endif
-#if defined( _CSEQ_FEATURE_DIGEST_METHOD )
-  .Digest                   = ComlibSequence_digest_nolock,             /* DigestNolock           */
-#endif
 
 #else
 
@@ -1124,10 +1115,6 @@ static _CSEQ_VTABLETYPE ComlibSequenceMethods = {
 #if defined( _CSEQ_FEATURE_OPTIMIZE_METHOD )
   .OptimizeNolock           = ComlibSequence_optimize_nolock,           /* OptimizeNolock         */
   .Optimize                 = ComlibSequence_optimize,                  /* Optimize               */
-#endif
-#if defined( _CSEQ_FEATURE_DIGEST_METHOD )
-  .DigestNolock             = ComlibSequence_digest_nolock,             /* DigestNolock           */
-  .Digest                   = ComlibSequence_digest,                    /* Digest                 */
 #endif
 #endif
 
@@ -4953,83 +4940,9 @@ static int64_t ComlibSequence_optimize( _CSEQ_TYPENAME *self ) {
   return element_count;
 }
 #endif
-#endif
 
 
 
-#if defined( _CSEQ_FEATURE_DIGEST_METHOD )
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-static objectid_t ComlibSequence_digest_nolock( _CSEQ_TYPENAME *self ) {
-  md5_state_t md5;
-  objectid_t id;
-
-  if( self->_size > UINT_MAX/sizeof(_CSEQ_ELEMENT_TYPE) ) {
-    idunset( &id );
-    return id;
-  }
-
-  // -----------
-  // Compute md5
-  // -----------
- 
-  // Init
-  md5_init( &md5 );
-
-  // Add data
-#if defined( _CSEQ_CIRCULAR_BUFFER )
-  int64_t max_capacity = (1ULL << self->_capacity_exp);
-  if( self->_rp <= self->_wp && self->_size < max_capacity ) {
-    // Only have to read the tail (no wrapping in buffer)
-    uint32_t bytes = (uint32_t)(self->_size * sizeof(_CSEQ_ELEMENT_TYPE));
-    md5_append( &md5, (md5_byte_t*)self->_rp, bytes );
-  }
-  else {
-    _CSEQ_ELEMENT_TYPE *endwall = self->_buffer + max_capacity;
-    uint64_t sztail = endwall - self->_rp;
-    uint32_t tail_bytes = (uint32_t)(sztail * sizeof(_CSEQ_ELEMENT_TYPE));
-    uint32_t head_bytes = (uint32_t)((self->_size - sztail) * sizeof(_CSEQ_ELEMENT_TYPE));
-    // Process tail
-    md5_append( &md5, (md5_byte_t*)self->_rp, tail_bytes );
-    // Process head
-    md5_append( &md5, (md5_byte_t*)self->_buffer, head_bytes );
-  }
-#elif defined( _CSEQ_LINEAR_BUFFER )
-  uint32_t bytes = (uint32_t)(self->_size * sizeof(_CSEQ_ELEMENT_TYPE));
-  md5_append( &md5, (md5_byte_t*)self->_buffer, bytes );
-#else
-#error
-#endif
-
-  // Compute digest
-  md5_finish( &md5, (md5_byte_t*)&id.id128 );
-
-  // Disallow any 0s in the H/L id parts
-  id.H |= -(id.H == 0);
-  id.L |= -(id.L == 0);
-
-  return id;
-}
-
-
-#if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-static objectid_t ComlibSequence_digest( _CSEQ_TYPENAME *self ) {
-  objectid_t id;
-  SYNCHRONIZE_ON( self->_lock ) {
-    id = ComlibSequence_digest_nolock( self );
-  } RELEASE;
-  return id;
-}
-
-#endif
 #endif
 
 

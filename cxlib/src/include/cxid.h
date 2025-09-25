@@ -10,7 +10,6 @@
 
 #include "cxobjbase.h"
 #include "cxmem.h"
-#include "md5.h"
 #include "sha256.h"
 
 #ifdef __cplusplus
@@ -18,19 +17,9 @@ extern "C" {
 #endif
 
 
-CALIGNED_TYPE( union ) u_md5digest_t {
-  md5_byte_t digest[16];
-  __m128i d128;
-  objectid_t id; // <- tricky thing to get whatever bytes into it
-} md5digest_t;
-
-
 
 const objectid_t obid_from_string_len( const char *string, unsigned int len );
 const objectid_t obid_from_string( const char *string );
-
-const objectid_t md5_len( const char *string, size_t len );
-const objectid_t md5( const char *string );
 
 const sha256_t sha256_len( const char *string, size_t len );
 const sha256_t sha256( const char *string );

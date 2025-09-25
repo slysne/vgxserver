@@ -57,26 +57,6 @@ typedef union u_objectid_t {
 
 
 
-/*******************************************************************//**
- * 
- * 
- ***********************************************************************
- */
-typedef union u_sha256_t {
-  #if defined CXPLAT_ARCH_X64
-  __m256i id256;
-  #elif defined CXPLAT_ARCH_ARM64
-    QWORD id256[4];
-  #endif
-  struct {
-    uint64_t A;
-    uint64_t B;
-    uint64_t C;
-    uint64_t D;
-  };
-  char str[32];
-} sha256_t;
-
 
 
 /*******************************************************************//**

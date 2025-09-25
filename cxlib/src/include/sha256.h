@@ -1,29 +1,58 @@
-/*********************************************************************
-* Filename:   sha256.h
-* Author:     Brad Conte (brad AT bradconte.com)
-* Copyright:
-* Disclaimer: This code is presented "as is" without any guarantees.
-* Details:    Defines the API for the corresponding SHA1 implementation.
-*********************************************************************/
+/*######################################################################
+ *#
+ *# sha256.h
+ *#
+ *#
+ *######################################################################
+ */
 
-#ifndef SHA256_H
-#define SHA256_H
+#ifndef CXLIB_SHA256_H
+#define CXLIB_SHA256_H
 
-#include <stddef.h>
+#include "cxmem.h"
 
-#define SHA256_BLOCK_SIZE 32            // SHA256 outputs a 32 byte digest
 
-typedef struct {
-  BYTE data[64];
-  DWORD datalen;
-  QWORD bitlen;
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */
+typedef union u_sha256_t {
+  #if defined CXPLAT_ARCH_X64
+  __m256i id256;
+  #elif defined CXPLAT_ARCH_ARM64
+  QWORD id256[4];
+  #endif
+  struct {
+    uint64_t A;
+    uint64_t B;
+    uint64_t C;
+    uint64_t D;
+  };
+  char str[32];
+} sha256_t;
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */
+typedef struct s_cxlib_sha256_context_t {
+  BYTE buffer[64];
   DWORD state[8];
-} SHA256_CTX;
+  BYTE *wp;
+  uint64_t nbits;
+  QWORD _rsv2[6];
+  sha256_t digest;
+} cxlib_sha256_context_t;
 
-void sha256_init( SHA256_CTX *ctx );
-void sha256_update( SHA256_CTX *ctx, const BYTE data[], size_t len );
-void sha256_final( SHA256_CTX *ctx, BYTE hash[] );
+
+void cxlib_sha256_initialize( cxlib_sha256_context_t *context );
+void cxlib_sha256_update( cxlib_sha256_context_t *context, const BYTE data[], size_t sz );
+sha256_t * cxlib_sha256_finalize( cxlib_sha256_context_t *context );
+
 
 #endif
-
-

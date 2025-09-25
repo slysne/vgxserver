@@ -59,41 +59,12 @@ const objectid_t obid_from_string( const char *string ) {
  *
  ***********************************************************************
  */
-const objectid_t md5_len( const char *string, size_t len ) {
-  objectid_t id;
-  md5_state_t md5;
-  md5_init( &md5 );
-  md5_append( &md5, (md5_byte_t*)string, (uint32_t)len );
-  md5_finish( &md5, (md5_byte_t*)&id.id128 );
-  id.L |= -(id.L == 0);
-  id.H |= -(id.H == 0);
-  return id;
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-const objectid_t md5( const char *string ) {
-  return md5_len( string, strlen( string ) );
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
 const sha256_t sha256_len( const char *string, size_t len ) {
-  sha256_t hash;
-  SHA256_CTX ctx;
-  sha256_init( &ctx );
-  sha256_update( &ctx, (BYTE*)string, len );
-  sha256_final( &ctx, (BYTE*)hash.str );
+  cxlib_sha256_context_t CALIGNED_ context;
+  cxlib_sha256_initialize( &context );
+  cxlib_sha256_update( &context, (BYTE*)string, len );
+  sha256_t *phash = cxlib_sha256_finalize( &context );
+  sha256_t hash = *phash;
   return hash;
 }
 
