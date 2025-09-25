@@ -1,0 +1,13 @@
+This product includes software developed by Rakuten, Inc.
+
+Original author: Stian Lysne (2014–2025)
+
+---
+
+This distribution includes third-party components:
+
+**LZ4 Compression Library**
+ - Source files: lz4.c, lz4.h
+ - Original project: https://github.com/lz4/lz4
+ - License: BSD 2-Clause "Simplified" License
+ - Copyright (c) Yann Collet
