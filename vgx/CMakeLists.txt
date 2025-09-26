@@ -11,7 +11,7 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 add_library(${LIB_NAME} SHARED ${SRC_FILES})
 
 add_custom_target(VGX_GENERATE_HEADER_FILE
-  COMMAND ${Python3_EXECUTABLE} ${WEB_ROOT}/tools/convert.py ${WEB_ROOT}/artifacts ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+  COMMAND ${Python3_EXECUTABLE} ${WEB_ROOT}/tools/convert.py ${WEB_ROOT}/artifacts ${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating VGX XHTML header file"
 )

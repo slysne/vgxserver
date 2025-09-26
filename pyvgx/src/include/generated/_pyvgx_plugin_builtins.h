@@ -1,72 +1,27 @@
-/*
-#########################################
-#
-# File: _pyvgx_plugin_builtins.h
-#
-#
-# Automatically generated from input sources:
-#
-#    resources/plugins/py/ADMIN_Attach.py
-#    resources/plugins/py/ADMIN_Bind.py
-#    resources/plugins/py/ADMIN_CancelSync.py
-#    resources/plugins/py/ADMIN_ClearReadonly.py
-#    resources/plugins/py/ADMIN_Console.py
-#    resources/plugins/py/ADMIN_Detach.py
-#    resources/plugins/py/ADMIN_DetachAll.py
-#    resources/plugins/py/ADMIN_GetAuthToken.py
-#    resources/plugins/py/ADMIN_Persist.py
-#    resources/plugins/py/ADMIN_ReloadPlugins.py
-#    resources/plugins/py/ADMIN_ResetMetrics.py
-#    resources/plugins/py/ADMIN_RestartHTTP.py
-#    resources/plugins/py/ADMIN_ResumeEvents.py
-#    resources/plugins/py/ADMIN_ResumeTxInput.py
-#    resources/plugins/py/ADMIN_ResumeTxOutput.py
-#    resources/plugins/py/ADMIN_ServiceIn.py
-#    resources/plugins/py/ADMIN_ServiceOut.py
-#    resources/plugins/py/ADMIN_SetReadonly.py
-#    resources/plugins/py/ADMIN_Shutdown.py
-#    resources/plugins/py/ADMIN_Subscribe.py
-#    resources/plugins/py/ADMIN_SuspendEvents.py
-#    resources/plugins/py/ADMIN_SuspendTxInput.py
-#    resources/plugins/py/ADMIN_SuspendTxOutput.py
-#    resources/plugins/py/ADMIN_Sync.py
-#    resources/plugins/py/ADMIN_SystemDescriptor.py
-#    resources/plugins/py/ADMIN_Throttle.py
-#    resources/plugins/py/ADMIN_Truncate.py
-#    resources/plugins/py/ADMIN_Unbind.py
-#    resources/plugins/py/ADMIN_Unsubscribe.py
-#    resources/plugins/py/ADMIN_UpdateSubscribers.py
-#    resources/plugins/py/BUILTIN_arcs.py
-#    resources/plugins/py/BUILTIN_connect.py
-#    resources/plugins/py/BUILTIN_createvertex.py
-#    resources/plugins/py/BUILTIN_deletevertex.py
-#    resources/plugins/py/BUILTIN_disconnect.py
-#    resources/plugins/py/BUILTIN_echo.py
-#    resources/plugins/py/BUILTIN_evaluate.py
-#    resources/plugins/py/BUILTIN_eventbacklog.py
-#    resources/plugins/py/BUILTIN_graphinfo.py
-#    resources/plugins/py/BUILTIN_init.py
-#    resources/plugins/py/BUILTIN_matrix.py
-#    resources/plugins/py/BUILTIN_matrixplugins.py
-#    resources/plugins/py/BUILTIN_memory.py
-#    resources/plugins/py/BUILTIN_metrics.py
-#    resources/plugins/py/BUILTIN_neighbor.py
-#    resources/plugins/py/BUILTIN_ping.py
-#    resources/plugins/py/BUILTIN_properties.py
-#    resources/plugins/py/BUILTIN_system_counts.py
-#    resources/plugins/py/BUILTIN_system_descriptor.py
-#    resources/plugins/py/BUILTIN_system_overview.py
-#    resources/plugins/py/BUILTIN_system_rates.py
-#    resources/plugins/py/BUILTIN_vertex.py
-#    resources/plugins/py/BUILTIN_vertices.py
-#    resources/plugins/py/INTERNAL_admin.py
-#    resources/plugins/py/INTERNAL_ast_validator.py
-#    resources/plugins/py/PYVGX_vgxadmin.py
-#    resources/plugins/py/PYVGX_vgxinstance.py
-#
-#
-#########################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    _pyvgx_plugin_builtins.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _PYVGX_PLUGIN_BUILTINS_H
 #define _PYVGX_PLUGIN_BUILTINS_H
@@ -4916,5 +4871,3 @@ const char **PYVGX_PLUGIN_BUILTINS[] = {
 
 
 #endif
-
-

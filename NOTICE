@@ -15,10 +15,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 ---
 
-This distribution includes third-party components:
+This project includes third-party components as detailed below.
 
 **LZ4 Compression Library**
- - Source files: lz4.c, lz4.h
- - Original project: https://github.com/lz4/lz4
- - License: BSD 2-Clause "Simplified" License
  - Copyright (c) Yann Collet
+ - License: BSD 2-Clause "Simplified" License
+   and is also included here:
+     licenses/jquery/LICENSE.txt 
+ - Original project: https://github.com/lz4/lz4
+ - Source files used are version v1.10.0 and are located here:
+    cxlib/src/lz4.c
+    cxlib/src/include/lz4.h
+ - The used lz4.h and lz4.c files are taken from the `lib` directory
+   at https://github.com/lz4/lz4/tree/v1.10.0/lib
+
+
+
+**jQuery v3.6.0**
+- jQuery is:
+  Copyright (c) OpenJS Foundation and other contributors
+  https://jquery.org/
+- License: MIT
+  The full license text is available at: https://jquery.org/license
+  and is also included here:
+    licenses/jquery/LICENSE.txt
+- The file used is the minified release version and is located here:
+    vgx/src/resources/WEB-ROOT/artifacts/jquery-3.6.0.min.js
+- This file includes the following header, as present in the official release:
+    /*! jQuery v3.6.0 | (c) OpenJS Foundation and other contributors | jquery.org/license */
+- The full contents of juery-3.6.0.min.js is embedded into the final binary output 

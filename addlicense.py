@@ -3,7 +3,7 @@ import sys
 import re
 
 PROJECT_NAME = "VGX Server"
-PROJECT_DESC = "Low-latency distributed engine for plugin-based graph and vector search"
+PROJECT_DESC = "Distributed engine for plugin-based graph and vector search"
 AUTHOR = "Stian Lysne"
 COPYRIGHT_YEAR = "2025"
 COMPANY = "Rakuten, Inc."
@@ -11,7 +11,7 @@ EMAIL = "..."
 
 
 LICENSE = f"""
-=== {PROJECT_NAME} ===
+{PROJECT_NAME}
 {PROJECT_DESC}
 
 Module:  {{module:}}
@@ -42,7 +42,6 @@ LICENSE_SOURCE = {
     # Add other file types...
 }
 
-print(LICENSE)
 
 
 EXTENSIONS = {
@@ -55,6 +54,13 @@ EXTENSIONS = {
     '.html': 'html',
     # add more
 }
+
+
+EXCLUDE = [
+    "lz4.h",
+    "lz4.c",
+    "jquery-3.6.0.min.js"
+]
 
 
 def get_module_name(filepath):
@@ -223,6 +229,12 @@ def process_file(filepath, add=True):
     global LINE_COUNT_IN
     global LINE_COUNT_OUT
     global FILE_COUNT
+    name = os.path.basename(filepath)
+
+    if name in EXCLUDE:
+        print( "Skipping {}".format(filepath) )
+        return
+
     ext = os.path.splitext(filepath)[1]
 
     style = EXTENSIONS.get(ext)
@@ -246,7 +258,6 @@ def process_file(filepath, add=True):
     strip_empty_bottom_lines(lines)
 
     if add is True and style:
-        name = os.path.basename(filepath)
         modname = get_module_name(filepath)
         header_lines = LICENSE_SOURCE[style]
         header = "\n".join(header_lines)

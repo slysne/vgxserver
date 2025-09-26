@@ -1,6 +1,32 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  vgx
+# File:    convert.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 import sys
 import os
 import re
+import time
 
 OUT_FILE = "_vxhtml.h"
 ARRAY_PREFIX = "VGX_BUILTIN_"
@@ -175,7 +201,8 @@ def convert_files( items, outname ):
     fout.write( '/*\n' )
     fout.write( '#########################################\n' )
     fout.write( '#\n' )
-    fout.write( '# File: _vxhtml.h\n' )
+    fout.write( '# File: {}\n'.format( OUT_FILE ) )
+    fout.write( '# Time: {}\n'.format( time.ctime() ) )
     fout.write( '#\n' )
     fout.write( '#\n' )
     fout.write( '# Automatically generated from input sources:\n' )
@@ -190,8 +217,8 @@ def convert_files( items, outname ):
     fout.write( '#########################################\n' )
     fout.write( '*/\n\n' )
     define = OUT_FILE.upper().replace( '.', '_' )
-    fout.write( '#ifndef _VXHTML_H\n' )
-    fout.write( '#define _VXHTML_H\n' )
+    fout.write( '#ifndef {}\n'.format(define) )
+    fout.write( '#define {}\n'.format(define) )
     fout.write( "\n\n\n" ) 
 
     for line in OUT:
@@ -241,6 +268,7 @@ def convert_files( items, outname ):
 def main():
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
+    os.makedirs(output_dir, exist_ok=True)
     FILES = []
     DIR = sorted(os.listdir( input_dir ))
     INPUT = []
@@ -274,8 +302,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

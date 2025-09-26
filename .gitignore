@@ -8,7 +8,7 @@
 *.pyc
 *.iml
 
-**/_vxhtml.h
+**/include/generatedz
 
 venv
 

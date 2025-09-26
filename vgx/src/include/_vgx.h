@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _vgx.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _vgx.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VGX_H
 #define _VGX_VGX_H
@@ -1090,4 +1106,3 @@ __inline static int32_t _vxvertex_property__get_vertex_enum_RO( const vgx_Vertex
 #define Vertex_SetEnum( Vertex_WL, Enum32 )  _vxvertex_property__set_vertex_enum_WL( Vertex_WL, Enum32 )
 
 #endif
-
