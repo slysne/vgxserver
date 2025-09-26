@@ -225,7 +225,7 @@ LINE_COUNT_OUT = 0
 FILE_COUNT = 0
 
 
-def process_file(filepath, add=True):
+def process_file_header(filepath, add=True):
     global LINE_COUNT_IN
     global LINE_COUNT_OUT
     global FILE_COUNT
@@ -280,8 +280,118 @@ def process_file(filepath, add=True):
 
 
 
+
+
+def has_comment_above(lines, index):
+    """
+    Walk upward to check if a block comment (/* ... */) is immediately above.
+    Allows multiline comments. Skips blank lines and // comments.
+    """
+    i = index - 1
+    in_block_comment = False
+
+    while i >= 0:
+        line = lines[i].strip()
+
+        if line == "" or line.startswith("SUPPRESS_"):
+            i -= 1
+            continue
+
+        if line.startswith("//"):
+            i -= 1
+            continue
+
+        if "*/" in line:
+            in_block_comment = True
+            i -= 1
+            continue
+
+        if in_block_comment:
+            if "/*" in line:
+                return True  # Found the start of a block comment
+            else:
+                i -= 1
+                continue
+
+        if line.startswith("/*"):
+            return True  # Single-line or top of comment
+        else:
+            return False  # Hit a non-comment line before finding block
+
+    return False
+
+
+
+
+def process_functions(filepath, find_naked=False, add_comment=False):
+
+    # List of allowed prefixes (you can expand this)
+    ALLOWED_PREFIXES = [
+        r'static',
+        r'__inline\s+static',
+        r'DLL_HIDDEN',
+        r'DLL_EXPORT',
+        r'DLL_HIDDEN\s+extern',  # optional additional ones
+    ]
+
+    # Build a regex that matches any of the allowed prefixes at start of line
+    FUNC_DEF_REGEX = re.compile(
+        rf'''^
+            \s*                                     # optional leading spaces
+            (?:{'|'.join(ALLOWED_PREFIXES)})        # must start with allowed prefix
+            \s+                                     # space after prefix
+            [\w\*\s]+                               # return type (e.g. int, void *, etc)
+            \s+                                     # space between return type and name
+            (?P<name>[a-zA-Z_]\w*)                  # function name
+            \s*\([^;]*\)                            # argument list
+            \s*\{{?\s*$                             # optional opening brace
+        ''',
+        re.VERBOSE
+    )
+
+    comment =
+"""
+/******************************************************************************
+ * {func:}
+ ******************************************************************************
+ */
+"""
+
+    result = []
+
+    try:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+    except Exception as e:
+        print(f"Error reading {filepath}: {e}")
+        return []
+
+    output = []
+    if find_naked:
+        for i, line in enumerate(lines):
+            m = FUNC_DEF_REGEX.match(line)
+            if m:
+                if not has_comment_above(lines, i):
+                    func_preview = line.strip()
+                    result.append( "{}  {}".format(i + 1, func_preview) )
+                    if add_comment:
+                        func_name = match.group("name")
+                        comment_lines = comment.format(func=func_name).splitlines(True)
+                        output.extend(comment_lines)
+
+            output.append(line)
+
+    if result:
+        print(filepath)
+    for item in result:
+        print( "    {}".format(item) )
+
+    return result
+
+
+
 def main():
-    what = "add"
+    what = "add-file-header"
     if len(sys.argv) < 2:
         print( "need repo root as arg" )
         sys.exit(1)
@@ -293,10 +403,12 @@ def main():
     for root, _, files in os.walk( source_root_dir ):
         for name in files:
             filepath = os.path.join(root, name)
-            if what == "add":
-                process_file(filepath, add=True)
-            elif what == "remove":
-                process_file(filepath, add=False)
+            if what == "add-file-header":
+                process_file_header(filepath, add=True)
+            elif what == "remove-file-header":
+                process_file_header(filepath, add=False)
+            elif what == "list-naked-functions":
+                process_functions(filepath, find_naked=True)
 
 
 
