@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_DetachAll
+#
+###############################################################################
 def sysplugin__ADMIN_DetachAll( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Detach all subscribers

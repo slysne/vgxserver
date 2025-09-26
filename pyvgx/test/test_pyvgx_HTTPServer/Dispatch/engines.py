@@ -41,13 +41,25 @@ from threading import Thread
 
 
 
+
+###############################################################################
+# redirect_instance_output
+#
+###############################################################################
 def redirect_instance_output( instance_id ):
+    """
+    """
     os.makedirs( instance_id, exist_ok=True )
     logpath = "{}/out.txt".format( instance_id )
     SetOutputStream( logpath )
 
 
 
+
+###############################################################################
+# get_authtoken
+#
+###############################################################################
 def get_authtoken( host, port ):
     """
     Return a new authtoken
@@ -59,6 +71,11 @@ def get_authtoken( host, port ):
 
 
 
+
+###############################################################################
+# EngineShutdown
+#
+###############################################################################
 def EngineShutdown( host, port ):
     """
     Send shutdown request
@@ -69,6 +86,11 @@ def EngineShutdown( host, port ):
 
 
 
+
+###############################################################################
+# WaitUntilEngineReady
+#
+###############################################################################
 def WaitUntilEngineReady( host, port, timeout=30.0 ):
     """
     Wait for server engine to start
@@ -92,6 +114,11 @@ N_TERM = 50000
 
 
 
+
+###############################################################################
+# PopulateServerData
+#
+###############################################################################
 def PopulateServerData( graph ):
     """
     Build server graph with random data
@@ -197,6 +224,11 @@ def DispatchSearchPost( response:PluginResponse ) -> PluginResponse:
 
 
 
+
+###############################################################################
+# ServerEntrypoint
+#
+###############################################################################
 def ServerEntrypoint( port, prefill ):
     """
     Backend server engine process entrypoint
@@ -224,6 +256,11 @@ def ServerEntrypoint( port, prefill ):
 
 
 
+
+###############################################################################
+# DispatcherEntrypoint
+#
+###############################################################################
 def DispatcherEntrypoint( port, cf ):
     """
     Backend dispatcher engine process entrypoint
@@ -248,7 +285,14 @@ def DispatcherEntrypoint( port, cf ):
 
 
 
+
+###############################################################################
+# GetDispatcherMatrixDimensions
+#
+###############################################################################
 def GetDispatcherMatrixDimensions( host, port ):
+    """
+    """
     bytes, headers = Support.send_request( "vgx/status", json=True, address=(host,port) )
     R = json.loads( bytes )
     d = R['response']['dispatcher']
@@ -258,7 +302,14 @@ def GetDispatcherMatrixDimensions( host, port ):
 
 
 
+
+###############################################################################
+# GetMatrixConfig
+#
+###############################################################################
 def GetMatrixConfig( width, height, host, ports ):
+    """
+    """
     R = []
     for h in range(height-1):
        R.append( {'channels':8, 'priority':1} )
@@ -280,13 +331,27 @@ def GetMatrixConfig( width, height, host, ports ):
 
 
 
+
+###############################################################################
+# GetNewConnection
+#
+###############################################################################
 def GetNewConnection( host, port ):
+    """
+    """
     conn = http.client.HTTPConnection( host, port, timeout=5.0 )
     return conn
 
 
 
+
+###############################################################################
+# __execute_feed
+#
+###############################################################################
 def __execute_feed( D, host, port, init_0, init_1, total_terminals ):
+    """
+    """
 
     conn = GetNewConnection( host, port)
     try:
@@ -342,7 +407,14 @@ def __execute_feed( D, host, port, init_0, init_1, total_terminals ):
 
 
 
+
+###############################################################################
+# FeedData
+#
+###############################################################################
 def FeedData( host, ports, nthreads=1, delay=5.0 ):
+    """
+    """
     print( f"FeedData( host={host}, ports={ports}, nthreads={nthreads}, delay={delay} )" )
 
     if delay > 0.0:
@@ -409,7 +481,14 @@ def FeedData( host, ports, nthreads=1, delay=5.0 ):
 
 
 
+
+###############################################################################
+# RunQueries
+#
+###############################################################################
 def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=1000, delay=5.0 ):
+    """
+    """
     if total_count < 0:
         width, height = GetDispatcherMatrixDimensions( host, port )
         total_count = width * N_TERM
@@ -498,6 +577,11 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
 
 
 
+
+###############################################################################
+# StartServerEngines
+#
+###############################################################################
 def StartServerEngines( host, ports, prefill=True ):
     """
     Start backend server engines
@@ -535,6 +619,11 @@ def StartServerEngines( host, ports, prefill=True ):
 
 
 
+
+###############################################################################
+# StartDispatcherEngines
+#
+###############################################################################
 def StartDispatcherEngines( host, ports, cf ):
     """
     Start dispatcher engines
@@ -572,6 +661,11 @@ def StartDispatcherEngines( host, ports, cf ):
 
 
 
+
+###############################################################################
+# StopEngines
+#
+###############################################################################
 def StopEngines( ENGINES ):
     """
     Stop backend server engines previously started with StartXXXEngines()

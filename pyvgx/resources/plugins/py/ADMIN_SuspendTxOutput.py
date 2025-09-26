@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_SuspendTxOutput
+#
+###############################################################################
 def sysplugin__ADMIN_SuspendTxOutput( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Suspend Transaction Output

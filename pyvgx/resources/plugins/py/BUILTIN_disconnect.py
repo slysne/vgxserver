@@ -27,6 +27,11 @@ import pyvgx
 import re
 
 
+
+###############################################################################
+# sysplugin__disconnect
+#
+###############################################################################
 def sysplugin__disconnect( request:pyvgx.PluginRequest, headers:dict, graph:str, id:str, neighbor:str="*", relationship:str="*", direction:str="D_OUT", modifier:str="M_ANY", condition:str="V_ANY", value:float=0.0, timeout:int=5000 ):
     """
     Disconnect initial from terminal(s)

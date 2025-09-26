@@ -84,6 +84,11 @@ SEQUENCES = [
 
 
 
+
+###############################################################################
+# get_random_unicode_string
+#
+###############################################################################
 def get_random_unicode_string( sz ):
     """
     return a unicode string
@@ -92,6 +97,11 @@ def get_random_unicode_string( sz ):
 
 
 
+
+###############################################################################
+# expect_KeyError
+#
+###############################################################################
 def expect_KeyError( method, name ):
     """
     method should produce KeyError
@@ -104,6 +114,11 @@ def expect_KeyError( method, name ):
 
 
 
+
+###############################################################################
+# expect_UnicodeError
+#
+###############################################################################
 def expect_UnicodeError( method, name ):
     """
     method should produce UnicodeError
@@ -116,6 +131,11 @@ def expect_UnicodeError( method, name ):
 
 
 
+
+###############################################################################
+# get_vertex_key_methods
+#
+###############################################################################
 def get_vertex_key_methods( graph ):
     """
     return vertex lookup methods that take vertex id as first argument
@@ -138,6 +158,11 @@ def get_vertex_key_methods( graph ):
 
 
 
+
+###############################################################################
+# get_vertex_create_methods
+#
+###############################################################################
 def get_vertex_create_methods( graph ):
     """
     return vertex creation methods that take vertex id as first argument
@@ -149,6 +174,11 @@ def get_vertex_create_methods( graph ):
 
 
 
+
+###############################################################################
+# TEST_VertexName_valid_utf8
+#
+###############################################################################
 def TEST_VertexName_valid_utf8():
     """
     Test API involving vertex names with valid utf-8 sequences
@@ -277,6 +307,11 @@ def TEST_VertexName_valid_utf8():
 
 
 
+
+###############################################################################
+# TEST_VertexName_invalid_utf8
+#
+###############################################################################
 def TEST_VertexName_invalid_utf8():
     """
     Test API involving vertex names with invalid utf-8 sequences
@@ -392,6 +427,11 @@ def TEST_VertexName_invalid_utf8():
 
 
 
+
+###############################################################################
+# TEST_VertexName_search_result_utf8
+#
+###############################################################################
 def TEST_VertexName_search_result_utf8():
     """
     Test vertex names returned in search results
@@ -462,6 +502,11 @@ def TEST_VertexName_search_result_utf8():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
     """
     Run the tests in this module

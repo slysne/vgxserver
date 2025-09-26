@@ -51,7 +51,14 @@ __ADMIN_LOCK = threading.RLock()
 
 
 
+
+###############################################################################
+# sysplugin__OnServerStartup
+#
+###############################################################################
 def sysplugin__OnServerStartup():
+    """
+    """
     # Set default descriptor if not set
     D = pyvgx.system.GetProperty( __SYSTEM_DESCRIPTOR_PROP, None )
     ident = pyvgx.system.GetProperty( __SYSTEM_DESCRIPTOR_IDENT_PROP, None )
@@ -98,7 +105,14 @@ def sysplugin__OnServerStartup():
 
 
 
+
+###############################################################################
+# sysplugin__GetGraphMemory
+#
+###############################################################################
 def sysplugin__GetGraphMemory( graph, size, shared=False ):
+    """
+    """
     if shared:
         key = '%s:%d' % (graph.name, size)
         M = __SHARED_EVAL_MEMORY.get( key )
@@ -111,6 +125,11 @@ def sysplugin__GetGraphMemory( graph, size, shared=False ):
 
 
 
+
+###############################################################################
+# sysplugin__GenerateNextAuthToken
+#
+###############################################################################
 def sysplugin__GenerateNextAuthToken( client_uri ):
     """
     Generate a new admin authtoken for this client
@@ -145,6 +164,11 @@ def sysplugin__GenerateNextAuthToken( client_uri ):
 
 
 
+
+###############################################################################
+# sysplugin__GetPreviousAuthToken
+#
+###############################################################################
 def sysplugin__GetPreviousAuthToken():
     """
     Return previous authtoken
@@ -156,7 +180,14 @@ def sysplugin__GetPreviousAuthToken():
  
 
 
+
+###############################################################################
+# sysplugin__ValidateAndConsumeAuthToken
+#
+###############################################################################
 def sysplugin__ValidateAndConsumeAuthToken( client_uri, token ):
+    """
+    """
     host = client_uri.split(':')[1]
     current = __ADMIN_AUTH_TOKENS.get( host )
     if current is None:
@@ -174,7 +205,14 @@ def sysplugin__ValidateAndConsumeAuthToken( client_uri, token ):
 
 
 
+
+###############################################################################
+# sysplugin__LogAdminOperation
+#
+###############################################################################
 def sysplugin__LogAdminOperation( headers, opdata="unknown" ):
+    """
+    """
     K = dict([(k.lower(),k) for k in headers.keys()])
     host = headers.get( K.get("host") )
     if host is None:
@@ -184,7 +222,14 @@ def sysplugin__LogAdminOperation( headers, opdata="unknown" ):
 
 
 
+
+###############################################################################
+# sysplugin__AuthorizeAdminOperation
+#
+###############################################################################
 def sysplugin__AuthorizeAdminOperation( headers, authtoken ):
+    """
+    """
     if pyvgx.system.GetProperty( __ADMIN_DISABLE_AUTH_PROP, None ) != 1:
         client_uri = headers.get( 'X-Vgx-Builtin-Client' )
         sysplugin__ValidateAndConsumeAuthToken( client_uri, authtoken )
@@ -197,7 +242,14 @@ def sysplugin__AuthorizeAdminOperation( headers, authtoken ):
 
 
 
+
+###############################################################################
+# sysplugin__BeginAdmin
+#
+###############################################################################
 def sysplugin__BeginAdmin( authtoken ):
+    """
+    """
     global __ADMIN_IN_PROGRESS_TOKEN
     global __ADMIN_IN_PROGRESS_RECURSION
     if not __ADMIN_LOCK.acquire( timeout=1.0 ):
@@ -214,7 +266,14 @@ def sysplugin__BeginAdmin( authtoken ):
 
 
 
+
+###############################################################################
+# sysplugin__EndAdmin
+#
+###############################################################################
 def sysplugin__EndAdmin( authtoken ):
+    """
+    """
     global __ADMIN_IN_PROGRESS_TOKEN
     global __ADMIN_IN_PROGRESS_RECURSION
     if not __ADMIN_LOCK.acquire( timeout=10.0 ):
@@ -229,7 +288,14 @@ def sysplugin__EndAdmin( authtoken ):
 
 
 
+
+###############################################################################
+# sysplugin__CloseHTTPConnection
+#
+###############################################################################
 def sysplugin__CloseHTTPConnection( host, port ):
+    """
+    """
     key = "{}:{}:{}".format( host, port, threading.get_ident() )
     _, conn = __HTTP_CONNECTIONS.pop( key, (None,None) )
     if conn is not None:
@@ -237,7 +303,14 @@ def sysplugin__CloseHTTPConnection( host, port ):
 
 
 
+
+###############################################################################
+# sysplugin__CleanupHTTPConnections
+#
+###############################################################################
 def sysplugin__CleanupHTTPConnections():
+    """
+    """
     # Too many connections
     CLEANUP_THRESHOLD = 64
     if len(__HTTP_CONNECTIONS) > CLEANUP_THRESHOLD:
@@ -249,7 +322,14 @@ def sysplugin__CleanupHTTPConnections():
 
 
 
+
+###############################################################################
+# sysplugin__NewHTTPConnection
+#
+###############################################################################
 def sysplugin__NewHTTPConnection( host, port, timeout=4.0 ):
+    """
+    """
     try:
         sysplugin__CleanupHTTPConnections()
     except Exception as err:
@@ -263,7 +343,14 @@ def sysplugin__NewHTTPConnection( host, port, timeout=4.0 ):
 
 
 
+
+###############################################################################
+# sysplugin__SendAdminRequest
+#
+###############################################################################
 def sysplugin__SendAdminRequest( host, port, path, headers={}, timeout=4.0 ):
+    """
+    """
     attempts = 3
     while attempts > 0:
         try:
@@ -291,6 +378,11 @@ def sysplugin__SendAdminRequest( host, port, path, headers={}, timeout=4.0 ):
 
 
 
+
+###############################################################################
+# sysplugin__SetSystemDescriptor
+#
+###############################################################################
 def sysplugin__SetSystemDescriptor( descriptor, ident=None ):
     """
     Update system descriptor and optionally set current instance identifier
@@ -309,6 +401,11 @@ def sysplugin__SetSystemDescriptor( descriptor, ident=None ):
 
 
 
+
+###############################################################################
+# sysplugin__GetSystemDescriptor
+#
+###############################################################################
 def sysplugin__GetSystemDescriptor():
     """
     Return system descriptor
@@ -322,6 +419,11 @@ def sysplugin__GetSystemDescriptor():
 
 
 
+
+###############################################################################
+# sysplugin__GetSystemIdent
+#
+###############################################################################
 def sysplugin__GetSystemIdent():
     """
     Return system descriptor current instance ident

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_SuspendTxInput
+#
+###############################################################################
 def sysplugin__ADMIN_SuspendTxInput( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Suspend Transaction Input

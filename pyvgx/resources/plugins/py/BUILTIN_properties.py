@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__properties
+#
+###############################################################################
 def sysplugin__properties( request:pyvgx.PluginRequest ):
     """
     System properties

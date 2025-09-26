@@ -27,6 +27,11 @@ import pyvgx
 import threading
 import time
 
+
+###############################################################################
+# sysplugin__ADMIN_RestartHTTP
+#
+###############################################################################
 def sysplugin__ADMIN_RestartHTTP( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Restart HTTP Server

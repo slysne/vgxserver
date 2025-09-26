@@ -36,6 +36,11 @@ from pytest.threads import Worker
 
 
 
+
+###############################################################################
+# _VerifyVertex
+#
+###############################################################################
 def _VerifyVertex( graph, V, name, typename=None, man="REAL", sus="ACTIVE", mode="w" ):
     """
     _VerifyVertex
@@ -155,6 +160,11 @@ def _VerifyVertex( graph, V, name, typename=None, man="REAL", sus="ACTIVE", mode
 
 
 
+
+###############################################################################
+# _VerifyNewVertex
+#
+###############################################################################
 def _VerifyNewVertex( graph, V, name, typename=None ):
     """
     _VerifyNewVertex
@@ -163,6 +173,11 @@ def _VerifyNewVertex( graph, V, name, typename=None ):
 
 
 
+
+###############################################################################
+# _NewVertex_or_CreateVertex
+#
+###############################################################################
 def _NewVertex_or_CreateVertex( graph, method_name ):
     """
     pyvgx.Graph.NewVertex()

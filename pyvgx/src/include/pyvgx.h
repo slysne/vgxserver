@@ -423,6 +423,12 @@ __inline static PyObject * PyVGX_PyCapsule_NewNoErr( void *pointer, const char *
 #define PyVGX_VertexConditionMaxRecursion (VGX_PREDICATOR_EPH_DISTANCE_MAX-1)
 
 
+
+/**************************************************************************//**
+ * PyNone_New
+ *
+ ******************************************************************************
+ */
 __inline static PyObject * PyNone_New( void ) {
   Py_RETURN_NONE;
 }
@@ -715,6 +721,12 @@ typedef struct s_pyvgx_VertexIdentifier_t {
 
 
 
+
+/**************************************************************************//**
+ * __pyvgx_reset_vertex_identifier
+ *
+ ******************************************************************************
+ */
 __inline static void __pyvgx_reset_vertex_identifier( pyvgx_VertexIdentifier_t *ident ) {
   ident->id = NULL;
   ident->len = 0;
@@ -1244,6 +1256,12 @@ DLL_HIDDEN extern PyObject *              __pyvgx_plugin__update_object_from_hea
 
 
 
+
+/**************************************************************************//**
+ * PyVGX_SetPyErr
+ *
+ ******************************************************************************
+ */
 static void PyVGX_SetPyErr( int errcode ) {
   static char codebuf[512] = {0};
 #define FORMAT_ERROR_CODE( Message, Errcode ) \

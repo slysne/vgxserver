@@ -28,6 +28,11 @@ import re
 
 sysplugin__neighbor_EXCLUDE = set(["headers", "content", "graph", "id", "hits", "query", "sharedmem"])
 
+
+###############################################################################
+# sysplugin__neighbor
+#
+###############################################################################
 def sysplugin__neighbor( request:pyvgx.PluginRequest, headers:dict, content:str, graph:str, id:str="", hits:int=25, query:str="", sharedmem:int=0 ):
     """
     Neighborhood query

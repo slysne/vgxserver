@@ -26,6 +26,11 @@
 import pyvgx
 import re
 
+
+###############################################################################
+# sysplugin__ADMIN_Subscribe
+#
+###############################################################################
 def sysplugin__ADMIN_Subscribe( request:pyvgx.PluginRequest, headers:dict, authtoken:str, uri:str, hardsync:int=0, timeout:int=30000):
     """
     ADMIN: Subscribe to provider

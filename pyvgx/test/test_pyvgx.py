@@ -54,7 +54,14 @@ import test_pyvgx_Similarity
 import test_pyvgx_HTTPServer
 
 
+
+###############################################################################
+# cleanup
+#
+###############################################################################
 def cleanup():
+    """
+    """
     if pyvgx.system.IsInitialized():
         for name in pyvgx.system.Registry():
             try:
@@ -63,7 +70,14 @@ def cleanup():
                 print( "Unable to clean up graph {}: {}".format( name, err ) )
 
 
+
+###############################################################################
+# checkalloc
+#
+###############################################################################
 def checkalloc( context="" ):
+    """
+    """
     print()
     print("----- CHECKING ALLOCATORS ({}) -----".format(context))
     if pyvgx.system.IsInitialized():
@@ -99,7 +113,14 @@ all_components = [
 CDICT = dict( all_components )
 
 
+
+###############################################################################
+# usage
+#
+###############################################################################
 def usage( err=None ):
+    """
+    """
     print()
     print( "usage: %s <options>" % os.path.basename( sys.argv[0] ) )
     print( "-a, --attach        Attach to these operation stream destinations" )
@@ -129,7 +150,14 @@ def usage( err=None ):
 
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
+    """
+    """
 
     component = []
     modulename = []

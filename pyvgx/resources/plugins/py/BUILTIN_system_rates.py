@@ -26,6 +26,11 @@
 import pyvgx
 
 
+
+###############################################################################
+# sysplugin__system_rates
+#
+###############################################################################
 def sysplugin__system_rates( request:pyvgx.PluginRequest, headers:dict, idlist:str="" ):
     """
     Multi-node system service rates

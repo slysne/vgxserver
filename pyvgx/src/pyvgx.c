@@ -204,6 +204,12 @@ BOOL WINAPI __ignore_ctrl_c_event( DWORD s ) {
   return s == CTRL_C_EVENT ? TRUE : FALSE;
 }
 #else
+
+/**************************************************************************//**
+ * __ignore_ctrl_c_event
+ *
+ ******************************************************************************
+ */
 void __ignore_ctrl_c_event( int s ) {
   PYVGX_API_WARNING( "pyvgx", 0x000, "Shutdown cannot be interrupted" );
   PyOS_setsig( SIGINT, __ignore_ctrl_c_event );
@@ -1408,6 +1414,12 @@ static PyObject * PyVGX_meminfo( PyObject *self ) {
  */
 #if defined CXPLAT_ARCH_X64
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_cpuid
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_cpuid( PyObject *self, PyObject *args, PyObject *kwdict ) {
   static char *kwlist[] = {"leaf", "subleaf", "obj", NULL}; 
   unsigned int leaf = 0;

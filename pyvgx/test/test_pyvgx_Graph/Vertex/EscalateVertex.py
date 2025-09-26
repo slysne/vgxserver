@@ -35,6 +35,11 @@ NAME = "V-esc"
 SETUP = False
 
 
+
+###############################################################################
+# TEST_EscalateVertex_setup
+#
+###############################################################################
 def TEST_EscalateVertex_setup():
     """
     pyvgx.Graph.EscalateVertex()
@@ -50,6 +55,11 @@ def TEST_EscalateVertex_setup():
 
 
 
+
+###############################################################################
+# TEST_EscalateVertex_normal
+#
+###############################################################################
 def TEST_EscalateVertex_normal():
     """
     Normal escalation from readonly to writable
@@ -71,6 +81,11 @@ def TEST_EscalateVertex_normal():
 
 
 
+
+###############################################################################
+# TEST_EscalateVertex_error1
+#
+###############################################################################
 def TEST_EscalateVertex_error1():
     """
     pyvgx.Graph.EscalateVertex()
@@ -97,6 +112,11 @@ def TEST_EscalateVertex_error1():
 
 
 
+
+###############################################################################
+# TEST_EscalateVertex_error2
+#
+###############################################################################
 def TEST_EscalateVertex_error2():
     """
     pyvgx.Graph.EscalateVertex()
@@ -123,6 +143,11 @@ def TEST_EscalateVertex_error2():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
     """
     Run the tests in this module

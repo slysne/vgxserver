@@ -2130,6 +2130,12 @@ PyDoc_STRVAR( Status__doc__,
   "\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_System__Status
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_System__Status( PyVGX_System *py_system, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "graph", "simple", NULL };
   
@@ -3489,6 +3495,12 @@ PyDoc_STRVAR( ServerMetrics__doc__,
   "\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_System__ServerMetrics
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_System__ServerMetrics( PyVGX_System *py_system, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "percentiles", NULL };
 
@@ -4903,6 +4915,12 @@ PyDoc_STRVAR( items__doc__,
   "items() -> [(key,val), ...]\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_System__items
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_System__items( PyVGX_System *py_system ) {
   return __system_keys_and_values( true, true );
 }
@@ -4918,6 +4936,12 @@ PyDoc_STRVAR( keys__doc__,
   "keys() -> [key1, key2, ...]\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_System__keys
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_System__keys( PyVGX_System *py_system ) {
   return __system_keys_and_values( true, false );
 }
@@ -4933,6 +4957,12 @@ PyDoc_STRVAR( values__doc__,
   "values() -> [val1, val2, ...]\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_System__values
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_System__values( PyVGX_System *py_system ) {
   return __system_keys_and_values( false, true );
 }
@@ -4973,6 +5003,12 @@ static PyMemberDef PyVGX_System__members[] = {
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_System__attr
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_System__attr( PyVGX_System *py_system, void *closure ) {
   return PyLong_FromLongLong( 0 );
 }

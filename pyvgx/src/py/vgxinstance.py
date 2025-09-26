@@ -33,7 +33,14 @@ StartInstance = pyvgx.VGXInstance.StartInstance
 
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main( id, descriptor_file=None, basedir="." ):
+    """
+    """
     descriptor = GetDescriptor( descriptor_file )
     instance = StartInstance( id, descriptor, basedir )
     pyvgx.system.RunServer( name=instance.description )

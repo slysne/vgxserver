@@ -57,6 +57,11 @@ def sysplugin__matrix__pre_objects( request:pyvgx.PluginRequest ) -> pyvgx.Plugi
 
 
 
+
+###############################################################################
+# sysplugin__matrix__post_objects
+#
+###############################################################################
 def sysplugin__matrix__post_objects( response:pyvgx.PluginResponse ):
     """
     Dispatcher object count post processor
@@ -107,6 +112,11 @@ def sysplugin__matrix__pre_identify( request:pyvgx.PluginRequest ) -> pyvgx.Plug
 
 
 
+
+###############################################################################
+# sysplugin__matrix__post_identify
+#
+###############################################################################
 def sysplugin__matrix__post_identify( response:pyvgx.PluginResponse ):
     """
     Dispatcher identify post processor
@@ -131,19 +141,40 @@ def sysplugin__matrix__post_identify( response:pyvgx.PluginResponse ):
 
 
 
+
+###############################################################################
+# __matrix__AddDispatcherPlugins
+#
+###############################################################################
 def __matrix__AddDispatcherPlugins():
+    """
+    """
     pyvgx.system.AddPlugin( name = "sysplugin__MatrixObjects", pre=sysplugin__matrix__pre_objects,  post=sysplugin__matrix__post_objects )
     pyvgx.system.AddPlugin( name = "sysplugin__Identify",      pre=sysplugin__matrix__pre_identify, post=sysplugin__matrix__post_identify )
 
 
 
+
+###############################################################################
+# __matrix__AddEnginePlugins
+#
+###############################################################################
 def __matrix__AddEnginePlugins():
+    """
+    """
     pyvgx.system.AddPlugin( name = "sysplugin__MatrixObjects", plugin=sysplugin__matrix__engine_objects )
     pyvgx.system.AddPlugin( name = "sysplugin__Identify",      plugin=sysplugin__matrix__engine_identify )
 
 
 
+
+###############################################################################
+# __matrix__RemovePlugins
+#
+###############################################################################
 def __matrix__RemovePlugins():
+    """
+    """
     plugins = [
         "sysplugin__MatrixObjects",
         "sysplugin__Identify"

@@ -36,7 +36,14 @@ graph = None
 
 
 
+
+###############################################################################
+# get_socket
+#
+###############################################################################
 def get_socket( host, port ):
+    """
+    """
     s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
     s.connect( (host, port) )
     s.setblocking( False )
@@ -44,7 +51,14 @@ def get_socket( host, port ):
 
 
 
+
+###############################################################################
+# client_loop
+#
+###############################################################################
 def client_loop( self, plugin, getquery, nsock=1 ):
+    """
+    """
 
     host, port = Support.get_server_host_port()
 
@@ -103,7 +117,14 @@ def client_loop( self, plugin, getquery, nsock=1 ):
 
 
 
+
+###############################################################################
+# add_worker
+#
+###############################################################################
 def add_worker( L, plugin_name, getquery_func, nsock=5 ):
+    """
+    """
     wn = len(L) + 1
     w = Worker( "Client {}".format(wn) )
     w.QueryCounter = 0
@@ -113,7 +134,14 @@ def add_worker( L, plugin_name, getquery_func, nsock=5 ):
 
 
 
+
+###############################################################################
+# run_load
+#
+###############################################################################
 def run_load( plugin_name, getquery_func, duration=30, initial_nworkers=1, inc_nworkers_interval=0, nsock_per_worker=1 ):
+    """
+    """
     
     LogInfo( "Running load test: plugin_name={} getquery_func={} duration={} initial_nworkers={} inc_nworkers_interval={} nsock_per_worker={}".format( 
                                  plugin_name,   getquery_func.__name__,   duration,   initial_nworkers,   inc_nworkers_interval,   nsock_per_worker ) )
@@ -179,6 +207,11 @@ def run_load( plugin_name, getquery_func, duration=30, initial_nworkers=1, inc_n
 
 
 
+
+###############################################################################
+# TEST_performance__simple
+#
+###############################################################################
 def TEST_performance__simple():
     """
     Basic performance test with a simple plugin
@@ -215,6 +248,11 @@ def TEST_performance__simple():
 
     
 
+
+###############################################################################
+# TEST_performance__graph
+#
+###############################################################################
 def TEST_performance__graph():
     """
     Performance test with graph fill and query
@@ -300,7 +338,14 @@ def TEST_performance__graph():
  
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

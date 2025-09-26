@@ -27,7 +27,14 @@ import pyvgx
 
 
 
+
+###############################################################################
+# __id_plug
+#
+###############################################################################
 def __id_plug( path, plug, typ, level ):
+    """
+    """
     id = "{} [{:04x}]".format( path, 0xff - level )
     P = {}
     P["matrix"] = {
@@ -40,6 +47,11 @@ def __id_plug( path, plug, typ, level ):
 
 
 
+
+###############################################################################
+# sysplugin__matrixplugins_pre
+#
+###############################################################################
 def sysplugin__matrixplugins_pre( request:pyvgx.PluginRequest ):
     """
     Deep plugin listing
@@ -72,6 +84,11 @@ def sysplugin__matrixplugins_pre( request:pyvgx.PluginRequest ):
 
 
 
+
+###############################################################################
+# sysplugin__matrixplugins_post
+#
+###############################################################################
 def sysplugin__matrixplugins_post( response:pyvgx.PluginResponse ):
     """
     Deep plugin listing

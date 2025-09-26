@@ -31,6 +31,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_GetProperties
+#
+###############################################################################
 def TEST_GetProperties():
     """
     pyvgx.Vertex.GetProperties()
@@ -50,7 +55,14 @@ def TEST_GetProperties():
     Expect( V.GetProperties() == {'x':1,'y':'string'},  "two properties" )
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

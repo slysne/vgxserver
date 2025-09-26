@@ -27,6 +27,11 @@ import pyvgx
 import threading
 import time
 
+
+###############################################################################
+# sysplugin__ADMIN_Persist
+#
+###############################################################################
 def sysplugin__ADMIN_Persist( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Create local snapshot

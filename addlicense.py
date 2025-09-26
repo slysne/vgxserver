@@ -411,6 +411,7 @@ def process_functions(filepath, find_naked=False, add_comment=False):
             (?P<name>[a-zA-Z_]\w*)      # function or class name
             \s*\([^;]*\)                # argument list
             :
+            \s*$
         ''',
         re.VERBOSE
     )

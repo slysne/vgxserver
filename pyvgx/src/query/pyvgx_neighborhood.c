@@ -232,6 +232,12 @@ PyVGX_DOC( pyvgx_Neighborhood__doc__,
   "Perform a neighborhood search around vertex 'id'.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_Neighborhood__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param, bool reusable ) {
   static char *fmt = "|OOz#z#z#OOOIIiLz#OIOOiLiii";
   static char *kwlist[] = {
@@ -512,6 +518,12 @@ PyVGX_DOC( pyvgx_Initials__doc__,
   "Return a simple list of initial vertices for which given vertex is a terminal.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_initials_terminals__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_initials_terminals__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param ) {
   static char *kwlist[] = {
     "id",
@@ -632,6 +644,12 @@ PyVGX_DOC( pyvgx_Inarcs__doc__,
   "This is a simplified version of the Neighborhood() method.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_inarcs_outarcs__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_inarcs_outarcs__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param ) {
   static char *kwlist[] = {
     "id",

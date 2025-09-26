@@ -27,6 +27,11 @@ import pyvgx
 import re
 
 
+
+###############################################################################
+# sysplugin__deletevertex
+#
+###############################################################################
 def sysplugin__deletevertex( request:pyvgx.PluginRequest, headers:dict, graph:str, id:str ):
     """
     Delete vertex

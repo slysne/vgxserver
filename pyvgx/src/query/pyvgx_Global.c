@@ -75,6 +75,12 @@ PyVGX_DOC( pyvgx_Arcs__doc__,
   "Perform a global search for arcs matching the given condition. By default all arcs are returned.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_Global__parse_params
+ *
+ ******************************************************************************
+ */
 static __global_query_args * _pyvgx_Global__parse_params( PyObject *args, PyObject *kwds, __global_query_args *param, bool reusable ) {
   static char *fmt_reusable = "|OOIIz#OIOi";
   static char *kwlist_reusable[] = {

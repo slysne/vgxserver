@@ -31,7 +31,14 @@ import re
 import time
 
 
+
+###############################################################################
+# __internal__ADMIN_UpdateSubscribersExecute
+#
+###############################################################################
 def __internal__ADMIN_UpdateSubscribersExecute( SubscribersGoal, SubscribersSync, authtoken ):
+    """
+    """
 
     def PrepareSync():
         """
@@ -122,6 +129,11 @@ def __internal__ADMIN_UpdateSubscribersExecute( SubscribersGoal, SubscribersSync
 
 
 
+
+###############################################################################
+# __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists
+#
+###############################################################################
 def __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists( goal, content="" ):
     """
     Return two lists: The final goal, and the intermediary sync destinations
@@ -333,6 +345,11 @@ def __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists( goal, content="" ):
 
 
 
+
+###############################################################################
+# sysplugin__ADMIN_UpdateSubscribers
+#
+###############################################################################
 def sysplugin__ADMIN_UpdateSubscribers( request:pyvgx.PluginRequest, headers:dict, authtoken:str, content:str, goal:str="[]" ):
     """
     ADMIN: Update Subscribers

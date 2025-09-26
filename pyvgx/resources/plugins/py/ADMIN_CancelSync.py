@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_CancelSync
+#
+###############################################################################
 def sysplugin__ADMIN_CancelSync( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Cancel Synchronize subscribers

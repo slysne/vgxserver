@@ -35,6 +35,11 @@ NODE = "Vertex with Property"
 SETUP = False
 
 
+
+###############################################################################
+# TEST_RemoveProperty_setup
+#
+###############################################################################
 def TEST_RemoveProperty_setup():
     """
     pyvgx.Vertex.RemoveProperty()
@@ -53,6 +58,11 @@ def TEST_RemoveProperty_setup():
 
 
 
+
+###############################################################################
+# TEST_RemoveProperty_set_and_remove
+#
+###############################################################################
 def TEST_RemoveProperty_set_and_remove():
     """
     pyvgx.Vertex.RemoveProperty()
@@ -87,7 +97,14 @@ def TEST_RemoveProperty_set_and_remove():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

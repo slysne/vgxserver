@@ -28,6 +28,11 @@ import re
 
 sysplugin__vertices_EXCLUDE = set(["headers", "content", "graph", "hits", "query", "sharedmem"])
 
+
+###############################################################################
+# sysplugin__vertices
+#
+###############################################################################
 def sysplugin__vertices( request:pyvgx.PluginRequest, headers:dict, content:str, graph:str, hits:int=25, query:str="", sharedmem:int=0 ):
     """
     Global vertices query

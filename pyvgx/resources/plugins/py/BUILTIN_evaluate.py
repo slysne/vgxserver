@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__evaluate
+#
+###############################################################################
 def sysplugin__evaluate( request:pyvgx.PluginRequest, content:str, graph:str, expression:str="", tail:str="", arc:str="", head:str="", memory:int=128, memresult:int=0, sharedmem:int=0 ):
     """
     Expression evaluator

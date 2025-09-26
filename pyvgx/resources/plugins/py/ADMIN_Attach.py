@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_Attach
+#
+###############################################################################
 def sysplugin__ADMIN_Attach( request:pyvgx.PluginRequest, headers:dict, authtoken:str, uri:str ):
     """
     ADMIN: Attach a subscriber

@@ -31,7 +31,14 @@ OUT_FILE = "_pyvgx_plugin_builtins.h"
 ARRAY_PREFIX = "PYVGX_BUILTIN__"
 EXPORT_TABLE = "PYVGX_PLUGIN_BUILTINS"
 
+
+###############################################################################
+# process
+#
+###############################################################################
 def process( name, data ):
+    """
+    """
     OUT = []
     name = os.path.basename( name )
     name = name.replace( ".py", "" )
@@ -59,7 +66,14 @@ def process( name, data ):
 
 
 
+
+###############################################################################
+# convert_files
+#
+###############################################################################
 def convert_files( names, outname ):
+    """
+    """
     OUT = []
     for name in names:
         f = open( name )
@@ -109,7 +123,14 @@ def convert_files( names, outname ):
     fout.close()
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
+    """
+    """
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
     os.makedirs(output_dir, exist_ok=True)

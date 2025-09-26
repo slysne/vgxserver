@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__graphinfo
+#
+###############################################################################
 def sysplugin__graphinfo( request:pyvgx.PluginRequest, headers:dict, content:str, graph:str, simple:int=0 ):
     """
     Graph status information

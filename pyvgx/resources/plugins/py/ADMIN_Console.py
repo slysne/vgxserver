@@ -121,7 +121,14 @@ sysplugin__RemoteAllMethods.update( sysplugin__RemoteVertexMethods )
 
 
 
+
+###############################################################################
+# sysplugin__ParseRemoteCommand
+#
+###############################################################################
 def sysplugin__ParseRemoteCommand( command, recursion=0 ):
+    """
+    """
     m = re.match( r'^(\S+)\s*:\s*(.*)$', command.replace( '\n', ' ' ) )
     if m:
         return m.group(1), sysplugin__VALIDATOR.SafeEval( m.group(2) )
@@ -137,7 +144,14 @@ def sysplugin__ParseRemoteCommand( command, recursion=0 ):
 
 
 
+
+###############################################################################
+# sysplugin__RemoteCallVertexMethod
+#
+###############################################################################
 def sysplugin__RemoteCallVertexMethod( g, cmd, params ):
+    """
+    """
     V = None 
     try:
         vcall = sysplugin__RemoteVertexMethods.get( cmd )
@@ -158,6 +172,11 @@ def sysplugin__RemoteCallVertexMethod( g, cmd, params ):
 
 
 
+
+###############################################################################
+# sysplugin__ADMIN_Console
+#
+###############################################################################
 def sysplugin__ADMIN_Console( request:pyvgx.PluginRequest, headers:dict, authtoken:str, graph:str, content:str ):
     """
     ADMIN: Console access to pyvgx API

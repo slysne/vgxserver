@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_ClearReadonly
+#
+###############################################################################
 def sysplugin__ADMIN_ClearReadonly( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Clear system readonly

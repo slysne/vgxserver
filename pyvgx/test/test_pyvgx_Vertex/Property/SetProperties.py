@@ -34,6 +34,11 @@ NODE = "Vertex with Property"
 SETUP = False
 
 
+
+###############################################################################
+# TEST_SetProperties_setup
+#
+###############################################################################
 def TEST_SetProperties_setup():
     """
     pyvgx.Vertex.SetProperties()
@@ -52,6 +57,11 @@ def TEST_SetProperties_setup():
 
 
 
+
+###############################################################################
+# TEST_SetProperties_basic
+#
+###############################################################################
 def TEST_SetProperties_basic():
     """
     pyvgx.Vertex.SetProperties()
@@ -109,6 +119,11 @@ def TEST_SetProperties_basic():
 
 
 
+
+###############################################################################
+# TEST_SetProperties_many
+#
+###############################################################################
 def TEST_SetProperties_many():
     """
     pyvgx.Vertex.SetProperties()
@@ -141,7 +156,14 @@ def TEST_SetProperties_many():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

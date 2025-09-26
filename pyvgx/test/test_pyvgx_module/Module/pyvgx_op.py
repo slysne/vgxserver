@@ -39,6 +39,11 @@ GRAPH = "local"
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation
+#
+###############################################################################
 def TEST_vxdurable_operation():
     """
     Core vxdurable_operation
@@ -51,6 +56,11 @@ def TEST_vxdurable_operation():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_buffers
+#
+###############################################################################
 def TEST_vxdurable_operation_buffers():
     """
     Core vxdurable_operation_buffers
@@ -63,6 +73,11 @@ def TEST_vxdurable_operation_buffers():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_transaction
+#
+###############################################################################
 def TEST_vxdurable_operation_transaction():
     """
     Core vxdurable_operation_transaction
@@ -75,6 +90,11 @@ def TEST_vxdurable_operation_transaction():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_capture
+#
+###############################################################################
 def TEST_vxdurable_operation_capture():
     """
     Core vxdurable_operation_capture
@@ -87,6 +107,11 @@ def TEST_vxdurable_operation_capture():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_emitter
+#
+###############################################################################
 def TEST_vxdurable_operation_emitter():
     """
     Core vxdurable_operation_emitter
@@ -99,6 +124,11 @@ def TEST_vxdurable_operation_emitter():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_produce_op
+#
+###############################################################################
 def TEST_vxdurable_operation_produce_op():
     """
     Core vxdurable_operation_produce_op
@@ -111,6 +141,11 @@ def TEST_vxdurable_operation_produce_op():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_parser
+#
+###############################################################################
 def TEST_vxdurable_operation_parser():
     """
     Core vxdurable_operation_parser
@@ -123,6 +158,11 @@ def TEST_vxdurable_operation_parser():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_operation_consumer_service
+#
+###############################################################################
 def TEST_vxdurable_operation_consumer_service():
     """
     Core vxdurable_operation_consumer_service
@@ -135,6 +175,11 @@ def TEST_vxdurable_operation_consumer_service():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Attach_Detach
+#
+###############################################################################
 def TEST_pyvgx_op_Attach_Detach():
     """
     pyvgx.op.Attach() and pyvgx.op.Detach()
@@ -182,6 +227,11 @@ def TEST_pyvgx_op_Attach_Detach():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Attach_default
+#
+###############################################################################
 def TEST_pyvgx_op_Attach_default():
     """
     pyvgx.op.Attach()
@@ -202,6 +252,11 @@ def TEST_pyvgx_op_Attach_default():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Suspend_Resume
+#
+###############################################################################
 def TEST_pyvgx_op_Suspend_Resume():
     """
     pyvgx.op.Suspend() and pyvgx.op.Resume()
@@ -306,6 +361,11 @@ def TEST_pyvgx_op_Suspend_Resume():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Fence
+#
+###############################################################################
 def TEST_pyvgx_op_Fence():
     """
     pyvgx.op.Fence()
@@ -376,6 +436,11 @@ def TEST_pyvgx_op_Fence():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Throttle
+#
+###############################################################################
 def TEST_pyvgx_op_Throttle():
     """
     pyvgx.op.Throttle()
@@ -532,6 +597,11 @@ def TEST_pyvgx_op_Throttle():
    
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Consume_and_Throttle
+#
+###############################################################################
 def TEST_pyvgx_op_Consume_and_Throttle():
     """
     pyvgx.op.Consume() and pyvgx.op.Throttle()
@@ -735,7 +805,14 @@ def TEST_pyvgx_op_Consume_and_Throttle():
 UNICODE = list(itertools.chain(range(0x20,0xd800),range(0xe000,0x110000)))
 
 
+
+###############################################################################
+# get_vertex_name
+#
+###############################################################################
 def get_vertex_name( N ):
+    """
+    """
     # Produce a vertex name with variable length
     r = random.randint( 1, N )
     digits = sha256(str(r))
@@ -746,7 +823,14 @@ def get_vertex_name( N ):
 
 
 
+
+###############################################################################
+# get_vertex
+#
+###############################################################################
 def get_vertex( g, N ):
+    """
+    """
     r, name, utf8, digits = get_vertex_name( N )
     type = "type_%d" % (r%20)
     raw = bytes( [int(x,16) for x in digits] )
@@ -760,7 +844,14 @@ def get_vertex( g, N ):
 
 
 
+
+###############################################################################
+# delete_vertex
+#
+###############################################################################
 def delete_vertex( g, N ):
+    """
+    """
     r, name, _ign1, _ign2 = get_vertex_name( N )
     try:
         g.DeleteVertex( name )
@@ -769,7 +860,14 @@ def delete_vertex( g, N ):
 
 
 
+
+###############################################################################
+# get_dim
+#
+###############################################################################
 def get_dim():
+    """
+    """
     return "".join( [chr(random.randint( 97, 122 )) for n in range(4)] )
 
 
@@ -790,12 +888,26 @@ def get_dim():
 
 
 
+
+###############################################################################
+# delete_vector
+#
+###############################################################################
 def delete_vector( vertex ):
+    """
+    """
     vertex.RemoveVector()
 
 
 
+
+###############################################################################
+# connect
+#
+###############################################################################
 def connect( g, N, V, term_min=1, term_max=10 ):
+    """
+    """
     for n in range( random.randint( term_min, term_max ) ):
         r, term, _ign1, _ign2 = get_vertex_name( N )
         rel = "rel_%d" % random.randint(1,25)
@@ -810,7 +922,14 @@ def connect( g, N, V, term_min=1, term_max=10 ):
 
 
 
+
+###############################################################################
+# disconnect
+#
+###############################################################################
 def disconnect( g, N ):
+    """
+    """
     r1, init, _ign1, _ign2 = get_vertex_name( N )
     r2, term, _ign1, _ign2 = get_vertex_name( N )
     try:
@@ -820,6 +939,11 @@ def disconnect( g, N ):
 
 
 
+
+###############################################################################
+# TEST_pyvgx_op_Produce_random
+#
+###############################################################################
 def TEST_pyvgx_op_Produce_random():
     """
     Random graph generation then pyvgx.op.Consume() to restore
@@ -952,7 +1076,14 @@ def TEST_pyvgx_op_Produce_random():
     g.Erase()
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     U = pyvgx.op.GetDefaultURIs()
     pyvgx.system.Unload()
     pyvgx.system.Initialize( SYSROOT, euclidean=False )

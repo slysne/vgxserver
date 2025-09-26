@@ -37,6 +37,11 @@ SYSROOT = "pyvgx_module_test"
 
 
 
+
+###############################################################################
+# TEST_vxoballoc_cstring
+#
+###############################################################################
 def TEST_vxoballoc_cstring():
     """
     Core vxoballoc_cstring
@@ -49,6 +54,11 @@ def TEST_vxoballoc_cstring():
 
 
 
+
+###############################################################################
+# TEST_vxoballoc_vector
+#
+###############################################################################
 def TEST_vxoballoc_vector():
     """
     Core vxoballoc_vector
@@ -61,6 +71,11 @@ def TEST_vxoballoc_vector():
 
 
 
+
+###############################################################################
+# TEST_vxoballoc_vertex
+#
+###############################################################################
 def TEST_vxoballoc_vertex():
     """
     Core vxoballoc_vertex
@@ -73,6 +88,11 @@ def TEST_vxoballoc_vertex():
 
 
 
+
+###############################################################################
+# TEST_vxoballoc_graph
+#
+###############################################################################
 def TEST_vxoballoc_graph():
     """
     Core vxoballoc_graph
@@ -85,6 +105,11 @@ def TEST_vxoballoc_graph():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_registry
+#
+###############################################################################
 def TEST_vxdurable_registry():
     """
     Core vxdurable_registry
@@ -98,6 +123,11 @@ def TEST_vxdurable_registry():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_initialize
+#
+###############################################################################
 def TEST_pyvgxmodule_initialize():
     """
     pyvgx.system.Initialize()
@@ -118,6 +148,11 @@ def TEST_pyvgxmodule_initialize():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_initialized
+#
+###############################################################################
 def TEST_pyvgxmodule_initialized():
     """
     pyvgx.system.IsInitialized()
@@ -131,6 +166,11 @@ def TEST_pyvgxmodule_initialized():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_system_root
+#
+###############################################################################
 def TEST_pyvgxmodule_system_root():
     """
     pyvgx.system.Root()
@@ -151,6 +191,11 @@ def TEST_pyvgxmodule_system_root():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_unload
+#
+###############################################################################
 def TEST_pyvgxmodule_unload():
     """
     pyvgx.system.Unload()
@@ -165,6 +210,11 @@ def TEST_pyvgxmodule_unload():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_init_unload_many
+#
+###############################################################################
 def TEST_pyvgxmodule_init_unload_many():
     """
     Repeated Initialize() Unload() loop
@@ -183,6 +233,11 @@ def TEST_pyvgxmodule_init_unload_many():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_registry
+#
+###############################################################################
 def TEST_pyvgxmodule_registry():
     """
     pyvgx.system.Registry()
@@ -216,6 +271,11 @@ def TEST_pyvgxmodule_registry():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_delete_graph
+#
+###############################################################################
 def TEST_pyvgxmodule_delete_graph():
     """
     pyvgx.system.DeleteGraph()
@@ -259,6 +319,11 @@ def TEST_pyvgxmodule_delete_graph():
 
     
 
+
+###############################################################################
+# TEST_pyvgxmodule_version
+#
+###############################################################################
 def TEST_pyvgxmodule_version():
     """
     pyvgx.version()
@@ -272,6 +337,11 @@ def TEST_pyvgxmodule_version():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_ihash64
+#
+###############################################################################
 def TEST_pyvgxmodule_ihash64():
     """
     pyvgx.ihash64()
@@ -292,6 +362,11 @@ def TEST_pyvgxmodule_ihash64():
         
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_strhash64
+#
+###############################################################################
 def TEST_pyvgxmodule_strhash64():
     """
     pyvgx.strhash64()
@@ -314,6 +389,11 @@ def TEST_pyvgxmodule_strhash64():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_strhash128
+#
+###############################################################################
 def TEST_pyvgxmodule_strhash128():
     """
     pyvgx.strhash128()
@@ -337,6 +417,11 @@ def TEST_pyvgxmodule_strhash128():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_tokenize
+#
+###############################################################################
 def TEST_pyvgxmodule_tokenize():
     """
     pyvgx.tokenize()
@@ -360,6 +445,11 @@ def TEST_pyvgxmodule_tokenize():
     
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_timestamp
+#
+###############################################################################
 def TEST_pyvgxmodule_timestamp():
     """
     pyvgx.timestamp()
@@ -373,6 +463,11 @@ def TEST_pyvgxmodule_timestamp():
 
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_SetOutputStream
+#
+###############################################################################
 def TEST_pyvgxmodule_SetOutputStream():
     """
     pyvgx.SetOutputStream()
@@ -391,6 +486,11 @@ def TEST_pyvgxmodule_SetOutputStream():
    
 
 
+
+###############################################################################
+# TEST_pyvgxmodule_AutoArcTimestamps
+#
+###############################################################################
 def TEST_pyvgxmodule_AutoArcTimestamps():
     """
     pyvgx.AutoArcTimestamps()
@@ -454,5 +554,12 @@ def TEST_pyvgxmodule_AutoArcTimestamps():
 
  
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )

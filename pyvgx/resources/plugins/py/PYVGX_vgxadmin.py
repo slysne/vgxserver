@@ -56,6 +56,11 @@ class vgxadmin__AddressError( Exception ): pass
 
 
 
+
+###############################################################################
+# sysplugin__TransformLegacyDescriptor
+#
+###############################################################################
 def sysplugin__TransformLegacyDescriptor( descriptor ):
     """
     Transform old style descriptor to new style.
@@ -85,6 +90,11 @@ def sysplugin__TransformLegacyDescriptor( descriptor ):
 
 
 
+
+###############################################################################
+# sysplugin__TransformTransactionTopology
+#
+###############################################################################
 def sysplugin__TransformTransactionTopology( topology ):
     """
     {
@@ -122,6 +132,11 @@ def sysplugin__TransformTransactionTopology( topology ):
 
 
 
+
+###############################################################################
+# sysplugin__ValidateSystemDescriptor
+#
+###############################################################################
 def sysplugin__ValidateSystemDescriptor( descriptor ):
     """
     Validate system descriptor
@@ -489,6 +504,11 @@ def sysplugin__ValidateSystemDescriptor( descriptor ):
 
 
 
+
+###############################################################################
+# sysplugin__GetTransactionTopologyInstances
+#
+###############################################################################
 def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
     """
     Return list of tuples: [ (id, {'host':..., ...}), (id, {...}), ... ]
@@ -513,6 +533,11 @@ def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
 
 
 
+
+###############################################################################
+# sysplugin__GetDispatchTopologyInstances
+#
+###############################################################################
 def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
     """
     Return list of tuples: [ (id, {'host':..., ...}), (id, {...}), ... ]
@@ -545,7 +570,14 @@ def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXConsole
+#
+###############################################################################
 class vgxadmin__VGXConsole( object ):
+    """
+    """
 
     def __init__( self, use_stdout=True, printf=None ):
         if use_stdout:
@@ -590,7 +622,14 @@ class vgxadmin__VGXConsole( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXRemote
+#
+###############################################################################
 class vgxadmin__VGXRemote( object ):
+    """
+    """
 
     HTTP_CONNECTIONS = {}
     CLEANUP_THRESHOLD = 64
@@ -831,7 +870,14 @@ class vgxadmin__VGXRemote( object ):
  
 
 
+
+###############################################################################
+# vgxadmin__VGXInstance
+#
+###############################################################################
 class vgxadmin__VGXInstance( object ):
+    """
+    """
 
     DEFAULT_TYPE = "generic"
     DEFAULT_HOST = "127.0.0.1"
@@ -1363,6 +1409,11 @@ class vgxadmin__VGXInstance( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__Descriptor
+#
+###############################################################################
 class vgxadmin__Descriptor( object ):
     """
     vgx.cf format (JSON):
@@ -1938,7 +1989,14 @@ class vgxadmin__Descriptor( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXAdmin
+#
+###############################################################################
 class vgxadmin__VGXAdmin( object ):
+    """
+    """
 
 
     @staticmethod

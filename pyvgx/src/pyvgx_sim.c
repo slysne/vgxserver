@@ -106,6 +106,12 @@ static int __PyVGX_Similarity__set_hamming_threshold( PyVGX_Similarity *pysim, P
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_hamming_threshold
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_hamming_threshold( PyVGX_Similarity *pysim, void *closure ) {
   return PyLong_FromLong( pysim->sim->params.threshold.hamming );
 }
@@ -122,6 +128,12 @@ static int __PyVGX_Similarity__set_sim_threshold( PyVGX_Similarity *pysim, PyObj
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_sim_threshold
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_sim_threshold( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.threshold.similarity );
 }
@@ -139,6 +151,12 @@ static int __PyVGX_Similarity__set_min_isect( PyVGX_Similarity *pysim, PyObject 
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_min_isect
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_min_isect( PyVGX_Similarity *pysim, void *closure ) {
   return PyLong_FromLong( pysim->sim->params.vector.min_intersect );
 }
@@ -168,6 +186,12 @@ static int __PyVGX_Similarity__set_cosine_exp( PyVGX_Similarity *pysim, PyObject
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_cosine_exp
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_cosine_exp( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.cosine_exponent );
 }
@@ -186,6 +210,12 @@ static int __PyVGX_Similarity__set_jaccard_exp( PyVGX_Similarity *pysim, PyObjec
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_jaccard_exp
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_jaccard_exp( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.jaccard_exponent );
 }
@@ -203,6 +233,12 @@ static int __PyVGX_Similarity__set_min_cosine( PyVGX_Similarity *pysim, PyObject
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_min_cosine
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_min_cosine( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.min_cosine );
 }
@@ -220,6 +256,12 @@ static int __PyVGX_Similarity__set_min_jaccard( PyVGX_Similarity *pysim, PyObjec
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Similarity__get_min_jaccard
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Similarity__get_min_jaccard( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.min_jaccard );
 }
@@ -307,6 +349,12 @@ PyDoc_STRVAR( rvec__doc__,
   "\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_Similarity__rvec
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__rvec( PyVGX_Similarity *py_sim, PyObject *py_n ) {
   if( !igraphfactory.EuclideanVectors() ) {
     PyErr_SetString( PyExc_TypeError, "Euclidean mode required" );
@@ -361,6 +409,12 @@ PyDoc_STRVAR( NewVector__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__NewVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__NewVector( PyVGX_Similarity *py_sim, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
 
   static const char *kwlist[] = {
@@ -404,6 +458,12 @@ PyDoc_STRVAR( NewCentroid__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__NewCentroid
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__NewCentroid( PyVGX_Similarity *py_sim, PyObject *py_vectors ) {
 
   PyObject *py_centroid = NULL;
@@ -497,6 +557,12 @@ PyDoc_STRVAR( Fingerprint__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__Fingerprint
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN PyObject * PyVGX_Similarity__Fingerprint( PyObject *pysim, PyObject *args ) {
   // Ensure fingerprinter
   vgx_Similarity_t *sim = ((PyVGX_Similarity*)pysim)->sim;
@@ -540,6 +606,12 @@ PyDoc_STRVAR( Projections__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__Projections
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__Projections( PyObject *pysim, PyObject *py_seed ) {
   if( !PyLong_CheckExact( py_seed ) ) {
     PyErr_SetString( PyExc_TypeError, "seed must be int" );
@@ -716,6 +788,12 @@ PyDoc_STRVAR( DeleteProjectionSets__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__DeleteProjectionSets
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__DeleteProjectionSets( PyObject *pysim ) {
   PyVGX_Similarity *pyvgx_sim = (PyVGX_Similarity*)pysim;
   vgx_Graph_t *graph = pyvgx_sim->sim->parent;
@@ -936,6 +1014,12 @@ PyDoc_STRVAR( CreateProjectionSets__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__CreateProjectionSets
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__CreateProjectionSets( PyObject *pysim, PyObject *args ) {
 
   PyVGX_Similarity *pyvgx_sim = (PyVGX_Similarity*)pysim;
@@ -1036,6 +1120,12 @@ PyDoc_STRVAR( Similarity__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__Similarity
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN PyObject * PyVGX_Similarity__Similarity( PyObject *pysim, PyObject *args ) {
   vgx_Similarity_t *sim = ((PyVGX_Similarity*)pysim)->sim;
   return __PyVGX__compare_vectors( args, sim, (f_similarity_method)CALLABLE(sim)->Similarity );
@@ -1053,6 +1143,12 @@ PyDoc_STRVAR( EuclideanDistance__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__EuclideanDistance
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__EuclideanDistance( PyObject *pysim, PyObject *args ) {
   vgx_Similarity_t *sim = ((PyVGX_Similarity*)pysim)->sim;
   return __PyVGX__compare_vectors( args, sim, (f_similarity_method)CALLABLE(sim)->EuclideanDistance );
@@ -1070,6 +1166,12 @@ PyDoc_STRVAR( Cosine__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__Cosine
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__Cosine( PyObject *pysim, PyObject *args ) {
   vgx_Similarity_t *sim = ((PyVGX_Similarity*)pysim)->sim;
   return __PyVGX__compare_vectors( args, sim, (f_similarity_method)CALLABLE(sim)->Cosine );
@@ -1087,6 +1189,12 @@ PyDoc_STRVAR( Jaccard__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__Jaccard
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__Jaccard( PyObject *pysim, PyObject *args ) {
   vgx_Similarity_t *sim = ((PyVGX_Similarity*)pysim)->sim;
   return __PyVGX__compare_vectors( args, sim, (f_similarity_method)CALLABLE(sim)->Jaccard );
@@ -1104,6 +1212,12 @@ PyDoc_STRVAR( HammingDistance__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__HammingDistance
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__HammingDistance( PyObject *pysim, PyObject *args ) {
   PyObject *py_ham = NULL;
   PyObject *py_A, *py_B;
@@ -1144,6 +1258,12 @@ static PyObject * PyVGX_Similarity__HammingDistance( PyObject *pysim, PyObject *
 PyDoc_STRVAR( AsDict__doc__,
   "AsDict() -> dict\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Similarity__AsDict
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Similarity__AsDict( PyVGX_Similarity *pysim ) {
   return __PyVGX_Similarity_as_dict( pysim );
 }

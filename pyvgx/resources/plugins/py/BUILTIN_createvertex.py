@@ -28,6 +28,11 @@ import re
 import json
 
 
+
+###############################################################################
+# sysplugin__createvertex
+#
+###############################################################################
 def sysplugin__createvertex( request:pyvgx.PluginRequest, headers:dict, graph:str, id:str, type:str="", lifespan:int=-1, properties:json={} ):
     """
     Create/update vertex

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_Throttle
+#
+###############################################################################
 def sysplugin__ADMIN_Throttle( request:pyvgx.PluginRequest, headers:dict, authtoken:str, rate:float=-1.0, unit:str="bytes" ):
     """
     ADMIN: Throttle TX input

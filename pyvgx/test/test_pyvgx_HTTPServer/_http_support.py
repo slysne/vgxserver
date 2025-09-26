@@ -33,7 +33,14 @@ import re
 
 
 
+
+###############################################################################
+# get_server_host_port
+#
+###############################################################################
 def get_server_host_port():
+    """
+    """
     server = system.Status()['httpserver']['server']
     m = re.match( r"http://([^:]+):(\d+)", server )
     host = m.group(1)
@@ -42,7 +49,14 @@ def get_server_host_port():
 
 
 
+
+###############################################################################
+# send_request
+#
+###############################################################################
 def send_request( path, headers={}, expect_status=200, admin=False, json=False, address=None ):
+    """
+    """
     if address:
         host, port = address
     else:
@@ -83,7 +97,14 @@ def send_request( path, headers={}, expect_status=200, admin=False, json=False, 
 
 
 
+
+###############################################################################
+# assert_headers
+#
+###############################################################################
 def assert_headers( header_dict, content, expected_content_type=None ):
+    """
+    """
     # Server
     server = header_dict.get( 'server' )
     if server is not None:
@@ -104,7 +125,14 @@ def assert_headers( header_dict, content, expected_content_type=None ):
 
 
 
+
+###############################################################################
+# response_from_json
+#
+###############################################################################
 def response_from_json( json_bytes, expect_status="OK", expect_base_port=None ):
+    """
+    """
     try:
         D = json.loads( json_bytes )
     except Exception as err:
@@ -136,7 +164,14 @@ def response_from_json( json_bytes, expect_status="OK", expect_base_port=None ):
 
 
 
+
+###############################################################################
+# validate_structure
+#
+###############################################################################
 def validate_structure( REF, subject, recursion=0 ):
+    """
+    """
     # collection
     if type(REF) in [dict, list]:
         # dict

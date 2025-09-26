@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_SystemDescriptor
+#
+###############################################################################
 def sysplugin__ADMIN_SystemDescriptor( request:pyvgx.PluginRequest, headers:dict, authtoken:str, content:str ):
     """
     ADMIN: Update system descriptor

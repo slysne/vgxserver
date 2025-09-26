@@ -28,6 +28,11 @@ import re
 
 sysplugin__arcs_EXCLUDE = set(["headers", "content", "graph", "hits", "query", "arc", "sharedmem"])
 
+
+###############################################################################
+# sysplugin__arcs
+#
+###############################################################################
 def sysplugin__arcs( request:pyvgx.PluginRequest, headers:dict, content:str, graph:str, hits:int=25, query:str="", arc:str="", sharedmem:int=0 ):
     """
     Global arcs query

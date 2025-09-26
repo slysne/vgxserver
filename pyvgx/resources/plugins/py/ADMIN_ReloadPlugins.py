@@ -26,6 +26,11 @@
 import pyvgx
 import json
 
+
+###############################################################################
+# sysplugin__ADMIN_ReloadPlugins
+#
+###############################################################################
 def sysplugin__ADMIN_ReloadPlugins( request:pyvgx.PluginRequest, headers:dict, authtoken:str, content:json ):
     """
     ADMIN: Reload Plugins

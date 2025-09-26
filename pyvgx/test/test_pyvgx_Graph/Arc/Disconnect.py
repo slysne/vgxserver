@@ -36,6 +36,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_Disconnect_basic
+#
+###############################################################################
 def TEST_Disconnect_basic():
     """
     Basic pyvgx.Graph.Disconnect()
@@ -167,6 +172,11 @@ def TEST_Disconnect_basic():
 
 
 
+
+###############################################################################
+# TEST_Disconnect_multiple
+#
+###############################################################################
 def TEST_Disconnect_multiple():
     """
     Multiple pyvgx.Graph.Disconnect()
@@ -223,6 +233,11 @@ def TEST_Disconnect_multiple():
 
 
 
+
+###############################################################################
+# TEST_Disconnect_many
+#
+###############################################################################
 def TEST_Disconnect_many():
     """
     Advanced pyvgx.Graph.Disconnect()
@@ -337,6 +352,11 @@ def TEST_Disconnect_many():
 
 
 
+
+###############################################################################
+# TEST_Disconnect_locked
+#
+###############################################################################
 def TEST_Disconnect_locked():
     """
     pyvgx.Graph.Disconnect() with access conflicts
@@ -607,6 +627,11 @@ def TEST_Disconnect_locked():
 
 
 
+
+###############################################################################
+# TEST_Disconnect_in_locked
+#
+###############################################################################
 def TEST_Disconnect_in_locked():
     """
     pyvgx.Graph.Disconnect() inarcs with access conflicts
@@ -816,7 +841,14 @@ def TEST_Disconnect_in_locked():
     
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

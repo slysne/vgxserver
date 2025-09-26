@@ -46,6 +46,11 @@ N_DELETERS = [ 1, 2 ]
 N_MONITORS = [ 1 ]
 N_SAVERS = [ 1 ]
 
+
+###############################################################################
+# TEST_RandomExpiration
+#
+###############################################################################
 def TEST_RandomExpiration():
     """
     Test multiple threads working in parallel to create, delete and expire
@@ -506,7 +511,14 @@ def TEST_RandomExpiration():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )
     for gn in N_GRAPHS:
         name = graph_name_fmt % gn

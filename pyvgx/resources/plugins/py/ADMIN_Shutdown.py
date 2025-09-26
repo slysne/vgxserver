@@ -33,7 +33,14 @@ import signal
 
 __ADMIN_Shutdown__Undertaker = None
 
+
+###############################################################################
+# __ADMIN_Shutdown__shutdown
+#
+###############################################################################
 def __ADMIN_Shutdown__shutdown( persist=False ):
+    """
+    """
     pyvgx.LogInfo( "Final shutdown initiated" )
     time.sleep(2)
     if persist:
@@ -65,6 +72,11 @@ def __ADMIN_Shutdown__shutdown( persist=False ):
 
 
 
+
+###############################################################################
+# sysplugin__ADMIN_Shutdown
+#
+###############################################################################
 def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authtoken:str, authshutdown:str, persist:int=0 ):
     """
     ADMIN: Shutdown

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_SuspendEvents
+#
+###############################################################################
 def sysplugin__ADMIN_SuspendEvents( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Suspend TTL

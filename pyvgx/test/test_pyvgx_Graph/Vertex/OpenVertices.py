@@ -34,7 +34,14 @@ graph = None
 
 
 
+
+###############################################################################
+# expect_Exc
+#
+###############################################################################
 def expect_Exc( E, method, *args, **kwds ):
+    """
+    """
     try:
         method( *args, **kwds )
         Expect( False,              "Expected exception {}".format( E ) )
@@ -45,19 +52,38 @@ def expect_Exc( E, method, *args, **kwds ):
 OWNED = {}
 
 
+
+###############################################################################
+# get_ids
+#
+###############################################################################
 def get_ids( graph, idlist, mode ):
+    """
+    """
     tid = threadid()
     L = graph.OpenVertices( idlist=idlist, mode=mode )
     OWNED[tid] = L
 
 
+
+###############################################################################
+# put_ids
+#
+###############################################################################
 def put_ids( graph ):
+    """
+    """
     tid = threadid()
     if tid in OWNED:
         OWNED.pop( tid )
 
 
 
+
+###############################################################################
+# TEST_OpenVertices_basic
+#
+###############################################################################
 def TEST_OpenVertices_basic():
     """
     pyvgx.Graph.OpenVertices()
@@ -104,6 +130,11 @@ def TEST_OpenVertices_basic():
 
 
 
+
+###############################################################################
+# TEST_OpenVertices_locked
+#
+###############################################################################
 def TEST_OpenVertices_locked():
     """
     pyvgx.Graph.OpenVertices()
@@ -159,6 +190,11 @@ def TEST_OpenVertices_locked():
 
 
 
+
+###############################################################################
+# TEST_OpenVertices_invalid_args
+#
+###############################################################################
 def TEST_OpenVertices_invalid_args():
     """
     pyvgx.Graph.OpenVertices()
@@ -198,6 +234,11 @@ def TEST_OpenVertices_invalid_args():
 
 
 
+
+###############################################################################
+# TEST_OpenVertices_large_with_duplicates
+#
+###############################################################################
 def TEST_OpenVertices_large_with_duplicates():
     """
     pyvgx.Graph.OpenVertices()
@@ -239,6 +280,11 @@ def TEST_OpenVertices_large_with_duplicates():
 
 
 
+
+###############################################################################
+# TEST_OpenVertices_invalid_access
+#
+###############################################################################
 def TEST_OpenVertices_invalid_access():
     """
     pyvgx.Graph.OpenVertices()
@@ -274,6 +320,11 @@ def TEST_OpenVertices_invalid_access():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
     """
     Run the tests in this module

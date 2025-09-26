@@ -34,6 +34,11 @@ graph = None
 TMX_TOLERANCE = 5
 
 
+
+###############################################################################
+# TEST_SetExpiration_simple
+#
+###############################################################################
 def TEST_SetExpiration_simple():
     """
     pyvgx.Vertex.SetExpiration()
@@ -86,6 +91,11 @@ def TEST_SetExpiration_simple():
 
 
 
+
+###############################################################################
+# TEST_SetExpiration_cancel
+#
+###############################################################################
 def TEST_SetExpiration_cancel():
     """
     pyvgx.Vertex.SetExpiration()
@@ -128,6 +138,11 @@ def TEST_SetExpiration_cancel():
 
 
 
+
+###############################################################################
+# TEST_SetExpiration_with_arc_ttl
+#
+###############################################################################
 def TEST_SetExpiration_with_arc_ttl():
     """
     pyvgx.Vertex.SetExpiration()
@@ -213,6 +228,11 @@ def TEST_SetExpiration_with_arc_ttl():
 
         
 
+
+###############################################################################
+# TEST_SetExpiration_many
+#
+###############################################################################
 def TEST_SetExpiration_many():
     """
     pyvgx.Vertex.SetExpiration()
@@ -271,7 +291,14 @@ def TEST_SetExpiration_many():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

@@ -26,7 +26,14 @@
 import pyvgx
 import ast
 
+
+###############################################################################
+# Validator
+#
+###############################################################################
 class Validator( ast.NodeTransformer ):
+    """
+    """
 
     ALLOWED_NODE_CLASSES = set([
         ast.Add,
@@ -316,7 +323,14 @@ class Validator( ast.NodeTransformer ):
 
 sysplugin__VALIDATOR = Validator()
 
+
+###############################################################################
+# sysplugin__UpdateQueryDict
+#
+###############################################################################
 def sysplugin__UpdateQueryDict( Q, http_params=None, http_content=None ):
+    """
+    """
     data = []
     if http_params:
         data.append( http_params )
@@ -337,7 +351,14 @@ def sysplugin__UpdateQueryDict( Q, http_params=None, http_content=None ):
 
     return Q
 
+
+###############################################################################
+# sysplugin__GetGraphObject
+#
+###############################################################################
 def sysplugin__GetGraphObject( graph_name ):
+    """
+    """
     try:
         return pyvgx.system.GetGraph( graph_name ), False
     except:

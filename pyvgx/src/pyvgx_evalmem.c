@@ -422,40 +422,88 @@ static int __PyVGX_Memory__set_REG( PyVGX_Memory *pymem, int64_t idx, PyObject *
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__get_R1
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Memory__get_R1( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R1 );
 }
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__set_R1
+ *
+ ******************************************************************************
+ */
 static int __PyVGX_Memory__set_R1( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R1, py_obj );
 }
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__get_R2
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Memory__get_R2( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R2 );
 }
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__set_R2
+ *
+ ******************************************************************************
+ */
 static int __PyVGX_Memory__set_R2( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R2, py_obj );
 }
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__get_R3
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Memory__get_R3( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R3 );
 }
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__set_R3
+ *
+ ******************************************************************************
+ */
 static int __PyVGX_Memory__set_R3( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R3, py_obj );
 }
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__get_R4
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Memory__get_R4( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R4 );
 }
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __PyVGX_Memory__set_R4
+ *
+ ******************************************************************************
+ */
 static int __PyVGX_Memory__set_R4( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R4, py_obj );
 }
@@ -631,6 +679,12 @@ static PyObject * PyVGX_Memory__vectorcall( PyObject *callable, PyObject *const 
 PyDoc_STRVAR( AsList__doc__,
   "AsList() -> list\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Memory__AsList
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Memory__AsList( PyVGX_Memory *pymem ) {
   if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
     PyVGXError_SetString( PyVGX_AccessError, "Not owner thread" );
@@ -699,6 +753,12 @@ static PyObject * PyVGX_Memory__AsList( PyVGX_Memory *pymem ) {
 PyDoc_STRVAR( Stack__doc__,
   "Stack() -> list\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Memory__Stack
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Memory__Stack( PyVGX_Memory *pymem ) {
   if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
     PyVGXError_SetString( PyVGX_AccessError, "Not owner thread" );
@@ -771,6 +831,12 @@ static PyObject * PyVGX_Memory__Stack( PyVGX_Memory *pymem ) {
 PyDoc_STRVAR( Reset__doc__,
   "Reset( [value [,increment] ] ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Memory__Reset
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyObject *kwds ) {
   // Args
   static char *kwlist[] = {"value", "increment", NULL};
@@ -877,6 +943,12 @@ static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyOb
 __inline static int __compare_real( const vgx_EvalStackItem_t *a, const vgx_EvalStackItem_t *b ) {
   return (a->real > b->real) - (a->real < b->real);
 }
+
+/**************************************************************************//**
+ * __compare_real_rev
+ *
+ ******************************************************************************
+ */
 __inline static int __compare_real_rev( const vgx_EvalStackItem_t *b, const vgx_EvalStackItem_t *a ) {
   return (a->real > b->real) - (a->real < b->real);
 }
@@ -890,6 +962,12 @@ __inline static int __compare_real_rev( const vgx_EvalStackItem_t *b, const vgx_
 __inline static int __compare_integer( const vgx_EvalStackItem_t *a, const vgx_EvalStackItem_t *b ) {
   return (a->integer > b->integer) - (a->integer < b->integer);
 }
+
+/**************************************************************************//**
+ * __compare_integer_rev
+ *
+ ******************************************************************************
+ */
 __inline static int __compare_integer_rev( const vgx_EvalStackItem_t *b, const vgx_EvalStackItem_t *a ) {
   return (a->integer > b->integer) - (a->integer < b->integer);
 }
@@ -903,6 +981,12 @@ __inline static int __compare_integer_rev( const vgx_EvalStackItem_t *b, const v
 __inline static int __compare_bits( const vgx_EvalStackItem_t *a, const vgx_EvalStackItem_t *b ) {
   return (a->bits > b->bits) - (a->bits < b->bits);
 }
+
+/**************************************************************************//**
+ * __compare_bits_rev
+ *
+ ******************************************************************************
+ */
 __inline static int __compare_bits_rev( const vgx_EvalStackItem_t *b, const vgx_EvalStackItem_t *a ) {
   return (a->bits > b->bits) - (a->bits < b->bits);
 }
@@ -925,6 +1009,12 @@ typedef int (*fcompare)( const void *, const void *);
 PyDoc_STRVAR( Sort__doc__,
   "Sort( a, b[, reverse=False ] ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Memory__Sort
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Memory__Sort( PyVGX_Memory *pymem, PyObject *args, PyObject *kwds ) {
   if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
     PyVGXError_SetString( PyVGX_AccessError, "not owner thread" );
@@ -993,6 +1083,12 @@ PyDoc_STRVAR( DualInt__doc__,
   "DualInt( a[, b] ) -> int or tuple\n"
 );
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * PyVGX_Memory__DualInt
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Memory__DualInt( PyObject *self, PyObject *args ) {
   
   PyObject *py_a = NULL;

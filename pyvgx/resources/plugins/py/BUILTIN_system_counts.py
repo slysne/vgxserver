@@ -26,6 +26,11 @@
 import pyvgx
 
 
+
+###############################################################################
+# sysplugin__system_counts
+#
+###############################################################################
 def sysplugin__system_counts( request:pyvgx.PluginRequest, headers:dict, idlist:str="" ):
     """
     Multi-node system object counts

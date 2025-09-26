@@ -30,6 +30,11 @@ import pyvgx
 graph = None
 
 
+
+###############################################################################
+# TEST_IsGraphReadonly
+#
+###############################################################################
 def TEST_IsGraphReadonly():
     """
     pyvgx.Graph.IsGraphReadonly()
@@ -40,6 +45,11 @@ def TEST_IsGraphReadonly():
 
 
 
+
+###############################################################################
+# TEST_ClearGraphReadonly
+#
+###############################################################################
 def TEST_ClearGraphReadonly():
     """
     pyvgx.Graph.ClearGraphReadonly()
@@ -50,6 +60,11 @@ def TEST_ClearGraphReadonly():
 
 
 
+
+###############################################################################
+# TEST_SetGraphReadonly
+#
+###############################################################################
 def TEST_SetGraphReadonly():
     """
     pyvgx.Graph.SetGraphReadonly()
@@ -136,7 +151,14 @@ def TEST_SetGraphReadonly():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

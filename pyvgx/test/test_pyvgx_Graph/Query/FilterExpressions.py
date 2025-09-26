@@ -37,6 +37,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_local
+#
+###############################################################################
 def TEST_FilterExpressions_local():
     """
     Local filters
@@ -145,6 +150,11 @@ def TEST_FilterExpressions_local():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_mixed
+#
+###############################################################################
 def TEST_FilterExpressions_mixed():
     """
     Mixed filter expressions for pyvgx.Graph.Neighborhood()
@@ -224,6 +234,11 @@ def TEST_FilterExpressions_mixed():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_registers
+#
+###############################################################################
 def TEST_FilterExpressions_registers():
     """
     Filter registers
@@ -512,6 +527,11 @@ def TEST_FilterExpressions_registers():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_collect
+#
+###############################################################################
 def TEST_FilterExpressions_collect():
     """
     Stage, Commit, Collect
@@ -629,7 +649,14 @@ def TEST_FilterExpressions_collect():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

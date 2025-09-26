@@ -26,6 +26,11 @@
 import pyvgx
 import json
 
+
+###############################################################################
+# sysplugin__metrics
+#
+###############################################################################
 def sysplugin__metrics( request:pyvgx.PluginRequest, headers:dict, content:str, latency:json=[80,90,95,99] ):
     """
     HTTP Server Metrics

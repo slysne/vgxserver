@@ -772,6 +772,12 @@ PyDoc_STRVAR( Execute__doc__,
   "Execute() -> Result\n"
 );
 //static PyObject * PyVGX_Query__Execute( PyVGX_Query *py_query, PyObject *args, PyObject *kwds ) {
+
+/**************************************************************************//**
+ * PyVGX_Query__Execute
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Query__Execute( PyVGX_Query *py_query, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
 
   static const char *kwlist[] = {

@@ -32,7 +32,14 @@ import os, sys
 
 
 
+
+###############################################################################
+# __build_fanout
+#
+###############################################################################
 def __build_fanout( graph, initial="root", remaining_levels=[1,2], fanout_factor=4, modifiers=[M_INT,M_FLT], relationships=[] ):
+    """
+    """
     r"""
 
 
@@ -95,7 +102,14 @@ def __build_fanout( graph, initial="root", remaining_levels=[1,2], fanout_factor
 
 
 
+
+###############################################################################
+# _new_root_node
+#
+###############################################################################
 def _new_root_node( graph, id ):
+    """
+    """
     R = graph.NewVertex( id, type="ROOT" )
     R.SetProperty( "level", 0 )
     R.SetProperty( "number", 0 )
@@ -105,6 +119,11 @@ def _new_root_node( graph, id ):
 
 
 
+
+###############################################################################
+# NewFanout
+#
+###############################################################################
 def NewFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], relationships=[] ):
     """
     NewFanout
@@ -120,6 +139,11 @@ def NewFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], r
 
 
 
+
+###############################################################################
+# AppendFanout
+#
+###############################################################################
 def AppendFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], relationships=[] ):
     """
     AppendFanout
@@ -134,6 +158,11 @@ def AppendFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT]
 
 
 
+
+###############################################################################
+# NewGeoGraph
+#
+###############################################################################
 def NewGeoGraph( name ):
     """
     Build graph of states and cities
@@ -184,6 +213,11 @@ def NewGeoGraph( name ):
 
 
 
+
+###############################################################################
+# AssertCleanStart
+#
+###############################################################################
 def AssertCleanStart():
     """
     Fail if not clean

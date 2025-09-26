@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_SetReadonly
+#
+###############################################################################
 def sysplugin__ADMIN_SetReadonly( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Set system readonly

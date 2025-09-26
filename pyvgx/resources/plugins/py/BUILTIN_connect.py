@@ -27,6 +27,11 @@ import pyvgx
 import re
 
 
+
+###############################################################################
+# sysplugin__connect
+#
+###############################################################################
 def sysplugin__connect( request:pyvgx.PluginRequest, headers:dict, graph:str, initial:str, terminal:str, relationship:str="__related__", modifier:str="M_FLT", value:float=0.0, lifespan:int=-1, timeout:int=5000 ):
     """
     Connect two vertices

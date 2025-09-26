@@ -88,6 +88,11 @@ VGX_MULTINODE_SAMPLE_CF = {
 
 
 
+
+###############################################################################
+# LocalSamplePlugin
+#
+###############################################################################
 def LocalSamplePlugin( request:pyvgx.PluginRequest, message:str="" ):
     """
     """
@@ -167,6 +172,11 @@ def GetPluginDefinitions():
 
 
 
+
+###############################################################################
+# RunService
+#
+###############################################################################
 def RunService( demo, instance_id, vgxroot=None, descriptor_file=None, interactive=False ):
     """
     Run VGX Server instance
@@ -209,6 +219,11 @@ def RunService( demo, instance_id, vgxroot=None, descriptor_file=None, interacti
 
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
     """
     Parse command line arguments and run service

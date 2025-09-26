@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__eventbacklog
+#
+###############################################################################
 def sysplugin__eventbacklog( request:pyvgx.PluginRequest, graph:str ):
     """
     Event processor backlog

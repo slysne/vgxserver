@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__memory
+#
+###############################################################################
 def sysplugin__memory( request:pyvgx.PluginRequest, headers:dict, content:str, graph:str ):
     """
     Memory usage for graph

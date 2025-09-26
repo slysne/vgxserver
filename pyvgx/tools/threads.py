@@ -31,7 +31,14 @@ class WorkerTimeout( Exception ): pass
 
 
 
+
+###############################################################################
+# Worker
+#
+###############################################################################
 class Worker( Thread ):
+    """
+    """
     def __init__(self, name):
         Thread.__init__(self, name=name)
         self._task = []

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__vertex
+#
+###############################################################################
 def sysplugin__vertex( request:pyvgx.PluginRequest, graph:str, id:str, maxarcs:int=3 ):
     """
     Get vertex information

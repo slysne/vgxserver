@@ -35,6 +35,11 @@ import gc
 
 
 
+
+###############################################################################
+# TEST_Vertices_basic
+#
+###############################################################################
 def TEST_Vertices_basic():
     """
     pyvgx.Graph.Vertices()
@@ -60,6 +65,11 @@ def TEST_Vertices_basic():
 
 
 
+
+###############################################################################
+# TEST_Vertices_condition_filters
+#
+###############################################################################
 def TEST_Vertices_condition_filters():
     """
     pyvgx.Graph.Vertices()
@@ -296,6 +306,11 @@ def TEST_Vertices_condition_filters():
 
 
 
+
+###############################################################################
+# TEST_Vertices_vector_filters
+#
+###############################################################################
 def TEST_Vertices_vector_filters():
     """
     pyvgx.Graph.Vertices()
@@ -307,6 +322,11 @@ def TEST_Vertices_vector_filters():
 
 
 
+
+###############################################################################
+# TEST_Vertices_all_params
+#
+###############################################################################
 def TEST_Vertices_all_params():
     """
     pyvgx.Graph.Vertices()
@@ -501,6 +521,11 @@ def TEST_Vertices_all_params():
 
 
 
+
+###############################################################################
+# TEST_Vertices_all_name_lengths
+#
+###############################################################################
 def TEST_Vertices_all_name_lengths():
     """
     Test full range of lengths of vertex names and vertex properties
@@ -624,5 +649,12 @@ def TEST_Vertices_all_name_lengths():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )

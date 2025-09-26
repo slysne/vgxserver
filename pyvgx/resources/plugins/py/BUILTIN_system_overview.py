@@ -28,6 +28,11 @@ import json
 
 
 
+
+###############################################################################
+# sysplugin__system_overview
+#
+###############################################################################
 def sysplugin__system_overview( request:pyvgx.PluginRequest, headers:dict ):
     """
     Multi-node system status

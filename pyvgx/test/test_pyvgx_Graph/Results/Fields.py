@@ -113,6 +113,11 @@ L2_FANOUT = 5
 LARGE_SZ = 100000
 
 
+
+###############################################################################
+# check_simple_entry
+#
+###############################################################################
 def check_simple_entry( entry, n, F_x, R_x ):
     """
     simple entry
@@ -197,6 +202,11 @@ def check_simple_entry( entry, n, F_x, R_x ):
 
 
 
+
+###############################################################################
+# check_single_string_entry
+#
+###############################################################################
 def check_single_string_entry( entry, n, F_x ):
     """
     single string entry
@@ -274,6 +284,11 @@ def check_single_string_entry( entry, n, F_x ):
 
 
 
+
+###############################################################################
+# check_complex_string_entry
+#
+###############################################################################
 def check_complex_string_entry( entry, n, fieldmask ):
     """
     complex string entry
@@ -302,6 +317,11 @@ def check_complex_string_entry( entry, n, fieldmask ):
 
 
 
+
+###############################################################################
+# check_dict_items
+#
+###############################################################################
 def check_dict_items( entry, n, F_x ):
     """
     dict items
@@ -385,6 +405,11 @@ def check_dict_items( entry, n, F_x ):
 
 
 
+
+###############################################################################
+# check_result
+#
+###############################################################################
 def check_result( R_x, result, sz ):
     """
     check result type of small graph result
@@ -430,6 +455,11 @@ def check_result( R_x, result, sz ):
 
 
                 
+
+###############################################################################
+# TEST_SmallSetup
+#
+###############################################################################
 def TEST_SmallSetup():
     """
     Set up a small graph for result field testing
@@ -462,6 +492,11 @@ def TEST_SmallSetup():
 
 
 
+
+###############################################################################
+# TEST_R_SIMPLE
+#
+###############################################################################
 def TEST_R_SIMPLE():
     """
     Test Neighborhood() with R_SIMPLE results
@@ -482,6 +517,11 @@ def TEST_R_SIMPLE():
 
 
 
+
+###############################################################################
+# TEST_R_STR
+#
+###############################################################################
 def TEST_R_STR():
     """
     Test Neighborhood() with R_STR results
@@ -519,6 +559,11 @@ def TEST_R_STR():
 
 
 
+
+###############################################################################
+# TEST_R_LIST
+#
+###############################################################################
 def TEST_R_LIST():
     """
     Test Neighborhood() with R_LIST results
@@ -571,6 +616,11 @@ def TEST_R_LIST():
 
 
 
+
+###############################################################################
+# TEST_R_DICT
+#
+###############################################################################
 def TEST_R_DICT():
     """
     Test Neighborhood() with R_DICT results
@@ -612,6 +662,11 @@ def TEST_R_DICT():
 
 
 
+
+###############################################################################
+# TEST_random_fields_and_modes
+#
+###############################################################################
 def TEST_random_fields_and_modes( worker=None, hitcount=-1, loopsize=SMALL_SZ, loop_maxtime=-1 ):
     """
     Test Neighborhood() with random combinations of fields and modes
@@ -660,6 +715,11 @@ def TEST_random_fields_and_modes( worker=None, hitcount=-1, loopsize=SMALL_SZ, l
 
 
 
+
+###############################################################################
+# TEST_multithread_random_fields_and_modes
+#
+###############################################################################
 def TEST_multithread_random_fields_and_modes():
     """
     Test random fields and modes with multiple simultaneous threads
@@ -697,6 +757,11 @@ def TEST_multithread_random_fields_and_modes():
 
 
 
+
+###############################################################################
+# TEST_LargeSetup
+#
+###############################################################################
 def TEST_LargeSetup():
     """
     Set up a large graph for result field testing
@@ -732,6 +797,11 @@ def TEST_LargeSetup():
 
 
 
+
+###############################################################################
+# TEST_large_neighborhood_result_set
+#
+###############################################################################
 def TEST_large_neighborhood_result_set( worker=None, maxhits=-1 ):
     """
     Return large result set for Neighborhood()
@@ -764,6 +834,11 @@ def TEST_large_neighborhood_result_set( worker=None, maxhits=-1 ):
 
 
 
+
+###############################################################################
+# TEST_large_global_result_set
+#
+###############################################################################
 def TEST_large_global_result_set( worker=None, maxhits=-1 ):
     """
     Return large result set for Vertices()
@@ -796,6 +871,11 @@ def TEST_large_global_result_set( worker=None, maxhits=-1 ):
 
 
 
+
+###############################################################################
+# TEST_multithread_large_result_sets
+#
+###############################################################################
 def TEST_multithread_large_result_sets( worker=None ):
     """
     Test large result sets with multiple simultaneous threads
@@ -872,7 +952,14 @@ def TEST_multithread_large_result_sets( worker=None ):
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     print(system.Registry())
     global graph
     graph = pyvgx.Graph( name )

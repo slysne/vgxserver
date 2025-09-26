@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_Bind
+#
+###############################################################################
 def sysplugin__ADMIN_Bind( request:pyvgx.PluginRequest, headers:dict, authtoken:str, port:int, durable:int=0 ):
     """
     ADMIN: System bind

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__echo
+#
+###############################################################################
 def sysplugin__echo( request:pyvgx.PluginRequest, headers:dict, method:str, content:bytes ):
     """
     Server echo

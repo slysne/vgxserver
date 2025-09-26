@@ -34,7 +34,14 @@ import time
 GRAPHS = []
 
 
+
+###############################################################################
+# vgxinstance__VGXInstance
+#
+###############################################################################
 class vgxinstance__VGXInstance( object ):
+    """
+    """
 
     INSTANCE = None
     PLUGIN_MODULES = {}

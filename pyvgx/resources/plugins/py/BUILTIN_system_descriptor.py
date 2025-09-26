@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__system_descriptor
+#
+###############################################################################
 def sysplugin__system_descriptor( request:pyvgx.PluginRequest ):
     """
     System descriptor

@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_GetAuthToken
+#
+###############################################################################
 def sysplugin__ADMIN_GetAuthToken( request:pyvgx.PluginRequest, headers:dict ):
     """
     ADMIN: Get a new token to allow one admin operation

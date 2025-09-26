@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_ResumeTxInput
+#
+###############################################################################
 def sysplugin__ADMIN_ResumeTxInput( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Resume Transaction Input

@@ -354,6 +354,12 @@ PyDoc_STRVAR( Define__doc__,
   "filtering and ranking.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Define
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Define( PyVGX_Graph *pygraph, PyObject *py_expression ) {
   PyObject *py_ret = NULL;
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
@@ -413,6 +419,12 @@ PyDoc_STRVAR( Evaluate__doc__,
   "Evaluate the expression.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Evaluate
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   PyObject *py_ret = NULL;
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
@@ -682,6 +694,12 @@ PyDoc_STRVAR( Memory__doc__,
   "Return a new Memory object for use with expression evaluators\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Memory
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Memory( PyVGX_Graph *pygraph, PyObject *py_order ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -710,6 +728,12 @@ PyDoc_STRVAR( GetDefinition__doc__,
   "Return the expression identified by name\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetDefinition
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetDefinition( PyVGX_Graph *pygraph, PyObject *py_name ) {
   PyObject *py_ret = NULL;
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
@@ -760,6 +784,12 @@ PyDoc_STRVAR( GetDefinitions__doc__,
   "Return all defined expressions\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetDefinitions
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetDefinitions( PyVGX_Graph *pygraph  ) {
   PyObject *py_ret = NULL;
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
@@ -827,6 +857,12 @@ PyDoc_STRVAR( NewVertex__doc__,
   "timeout    :  Timeout in milliseconds for aquiring writable access to the vertex\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__NewVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__NewVertex( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -896,6 +932,12 @@ PyDoc_STRVAR( CreateVertex__doc__,
   "properties :  Dict of properties to set on vertex \n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__CreateVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__CreateVertex( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1029,6 +1071,12 @@ PyDoc_STRVAR( DeleteVertex__doc__,
   "\n"
   ""
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DeleteVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DeleteVertex( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1102,6 +1150,12 @@ PyDoc_STRVAR( HasVertex__doc__,
   "\n"
   "id      :  Unique string identifier for vertex\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__HasVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__HasVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
   int exists = sq_contains_PyVGX_Graph( pygraph, py_id );
   if( exists >= 0 ) {
@@ -1134,6 +1188,12 @@ PyDoc_STRVAR( OpenVertex__doc__,
   "timeout : Timeout in milliseconds for acquiring the requested access to the vertex\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__OpenVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__OpenVertex( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1180,6 +1240,12 @@ PyDoc_STRVAR( CloseVertex__doc__,
   "vertex_object:    Vertex object to close\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__CloseVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__CloseVertex( PyVGX_Graph *pygraph, PyVGX_Vertex *pyvertex ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1225,6 +1291,12 @@ PyDoc_STRVAR( CloseAll__doc__,
   "Close all vertices opened by current thread.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__CloseAll
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__CloseAll( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1256,6 +1328,12 @@ PyDoc_STRVAR( CommitAll__doc__,
   "Commit all vertices opened writable by current thread.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__CommitAll
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__CommitAll( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1288,6 +1366,12 @@ PyDoc_STRVAR( EscalateVertex__doc__,
   "timeout                 : Acquisition timeout (in milliseconds)\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EscalateVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EscalateVertex( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1350,6 +1434,12 @@ PyDoc_STRVAR( RelaxVertex__doc__,
   "                          should be relaxed to readonly\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__RelaxVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__RelaxVertex( PyVGX_Graph *pygraph, PyVGX_Vertex *pyvertex ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1564,6 +1654,12 @@ PyDoc_STRVAR( OpenVertices__doc__,
   "timeout : Timeout in milliseconds for acquiring the requested access to all vertices\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__OpenVertices
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__OpenVertices( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1679,6 +1775,12 @@ PyDoc_STRVAR( CloseVertices__doc__,
   "vertices  : List of vertex objects to close\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__CloseVertices
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__CloseVertices( PyVGX_Graph *pygraph, PyObject *py_vertices ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1778,6 +1880,12 @@ PyDoc_STRVAR( GetVertex__doc__,
   "\n"
   "id       :  Unique string identifier for vertex\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -1812,6 +1920,12 @@ PyDoc_STRVAR( VertexIdByAddress__doc__,
   "Return the identifier of vertex at memory address\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__VertexIdByAddress
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__VertexIdByAddress( PyVGX_Graph *pygraph, PyObject *py_address ) {
   PyObject *py_id = NULL;
 
@@ -1874,6 +1988,12 @@ PyDoc_STRVAR( Connect__doc__,
   "            initial and terminal vertices\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Connect
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Connect( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -2083,6 +2203,12 @@ PyDoc_STRVAR( Disconnect__doc__,
   "           vertex condition is specified.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Disconnect
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Disconnect( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -2421,6 +2547,12 @@ PyDoc_STRVAR( VerticesType__doc__,
   "Return a list of vertex names of the given type in the graph.\n"
   "\n"
  );
+
+/**************************************************************************//**
+ * PyVGX_Graph__VerticesType
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__VerticesType( PyVGX_Graph *pygraph, PyObject *py_type ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -2538,6 +2670,12 @@ PyDoc_STRVAR( Search__doc__,
   "Perform a graph neighborhood search around anchor vertex and return a human-readable result list.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Search
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Search( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -2926,6 +3064,12 @@ PyDoc_STRVAR( EnumRelationship__doc__,
   "EnumRelationship( type[, enum] ) -> enum\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EnumRelationship
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EnumRelationship( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3002,6 +3146,12 @@ PyDoc_STRVAR( EnumVertexType__doc__,
   "EnumVertexType( type[, enum] ) -> enum\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EnumVertexType
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EnumVertexType( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3078,6 +3228,12 @@ PyDoc_STRVAR( EnumDimension__doc__,
   "EnumDimension( dim[, enum] ) -> enum\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EnumDimension
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EnumDimension( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3160,6 +3316,12 @@ PyDoc_STRVAR( EnumKey__doc__,
   "EnumKey( key ) -> keyhash\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EnumKey
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EnumKey( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3221,6 +3383,12 @@ PyDoc_STRVAR( EnumValue__doc__,
   "EnumValue( value ) -> objectid\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EnumValue
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EnumValue( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3280,6 +3448,12 @@ PyDoc_STRVAR( Relationship__doc__,
   "Relationship( enum ) -> relationship\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Relationship
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Relationship( PyVGX_Graph *pygraph, PyObject *py_enum ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3330,6 +3504,12 @@ PyDoc_STRVAR( VertexType__doc__,
   "VertexType( enum ) -> vertex_type\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__VertexType
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__VertexType( PyVGX_Graph *pygraph, PyObject *py_enum ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3380,6 +3560,12 @@ PyDoc_STRVAR( Dimension__doc__,
   "Dimension( enum ) -> dimension\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Dimension
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Dimension( PyVGX_Graph *pygraph, PyObject *py_enum ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3433,6 +3619,12 @@ PyDoc_STRVAR( Key__doc__,
   "Key( enum ) -> key\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Key
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Key( PyVGX_Graph *pygraph, PyObject *py_enum ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3483,6 +3675,12 @@ PyDoc_STRVAR( Value__doc__,
   "Value( obid ) -> value\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Value
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Value( PyVGX_Graph *pygraph, PyObject *py_obid ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3542,6 +3740,12 @@ static PyObject * PyVGX_Graph__Value( PyVGX_Graph *pygraph, PyObject *py_obid ) 
 PyDoc_STRVAR( Relationships__doc__,
   "Relationships() -> dict of {relationship:enumeration} used in graph\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Relationships
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Relationships( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3560,6 +3764,12 @@ static PyObject * PyVGX_Graph__Relationships( PyVGX_Graph *pygraph ) {
 PyDoc_STRVAR( VertexTypes__doc__,
   "VertexTypes() -> dict of {vertex_type:enumeration} used in graph\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__VertexTypes
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__VertexTypes( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3578,6 +3788,12 @@ static PyObject * PyVGX_Graph__VertexTypes( PyVGX_Graph *pygraph ) {
 PyDoc_STRVAR( PropertyKeys__doc__,
   "PropertyKeys() -> dict of {property_key:enumeration} used in graph\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__PropertyKeys
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__PropertyKeys( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3596,6 +3812,12 @@ static PyObject * PyVGX_Graph__PropertyKeys( PyVGX_Graph *pygraph ) {
 PyDoc_STRVAR( PropertyStringValues__doc__,
   "PropertyStringValues() -> dict of {property_string_value:enumeration} used in graph\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__PropertyStringValues
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__PropertyStringValues( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3619,6 +3841,12 @@ PyDoc_STRVAR( Truncate__doc__,
   "be removed.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Truncate
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Truncate( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3706,6 +3934,12 @@ PyDoc_STRVAR( ResetSerial__doc__,
   "ResetSerial( [sn] ) -> long\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ResetSerial
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ResetSerial( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -3789,6 +4023,12 @@ static PyObject * __PyVGX_Graph__get_size( PyVGX_Graph *pygraph, void *closure )
 PyDoc_STRVAR( Size__doc__,
   "Size() -> Number of arcs in graph\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Size
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Size( PyVGX_Graph *pygraph ) {
   return __PyVGX_Graph__get_size( pygraph, NULL );
 }
@@ -3862,6 +4102,12 @@ PyDoc_STRVAR( Order__doc__,
   "Order( [type] ) -> Number of vertices in graph, optionally filtered by type\n"
 );
 //static PyObject * PyVGX_Graph__Order( PyVGX_Graph *pygraph, PyObject *args ) {
+
+/**************************************************************************//**
+ * PyVGX_Graph__Order
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Order( PyVGX_Graph *pygraph, PyObject *const *args, Py_ssize_t nargs ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4217,6 +4463,12 @@ PyDoc_STRVAR( Count__doc__,
   "               to both initial and terminal vertices.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Count
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Count( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   return __py_accumulate( pygraph, args, kwds, VGX_PREDICATOR_MOD_COUNTER );
 }
@@ -4243,6 +4495,12 @@ PyDoc_STRVAR( Accumulate__doc__,
   "               to both initial and terminal vertices.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Accumulate
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Accumulate( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   return __py_accumulate( pygraph, args, kwds, VGX_PREDICATOR_MOD_ACCUMULATOR );
 }
@@ -4260,6 +4518,12 @@ PyDoc_STRVAR( ShowVertex__doc__,
   "Prints a representation of the internal vertex data. Useful for debugging.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ShowVertex
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ShowVertex( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4328,6 +4592,12 @@ PyDoc_STRVAR( VertexDescriptor__doc__,
   "Return the vertex descriptor. Useful for debugging.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__VertexDescriptor
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__VertexDescriptor( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4431,6 +4701,12 @@ PyDoc_STRVAR( GetMemoryUsage__doc__,
   "GetMemoryUsage() -> dict\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetMemoryUsage
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetMemoryUsage( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4624,6 +4900,12 @@ PyDoc_STRVAR( Status__doc__,
   "Status() -> dict\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Status
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Status( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4644,6 +4926,12 @@ PyDoc_STRVAR( ResetCounters__doc__,
   "ResetCounters() -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ResetCounters
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ResetCounters( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4673,6 +4961,12 @@ PyDoc_STRVAR( Close__doc__,
   "Close() -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Close
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Close( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4739,6 +5033,12 @@ PyDoc_STRVAR( Erase__doc__,
   "Erase() -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Erase
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Erase( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4873,6 +5173,12 @@ PyDoc_STRVAR( Save__doc__,
   "attached instances set remote=True.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Save
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Save( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -4924,6 +5230,12 @@ static PyObject * PyVGX_Graph__Save( PyVGX_Graph *pygraph, PyObject *args, PyObj
 PyDoc_STRVAR( Sync__doc__,
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Sync
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Sync( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5002,6 +5314,12 @@ PyDoc_STRVAR( GetOpenVertices__doc__,
   "            The default is 0, which returns open vertices for all threads.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetOpenVertices
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetOpenVertices( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5157,6 +5475,12 @@ PyDoc_STRVAR( ShowOpenVertices__doc__,
   "Print a summary of all vertices in graph that have been acquired.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ShowOpenVertices
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ShowOpenVertices( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5219,6 +5543,12 @@ PyDoc_STRVAR( GetIndexCounters__doc__,
   "GetIndexCounters( [type] ) -> dict\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetIndexCounters
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetIndexCounters( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5274,6 +5604,12 @@ PyDoc_STRVAR( ResetIndexCounters__doc__,
   "ResetIndexCounters() -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ResetIndexCounters
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ResetIndexCounters( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5301,6 +5637,12 @@ PyDoc_STRVAR( EventBacklog__doc__,
   "internal event processor.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EventBacklog
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EventBacklog( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5339,6 +5681,12 @@ PyDoc_STRVAR( EventEnable__doc__,
   "processing of vertices and arcs.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EventEnable
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EventEnable( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5388,6 +5736,12 @@ PyDoc_STRVAR( EventDisable__doc__,
   "processing of vertices and arcs.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EventDisable
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EventDisable( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5434,6 +5788,12 @@ PyDoc_STRVAR( EventFlush__doc__,
   "respective schedules.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EventFlush
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EventFlush( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5475,6 +5835,12 @@ PyDoc_STRVAR( EventParam__doc__,
   "the internal event processor.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__EventParam
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__EventParam( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5600,6 +5966,12 @@ PyDoc_STRVAR( SetGraphReadonly__doc__,
   "graph writable again.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__SetGraphReadonly
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__SetGraphReadonly( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   static __THREAD objectid_t _ftoken = {0};
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
@@ -5670,6 +6042,12 @@ PyDoc_STRVAR( IsGraphReadonly__doc__,
   "Return True if the graph is currently readonly, otherwise False.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__IsGraphReadonly
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__IsGraphReadonly( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5706,6 +6084,12 @@ PyDoc_STRVAR( ClearGraphReadonly__doc__,
   "\nmode."
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__ClearGraphReadonly
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__ClearGraphReadonly( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5740,6 +6124,12 @@ PyDoc_STRVAR( IsGraphLocal__doc__,
   "Return True if the graph is local only, otherwise False.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__IsGraphLocal
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__IsGraphLocal( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5770,6 +6160,12 @@ PyDoc_STRVAR( DebugDumpGraph__doc__,
   "DebugDumpGraph() -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DebugDumpGraph
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DebugDumpGraph( PyVGX_Graph *pygraph ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5793,6 +6189,12 @@ PyDoc_STRVAR( DebugPrintAllocators__doc__,
   "DebugPrintAllocators( [name] ) -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DebugPrintAllocators
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DebugPrintAllocators( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5825,6 +6227,12 @@ PyDoc_STRVAR( DebugCheckAllocators__doc__,
   "DebugCheckAllocators( [name] ) -> None\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DebugCheckAllocators
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DebugCheckAllocators( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5865,6 +6273,12 @@ PyDoc_STRVAR( DebugGetObjectByAddress__doc__,
   "DebugGetObjectByAddress( address ) -> object_description\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DebugGetObjectByAddress
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DebugGetObjectByAddress( PyVGX_Graph *pygraph, PyObject *py_address ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5907,6 +6321,12 @@ PyDoc_STRVAR( DebugFindObjectByIdentifier__doc__,
   "DebugFindObjectByIdentifier( identifier ) -> object_description\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__DebugFindObjectByIdentifier
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__DebugFindObjectByIdentifier( PyVGX_Graph *pygraph, PyObject *py_identifier ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -5943,6 +6363,12 @@ PyDoc_STRVAR( GetVertexID__doc__,
   "GetVertexID( [offset] ) -> string\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__GetVertexID
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__GetVertexID( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "offset",  NULL };
 
@@ -5990,6 +6416,12 @@ PyDoc_STRVAR( Lock__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Lock
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Lock( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
@@ -6114,6 +6546,12 @@ PyDoc_STRVAR( Synchronized__doc__,
   "\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Graph__Synchronized
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Graph__Synchronized( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds ) {
   static PyObject *py_lock_args = NULL;
   if( py_lock_args == NULL ) {
@@ -6254,6 +6692,12 @@ static PyObject * PyVGX_Graph__new( PyTypeObject *type, PyObject *args, PyObject
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __remove_graph_reference
+ *
+ ******************************************************************************
+ */
 static void __remove_graph_reference( vgx_Graph_t *graph, void *pygraph ) {
   if( pygraph ) {
     ((PyVGX_Graph*)pygraph)->graph = NULL;

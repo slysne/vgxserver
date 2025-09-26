@@ -25,6 +25,11 @@
 
 import pyvgx
 
+
+###############################################################################
+# sysplugin__ADMIN_Truncate
+#
+###############################################################################
 def sysplugin__ADMIN_Truncate( request:pyvgx.PluginRequest, headers:dict, authtoken:str ):
     """
     ADMIN: Delete all graph data

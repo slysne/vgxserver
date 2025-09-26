@@ -39,6 +39,11 @@ GRAPH2 = "local2"
 
 
 
+
+###############################################################################
+# TEST_vxdurable_system
+#
+###############################################################################
 def TEST_vxdurable_system():
     """
     Core vxdurable_system
@@ -51,6 +56,11 @@ def TEST_vxdurable_system():
 
 
 
+
+###############################################################################
+# TEST_vxio_uri
+#
+###############################################################################
 def TEST_vxio_uri():
     """
     Core vxio_uri
@@ -63,6 +73,11 @@ def TEST_vxio_uri():
 
 
 
+
+###############################################################################
+# TEST_pyvgx_system_WritableVertices
+#
+###############################################################################
 def TEST_pyvgx_system_WritableVertices():
     """
     Verify writable vertices counter
@@ -148,7 +163,14 @@ def TEST_pyvgx_system_WritableVertices():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     U = pyvgx.op.GetDefaultURIs()
     pyvgx.system.Unload()
     pyvgx.system.Initialize( SYSROOT, euclidean=False )
