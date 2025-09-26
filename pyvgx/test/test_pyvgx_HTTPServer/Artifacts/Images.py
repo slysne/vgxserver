@@ -37,13 +37,13 @@ graph = None
 
 def TEST_Artifacts_images_logo():
     """
-    logo.gif
+    logo_b-x.png
     test_level=4101
     """
     # Send request
-    bytes, headers = Support.send_request( "logo.gif" )
+    bytes, headers = Support.send_request( "logo_b-x.png" )
     # Check headers
-    Support.assert_headers( headers, bytes, "image/gif" )
+    Support.assert_headers( headers, bytes, "image/png" )
 
 
 

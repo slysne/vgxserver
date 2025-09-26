@@ -46,7 +46,7 @@ def TEST_Artifacts_HTML_header():
     artifact = bytes.decode()
     for tag in ["div", "table", "tr", "td" ]:
         Expect( "<%s" % tag in artifact,            "<%s> tag(s) should exist" % tag )
-    for text in ["commonHeaderTable", "Processor", "logo.gif" ]:
+    for text in ["commonHeaderTable", "Processor", "logo_b-x.png" ]:
         Expect( text in artifact,                   "%s should exist" % text )
 
 
