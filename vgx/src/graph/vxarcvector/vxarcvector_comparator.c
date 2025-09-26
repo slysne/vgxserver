@@ -1636,13 +1636,13 @@ __vertex_stage_TO_SORT_BY( random_order )    { __vertex_sortby_random_order     
 #define __cmp_a_gt_b( a, b ) (int)( (a > b) - (a < b) )
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __cmp_always_1
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __cmp_always_1( const vgx_CollectorItem_t *a, const vgx_CollectorItem_t *b ) {
   return 1;
 }

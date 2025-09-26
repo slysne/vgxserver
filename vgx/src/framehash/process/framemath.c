@@ -290,13 +290,13 @@ static int64_t __f_process_math_pow( framehash_processing_context_t * const cont
 }
 
 // CELL PROCESSOR: square
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __f_process_math_square
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_square( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   uint64_t ival;
   double fval;
@@ -320,13 +320,13 @@ static int64_t __f_process_math_square( framehash_processing_context_t * const c
 }
 
 // CELL PROCESSOR: cube
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __f_process_math_cube
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_cube( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   uint64_t ival;
   double fval;
@@ -412,13 +412,13 @@ static int64_t __f_process_math_log( framehash_processing_context_t * const cont
 
 // CELL PROCESSOR: logarithm (base 2)
 #define __log2inv 1.4426950408889634
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __f_process_math_log2
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_log2( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   if( _CELL_IS_VALUE( cell ) ) {
     switch( _CELL_VALUE_DTYPE( cell ) ) {
@@ -496,13 +496,13 @@ static int64_t __f_process_math_exp_base( framehash_processing_context_t * const
 }
 
 // CELL PROCESSOR: exponentiation (base = e)
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __f_process_math_exp
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_exp( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   if( _CELL_IS_VALUE( cell ) ) {
     switch( _CELL_VALUE_DTYPE( cell ) ) {

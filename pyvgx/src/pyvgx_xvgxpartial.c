@@ -457,13 +457,14 @@ static PyObject * PyVGX_PluginRequest_get_signature( PyVGX_PluginRequest *py_plu
   return PyUnicode_FromStringAndSize( fmtbuf, 32 );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_signature
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_signature( PyVGX_PluginRequest *py_plugreq, PyObject *py_signature, void *closure ) {
 
   vgx_HTTPHeaders_t *h = py_plugreq->request->headers;
@@ -515,13 +516,14 @@ static PyObject * PyVGX_PluginRequest_get_flag( PyVGX_PluginRequest *py_plugreq,
   return PyUnicode_FromStringAndSize( h->flag.value, strnlen( h->flag.value, sizeof(h->flag) ) );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_flag
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_flag( PyVGX_PluginRequest *py_plugreq, PyObject *py_flag, void *closure ) {
   vgx_HTTPHeaders_t *h = py_plugreq->request->headers;
 
@@ -638,13 +640,14 @@ static PyObject * PyVGX_PluginRequest_get_local( PyVGX_PluginRequest *py_plugreq
   return local_capsule_get( py_plugreq->request->headers );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_local
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_local( PyVGX_PluginRequest *py_plugreq, PyObject *py_obj, void *closure ) {
   return local_capsule_set( py_plugreq->request->headers, py_obj );
 }
@@ -786,13 +789,14 @@ static PyObject * PyVGX_PluginRequest_get_content( PyVGX_PluginRequest *py_plugr
   return py_plugreq->py_content;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_content
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_content( PyVGX_PluginRequest *py_plugreq, PyObject *py_content, void *closure ) {
 
   int ret = 0;
@@ -880,13 +884,14 @@ static PyObject * PyVGX_PluginRequest_get_partial( PyVGX_PluginRequest *py_plugr
   Py_RETURN_NONE;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_partial
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_partial( PyVGX_PluginRequest *py_plugreq, PyObject *py_partial, void *closure ) {
   if( py_partial == NULL || py_partial == Py_None ) {
     py_plugreq->request->target_partial = -1;
@@ -931,13 +936,14 @@ static PyObject * PyVGX_PluginRequest_get_affinity( PyVGX_PluginRequest *py_plug
   Py_RETURN_NONE;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_affinity
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_affinity( PyVGX_PluginRequest *py_plugreq, PyObject *py_affinity, void *closure ) {
   if( py_affinity == NULL || py_affinity == Py_None ) {
     py_plugreq->request->replica_affinity = -1;
@@ -968,13 +974,14 @@ static PyObject * PyVGX_PluginRequest_get_primary( PyVGX_PluginRequest *py_plugr
   return PyLong_FromLong( py_plugreq->request->headers->client->flags.primary );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_set_primary
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginRequest_set_primary( PyVGX_PluginRequest *py_plugreq, PyObject *py_primary, void *closure ) {
   int p;
   if( py_primary == NULL ) {
@@ -1409,13 +1416,13 @@ DLL_HIDDEN PyVGX_PluginRequest * __pyvgx_PluginRequest_New( vgx_VGXServerRequest
 PyDoc_STRVAR( SerializeRequest__doc__,
   "Serialize() -> None\n"
 );
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_PluginRequest_Serialize
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginRequest_Serialize( PyVGX_PluginRequest *py_plugreq ) {
   PyObject *py_bytes = NULL;
   vgx_StreamBuffer_t *output = NULL;
@@ -2459,13 +2466,13 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_maxhits( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyLong_FromLongLong( py_plugres->metas.maxhits );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_maxhits
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_maxhits( PyVGX_PluginResponse *py_plugres, PyObject *py_maxhits, void *closure ) {
   if( py_maxhits == NULL ) {
     py_plugres->metas.maxhits = -1;
@@ -2524,13 +2531,15 @@ static PyObject * PyVGX_PluginResponse_get_message( PyVGX_PluginResponse *py_plu
   Py_INCREF( py_ret );
   return py_ret;
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_message
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_message( PyVGX_PluginResponse *py_plugres, PyObject *py_message, void *closure ) {
   Py_XDECREF( py_plugres->py_message );
   if( (py_plugres->py_message = py_message) != NULL ) {
@@ -2550,13 +2559,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_hitcount( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyLong_FromLongLong( py_plugres->metas.hitcount );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_hitcount
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_hitcount( PyVGX_PluginResponse *py_plugres, PyObject *py_hitcount, void *closure ) {
   int64_t sz = PyList_Size( py_plugres->py_entries );
   // on del, set hitcount to len(entries)
@@ -2588,13 +2599,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_partials( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyLong_FromLong( (int)py_plugres->metas.level.deep_parts );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_partials
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_partials( PyVGX_PluginResponse *py_plugres, PyObject *py_partials, void *closure ) {
   if( py_partials == NULL ) {
     py_plugres->metas.level.deep_parts = 1;
@@ -2759,13 +2772,14 @@ static PyObject* PyVGX_PluginResponse_get_local(PyVGX_PluginResponse* py_plugres
   return local_capsule_get( py_plugres->request->headers );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_local
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_local( PyVGX_PluginResponse *py_plugres, PyObject *py_obj, void *closure ) {
   if( py_plugres->request == NULL ) {
     PyErr_SetString( PyVGX_ResponseError, "invalid context (no request)" );
@@ -3050,13 +3064,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_i0( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyLong_FromLongLong( py_plugres->aggregator.int_aggr[ __aggr_i0 ] );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_i0
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_i0( PyVGX_PluginResponse *py_plugres, PyObject *py_i0, void *closure ) {
   return __set_int_aggregator( py_plugres, py_i0, __aggr_i0 );
 }
@@ -3072,13 +3088,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_i1( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyLong_FromLongLong( py_plugres->aggregator.int_aggr[ __aggr_i1 ] );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_i1
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_i1( PyVGX_PluginResponse *py_plugres, PyObject *py_i1, void *closure ) {
   return __set_int_aggregator( py_plugres, py_i1, __aggr_i1 );
 }
@@ -3094,13 +3112,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_f2( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyFloat_FromDouble( py_plugres->aggregator.dbl_aggr[ __aggr_f2 ] );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_f2
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_f2( PyVGX_PluginResponse *py_plugres, PyObject *py_f2, void *closure ) {
   return __set_dbl_aggregator( py_plugres, py_f2, __aggr_f2 );
 }
@@ -3116,13 +3136,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_get_f3( PyVGX_PluginResponse *py_plugres, void *closure ) {
   return PyFloat_FromDouble( py_plugres->aggregator.dbl_aggr[ __aggr_f3 ] );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_set_f3
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int PyVGX_PluginResponse_set_f3( PyVGX_PluginResponse *py_plugres, PyObject *py_f3, void *closure ) {
   return __set_dbl_aggregator( py_plugres, py_f3, __aggr_f3 );
 }
@@ -3640,13 +3662,13 @@ static PyObject * PyVGX_PluginResponse_Serialize( PyVGX_PluginResponse *py_plugr
 PyDoc_STRVAR( Deserialize__doc__,
   "Deserialize( data ) -> obj\n"
 );
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_PluginResponse_Deserialize
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_PluginResponse_Deserialize( PyVGX_PluginResponse *py_plugres, PyObject *py_data ) {
   char *data;
   Py_ssize_t sz_data;

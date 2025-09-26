@@ -1905,13 +1905,12 @@ static PyMemberDef PyVGX_Operation__members[] = {
 
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-
 /**************************************************************************//**
  * __PyVGX_Operation__attr
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Operation__attr( PyVGX_Operation *py_op, void *closure ) {
   return PyLong_FromLongLong( 0 );
 }

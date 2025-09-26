@@ -643,13 +643,13 @@ static int Fingerprinter_hamming_distance_naive( const vgx_Fingerprinter_t *self
 #define __00001111__ 0x0F0F0F0F0F0F0F0FULL
 #define __00000001__ 0x0101010101010101ULL
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * Fingerprinter_hamming_distance_parallel
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int Fingerprinter_hamming_distance_parallel( const vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 ) {
   FP_t bits = fp1 ^ fp2;
   bits = bits - ((bits >> 1) & __01010101__);
@@ -674,13 +674,13 @@ unsigned __int64 __popcnt64( unsigned __int64 value );
 #error "__popcnt64 not defined for this platform"
 #endif
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * Fingerprinter_hamming_distance_intrinsic
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int Fingerprinter_hamming_distance_intrinsic( const vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 ) {
   return (int)__popcnt64( fp1 ^  fp2 );
 }

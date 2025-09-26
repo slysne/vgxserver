@@ -105,13 +105,14 @@ static int __PyVGX_Similarity__set_hamming_threshold( PyVGX_Similarity *pysim, P
   return __PyVGX_Similarity__set_int_member( pysim, pyval, &pysim->sim->params.threshold.hamming, 0, 64 );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_hamming_threshold
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_hamming_threshold( PyVGX_Similarity *pysim, void *closure ) {
   return PyLong_FromLong( pysim->sim->params.threshold.hamming );
 }
@@ -127,13 +128,14 @@ static int __PyVGX_Similarity__set_sim_threshold( PyVGX_Similarity *pysim, PyObj
   return __PyVGX_Similarity__set_float_member( pysim, pyval, &pysim->sim->params.threshold.similarity, 0.0f, 1.0f );
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_sim_threshold
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_sim_threshold( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.threshold.similarity );
 }
@@ -150,13 +152,14 @@ static int __PyVGX_Similarity__set_min_isect( PyVGX_Similarity *pysim, PyObject 
   return retcode;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_min_isect
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_min_isect( PyVGX_Similarity *pysim, void *closure ) {
   return PyLong_FromLong( pysim->sim->params.vector.min_intersect );
 }
@@ -185,13 +188,14 @@ static int __PyVGX_Similarity__set_cosine_exp( PyVGX_Similarity *pysim, PyObject
   return retcode;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_cosine_exp
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_cosine_exp( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.cosine_exponent );
 }
@@ -209,13 +213,14 @@ static int __PyVGX_Similarity__set_jaccard_exp( PyVGX_Similarity *pysim, PyObjec
   return retcode;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_jaccard_exp
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_jaccard_exp( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.jaccard_exponent );
 }
@@ -232,13 +237,14 @@ static int __PyVGX_Similarity__set_min_cosine( PyVGX_Similarity *pysim, PyObject
   return retcode;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_min_cosine
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_min_cosine( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.min_cosine );
 }
@@ -255,13 +261,14 @@ static int __PyVGX_Similarity__set_min_jaccard( PyVGX_Similarity *pysim, PyObjec
   return retcode;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __PyVGX_Similarity__get_min_jaccard
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Similarity__get_min_jaccard( PyVGX_Similarity *pysim, void *closure ) {
   return PyFloat_FromDouble( pysim->sim->params.vector.min_jaccard );
 }
@@ -348,13 +355,13 @@ PyDoc_STRVAR( rvec__doc__,
   "\n"
   "\n"
 );
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_Similarity__rvec
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_Similarity__rvec( PyVGX_Similarity *py_sim, PyObject *py_n ) {
   if( !igraphfactory.EuclideanVectors() ) {
     PyErr_SetString( PyExc_TypeError, "Euclidean mode required" );

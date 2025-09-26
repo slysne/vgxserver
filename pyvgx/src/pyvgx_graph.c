@@ -6691,13 +6691,12 @@ static PyObject * PyVGX_Graph__new( PyTypeObject *type, PyObject *args, PyObject
 
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-
 /**************************************************************************//**
  * __remove_graph_reference
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static void __remove_graph_reference( vgx_Graph_t *graph, void *pygraph ) {
   if( pygraph ) {
     ((PyVGX_Graph*)pygraph)->graph = NULL;

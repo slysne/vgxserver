@@ -125,13 +125,12 @@ DLL_EXPORT char ** vgx_get_unit_test_names( void ) {
 
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-
 /**************************************************************************//**
  * vgx_unit_tests
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 DLL_EXPORT int vgx_unit_tests( const char *runonly[], const char *testdir ) {
 #ifdef INCLUDE_UNIT_TESTS
   int retcode = -1;

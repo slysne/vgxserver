@@ -130,24 +130,25 @@ static void __delete_perfcounters( framehash_perfcounters_t *counters ) {
 #else
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __get_perfcounters
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static framehash_perfcounters_t * __get_perfcounters( framehash_t * const self, framehash_perfcounters_t *target ) {
   return target;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __reset_perfcounters
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static void __reset_perfcounters( framehash_t * const self ) {
 }
 
@@ -161,13 +162,14 @@ static framehash_perfcounters_t * __new_perfcounters( void ) {
   return NULL;
 }
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
 
 /**************************************************************************//**
  * __delete_perfcounters
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static void __delete_perfcounters( framehash_perfcounters_t *counters ) {
 }
 

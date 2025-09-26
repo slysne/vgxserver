@@ -1413,13 +1413,13 @@ static PyObject * PyVGX_meminfo( PyObject *self ) {
  ******************************************************************************
  */
 #if defined CXPLAT_ARCH_X64
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_cpuid
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_cpuid( PyObject *self, PyObject *args, PyObject *kwdict ) {
   static char *kwlist[] = {"leaf", "subleaf", "obj", NULL}; 
   unsigned int leaf = 0;

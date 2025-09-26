@@ -549,13 +549,13 @@ __inline static int8_t __parse_header__x_vgx_partial_target( const char *data ) 
 #define HEADER_XVgxBuiltinMinExecutor "x-vgx-builtin-min-executor:"
 #define sz_HEADER_XVgxBuiltinMinExecutor (sizeof(HEADER_XVgxBuiltinMinExecutor) - 1)
 #define IS_HEADER_XVgxBuiltinMinExecutor( Line ) __match_lower_prefix( Line, HEADER_XVgxBuiltinMinExecutor )
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __parse_header__x_vgx_builtin_min_executor
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __parse_header__x_vgx_builtin_min_executor( vgx_VGXServer_t *server, const char *data ) {
   int pool_n;
   data += sz_HEADER_XVgxBuiltinMinExecutor;

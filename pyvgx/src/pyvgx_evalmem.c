@@ -420,90 +420,96 @@ static int __PyVGX_Memory__set_REG( PyVGX_Memory *pymem, int64_t idx, PyObject *
 
 
 
-
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-
 /**************************************************************************//**
  * __PyVGX_Memory__get_R1
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Memory__get_R1( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R1 );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * __PyVGX_Memory__set_R1
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int __PyVGX_Memory__set_R1( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R1, py_obj );
 }
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __PyVGX_Memory__get_R2
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Memory__get_R2( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R2 );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * __PyVGX_Memory__set_R2
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int __PyVGX_Memory__set_R2( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R2, py_obj );
 }
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __PyVGX_Memory__get_R3
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Memory__get_R3( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R3 );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * __PyVGX_Memory__set_R3
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int __PyVGX_Memory__set_R3( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R3, py_obj );
 }
 
 
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * __PyVGX_Memory__get_R4
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Memory__get_R4( PyVGX_Memory *pymem, void *closure ) {
   return __PyVGX_Memory__get_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R4 );
 }
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+
 
 /**************************************************************************//**
  * __PyVGX_Memory__set_R4
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int __PyVGX_Memory__set_R4( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
   return __PyVGX_Memory__set_REG( pymem, EXPRESS_EVAL_MEM_REGISTER_R4, py_obj );
 }
@@ -1082,13 +1088,13 @@ static PyObject * PyVGX_Memory__Sort( PyVGX_Memory *pymem, PyObject *args, PyObj
 PyDoc_STRVAR( DualInt__doc__,
   "DualInt( a[, b] ) -> int or tuple\n"
 );
-SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 
 /**************************************************************************//**
  * PyVGX_Memory__DualInt
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_Memory__DualInt( PyObject *self, PyObject *args ) {
   
   PyObject *py_a = NULL;
