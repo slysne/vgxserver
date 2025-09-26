@@ -150,18 +150,6 @@ class CmakeBuild(build_ext):
             check=True
         )
 
-        if not IS_MACOS:
-            # Run 'chrpath' tool to modify the RPATH of shared libraries
-            # Find all .so files in extdir
-            so_files = glob.glob(os.path.join(extdir, "*.so"))
-
-            # Fix RPATH on each .so file
-            for so_file in so_files:
-                subprocess.run(
-                    ["chrpath", "-r", "$ORIGIN/.", so_file],
-                    check=True
-                )
-
         # Target location where setuptools expects files for packaging
         target_dir = os.path.join(self.build_lib, "pyvgx")
 
