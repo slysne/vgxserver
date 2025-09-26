@@ -1,4 +1,4 @@
-![Logo](./vgx/src/resources/WEB-ROOT/artifacts/logo_w-b.png)
+<img src="./vgx/src/resources/WEB-ROOT/artifacts/logo_w-b.png" alt="" width="200"/>
 
 # VGX Server
 
