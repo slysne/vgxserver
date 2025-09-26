@@ -282,7 +282,7 @@ def process_file_header(filepath, add=True):
 
 
 
-def has_comment_above(lines, index):
+def c_has_comment_above(lines, index):
     """
     Walk upward to check if a block comment (/* ... */) is immediately above.
     Allows multiline comments. Skips blank lines and // comments.
@@ -302,6 +302,7 @@ def has_comment_above(lines, index):
             continue
 
         if "*/" in line:
+        #if line.strip().endswith("*/"):
             in_block_comment = True
             i -= 1
             continue
@@ -322,71 +323,168 @@ def has_comment_above(lines, index):
 
 
 
+def py_has_comment_above(lines, index):
+    """
+    Check if line above starts with #
+    """
+    if lines[index-1].startswith("#"):
+        return True
+    return False
+
+
+
+def py_has_docstring(lines, index):
+    """
+    Check if line below has triple-quotes
+    """
+    next_line = lines[index+1].strip()
+    if next_line.startswith(r'"""') or next_line.startswith(r"'''"):
+        return True
+    return False
+
+
+
 
 def process_functions(filepath, find_naked=False, add_comment=False):
+    global LINE_COUNT_IN
+    global LINE_COUNT_OUT
+    global FILE_COUNT
 
-    # List of allowed prefixes (you can expand this)
-    ALLOWED_PREFIXES = [
-        r'static',
-        r'__inline\s+static',
-        r'DLL_HIDDEN',
-        r'DLL_EXPORT',
-        r'DLL_HIDDEN\s+extern',  # optional additional ones
+    
+    name = os.path.basename(filepath)
+
+    if name in EXCLUDE:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    ext = os.path.splitext(filepath)[1]
+
+    style = EXTENSIONS.get(ext)
+    if not style:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    C_KEYWORDS = [
+        'if', 'for', 'while', 'switch', 'else', 'return',
+        'goto', 'case', 'default', 'do', 
+        'XTRY', 'XCATCH', 'XFINALLY',
+        'TRY', 'CATCH', 'FINALLY'
     ]
 
-    # Build a regex that matches any of the allowed prefixes at start of line
-    FUNC_DEF_REGEX = re.compile(
+    # List of allowed prefixes (you can expand this)
+    C_ALLOWED_PREFIXES = [
+        r'static\s+',
+        r'extern\s+',
+        r'__inline\s+static\s+',
+        r'DLL_HIDDEN\s+',
+        r'DLL_EXPORT\s+',
+        r'DLL_HIDDEN\s+extern\s+',  # optional additional ones
+    ]
+
+    # Combine allowed prefixes into one alternation group
+    prefix_group = '|'.join(C_ALLOWED_PREFIXES)
+
+    C_FUNC_DEF_REGEX = re.compile(
         rf'''^
-            \s*                                     # optional leading spaces
-            (?:{'|'.join(ALLOWED_PREFIXES)})        # must start with allowed prefix
-            \s+                                     # space after prefix
-            [\w\*\s]+                               # return type (e.g. int, void *, etc)
-            \s+                                     # space between return type and name
-            (?P<name>[a-zA-Z_]\w*)                  # function name
-            \s*\([^;]*\)                            # argument list
-            \s*\{{?\s*$                             # optional opening brace
+            (?:{prefix_group})?                         # optional allowed prefix
+            (\w+(\s+\*+\s*|\*+\s+|\s+))                 # return type (e.g. int, void *, etc) followed by space
+            (?P<name>[a-zA-Z_]\w*)                      # function name
+            \s*\([^;]*\)                                # argument list (not a prototype)
+            \s*\{{?\s*$                                 # optional opening brace
         ''',
         re.VERBOSE
     )
 
-    comment =
+    C_comment = \
 """
-/******************************************************************************
+/**************************************************************************//**
  * {func:}
+ *
  ******************************************************************************
  */
 """
+    
+    PY_FUNC_DEF_OR_CLASS_REGEX = re.compile(
+        rf'''^
+            (def|class)
+            \s+
+            (?P<name>[a-zA-Z_]\w*)      # function or class name
+            \s*\([^;]*\)                # argument list
+            :
+        ''',
+        re.VERBOSE
+    )
 
-    result = []
+    PY_comment = \
+"""
+###############################################################################
+# {func:}
+#
+###############################################################################
+"""
 
-    try:
-        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
-    except Exception as e:
-        print(f"Error reading {filepath}: {e}")
-        return []
+    PY_docstring = \
+'''    """
+    """
+'''
+
+    FILE_COUNT += 1
+    has_bom, is_min, lines = read_file_with_bom(filepath)
+
+    if not lines or is_min:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    LINE_COUNT_IN += len(lines)
 
     output = []
+    naked_funcs = []
     if find_naked:
         for i, line in enumerate(lines):
-            m = FUNC_DEF_REGEX.match(line)
-            if m:
-                if not has_comment_above(lines, i):
-                    func_preview = line.strip()
-                    result.append( "{}  {}".format(i + 1, func_preview) )
-                    if add_comment:
-                        func_name = match.group("name")
-                        comment_lines = comment.format(func=func_name).splitlines(True)
-                        output.extend(comment_lines)
+            if ext in ['.c', '.h']:
+                m = C_FUNC_DEF_REGEX.match(line)
+                if m and m.group("name") not in C_KEYWORDS:
+                    if not c_has_comment_above(lines, i):
+                        func_preview = line.strip()
+                        naked_funcs.append( "{}  {}".format(i + 1, func_preview) )
+                        if add_comment:
+                            func_name = m.group("name")
+                            comment_lines = C_comment.format(func=func_name).splitlines(True)
+                            output.extend(comment_lines)
 
-            output.append(line)
+            elif ext == '.py':
+                m = PY_FUNC_DEF_OR_CLASS_REGEX.match(line)
+                if m:
+                    if not py_has_comment_above(lines, i):
+                        preview = line.strip()
+                        naked_funcs.append( "{}  {}".format(i + 1, preview) )
+                        if add_comment:
+                            func_name = m.group("name")
+                            comment_lines = PY_comment.format(func=func_name).splitlines(True)
+                            output.extend(comment_lines)
+                    if not py_has_docstring(lines, i):
+                        if add_comment:
+                            output.append(line)
+                            docstring_lines = PY_docstring.splitlines(True)
+                            output.extend(docstring_lines) 
+                            continue
 
-    if result:
-        print(filepath)
-    for item in result:
-        print( "    {}".format(item) )
+            if add_comment:
+                output.append(line)
 
-    return result
+
+
+    LINE_COUNT_OUT += len(output)
+
+    if add_comment:
+        text = ''.join(output)
+        write_file_preserving_bom(filepath, text, has_bom)
+    elif naked_funcs:
+        for item in naked_funcs:
+            print(item)
+
+    print( "Processed {} - Total processed files:{} Lines in:{} out:{}".format(filepath, FILE_COUNT, LINE_COUNT_IN, LINE_COUNT_OUT) )
+
 
 
 
@@ -409,6 +507,9 @@ def main():
                 process_file_header(filepath, add=False)
             elif what == "list-naked-functions":
                 process_functions(filepath, find_naked=True)
+            elif what == "fix-naked-functions":
+                process_functions(filepath, find_naked=True, add_comment=True)
+
 
 
 
