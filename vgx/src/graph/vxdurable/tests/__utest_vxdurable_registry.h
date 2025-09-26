@@ -28,6 +28,12 @@
 
 #include "__vxtest_macro.h"
 
+
+/**************************************************************************//**
+ * __retrieve_graph_by_path_and_name_OPEN
+ *
+ ******************************************************************************
+ */
 static vgx_Graph_t * __retrieve_graph_by_path_and_name_OPEN( const CString_t *CSTR__path, const CString_t *CSTR__name) {
   vgx_Graph_t *graph;
   REGISTRY_LOCK {
@@ -38,6 +44,12 @@ static vgx_Graph_t * __retrieve_graph_by_path_and_name_OPEN( const CString_t *CS
 #define retrieve_graph_by_path_and_name( Path, Name ) __retrieve_graph_by_path_and_name_OPEN( Path, Name )
 
 
+
+/**************************************************************************//**
+ * __del_graph_OPEN
+ *
+ ******************************************************************************
+ */
 static int __del_graph_OPEN( vgx_Graph_t **graph, bool erase ) {
   int ret;
   REGISTRY_LOCK {

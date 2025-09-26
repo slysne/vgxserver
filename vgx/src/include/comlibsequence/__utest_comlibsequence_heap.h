@@ -32,6 +32,12 @@
 #define X_HEAP_TEST_NAME( type ) HEAP_TEST_NAME( type )
 
 
+
+/**************************************************************************//**
+ * cmp_reverse
+ *
+ ******************************************************************************
+ */
 __inline static int cmp_reverse( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b ) {
   return __compare_elements_default( b, a );
 }

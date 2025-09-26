@@ -1040,6 +1040,12 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
 
 
 
+
+/**************************************************************************//**
+ * __new_null_vertex_collector
+ *
+ ******************************************************************************
+ */
 static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t *graph, vgx_BaseQuery_t *query ) {
   // Create the collector context
   vgx_VertexCollector_context_t *collector = NULL;

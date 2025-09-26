@@ -224,6 +224,12 @@ static CS_COND g_registry_graph_availability = {0};
 
 
 
+
+/**************************************************************************//**
+ * __enter_registry_CS
+ *
+ ******************************************************************************
+ */
 __inline static int16_t __enter_registry_CS( void ) {
   // UNSAFE HERE
   ENTER_CRITICAL_SECTION( &g_registry_lock.lock );
@@ -232,6 +238,12 @@ __inline static int16_t __enter_registry_CS( void ) {
 }
 
 
+
+/**************************************************************************//**
+ * __leave_registry_CS
+ *
+ ******************************************************************************
+ */
 __inline static int16_t __leave_registry_CS( void ) {
   // SAFE HERE
   int16_t c = --g_registry_lock_count;

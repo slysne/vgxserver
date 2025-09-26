@@ -27,6 +27,12 @@
 #define _COMLIBSEQUENCE_M256I_OPS_H_INCLUDED
 
 
+
+/**************************************************************************//**
+ * __copy_element
+ *
+ ******************************************************************************
+ */
 __inline static void __copy_element( _CSEQ_ELEMENT_TYPE *dest, _CSEQ_ELEMENT_TYPE *src ) {
   QWORD *d = (QWORD*)dest;
   QWORD *s = (QWORD*)src;
@@ -37,17 +43,35 @@ __inline static void __copy_element( _CSEQ_ELEMENT_TYPE *dest, _CSEQ_ELEMENT_TYP
 }
 
 
+
+/**************************************************************************//**
+ * __set_element_int
+ *
+ ******************************************************************************
+ */
 __inline static void __set_element_int( _CSEQ_ELEMENT_TYPE *e, QWORD v ) {
   QWORD *q = (QWORD*)e;
   q[0] = q[1] = q[2] = q[3] = v;
 }
 
 
+
+/**************************************************************************//**
+ * __get_element_int
+ *
+ ******************************************************************************
+ */
 __inline static QWORD __get_element_int( _CSEQ_ELEMENT_TYPE *e ) {
   return *((QWORD*)e);
 }
 
 
+
+/**************************************************************************//**
+ * __print_element
+ *
+ ******************************************************************************
+ */
 __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
   printf( "m256i @ %p\n", e );
   printf( "  0: %016llX\n", ((QWORD*)e)[0] );
@@ -58,6 +82,12 @@ __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
 
 
 
+
+/**************************************************************************//**
+ * __random_element
+ *
+ ******************************************************************************
+ */
 __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
   QWORD *q = (QWORD*)dest;
   q[0] = rand64();
@@ -67,6 +97,12 @@ __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
 }
 
 
+
+/**************************************************************************//**
+ * __eq_element
+ *
+ ******************************************************************************
+ */
 __inline static int __eq_element( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) {
   QWORD *a = (QWORD*)e1;
   QWORD *b = (QWORD*)e2;
@@ -76,6 +112,12 @@ __inline static int __eq_element( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEM
 
 
 
+
+/**************************************************************************//**
+ * __set_zero_element
+ *
+ ******************************************************************************
+ */
 __inline static void __set_zero_element( _CSEQ_ELEMENT_TYPE *e ) {
   QWORD *q = (QWORD*)e;
   q[0] = q[1] = q[2] = q[3] = 0;
@@ -84,6 +126,12 @@ __inline static void __set_zero_element( _CSEQ_ELEMENT_TYPE *e ) {
 
 
 
+
+/**************************************************************************//**
+ * __is_zero_element
+ *
+ ******************************************************************************
+ */
 __inline static int __is_zero_element( const _CSEQ_ELEMENT_TYPE *e ) {
   QWORD *q = (QWORD*)e;
   return q[0] == 0 && q[1] == 0 && q[2] == 0 && q[3] == 0;
@@ -91,6 +139,12 @@ __inline static int __is_zero_element( const _CSEQ_ELEMENT_TYPE *e ) {
 
 
 
+
+/**************************************************************************//**
+ * __swap_elements
+ *
+ ******************************************************************************
+ */
 __inline static _CSEQ_ELEMENT_TYPE * __swap_elements( _CSEQ_ELEMENT_TYPE *e1, _CSEQ_ELEMENT_TYPE *e2 ) {
   __m256i tmp = *e1;
   *e1 = *e2;
@@ -99,6 +153,12 @@ __inline static _CSEQ_ELEMENT_TYPE * __swap_elements( _CSEQ_ELEMENT_TYPE *e1, _C
 }
 
 
+
+/**************************************************************************//**
+ * __compare_elements_default
+ *
+ ******************************************************************************
+ */
 __inline static int __compare_elements_default( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) {
   QWORD *a = (QWORD*)e1;
   QWORD *b = (QWORD*)e2;

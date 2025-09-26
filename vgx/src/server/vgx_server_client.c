@@ -40,11 +40,23 @@ static vgx_VGXServerClient_t * __client__register( vgx_VGXServer_t *server, vgx_
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * vgx_server_client__trap_illegal_access
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN void vgx_server_client__trap_illegal_access( vgx_VGXServer_t *server, vgx_VGXServerClient_t *client ) {
   FATAL( 0xFFF, "Illegal access to dispatched client" );
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * vgx_server_client__assert_client_reset
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN void vgx_server_client__assert_client_reset( vgx_VGXServerClient_t *client ) {
   if( client->request.state != VGXSERVER_CLIENT_STATE__RESET
       ||

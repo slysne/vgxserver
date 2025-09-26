@@ -237,6 +237,12 @@ static int __api_arcvector_add_arc( framehash_dynamic_t *dynamic, vgx_Arc_t *arc
 
 
 #ifdef VGX_CONSISTENCY_CHECK
+
+/**************************************************************************//**
+ * __assert_inarcs_stable
+ *
+ ******************************************************************************
+ */
 static void __assert_inarcs_stable( vgx_Vertex_t *vertex ) {
   // WL must either have no yielded inarcs or they must be claimed busy by owner thread
   if( __vertex_is_locked_writable_by_current_thread( vertex ) ) {

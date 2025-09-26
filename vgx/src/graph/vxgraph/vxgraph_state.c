@@ -76,6 +76,12 @@ __inline static const char *__full_path( vgx_Graph_t *graph ) {
 
 
 
+
+/**************************************************************************//**
+ * __vertex_pointer_valid_active_CS
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_pointer_valid_active_CS( cxmalloc_family_t *valloc, cxmalloc_handle_t vhandle, vgx_Vertex_t *vertex ) {
   vgx_Vertex_t *obj = CALLABLE( valloc )->HandleAsObjectNolock( valloc, vhandle );
   if( vertex == obj && _cxmalloc_is_object_active( vertex ) && __vertex_is_active_context( vertex ) ) {

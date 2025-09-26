@@ -37,6 +37,12 @@ static CString_t * __add_value_CS( vgx_Graph_t *self, const objectid_t *value_ob
 
 
 
+
+/**************************************************************************//**
+ * _vxenum_propval__obid
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN objectid_t _vxenum_propval__obid( const CString_t *CSTR__value ) {  
   const objectid_t *obid = CStringObid( CSTR__value );
   return *obid;

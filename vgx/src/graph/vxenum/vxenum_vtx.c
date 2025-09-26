@@ -87,6 +87,12 @@ static int               __remove_vertex_type_mapping_CS( vgx_Graph_t *self, vgx
 
 
 
+
+/**************************************************************************//**
+ * __invalidate_encoder_cache_entry
+ *
+ ******************************************************************************
+ */
 static vgx_vertex_type_t __invalidate_encoder_cache_entry( __vertex_type_encoder_cache_entry *entry, vgx_vertex_type_t code ) {
   entry->graph = NULL;
   entry->typehash = 0;
@@ -95,6 +101,12 @@ static vgx_vertex_type_t __invalidate_encoder_cache_entry( __vertex_type_encoder
 }
 
 
+
+/**************************************************************************//**
+ * __invalidate_decoder_cache_entry
+ *
+ ******************************************************************************
+ */
 static vgx_vertex_type_t __invalidate_decoder_cache_entry( __vertex_type_decoder_cache_entry *entry, vgx_vertex_type_t code ) {
   entry->graph = NULL;
   entry->typecode = code;

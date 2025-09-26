@@ -264,6 +264,12 @@ static framehash_retcode_t __leaf_resize( framehash_context_t * const context, c
 #define __SPECULATION_THRESHOLD( Order_p ) *speculation_threshold = ((((2<<(Order_p-1))-1) * FRAMEHASH_CELLS_PER_SLOT)>>1) /* half capacity of order p, e.g. p=6 => threshold=252/2=126 */
 __inline static void __hashbits_for_frame_order( const int p, _hashbits_t * const h16, int * const speculation_threshold )
 #else
+
+/**************************************************************************//**
+ * __hashbits_for_frame_order
+ *
+ ******************************************************************************
+ */
 __inline static void __hashbits_for_frame_order( const int p, _hashbits_t * const h16 )
 #endif
 {

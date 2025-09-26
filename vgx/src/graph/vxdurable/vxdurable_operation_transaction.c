@@ -59,6 +59,12 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX_GRAPH );
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_request_sent
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_request_sent( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
@@ -95,6 +101,12 @@ static void __dump_tx_request_sent( const char *data, int64_t sz ) {
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_response_recv
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_response_recv( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {

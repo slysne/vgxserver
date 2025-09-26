@@ -55,6 +55,12 @@ typedef int (*__f_heapcmp)( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb );
 
 
 
+
+/**************************************************************************//**
+ * __minheap_lt
+ *
+ ******************************************************************************
+ */
 __inline static int __minheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as min value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -68,6 +74,12 @@ __inline static int __minheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __minheap_gt
+ *
+ ******************************************************************************
+ */
 __inline static int __minheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as min value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -81,6 +93,12 @@ __inline static int __minheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __maxheap_lt
+ *
+ ******************************************************************************
+ */
 __inline static int __maxheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as max value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -94,6 +112,12 @@ __inline static int __maxheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __maxheap_gt
+ *
+ ******************************************************************************
+ */
 __inline static int __maxheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as max value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -107,6 +131,12 @@ __inline static int __maxheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __heap_swap
+ *
+ ******************************************************************************
+ */
 __inline static vgx_EvalStackItem_t * __heap_swap( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   vgx_EvalStackItem_t tmp = *pa;
   *pa = *pb;

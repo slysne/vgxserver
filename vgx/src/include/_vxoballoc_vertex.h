@@ -70,6 +70,12 @@ DLL_HIDDEN extern IVertexObject_t ivertexobject;
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_as_handle
+ *
+ ******************************************************************************
+ */
 __inline static cxmalloc_handle_t _vxoballoc_vertex_as_handle( const vgx_Vertex_t *vertex ) {
   cxmalloc_handle_t vertex_handle = _cxmalloc_object_as_handle( vertex );
   vertex_handle.objclass = COMLIB_CLASS_CODE( vgx_Vertex_t );
@@ -78,6 +84,12 @@ __inline static cxmalloc_handle_t _vxoballoc_vertex_as_handle( const vgx_Vertex_
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_enum32
+ *
+ ******************************************************************************
+ */
 __inline static int32_t _vxoballoc_vertex_enum32( const vgx_Vertex_t *vertex ) {
   cxmalloc_linehead_t *linehead = _cxmalloc_linehead_from_object( vertex );
   uint64_t u40 = linehead->data.handle & 0xFFFFFFFFFFULL;
@@ -91,24 +103,48 @@ __inline static int32_t _vxoballoc_vertex_enum32( const vgx_Vertex_t *vertex ) {
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_incref_WL
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_incref_WL( vgx_Vertex_t *vertex_WL ) {
   return _cxmalloc_object_incref_nolock( vertex_WL );
 }
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_incref_delta_WL
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_incref_delta_WL( vgx_Vertex_t *vertex_WL, unsigned delta ) {
   return _cxmalloc_object_incref_delta_nolock( vertex_WL, delta );
 }
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_refcnt_WL
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_refcnt_WL( vgx_Vertex_t *vertex_WL ) {
   return _cxmalloc_object_refcnt_nolock( vertex_WL );
 }
 
 
 
+
+/**************************************************************************//**
+ * __vxoballoc_vertex_decref_to_zero_WL
+ *
+ ******************************************************************************
+ */
 static int64_t __vxoballoc_vertex_decref_to_zero_WL( vgx_Vertex_t *vertex_WL ) {
   vgx_Graph_t *graph = vertex_WL->graph;
   int64_t refc;
@@ -131,6 +167,12 @@ static int64_t __vxoballoc_vertex_decref_to_zero_WL( vgx_Vertex_t *vertex_WL ) {
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_decref_WL
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_decref_WL( vgx_Vertex_t *vertex_WL ) {
   cxmalloc_linehead_t *linehead = _cxmalloc_linehead_from_object( vertex_WL );
   // Quick decref since refcnt is not going to zero
@@ -149,12 +191,24 @@ __inline static int64_t _vxoballoc_vertex_decref_WL( vgx_Vertex_t *vertex_WL ) {
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_incref_CS_RO
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_incref_CS_RO( vgx_Vertex_t *vertex_CS_RO ) {
   return _cxmalloc_object_incref_nolock( vertex_CS_RO );
 }
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_incref_delta_CS_RO
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_incref_delta_CS_RO( vgx_Vertex_t *vertex_CS_RO, unsigned delta ) {
   return _cxmalloc_object_incref_delta_nolock( vertex_CS_RO, delta );
 }
@@ -165,6 +219,12 @@ DLL_VISIBLE extern void __trap_invalid_vertex_CS_RO( const struct s_vgx_Vertex_t
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_decref_CS_RO
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_decref_CS_RO( vgx_Vertex_t *vertex_CS_RO ) {
   cxmalloc_linehead_t *linehead = _cxmalloc_linehead_from_object( vertex_CS_RO );
   // Quick decref since refcnt is not going to zero
@@ -180,6 +240,12 @@ __inline static int64_t _vxoballoc_vertex_decref_CS_RO( vgx_Vertex_t *vertex_CS_
 
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vertex_refcnt_CS_RO
+ *
+ ******************************************************************************
+ */
 __inline static int64_t _vxoballoc_vertex_refcnt_CS_RO( const vgx_Vertex_t *vertex_CS_RO ) {
   return _cxmalloc_object_refcnt_nolock( vertex_CS_RO );
 }

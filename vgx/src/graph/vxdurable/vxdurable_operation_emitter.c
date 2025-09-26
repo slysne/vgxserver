@@ -274,6 +274,12 @@ static float __drain_as_percentage_TCS( comlib_task_t *task ) {
 
 static const int64_t HEADROOM_FACTOR = (1LL << __RESOLUTION_BITS) / (int64_t)__INFLIGHT_HEADROOM;
 
+
+/**************************************************************************//**
+ * __backoff_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __backoff_CS( vgx_Graph_t *graph ) {
   static __THREAD int64_t prev_inflight = 0;
   vgx_OperationEmitter_t *emitter = &graph->OP.emitter;

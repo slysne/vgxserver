@@ -708,6 +708,12 @@ __inline static int __enter_buffer_CS( vgx_OperationBuffer_t *buffer ) {
 }
 
 
+
+/**************************************************************************//**
+ * __leave_buffer_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_buffer_CS( vgx_OperationBuffer_t *buffer ) {
   // SAFE HERE
   int c = --(buffer->lock_count);
@@ -1939,6 +1945,12 @@ __inline static int __enter_transactional_CS( vgx_TransactionalProducer_t *produ
 }
 
 
+
+/**************************************************************************//**
+ * __leave_transactional_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_transactional_CS( vgx_TransactionalProducer_t *producer ) {
   // SAFE HERE
   int c = --(producer->lock_count);
@@ -2024,6 +2036,12 @@ __inline static int __enter_transactional_producers_CS( vgx_TransactionalProduce
 }
 
 
+
+/**************************************************************************//**
+ * __leave_transactional_producers_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_transactional_producers_CS( vgx_TransactionalProducers_t *producers ) {
   // SAFE HERE
   int c = --(producers->lock_count);

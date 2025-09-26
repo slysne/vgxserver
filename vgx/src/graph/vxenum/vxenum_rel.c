@@ -95,6 +95,12 @@ static int                      __remove_relationship_mapping_CS( vgx_Graph_t *s
 
 
 
+
+/**************************************************************************//**
+ * __invalidate_encoder_cache_entry
+ *
+ ******************************************************************************
+ */
 static vgx_predicator_rel_enum __invalidate_encoder_cache_entry( __reltype_encoder_cache_entry *entry, vgx_predicator_rel_enum code ) {
   entry->graph = NULL;
   entry->relhash = 0;
@@ -103,6 +109,12 @@ static vgx_predicator_rel_enum __invalidate_encoder_cache_entry( __reltype_encod
 }
 
 
+
+/**************************************************************************//**
+ * __invalidate_decoder_cache_entry
+ *
+ ******************************************************************************
+ */
 static vgx_predicator_rel_enum __invalidate_decoder_cache_entry( __reltype_decoder_cache_entry *entry, vgx_predicator_rel_enum code ) {
   entry->graph = NULL;
   entry->relcode = code;

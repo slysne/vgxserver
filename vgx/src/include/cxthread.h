@@ -194,6 +194,12 @@ DLL_COMLIB_PUBLIC extern int             COMLIB_TASK__GetReturnCode( comlib_task
 
 
 
+
+/**************************************************************************//**
+ * __enter_task_CS
+ *
+ ******************************************************************************
+ */
 __inline static int16_t __enter_task_CS( comlib_task_t *task ) {
   // UNSAFE HERE
   ENTER_CRITICAL_SECTION( &task->_lock.lock );
@@ -202,6 +208,12 @@ __inline static int16_t __enter_task_CS( comlib_task_t *task ) {
 }
 
 
+
+/**************************************************************************//**
+ * __leave_task_CS
+ *
+ ******************************************************************************
+ */
 __inline static int16_t __leave_task_CS( comlib_task_t *task ) {
   // SAFE HERE
   int16_t c = --(task->_state_TCS._lock_recursion);
@@ -227,6 +239,12 @@ __inline static int16_t __leave_task_CS( comlib_task_t *task ) {
 
 
 
+
+/**************************************************************************//**
+ * COMLIB_TASK_TRY_LOCK
+ *
+ ******************************************************************************
+ */
 __inline static bool COMLIB_TASK_TRY_LOCK( comlib_task_t *task ) {
   if( !TRY_CRITICAL_SECTION( &task->_lock.lock ) ) {
     return false;
@@ -237,6 +255,12 @@ __inline static bool COMLIB_TASK_TRY_LOCK( comlib_task_t *task ) {
 }
 
 
+
+/**************************************************************************//**
+ * COMLIB_TASK_RELEASE_LOCK
+ *
+ ******************************************************************************
+ */
 __inline static void COMLIB_TASK_RELEASE_LOCK( comlib_task_t *task ) {
   __leave_task_CS( task );
 }
@@ -477,6 +501,12 @@ static int __comlib_task_new_waitable_timer( WAITABLE_TIMER *WT ) {
 
 
 
+
+/**************************************************************************//**
+ * __sleep_microseconds_windows
+ *
+ ******************************************************************************
+ */
 __inline static void __sleep_microseconds_windows( WAITABLE_TIMER T, int64_t us ) {
   if( sleep_nanoseconds( T, 1000*us ) < 0 ) {
     COMLIB__Spin( (int)us ); // fallback
@@ -484,6 +514,12 @@ __inline static void __sleep_microseconds_windows( WAITABLE_TIMER T, int64_t us 
 }
 
 
+
+/**************************************************************************//**
+ * __sleep_microseconds_unix
+ *
+ ******************************************************************************
+ */
 __inline static void __sleep_microseconds_unix( WAITABLE_TIMER T, int64_t us ) {
   sleep_nanoseconds( T, us );
 }

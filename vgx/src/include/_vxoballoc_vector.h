@@ -98,6 +98,12 @@ typedef struct s_IVectorObject_t {
 DLL_HIDDEN extern IVectorObject_t ivectorobject;
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_vector_as_handle
+ *
+ ******************************************************************************
+ */
 __inline static cxmalloc_handle_t _vxoballoc_vector_as_handle( const vgx_Vector_t *vector ) {
   cxmalloc_handle_t vector_handle = _cxmalloc_object_as_handle( vector );
   vector_handle.objclass = COMLIB_CLASS_CODE( vgx_Vector_t );

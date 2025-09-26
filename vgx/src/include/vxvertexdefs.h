@@ -369,6 +369,12 @@ DLL_HIDDEN extern const CString_t *CSTR__VERTEX_TYPE_ENUMERATION_UNKNOWN_STRING;
 DLL_HIDDEN extern const CString_t *CSTR__VERTEX_TYPE_ENUMERATION_LOCKOBJECT_STRING;
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_in_user_range( vgx_vertex_type_t vertex_type ) {
   return vertex_type >= __VERTEX_TYPE_ENUMERATION_START_USER_RANGE 
          &&
@@ -378,24 +384,48 @@ __inline static bool __vertex_type_enumeration_in_user_range( vgx_vertex_type_t 
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_in_user_range( int vertex_type ) {
   return (bool)(vertex_type >= (int)__VERTEX_TYPE_ENUMERATION_START_USER_RANGE && vertex_type <= (int)__VERTEX_TYPE_ENUMERATION_END_USER_RANGE);
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_default
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_default( int vertex_type ) {
   return vertex_type == (int)VERTEX_TYPE_ENUMERATION_VERTEX;
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_lockobject
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_lockobject( int vertex_type ) {
   return vertex_type == (int)VERTEX_TYPE_ENUMERATION_LOCKOBJECT;
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_valid
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_valid( int vertex_type ) {
   return vertex_type == VERTEX_TYPE_ENUMERATION_WILDCARD || __vertex_type_enumeration_default( vertex_type ) || __vertex_type_enumeration_lockobject( vertex_type ) || __vertex_type_in_user_range( vertex_type );
 }

@@ -706,26 +706,62 @@ DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_MAY_MODIFY( framehash_proce
 DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_PRESERVE_CACHE( framehash_processing_context_t *context );
 DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_DELETE_CELL( framehash_processing_context_t *context, framehash_cell_t *cell );
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_CURRENT_FRAME
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t * FRAMEHASH_PROCESSOR_CURRENT_FRAME( framehash_processing_context_t *context ) {
   return context->instance.frame;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_SET_FAILED
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_SET_FAILED( framehash_processing_context_t *context ) {
   context->flags.failed = 1;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_IS_FAILED
+ *
+ ******************************************************************************
+ */
 __inline static int FRAMEHASH_PROCESSOR_IS_FAILED( const framehash_processing_context_t *context ) {
   return context->flags.failed;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_SET_COMPLETED
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_SET_COMPLETED( framehash_processing_context_t *context ) {
   context->flags.completed = 1;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_IS_COMPLETED
+ *
+ ******************************************************************************
+ */
 __inline static int FRAMEHASH_PROCESSOR_IS_COMPLETED( const framehash_processing_context_t *context ) {
   return context->flags.completed;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_INHERIT_COMPLETION
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_INHERIT_COMPLETION( framehash_processing_context_t *dest, const framehash_processing_context_t *src ) {
   dest->flags.completed = src->flags.completed;
 }

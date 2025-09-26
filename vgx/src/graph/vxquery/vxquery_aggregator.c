@@ -43,6 +43,12 @@ DLL_HIDDEN IGraphAggregator_t iGraphAggregator = {
 
 
 
+
+/**************************************************************************//**
+ * __get_arc_degree
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __get_arc_degree( const vgx_ArcVector_cell_t *arcs ) {
   _vgx_ArcVector_VxD_tag tag = TPTR_AS_TAG( &arcs->VxD );
   return tag == VGX_ARCVECTOR_VxD_DEGREE ? __arcvector_get_degree( arcs ) : tag == VGX_ARCVECTOR_VxD_EMPTY ? 0 : 1;

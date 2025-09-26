@@ -951,31 +951,73 @@ void vgx_AdjacencyQuery_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( vgx_AdjacencyQuery_t, CXLIB_OBTYPE_QUERY, &AdjacencyQuery_Methods, OBJECT_IDENTIFIED_BY_NONE, -1 );
 }
 
+
+/**************************************************************************//**
+ * vgx_NeighborhoodQuery_RegisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_NeighborhoodQuery_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( vgx_NeighborhoodQuery_t, CXLIB_OBTYPE_QUERY, &NeighborhoodQuery_Methods, OBJECT_IDENTIFIED_BY_NONE, -1 );
 }
 
+
+/**************************************************************************//**
+ * vgx_GlobalQuery_RegisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_GlobalQuery_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( vgx_GlobalQuery_t, CXLIB_OBTYPE_QUERY, &GlobalQuery_Methods, OBJECT_IDENTIFIED_BY_NONE, -1 );
 }
 
 
+
+/**************************************************************************//**
+ * vgx_AggregatorQuery_RegisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_AggregatorQuery_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( vgx_AggregatorQuery_t, CXLIB_OBTYPE_QUERY, &AggregatorQuery_Methods, OBJECT_IDENTIFIED_BY_NONE, -1 );
 }
 
+
+/**************************************************************************//**
+ * vgx_AdjacencyQuery_UnregisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_AdjacencyQuery_UnregisterClass( void ) {
   COMLIB_UNREGISTER_CLASS( vgx_AdjacencyQuery_t );
 }
 
+
+/**************************************************************************//**
+ * vgx_NeighborhoodQuery_UnregisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_NeighborhoodQuery_UnregisterClass( void ) {
   COMLIB_UNREGISTER_CLASS( vgx_NeighborhoodQuery_t );
 }
 
+
+/**************************************************************************//**
+ * vgx_GlobalQuery_UnregisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_GlobalQuery_UnregisterClass( void ) {
   COMLIB_UNREGISTER_CLASS( vgx_GlobalQuery_t );
 }
 
+
+/**************************************************************************//**
+ * vgx_AggregatorQuery_UnregisterClass
+ *
+ ******************************************************************************
+ */
 void vgx_AggregatorQuery_UnregisterClass( void ) {
   COMLIB_UNREGISTER_CLASS( vgx_AggregatorQuery_t );
 }

@@ -40,15 +40,6 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_COMLIB );
 static int g_comlib_initialized = 0;
 
 
-void yyy(void) {
-
-  aptr_t aptr1 = {0};
-  
-  int64_t x = (1LL<<55);
-  APTR_SET_INTEGER(&aptr1, x);
-
-}
-
 
 
 /*******************************************************************//**

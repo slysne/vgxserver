@@ -1202,6 +1202,12 @@ static char * __single_predicator_field_to_buffer( const vgx_ResponseFieldData_t
  */
 #ifdef VGX_CONSISTENCY_CHECK
 
+
+/**************************************************************************//**
+ * __assert_safe_tail
+ *
+ ******************************************************************************
+ */
 __inline static void __assert_safe_tail( vgx_Graph_t *graph, vgx_CollectorItem_t *item ) {
   GRAPH_LOCK( graph ) {
     if( !_vgx_is_readonly_CS( &graph->readonly ) ) {
@@ -1213,6 +1219,12 @@ __inline static void __assert_safe_tail( vgx_Graph_t *graph, vgx_CollectorItem_t
   } GRAPH_RELEASE;
 }
 
+
+/**************************************************************************//**
+ * __assert_safe_head
+ *
+ ******************************************************************************
+ */
 __inline static void __assert_safe_head( vgx_Graph_t *graph, vgx_CollectorItem_t *item ) {
   GRAPH_LOCK( graph ) {
     if( !_vgx_is_readonly_CS( &graph->readonly ) ) {

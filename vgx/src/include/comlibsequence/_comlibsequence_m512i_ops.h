@@ -28,6 +28,12 @@
 
 
 
+
+/**************************************************************************//**
+ * __copy_element
+ *
+ ******************************************************************************
+ */
 __inline static void __copy_element( _CSEQ_ELEMENT_TYPE *dest, _CSEQ_ELEMENT_TYPE *src ) {
   QWORD *d = (QWORD*)dest;
   QWORD *s = (QWORD*)src;
@@ -41,16 +47,34 @@ __inline static void __copy_element( _CSEQ_ELEMENT_TYPE *dest, _CSEQ_ELEMENT_TYP
   d[7] = s[7];
 }
 
+
+/**************************************************************************//**
+ * __set_element_int
+ *
+ ******************************************************************************
+ */
 __inline static void __set_element_int( _CSEQ_ELEMENT_TYPE *e, QWORD v ) {
   QWORD *q = (QWORD*)e;
   q[0] = q[1] = q[2] = q[3] = q[4] = q[5] = q[6] = q[7] = v;
 }
 
+
+/**************************************************************************//**
+ * __get_element_int
+ *
+ ******************************************************************************
+ */
 __inline static QWORD __get_element_int( _CSEQ_ELEMENT_TYPE *e ) {
   return *((QWORD*)e);
 }
 
 
+
+/**************************************************************************//**
+ * __print_element
+ *
+ ******************************************************************************
+ */
 __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
   printf( "m512i @ %p\n", e );
   printf( "  0: %016llX\n", ((QWORD*)e)[0] );
@@ -64,6 +88,12 @@ __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
 }
 
 
+
+/**************************************************************************//**
+ * __random_element
+ *
+ ******************************************************************************
+ */
 __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
   QWORD *q = (QWORD*)dest;
   q[0] = rand64();
@@ -76,6 +106,12 @@ __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
   q[7] = rand64();
 }
 
+
+/**************************************************************************//**
+ * __eq_element
+ *
+ ******************************************************************************
+ */
 __inline static int __eq_element( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) {
   QWORD *a = (QWORD*)e1;
   QWORD *b = (QWORD*)e2;
@@ -84,6 +120,12 @@ __inline static int __eq_element( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEM
 
 
 
+
+/**************************************************************************//**
+ * __set_zero_element
+ *
+ ******************************************************************************
+ */
 __inline static void __set_zero_element( _CSEQ_ELEMENT_TYPE *e ) {
   QWORD *q = (QWORD*)e;
   q[0] = q[1] = q[2] = q[3] = q[4] = q[5] = q[6] = q[7] = 0;
@@ -91,12 +133,24 @@ __inline static void __set_zero_element( _CSEQ_ELEMENT_TYPE *e ) {
 
 
 
+
+/**************************************************************************//**
+ * __is_zero_element
+ *
+ ******************************************************************************
+ */
 __inline static int __is_zero_element( const _CSEQ_ELEMENT_TYPE *e ) {
   QWORD *q = (QWORD*)e;
   return q[0] == 0 && q[1] == 0 && q[2] == 0 && q[3] == 0 && q[4] == 0 && q[5] == 0 && q[6] == 0 && q[7] == 0;
 }
 
 
+
+/**************************************************************************//**
+ * __swap_elements
+ *
+ ******************************************************************************
+ */
 __inline static _CSEQ_ELEMENT_TYPE * __swap_elements( _CSEQ_ELEMENT_TYPE *e1, _CSEQ_ELEMENT_TYPE *e2 ) {
   __m256i tmp0 = *(e1->m256i);
   __m256i tmp1 = *(e1->m256i+1);
@@ -108,6 +162,12 @@ __inline static _CSEQ_ELEMENT_TYPE * __swap_elements( _CSEQ_ELEMENT_TYPE *e1, _C
 }
 
 
+
+/**************************************************************************//**
+ * __compare_elements_default
+ *
+ ******************************************************************************
+ */
 __inline static int __compare_elements_default( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) {
   QWORD *a = (QWORD*)e1;
   QWORD *b = (QWORD*)e2;

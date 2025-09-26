@@ -35,6 +35,12 @@ static FILE *g_debug_stream = NULL;
 static FILE g_dev_null;
 DLL_EXPORT FILE *comlib_null_sink = &g_dev_null;
 
+
+/**************************************************************************//**
+ * comlib_set_pmesg_stream
+ *
+ ******************************************************************************
+ */
 void comlib_set_pmesg_stream( FILE *stream ) {
   g_debug_stream = stream;
 }
@@ -45,6 +51,12 @@ void comlib_set_pmesg_stream( FILE *stream ) {
 
 
 
+
+/**************************************************************************//**
+ * pmesg
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void pmesg( int level, const char *format, ... ) {
   va_list args;
   char tbuf[32] = {0};

@@ -418,6 +418,12 @@ bad_line:
 #define HEADER_Accept "accept:"
 #define sz_HEADER_Accept (sizeof( HEADER_Accept ) - 1)
 #define IS_HEADER_Accept( Line ) __match_lower_prefix( Line, HEADER_Accept )
+
+/**************************************************************************//**
+ * __parse_header__accept
+ *
+ ******************************************************************************
+ */
 __inline static vgx_MediaType __parse_header__accept( const char *data ) {
   vgx_MediaType accept;
   data += sz_HEADER_Accept;
@@ -450,6 +456,12 @@ __inline static vgx_MediaType __parse_header__accept( const char *data ) {
 #define HEADER_ContentType "content-type:"
 #define sz_HEADER_ContentType (sizeof( HEADER_ContentType ) - 1)
 #define IS_HEADER_ContentType( Line ) __match_lower_prefix( Line, HEADER_ContentType )
+
+/**************************************************************************//**
+ * __parse_header__content_type
+ *
+ ******************************************************************************
+ */
 __inline static vgx_MediaType __parse_header__content_type( const char *data ) {
   vgx_MediaType content_type;
   data += sz_HEADER_ContentType;
@@ -480,6 +492,12 @@ __inline static vgx_MediaType __parse_header__content_type( const char *data ) {
 #define HEADER_ContentLength "content-length:"
 #define sz_HEADER_ContentLength (sizeof(HEADER_ContentLength) - 1)
 #define IS_HEADER_ContentLength( Line ) __match_lower_prefix( Line, HEADER_ContentLength )
+
+/**************************************************************************//**
+ * __parse_header__content_length
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __parse_header__content_length( const char *data ) {
   data += sz_HEADER_ContentLength;
   __skip_spaces( data );
@@ -501,6 +519,12 @@ __inline static int64_t __parse_header__content_length( const char *data ) {
 #define HEADER_XVgxPartialTarget "x-vgx-partial-target:"
 #define sz_HEADER_XVgxPartialTarget (sizeof(HEADER_XVgxPartialTarget) - 1)
 #define IS_HEADER_XVgxPartialTarget( Line ) __match_lower_prefix( Line, HEADER_XVgxPartialTarget )
+
+/**************************************************************************//**
+ * __parse_header__x_vgx_partial_target
+ *
+ ******************************************************************************
+ */
 __inline static int8_t __parse_header__x_vgx_partial_target( const char *data ) {
   data += sz_HEADER_XVgxPartialTarget;
   __skip_spaces( data );
@@ -526,6 +550,12 @@ __inline static int8_t __parse_header__x_vgx_partial_target( const char *data ) 
 #define sz_HEADER_XVgxBuiltinMinExecutor (sizeof(HEADER_XVgxBuiltinMinExecutor) - 1)
 #define IS_HEADER_XVgxBuiltinMinExecutor( Line ) __match_lower_prefix( Line, HEADER_XVgxBuiltinMinExecutor )
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __parse_header__x_vgx_builtin_min_executor
+ *
+ ******************************************************************************
+ */
 __inline static int __parse_header__x_vgx_builtin_min_executor( vgx_VGXServer_t *server, const char *data ) {
   int pool_n;
   data += sz_HEADER_XVgxBuiltinMinExecutor;
@@ -554,6 +584,12 @@ __inline static int __parse_header__x_vgx_builtin_min_executor( vgx_VGXServer_t 
 #define HEADER_XVgxBacklog "x-vgx-backlog:"
 #define sz_HEADER_XVgxBacklog (sizeof(HEADER_XVgxBacklog) - 1)
 #define IS_HEADER_XVgxBacklog( Line ) __match_lower_prefix( Line, HEADER_XVgxBacklog )
+
+/**************************************************************************//**
+ * __parse_header__x_vgx_backlog
+ *
+ ******************************************************************************
+ */
 __inline static int16_t __parse_header__x_vgx_backlog( const char *data ) {
   data += sz_HEADER_XVgxBacklog;
   __skip_spaces( data );
@@ -575,6 +611,12 @@ __inline static int16_t __parse_header__x_vgx_backlog( const char *data ) {
 #define HEADER_XVgxBypassSOUT "x-vgx-bypass-sout:"
 #define sz_HEADER_XVgxBypassSOUT (sizeof(HEADER_XVgxBypassSOUT) - 1)
 #define IS_HEADER_XVgxBypassSOUT( Line ) __match_lower_prefix( Line, HEADER_XVgxBypassSOUT )
+
+/**************************************************************************//**
+ * __parse_header__x_vgx_bypass_sout
+ *
+ ******************************************************************************
+ */
 __inline static int __parse_header__x_vgx_bypass_sout( const char *data ) {
   data += sz_HEADER_XVgxBypassSOUT;
   __skip_spaces( data );

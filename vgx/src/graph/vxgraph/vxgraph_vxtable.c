@@ -68,6 +68,12 @@ typedef struct __s_processor_control_t {
 
 
 #ifdef VGX_CONSISTENCY_CHECK
+
+/**************************************************************************//**
+ * __assert_active_vertex_indexed
+ *
+ ******************************************************************************
+ */
 static void __assert_active_vertex_indexed( vgx_Vertex_t *vertex, const objectid_t *obid ) {
   cxmalloc_linehead_t *linehead = _cxmalloc_linehead_from_object( vertex );
   int act = linehead->data.flags._act;
@@ -1035,6 +1041,12 @@ static int64_t __discard_index_CS_NT( vgx_Graph_t *self, vgx_VertexTypeEnumerati
  ***********************************************************************
  */
 #ifdef VXTABLE_PERSIST
+
+/**************************************************************************//**
+ * _vxgraph_vxtable__create_index_OPEN
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int _vxgraph_vxtable__create_index_OPEN( vgx_Graph_t *self ) {
 
 #define PUSH_VERTEX_ALLOCATOR_CURRENT_THREAD( VertexAllocator )   \

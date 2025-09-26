@@ -83,6 +83,12 @@ static const char *vgx_eventproc_state_name[] = {
 };
 
 
+
+/**************************************************************************//**
+ * __update_eventproc_state_WL
+ *
+ ******************************************************************************
+ */
 static void __update_eventproc_state_WL( vgx_EventProcessor_t *processor_WL, vgx_eventproc_state_t state ) {
   processor_WL->params.task_WL.state = state;
 }
@@ -155,6 +161,12 @@ typedef struct __s_cutoff_timespec {
 
 
 
+
+/**************************************************************************//**
+ * __get_executable_cutoff
+ *
+ ******************************************************************************
+ */
 __inline static __cutoff_timespec __get_executable_cutoff( void ) {
   __cutoff_timespec T;
   int64_t now_tms = __MILLISECONDS_SINCE_1970();
@@ -172,18 +184,42 @@ extern vgx_ExecutionJobDescriptor_t * __eventexec_new_execution_job_WL( vgx_Even
 
 
 // Queue
+
+/**************************************************************************//**
+ * __APPEND_QUEUE_VERTEX_EVENT_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int __APPEND_QUEUE_VERTEX_EVENT_NOLOCK( vgx_VertexEventQueue_t *VertexEventQueue, const vgx_VertexStorableEvent_t *VertexEvent ) {
   return CALLABLE( VertexEventQueue )->AppendNolock( VertexEventQueue, &VertexEvent->m128 ) == 1;
 }
 
+
+/**************************************************************************//**
+ * __NEXT_QUEUE_VERTEX_EVENT_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __NEXT_QUEUE_VERTEX_EVENT_NOLOCK( vgx_VertexEventQueue_t *VertexEventQueue, vgx_VertexStorableEvent_t *VertexEvent ) {
   return CALLABLE( VertexEventQueue )->NextNolock( VertexEventQueue, &VertexEvent->m128 );
 }
 
+
+/**************************************************************************//**
+ * __LENGTH_QUEUE_VERTEX_EVENTS
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __LENGTH_QUEUE_VERTEX_EVENTS( vgx_VertexEventQueue_t *VertexEventQueue ) {
   return CALLABLE( VertexEventQueue )->Length( VertexEventQueue );
 }
 
+
+/**************************************************************************//**
+ * __ABSORB_QUEUE_VERTEX_EVENTS_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __ABSORB_QUEUE_VERTEX_EVENTS_NOLOCK( vgx_VertexEventQueue_t *DestEvents, vgx_VertexEventQueue_t *SrcEvents, int64_t N ) {
   return CALLABLE( DestEvents )->AbsorbNolock( DestEvents, SrcEvents, N );
 }
@@ -207,18 +243,42 @@ static int __cmp_event( const vgx_VertexStorableEvent_t *ev1, const vgx_VertexSt
 }
 
 // Heap
+
+/**************************************************************************//**
+ * __PUSH_HEAP_VERTEX_EVENT_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int __PUSH_HEAP_VERTEX_EVENT_NOLOCK( vgx_VertexEventHeap_t *VertexEventHeap, const vgx_VertexStorableEvent_t *VertexEvent ) {
   return CALLABLE( VertexEventHeap )->HeapPush( VertexEventHeap, &VertexEvent->m128 ) == 1;
 }
 
+
+/**************************************************************************//**
+ * __POP_HEAP_VERTEX_EVENT_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __POP_HEAP_VERTEX_EVENT_NOLOCK( vgx_VertexEventHeap_t *VertexEventHeap, vgx_VertexStorableEvent_t *VertexEvent ) {
   return CALLABLE( VertexEventHeap )->HeapPop( VertexEventHeap, &VertexEvent->m128 );
 }
 
+
+/**************************************************************************//**
+ * __LENGTH_HEAP_VERTEX_EVENTS
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __LENGTH_HEAP_VERTEX_EVENTS( vgx_VertexEventHeap_t *VertexEventHeap ) {
   return CALLABLE( VertexEventHeap )->Length( VertexEventHeap );
 }
 
+
+/**************************************************************************//**
+ * __ABSORB_HEAP_VERTEX_EVENTS_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __ABSORB_HEAP_VERTEX_EVENTS_NOLOCK( vgx_VertexEventHeap_t *DestEvents, vgx_VertexEventHeap_t *SrcEvents, int64_t N ) {
   int64_t n = 0;
   vgx_VertexStorableEvent_t e;
@@ -237,6 +297,12 @@ __inline static int64_t __ABSORB_HEAP_VERTEX_EVENTS_NOLOCK( vgx_VertexEventHeap_
   return n;
 }
 
+
+/**************************************************************************//**
+ * __ABSORB_QUEUE_TO_HEAP_VERTEX_EVENTS_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __ABSORB_QUEUE_TO_HEAP_VERTEX_EVENTS_NOLOCK( vgx_VertexEventHeap_t *DestEvents, vgx_VertexEventQueue_t *SrcEvents, int64_t N ) {
   int64_t n = 0;
   vgx_VertexStorableEvent_t e;
@@ -256,6 +322,12 @@ __inline static int64_t __ABSORB_QUEUE_TO_HEAP_VERTEX_EVENTS_NOLOCK( vgx_VertexE
   return n;
 }
 
+
+/**************************************************************************//**
+ * __ENQUEUE_DUE_VERTEX_EVENTS_NOLOCK
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __ENQUEUE_DUE_VERTEX_EVENTS_NOLOCK( vgx_VertexEventQueue_t *DestEvents, vgx_VertexEventHeap_t *SrcEvents, uint32_t t_thres, int64_t N ) {
   int64_t n = 0;
   vgx_VertexStorableEvent_t e;
@@ -301,24 +373,54 @@ __inline static vgx_VertexStorableEvent_t __get_vertex_expiration_event( vgx_Ver
 }
 
 
+
+/**************************************************************************//**
+ * __event_key_as_qword
+ *
+ ******************************************************************************
+ */
 __inline static QWORD __event_key_as_qword( vgx_VertexStorableEvent_t *ev ) {
   return ev->event_key.allocdata;
 }
 
+
+/**************************************************************************//**
+ * __event_key_as_vertex
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __event_key_as_vertex( vgx_VertexStorableEvent_t *ev, cxmalloc_family_t *vertex_allocator ) {
   return (vgx_Vertex_t*)CALLABLE( vertex_allocator )->HandleAsObjectNolock( vertex_allocator, ev->event_key ); 
 }
 
+
+/**************************************************************************//**
+ * __event_value_as_qword
+ *
+ ******************************************************************************
+ */
 __inline static QWORD __event_value_as_qword( vgx_VertexStorableEvent_t *ev ) {
   return ev->event_val.bits;
 }
 
 
+
+/**************************************************************************//**
+ * __EVENTMAP_SIZE
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __EVENTMAP_SIZE( framehash_t *Map ) {
   return CALLABLE( Map )->Items( Map );
 }
 
 
+
+/**************************************************************************//**
+ * __EVENTMAP_SERIALIZE
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __EVENTMAP_SERIALIZE( framehash_t *Map, bool force ) {
   return CALLABLE( Map )->BulkSerialize( Map, force );
 }

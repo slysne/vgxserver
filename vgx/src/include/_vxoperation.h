@@ -110,16 +110,34 @@ typedef enum e_vgx_OpSuspendCode {
 } vgx_OpSuspendCode;
 
 
+
+/**************************************************************************//**
+ * __suspend_code_from_reason
+ *
+ ******************************************************************************
+ */
 static vgx_OpSuspendCode __suspend_code_from_reason( DWORD reason ) {
   return (vgx_OpSuspendCode)(reason >> 16);
 }
 
 
+
+/**************************************************************************//**
+ * __suspend_milliseconds_from_reason
+ *
+ ******************************************************************************
+ */
 static int __suspend_milliseconds_from_reason( DWORD reason ) {
   return (int)(reason & 0xFFFF);
 }
 
 
+
+/**************************************************************************//**
+ * __suspend_reason
+ *
+ ******************************************************************************
+ */
 static DWORD __suspend_reason( int suspend_ms ) {
   if( suspend_ms < 0 ) {
     // Infinite suspend. Explicit RESUME required.

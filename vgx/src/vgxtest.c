@@ -30,6 +30,12 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX );
 
 
 
+
+/**************************************************************************//**
+ * show_sizeof
+ *
+ ******************************************************************************
+ */
 static int show_sizeof(void) {
   /*
    * INFO
@@ -57,6 +63,12 @@ static int show_sizeof(void) {
 
 
 
+
+/**************************************************************************//**
+ * vgx_get_unit_test_definitions
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT test_descriptor_set_t * vgx_get_unit_test_definitions( void ) {
 #ifdef INCLUDE_UNIT_TESTS
   const int sz = __TOTAL_TEST_COUNT;
@@ -84,6 +96,12 @@ DLL_EXPORT test_descriptor_set_t * vgx_get_unit_test_definitions( void ) {
 
 
 
+
+/**************************************************************************//**
+ * vgx_get_unit_test_names
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT char ** vgx_get_unit_test_names( void ) {
 #ifdef INCLUDE_UNIT_TESTS
   char **names = NULL;
@@ -108,6 +126,12 @@ DLL_EXPORT char ** vgx_get_unit_test_names( void ) {
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * vgx_unit_tests
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int vgx_unit_tests( const char *runonly[], const char *testdir ) {
 #ifdef INCLUDE_UNIT_TESTS
   int retcode = -1;

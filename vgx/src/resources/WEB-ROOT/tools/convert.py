@@ -32,7 +32,14 @@ OUT_FILE = "_vxhtml.h"
 ARRAY_PREFIX = "VGX_BUILTIN_"
 
 
+
+###############################################################################
+# process_html
+#
+###############################################################################
 def process_html( kind, name, data, ARR ):
+    """
+    """
     L = []
     basename = os.path.basename( name )
     name = basename.replace( ".html", "" )
@@ -58,7 +65,14 @@ def process_html( kind, name, data, ARR ):
 
 
 
+
+###############################################################################
+# process_css
+#
+###############################################################################
 def process_css( kind, name, data, ARR ):
+    """
+    """
     L = []
     basename = os.path.basename( name )
     name = basename.replace( ".css", "" )
@@ -82,7 +96,14 @@ def process_css( kind, name, data, ARR ):
 
 
 
+
+###############################################################################
+# process_image
+#
+###############################################################################
 def process_image( kind, name, data, ARR ):
+    """
+    """
     L = []
     basename = os.path.basename( name )
     name = basename.replace( ".", "_" )
@@ -112,7 +133,14 @@ def process_image( kind, name, data, ARR ):
 
 
 
+
+###############################################################################
+# process_js_binary
+#
+###############################################################################
 def process_js_binary( kind, name, data, ARR ):
+    """
+    """
     L = []
     basename = os.path.basename( name )
     name = basename.replace( ".", "_" )
@@ -146,7 +174,14 @@ def process_js_binary( kind, name, data, ARR ):
 
 
 
+
+###############################################################################
+# process_js
+#
+###############################################################################
 def process_js( kind, name, data, ARR ):
+    """
+    """
     L = []
     basename = os.path.basename( name )
     name = basename.replace( ".", "_" )
@@ -169,7 +204,14 @@ def process_js( kind, name, data, ARR ):
 
 
 
+
+###############################################################################
+# convert_files
+#
+###############################################################################
 def convert_files( items, outname ):
+    """
+    """
     OUT = []
     ARR = []
     for kind, name in items:
@@ -265,7 +307,14 @@ def convert_files( items, outname ):
 
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
+    """
+    """
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
     os.makedirs(output_dir, exist_ok=True)

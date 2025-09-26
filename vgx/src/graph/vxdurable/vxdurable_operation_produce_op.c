@@ -284,6 +284,12 @@ static char ** __buffer_ENDOP( char **cursor ) {
 #define _OSTREAM_OPCSTRING_CRC( Sep, CSTR_x ) __ostream_opcstring_crc( _emitter_instance, Sep, CSTR_x, &_crc )
 
 
+
+/**************************************************************************//**
+ * __DEC_LXW_BALANCE
+ *
+ ******************************************************************************
+ */
 static int64_t __DEC_LXW_BALANCE( vgx_OperationEmitter_t *emitter ) {
   if( emitter->lxw_balance > 0 ) {
     return emitter->lxw_balance--;

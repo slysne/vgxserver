@@ -131,19 +131,43 @@ static void __delete_perfcounters( framehash_perfcounters_t *counters ) {
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __get_perfcounters
+ *
+ ******************************************************************************
+ */
 static framehash_perfcounters_t * __get_perfcounters( framehash_t * const self, framehash_perfcounters_t *target ) {
   return target;
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __reset_perfcounters
+ *
+ ******************************************************************************
+ */
 static void __reset_perfcounters( framehash_t * const self ) {
 }
 
+
+/**************************************************************************//**
+ * __new_perfcounters
+ *
+ ******************************************************************************
+ */
 static framehash_perfcounters_t * __new_perfcounters( void ) {
   return NULL;
 }
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * __delete_perfcounters
+ *
+ ******************************************************************************
+ */
 static void __delete_perfcounters( framehash_perfcounters_t *counters ) {
 }
 

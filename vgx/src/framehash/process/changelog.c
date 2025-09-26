@@ -83,6 +83,12 @@ typedef struct __s_change_persist_t {
 
 
 
+
+/**************************************************************************//**
+ * GET_INIT_HEADER
+ *
+ ******************************************************************************
+ */
 static __change_persist_header_t GET_INIT_HEADER( framehash_t *self ) {
   __change_persist_header_t header = {0};
   header.start_delim = g_start_delim;
@@ -96,6 +102,12 @@ static __change_persist_header_t GET_INIT_HEADER( framehash_t *self ) {
 
 
 
+
+/**************************************************************************//**
+ * GET_TERM
+ *
+ ******************************************************************************
+ */
 static __change_persist_terminator_t GET_TERM( framehash_t *self ) {
   __change_persist_terminator_t term = {0};
   idcpy( &term.obid, &self->obid );

@@ -618,11 +618,23 @@ static int64_t ComlibSequence_optimize( _CSEQ_TYPENAME *self );
 
 #if _CSEQ_IS_PRIMITIVE == 1
 
+
+/**************************************************************************//**
+ * __copy_element
+ *
+ ******************************************************************************
+ */
 __inline static void __copy_element( _CSEQ_ELEMENT_TYPE *dest, _CSEQ_ELEMENT_TYPE *src ) {
   memcpy( dest, src, sizeof( _CSEQ_ELEMENT_TYPE ) );
 }
 __inline static void __set_element_int( _CSEQ_ELEMENT_TYPE *e, _CSEQ_ELEMENT_TYPE v ) { *e = v; }
 __inline static _CSEQ_ELEMENT_TYPE __get_element_int( _CSEQ_ELEMENT_TYPE *e ) { return *e; }
+
+/**************************************************************************//**
+ * __print_element
+ *
+ ******************************************************************************
+ */
 __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
   switch( sizeof( _CSEQ_ELEMENT_TYPE ) ) {
   case 1:
@@ -642,6 +654,12 @@ __inline static void __print_element( _CSEQ_ELEMENT_TYPE *e ) {
   }
 }
 
+
+/**************************************************************************//**
+ * __random_element
+ *
+ ******************************************************************************
+ */
 __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
   switch( sizeof( _CSEQ_ELEMENT_TYPE ) ) {
   case 1:
@@ -663,12 +681,24 @@ __inline static void __random_element( _CSEQ_ELEMENT_TYPE *dest ) {
 __inline static int __eq_element( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) { return *e1 == *e2; }
 __inline static void __set_zero_element( _CSEQ_ELEMENT_TYPE *e ) { *e = 0; }
 __inline static int __is_zero_element( const _CSEQ_ELEMENT_TYPE *e ) { return *e == 0; }
+
+/**************************************************************************//**
+ * __swap_elements
+ *
+ ******************************************************************************
+ */
 __inline static _CSEQ_ELEMENT_TYPE * __swap_elements( _CSEQ_ELEMENT_TYPE *e1, _CSEQ_ELEMENT_TYPE *e2 ) {
   _CSEQ_ELEMENT_TYPE tmp = *e1;
   *e1 = *e2;
   *e2 = tmp;
   return e1;
 }
+
+/**************************************************************************//**
+ * __compare_elements_default
+ *
+ ******************************************************************************
+ */
 static int __compare_elements_default( const _CSEQ_ELEMENT_TYPE *e1, const _CSEQ_ELEMENT_TYPE *e2 ) {
   return (*e1 > *e2) - (*e1 < *e2);
 }

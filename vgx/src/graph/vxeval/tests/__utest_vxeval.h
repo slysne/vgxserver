@@ -145,6 +145,12 @@ typedef struct __s_test {
 
 
 
+
+/**************************************************************************//**
+ * __test_constructor
+ *
+ ******************************************************************************
+ */
 int __test_constructor( vgx_Graph_t *graph, vgx_Vector_t *vector, __test *test, int opcount, int runtime_depth, int n_strings, int this_accesses, int head_accesses, int traversals, int lookbacks, int identifiers, double rankscore, vgx_ExpressEvalMemory_t *evalmem, CString_t **CSTR__err ) {
   int ret = 0;
 
@@ -291,6 +297,12 @@ int __test_constructor( vgx_Graph_t *graph, vgx_Vector_t *vector, __test *test, 
 
 
 
+
+/**************************************************************************//**
+ * __test_expressions
+ *
+ ******************************************************************************
+ */
 static int __test_expressions( vgx_Graph_t *graph, __test *tests, double rankscore, vgx_ExpressEvalMemory_t *evalmem, vgx_EvalStackItem_t *default_prop  ) {
   int ret = 0;
   vgx_Evaluator_t *evaluator = NULL;
@@ -430,6 +442,12 @@ static int __test_expressions( vgx_Graph_t *graph, __test *tests, double ranksco
 
 
 
+
+/**************************************************************************//**
+ * __is_syntax_error
+ *
+ ******************************************************************************
+ */
 static int __is_syntax_error( vgx_Graph_t *graph, const char *expression ) {
   int ret = 0;
   vgx_Evaluator_t *evaluator = NULL;
@@ -453,6 +471,12 @@ static int __is_syntax_error( vgx_Graph_t *graph, const char *expression ) {
 }
 
 
+
+/**************************************************************************//**
+ * __populate_graph
+ *
+ ******************************************************************************
+ */
 static int __populate_graph( vgx_Graph_t *graph ) {
   int ret = 0;
   XTRY {

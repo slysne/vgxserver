@@ -442,6 +442,12 @@ __inline static void __release_all_subtrees( framehash_t * const self ) {
  ***********************************************************************
  */
 #ifdef FRAMEHASH_INSTRUMENTATION
+
+/**************************************************************************//**
+ * __framehash_update_counters
+ *
+ ******************************************************************************
+ */
 __inline static void __framehash_update_counters( _framehash_counters_t * const counters, const framehash_instrument_t * const instrument ) {
   SYNCHRONIZE_ON( counters->lock ) {
     counters->opcount++;
@@ -842,6 +848,12 @@ typedef enum __e_hashbits_mask_t {
   HASHBITS_INVALID = 0x8000
 } __hashbits_mask_t;
 
+
+/**************************************************************************//**
+ * _framehash_hashing__get_hashbits
+ *
+ ******************************************************************************
+ */
 __inline static _hashbits_t _framehash_hashing__get_hashbits( const int domain, const shortid_t id64 ) {
   return (_hashbits_t)(domain > 0 ? ( id64 >> ((domain-1) << 4) ) & HASHBITS_VALID : HASHBITS_INVALID);
 }
@@ -1143,6 +1155,12 @@ DLL_HIDDEN extern int     _framehash_changelog__remove( framehash_t *self, int s
 DLL_HIDDEN extern int     _framehash_changelog__apply( framehash_t *self );
 DLL_HIDDEN extern int     _framehash_changelog__end( framehash_t *self );
 
+
+/**************************************************************************//**
+ * CHANGELOG_EMIT_OPERATION
+ *
+ ******************************************************************************
+ */
 __inline static int64_t CHANGELOG_EMIT_OPERATION( framehash_t *self, framehash_context_t *context ) {
   if( self->changelog.enable ) {
     return _framehash_changelog__emit_operation( self, context );

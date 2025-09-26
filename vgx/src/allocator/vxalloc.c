@@ -94,6 +94,12 @@ CXMALLOC_TEMPLATE( OffsetAllocator,           /*                                
 
 
 
+
+/**************************************************************************//**
+ * f
+ *
+ ******************************************************************************
+ */
 void f(void) {
 
   const TptrAllocator_interface_t *TP_alloc = TptrAllocatorInterface();

@@ -152,10 +152,22 @@ static CString_t *  VGXProfile__CPU_GetInstructionSetExtensions( int *avxcompat 
  ***********************************************************************
  */
 #if defined CXPLAT_ARCH_X64
+
+/**************************************************************************//**
+ * VGXProfile__CPU_GetCoreCount
+ *
+ ******************************************************************************
+ */
 static int VGXProfile__CPU_GetCoreCount( int *cores, int *threads ) {
   return get_cpu_cores( cores, threads );
 }
 #elif defined CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * VGXProfile__CPU_GetCoreCount
+ *
+ ******************************************************************************
+ */
 static int VGXProfile__CPU_GetCoreCount( int *P_cores, int *E_cores ) {
   return get_cpu_cores( P_cores, E_cores );
 }

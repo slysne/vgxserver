@@ -28,6 +28,12 @@
 SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_COMLIB );
 
 
+
+/**************************************************************************//**
+ * show_sizeof
+ *
+ ******************************************************************************
+ */
 static int show_sizeof(void) {
   /*
    * INFO
@@ -85,6 +91,12 @@ test_descriptor_set_t comlib_utest_sets[] = {
 
 
 
+
+/**************************************************************************//**
+ * comlib_get_unit_test_names
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT char ** comlib_get_unit_test_names( void ) {
 #ifdef INCLUDE_UNIT_TESTS
 #define __TEST_COUNT( Set ) ((sizeof( Set ) / sizeof( test_descriptor_set_t ))-1)
@@ -106,6 +118,12 @@ DLL_EXPORT char ** comlib_get_unit_test_names( void ) {
 
 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+
+/**************************************************************************//**
+ * comlib_unit_tests
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int comlib_unit_tests( const char *runonly[], const char *testdir ) {
 #ifdef INCLUDE_UNIT_TESTS
   int retcode = -1;

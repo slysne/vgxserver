@@ -224,6 +224,12 @@ __inline static const char *__full_path( vgx_TransactionalConsumerService_t *con
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_request_recv
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_request_recv( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
@@ -260,6 +266,12 @@ static void __dump_tx_request_recv( const char *data, int64_t sz ) {
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_response_sent
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_response_sent( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
@@ -2696,6 +2708,12 @@ static int64_t __append_tx( vgx_TransactionalConsumerService_t *consumer_service
  ***********************************************************************
  */
 #ifdef OPSTREAM_INJECT_RANDOM_ERROR_RATE 
+
+/**************************************************************************//**
+ * __random_noise_inject
+ *
+ ******************************************************************************
+ */
 static void __random_noise_inject( vgx_TransactionalConsumerService_t *consumer_service, const char *line, int64_t sz_line ) {
   // Corrupt inbound data at a low random rate to exercise the error detection / retry logic.
   if( randfloat() < (double)(OPSTREAM_INJECT_RANDOM_ERROR_RATE) ) {

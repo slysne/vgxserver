@@ -127,6 +127,12 @@ __inline static void __trap_operator_error( op_BASE *op, const char *funcname, i
  ***********************************************************************
  */
 #ifdef HASVERBOSE
+
+/**************************************************************************//**
+ * __trap_operator_ignore
+ *
+ ******************************************************************************
+ */
 __inline static void __trap_operator_ignore( op_BASE *op, const char *funcname, int line ) {
   if( op ) {
     VERBOSE( 0x001, "(trap ignore) %s:%d %08X %s", funcname, line, op->op.code, op->op.name );
@@ -191,6 +197,12 @@ __inline static const char * __op_vertex( vgx_OperationParser_t *parser ) {
  ***********************************************************************
  */
 #ifdef HASVERBOSE
+
+/**************************************************************************//**
+ * __trap_parser_error
+ *
+ ******************************************************************************
+ */
 __inline static void __trap_parser_error( const char *funcname, int line ) {
   VERBOSE( 0x001, "%s:%d", funcname, line );
 }

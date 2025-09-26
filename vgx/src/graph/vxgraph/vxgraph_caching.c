@@ -47,6 +47,12 @@ DLL_EXPORT vgx_ICache_t iCache = {
 
 
 
+
+/**************************************************************************//**
+ * __new_QtoS_2way_set_associative_cache
+ *
+ ******************************************************************************
+ */
 static vgx_QtoS_2way_set_associative_cache_t * __new_QtoS_2way_set_associative_cache( const char *name, int depth, int order ) {
   vgx_QtoS_2way_set_associative_cache_t *cache = NULL;
   
@@ -95,6 +101,12 @@ static vgx_QtoS_2way_set_associative_cache_t * __new_QtoS_2way_set_associative_c
 }
 
 
+
+/**************************************************************************//**
+ * __delete_QtoS_2way_set_associative_cache
+ *
+ ******************************************************************************
+ */
 static void __delete_QtoS_2way_set_associative_cache( vgx_QtoS_2way_set_associative_cache_t **cache ) {
   if( cache && *cache ) {
     if( (*cache)->next ) {
@@ -112,6 +124,12 @@ static void __delete_QtoS_2way_set_associative_cache( vgx_QtoS_2way_set_associat
 }
 
 
+
+/**************************************************************************//**
+ * __print_cache_stats
+ *
+ ******************************************************************************
+ */
 static void __print_cache_stats( vgx_QtoS_2way_set_associative_cache_t *cache ) {
   int level = 0;
   vgx_QtoS_2way_set_associative_cache_t *this_level = cache;

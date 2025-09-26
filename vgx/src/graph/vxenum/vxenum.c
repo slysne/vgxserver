@@ -157,18 +157,36 @@ static const uint8_t * __uri_path_map = __vxenum__bitmap_char.bytes + 32;
 #define __BITMAP_MASK( C ) (0b10000000 >> (C & 0b111))
 
 
+
+/**************************************************************************//**
+ * __IS_KEYCHAR
+ *
+ ******************************************************************************
+ */
 __inline static int __IS_KEYCHAR( const char C ) {
   return (  *(  __key_map + __BITMAP_BYTE( C )) & __BITMAP_MASK( C ) );
 }
 
 
 
+
+/**************************************************************************//**
+ * __IS_ALPHA
+ *
+ ******************************************************************************
+ */
 __inline static int __IS_ALPHA( const char C ) {
   return (  *(  __alpha_map + __BITMAP_BYTE( C )) & __BITMAP_MASK( C ) );
 }
 
 
 
+
+/**************************************************************************//**
+ * __IS_URI_PATH
+ *
+ ******************************************************************************
+ */
 __inline static int __IS_URI_PATH( const char C ) {
   return (  *(  __uri_path_map + __BITMAP_BYTE( C )) & __BITMAP_MASK( C ) );
 }

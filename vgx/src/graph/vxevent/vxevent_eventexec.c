@@ -44,6 +44,12 @@ __inline static const char *__full_path( vgx_Graph_t *graph ) {
 #define EXECUTOR_FATAL( Graph, Code, Format, ... )     __MESSAGE( FATAL, Graph, Code, Format, ##__VA_ARGS__ )
 
 
+
+/**************************************************************************//**
+ * __reschedule_event_WL
+ *
+ ******************************************************************************
+ */
 __inline static void __reschedule_event_WL( vgx_Graph_t *graph, vgx_Vertex_t *vertex_WL, vgx_vertex_expiration_t *expiration ) {
   uint32_t tmx;
   if( expiration ) {

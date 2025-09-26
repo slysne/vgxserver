@@ -176,6 +176,12 @@ static int __cmp_true( const x_vgx_partial__entry_key *k1, const x_vgx_partial__
 
 
 
+
+/**************************************************************************//**
+ * __invalid_header_data
+ *
+ ******************************************************************************
+ */
 static int __invalid_header_data( const char *data, int64_t sz, x_vgx_partial__header *header ) {
   
   char buffer[512] = {0}; 

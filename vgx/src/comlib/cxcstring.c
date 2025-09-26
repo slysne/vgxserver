@@ -753,6 +753,12 @@ static __THREAD f_CString_serializer_t gt_serializer = NULL;
 static __THREAD f_CString_deserializer_t gt_deserializer = NULL;
 static __THREAD object_allocator_context_t *gt_allocator_context = NULL;
 
+
+/**************************************************************************//**
+ * CStringSetSerializationCurrentThread
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void CStringSetSerializationCurrentThread( f_CString_serializer_t serializer, f_CString_deserializer_t deserializer ) {
   gt_serializer = serializer;
   gt_deserializer = deserializer;
