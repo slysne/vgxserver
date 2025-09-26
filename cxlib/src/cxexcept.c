@@ -385,6 +385,12 @@ int cxlib_format_code( int msgcode, char *buf, size_t n ) {
 
 
 
+
+/**************************************************************************//**
+ * __fprintf_critical
+ *
+ ******************************************************************************
+ */
 static void __fprintf_critical( FILE *ostream, const char *tbuf, int msg_typ, int msg_sub, int msg_mod, int msg_cod, uint32_t tid, const char *msg  ) {
   char above[128];
   char below[128];
@@ -836,6 +842,12 @@ IGNORE_WARNING_NO_FUNCTION_PROTOTYPE_GIVEN
 RESUME_WARNINGS
 #endif
 #if defined(CXPLAT_LINUX_ANY) || defined(CXPLAT_MAC_ARM64)
+
+/**************************************************************************//**
+ * cxlib_print_backtrace
+ *
+ ******************************************************************************
+ */
 void cxlib_print_backtrace( int nframes ) {
   void *buffer[ 128 ];
   int n = backtrace( buffer, 128 );
@@ -867,6 +879,12 @@ void cxlib_print_backtrace( int nframes ) {
   }
 }
 
+
+/**************************************************************************//**
+ * cxlib_get_symbol_name
+ *
+ ******************************************************************************
+ */
 cxlib_symbol_name cxlib_get_symbol_name( const uintptr_t address ) {
 
   cxlib_symbol_name name = {0};
@@ -883,6 +901,12 @@ cxlib_symbol_name cxlib_get_symbol_name( const uintptr_t address ) {
 
 #else
 
+
+/**************************************************************************//**
+ * cxlib_print_backtrace
+ *
+ ******************************************************************************
+ */
 void cxlib_print_backtrace( int nframes ) {
   unsigned int   i;
   void         * stack[ 100 ];
@@ -922,6 +946,12 @@ void cxlib_print_backtrace( int nframes ) {
 
 }
 
+
+/**************************************************************************//**
+ * cxlib_get_symbol_name
+ *
+ ******************************************************************************
+ */
 cxlib_symbol_name cxlib_get_symbol_name( const uintptr_t address ) {
   
   cxlib_symbol_name name = {0};

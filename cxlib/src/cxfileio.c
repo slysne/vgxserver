@@ -956,6 +956,12 @@ int delete_dir( const char *path ) {
  ***********************************************************************
  */
 #ifdef CXPLAT_WINDOWS_X64
+
+/**************************************************************************//**
+ * get_file_attr_internal
+ *
+ ******************************************************************************
+ */
 static file_attr_t get_file_attr_internal( const char *path ) {
   file_attr_t file_attr;
   DWORD file_attr_win;
@@ -979,6 +985,12 @@ static file_attr_t get_file_attr_internal( const char *path ) {
   return file_attr;
 }
 #else
+
+/**************************************************************************//**
+ * get_file_attr_internal
+ *
+ ******************************************************************************
+ */
 static file_attr_t get_file_attr_internal( const char *path ) {
   file_attr_t file_attr;
 #if defined CXPLAT_LINUX_ANY

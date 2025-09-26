@@ -53,6 +53,12 @@ typedef union __u_cpuregs_t {
 
 
 
+
+/**************************************************************************//**
+ * cxplat_cpuid
+ *
+ ******************************************************************************
+ */
 static int cxplat_cpuid( unsigned int leaf, int *eax, int *ebx, int *ecx, int *edx ) {
 #if defined CXPLAT_WINDOWS_X64
   __cpuregs_t regs;
@@ -71,6 +77,12 @@ static int cxplat_cpuid( unsigned int leaf, int *eax, int *ebx, int *ecx, int *e
 
 
 
+
+/**************************************************************************//**
+ * cxplat_cpuidex
+ *
+ ******************************************************************************
+ */
 int cxplat_cpuidex( unsigned int leaf, unsigned int subleaf, int *eax, int *ebx, int *ecx, int *edx ) {
 #if defined CXPLAT_WINDOWS_X64
   __cpuregs_t regs;
@@ -797,6 +809,12 @@ char * get_new_cpu_instruction_set_extensions( int *avxcompat ) {
 
   */
 #elif CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * get_new_cpu_instruction_set_extensions
+ *
+ ******************************************************************************
+ */
 char * get_new_cpu_instruction_set_extensions( int *__ign ) {
 
   static const char hw_optional_arm_FEAT_[] = "hw.optional.arm.FEAT_";
@@ -893,6 +911,12 @@ char * get_new_cpu_instruction_set_extensions( int *__ign ) {
  ***********************************************************************
  */
 #if defined CXPLAT_ARCH_X64
+
+/**************************************************************************//**
+ * get_cpu_cores
+ *
+ ******************************************************************************
+ */
 int get_cpu_cores( int *cores, int *threads ) {
   __cpuregs_t regs = {0};
 
@@ -928,6 +952,12 @@ int get_cpu_cores( int *cores, int *threads ) {
   return 0;
 }
 #elif defined CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * get_cpu_cores
+ *
+ ******************************************************************************
+ */
 int get_cpu_cores( int *P_cores, int *E_cores ) {
   uint64_t core_count = 0;
   size_t size = sizeof(core_count);

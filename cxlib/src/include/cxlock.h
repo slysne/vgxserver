@@ -95,22 +95,52 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( PCONDITION_VARIABLE pcond, PCRITICAL_S
 #define ATOMIC_ASSIGN_i32(ptr, val) InterlockedExchange( ptr, val )
 
 
+
+/**************************************************************************//**
+ * InterlockedIncrement_u32
+ *
+ ******************************************************************************
+ */
 __inline static ULONG InterlockedIncrement_u32( ULONG volatile * _Addend ) {
   return (ULONG)InterlockedIncrement( (LONG*)_Addend );
 }
 
+
+/**************************************************************************//**
+ * InterlockedDecrement_u32
+ *
+ ******************************************************************************
+ */
 __inline static ULONG InterlockedDecrement_u32( ULONG volatile * _Addend ) {
   return (ULONG)InterlockedDecrement( (LONG*)_Addend );
 }
 
+
+/**************************************************************************//**
+ * InterlockedAdd_u32
+ *
+ ******************************************************************************
+ */
 __inline static ULONG InterlockedAdd_u32( ULONG volatile * _Addend, ULONG value ) {
   return (ULONG)InterlockedAdd( (LONG*)_Addend, (LONG)value );
 }
 
+
+/**************************************************************************//**
+ * InterlockedCompareExchange_u32
+ *
+ ******************************************************************************
+ */
 __inline static ULONG InterlockedCompareExchange_u32( ULONG volatile * _Destination, ULONG _Exchange, ULONG _Comparand ) {
   return (ULONG)InterlockedCompareExchange( (LONG*)_Destination, (LONG)_Exchange, (LONG)_Comparand );
 }
 
+
+/**************************************************************************//**
+ * InterlockedExchange_u32
+ *
+ ******************************************************************************
+ */
 __inline static ULONG InterlockedExchange_u32( ULONG volatile * _Target, ULONG _Value ) {
   return (ULONG)InterlockedExchange( (LONG*)_Target, (LONG)_Value );
 }
@@ -132,22 +162,52 @@ __inline static ULONG InterlockedExchange_u32( ULONG volatile * _Target, ULONG _
 #define ATOMIC_ASSIGN_i64(ptr, val) InterlockedExchange64( ptr, val )
 
 
+
+/**************************************************************************//**
+ * InterlockedIncrement_u64
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t InterlockedIncrement_u64( uint64_t volatile * _Addend ) {
   return (uint64_t)InterlockedIncrement64( (int64_t*)_Addend );
 }
 
+
+/**************************************************************************//**
+ * InterlockedDecrement_u64
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t InterlockedDecrement_u64( uint64_t volatile * _Addend ) {
   return (uint64_t)InterlockedDecrement64( (int64_t*)_Addend );
 }
 
+
+/**************************************************************************//**
+ * InterlockedAdd_u64
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t InterlockedAdd_u64( uint64_t volatile * _Addend, uint64_t value ) {
   return (uint64_t)InterlockedAdd64( (int64_t*)_Addend, (int64_t)value );
 }
 
+
+/**************************************************************************//**
+ * InterlockedCompareExchange_u64
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t InterlockedCompareExchange_u64( uint64_t volatile * _Destination, uint64_t _Exchange, uint64_t _Comparand ) {
   return (uint64_t)InterlockedCompareExchange64( (int64_t*)_Destination, (int64_t)_Exchange, (int64_t)_Comparand );
 }
 
+
+/**************************************************************************//**
+ * InterlockedExchange_u64
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t InterlockedExchange_u64( uint64_t volatile * _Target, uint64_t _Value ) {
   return (uint64_t)InterlockedExchange64( (int64_t*)_Target, (int64_t)_Value );
 }
@@ -386,6 +446,12 @@ typedef HANDLE cxlib_thread_t;
 
 typedef unsigned ( __stdcall *f_cxlib_thread_entrypoint )( void * );
 
+
+/**************************************************************************//**
+ * THREAD_START
+ *
+ ******************************************************************************
+ */
 static int THREAD_START( cxlib_thread_t *hThread, uint32_t *thread_id, f_cxlib_thread_entrypoint entrypoint, void *arg ) {
   int ret = 0;
 
@@ -408,6 +474,12 @@ static int THREAD_START( cxlib_thread_t *hThread, uint32_t *thread_id, f_cxlib_t
 
 
 
+
+/**************************************************************************//**
+ * THREAD_SET_PRIORITY
+ *
+ ******************************************************************************
+ */
 static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   static int priority_map[] = {
     THREAD_PRIORITY_LOWEST,
@@ -422,18 +494,36 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
 
 
 
+
+/**************************************************************************//**
+ * THREAD_JOIN
+ *
+ ******************************************************************************
+ */
 static void THREAD_JOIN( cxlib_thread_t hThread, uint32_t timeout_ms ) {
   WaitForSingleObject( hThread, timeout_ms );
 }
 
 
 
+
+/**************************************************************************//**
+ * THREAD_ZERO
+ *
+ ******************************************************************************
+ */
 static void THREAD_ZERO( cxlib_thread_t *phThread ) {
   memset( phThread, 0, sizeof( cxlib_thread_t ) );
 }
 
 
 
+
+/**************************************************************************//**
+ * THREAD_IS_ZERO
+ *
+ ******************************************************************************
+ */
 static int THREAD_IS_ZERO( cxlib_thread_t *phThread ) {
   static char nothread[ sizeof( cxlib_thread_t ) ] = {0};
   return memcmp( phThread, nothread, sizeof( cxlib_thread_t ) ) == 0;
@@ -448,6 +538,12 @@ static int THREAD_IS_ZERO( cxlib_thread_t *phThread ) {
 #define __THREAD_DESCRIPTION     __cxlib_thread_description__
 
 
+
+/**************************************************************************//**
+ * __append_thread_description
+ *
+ ******************************************************************************
+ */
 static errno_t __append_thread_description( wchar_t *description, const char *string, size_t max_sz ) {
   size_t sz_descr = wcslen( description );
   size_t cc = 0;
@@ -499,6 +595,12 @@ typedef pthread_t cxlib_thread_t;
 
 typedef void * ( *f_cxlib_thread_entrypoint )( void * );
 
+
+/**************************************************************************//**
+ * THREAD_START
+ *
+ ******************************************************************************
+ */
 static int THREAD_START( cxlib_thread_t *thread, uint32_t *thread_id, f_cxlib_thread_entrypoint entrypoint, void *arg ) {
   int ret = 0;
   
@@ -524,6 +626,12 @@ static int THREAD_START( cxlib_thread_t *thread, uint32_t *thread_id, f_cxlib_th
 
 
 #if defined(CXPLAT_LINUX_ANY)
+
+/**************************************************************************//**
+ * THREAD_SET_PRIORITY
+ *
+ ******************************************************************************
+ */
 static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   /*
   * NOTE: For this to have any effect you will need to grant permission:
@@ -546,6 +654,12 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
 #include <mach/mach_init.h>
 #include <mach/mach.h>
 
+
+/**************************************************************************//**
+ * _get_current_thread_importance
+ *
+ ******************************************************************************
+ */
 static int _get_current_thread_importance(void) {
     mach_port_t thread = pthread_mach_thread_np(pthread_self());
 
@@ -567,6 +681,12 @@ static int _get_current_thread_importance(void) {
 }
 
 
+
+/**************************************************************************//**
+ * THREAD_SET_PRIORITY
+ *
+ ******************************************************************************
+ */
 static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   // NOTE: Call this only once per thread since 
   //       it will set priority relative to previous 
@@ -610,6 +730,12 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
 
 
 #if defined CXPLAT_LINUX_ANY
+
+/**************************************************************************//**
+ * THREAD_JOIN
+ *
+ ******************************************************************************
+ */
 static void THREAD_JOIN( cxlib_thread_t thread, uint32_t timeout_ms ) {
   struct timespec ts = {0};
   int64_t now_ms = __MILLISECONDS_SINCE_1970();
@@ -618,6 +744,12 @@ static void THREAD_JOIN( cxlib_thread_t thread, uint32_t timeout_ms ) {
 }
 
 #elif defined CXPLAT_MAC_ARM64
+
+/**************************************************************************//**
+ * THREAD_JOIN
+ *
+ ******************************************************************************
+ */
 static void THREAD_JOIN( cxlib_thread_t thread, uint32_t timeout_ms ) {
   struct timespec ts = {0};
   int64_t now_ms = __MILLISECONDS_SINCE_1970();
@@ -630,12 +762,24 @@ static void THREAD_JOIN( cxlib_thread_t thread, uint32_t timeout_ms ) {
 #endif
 
 
+
+/**************************************************************************//**
+ * THREAD_ZERO
+ *
+ ******************************************************************************
+ */
 static void THREAD_ZERO( cxlib_thread_t *p_thread ) {
   memset( p_thread, 0, sizeof( cxlib_thread_t ) );
 }
 
 
 
+
+/**************************************************************************//**
+ * THREAD_IS_ZERO
+ *
+ ******************************************************************************
+ */
 static int THREAD_IS_ZERO( cxlib_thread_t *p_thread ) {
   static char nothread[ sizeof( cxlib_thread_t ) ] = {0};
   return memcmp( p_thread, nothread, sizeof( cxlib_thread_t ) ) == 0;

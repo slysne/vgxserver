@@ -100,6 +100,12 @@ char * lower_inplace( char *ascii, int64_t sz_ascii );
 char * upper_inplace( char *ascii, int64_t sz_ascii );
 
 
+
+/**************************************************************************//**
+ * hex_digit_byte
+ *
+ ******************************************************************************
+ */
 __inline static bool hex_digit_byte( char c, BYTE *x ) {
   if( (*x = c-48) < 10              // [0-9]
        ||
