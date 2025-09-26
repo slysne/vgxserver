@@ -2011,44 +2011,45 @@ class vgxadmin__VGXAdmin( object ):
 
         console.Print( "-a, --attach <id>[,<sub>[,...]] Attach instance to subscribers" )
         console.Print( "-B, --bind <id>                 Bind transaction input port" )
-        console.Print( "-c, --confirm                   Confirm operation (skip y/n prompt)" )
-        console.Print( "-C, --command <id>,<gr>,<cmd>   Send console command <cmd> to graph <gr>" )
-        console.Print( "-d, --detach <id>               Detach instance from subscribers" )
-        console.Print( "-D, --restarthttp <id>          Restart HTTP server with refreshed config" )
-        console.Print( "-E, --endpoint <path>           Send request to <address>" )
-        console.Print( "-f, --cf <file>                 Use this local system descriptor file" )
-        console.Print( "-g, --readonly <id>             Make graph(s) readonly" )
-        console.Print( "-G, --writable <id>             Make graph(s) writable" )
-        console.Print( "-i, --serviceout <id>           Service out" )
-        console.Print( "-I, --servicein <id>            Service in" )
-        console.Print( "-J, --show                      Show effective system descriptor" )
         console.Print( "-k, --cancelsync <id>           Terminate sync in progress" )
+        console.Print( "-f, --cf <file>                 Use this local system descriptor file" )
+        console.Print( "-C, --command <id>,<gr>,<cmd>   Send console command <cmd> to graph <gr>" )
+        console.Print( "-c, --confirm                   Confirm operation (skip y/n prompt)" )
+        console.Print( "-Z, --descriptor <id>           Update instance system descriptor" )
+        console.Print( "-d, --detach <id>               Detach instance from subscribers" )
+        console.Print( "-E, --endpoint <path>           Send request to <address>" )
         console.Print( "-K, --forcecopy <src>,<dst>     Force hard sync from <src> to <dst>" )
-        console.Print( "-L, --rollingupdate <id>        Forward sync subscribers one at a time in S-OUT" )
-        console.Print( "-m, --resetmetrics <id>         Clear performance and error counters" )
-        console.Print( "-M, --opdump <id>               Dump instance data to output file" )
+        console.Print( "-h, --help                      Show this help message" )
+        console.Print( "-Q, --instancecfg <id>          Show instance configuration" )
         console.Print( "-n, --nodestat <id>[,<key>]     Nodestat" )
-        console.Print( "-N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file" )
+        console.Print( "-M, --opdump <id>               Dump instance data to output file" )
         console.Print( "-p, --pausein <id>              Pause transaction input" )
         console.Print( "-P, --pauseout <id>             Pause transaction output" )
-        console.Print( "-Q, --instancecfg <id>          Show instance configuration" )
+        console.Print( "-t, --pausettl <id>             Pause TTL event processor" )
+        console.Print( "-W, --persist <id>              Write instance data to disk" )
+        console.Print( "-g, --readonly <id>             Make graph(s) readonly" )
+        console.Print( "-N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file" )
+        console.Print( "-m, --resetmetrics <id>         Clear performance and error counters" )
+        console.Print( "-D, --restarthttp <id>          Restart HTTP server with refreshed config" )
         console.Print( "-r, --resumein <id>             Resume transaction input" )
         console.Print( "-R, --resumeout <id>            Resume transaction output" )
+        console.Print( "-T, --resumettl <id>            Resume TTL event processor (if enabled)" )
+        console.Print( "-Y, --reversesync <id>          Reverse sync instance data from attached subscriber" )
+        console.Print( "-L, --rollingupdate <id>        Forward sync subscribers one at a time in S-OUT" )
+        console.Print( "-I, --servicein <id>            Service in" )
+        console.Print( "-i, --serviceout <id>           Service out" )
+        console.Print( "-J, --show                      Show effective system descriptor" )
         console.Print( "-s, --start <id>                Start instance on the local host" )
         console.Print( "-S, --status <id>               System summary" )
-        console.Print( "-t, --pausettl <id>             Pause TTL event processor" )
-        console.Print( "-T, --resumettl <id>            Resume TTL event processor (if enabled)" )
-        console.Print( "-u, --unsubscribe <id>          Detach instance from provider" )
-        console.Print( "-U, --unbind <id>               Unbind transaction input port" )
-        console.Print( "-V, --throttle <id>[,<r>,<u>]   Throttle TX input rate <r>, unit <u>" )
-        console.Print( "-w, --waitforidle <id>          Wait until instance input is idle" )
-        console.Print( "-W, --persist <id>              Write instance data to disk" )
         console.Print( "-x, --stop <id>                 Stop instance" )
-        console.Print( "-X, --truncate <id>             Erase instance data" )
         console.Print( "-y, --sync <id>[,<mode>]        Sync instance data to attached subscribers" )
         console.Print( "                                <mode>: [repair|hard|soft]" )
-        console.Print( "-Y, --reversesync <id>          Reverse sync instance data from attached subscriber" )
-        console.Print( "-Z, --descriptor <id>           Update instance system descriptor" )
+        console.Print( "-V, --throttle <id>[,<r>,<u>]   Throttle TX input rate <r>, unit <u>" )
+        console.Print( "-X, --truncate <id>             Erase instance data" )
+        console.Print( "-U, --unbind <id>               Unbind transaction input port" )
+        console.Print( "-u, --unsubscribe <id>          Detach instance from provider" )
+        console.Print( "-w, --waitforidle <id>          Wait until instance input is idle" )
+        console.Print( "-G, --writable <id>             Make graph(s) writable" )
 
         console.Print()
         if err is not None:
@@ -2107,6 +2108,7 @@ class vgxadmin__VGXAdmin( object ):
                     ("resumettl=",       "T:"),
                     ("unsubscribe=",     "u:"),
                     ("unbind=",          "U:"),
+                    ("version",          "v" ),
                     ("throttle=",        "V:"),
                     ("waitforidle=",     "w:"),
                     ("persist=",         "W:"),
@@ -2137,6 +2139,9 @@ class vgxadmin__VGXAdmin( object ):
             short = "".join([ x for _,x in paramdef ])
             long = [x for x,_ in paramdef]
             opts, args = getopt.getopt( arguments, short, long )
+
+            if not opts:
+                raise vgxadmin__InvalidUsageOrConfig()
 
             for o, a in opts:
                 if o in ( "-h", "--help" ):
@@ -2341,6 +2346,10 @@ class vgxadmin__VGXAdmin( object ):
                         instance = descriptor.Get( a )
                         ret = instance.Unbind()
                         R.append( (instance, ret) )
+
+                    elif o in ( "-v", "--version" ):
+                        v = [line for line in pyvgx.version(2).split('\n') if line.startswith('vgx')][0].split()[1]
+                        console.Print( v )
 
                     elif o in ( "-V", "--throttle" ):
                         id, rate, unit = vgxadmin__VGXAdmin.GetArgs( a, [None, -1.0, "bytes"] )
