@@ -17,11 +17,14 @@ PLAT = platform.system()
 
 IS_MACOS = PLAT == "Darwin"
 IS_LINUX = PLAT == "Linux"
+IS_WINDOWS = PLAT == "Windows"
 
 if IS_MACOS:
     package_data = {"": ["libcxlib.a", "libvgx.dylib", "pyvgx.so"]}
 elif IS_LINUX:
     package_data = {"": ["libcxlib.a", "libvgx.so", "pyvgx.so"]}
+elif IS_WINDOWS:
+    package_data = {"": ["libcxlib.lib", "libvgx.dll", "pyvgx.pyd"]} 
 else:
     raise Exception("Not supported: {}".format(PLAT))
 
@@ -137,16 +140,31 @@ class CmakeBuild(build_ext):
                 f"-DCMAKE_C_COMPILER={find_executable('gcc')}",
                 f"-DCMAKE_CXX_COMPILER={find_executable('g++')}"
             ])
+        elif IS_WINDOWS:
+            # Use native VS generator for .sln and MSBuild (overrides Ninja from presets)
+            cmake_configure_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])  # For VS 2022, x64 arch
+
+            # For multi-config generators like VS, specify config in build
+            config = 'Release' if preset == 'release' else 'Debug' if preset == 'debug' else 'RelWithDebInfo'
+            cmake_execute_build.extend(['--config', config])
+
+            # # Ensure MSVC compiler (CMake detects it automatically)
+            # cmake_configure_cmd.extend([
+            #     f"-DCMAKE_C_COMPILER=cl.exe",  # MSVC C compiler
+            #     f"-DCMAKE_CXX_COMPILER=cl.exe"  # MSVC C++ compiler
+            # ])
 
         # Configuration step (generate the build system)
         subprocess.run(
             cmake_configure_cmd,
+            cwd=cmake_build_dir,
             check=True
         )
 
         # Execute build
         subprocess.run(
             cmake_execute_build,
+            cwd=cmake_build_dir,
             check=True
         )
 
@@ -157,15 +175,18 @@ class CmakeBuild(build_ext):
         os.makedirs(target_dir, exist_ok=True)
 
         # File extensions to copy based on platform
-        extensions_to_copy = ["so", "a"]
-        if IS_MACOS:
-            extensions_to_copy.append("dylib")
+        if IS_WINDOWS:
+            extensions_to_copy = ["lib", "dll", "pyd"]
+        else:
+            extensions_to_copy = ["so", "a"]
+            if IS_MACOS:
+                extensions_to_copy.append("dylib")
 
         # Copy matching files
         for ext in extensions_to_copy:
             for file in glob.glob(os.path.join(extdir, f"**/*.{ext}"), recursive=True):
-                #shutil.copy(file, target_dir)
-                print(file)
+                #shutil.copy(file, target_dir)  # CHANGED: Actually copy (your original has print(file)—was that a debug leftover?)
+                print(f"Copied: {file} to {target_dir}")
 
 
 

@@ -67,12 +67,3 @@ WHEEL=dist/*cp$(python -c "import sys; print(f'{sys.version_info.major}{sys.vers
 pip install $WHEEL
 
 cd -
-
-
-
-
-
-
-
-
-
