@@ -1,17 +1,39 @@
-/*######################################################################
- *#
- *# comlibtest.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  comlib
+ * File:    comlibtest.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_comlib.h"
 
 SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_COMLIB );
 
 
+
+/**************************************************************************//**
+ * show_sizeof
+ *
+ ******************************************************************************
+ */
 static int show_sizeof(void) {
   /*
    * INFO
@@ -69,6 +91,12 @@ test_descriptor_set_t comlib_utest_sets[] = {
 
 
 
+
+/**************************************************************************//**
+ * comlib_get_unit_test_names
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT char ** comlib_get_unit_test_names( void ) {
 #ifdef INCLUDE_UNIT_TESTS
 #define __TEST_COUNT( Set ) ((sizeof( Set ) / sizeof( test_descriptor_set_t ))-1)
@@ -89,6 +117,11 @@ DLL_EXPORT char ** comlib_get_unit_test_names( void ) {
 
 
 
+/**************************************************************************//**
+ * comlib_unit_tests
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 DLL_EXPORT int comlib_unit_tests( const char *runonly[], const char *testdir ) {
 #ifdef INCLUDE_UNIT_TESTS
@@ -147,10 +180,3 @@ DLL_EXPORT int comlib_unit_tests( const char *runonly[], const char *testdir ) {
   return 0;
 #endif
 }
-
-
-
-
-
-
-

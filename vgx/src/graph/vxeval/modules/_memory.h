@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _memory.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _memory.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VXEVAL_MODULES_MEMORY_H
 #define _VGX_VXEVAL_MODULES_MEMORY_H
@@ -271,32 +287,74 @@ static void __eval_memory_unindex( vgx_Evaluator_t *self );
 
 
 
+
+/**************************************************************************//**
+ * __radians
+ *
+ ******************************************************************************
+ */
 __inline static double __radians( double deg ) {
   return RADIANS( deg );
 }
 
+
+/**************************************************************************//**
+ * __degrees
+ *
+ ******************************************************************************
+ */
 __inline static double __degrees( double rad ) {
   return DEGREES( rad );
 }
 
+
+/**************************************************************************//**
+ * __rinv
+ *
+ ******************************************************************************
+ */
 __inline static double __rinv( double x ) {
   return x != 0 ? 1.0 / x : FLT_MAX;
 }
 
+
+/**************************************************************************//**
+ * __isq
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __isq( int64_t x ) {
   return x * x;
 }
 
+
+/**************************************************************************//**
+ * __rsq
+ *
+ ******************************************************************************
+ */
 __inline static double __rsq( double x ) {
   return x * x;
 }
 
 #if defined CXPLAT_WINDOWS_X64 || defined CXPLAT_MAC_ARM64
+
+/**************************************************************************//**
+ * exp10
+ *
+ ******************************************************************************
+ */
 __inline static double exp10( double x ) {
   return exp( x * M_LN10 );
 }
 #endif
 
+
+/**************************************************************************//**
+ * __sinc
+ *
+ ******************************************************************************
+ */
 __inline static double __sinc( double x ) {
   if( x ) {
     x *= M_PI;
@@ -308,11 +366,23 @@ __inline static double __sinc( double x ) {
 }
 
 
+
+/**************************************************************************//**
+ * __isign
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __isign( int64_t x ) {
   return (x > 0LL) - (x < 0LL);
 }
 
 
+
+/**************************************************************************//**
+ * __rsign
+ *
+ ******************************************************************************
+ */
 __inline static double __rsign( double x ) {
   return (x > 0.0) - (x < 0.0);
 }
@@ -382,6 +452,12 @@ __inline double __cosine( double dp, double norm_ab ) {
 
 
 
+
+/**************************************************************************//**
+ * __is_stack_item_storable
+ *
+ ******************************************************************************
+ */
 __inline static int __is_stack_item_storable( vgx_Evaluator_t *self, const vgx_EvalStackItem_t *item, bool incref ) {
   if( __is_stack_item_type_object( item->type ) ) {
     // bitvector or keyval

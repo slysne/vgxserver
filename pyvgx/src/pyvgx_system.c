@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# pyvgx_system.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx_system.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "pyvgx.h"
 
@@ -2113,6 +2129,12 @@ PyDoc_STRVAR( Status__doc__,
   "Status( [graph[, simple]] ) -> dict\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_System__Status
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_System__Status( PyVGX_System *py_system, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "graph", "simple", NULL };
@@ -3472,6 +3494,12 @@ PyDoc_STRVAR( ServerMetrics__doc__,
   "ServerMetrics() -> dict\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_System__ServerMetrics
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_System__ServerMetrics( PyVGX_System *py_system, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "percentiles", NULL };
@@ -4886,6 +4914,12 @@ static PyObject * __system_keys_and_values( bool keys, bool values ) {
 PyDoc_STRVAR( items__doc__,
   "items() -> [(key,val), ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_System__items
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_System__items( PyVGX_System *py_system ) {
   return __system_keys_and_values( true, true );
@@ -4901,6 +4935,12 @@ static PyObject * PyVGX_System__items( PyVGX_System *py_system ) {
 PyDoc_STRVAR( keys__doc__,
   "keys() -> [key1, key2, ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_System__keys
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_System__keys( PyVGX_System *py_system ) {
   return __system_keys_and_values( true, false );
@@ -4916,6 +4956,12 @@ static PyObject * PyVGX_System__keys( PyVGX_System *py_system ) {
 PyDoc_STRVAR( values__doc__,
   "values() -> [val1, val2, ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_System__values
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_System__values( PyVGX_System *py_system ) {
   return __system_keys_and_values( false, true );
@@ -4956,6 +5002,11 @@ static PyMemberDef PyVGX_System__members[] = {
 
 
 
+/**************************************************************************//**
+ * __PyVGX_System__attr
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_System__attr( PyVGX_System *py_system, void *closure ) {
   return PyLong_FromLongLong( 0 );
@@ -5141,4 +5192,3 @@ static PyTypeObject PyVGX_System__SystemType = {
 
 
 DLL_HIDDEN PyTypeObject * p_PyVGX_System__SystemType = &PyVGX_System__SystemType;
-

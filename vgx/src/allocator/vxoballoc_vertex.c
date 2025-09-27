@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# vxoballoc_vertex.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxoballoc_vertex.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vxoballoc_vertex.h"
 #include "_vxoballoc_vector.h"
@@ -822,6 +838,12 @@ static int __vxoballoc_vertex__cxmalloc_deserialize_vertex( cxmalloc_line_deseri
 
 
 
+
+/**************************************************************************//**
+ * __trap_invalid_vertex_CS_RO
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void __trap_invalid_vertex_CS_RO( const vgx_Vertex_t *vertex_CS_RO ) {
   cxmalloc_linehead_t *linehead = _cxmalloc_linehead_from_object( vertex_CS_RO );
   if( linehead->data.refc == 0 || __vertex_is_unindexed( vertex_CS_RO ) ) {
@@ -833,6 +855,12 @@ DLL_EXPORT void __trap_invalid_vertex_CS_RO( const vgx_Vertex_t *vertex_CS_RO ) 
 
 
 #ifdef VGX_CONSISTENCY_CHECK
+
+/**************************************************************************//**
+ * __check_vertex_consistency_WL
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int64_t __check_vertex_consistency_WL( vgx_Vertex_t *vertex_WL ) {
   // Actual refcnt
   int64_t actual_refcnt = Vertex_REFCNT_WL( vertex_WL );
@@ -960,6 +988,12 @@ DLL_EXPORT const vgx_Graph_t * __assert_state_lock( const vgx_Graph_t *graph ) {
 
 
 #if defined (VGX_CONSISTENCY_CHECK) || defined (VGX_STATE_LOCK_CHECK)
+
+/**************************************************************************//**
+ * __vertex_count_dec
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int64_t __vertex_count_dec( int64_t *pcnt ) {
   if( *pcnt > 0 ) {
     --(*pcnt);
@@ -973,6 +1007,12 @@ DLL_EXPORT int64_t __vertex_count_dec( int64_t *pcnt ) {
 
 
 #if defined (VGX_CONSISTENCY_CHECK) || defined (VGX_STATE_LOCK_CHECK)
+
+/**************************************************************************//**
+ * __vertex_count_dec_delta
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int64_t __vertex_count_dec_delta( int64_t *pcnt, int delta ) {
   if( delta > *pcnt ) {
     FATAL( 0xFFF, "Attempted decrement delta %d vertex lock count %lld", delta, *pcnt );
@@ -997,4 +1037,3 @@ test_descriptor_t _vgx_vxoballoc_vertex_tests[] = {
   {NULL}
 };
 #endif
-

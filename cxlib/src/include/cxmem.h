@@ -1,10 +1,28 @@
-/*
-###################################################
-#
-# File:   cxmem.h
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  cxlib
+ * File:    cxmem.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
+
 #ifndef CXLIB_CXMEM_H
 #define CXLIB_CXMEM_H
 
@@ -171,6 +189,12 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
 #define PALIGNED_TYPE(struct_or_union)            typedef struct_or_union PALIGNED_
 
 
+
+/**************************************************************************//**
+ * free_const
+ *
+ ******************************************************************************
+ */
 __inline static void free_const( const void *Memory ) {
   free( (void*)Memory );
 }
@@ -195,34 +219,82 @@ CALIGNED_TYPE(union) u_cacheline_t {
 
 
 #if defined CXPLAT_ARCH_X64
+
+/**************************************************************************//**
+ * __prefetch_L1
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L1( void *p ) {
   _mm_prefetch( (char*)p, _MM_HINT_T0 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_L2
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L2( void *p ) {
   _mm_prefetch( (char*)p, _MM_HINT_T1 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_L3
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L3( void *p ) {
   _mm_prefetch( (char*)p, _MM_HINT_T2 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_nta
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_nta( void *p ) {
   _mm_prefetch( (char*)p, _MM_HINT_NTA );
 }
 #elif defined CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * __prefetch_L1
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L1( void *p ) {
   __builtin_prefetch(p, 0, 3 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_L2
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L2( void *p ) {
   __builtin_prefetch(p, 0, 2 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_L3
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_L3( void *p ) {
   __builtin_prefetch(p, 0, 1 );
 }
 
+
+/**************************************************************************//**
+ * __prefetch_nta
+ *
+ ******************************************************************************
+ */
 __inline static void __prefetch_nta( void *p ) {
   __builtin_prefetch(p, 0, 0 );
 }
@@ -284,4 +356,3 @@ typedef union __u_float_bits_t {
 
 
 #endif
-

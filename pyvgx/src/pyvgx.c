@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# pyvgx.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "pyvgx.h"
 #include "versiongen.h"
@@ -188,6 +204,12 @@ BOOL WINAPI __ignore_ctrl_c_event( DWORD s ) {
   return s == CTRL_C_EVENT ? TRUE : FALSE;
 }
 #else
+
+/**************************************************************************//**
+ * __ignore_ctrl_c_event
+ *
+ ******************************************************************************
+ */
 void __ignore_ctrl_c_event( int s ) {
   PYVGX_API_WARNING( "pyvgx", 0x000, "Shutdown cannot be interrupted" );
   PyOS_setsig( SIGINT, __ignore_ctrl_c_event );
@@ -1391,6 +1413,12 @@ static PyObject * PyVGX_meminfo( PyObject *self ) {
  ******************************************************************************
  */
 #if defined CXPLAT_ARCH_X64
+
+/**************************************************************************//**
+ * PyVGX_cpuid
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * PyVGX_cpuid( PyObject *self, PyObject *args, PyObject *kwdict ) {
   static char *kwlist[] = {"leaf", "subleaf", "obj", NULL}; 
@@ -2927,4 +2955,3 @@ PyMODINIT_FUNC PyInit_pyvgx( void ) {
 
   return g_pyvgx;
 }
-

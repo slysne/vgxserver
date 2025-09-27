@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# pyvgx_vertex.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx_vertex.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "pyvgx.h"
 
@@ -213,6 +229,12 @@ static PyObject * __py_get_identifier( const vgx_Vertex_t *vertex_RO, void *clos
   return py_identifier;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_identifier
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_identifier( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_identifier, closure );
 }
@@ -233,6 +255,12 @@ __inline static PyObject * __py_get_internalid( const vgx_Vertex_t *vertex_RO, v
   return py_internalid;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_internalid
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_internalid( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_internalid, closure );
 }
@@ -251,6 +279,12 @@ __inline static PyObject * __py_get_outdegree( const vgx_Vertex_t *vertex_RO, vo
   return py_outdegree;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_outdegree
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_outdegree( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_outdegree, closure );
 }
@@ -269,6 +303,12 @@ __inline static PyObject * __py_get_indegree( const vgx_Vertex_t *vertex_RO, voi
   return py_indegree;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_indegree
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_indegree( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_indegree, closure );
 }
@@ -287,6 +327,12 @@ __inline static PyObject * __py_get_degree( const vgx_Vertex_t *vertex_RO, void 
   return py_degree;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_degree
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_degree( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_degree, closure );
 }
@@ -304,6 +350,12 @@ __inline static PyObject * __py_get_isolated( const vgx_Vertex_t *vertex_RO, voi
   return py_isolated;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_isolated
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_isolated( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_isolated, closure );
 }
@@ -321,6 +373,12 @@ __inline static PyObject * __py_get_descriptor( const vgx_Vertex_t *vertex_RO, v
   return py_desc;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_descriptor
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_descriptor( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_descriptor, closure );
 }
@@ -343,6 +401,12 @@ __inline static PyObject * __py_get_type( const vgx_Vertex_t *vertex_RO, void *c
   return py_type;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_type
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_type( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_type, closure );
 }
@@ -361,6 +425,12 @@ __inline static PyObject * __py_get_manifestation( const vgx_Vertex_t *vertex_RO
   return py_man;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_manifestation
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_manifestation( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_manifestation, closure );
 }
@@ -378,6 +448,12 @@ __inline static PyObject * __py_get_vector( const vgx_Vertex_t *vertex_RO, void 
   return py_vector;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_vector
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_vector( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_vector, closure );
 }
@@ -393,6 +469,12 @@ __inline static PyObject * __py_get_properties( const vgx_Vertex_t *vertex_RO, v
   return iPyVGXSearchResult.PyDict_FromVertexProperties( (vgx_Vertex_t*)vertex_RO );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_properties
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_properties( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_properties, closure );
 }
@@ -411,6 +493,12 @@ __inline static PyObject * __py_get_TMC( const vgx_Vertex_t *vertex_RO, void *cl
   return py_TMC;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_TMC
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_TMC( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_TMC, closure );
 }
@@ -429,6 +517,12 @@ __inline static PyObject * __py_get_TMM( const vgx_Vertex_t *vertex_RO, void *cl
   return py_TMM;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_TMM
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_TMM( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_TMM, closure );
 }
@@ -447,6 +541,12 @@ __inline static PyObject * __py_get_TMX( const vgx_Vertex_t *vertex_RO, void *cl
   return py_TMX;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_TMX
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_TMX( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_TMX, closure );
 }
@@ -468,6 +568,12 @@ __inline static PyObject * __py_get_rtx( const vgx_Vertex_t *vertex_RO, void *cl
   return PyLong_FromUnsignedLong( (unsigned long)rtx );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_rtx
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_rtx( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_rtx, closure );
 }
@@ -488,6 +594,12 @@ __inline static PyObject * __py_get_rank_cX( const vgx_Vertex_t *vertex_RO, void
   return py_cX;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_rank_cX
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_rank_cX( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_rank_cX, closure );
 }
@@ -565,6 +677,12 @@ __inline static PyObject * __py_get_rank_b1( const vgx_Vertex_t *vertex_RO, void
   return PyLong_FromUnsignedLong( vertex_RO->rank.slope.b8 );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_rank_b1
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_rank_b1( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_rank_b1, closure );
 }
@@ -580,6 +698,12 @@ __inline static PyObject * __py_get_rank_b0( const vgx_Vertex_t *vertex_RO, void
   return PyLong_FromUnsignedLong( vertex_RO->rank.offset.b8 );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_rank_b0
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_rank_b0( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_rank_b0, closure );
 }
@@ -598,6 +722,12 @@ __inline static PyObject * __py_get_virtual( const vgx_Vertex_t *vertex_RO, void
   return py_virtual;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_virtual
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_virtual( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_virtual, closure );
 }
@@ -613,6 +743,12 @@ __inline static PyObject * __py_get_address( const vgx_Vertex_t *vertex_RO, void
   return PyLong_FromUnsignedLongLong( (uintptr_t)vertex_RO );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_address
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_address( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_address( py_vertex->vertex, closure );
 }
@@ -628,6 +764,12 @@ __inline static PyObject * __py_get_index( const vgx_Vertex_t *vertex_RO, void *
   return PyLong_FromUnsignedLongLong( __vertex_get_index( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( vertex_RO ) ) );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_index
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_index( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_index( py_vertex->vertex, closure );
 }
@@ -643,6 +785,12 @@ __inline static PyObject * __py_get_bitindex( const vgx_Vertex_t *vertex_RO, voi
   return PyLong_FromUnsignedLongLong( __vertex_get_bitindex( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( vertex_RO ) ) );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_bitindex
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_bitindex( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_bitindex( py_vertex->vertex, closure );
 }
@@ -658,6 +806,12 @@ __inline static PyObject * __py_get_bitvector( const vgx_Vertex_t *vertex_RO, vo
   return PyLong_FromUnsignedLongLong( __vertex_get_bitvector( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( vertex_RO ) ) );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_bitvector
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_bitvector( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_bitvector( py_vertex->vertex, closure );
 }
@@ -676,6 +830,12 @@ __inline static PyObject * __py_get_opcnt( const vgx_Vertex_t *vertex_RO, void *
   return py_opcnt;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_opcnt
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_opcnt( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_opcnt, closure );
 }
@@ -693,6 +853,12 @@ __inline static PyObject * __py_get_refc( const vgx_Vertex_t *vertex_RO, void *c
   return py_refc;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_refc
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_refc( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_refc, closure );
 }
@@ -710,6 +876,12 @@ __inline static PyObject * __py_get_aidx( const vgx_Vertex_t *vertex_RO, void *c
   return py_aidx;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_aidx
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_aidx( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_aidx, closure );
 }
@@ -727,6 +899,12 @@ __inline static PyObject * __py_get_bidx( const vgx_Vertex_t *vertex_RO, void *c
   return py_bidx;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_bidx
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_bidx( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_bidx, closure );
 }
@@ -744,6 +922,12 @@ __inline static PyObject * __py_get_oidx( const vgx_Vertex_t *vertex_RO, void *c
   return py_oidx;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_oidx
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_oidx( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_oidx, closure );
 }
@@ -761,6 +945,12 @@ __inline static PyObject * __py_get_handle( const vgx_Vertex_t *vertex_RO, void 
   return py_handle;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_handle
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_handle( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_handle, closure );
 }
@@ -783,6 +973,12 @@ __inline static PyObject * __py_get_enum( const vgx_Vertex_t *vertex_RO, void *c
   return PyLong_FromLong( e32 );
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_enum
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_enum( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_enum, closure );
 }
@@ -808,6 +1004,12 @@ __inline static PyObject * __py_get_readers( const vgx_Vertex_t *vertex_RO, void
   return py_readers;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_readers
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_readers( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_readers, closure );
 }
@@ -833,6 +1035,12 @@ __inline static PyObject * __py_get_xrecursion( const vgx_Vertex_t *vertex_LCK, 
   return py_xrecursion;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_xrecursion
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_xrecursion( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_xrecursion, closure );
 }
@@ -856,6 +1064,12 @@ __inline static PyObject * __py_get_owner( const vgx_Vertex_t *vertex_LCK, void 
   return py_owner;
 }
 
+
+/**************************************************************************//**
+ * __PyVGX_Vertex__get_owner
+ *
+ ******************************************************************************
+ */
 static PyObject * __PyVGX_Vertex__get_owner( PyVGX_Vertex *py_vertex, void *closure ) {
   return __py_get_if_readable( py_vertex->vertex, __py_get_owner, closure );
 }
@@ -872,6 +1086,12 @@ PyDoc_STRVAR( Writable__doc__,
   "\n"
   "Return True if vertex is writable, False otherwise"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Writable
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Writable( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = pyvertex->vertex;
   if( vertex && CALLABLE( vertex )->Writable( vertex ) ) {
@@ -892,6 +1112,12 @@ static PyObject * PyVGX_Vertex__Writable( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Readable__doc__,
   "Readable() -> boolean\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Readable
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Readable( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = pyvertex->vertex;
   if( vertex &&  CALLABLE( vertex )->Readable( vertex ) ) {
@@ -912,6 +1138,12 @@ static PyObject * PyVGX_Vertex__Readable( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Readonly__doc__,
   "Readonly() -> boolean\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Readonly
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Readonly( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = pyvertex->vertex;
   if( vertex && CALLABLE( vertex )->Readonly( vertex ) ) {
@@ -932,6 +1164,12 @@ static PyObject * PyVGX_Vertex__Readonly( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Close__doc__,
   "Close() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Close
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Close( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( vertex == NULL ) {
@@ -958,6 +1196,12 @@ static PyObject * PyVGX_Vertex__Close( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Escalate__doc__,
   "Escalate( timeout=0 ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Escalate
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Escalate( PyVGX_Vertex *pyvertex, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = {"timeout", NULL};
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -1002,6 +1246,12 @@ static PyObject * PyVGX_Vertex__Escalate( PyVGX_Vertex *pyvertex, PyObject *args
 PyDoc_STRVAR( Relax__doc__,
   "Relax() -> bool\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Relax
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Relax( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( vertex == NULL ) {
@@ -1043,6 +1293,12 @@ static PyObject * PyVGX_Vertex__Relax( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( SetRank__doc__,
   "SetRank( [c1[, c0]] ) -> ( c1, c0 )\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetRank
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetRank( PyVGX_Vertex *pyvertex, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = {"c1", "c0", NULL};
 
@@ -1094,6 +1350,12 @@ static PyObject * PyVGX_Vertex__SetRank( PyVGX_Vertex *pyvertex, PyObject *args,
 PyDoc_STRVAR( GetRank__doc__,
   "GetRank() -> ( c1, offset )\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetRank
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetRank( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1128,6 +1390,12 @@ PyDoc_STRVAR( ArcLSH__doc__,
   "rank attribute, making this attribute unavailable for ranking purposes.\n" 
   "\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__ArcLSH
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__ArcLSH( PyVGX_Vertex *pyvertex, PyObject *py_lsh ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1158,6 +1426,12 @@ static PyObject * PyVGX_Vertex__ArcLSH( PyVGX_Vertex *pyvertex, PyObject *py_lsh
 PyDoc_STRVAR( SetVector__doc__,
   "SetVector( [data [,alpha]] ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1236,6 +1510,12 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
 PyDoc_STRVAR( HasVector__doc__,
   "HasVector() -> bool\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__HasVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__HasVector( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1260,6 +1540,12 @@ static PyObject * PyVGX_Vertex__HasVector( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( GetVector__doc__,
   "GetVector() -> Vector\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetVector( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1292,6 +1578,12 @@ static PyObject * PyVGX_Vertex__GetVector( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( RemoveVector__doc__,
   "RemoveVector() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__RemoveVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__RemoveVector( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -1704,6 +1996,12 @@ static PyObject * PyVGX_Vertex__Neighbors( PyVGX_Vertex *pyvertex, PyObject *arg
 PyDoc_STRVAR( SetProperty__doc__,
   "SetProperty( name[, value[, virtual]] ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetProperty
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetProperty( PyVGX_Vertex *pyvertex, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
   static const char *kwlist[] = {
     "name",
@@ -1840,6 +2138,12 @@ DLL_HIDDEN int64_t pyvgx_SetVertexProperties( vgx_Vertex_t *vertex_WL, PyObject 
 PyDoc_STRVAR( SetProperties__doc__,
   "SetProperties( name ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetProperties
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetProperties( PyVGX_Vertex *pyvertex, PyObject *py_propdict ) {
   PyObject *py_ret = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -1982,6 +2286,12 @@ static PyObject * __py_inc_property( vgx_Vertex_t *vertex_WL, const char *name, 
 PyDoc_STRVAR( IncProperty__doc__,
   "IncProperty( name [, increment] ) -> incremented value\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__IncProperty
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__IncProperty( PyVGX_Vertex *pyvertex, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
   static const char *kwlist[] = {
     "name",
@@ -2210,6 +2520,12 @@ static PyObject * __py_get_property( PyVGX_Vertex *pyvertex, PyObject *py_name )
 PyDoc_STRVAR( GetProperty__doc__,
   "GetProperty( name, default=None ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetProperty
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetProperty( PyVGX_Vertex *pyvertex, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
   static const char *kwlist[] = {
     "name",
@@ -2251,6 +2567,12 @@ static PyObject * PyVGX_Vertex__GetProperty( PyVGX_Vertex *pyvertex, PyObject *c
 PyDoc_STRVAR( GetProperties__doc__,
   "GetProperties() -> dict\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetProperties
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetProperties( PyVGX_Vertex *pyvertex ) {
   PyObject *py_dict = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -2441,6 +2763,12 @@ DLL_HIDDEN PyObject * pyvgx__vertex_keys_and_values( PyVGX_Vertex *pyvertex, boo
 PyDoc_STRVAR( items__doc__,
   "items() -> [(key,val), ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__items
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__items( PyVGX_Vertex *pyvertex ) {
   return pyvgx__vertex_keys_and_values( pyvertex, true, true );
 }
@@ -2455,6 +2783,12 @@ static PyObject * PyVGX_Vertex__items( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( keys__doc__,
   "keys() -> [key1, key2, ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__keys
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__keys( PyVGX_Vertex *pyvertex ) {
   return pyvgx__vertex_keys_and_values( pyvertex, true, false );
 }
@@ -2469,6 +2803,12 @@ static PyObject * PyVGX_Vertex__keys( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( values__doc__,
   "values() -> [val1, val2, ...]\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__values
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__values( PyVGX_Vertex *pyvertex ) {
   return pyvgx__vertex_keys_and_values( pyvertex, false, true );
 }
@@ -2546,6 +2886,12 @@ PyDoc_STRVAR( HasProperty__doc__,
 );
 
 //static PyObject * PyVGX_Vertex__HasProperty( PyVGX_Vertex *pyvertex, PyObject *args, PyObject *kwds ) {
+
+/**************************************************************************//**
+ * PyVGX_Vertex__HasProperty
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__HasProperty( PyVGX_Vertex *pyvertex, PyObject *const *args, Py_ssize_t nargs, PyObject *kwnames ) {
   static const char *kwlist[] = {
     "name",
@@ -2657,6 +3003,12 @@ static PyObject * PyVGX_Vertex__HasProperty( PyVGX_Vertex *pyvertex, PyObject *c
 PyDoc_STRVAR( HasProperties__doc__,
   "HasProperties() -> boolean\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__HasProperties
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__HasProperties( PyVGX_Vertex *pyvertex ) {
   PyObject *py_ret = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -2712,6 +3064,12 @@ static PyObject * PyVGX_Vertex__HasProperties( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( NumProperties__doc__,
   "NumProperties() -> integer\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__NumProperties
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__NumProperties( PyVGX_Vertex *pyvertex ) {
   // TODO: FIND A WAY TO GET THE LENGTH DIRECTLY
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -2764,6 +3122,12 @@ static PyObject * PyVGX_Vertex__NumProperties( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( RemoveProperty__doc__,
   "RemoveProperty( name ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__RemoveProperty
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__RemoveProperty( PyVGX_Vertex *pyvertex, PyObject *py_name ) {
   PyObject *py_ret = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -2850,6 +3214,12 @@ static PyObject * PyVGX_Vertex__RemoveProperty( PyVGX_Vertex *pyvertex, PyObject
 PyDoc_STRVAR( RemoveProperties__doc__,
   "RemoveProperties() -> number\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__RemoveProperties
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__RemoveProperties( PyVGX_Vertex *pyvertex ) {
   PyObject *py_count = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -2907,6 +3277,12 @@ static PyObject * PyVGX_Vertex__RemoveProperties( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( SetExpiration__doc__,
   "SetExpiration( timestamp [, relative] ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetExpiration
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetExpiration( PyVGX_Vertex *pyvertex, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = {"expires", "relative", NULL};
 
@@ -2963,6 +3339,12 @@ static PyObject * PyVGX_Vertex__SetExpiration( PyVGX_Vertex *pyvertex, PyObject 
 PyDoc_STRVAR( GetExpiration__doc__,
   "GetExpiration() -> expiration timestamp in seconds since 1970\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetExpiration
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetExpiration( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -2983,6 +3365,12 @@ static PyObject * PyVGX_Vertex__GetExpiration( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( IsExpired__doc__,
   "IsExpired() -> bool\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__IsExpired
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__IsExpired( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -3007,6 +3395,12 @@ static PyObject * PyVGX_Vertex__IsExpired( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( ClearExpiration__doc__,
   "ClearExpiration() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__ClearExpiration
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__ClearExpiration( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -3043,6 +3437,12 @@ static PyObject * PyVGX_Vertex__ClearExpiration( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Descriptor__doc__,
   "Descriptor() -> string\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Descriptor
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Descriptor( PyVGX_Vertex *pyvertex ) {
   PyObject *py_str = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -3100,6 +3500,12 @@ static PyObject * PyVGX_Vertex__Descriptor( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( SetType__doc__,
   "SetType( type ) -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__SetType
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__SetType( PyVGX_Vertex *pyvertex, PyObject *py_type ) {
   PyObject *py_ret = NULL;
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
@@ -3166,6 +3572,12 @@ static PyObject * PyVGX_Vertex__SetType( PyVGX_Vertex *pyvertex, PyObject *py_ty
 PyDoc_STRVAR( GetType__doc__,
   "GetType() -> type\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetType
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetType( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !__vertex ) {
@@ -3185,6 +3597,12 @@ static PyObject * PyVGX_Vertex__GetType( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( GetTypeEnum__doc__,
   "GetTypeEnum() -> enum\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__GetTypeEnum
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__GetTypeEnum( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !__vertex ) {
@@ -3206,6 +3624,12 @@ static PyObject * PyVGX_Vertex__GetTypeEnum( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Commit__doc__,
   "Commit() -> opcount\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Commit
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Commit( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !vertex ) {
@@ -3231,6 +3655,12 @@ static PyObject * PyVGX_Vertex__Commit( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( IsVirtual__doc__,
   "IsVirtual() -> bool\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__IsVirtual
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__IsVirtual( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !__vertex ) {
@@ -3255,6 +3685,12 @@ static PyObject * PyVGX_Vertex__IsVirtual( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( AsDict__doc__,
   "AsDict() -> dict of vertex attributes\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__AsDict
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__AsDict( PyVGX_Vertex *py_vertex ) {
   PyObject *py_dict = PyDict_New();
   PyObject *py_alloc = PyDict_New();
@@ -3392,6 +3828,12 @@ static PyObject * PyVGX_Vertex__AsDict( PyVGX_Vertex *py_vertex ) {
 PyDoc_STRVAR( DebugVector__doc__,
   "DebugVector() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__DebugVector
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__DebugVector( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !__vertex ) {
@@ -3419,6 +3861,12 @@ static PyObject * PyVGX_Vertex__DebugVector( PyVGX_Vertex *pyvertex ) {
 PyDoc_STRVAR( Debug__doc__,
   "Debug() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vertex__Debug
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vertex__Debug( PyVGX_Vertex *pyvertex ) {
   vgx_Vertex_t *__vertex = __PyVGX_Vertex_as_vgx_Vertex_t( pyvertex );
   if( !__vertex ) {
@@ -4176,5 +4624,3 @@ static PyTypeObject PyVGX_Vertex__VertexType = {
 
 
 DLL_HIDDEN PyTypeObject * p_PyVGX_Vertex__VertexType = &PyVGX_Vertex__VertexType;
-
-

@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Fields.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pytest.threads import Worker
 import threading
 from pyvgx import *
@@ -88,6 +113,11 @@ L2_FANOUT = 5
 LARGE_SZ = 100000
 
 
+
+###############################################################################
+# check_simple_entry
+#
+###############################################################################
 def check_simple_entry( entry, n, F_x, R_x ):
     """
     simple entry
@@ -172,6 +202,11 @@ def check_simple_entry( entry, n, F_x, R_x ):
 
 
 
+
+###############################################################################
+# check_single_string_entry
+#
+###############################################################################
 def check_single_string_entry( entry, n, F_x ):
     """
     single string entry
@@ -249,6 +284,11 @@ def check_single_string_entry( entry, n, F_x ):
 
 
 
+
+###############################################################################
+# check_complex_string_entry
+#
+###############################################################################
 def check_complex_string_entry( entry, n, fieldmask ):
     """
     complex string entry
@@ -277,6 +317,11 @@ def check_complex_string_entry( entry, n, fieldmask ):
 
 
 
+
+###############################################################################
+# check_dict_items
+#
+###############################################################################
 def check_dict_items( entry, n, F_x ):
     """
     dict items
@@ -360,6 +405,11 @@ def check_dict_items( entry, n, F_x ):
 
 
 
+
+###############################################################################
+# check_result
+#
+###############################################################################
 def check_result( R_x, result, sz ):
     """
     check result type of small graph result
@@ -405,6 +455,11 @@ def check_result( R_x, result, sz ):
 
 
                 
+
+###############################################################################
+# TEST_SmallSetup
+#
+###############################################################################
 def TEST_SmallSetup():
     """
     Set up a small graph for result field testing
@@ -437,6 +492,11 @@ def TEST_SmallSetup():
 
 
 
+
+###############################################################################
+# TEST_R_SIMPLE
+#
+###############################################################################
 def TEST_R_SIMPLE():
     """
     Test Neighborhood() with R_SIMPLE results
@@ -457,6 +517,11 @@ def TEST_R_SIMPLE():
 
 
 
+
+###############################################################################
+# TEST_R_STR
+#
+###############################################################################
 def TEST_R_STR():
     """
     Test Neighborhood() with R_STR results
@@ -494,6 +559,11 @@ def TEST_R_STR():
 
 
 
+
+###############################################################################
+# TEST_R_LIST
+#
+###############################################################################
 def TEST_R_LIST():
     """
     Test Neighborhood() with R_LIST results
@@ -546,6 +616,11 @@ def TEST_R_LIST():
 
 
 
+
+###############################################################################
+# TEST_R_DICT
+#
+###############################################################################
 def TEST_R_DICT():
     """
     Test Neighborhood() with R_DICT results
@@ -587,6 +662,11 @@ def TEST_R_DICT():
 
 
 
+
+###############################################################################
+# TEST_random_fields_and_modes
+#
+###############################################################################
 def TEST_random_fields_and_modes( worker=None, hitcount=-1, loopsize=SMALL_SZ, loop_maxtime=-1 ):
     """
     Test Neighborhood() with random combinations of fields and modes
@@ -635,6 +715,11 @@ def TEST_random_fields_and_modes( worker=None, hitcount=-1, loopsize=SMALL_SZ, l
 
 
 
+
+###############################################################################
+# TEST_multithread_random_fields_and_modes
+#
+###############################################################################
 def TEST_multithread_random_fields_and_modes():
     """
     Test random fields and modes with multiple simultaneous threads
@@ -672,6 +757,11 @@ def TEST_multithread_random_fields_and_modes():
 
 
 
+
+###############################################################################
+# TEST_LargeSetup
+#
+###############################################################################
 def TEST_LargeSetup():
     """
     Set up a large graph for result field testing
@@ -707,6 +797,11 @@ def TEST_LargeSetup():
 
 
 
+
+###############################################################################
+# TEST_large_neighborhood_result_set
+#
+###############################################################################
 def TEST_large_neighborhood_result_set( worker=None, maxhits=-1 ):
     """
     Return large result set for Neighborhood()
@@ -739,6 +834,11 @@ def TEST_large_neighborhood_result_set( worker=None, maxhits=-1 ):
 
 
 
+
+###############################################################################
+# TEST_large_global_result_set
+#
+###############################################################################
 def TEST_large_global_result_set( worker=None, maxhits=-1 ):
     """
     Return large result set for Vertices()
@@ -771,6 +871,11 @@ def TEST_large_global_result_set( worker=None, maxhits=-1 ):
 
 
 
+
+###############################################################################
+# TEST_multithread_large_result_sets
+#
+###############################################################################
 def TEST_multithread_large_result_sets( worker=None ):
     """
     Test large result sets with multiple simultaneous threads
@@ -847,7 +952,14 @@ def TEST_multithread_large_result_sets( worker=None ):
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     print(system.Registry())
     global graph
     graph = pyvgx.Graph( name )
@@ -855,4 +967,3 @@ def Run( name ):
     graph.Truncate()
     graph.Close()
     del graph
-

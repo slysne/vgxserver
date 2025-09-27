@@ -1,3 +1,28 @@
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
+
 #ifndef PY_VGX_H
 #define PY_VGX_H
 
@@ -398,6 +423,12 @@ __inline static PyObject * PyVGX_PyCapsule_NewNoErr( void *pointer, const char *
 #define PyVGX_VertexConditionMaxRecursion (VGX_PREDICATOR_EPH_DISTANCE_MAX-1)
 
 
+
+/**************************************************************************//**
+ * PyNone_New
+ *
+ ******************************************************************************
+ */
 __inline static PyObject * PyNone_New( void ) {
   Py_RETURN_NONE;
 }
@@ -690,6 +721,12 @@ typedef struct s_pyvgx_VertexIdentifier_t {
 
 
 
+
+/**************************************************************************//**
+ * __pyvgx_reset_vertex_identifier
+ *
+ ******************************************************************************
+ */
 __inline static void __pyvgx_reset_vertex_identifier( pyvgx_VertexIdentifier_t *ident ) {
   ident->id = NULL;
   ident->len = 0;
@@ -1219,6 +1256,12 @@ DLL_HIDDEN extern PyObject *              __pyvgx_plugin__update_object_from_hea
 
 
 
+
+/**************************************************************************//**
+ * PyVGX_SetPyErr
+ *
+ ******************************************************************************
+ */
 static void PyVGX_SetPyErr( int errcode ) {
   static char codebuf[512] = {0};
 #define FORMAT_ERROR_CODE( Message, Errcode ) \
@@ -2043,5 +2086,3 @@ static int PyVGX_DictStealItemString( PyObject *py_map, const char *key, PyObjec
 }
 
 #endif
-
-

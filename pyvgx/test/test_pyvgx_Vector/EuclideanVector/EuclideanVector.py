@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    EuclideanVector.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
 from pyvgx import *
 import pyvgx
 import random
@@ -24,17 +49,38 @@ SZ_STEP = quant[ avxbuild() ]
 SIZES = itertools.chain( range(0, 4096, SZ_STEP), range(4096, 64512, 1024), (65456,) )
 
 
+
+###############################################################################
+# approx_eq
+#
+###############################################################################
 def approx_eq( f1, f2, err=0.05 ):
+    """
+    """
     diff = abs( 1 - f1/f2 ) if f2 != 0 else abs( 1 - f2/f1) if f1 != 0 else 0
     return diff < err
 
 
 
+
+###############################################################################
+# EuclideanDistance
+#
+###############################################################################
 def EuclideanDistance( L1, L2 ):
+    """
+    """
     return math.sqrt( sum( [ (a-b)**2 for a, b in zip( L1, L2 ) ] ) )
 
 
+
+###############################################################################
+# Cosine
+#
+###############################################################################
 def Cosine( L1, L2 ):
+    """
+    """
     dp = sum([a*b for a, b in zip( L1, L2 )])
     m1 = sum([a**2 for a in L1]) ** 0.5
     m2 = sum([b**2 for b in L2]) ** 0.5
@@ -42,6 +88,11 @@ def Cosine( L1, L2 ):
 
 
 
+
+###############################################################################
+# TEST_Vector_basic
+#
+###############################################################################
 def TEST_Vector_basic():
     """
     pyvgx.Vector() basics
@@ -103,6 +154,11 @@ def TEST_Vector_basic():
 
 
 
+
+###############################################################################
+# TEST_Vector_components
+#
+###############################################################################
 def TEST_Vector_components():
     """
     pyvgx.Vector() normalization, quantization and positional correctness
@@ -147,6 +203,11 @@ def TEST_Vector_components():
 
 
 
+
+###############################################################################
+# TEST_Vector_similarity
+#
+###############################################################################
 def TEST_Vector_similarity():
     """
     Euclidean distance and Cosine similarity
@@ -288,6 +349,11 @@ def TEST_Vector_similarity():
 
 
 
+
+###############################################################################
+# TEST_Vector_centroid
+#
+###############################################################################
 def TEST_Vector_centroid():
     """
     pyvgx.Vector() centroid
@@ -319,6 +385,11 @@ def TEST_Vector_centroid():
 
 
 
+
+###############################################################################
+# TEST_Vector_exhaustive
+#
+###############################################################################
 def TEST_Vector_exhaustive():
     """
     pyvgx.Vector() random vectors, all lengths
@@ -359,7 +430,14 @@ def TEST_Vector_exhaustive():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     pyvgx.system.Initialize( name, euclidean=True )
     try:
@@ -370,6 +448,3 @@ def Run( name ):
         PerformCleanup()
     finally:
         pyvgx.system.Unload()
-
-
-

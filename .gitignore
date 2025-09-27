@@ -8,10 +8,11 @@
 *.pyc
 *.iml
 
-**/_vxhtml.h
+**/include/generatedz
 
 venv
 
+.DS_Store
 .idea/
 build/
 dist/

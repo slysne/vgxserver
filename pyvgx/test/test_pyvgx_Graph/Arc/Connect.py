@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Connect.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 import time
 from pyvgx import *
 import pyvgx
@@ -16,6 +41,11 @@ D = "D"
 SETUP = False
 
 
+
+###############################################################################
+# TEST_Connect_setup
+#
+###############################################################################
 def TEST_Connect_setup( reset=False ):
     """
     pyvgx.Graph.Connect()
@@ -33,6 +63,11 @@ def TEST_Connect_setup( reset=False ):
 
 
 
+
+###############################################################################
+# TEST_Connect_simple
+#
+###############################################################################
 def TEST_Connect_simple():
     """
     pyvgx.Graph.Connect()
@@ -45,6 +80,11 @@ def TEST_Connect_simple():
 
 
 
+
+###############################################################################
+# TEST_Connect_multiple
+#
+###############################################################################
 def TEST_Connect_multiple():
     """
     pyvgx.Graph.Connect()
@@ -72,6 +112,11 @@ def TEST_Connect_multiple():
 
 
 
+
+###############################################################################
+# TEST_Connect_conditional
+#
+###############################################################################
 def TEST_Connect_conditional():
     """
     pyvgx.Graph.Connect()
@@ -101,6 +146,11 @@ def TEST_Connect_conditional():
 
 
 
+
+###############################################################################
+# TEST_Connect_terminal_list
+#
+###############################################################################
 def TEST_Connect_terminal_list():
     """
     pyvgx.Graph.Connect()
@@ -171,6 +221,11 @@ def TEST_Connect_terminal_list():
 
 
 
+
+###############################################################################
+# TEST_Connect_virtual
+#
+###############################################################################
 def TEST_Connect_virtual():
     """
     pyvgx.Graph.Connect()
@@ -186,6 +241,11 @@ def TEST_Connect_virtual():
 
 
 
+
+###############################################################################
+# TEST_Connect_implicit
+#
+###############################################################################
 def TEST_Connect_implicit():
     """
     pyvgx.Graph.Connect()
@@ -244,6 +304,11 @@ def TEST_Connect_implicit():
 
 
 
+
+###############################################################################
+# TEST_Connect_all_modifiers
+#
+###############################################################################
 def TEST_Connect_all_modifiers():
     """
     pyvgx.Graph.Connect()
@@ -288,6 +353,11 @@ def TEST_Connect_all_modifiers():
 
 
 
+
+###############################################################################
+# TEST_Connect_ForwardOnly
+#
+###############################################################################
 def TEST_Connect_ForwardOnly():
     """
     pyvgx.Graph.Connect()
@@ -392,6 +462,11 @@ def TEST_Connect_ForwardOnly():
 
 
 
+
+###############################################################################
+# TEST_Connect_TMC
+#
+###############################################################################
 def TEST_Connect_TMC():
     """
     pyvgx.Graph.Connect()
@@ -434,6 +509,11 @@ def TEST_Connect_TMC():
 
 
 
+
+###############################################################################
+# TEST_Connect_TMM
+#
+###############################################################################
 def TEST_Connect_TMM():
     """
     pyvgx.Graph.Connect()
@@ -473,6 +553,11 @@ def TEST_Connect_TMM():
 
 
 
+
+###############################################################################
+# TEST_Connect_TMX
+#
+###############################################################################
 def TEST_Connect_TMX():
     """
     pyvgx.Graph.Connect()
@@ -514,6 +599,11 @@ def TEST_Connect_TMX():
 
 
 
+
+###############################################################################
+# TEST_Connect_Lifespan
+#
+###############################################################################
 def TEST_Connect_Lifespan():
     """
     pyvgx.Graph.Connect()
@@ -552,11 +642,17 @@ def TEST_Connect_Lifespan():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

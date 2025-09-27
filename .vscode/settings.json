@@ -14,6 +14,11 @@
         "pyvgx.h": "c",
         "python.h": "c",
         "cxobjbase.h": "c",
-        "_neon.h": "c"
+        "_neon.h": "c",
+        "sha256.h": "c",
+        "stddef.h": "c",
+        "stdlib.h": "c",
+        "memory.h": "c",
+        "_vxhtml.h": "c"
     }
 }

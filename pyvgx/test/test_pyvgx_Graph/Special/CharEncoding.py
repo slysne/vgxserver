@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    CharEncoding.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import time
@@ -59,6 +84,11 @@ SEQUENCES = [
 
 
 
+
+###############################################################################
+# get_random_unicode_string
+#
+###############################################################################
 def get_random_unicode_string( sz ):
     """
     return a unicode string
@@ -67,6 +97,11 @@ def get_random_unicode_string( sz ):
 
 
 
+
+###############################################################################
+# expect_KeyError
+#
+###############################################################################
 def expect_KeyError( method, name ):
     """
     method should produce KeyError
@@ -79,6 +114,11 @@ def expect_KeyError( method, name ):
 
 
 
+
+###############################################################################
+# expect_UnicodeError
+#
+###############################################################################
 def expect_UnicodeError( method, name ):
     """
     method should produce UnicodeError
@@ -91,6 +131,11 @@ def expect_UnicodeError( method, name ):
 
 
 
+
+###############################################################################
+# get_vertex_key_methods
+#
+###############################################################################
 def get_vertex_key_methods( graph ):
     """
     return vertex lookup methods that take vertex id as first argument
@@ -113,6 +158,11 @@ def get_vertex_key_methods( graph ):
 
 
 
+
+###############################################################################
+# get_vertex_create_methods
+#
+###############################################################################
 def get_vertex_create_methods( graph ):
     """
     return vertex creation methods that take vertex id as first argument
@@ -124,6 +174,11 @@ def get_vertex_create_methods( graph ):
 
 
 
+
+###############################################################################
+# TEST_VertexName_valid_utf8
+#
+###############################################################################
 def TEST_VertexName_valid_utf8():
     """
     Test API involving vertex names with valid utf-8 sequences
@@ -252,6 +307,11 @@ def TEST_VertexName_valid_utf8():
 
 
 
+
+###############################################################################
+# TEST_VertexName_invalid_utf8
+#
+###############################################################################
 def TEST_VertexName_invalid_utf8():
     """
     Test API involving vertex names with invalid utf-8 sequences
@@ -367,6 +427,11 @@ def TEST_VertexName_invalid_utf8():
 
 
 
+
+###############################################################################
+# TEST_VertexName_search_result_utf8
+#
+###############################################################################
 def TEST_VertexName_search_result_utf8():
     """
     Test vertex names returned in search results
@@ -437,6 +502,11 @@ def TEST_VertexName_search_result_utf8():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
     """
     Run the tests in this module

@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# changelog.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    changelog.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_framehash.h"
 #include "_cxmalloc.h"
@@ -67,6 +83,12 @@ typedef struct __s_change_persist_t {
 
 
 
+
+/**************************************************************************//**
+ * GET_INIT_HEADER
+ *
+ ******************************************************************************
+ */
 static __change_persist_header_t GET_INIT_HEADER( framehash_t *self ) {
   __change_persist_header_t header = {0};
   header.start_delim = g_start_delim;
@@ -80,6 +102,12 @@ static __change_persist_header_t GET_INIT_HEADER( framehash_t *self ) {
 
 
 
+
+/**************************************************************************//**
+ * GET_TERM
+ *
+ ******************************************************************************
+ */
 static __change_persist_terminator_t GET_TERM( framehash_t *self ) {
   __change_persist_terminator_t term = {0};
   idcpy( &term.obid, &self->obid );

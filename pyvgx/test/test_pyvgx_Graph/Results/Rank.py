@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Rank.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from ..Query._query_test_support import *
 from pyvgx import *
 import pyvgx
@@ -8,13 +33,32 @@ import operator
 graph = None
 
 
+
+###############################################################################
+# is_sorted_asc
+#
+###############################################################################
 def is_sorted_asc( L ):
+    """
+    """
   return all( a <= b for a, b in zip(L, L[1:]) )
 
+
+###############################################################################
+# is_sorted_desc
+#
+###############################################################################
 def is_sorted_desc( L ):
+    """
+    """
   return all( a >= b for a, b in zip(L, L[1:]) )
 
 
+
+###############################################################################
+# TEST_vxquery_rank
+#
+###############################################################################
 def TEST_vxquery_rank():
     """
     Core vxquery_rank
@@ -27,6 +71,11 @@ def TEST_vxquery_rank():
 
 
 
+
+###############################################################################
+# TEST_Neighborhood_rank
+#
+###############################################################################
 def TEST_Neighborhood_rank():
     """
     Various ranking for pyvgx.Graph.Neighborhood()
@@ -93,6 +142,11 @@ def TEST_Neighborhood_rank():
 
 
  
+
+###############################################################################
+# TEST_Vertices_rank
+#
+###############################################################################
 def TEST_Vertices_rank():
     """
     Various ranking for pyvgx.Graph.Vertices()
@@ -146,6 +200,11 @@ def TEST_Vertices_rank():
 
 
  
+
+###############################################################################
+# TEST_Arcs_rank
+#
+###############################################################################
 def TEST_Arcs_rank():
     """
     Various ranking for pyvgx.Graph.Arcs()
@@ -201,11 +260,17 @@ def TEST_Arcs_rank():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

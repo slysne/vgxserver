@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  comlib
+# File:    lib_comlib.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 
@@ -6,6 +31,11 @@ import pyvgx
 
 
 
+
+###############################################################################
+# TEST_comlib_COMLIB
+#
+###############################################################################
 def TEST_comlib_COMLIB():
     """
     Core comlib COMLIB
@@ -19,6 +49,11 @@ def TEST_comlib_COMLIB():
  
 
 
+
+###############################################################################
+# TEST_comlib_cxcstring
+#
+###############################################################################
 def TEST_comlib_cxcstring():
     """
     Core comlib cxcstring
@@ -32,6 +67,11 @@ def TEST_comlib_cxcstring():
 
 
 
+
+###############################################################################
+# TEST_comlib_CStringQueue_t
+#
+###############################################################################
 def TEST_comlib_CStringQueue_t():
     """
     Core comlib CStringQueue_t
@@ -44,6 +84,11 @@ def TEST_comlib_CStringQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CByteQueue_t
+#
+###############################################################################
 def TEST_comlib_CByteQueue_t():
     """
     Core comlib CByteQueue_t
@@ -56,6 +101,11 @@ def TEST_comlib_CByteQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CWordQueue_t
+#
+###############################################################################
 def TEST_comlib_CWordQueue_t():
     """
     Core comlib CWordQueue_t
@@ -68,6 +118,11 @@ def TEST_comlib_CWordQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CDwordQueue_t
+#
+###############################################################################
 def TEST_comlib_CDwordQueue_t():
     """
     Core comlib CDwordQueue_t
@@ -80,6 +135,11 @@ def TEST_comlib_CDwordQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CQwordQueue_t
+#
+###############################################################################
 def TEST_comlib_CQwordQueue_t():
     """
     Core comlib CQwordQueue_t
@@ -92,6 +152,11 @@ def TEST_comlib_CQwordQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_Cm128iQueue_t
+#
+###############################################################################
 def TEST_comlib_Cm128iQueue_t():
     """
     Core comlib Cm128iQueue_t
@@ -104,6 +169,11 @@ def TEST_comlib_Cm128iQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_Cm256iQueue_t
+#
+###############################################################################
 def TEST_comlib_Cm256iQueue_t():
     """
     Core comlib Cm256iQueue_t
@@ -116,6 +186,11 @@ def TEST_comlib_Cm256iQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_Cm512iQueue_t
+#
+###############################################################################
 def TEST_comlib_Cm512iQueue_t():
     """
     Core comlib Cm512iQueue_t
@@ -128,6 +203,11 @@ def TEST_comlib_Cm512iQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CtptrQueue_t
+#
+###############################################################################
 def TEST_comlib_CtptrQueue_t():
     """
     Core comlib CtptrQueue_t
@@ -140,6 +220,11 @@ def TEST_comlib_CtptrQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_Cx2tptrQueue_t
+#
+###############################################################################
 def TEST_comlib_Cx2tptrQueue_t():
     """
     Core comlib Cx2tptrQueue_t
@@ -152,6 +237,11 @@ def TEST_comlib_Cx2tptrQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CaptrQueue_t
+#
+###############################################################################
 def TEST_comlib_CaptrQueue_t():
     """
     Core comlib CaptrQueue_t
@@ -164,6 +254,11 @@ def TEST_comlib_CaptrQueue_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CByteHeap_t
+#
+###############################################################################
 def TEST_comlib_CByteHeap_t():
     """
     Core comlib CByteHeap_t
@@ -176,6 +271,11 @@ def TEST_comlib_CByteHeap_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CWordHeap_t
+#
+###############################################################################
 def TEST_comlib_CWordHeap_t():
     """
     Core comlib CWordHeap_t
@@ -188,6 +288,11 @@ def TEST_comlib_CWordHeap_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CDwordHeap_t
+#
+###############################################################################
 def TEST_comlib_CDwordHeap_t():
     """
     Core comlib CDwordHeap_t
@@ -200,6 +305,11 @@ def TEST_comlib_CDwordHeap_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CQwordHeap_t
+#
+###############################################################################
 def TEST_comlib_CQwordHeap_t():
     """
     Core comlib CQwordHeap_t
@@ -212,6 +322,11 @@ def TEST_comlib_CQwordHeap_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CtptrHeap_t
+#
+###############################################################################
 def TEST_comlib_CtptrHeap_t():
     """
     Core comlib CtptrHeap_t
@@ -224,6 +339,11 @@ def TEST_comlib_CtptrHeap_t():
 
 
 
+
+###############################################################################
+# TEST_comlib_CaptrHeap_t
+#
+###############################################################################
 def TEST_comlib_CaptrHeap_t():
     """
     Core comlib CaptrHeap_t
@@ -237,10 +357,12 @@ def TEST_comlib_CaptrHeap_t():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )
-
-
-
-
-

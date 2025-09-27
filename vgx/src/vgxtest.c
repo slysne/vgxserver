@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# vgxtest.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vgxtest.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vgx.h"
 #include "_vxtest.h"
@@ -14,6 +30,12 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX );
 
 
 
+
+/**************************************************************************//**
+ * show_sizeof
+ *
+ ******************************************************************************
+ */
 static int show_sizeof(void) {
   /*
    * INFO
@@ -41,6 +63,12 @@ static int show_sizeof(void) {
 
 
 
+
+/**************************************************************************//**
+ * vgx_get_unit_test_definitions
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT test_descriptor_set_t * vgx_get_unit_test_definitions( void ) {
 #ifdef INCLUDE_UNIT_TESTS
   const int sz = __TOTAL_TEST_COUNT;
@@ -68,6 +96,12 @@ DLL_EXPORT test_descriptor_set_t * vgx_get_unit_test_definitions( void ) {
 
 
 
+
+/**************************************************************************//**
+ * vgx_get_unit_test_names
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT char ** vgx_get_unit_test_names( void ) {
 #ifdef INCLUDE_UNIT_TESTS
   char **names = NULL;
@@ -91,6 +125,11 @@ DLL_EXPORT char ** vgx_get_unit_test_names( void ) {
 
 
 
+/**************************************************************************//**
+ * vgx_unit_tests
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 DLL_EXPORT int vgx_unit_tests( const char *runonly[], const char *testdir ) {
 #ifdef INCLUDE_UNIT_TESTS
@@ -160,10 +199,3 @@ DLL_EXPORT int vgx_unit_tests( const char *runonly[], const char *testdir ) {
   return 0;
 #endif
 }
-
-
-
-
-
-
-

@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# vxsim_lsh.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxsim_lsh.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vgx.h"
 #include "_vxsim.h"
@@ -627,6 +643,12 @@ static int Fingerprinter_hamming_distance_naive( const vgx_Fingerprinter_t *self
 #define __00001111__ 0x0F0F0F0F0F0F0F0FULL
 #define __00000001__ 0x0101010101010101ULL
 
+
+/**************************************************************************//**
+ * Fingerprinter_hamming_distance_parallel
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int Fingerprinter_hamming_distance_parallel( const vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 ) {
   FP_t bits = fp1 ^ fp2;
@@ -652,6 +674,12 @@ unsigned __int64 __popcnt64( unsigned __int64 value );
 #error "__popcnt64 not defined for this platform"
 #endif
 
+
+/**************************************************************************//**
+ * Fingerprinter_hamming_distance_intrinsic
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int Fingerprinter_hamming_distance_intrinsic( const vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 ) {
   return (int)__popcnt64( fp1 ^  fp2 );
@@ -877,5 +905,3 @@ test_descriptor_t _vgx_vxsim_lsh_tests[] = {
   {NULL}
 };
 #endif
-
-

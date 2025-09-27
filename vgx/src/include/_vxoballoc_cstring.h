@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _vxoballoc_cstring.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _vxoballoc_cstring.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VXOBALLOC_CSTRING_H
 #define _VGX_VXOBALLOC_CSTRING_H
@@ -73,6 +89,12 @@ typedef struct s_ICStringObject_t {
 DLL_HIDDEN extern ICStringObject_t icstringobject;
 
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_as_handle
+ *
+ ******************************************************************************
+ */
 __inline static cxmalloc_handle_t _vxoballoc_cstring_as_handle( const CString_t *CSTR__str ) {
   cxmalloc_handle_t cstring_handle = _cxmalloc_object_as_handle( CSTR__str );
   cstring_handle.objclass = COMLIB_CLASS_CODE( CString_t );
@@ -86,14 +108,32 @@ __inline static cxmalloc_handle_t _vxoballoc_cstring_as_handle( const CString_t 
 #define _VXOBALLOC_CSTRING_KEY_MAP_ORDER 2
 static const vgx_mapping_spec_t _VXOBALLOC_CSTRING_KEY_MAP_SPEC = (unsigned)VGX_MAPPING_SYNCHRONIZATION_NONE | (unsigned)VGX_MAPPING_KEYTYPE_QWORD | (unsigned)VGX_MAPPING_OPTIMIZE_NORMAL;
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_set_key_indexable
+ *
+ ******************************************************************************
+ */
 __inline static void _vxoballoc_cstring_set_key_indexable( CString_t *CSTR__key ) {
   VGX_CSTRING_FLAG__KEY_INDEX_BIT( CSTR__key ) = 1;
 }
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_clear_key_indexable
+ *
+ ******************************************************************************
+ */
 __inline static void _vxoballoc_cstring_clear_key_indexable( CString_t *CSTR__key ) {
   VGX_CSTRING_FLAG__KEY_INDEX_BIT( CSTR__key ) = 0;
 }
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_is_key_indexable
+ *
+ ******************************************************************************
+ */
 __inline static int _vxoballoc_cstring_is_key_indexable( const CString_t *CSTR__key ) {
   return VGX_CSTRING_FLAG__KEY_INDEX_BIT( CSTR__key );
 }
@@ -104,14 +144,32 @@ __inline static int _vxoballoc_cstring_is_key_indexable( const CString_t *CSTR__
 #define _VXOBALLOC_CSTRING_VALUE_MAP_ORDER 6
 static const vgx_mapping_spec_t _VXOBALLOC_CSTRING_VALUE_MAP_SPEC = (unsigned)VGX_MAPPING_SYNCHRONIZATION_NONE | (unsigned)VGX_MAPPING_KEYTYPE_128BIT | (unsigned)VGX_MAPPING_OPTIMIZE_NORMAL;
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_set_value_indexable
+ *
+ ******************************************************************************
+ */
 __inline static void _vxoballoc_cstring_set_value_indexable( CString_t *CSTR__val ) {
   VGX_CSTRING_FLAG__VAL_INDEX_BIT( CSTR__val ) = 1;
 }
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_clear_value_indexable
+ *
+ ******************************************************************************
+ */
 __inline static void _vxoballoc_cstring_clear_value_indexable( CString_t *CSTR__val ) {
   VGX_CSTRING_FLAG__VAL_INDEX_BIT( CSTR__val ) = 0;
 }
 
+
+/**************************************************************************//**
+ * _vxoballoc_cstring_is_value_indexable
+ *
+ ******************************************************************************
+ */
 __inline static int _vxoballoc_cstring_is_value_indexable( const CString_t *CSTR__val ) {
   return VGX_CSTRING_FLAG__VAL_INDEX_BIT( CSTR__val );
 }

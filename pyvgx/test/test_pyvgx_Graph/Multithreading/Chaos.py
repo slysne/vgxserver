@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Chaos.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
 from pytest.threads import Worker
 from pyvgx import *
@@ -27,6 +52,11 @@ graph_name_fmt = "chaos_%d"
 
 
 
+
+###############################################################################
+# feed
+#
+###############################################################################
 def feed( graph ):
     """
     Create random network:
@@ -105,7 +135,14 @@ def feed( graph ):
 
 
 
+
+###############################################################################
+# delete
+#
+###############################################################################
 def delete( graph ):
+    """
+    """
     global RUNNING
     # run iterations of terminal-to-head connections
     n = 0
@@ -139,7 +176,14 @@ def delete( graph ):
 
 
 
+
+###############################################################################
+# search
+#
+###############################################################################
 def search( graph ):
+    """
+    """
     global RUNNING
     n = 0
     while RUNNING:
@@ -237,7 +281,14 @@ def search( graph ):
                 V = None
 
 
+
+###############################################################################
+# monitoring
+#
+###############################################################################
 def monitoring( graph ):
+    """
+    """
     global RUNNING
     t0 = time.time()
     ts = t0 + 1
@@ -250,7 +301,14 @@ def monitoring( graph ):
             time.sleep(0.5)
 
 
+
+###############################################################################
+# freeze
+#
+###############################################################################
 def freeze( graph ):
+    """
+    """
     global RUNNING
     t0 = time.time()
     flip_interval = 10
@@ -291,6 +349,11 @@ def freeze( graph ):
 
 
 
+
+###############################################################################
+# TEST_Chaos
+#
+###############################################################################
 def TEST_Chaos():
     """
     Test multiple threads working in parallel to create, delete and search.
@@ -438,7 +501,14 @@ def TEST_Chaos():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )
     for gn in N_GRAPHS:
         name = graph_name_fmt % gn
@@ -446,4 +516,3 @@ def Run( name ):
         g.Close()
         del g
     PerformCleanup()
-

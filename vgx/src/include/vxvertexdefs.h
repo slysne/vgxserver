@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   vxvertexdefs.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxvertexdefs.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef VGX_VXVERTEXDEFS_H
 #define VGX_VXVERTEXDEFS_H
@@ -353,6 +369,12 @@ DLL_HIDDEN extern const CString_t *CSTR__VERTEX_TYPE_ENUMERATION_UNKNOWN_STRING;
 DLL_HIDDEN extern const CString_t *CSTR__VERTEX_TYPE_ENUMERATION_LOCKOBJECT_STRING;
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_in_user_range( vgx_vertex_type_t vertex_type ) {
   return vertex_type >= __VERTEX_TYPE_ENUMERATION_START_USER_RANGE 
          &&
@@ -362,24 +384,48 @@ __inline static bool __vertex_type_enumeration_in_user_range( vgx_vertex_type_t 
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_in_user_range( int vertex_type ) {
   return (bool)(vertex_type >= (int)__VERTEX_TYPE_ENUMERATION_START_USER_RANGE && vertex_type <= (int)__VERTEX_TYPE_ENUMERATION_END_USER_RANGE);
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_default
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_default( int vertex_type ) {
   return vertex_type == (int)VERTEX_TYPE_ENUMERATION_VERTEX;
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_lockobject
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_lockobject( int vertex_type ) {
   return vertex_type == (int)VERTEX_TYPE_ENUMERATION_LOCKOBJECT;
 }
 
 
 
+
+/**************************************************************************//**
+ * __vertex_type_enumeration_valid
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_type_enumeration_valid( int vertex_type ) {
   return vertex_type == VERTEX_TYPE_ENUMERATION_WILDCARD || __vertex_type_enumeration_default( vertex_type ) || __vertex_type_enumeration_lockobject( vertex_type ) || __vertex_type_in_user_range( vertex_type );
 }

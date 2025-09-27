@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    ExpirationChaser.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
 from pytest.threads import Worker
 from pyvgx import *
@@ -20,12 +45,24 @@ MAX_IN = 0
 TIMEOUT = 5000
 
 
+
+###############################################################################
+# nodename
+#
+###############################################################################
 def nodename( n ):
+    """
+    """
     extra = "x" * (1 + n % 50)
     return "%d_%s" % (n, extra)
 
 
 
+
+###############################################################################
+# TEST_ExpirationChaser
+#
+###############################################################################
 def TEST_ExpirationChaser():
     """
     t_nominal=660
@@ -164,7 +201,13 @@ def TEST_ExpirationChaser():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )
     PerformCleanup()
-

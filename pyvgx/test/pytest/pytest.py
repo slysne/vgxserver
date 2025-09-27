@@ -1,4 +1,29 @@
-﻿import os
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    pytest.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+import os
 import os.path
 import inspect
 import types
@@ -56,7 +81,14 @@ TIMING = {} # key -> (n, avg_sec)
 
 
 
+
+###############################################################################
+# current_line_info
+#
+###############################################################################
 def current_line_info( levels_up ):
+    """
+    """
     # The caller of this function will provide the number of levels up whose function
     # line number to get
     if( levels_up < 1 ):
@@ -68,31 +100,80 @@ def current_line_info( levels_up ):
     return info
 
 
+
+###############################################################################
+# test_first
+#
+###############################################################################
 def test_first():
+    """
+    """
     print("1")
 
 
+
+###############################################################################
+# test_second
+#
+###############################################################################
 def test_second():
+    """
+    """
     print("2")
 
 
+
+###############################################################################
+# test_third
+#
+###############################################################################
 def test_third():
+    """
+    """
     print("3")
 
 
+
+###############################################################################
+# test_fourth
+#
+###############################################################################
 def test_fourth():
+    """
+    """
     print("4")
 
 
+
+###############################################################################
+# test_fifth
+#
+###############################################################################
 def test_fifth():
+    """
+    """
     print("5")
 
 
+
+###############################################################################
+# test_sixth
+#
+###############################################################################
 def test_sixth():
+    """
+    """
     print("6")
 
 
+
+###############################################################################
+# test_seventh
+#
+###############################################################################
 def test_seventh():
+    """
+    """
     print("7")
 
 
@@ -103,7 +184,14 @@ class TestFailed( AssertionError ): pass
 class TestAborted( AssertionError ): pass
 
 
+
+###############################################################################
+# Expect
+#
+###############################################################################
 def Expect( true_condition, expected_message="?" ):
+    """
+    """
     if not true_condition:
 
         i = 1
@@ -138,6 +226,11 @@ def Expect( true_condition, expected_message="?" ):
 
 
 
+
+###############################################################################
+# get_all_tests
+#
+###############################################################################
 def get_all_tests( module_name ):
     """
     get_all_tests( module_name ) -> list of 3-tuples [(line_number, function_name, function), ...]
@@ -155,7 +248,14 @@ def get_all_tests( module_name ):
 
 
 
+
+###############################################################################
+# WriteOut
+#
+###############################################################################
 def WriteOut( status, module, test, duration=0.0, nominal=T_NOMINAL_UNSET, level=TEST_LEVEL_UNSET, final=False ):
+    """
+    """
     try:
         if OUTPUT_FILE:
             t1 = time.time()
@@ -189,7 +289,14 @@ def WriteOut( status, module, test, duration=0.0, nominal=T_NOMINAL_UNSET, level
 
 
 
+
+###############################################################################
+# WriteHeader
+#
+###############################################################################
 def WriteHeader():
+    """
+    """
     if OUTPUT_FORMAT == "csv":
         OUTPUT_FILE.write( "# Start at %s\n" % time.ctime( OUTPUT_T0 ) )
         OUTPUT_FILE.write( "status, module, test, duration, cumulative, nominal, level, ctime\n" )
@@ -199,7 +306,14 @@ def WriteHeader():
 
 
 
+
+###############################################################################
+# WriteFooter
+#
+###############################################################################
 def WriteFooter():
+    """
+    """
     passed_tests = run_tests - (failed_tests + skipped_tests)
     status = "pass" if failed_tests == 0 else "fail"
     total_t = time.time() - OUTPUT_T0
@@ -212,7 +326,14 @@ def WriteFooter():
 
 
 
+
+###############################################################################
+# OpenOutput
+#
+###############################################################################
 def OpenOutput( path ):
+    """
+    """
     global OUTPUT_FILE
     global OUTPUT_T0
     global OUTPUT_FORMAT
@@ -230,7 +351,14 @@ def OpenOutput( path ):
 
 
 
+
+###############################################################################
+# CloseOutput
+#
+###############################################################################
 def CloseOutput( error=None ):
+    """
+    """
     global OUTPUT_FILE
     if OUTPUT_FILE:
         WriteFooter()
@@ -240,7 +368,14 @@ def CloseOutput( error=None ):
 
 
 
+
+###############################################################################
+# Pass
+#
+###############################################################################
 def Pass( module_name, name, duration_ms, docinfo, t_nominal, test_level ):
+    """
+    """
     pass_test = "%s.%s" % (module_name, name)
     print("----- Test PASSED: %s (%.2f ms) -----" % (pass_test, duration_ms))
     print()
@@ -249,7 +384,14 @@ def Pass( module_name, name, duration_ms, docinfo, t_nominal, test_level ):
     
 
 
+
+###############################################################################
+# Skip
+#
+###############################################################################
 def Skip( reason, module_name, name, t_nominal, test_level ):
+    """
+    """
     global skipped_tests
     skipped_tests += 1
     skip_test = "%s.%s" % (module_name, name)
@@ -260,7 +402,14 @@ def Skip( reason, module_name, name, t_nominal, test_level ):
 
 
 
+
+###############################################################################
+# Fail
+#
+###############################################################################
 def Fail( reason, module_name, name ):
+    """
+    """
     global failed_tests
     failed_tests += 1
     fail_test = "%s.%s" % (module_name, name)
@@ -273,6 +422,11 @@ def Fail( reason, module_name, name ):
 
 
 
+
+###############################################################################
+# get_doc
+#
+###############################################################################
 def get_doc( FUNC, strip=False ):
     """
     get_doc()
@@ -287,6 +441,11 @@ def get_doc( FUNC, strip=False ):
 
 
 
+
+###############################################################################
+# get_t_nominal
+#
+###############################################################################
 def get_t_nominal( FUNC ):
     """
     get_t_nominal()
@@ -311,6 +470,11 @@ def get_t_nominal( FUNC ):
 
 
 
+
+###############################################################################
+# get_test_level
+#
+###############################################################################
 def get_test_level( FUNC ):
     """
     get_test_level()
@@ -326,6 +490,11 @@ def get_test_level( FUNC ):
 
 
 
+
+###############################################################################
+# is_test_excluded
+#
+###############################################################################
 def is_test_excluded( MODNAME, NAME, FUNC, quiet=False ):
     """
     is_test_excluded()
@@ -352,6 +521,11 @@ def is_test_excluded( MODNAME, NAME, FUNC, quiet=False ):
 
 
 
+
+###############################################################################
+# RunTests
+#
+###############################################################################
 def RunTests( module_list=[], skip_test_names={} ):
     """
     Run all the tests defined in the specified module(s).
@@ -457,7 +631,14 @@ def RunTests( module_list=[], skip_test_names={} ):
 
 
 
+
+###############################################################################
+# LoadTimings
+#
+###############################################################################
 def LoadTimings( here ):
+    """
+    """
     global TIMING
     # Load timing database
     try:
@@ -470,7 +651,14 @@ def LoadTimings( here ):
 
 
 
+
+###############################################################################
+# PrintSummary
+#
+###############################################################################
 def PrintSummary( here ):
+    """
+    """
     n = len( COMPLETED_TESTS )
     i = 1
     for duration_ms, module_name, name, docinfo in COMPLETED_TESTS:
@@ -538,7 +726,14 @@ def PrintSummary( here ):
 
 
 
+
+###############################################################################
+# ListTests
+#
+###############################################################################
 def ListTests( module_name ):
+    """
+    """
     module_tests = get_all_tests( module_name )
     for __line, name, func in module_tests:
         if run_only_testname is not None and run_only_testname != name:
@@ -550,14 +745,28 @@ def ListTests( module_name ):
 
 
 
+
+###############################################################################
+# ListModules
+#
+###############################################################################
 def ListModules( module_list ):
+    """
+    """
     for mod in module_list:
         if run_only_module is None or mod.__name__ == run_only_module:
             mod.List()
 
 
 
+
+###############################################################################
+# RunModules
+#
+###############################################################################
 def RunModules( module_list, *args ):
+    """
+    """
     for mod in module_list:
         if run_only_module is None or mod.__name__ == run_only_module:
             mod.Run( *args )
@@ -565,14 +774,28 @@ def RunModules( module_list, *args ):
 
 
 
+
+###############################################################################
+# ListTestSets
+#
+###############################################################################
 def ListTestSets( module_list ):
+    """
+    """
     for testset in module_list:
         if run_only_testset is None or testset.__name__ == run_only_testset:
             ListTests( testset.__name__ )
 
 
 
+
+###############################################################################
+# RunTestSets
+#
+###############################################################################
 def RunTestSets( module_list, *args ):
+    """
+    """
     for testset in module_list:
         if run_only_testset is None or testset.__name__ == run_only_testset:
             testset.Run( *args )
@@ -585,42 +808,98 @@ def RunTestSets( module_list, *args ):
 
 
 
+
+###############################################################################
+# DryrunOnly
+#
+###############################################################################
 def DryrunOnly():
+    """
+    """
     global dryrun
     dryrun = True
 
 
+
+###############################################################################
+# RequireSuccess
+#
+###############################################################################
 def RequireSuccess():
+    """
+    """
     global strict
     strict = True
 
 
+
+###############################################################################
+# SetMaxTNominal
+#
+###############################################################################
 def SetMaxTNominal( t ):
+    """
+    """
     global run_only_tnominal_less_than
     run_only_tnominal_less_than = t
 
 
+
+###############################################################################
+# SetMinTestLevel
+#
+###############################################################################
 def SetMinTestLevel( n ):
+    """
+    """
     global skip_test_levels_below
     skip_test_levels_below = n
 
 
+
+###############################################################################
+# SetMaxTestLevel
+#
+###############################################################################
 def SetMaxTestLevel( n ):
+    """
+    """
     global skip_test_levels_above
     skip_test_levels_above = n
 
 
+
+###############################################################################
+# SetInteractOnFailed
+#
+###############################################################################
 def SetInteractOnFailed( flag ):
+    """
+    """
     global interact_on_failed_test
     interact_on_failed_test = flag
 
 
+
+###############################################################################
+# SetPostFunc
+#
+###############################################################################
 def SetPostFunc( func ):
+    """
+    """
     global EACH_POST_FUNC
     EACH_POST_FUNC = func
 
 
+
+###############################################################################
+# RunOnly
+#
+###############################################################################
 def RunOnly( modulename, testset, testname ):
+    """
+    """
     global run_only_module
     global run_only_testset
     global run_only_testname
@@ -629,7 +908,14 @@ def RunOnly( modulename, testset, testname ):
     run_only_testname = testname
 
 
+
+###############################################################################
+# SetOutput
+#
+###############################################################################
 def SetOutput( path ):
+    """
+    """
     abspath = os.path.abspath( path )
     dirname = os.path.dirname( abspath )
     if not os.path.exists( dirname ):
@@ -642,12 +928,26 @@ def SetOutput( path ):
     OpenOutput( abspath )
 
 
+
+###############################################################################
+# SetCleanup
+#
+###############################################################################
 def SetCleanup( func ):
+    """
+    """
     global CLEANUP_FUNC
     CLEANUP_FUNC = func
 
 
+
+###############################################################################
+# PerformCleanup
+#
+###############################################################################
 def PerformCleanup():
+    """
+    """
     if callable( CLEANUP_FUNC ):
         try:
             CLEANUP_FUNC()
@@ -656,7 +956,14 @@ def PerformCleanup():
 
 
 
+
+###############################################################################
+# run
+#
+###############################################################################
 def run():
+    """
+    """
     input( "Any key to start tests..." )
     tests = get_all_tests()
     for line, name, value in tests:

@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _vxoperation.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _vxoperation.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VXOPERATION_H
 #define _VXOPERATION_H
@@ -94,16 +110,34 @@ typedef enum e_vgx_OpSuspendCode {
 } vgx_OpSuspendCode;
 
 
+
+/**************************************************************************//**
+ * __suspend_code_from_reason
+ *
+ ******************************************************************************
+ */
 static vgx_OpSuspendCode __suspend_code_from_reason( DWORD reason ) {
   return (vgx_OpSuspendCode)(reason >> 16);
 }
 
 
+
+/**************************************************************************//**
+ * __suspend_milliseconds_from_reason
+ *
+ ******************************************************************************
+ */
 static int __suspend_milliseconds_from_reason( DWORD reason ) {
   return (int)(reason & 0xFFFF);
 }
 
 
+
+/**************************************************************************//**
+ * __suspend_reason
+ *
+ ******************************************************************************
+ */
 static DWORD __suspend_reason( int suspend_ms ) {
   if( suspend_ms < 0 ) {
     // Infinite suspend. Explicit RESUME required.

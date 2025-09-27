@@ -1,8 +1,27 @@
-/*
- * cxplat.c
- *
- *
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  cxlib
+ * File:    cxplat.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "cxfileio.h"
 
@@ -34,6 +53,12 @@ typedef union __u_cpuregs_t {
 
 
 
+
+/**************************************************************************//**
+ * cxplat_cpuid
+ *
+ ******************************************************************************
+ */
 static int cxplat_cpuid( unsigned int leaf, int *eax, int *ebx, int *ecx, int *edx ) {
 #if defined CXPLAT_WINDOWS_X64
   __cpuregs_t regs;
@@ -52,6 +77,12 @@ static int cxplat_cpuid( unsigned int leaf, int *eax, int *ebx, int *ecx, int *e
 
 
 
+
+/**************************************************************************//**
+ * cxplat_cpuidex
+ *
+ ******************************************************************************
+ */
 int cxplat_cpuidex( unsigned int leaf, unsigned int subleaf, int *eax, int *ebx, int *ecx, int *edx ) {
 #if defined CXPLAT_WINDOWS_X64
   __cpuregs_t regs;
@@ -778,6 +809,12 @@ char * get_new_cpu_instruction_set_extensions( int *avxcompat ) {
 
   */
 #elif CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * get_new_cpu_instruction_set_extensions
+ *
+ ******************************************************************************
+ */
 char * get_new_cpu_instruction_set_extensions( int *__ign ) {
 
   static const char hw_optional_arm_FEAT_[] = "hw.optional.arm.FEAT_";
@@ -874,6 +911,12 @@ char * get_new_cpu_instruction_set_extensions( int *__ign ) {
  ***********************************************************************
  */
 #if defined CXPLAT_ARCH_X64
+
+/**************************************************************************//**
+ * get_cpu_cores
+ *
+ ******************************************************************************
+ */
 int get_cpu_cores( int *cores, int *threads ) {
   __cpuregs_t regs = {0};
 
@@ -909,6 +952,12 @@ int get_cpu_cores( int *cores, int *threads ) {
   return 0;
 }
 #elif defined CXPLAT_ARCH_ARM64
+
+/**************************************************************************//**
+ * get_cpu_cores
+ *
+ ******************************************************************************
+ */
 int get_cpu_cores( int *P_cores, int *E_cores ) {
   uint64_t core_count = 0;
   size_t size = sizeof(core_count);
@@ -1744,6 +1793,3 @@ char * get_error_reason( int __errnum, char *__buf, size_t __buflen ) {
 }
 
 #endif
-
-
-

@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _framehash.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    _framehash.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _FRAMEHASH_H
 #define _FRAMEHASH_H
@@ -426,6 +442,12 @@ __inline static void __release_all_subtrees( framehash_t * const self ) {
  ***********************************************************************
  */
 #ifdef FRAMEHASH_INSTRUMENTATION
+
+/**************************************************************************//**
+ * __framehash_update_counters
+ *
+ ******************************************************************************
+ */
 __inline static void __framehash_update_counters( _framehash_counters_t * const counters, const framehash_instrument_t * const instrument ) {
   SYNCHRONIZE_ON( counters->lock ) {
     counters->opcount++;
@@ -826,6 +848,12 @@ typedef enum __e_hashbits_mask_t {
   HASHBITS_INVALID = 0x8000
 } __hashbits_mask_t;
 
+
+/**************************************************************************//**
+ * _framehash_hashing__get_hashbits
+ *
+ ******************************************************************************
+ */
 __inline static _hashbits_t _framehash_hashing__get_hashbits( const int domain, const shortid_t id64 ) {
   return (_hashbits_t)(domain > 0 ? ( id64 >> ((domain-1) << 4) ) & HASHBITS_VALID : HASHBITS_INVALID);
 }
@@ -1127,6 +1155,12 @@ DLL_HIDDEN extern int     _framehash_changelog__remove( framehash_t *self, int s
 DLL_HIDDEN extern int     _framehash_changelog__apply( framehash_t *self );
 DLL_HIDDEN extern int     _framehash_changelog__end( framehash_t *self );
 
+
+/**************************************************************************//**
+ * CHANGELOG_EMIT_OPERATION
+ *
+ ******************************************************************************
+ */
 __inline static int64_t CHANGELOG_EMIT_OPERATION( framehash_t *self, framehash_context_t *context ) {
   if( self->changelog.enable ) {
     return _framehash_changelog__emit_operation( self, context );
@@ -1259,7 +1293,3 @@ DLL_HIDDEN extern test_descriptor_t _framehash_api_manage_tests[];
 DLL_HIDDEN extern test_descriptor_t _framehash_api_simple_tests[];
 
 #endif
-
-
-
-

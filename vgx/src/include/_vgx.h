@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _vgx.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _vgx.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VGX_H
 #define _VGX_VGX_H
@@ -188,12 +204,24 @@ extern test_descriptor_t _vgx_server_tests[];
 #endif
 
 // TODO: FIND A BETTER PLACE FOR THIS
+
+/**************************************************************************//**
+ * __vertex_internalid
+ *
+ ******************************************************************************
+ */
 __inline static objectid_t * __vertex_internalid( const vgx_Vertex_t *vertex ) {
   return (objectid_t*)(&CXMALLOC_META_FROM_OBJECT( vertex )->M);
 }
 
 
 
+
+/**************************************************************************//**
+ * __format_error_string
+ *
+ ******************************************************************************
+ */
 static CString_t * __format_error_string( CString_t **CSTR__error, const char *format, ... ) {
   if( CSTR__error == NULL ) {
     return NULL;
@@ -223,6 +251,12 @@ static CString_t * __format_error_string( CString_t **CSTR__error, const char *f
 
 
 
+
+/**************************************************************************//**
+ * __set_error_string
+ *
+ ******************************************************************************
+ */
 static CString_t * __set_error_string( CString_t **CSTR__error, const char *string ) {
   if( CSTR__error == NULL ) {
     return NULL;
@@ -254,6 +288,12 @@ static const char * __get_error_string( CString_t **CSTR__error, const char *dfl
 
 
 
+
+/**************************************************************************//**
+ * __set_error_string_with_object_name
+ *
+ ******************************************************************************
+ */
 static CString_t * __set_error_string_with_object_name( CString_t **CSTR__error, const char *string, const CString_t *CSTR__name ) {
   int err = 0;
   int64_t len = CSTR__name ? CStringLength( CSTR__name ) : -1;
@@ -278,6 +318,12 @@ static CString_t * __set_error_string_with_object_name( CString_t **CSTR__error,
 
 
 
+
+/**************************************************************************//**
+ * __set_error_string_from_reason
+ *
+ ******************************************************************************
+ */
 static CString_t * __set_error_string_from_reason( CString_t **CSTR__error, const CString_t *CSTR__name, vgx_AccessReason_t reason ) {
   switch( reason ) {
   case VGX_ACCESS_REASON_NOEXIST:
@@ -322,6 +368,12 @@ static CString_t * __set_error_string_from_reason( CString_t **CSTR__error, cons
 
 
 
+
+/**************************************************************************//**
+ * __set_error_string_from_errcode
+ *
+ ******************************************************************************
+ */
 static CString_t * __set_error_string_from_errcode( CString_t **CSTR__error, int errcode, const char *message ) {
   static char codebuf[512] = {0};
 #define FORMAT_ERROR_CODE( Message, Errcode ) \
@@ -382,6 +434,12 @@ static CString_t * __set_error_string_from_errcode( CString_t **CSTR__error, int
 
 
 
+
+/**************************************************************************//**
+ * __transfer_error_string
+ *
+ ******************************************************************************
+ */
 static CString_t * __transfer_error_string( CString_t **CSTR__dest, CString_t **CSTR__src ) {
   CString_t * CSTR__err = NULL;
   if( CSTR__dest && CSTR__src && *CSTR__src ) {
@@ -414,6 +472,12 @@ DLL_HIDDEN extern void __check_arc_balance( vgx_Graph_t *self, const char *funcn
 
 
 
+
+/**************************************************************************//**
+ * PRINT_VERTEX
+ *
+ ******************************************************************************
+ */
 static void PRINT_VERTEX( const vgx_Vertex_t *vertex ) {
   if( vertex != NULL ) {
     COMLIB_OBJECT_PRINT( vertex );
@@ -1074,6 +1138,12 @@ DLL_HIDDEN extern CString_t *               _vxvertex_property__read_virtual_pro
 #define IsPropertyKeyHashVertexEnum( KeyHash )  ((KeyHash) == _vgx__vertex_enum_key)
 
 
+
+/**************************************************************************//**
+ * _vxvertex_property__get_vertex_enum_RO
+ *
+ ******************************************************************************
+ */
 __inline static int32_t _vxvertex_property__get_vertex_enum_RO( const vgx_Vertex_t *vertex_RO ) {
   // Try to retrieve the internal enum property
   int64_t rvalue;
@@ -1090,4 +1160,3 @@ __inline static int32_t _vxvertex_property__get_vertex_enum_RO( const vgx_Vertex
 #define Vertex_SetEnum( Vertex_WL, Enum32 )  _vxvertex_property__set_vertex_enum_WL( Vertex_WL, Enum32 )
 
 #endif
-

@@ -34,7 +34,7 @@ set_target_properties(${LIB_NAME} PROPERTIES
 )
 
 add_custom_target(PYVGX_GENERATE_HEADER_FILE
-  COMMAND ${Python3_EXECUTABLE} ${PY_PLUGINS}/tools/convert.py ${PY_PLUGINS}/py ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+  COMMAND ${Python3_EXECUTABLE} ${PY_PLUGINS}/tools/convert.py ${PY_PLUGINS}/py ${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating VGX XHTML header file"
 )

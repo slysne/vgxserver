@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    PYVGX_vgxadmin.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 import pyvgx    
 import sys
 import os
@@ -31,6 +56,11 @@ class vgxadmin__AddressError( Exception ): pass
 
 
 
+
+###############################################################################
+# sysplugin__TransformLegacyDescriptor
+#
+###############################################################################
 def sysplugin__TransformLegacyDescriptor( descriptor ):
     """
     Transform old style descriptor to new style.
@@ -60,6 +90,11 @@ def sysplugin__TransformLegacyDescriptor( descriptor ):
 
 
 
+
+###############################################################################
+# sysplugin__TransformTransactionTopology
+#
+###############################################################################
 def sysplugin__TransformTransactionTopology( topology ):
     """
     {
@@ -97,6 +132,11 @@ def sysplugin__TransformTransactionTopology( topology ):
 
 
 
+
+###############################################################################
+# sysplugin__ValidateSystemDescriptor
+#
+###############################################################################
 def sysplugin__ValidateSystemDescriptor( descriptor ):
     """
     Validate system descriptor
@@ -464,6 +504,11 @@ def sysplugin__ValidateSystemDescriptor( descriptor ):
 
 
 
+
+###############################################################################
+# sysplugin__GetTransactionTopologyInstances
+#
+###############################################################################
 def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
     """
     Return list of tuples: [ (id, {'host':..., ...}), (id, {...}), ... ]
@@ -488,6 +533,11 @@ def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
 
 
 
+
+###############################################################################
+# sysplugin__GetDispatchTopologyInstances
+#
+###############################################################################
 def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
     """
     Return list of tuples: [ (id, {'host':..., ...}), (id, {...}), ... ]
@@ -520,7 +570,14 @@ def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXConsole
+#
+###############################################################################
 class vgxadmin__VGXConsole( object ):
+    """
+    """
 
     def __init__( self, use_stdout=True, printf=None ):
         if use_stdout:
@@ -565,7 +622,14 @@ class vgxadmin__VGXConsole( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXRemote
+#
+###############################################################################
 class vgxadmin__VGXRemote( object ):
+    """
+    """
 
     HTTP_CONNECTIONS = {}
     CLEANUP_THRESHOLD = 64
@@ -806,7 +870,14 @@ class vgxadmin__VGXRemote( object ):
  
 
 
+
+###############################################################################
+# vgxadmin__VGXInstance
+#
+###############################################################################
 class vgxadmin__VGXInstance( object ):
+    """
+    """
 
     DEFAULT_TYPE = "generic"
     DEFAULT_HOST = "127.0.0.1"
@@ -936,6 +1007,11 @@ class vgxadmin__VGXInstance( object ):
 
     def ClearEndpointCache( self ):
         self.remote.ClearEndpointCache()
+
+    
+
+    def Ping( self, key=None, dflt=None, cache=False ):
+        return self.remote.Endpoint( "/vgx/ping", key=key, dflt=dflt, cache=cache )
 
 
 
@@ -1338,6 +1414,11 @@ class vgxadmin__VGXInstance( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__Descriptor
+#
+###############################################################################
 class vgxadmin__Descriptor( object ):
     """
     vgx.cf format (JSON):
@@ -1707,6 +1788,8 @@ class vgxadmin__Descriptor( object ):
             return "{:,}".format( value//(1<<20) )
         def fmt_sin( value ):
             return "S-IN" if value > 0 else "S-OUT"
+        def fmt_version( value ):
+            return value.split()[1].removeprefix('v')
         def fmt_dhms( value ):
             s = value
             D = s // 86400
@@ -1724,6 +1807,7 @@ class vgxadmin__Descriptor( object ):
         include_level = 1 if detail else 0
         allitems = [ 
                   (0, "Id",        "Nodestat", None,                   None),
+                  (1, "Ver",       "Ping",     ["host","version"],     fmt_version),
                   (0, "Uptime",    "Nodestat", "uptime",               fmt_dhms),
                   (0, "Host",      "Nodestat", "host",                 fmt),
                   (0, "IP",        "Nodestat", "ip",                   fmt),
@@ -1766,8 +1850,11 @@ class vgxadmin__Descriptor( object ):
                     val = instance.id
                 else:
                     if running and render:
-                        data = getattr( instance, method )( key, cache=True )
-                        val = render( data if data is not None else "?" )
+                        try:
+                            data = getattr( instance, method )( key, cache=True )
+                            val = render( data if data is not None else "?" )
+                        except Exception as rerr:
+                            val = "{}".format(rerr)
                     else:
                         val = ""
                 info[instance.id].append( [val, ""] )
@@ -1913,7 +2000,14 @@ class vgxadmin__Descriptor( object ):
 
 
 
+
+###############################################################################
+# vgxadmin__VGXAdmin
+#
+###############################################################################
 class vgxadmin__VGXAdmin( object ):
+    """
+    """
 
 
     @staticmethod
@@ -1926,46 +2020,50 @@ class vgxadmin__VGXAdmin( object ):
         console.Print()
         console.Print( "usage: {} [<address|id>] <options>".format( program ) )
 
-        console.Print( "-a, --attach <id>[,<sub>[,...]] Attach instance to subscribers" )
-        console.Print( "-B, --bind <id>                 Bind transaction input port" )
-        console.Print( "-c, --confirm                   Confirm operation (skip y/n prompt)" )
-        console.Print( "-C, --command <id>,<gr>,<cmd>   Send console command <cmd> to graph <gr>" )
-        console.Print( "-d, --detach <id>               Detach instance from subscribers" )
-        console.Print( "-D, --restarthttp <id>          Restart HTTP server with refreshed config" )
-        console.Print( "-E, --endpoint <path>           Send request to <address>" )
-        console.Print( "-f, --cf <file>                 Use this local system descriptor file" )
-        console.Print( "-g, --readonly <id>             Make graph(s) readonly" )
-        console.Print( "-G, --writable <id>             Make graph(s) writable" )
-        console.Print( "-i, --serviceout <id>           Service out" )
-        console.Print( "-I, --servicein <id>            Service in" )
-        console.Print( "-J, --show                      Show effective system descriptor" )
-        console.Print( "-k, --cancelsync <id>           Terminate sync in progress" )
-        console.Print( "-K, --forcecopy <src>,<dst>     Force hard sync from <src> to <dst>" )
-        console.Print( "-L, --rollingupdate <id>        Forward sync subscribers one at a time in S-OUT" )
-        console.Print( "-m, --resetmetrics <id>         Clear performance and error counters" )
-        console.Print( "-M, --opdump <id>               Dump instance data to output file" )
-        console.Print( "-n, --nodestat <id>[,<key>]     Nodestat" )
-        console.Print( "-N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file" )
-        console.Print( "-p, --pausein <id>              Pause transaction input" )
-        console.Print( "-P, --pauseout <id>             Pause transaction output" )
-        console.Print( "-Q, --instancecfg <id>          Show instance configuration" )
-        console.Print( "-r, --resumein <id>             Resume transaction input" )
-        console.Print( "-R, --resumeout <id>            Resume transaction output" )
-        console.Print( "-s, --start <id>                Start instance on the local host" )
-        console.Print( "-S, --status <id>               System summary" )
-        console.Print( "-t, --pausettl <id>             Pause TTL event processor" )
-        console.Print( "-T, --resumettl <id>            Resume TTL event processor (if enabled)" )
-        console.Print( "-u, --unsubscribe <id>          Detach instance from provider" )
-        console.Print( "-U, --unbind <id>               Unbind transaction input port" )
-        console.Print( "-V, --throttle <id>[,<r>,<u>]   Throttle TX input rate <r>, unit <u>" )
-        console.Print( "-w, --waitforidle <id>          Wait until instance input is idle" )
-        console.Print( "-W, --persist <id>              Write instance data to disk" )
-        console.Print( "-x, --stop <id>                 Stop instance" )
-        console.Print( "-X, --truncate <id>             Erase instance data" )
-        console.Print( "-y, --sync <id>[,<mode>]        Sync instance data to attached subscribers" )
-        console.Print( "                                <mode>: [repair|hard|soft]" )
-        console.Print( "-Y, --reversesync <id>          Reverse sync instance data from attached subscriber" )
-        console.Print( "-Z, --descriptor <id>           Update instance system descriptor" )
+        message = """
+    -a, --attach <id>[,<sub>[,...]] Attach instance to subscribers
+    -B, --bind <id>                 Bind transaction input port
+    -k, --cancelsync <id>           Terminate sync in progress
+    -f, --cf <file>                 Use this local system descriptor file
+    -C, --command <id>,<gr>,<cmd>   Send console command <cmd> to graph <gr>
+    -c, --confirm                   Confirm operation (skip y/n prompt)
+    -Z, --descriptor <id>           Update instance system descriptor
+    -d, --detach <id>               Detach instance from subscribers
+    -E, --endpoint <path>           Send request to <address>
+    -K, --forcecopy <src>,<dst>     Force hard sync from <src> to <dst>
+    -h, --help                      Show this help message
+    -Q, --instancecfg <id>          Show instance configuration
+    -n, --nodestat <id>[,<key>]     Nodestat
+    -M, --opdump <id>               Dump instance data to output file
+    -p, --pausein <id>              Pause transaction input
+    -P, --pauseout <id>             Pause transaction output
+    -t, --pausettl <id>             Pause TTL event processor
+    -W, --persist <id>              Write instance data to disk
+    -g, --readonly <id>             Make graph(s) readonly
+    -N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file
+    -m, --resetmetrics <id>         Clear performance and error counters
+    -D, --restarthttp <id>          Restart HTTP server with refreshed config
+    -r, --resumein <id>             Resume transaction input
+    -R, --resumeout <id>            Resume transaction output
+    -T, --resumettl <id>            Resume TTL event processor (if enabled)
+    -Y, --reversesync <id>          Reverse sync instance data from attached subscriber
+    -L, --rollingupdate <id>        Forward sync subscribers one at a time in S-OUT
+    -I, --servicein <id>            Service in
+    -i, --serviceout <id>           Service out
+    -J, --show                      Show effective system descriptor
+    -s, --start <id>                Start instance on the local host
+    -S, --status <id>               System summary
+    -x, --stop <id>                 Stop instance
+    -y, --sync <id>[,<mode>]        Sync data to subscribers (<mode> [repair|hard|soft])
+    -V, --throttle <id>[,<r>,<u>]   Throttle TX input rate <r>, unit <u>
+    -X, --truncate <id>             Erase instance data
+    -U, --unbind <id>               Unbind transaction input port
+    -u, --unsubscribe <id>          Detach instance from provider
+    -v, --version                   VGX Server version
+    -w, --waitforidle <id>          Wait until instance input is idle
+    -G, --writable <id>             Make graph(s) writable
+        """
+        console.Print(message)
 
         console.Print()
         if err is not None:
@@ -2024,6 +2122,7 @@ class vgxadmin__VGXAdmin( object ):
                     ("resumettl=",       "T:"),
                     ("unsubscribe=",     "u:"),
                     ("unbind=",          "U:"),
+                    ("version",          "v" ),
                     ("throttle=",        "V:"),
                     ("waitforidle=",     "w:"),
                     ("persist=",         "W:"),
@@ -2054,6 +2153,9 @@ class vgxadmin__VGXAdmin( object ):
             short = "".join([ x for _,x in paramdef ])
             long = [x for x,_ in paramdef]
             opts, args = getopt.getopt( arguments, short, long )
+
+            if len(sys.argv) == 1:
+                raise vgxadmin__InvalidUsageOrConfig()
 
             for o, a in opts:
                 if o in ( "-h", "--help" ):
@@ -2259,6 +2361,10 @@ class vgxadmin__VGXAdmin( object ):
                         ret = instance.Unbind()
                         R.append( (instance, ret) )
 
+                    elif o in ( "-v", "--version" ):
+                        v = [line for line in pyvgx.version(2).split('\n') if line.startswith('vgx')][0].split()[1]
+                        console.Print( v )
+
                     elif o in ( "-V", "--throttle" ):
                         id, rate, unit = vgxadmin__VGXAdmin.GetArgs( a, [None, -1.0, "bytes"] )
                         R = descriptor.Concurrent( "Throttle", id, (rate, unit) )
@@ -2350,5 +2456,3 @@ import pyvgx
 pyvgx.Descriptor = vgxadmin__Descriptor
 pyvgx.VGXRemote = vgxadmin__VGXRemote
 pyvgx.VGXAdmin = vgxadmin__VGXAdmin
-
-

@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   vxoperation.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxoperation.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef VXOPERATION_H
 #define VXOPERATION_H
@@ -692,6 +708,12 @@ __inline static int __enter_buffer_CS( vgx_OperationBuffer_t *buffer ) {
 }
 
 
+
+/**************************************************************************//**
+ * __leave_buffer_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_buffer_CS( vgx_OperationBuffer_t *buffer ) {
   // SAFE HERE
   int c = --(buffer->lock_count);
@@ -1923,6 +1945,12 @@ __inline static int __enter_transactional_CS( vgx_TransactionalProducer_t *produ
 }
 
 
+
+/**************************************************************************//**
+ * __leave_transactional_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_transactional_CS( vgx_TransactionalProducer_t *producer ) {
   // SAFE HERE
   int c = --(producer->lock_count);
@@ -2008,6 +2036,12 @@ __inline static int __enter_transactional_producers_CS( vgx_TransactionalProduce
 }
 
 
+
+/**************************************************************************//**
+ * __leave_transactional_producers_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __leave_transactional_producers_CS( vgx_TransactionalProducers_t *producers ) {
   // SAFE HERE
   int c = --(producers->lock_count);

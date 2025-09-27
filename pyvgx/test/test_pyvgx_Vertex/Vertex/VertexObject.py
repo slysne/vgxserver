@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    VertexObject.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 import time
 from pyvgx import *
 import pyvgx
@@ -9,6 +34,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_vxvertex_object
+#
+###############################################################################
 def TEST_vxvertex_object():
     """
     Core vxvertex_object
@@ -21,6 +51,11 @@ def TEST_vxvertex_object():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_commit
+#
+###############################################################################
 def TEST_vxdurable_commit():
     """
     Core vxdurable_commit
@@ -33,6 +68,11 @@ def TEST_vxdurable_commit():
 
 
 
+
+###############################################################################
+# TEST_Vertex_methods
+#
+###############################################################################
 def TEST_Vertex_methods():
     """
     pyvgx.Vertex
@@ -61,6 +101,11 @@ def TEST_Vertex_methods():
 
 
 
+
+###############################################################################
+# TEST_Vertex_attributes_exist
+#
+###############################################################################
 def TEST_Vertex_attributes_exist():
     """
     pyvgx.Vertex
@@ -101,6 +146,11 @@ def TEST_Vertex_attributes_exist():
 
 
 
+
+###############################################################################
+# TEST_Vertex_constructor
+#
+###############################################################################
 def TEST_Vertex_constructor():
     """
     pyvgx.Vertex
@@ -172,6 +222,11 @@ def TEST_Vertex_constructor():
 
 
 
+
+###############################################################################
+# TEST_Vertex_attibutes_set
+#
+###############################################################################
 def TEST_Vertex_attibutes_set():
     """
     pyvgx.Vertex
@@ -229,7 +284,14 @@ def TEST_Vertex_attibutes_set():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

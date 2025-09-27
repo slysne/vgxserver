@@ -1,12 +1,27 @@
-/*######################################################################
- *#
- *# vxarcvector_comparator.c
- *#
- *#
- *######################################################################
- */
-
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxarcvector_comparator.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vxarcvector.h"
 
@@ -1621,6 +1636,12 @@ __vertex_stage_TO_SORT_BY( random_order )    { __vertex_sortby_random_order     
 #define __cmp_a_gt_b( a, b ) (int)( (a > b) - (a < b) )
 
 
+
+/**************************************************************************//**
+ * __cmp_always_1
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __cmp_always_1( const vgx_CollectorItem_t *a, const vgx_CollectorItem_t *b ) {
   return 1;

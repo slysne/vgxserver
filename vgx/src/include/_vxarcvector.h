@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _vxarcvector.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _vxarcvector.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VXARCVECTOR_H
 #define _VGX_VXARCVECTOR_H
@@ -155,38 +171,92 @@ error:
 
 
 
+
+/**************************************************************************//**
+ * __arcvector_has_framepointer
+ *
+ ******************************************************************************
+ */
 __inline static bool __arcvector_has_framepointer( const vgx_ArcVector_cell_t *arc_cell ) {
   return TPTR_AS_TAG( &arc_cell->FxP ) == VGX_ARCVECTOR_FxP_FRAME;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_set_empty
+ *
+ ******************************************************************************
+ */
 __inline static void __arcvector_set_empty( vgx_ArcVector_cell_t *arc_cell ) {
   TPTR_AS_TAG( &arc_cell->VxD ) = VGX_ARCVECTOR_VxD_EMPTY;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_is_empty
+ *
+ ******************************************************************************
+ */
 __inline static bool __arcvector_is_empty( const vgx_ArcVector_cell_t *arc_cell ) {
   return TPTR_AS_TAG( &arc_cell->VxD ) == VGX_ARCVECTOR_VxD_EMPTY;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_set_has_degree
+ *
+ ******************************************************************************
+ */
 __inline static void __arcvector_set_has_degree( vgx_ArcVector_cell_t *arc_cell ) {
   TPTR_AS_TAG( &arc_cell->VxD ) = VGX_ARCVECTOR_VxD_DEGREE;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_has_degree
+ *
+ ******************************************************************************
+ */
 __inline static bool __arcvector_has_degree( const vgx_ArcVector_cell_t *arc_cell ) {
   return TPTR_AS_TAG( &arc_cell->VxD ) == VGX_ARCVECTOR_VxD_DEGREE;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_get_vertex
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __arcvector_get_vertex( const vgx_ArcVector_cell_t *arc_cell ) {
   return (vgx_Vertex_t*)TPTR_GET_OBJ56( &arc_cell->VxD );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_as_frametop
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t * __arcvector_as_frametop( const vgx_ArcVector_cell_t *arc_cell ) {
   return (framehash_cell_t*)TPTR_GET_POINTER( &arc_cell->FxP );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_get_frametop
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t * __arcvector_get_frametop( const vgx_ArcVector_cell_t *arc_cell ) {
   return __arcvector_has_framepointer( arc_cell ) ? __arcvector_as_frametop( arc_cell ) : NULL;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_set_ephemeral_top
+ *
+ ******************************************************************************
+ */
 __inline static void __arcvector_set_ephemeral_top( const vgx_ArcVector_cell_t *arc_cell, framehash_cell_t *eph_top ) {
   framehash_cell_t *frametop = __arcvector_get_frametop( arc_cell );
   if( frametop ) {
@@ -197,18 +267,36 @@ __inline static void __arcvector_set_ephemeral_top( const vgx_ArcVector_cell_t *
   }
 }
 
+
+/**************************************************************************//**
+ * __arcvector_avcell_get_ephemeral_top
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t __arcvector_avcell_get_ephemeral_top( const vgx_ArcVector_cell_t *av_cell ) {
   framehash_cell_t eph_top;
   APTR_COPY( &eph_top, __arcvector_as_frametop( av_cell ) );
   return eph_top;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_fhcell_get_ephemeral_top
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t __arcvector_fhcell_get_ephemeral_top( const framehash_cell_t *fh_cell ) {
   framehash_cell_t eph_top;
   APTR_COPY( &eph_top, (framehash_cell_t*)APTR_GET_PTR56( fh_cell ) );
   return eph_top;
 }
 
+
+/**************************************************************************//**
+ * __arcvector_set_degree
+ *
+ ******************************************************************************
+ */
 __inline static void __arcvector_set_degree( vgx_ArcVector_cell_t *arc_cell, int64_t degree ) {
   if( degree == 0 ) {
     __arcvector_set_empty( arc_cell );
@@ -219,24 +307,54 @@ __inline static void __arcvector_set_degree( vgx_ArcVector_cell_t *arc_cell, int
   }
 }
 
+
+/**************************************************************************//**
+ * __arcvector_get_degree
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __arcvector_get_degree( const vgx_ArcVector_cell_t *arc_cell ) {
   return TPTR_AS_INTEGER( &arc_cell->VxD );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_inc_degree
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __arcvector_inc_degree( vgx_ArcVector_cell_t *arc_cell, int64_t amount ) {
   TPTR_AS_INTEGER( &arc_cell->VxD ) += amount;
   return __arcvector_get_degree( arc_cell );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_dec_degree
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __arcvector_dec_degree( vgx_ArcVector_cell_t *arc_cell, int64_t amount ) {
   TPTR_AS_INTEGER( &arc_cell->VxD ) -= amount;
   return __arcvector_get_degree( arc_cell );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_as_predicator_bits
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t __arcvector_as_predicator_bits( const vgx_ArcVector_cell_t *arc_cell ) {
   return TPTR_AS_UNSIGNED( &arc_cell->FxP );
 }
 
+
+/**************************************************************************//**
+ * __arcvector_as_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t __arcvector_as_predicator( const vgx_ArcVector_cell_t *arc_cell ) {
   vgx_predicator_t pred = {
     .data = TPTR_AS_UNSIGNED( &arc_cell->FxP )

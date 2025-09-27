@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# pyvgx_Neighborhood.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx_neighborhood.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "pyvgx.h"
 
@@ -216,6 +232,12 @@ PyVGX_DOC( pyvgx_Neighborhood__doc__,
   "Perform a neighborhood search around vertex 'id'.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_Neighborhood__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param, bool reusable ) {
   static char *fmt = "|OOz#z#z#OOOIIiLz#OIOOiLiii";
   static char *kwlist[] = {
@@ -496,6 +518,12 @@ PyVGX_DOC( pyvgx_Initials__doc__,
   "Return a simple list of initial vertices for which given vertex is a terminal.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_initials_terminals__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_initials_terminals__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param ) {
   static char *kwlist[] = {
     "id",
@@ -616,6 +644,12 @@ PyVGX_DOC( pyvgx_Inarcs__doc__,
   "This is a simplified version of the Neighborhood() method.\n"
   "\n"
 );
+
+/**************************************************************************//**
+ * _pyvgx_inarcs_outarcs__parse_params
+ *
+ ******************************************************************************
+ */
 static __neighborhood_query_args * _pyvgx_inarcs_outarcs__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param ) {
   static char *kwlist[] = {
     "id",
@@ -1207,10 +1241,3 @@ DLL_HIDDEN PyObject * pyvgx_ExecuteNeighborhoodQuery( PyVGX_Query *py_query ) {
 
   return py_neighborhood;
 }
-
-
-
-
-
-
-

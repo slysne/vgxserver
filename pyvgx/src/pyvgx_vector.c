@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# pyvgx_vector.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  pyvgx
+ * File:    pyvgx_vector.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "pyvgx.h"
 
@@ -184,6 +200,12 @@ static PyObject * __PyVGX_Vector__alpha( PyVGX_Vector *pyvector, void *closure )
 PyDoc_STRVAR( AsDict__doc__,
   "AsDict() -> dict\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__AsDict
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__AsDict( PyVGX_Vector *pyvector ) {
   return __PyVGX_Vector_as_dict( pyvector );
 }
@@ -198,6 +220,12 @@ static PyObject * PyVGX_Vector__AsDict( PyVGX_Vector *pyvector ) {
 PyDoc_STRVAR( Fingerprint__doc__,
   "Fingerprint( [seed] ) -> int\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__Fingerprint
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__Fingerprint( PyVGX_Vector *pyvector, PyObject *args ) {
   vgx_Vector_t *vector = pyvector->vint;
   if( vector == NULL ) {
@@ -236,6 +264,12 @@ static PyObject * PyVGX_Vector__Fingerprint( PyVGX_Vector *pyvector, PyObject *a
 PyDoc_STRVAR( Projections__doc__,
   "Projections( seed, lsh=0, lcm=0, reduce=0, expand=0 ) -> list\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__Projections
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__Projections( PyVGX_Vector *pyvector, PyObject *args, PyObject *kwdict ) {
   static char *kwlist[] = {"seed", "lsh", "lcm", "reduce", "expand", NULL}; 
 
@@ -403,6 +437,12 @@ static vgx_Similarity_t * __vector_simcontext( PyObject *pyvec1, PyObject *pyvec
 PyDoc_STRVAR( Cosine__doc__,
   "Cosine() -> float\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__Cosine
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__Cosine( PyObject *py_self, PyObject *py_other ) {
   vgx_Vector_t *v1, *v2;
   vgx_Similarity_t *sim = __vector_simcontext( py_self, py_other, &v1, &v2 );
@@ -423,6 +463,12 @@ static PyObject * PyVGX_Vector__Cosine( PyObject *py_self, PyObject *py_other ) 
 PyDoc_STRVAR( EuclideanDistance__doc__,
   "EuclideanDistance() -> float\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__EuclideanDistance
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__EuclideanDistance( PyObject *py_self, PyObject *py_other ) {
   vgx_Vector_t *v1, *v2;
   vgx_Similarity_t *sim = __vector_simcontext( py_self, py_other, &v1, &v2 );
@@ -443,6 +489,12 @@ static PyObject * PyVGX_Vector__EuclideanDistance( PyObject *py_self, PyObject *
 PyDoc_STRVAR( Debug__doc__,
   "Debug() -> None\n"
 );
+
+/**************************************************************************//**
+ * PyVGX_Vector__Debug
+ *
+ ******************************************************************************
+ */
 static PyObject * PyVGX_Vector__Debug( PyVGX_Vector *pyvector ) {
   if( pyvector->vint ) {
     iPyVGXDebug.PrintVectorAllocator( pyvector->vint );
@@ -1231,5 +1283,3 @@ static PyTypeObject PyVGX_Vector__VectorType = {
 
 
 DLL_HIDDEN PyTypeObject * p_PyVGX_Vector__VectorType = &PyVGX_Vector__VectorType;
-
-

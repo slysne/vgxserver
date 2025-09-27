@@ -1,11 +1,44 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    convert.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 import sys
 import os
+import time
 
 OUT_FILE = "_pyvgx_plugin_builtins.h"
 ARRAY_PREFIX = "PYVGX_BUILTIN__"
 EXPORT_TABLE = "PYVGX_PLUGIN_BUILTINS"
 
+
+###############################################################################
+# process
+#
+###############################################################################
 def process( name, data ):
+    """
+    """
     OUT = []
     name = os.path.basename( name )
     name = name.replace( ".py", "" )
@@ -33,7 +66,14 @@ def process( name, data ):
 
 
 
+
+###############################################################################
+# convert_files
+#
+###############################################################################
 def convert_files( names, outname ):
+    """
+    """
     OUT = []
     for name in names:
         f = open( name )
@@ -47,6 +87,7 @@ def convert_files( names, outname ):
     fout.write( '#########################################\n' )
     fout.write( '#\n' )
     fout.write( '# File: {}\n'.format( OUT_FILE ) )
+    fout.write( '# Time: {}\n'.format( time.ctime() ) )
     fout.write( '#\n' )
     fout.write( '#\n' )
     fout.write( '# Automatically generated from input sources:\n' )
@@ -82,9 +123,17 @@ def convert_files( names, outname ):
     fout.close()
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
+    """
+    """
     input_dir = sys.argv[1]
     output_dir = sys.argv[2]
+    os.makedirs(output_dir, exist_ok=True)
     PY = []
     for name in os.listdir( input_dir ):
         if name.endswith( ".py" ):
@@ -99,6 +148,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Similarity.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import random
@@ -11,17 +36,36 @@ import re
 graph = None
 
 
+
+###############################################################################
+# getstr
+#
+###############################################################################
 def getstr( N ):
+    """
+    """
     return "".join( [ chr(random.randint(ord('a'),ord('z'))) for n in range(N) ] )
 
 
+
+###############################################################################
+# getvec
+#
+###############################################################################
 def getvec( N, C, common=[] ):
+    """
+    """
   V = common + [ (getstr( C ), random.randint(0,1875)/1000.0) for n in range(N) ]
   return sorted( V, key=lambda x:x[1], reverse=True )
 
 
 
 
+
+###############################################################################
+# TEST_vxsim_sim
+#
+###############################################################################
 def TEST_vxsim_sim():
     """
     Core vxsim_sim
@@ -34,6 +78,11 @@ def TEST_vxsim_sim():
 
 
 
+
+###############################################################################
+# TEST_vxsim_vector
+#
+###############################################################################
 def TEST_vxsim_vector():
     """
     Core vxsim_vector
@@ -46,6 +95,11 @@ def TEST_vxsim_vector():
 
 
 
+
+###############################################################################
+# TEST_vxsim_lsh
+#
+###############################################################################
 def TEST_vxsim_lsh():
     """
     Core vxsim_lsh
@@ -58,6 +112,11 @@ def TEST_vxsim_lsh():
 
 
 
+
+###############################################################################
+# TEST_vxsim_centroid
+#
+###############################################################################
 def TEST_vxsim_centroid():
     """
     Core vxsim_centroid
@@ -70,6 +129,11 @@ def TEST_vxsim_centroid():
 
 
 
+
+###############################################################################
+# TEST_Similarity
+#
+###############################################################################
 def TEST_Similarity():
     """
     pyvgx.Similarity()
@@ -90,6 +154,11 @@ def TEST_Similarity():
 
 
 
+
+###############################################################################
+# TEST_Similarity_centroid
+#
+###############################################################################
 def TEST_Similarity_centroid():
     """
     pyvgx.Similarity.NewCentroid()
@@ -113,7 +182,14 @@ def TEST_Similarity_centroid():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )

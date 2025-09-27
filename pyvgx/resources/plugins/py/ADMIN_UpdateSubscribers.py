@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    ADMIN_UpdateSubscribers.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 import pyvgx
 import threading
 import time
@@ -6,7 +31,14 @@ import re
 import time
 
 
+
+###############################################################################
+# __internal__ADMIN_UpdateSubscribersExecute
+#
+###############################################################################
 def __internal__ADMIN_UpdateSubscribersExecute( SubscribersGoal, SubscribersSync, authtoken ):
+    """
+    """
 
     def PrepareSync():
         """
@@ -97,6 +129,11 @@ def __internal__ADMIN_UpdateSubscribersExecute( SubscribersGoal, SubscribersSync
 
 
 
+
+###############################################################################
+# __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists
+#
+###############################################################################
 def __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists( goal, content="" ):
     """
     Return two lists: The final goal, and the intermediary sync destinations
@@ -308,6 +345,11 @@ def __internal__ADMIN_UpdateSubscribersGetGoalAndSyncLists( goal, content="" ):
 
 
 
+
+###############################################################################
+# sysplugin__ADMIN_UpdateSubscribers
+#
+###############################################################################
 def sysplugin__ADMIN_UpdateSubscribers( request:pyvgx.PluginRequest, headers:dict, authtoken:str, content:str, goal:str="[]" ):
     """
     ADMIN: Update Subscribers
@@ -324,4 +366,3 @@ def sysplugin__ADMIN_UpdateSubscribers( request:pyvgx.PluginRequest, headers:dic
 
 
 pyvgx.system.AddPlugin( plugin=sysplugin__ADMIN_UpdateSubscribers )
-

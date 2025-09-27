@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Save.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import random
@@ -8,11 +33,23 @@ SYSROOT = None
 
 
 
+
+###############################################################################
+# rstr
+#
+###############################################################################
 def rstr(n):
+    """
+    """
     return "".join( [ chr(random.randint(97,122)) for _ in range(n) ] )
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_serialization
+#
+###############################################################################
 def TEST_vxarcvector_serialization():
     """
     Core vxarcvector_serialization
@@ -25,6 +62,11 @@ def TEST_vxarcvector_serialization():
 
 
 
+
+###############################################################################
+# TEST_vxdurable_serialization
+#
+###############################################################################
 def TEST_vxdurable_serialization():
     """
     Core vxdurable_serialization
@@ -37,6 +79,11 @@ def TEST_vxdurable_serialization():
 
 
 
+
+###############################################################################
+# TEST_Save
+#
+###############################################################################
 def TEST_Save():
     """
     pyvgx.Graph.Save()
@@ -113,6 +160,11 @@ def TEST_Save():
 
 
 
+
+###############################################################################
+# TEST_PersistedReadonly
+#
+###############################################################################
 def TEST_PersistedReadonly():
     """
     Test Persisted Readonly
@@ -170,6 +222,11 @@ def TEST_PersistedReadonly():
 
 
 
+
+###############################################################################
+# TEST_Save_large_data
+#
+###############################################################################
 def TEST_Save_large_data():
     """
     pyvgx.Graph.Save()
@@ -346,6 +403,11 @@ def TEST_Save_large_data():
 
 
 
+
+###############################################################################
+# TEST_Reinit
+#
+###############################################################################
 def TEST_Reinit():
     """
     Reinitialize graph if unloaded
@@ -357,7 +419,14 @@ def TEST_Reinit():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     global SYSROOT
     graph = pyvgx.Graph( name )
@@ -366,4 +435,3 @@ def Run( name ):
     graph = pyvgx.Graph( name )
     graph.Close()
     del graph
-

@@ -1,8 +1,27 @@
-/*
- * utest.c
- *
- *
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  comlib
+ * File:    utest.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_comlib.h"
 
@@ -733,6 +752,12 @@ static int64_t __UnitTestSuite_completed_scenarios( UnitTestSuite *test_suite ) 
 }
 
 
+
+/**************************************************************************//**
+ * __print
+ *
+ ******************************************************************************
+ */
 static void __print( const char *format, ... ) {
   va_list args;
   va_start( args, format );
@@ -744,12 +769,24 @@ static void __print( const char *format, ... ) {
 
 
 
+
+/**************************************************************************//**
+ * IncScenarioCount
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void IncScenarioCount(void) {
 
 }
 
 
 
+
+/**************************************************************************//**
+ * SetCurrentTestDirectory
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT int SetCurrentTestDirectory( const char *dirname ) {
   int ret = 0;
   g_current_test_dir = dirname;
@@ -767,6 +804,12 @@ DLL_EXPORT const char * GetCurrentTestDirectory( void ) {
 
 
 
+
+/**************************************************************************//**
+ * UnitTestMessage
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void UnitTestMessage( const char *format, ... ) {
   va_list args;
   char tbuf[32] = {0};
@@ -789,37 +832,79 @@ DLL_EXPORT void UnitTestMessage( const char *format, ... ) {
 
 
 
+
+/**************************************************************************//**
+ * NewUnitTestSuite
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT UnitTestSuite * NewUnitTestSuite( const char *name ) {
   return __UnitTestSuite_new( name );
 }
 
 
+
+/**************************************************************************//**
+ * NewUnitTestSet
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT UnitTestSet * NewUnitTestSet( const char *name, test_descriptor_t *test_list ) {
   return __UnitTestSet_new( name, test_list );
 }
 
 
+
+/**************************************************************************//**
+ * NewUnitTest
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT UnitTest * NewUnitTest( const char *name, test_procedure_t procedure ) {
   return __UnitTest_new( name, procedure );
 }
 
 
+
+/**************************************************************************//**
+ * DeleteUnitTest
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void DeleteUnitTest( UnitTest **test ) {
   __UnitTest_delete( test );
 }
 
 
+
+/**************************************************************************//**
+ * DeleteUnitTestSet
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void DeleteUnitTestSet( UnitTestSet **test_set ) {
   __UnitTestSet_delete( test_set );
 }
 
 
+
+/**************************************************************************//**
+ * DeleteUnitTestSuite
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT void DeleteUnitTestSuite( UnitTestSuite **test_suite ) {
   __UnitTestSuite_delete( test_suite );
 }
 
 
 
+
+/**************************************************************************//**
+ * UnitTestFailed
+ *
+ ******************************************************************************
+ */
 DLL_EXPORT test_failure_info_t * UnitTestFailed( test_failure_info_t *info, const char *file_name, int line_number, const char *format, ... ) {
   va_list args;
   va_start( args, format );
@@ -829,5 +914,3 @@ DLL_EXPORT test_failure_info_t * UnitTestFailed( test_failure_info_t *info, cons
   info->line_number = line_number;
   return info;
 }
-
-

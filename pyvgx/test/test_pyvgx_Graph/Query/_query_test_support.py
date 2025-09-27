@@ -1,4 +1,29 @@
-﻿from pytest.pytest import Expect
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    _query_test_support.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import Expect
 from pyvgx import *
 import pyvgx
 import time
@@ -7,7 +32,14 @@ import os, sys
 
 
 
+
+###############################################################################
+# __build_fanout
+#
+###############################################################################
 def __build_fanout( graph, initial="root", remaining_levels=[1,2], fanout_factor=4, modifiers=[M_INT,M_FLT], relationships=[] ):
+    """
+    """
     r"""
 
 
@@ -70,7 +102,14 @@ def __build_fanout( graph, initial="root", remaining_levels=[1,2], fanout_factor
 
 
 
+
+###############################################################################
+# _new_root_node
+#
+###############################################################################
 def _new_root_node( graph, id ):
+    """
+    """
     R = graph.NewVertex( id, type="ROOT" )
     R.SetProperty( "level", 0 )
     R.SetProperty( "number", 0 )
@@ -80,6 +119,11 @@ def _new_root_node( graph, id ):
 
 
 
+
+###############################################################################
+# NewFanout
+#
+###############################################################################
 def NewFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], relationships=[] ):
     """
     NewFanout
@@ -95,6 +139,11 @@ def NewFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], r
 
 
 
+
+###############################################################################
+# AppendFanout
+#
+###############################################################################
 def AppendFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT], relationships=[] ):
     """
     AppendFanout
@@ -109,6 +158,11 @@ def AppendFanout( name, root_node, fanout_factor=10, levels=3, modifiers=[M_INT]
 
 
 
+
+###############################################################################
+# NewGeoGraph
+#
+###############################################################################
 def NewGeoGraph( name ):
     """
     Build graph of states and cities
@@ -159,14 +213,14 @@ def NewGeoGraph( name ):
 
 
 
+
+###############################################################################
+# AssertCleanStart
+#
+###############################################################################
 def AssertCleanStart():
     """
     Fail if not clean
     """
     n = system.WritableVertices()
     Expect( n == 0,         "Unexpected writable vertex count: %d" % n )
-
-
-
-
-

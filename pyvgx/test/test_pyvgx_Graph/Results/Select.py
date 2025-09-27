@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Select.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from ..Query._query_test_support import *
 from pyvgx import *
 import pyvgx
@@ -80,6 +105,11 @@ A_B_G = "".join([chr(x) for x in range(945,948)])
 A_B_G_utf8 = A_B_G.encode()
 
 
+
+###############################################################################
+# check_dict_result
+#
+###############################################################################
 def check_dict_result( F_x, keys, data ):
     """
     Check dict result entry
@@ -124,6 +154,11 @@ def check_dict_result( F_x, keys, data ):
     
 
 
+
+###############################################################################
+# check_json_result
+#
+###############################################################################
 def check_json_result( F_x, keys, result ):
     """
     Convert (json) string result to dict and check
@@ -133,6 +168,11 @@ def check_json_result( F_x, keys, result ):
 
 
 
+
+###############################################################################
+# check_list_result
+#
+###############################################################################
 def check_list_result( F_x, keys, result ):
     """
     Check list result entry
@@ -172,6 +212,11 @@ def check_list_result( F_x, keys, result ):
 
 
 
+
+###############################################################################
+# check_results
+#
+###############################################################################
 def check_results( R_x, F_x, select, results ):
     """
     Check a sample of results
@@ -191,6 +236,11 @@ def check_results( R_x, F_x, select, results ):
 
 
 
+
+###############################################################################
+# TEST_Neighborhood_basic_select
+#
+###############################################################################
 def TEST_Neighborhood_basic_select():
     """
     pyvgx.Neighborhood() select statement
@@ -436,6 +486,11 @@ def TEST_Neighborhood_basic_select():
 
 
 
+
+###############################################################################
+# TEST_Select_deref
+#
+###############################################################################
 def TEST_Select_deref():
     """
     Select deref stability
@@ -490,11 +545,17 @@ def TEST_Select_deref():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

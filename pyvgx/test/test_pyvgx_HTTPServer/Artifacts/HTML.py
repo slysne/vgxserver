@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    HTML.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from .. import _http_support as Support
 from pyvgx import *
 import pyvgx
@@ -8,6 +33,11 @@ import re
 graph = None
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_header
+#
+###############################################################################
 def TEST_Artifacts_HTML_header():
     """
     header.html
@@ -21,11 +51,16 @@ def TEST_Artifacts_HTML_header():
     artifact = bytes.decode()
     for tag in ["div", "table", "tr", "td" ]:
         Expect( "<%s" % tag in artifact,            "<%s> tag(s) should exist" % tag )
-    for text in ["commonHeaderTable", "Processor", "logo.gif" ]:
+    for text in ["commonHeaderTable", "Processor", "logo_b-x.png" ]:
         Expect( text in artifact,                   "%s should exist" % text )
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_footer
+#
+###############################################################################
 def TEST_Artifacts_HTML_footer():
     """
     footer.html
@@ -44,6 +79,11 @@ def TEST_Artifacts_HTML_footer():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_admin
+#
+###############################################################################
 def TEST_Artifacts_HTML_admin():
     """
     admin
@@ -62,6 +102,11 @@ def TEST_Artifacts_HTML_admin():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_system
+#
+###############################################################################
 def TEST_Artifacts_HTML_system():
     """
     system
@@ -78,6 +123,11 @@ def TEST_Artifacts_HTML_system():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_console
+#
+###############################################################################
 def TEST_Artifacts_HTML_console():
     """
     console
@@ -96,6 +146,11 @@ def TEST_Artifacts_HTML_console():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_index
+#
+###############################################################################
 def TEST_Artifacts_HTML_index():
     """
     index
@@ -114,6 +169,11 @@ def TEST_Artifacts_HTML_index():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_plugin
+#
+###############################################################################
 def TEST_Artifacts_HTML_plugin():
     """
     plugin
@@ -132,6 +192,11 @@ def TEST_Artifacts_HTML_plugin():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_search
+#
+###############################################################################
 def TEST_Artifacts_HTML_search():
     """
     search
@@ -150,6 +215,11 @@ def TEST_Artifacts_HTML_search():
 
 
 
+
+###############################################################################
+# TEST_Artifacts_HTML_status
+#
+###############################################################################
 def TEST_Artifacts_HTML_status():
     """
     status
@@ -170,10 +240,16 @@ def TEST_Artifacts_HTML_status():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Close()
     del graph
-

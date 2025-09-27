@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# leaf.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    leaf.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_framehash.h"
 #include "_fcell.h"
@@ -248,6 +264,12 @@ static framehash_retcode_t __leaf_resize( framehash_context_t * const context, c
 #define __SPECULATION_THRESHOLD( Order_p ) *speculation_threshold = ((((2<<(Order_p-1))-1) * FRAMEHASH_CELLS_PER_SLOT)>>1) /* half capacity of order p, e.g. p=6 => threshold=252/2=126 */
 __inline static void __hashbits_for_frame_order( const int p, _hashbits_t * const h16, int * const speculation_threshold )
 #else
+
+/**************************************************************************//**
+ * __hashbits_for_frame_order
+ *
+ ******************************************************************************
+ */
 __inline static void __hashbits_for_frame_order( const int p, _hashbits_t * const h16 )
 #endif
 {
@@ -896,4 +918,3 @@ DLL_HIDDEN test_descriptor_t _framehash_leaf_tests[] = {
   {NULL}
 };
 #endif
-

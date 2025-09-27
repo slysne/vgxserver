@@ -1,4 +1,29 @@
-﻿from ast import Try
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    SetProperty.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from ast import Try
 from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
@@ -25,6 +50,11 @@ UNI_21000b = "".join( [chr(x) for x in random.sample(UNICODE,21000)] )
 SIZES = itertools.chain( range(1,520), range(520,MAX_STRING,953), range(MAX_STRING-17,MAX_STRING+17), (500000, 5000000, 50000000) )
 RANDOM_STRING_KEYVAL = [ (f"random_key_{n}_{rstr(16)}", rstr(n)) for n in SIZES ]
 
+
+###############################################################################
+# float_eq
+#
+###############################################################################
 def float_eq( a, b ):
     """
     Approximate float equivalence
@@ -32,11 +62,25 @@ def float_eq( a, b ):
     return abs( a - b ) < 1e-10
 
 
+
+###############################################################################
+# some_function
+#
+###############################################################################
 def some_function( a, b=1 ):
+    """
+    """
     return a + b
 
 
+
+###############################################################################
+# some_class
+#
+###############################################################################
 class some_class( object ):
+    """
+    """
     def __init__( self, val ):
         self._v = val
 
@@ -50,6 +94,11 @@ NODES = [f"Vertex {i+1} with Property" for i in range(5)]
 
 
 
+
+###############################################################################
+# TEST_vxvertex_property
+#
+###############################################################################
 def TEST_vxvertex_property():
     """
     Core vxvertex_property
@@ -66,6 +115,11 @@ def TEST_vxvertex_property():
 SETUP = False
 
 
+
+###############################################################################
+# TEST_SetProperty_setup
+#
+###############################################################################
 def TEST_SetProperty_setup():
     """
     pyvgx.Vertex.SetProperty()
@@ -89,7 +143,14 @@ POPULATED = False
 
 
 
+
+###############################################################################
+# vpropname
+#
+###############################################################################
 def vpropname( name, virtual=False ):
+    """
+    """
     if virtual:
         return f"{name}__V"
     else:
@@ -97,7 +158,14 @@ def vpropname( name, virtual=False ):
 
 
 
+
+###############################################################################
+# assignvprop
+#
+###############################################################################
 def assignvprop( name, virtual=False ):
+    """
+    """
     if virtual:
         vname = vpropname( name, virtual )
         return f"*{vname}"
@@ -106,6 +174,11 @@ def assignvprop( name, virtual=False ):
 
 
 
+
+###############################################################################
+# TEST_SetProperty_populate
+#
+###############################################################################
 def TEST_SetProperty_populate():
     """
     pyvgx.Vertex.SetProperty()
@@ -249,6 +322,11 @@ def TEST_SetProperty_populate():
 
 
 
+
+###############################################################################
+# TEST_SetProperty_verify
+#
+###############################################################################
 def TEST_SetProperty_verify():
     """
     pyvgx.Vertex.SetProperty()
@@ -525,6 +603,11 @@ def TEST_SetProperty_verify():
 
 
 
+
+###############################################################################
+# TEST_SetProperty_overwrite
+#
+###############################################################################
 def TEST_SetProperty_overwrite():
     """
     pyvgx.Vertex.SetProperty()
@@ -551,6 +634,11 @@ def TEST_SetProperty_overwrite():
 
 
 
+
+###############################################################################
+# TEST_SetProperty_many
+#
+###############################################################################
 def TEST_SetProperty_many():
     """
     pyvgx.Vertex.SetProperty()
@@ -602,6 +690,11 @@ def TEST_SetProperty_many():
 
 
 
+
+###############################################################################
+# TEST_SetProperty_sizes
+#
+###############################################################################
 def TEST_SetProperty_sizes():
     """
     pyvgx.Vertex.SetProperty()
@@ -625,6 +718,11 @@ def TEST_SetProperty_sizes():
 
 
 
+
+###############################################################################
+# TEST_SetProperty_virtual
+#
+###############################################################################
 def TEST_SetProperty_virtual():
     """
     pyvgx.Vertex.SetProperty()
@@ -639,12 +737,16 @@ def TEST_SetProperty_virtual():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Close()
     del graph
-
-
-

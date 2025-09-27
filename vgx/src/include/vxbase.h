@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   vxbase.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxbase.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef VGX_VXBASE_H
 #define VGX_VXBASE_H
@@ -65,6 +81,12 @@ DISABLE_WARNING_NUMBER(4201 4214) /* warning C4201: nonstandard extension used :
 typedef vector_feature_t (*vgx_vector_dimension_encoder_t)( struct s_vgx_Similarity_t *self, const ext_vector_feature_t *feature );
 
 
+
+/**************************************************************************//**
+ * __vector_dimension_in_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __vector_dimension_in_range( int code ) {
   return (bool)( code >= (int)FEATURE_VECTOR_DIMENSION_MIN && code <= (int)FEATURE_VECTOR_DIMENSION_MAX );
 }
@@ -351,6 +373,12 @@ __inline static const char * _vgx_arcdir_as_string( const vgx_arc_direction dir 
   return __reverse_arcdir_map[ dir & __VGX_ARCDIR_MASK ];
 }
 
+
+/**************************************************************************//**
+ * _vgx_arcdir_valid
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_arcdir_valid( const vgx_arc_direction dir ) {
   return (dir & ~__VGX_ARCDIR_MASK) == 0;
 }
@@ -547,11 +575,23 @@ __inline static const char * _vgx_vcomp_as_string( const vgx_value_comparison vc
 
 
 
+
+/**************************************************************************//**
+ * _vgx_is_exact_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_exact_value_comparison( const vgx_value_comparison vcomp ) {
   return ((vcomp & VGX_VALUE_EQU) == VGX_VALUE_EQU) || ((vcomp & VGX_VALUE_DYN_EQU) == VGX_VALUE_DYN_EQU);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_is_basic_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_basic_value_comparison( const vgx_value_comparison vcomp ) {
   // allow only these bits for basic: -xxx-
   static const unsigned mask = ~0x0000000EU;
@@ -559,28 +599,58 @@ __inline static int _vgx_is_basic_value_comparison( const vgx_value_comparison v
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_is_extended_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_extended_value_comparison( const vgx_value_comparison vcomp ) {
   // allow 5 bits for extended
   return (vcomp & 0x10) && vcomp < 0x20;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_is_valid_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_valid_value_comparison( const vgx_value_comparison vcomp ) {
   return _vgx_is_basic_value_comparison( vcomp ) || _vgx_is_extended_value_comparison( vcomp );
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_is_dynamic_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_dynamic_value_comparison( const vgx_value_comparison vcomp ) {
   return (vcomp & VGX_VALUE_DYN_MASK) == VGX_VALUE_DYN_MASK;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_is_value_range_comparison
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_value_range_comparison( const vgx_value_comparison vcomp ) {
   return ((vcomp & VGX_VALUE_RANGE_MASK) == VGX_VALUE_RANGE) || ((vcomp & VGX_VALUE_DRANGE_MASK) == VGX_VALUE_DYN_RANGE);
 }
 
 
 
+
+/**************************************************************************//**
+ * _vgx_basic_value_comparison_from_dynamic
+ *
+ ******************************************************************************
+ */
 __inline static vgx_value_comparison _vgx_basic_value_comparison_from_dynamic( const vgx_value_comparison dynamic_vcomp ) {
   // dynamic vcomp  11xxx
   //                (<<1)
@@ -1119,6 +1189,12 @@ typedef enum e_vgx_predicator_modifier_enum {
 } vgx_predicator_modifier_enum;
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_mod_from_enum
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_mod_t _vgx_predicator_mod_from_enum( vgx_predicator_modifier_enum mod_enum ) {
   vgx_predicator_mod_t mod;
   mod.bits = (uint8_t)((int)mod_enum & _VGX_PREDICATOR_MOD_ALL_MASK);
@@ -1127,6 +1203,12 @@ __inline static vgx_predicator_mod_t _vgx_predicator_mod_from_enum( vgx_predicat
 
 
 
+
+/**************************************************************************//**
+ * _vgx_set_predicator_mod_condition_from_value_comparison
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_mod_t _vgx_set_predicator_mod_condition_from_value_comparison( vgx_predicator_mod_t *modifier, vgx_value_comparison vcomp ) {
   modifier->bits |= (uint8_t)(vcomp << 4);
   return *modifier;
@@ -1285,103 +1367,223 @@ DLL_VISIBLE extern const vgx_predicator_eph_t VGX_PREDICATOR_EPH_DYNDELTA;
 DLL_VISIBLE extern const vgx_predicator_eph_t VGX_PREDICATOR_EPH_DISTANCE;
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_none
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_none( const vgx_predicator_t pred ) {
   return pred.data == VGX_PREDICATOR_NONE.data;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_synthetic
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_synthetic( const vgx_predicator_t pred ) {
   return pred.rel.enc == VGX_PREDICATOR_REL_SYNTHETIC;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_NEQ
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_NEQ( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_NEQ;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_LT
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_LT( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_LT;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_LTE
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_LTE( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_LTE;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_EQU
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_EQU( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_EQU;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_GTE
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_GTE( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_GTE;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_cmp_is_GT
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_cmp_is_GT( const vgx_predicator_t pred ) {
   return (pred.data & __VGX_PREDICATOR_CMP_MASK) == __VGX_PREDICATOR_CMP_GT;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_invert
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_invert( vgx_predicator_t *pred ) {
   pred->eph.neg = !pred->eph.neg;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_negative
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_negative( vgx_predicator_t *pred ) {
   pred->eph.neg = 1;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_positive
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_positive( vgx_predicator_t *pred ) {
   pred->eph.neg = 0;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_negative
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_negative( const vgx_predicator_t predicator ) {
   return (int)predicator.eph.neg;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_positive
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_positive( const vgx_predicator_t predicator ) {
   return !(int)predicator.eph.neg;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_lsh_and_distance
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_lsh_and_distance( vgx_predicator_t *pred, int distance_threshold ) {
   pred->eph.value = (uint8_t)distance_threshold;
   pred->eph.type = VGX_PREDICATOR_EPH_TYPE_LSH;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_lsh
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_lsh( const vgx_predicator_t predicator ) {
   return predicator.eph.type == VGX_PREDICATOR_EPH_TYPE_LSH;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_get_lsh_distance
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_get_lsh_distance( const vgx_predicator_t predicator ) {
   return _vgx_predicator_eph_is_lsh( predicator ) ? (int)predicator.eph.value : -1;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_distance
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_distance( vgx_predicator_t *pred, unsigned distance ) {
   pred->eph.value = (uint8_t)distance;
   pred->eph.type = VGX_PREDICATOR_EPH_TYPE_DISTANCE;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_distance
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_distance( const vgx_predicator_t predicator ) {
   return predicator.eph.type == VGX_PREDICATOR_EPH_TYPE_DISTANCE;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_get_value
+ *
+ ******************************************************************************
+ */
 __inline static unsigned _vgx_predicator_eph_get_value( const vgx_predicator_t predicator ) {
   return (unsigned)predicator.eph.value;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_dyndelta
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_dyndelta( vgx_predicator_t *pred, vgx_value_comparison vcomp, vgx_predicator_val_t delta ) {
   vgx_value_comparison basic_vcomp = _vgx_basic_value_comparison_from_dynamic( vcomp );
   _vgx_set_predicator_mod_condition_from_value_comparison( &pred->mod, basic_vcomp );
@@ -1390,11 +1592,23 @@ __inline static void _vgx_predicator_eph_set_dyndelta( vgx_predicator_t *pred, v
   pred->eph.value = VGX_VALUE_MASK & vcomp; // only room for 4 bits in the eph.value (th 5th bit=1 is implied by the eph context)
 }
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_dyndelta
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_dyndelta( const vgx_predicator_t predicator ) {
   return predicator.eph.type == VGX_PREDICATOR_EPH_TYPE_DYNDELTA;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_set_dynratio
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_predicator_eph_set_dynratio( vgx_predicator_t *pred, vgx_value_comparison vcomp, vgx_predicator_val_t ratio ) {
   vgx_value_comparison basic_vcomp = _vgx_basic_value_comparison_from_dynamic( vcomp );
   _vgx_set_predicator_mod_condition_from_value_comparison( &pred->mod, basic_vcomp );
@@ -1403,16 +1617,34 @@ __inline static void _vgx_predicator_eph_set_dynratio( vgx_predicator_t *pred, v
   pred->eph.value = VGX_VALUE_MASK & vcomp; // only room for 4 bits in the eph.value (th 5th bit=1 is implied by the eph context)
 }
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_dynratio
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_dynratio( const vgx_predicator_t predicator ) {
   return predicator.eph.type == VGX_PREDICATOR_EPH_TYPE_DYNRATIO;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_eph_is_dynamic
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_eph_is_dynamic( const vgx_predicator_t predicator ) {
   return _vgx_predicator_eph_is_dyndelta( predicator ) || _vgx_predicator_eph_is_dynratio( predicator );
 }
 
 
+
+/**************************************************************************//**
+ * __relationship_enumeration_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __relationship_enumeration_in_user_range( vgx_predicator_rel_enum enc ) {
   return enc >= __VGX_PREDICATOR_REL_START_USER_RANGE
          &&
@@ -1421,22 +1653,46 @@ __inline static bool __relationship_enumeration_in_user_range( vgx_predicator_re
 }
 
 
+
+/**************************************************************************//**
+ * __relationship_in_user_range
+ *
+ ******************************************************************************
+ */
 __inline static bool __relationship_in_user_range( int rel ) {
   return (bool)(rel >= (int)__VGX_PREDICATOR_REL_START_USER_RANGE && rel <= (int)__VGX_PREDICATOR_REL_END_USER_RANGE);
 }
 
 
+
+/**************************************************************************//**
+ * __relationship_enumeration_valid
+ *
+ ******************************************************************************
+ */
 __inline static bool __relationship_enumeration_valid( int rel ) {
   return rel >= VGX_PREDICATOR_REL_NONE && rel < __VGX_PREDICATOR_REL_START_EXC_RANGE;
 }
 
 
+
+/**************************************************************************//**
+ * __predicator_has_exception
+ *
+ ******************************************************************************
+ */
 __inline static bool __predicator_has_exception( vgx_predicator_t pred ) {
   return __relationship_enumeration_valid(
       (vgx_predicator_rel_enum)pred.rel.enc ) == false ? true : false;
 }
 
 
+
+/**************************************************************************//**
+ * __predicator_has_relationship
+ *
+ ******************************************************************************
+ */
 __inline static bool __predicator_has_relationship( vgx_predicator_t pred ) {
   return pred.rel.enc >= __VGX_PREDICATOR_REL_START_SYS_RANGE
          &&
@@ -1445,40 +1701,82 @@ __inline static bool __predicator_has_relationship( vgx_predicator_t pred ) {
 }
 
 
+
+/**************************************************************************//**
+ * __predicator_direction
+ *
+ ******************************************************************************
+ */
 __inline static vgx_arc_direction __predicator_direction( vgx_predicator_t pred ) {
   return (vgx_arc_direction)pred.rel.dir;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_mod_is_system
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_mod_is_system( const vgx_predicator_t predicator ) {
   // return true if predicator modifier class is time
   return !((predicator.data ^ __VGX_PREDICATOR_MCL_SYS) & __VGX_PREDICATOR_MCL_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_mod_is_basic
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_mod_is_basic( const vgx_predicator_t predicator ) {
   // return true if predicator modifier class is basic
   return !((predicator.data ^ __VGX_PREDICATOR_MCL_BAS) & __VGX_PREDICATOR_MCL_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_mod_is_accumulator
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_mod_is_accumulator( const vgx_predicator_t predicator ) {
   // return true if predicator modifier class is accumulator
   return !((predicator.data ^ __VGX_PREDICATOR_MCL_ACC) & __VGX_PREDICATOR_MCL_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_mod_is_time
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_mod_is_time( const vgx_predicator_t predicator ) {
   // return true if predicator modifier class is time
   return !((predicator.data ^ __VGX_PREDICATOR_MCL_TIM) & __VGX_PREDICATOR_MCL_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_value_is_float
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_value_is_float( const vgx_predicator_t predicator ) {
   return (__VGX_PREDICATOR_FLT_MASK & predicator.data) != 0;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_get_value_as_float
+ *
+ ******************************************************************************
+ */
 __inline static float _vgx_predicator_get_value_as_float( const vgx_predicator_t predicator ) {
   if( __VGX_PREDICATOR_FLT_MASK & predicator.data ) {
     return predicator.val.real;
@@ -1489,11 +1787,23 @@ __inline static float _vgx_predicator_get_value_as_float( const vgx_predicator_t
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_data_match
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_data_match( const vgx_predicator_t p1, const vgx_predicator_t p2 ) {
   return ((p1.data ^ p2.data) & __VGX_PREDICATOR_DAT_MASK) == 0;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_merge_inherit_key
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_predicator_merge_inherit_key( const vgx_predicator_t probe_predicator, const vgx_predicator_t source ) {
   vgx_predicator_t merged = probe_predicator;
   merged.rkey = source.rkey;
@@ -1502,6 +1812,12 @@ __inline static vgx_predicator_t _vgx_predicator_merge_inherit_key( const vgx_pr
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_value_range
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_val_type _vgx_predicator_value_range( void *min, void *max, const vgx_predicator_modifier_enum mod_enum ) {
 
   switch( ((int)mod_enum & _VGX_PREDICATOR_MOD_STO_MASK) ) {
@@ -1600,6 +1916,12 @@ __inline static vgx_predicator_val_type _vgx_predicator_value_range( void *min, 
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_modifier_is_valid
+ *
+ ******************************************************************************
+ */
 __inline static bool _vgx_modifier_is_valid( const vgx_predicator_modifier_enum modifier ) {
   if( _vgx_predicator_value_range( NULL, NULL, modifier ) == VGX_PREDICATOR_VAL_TYPE_ERROR ) {
     return false;
@@ -1610,11 +1932,23 @@ __inline static bool _vgx_modifier_is_valid( const vgx_predicator_modifier_enum 
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_value_is_accumulator
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_value_is_accumulator( const vgx_predicator_t pred ) {
   return (pred.mod.bits & _VGX_PREDICATOR_MOD_CLS_MASK) == _VGX_PREDICATOR_MOD_CLS_ACC;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_update_predicator_accumulator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_update_predicator_accumulator( vgx_predicator_t previous, vgx_predicator_t set ) {
   vgx_predicator_t updated = previous;
   if( (set.data & __VGX_PREDICATOR_FLT_MASK) ) {
@@ -1628,6 +1962,12 @@ __inline static vgx_predicator_t _vgx_update_predicator_accumulator( vgx_predica
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_update_predicator_value_if_accumulator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_update_predicator_value_if_accumulator( vgx_predicator_t previous, vgx_predicator_t set ) {
   if( _vgx_predicator_value_is_accumulator(set) ) {
     vgx_predicator_t updated = previous;
@@ -1649,11 +1989,23 @@ __inline static vgx_predicator_t _vgx_update_predicator_value_if_accumulator( vg
 
 
 
+
+/**************************************************************************//**
+ * _vgx_init_none_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_none_predicator( void ) {
   return VGX_PREDICATOR_NONE;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_related_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_related_predicator( vgx_arc_direction dir ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_RELATED;
   predicator.rel.dir = dir;
@@ -1661,6 +2013,12 @@ __inline static vgx_predicator_t _vgx_init_related_predicator( vgx_arc_direction
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_static_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_static_predicator( vgx_predicator_rel_enum enc, vgx_arc_direction dir ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_RELATED;
   predicator.rel.dir = dir;
@@ -1669,6 +2027,12 @@ __inline static vgx_predicator_t _vgx_init_static_predicator( vgx_predicator_rel
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_similarity_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_similarity_predicator( float similarity, vgx_arc_direction dir ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_SIMILAR;
   predicator.val.real = similarity;
@@ -1677,6 +2041,12 @@ __inline static vgx_predicator_t _vgx_init_similarity_predicator( float similari
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_general_integer_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_general_integer_predicator( vgx_predicator_rel_enum enc, vgx_arc_direction dir, int32_t value ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_INTEGER;
   predicator.val.integer = value;
@@ -1686,6 +2056,12 @@ __inline static vgx_predicator_t _vgx_init_general_integer_predicator( vgx_predi
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_general_unsigned_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_general_unsigned_predicator( vgx_predicator_rel_enum enc, vgx_arc_direction dir, uint32_t value ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_UNSIGNED;
   predicator.val.uinteger = value;
@@ -1695,6 +2071,12 @@ __inline static vgx_predicator_t _vgx_init_general_unsigned_predicator( vgx_pred
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_init_general_real_predicator
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_t _vgx_init_general_real_predicator( vgx_predicator_rel_enum enc, vgx_arc_direction dir, float value ) {
   vgx_predicator_t predicator = VGX_PREDICATOR_FLOAT;
   predicator.val.real = value;
@@ -1704,30 +2086,60 @@ __inline static vgx_predicator_t _vgx_init_general_real_predicator( vgx_predicat
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_full_wildcard
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_full_wildcard( const vgx_predicator_t probe ) {
   // return true if predicator probe is a complete wildcard (i.e. no restrictions on REL or MOD)
   return (probe.data & __VGX_PREDICATOR_KEY_MASK) == __VGX_PREDICATOR_WILDCARD;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_has_rel
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_has_rel( const vgx_predicator_t probe ) {
   // return true if predicator specifies a relationship
   return (probe.data & __VGX_PREDICATOR_REL_MASK) != 0;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_arcdir_both
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_arcdir_both( const vgx_predicator_t probe ) {
   // return true if predicator specifies arcdirection to be bidirectional
   return probe.rel.dir == VGX_ARCDIR_BOTH;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_has_mod
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_has_mod( const vgx_predicator_t probe ) {
   // return true if predicator specifies a modifier
   return (probe.data & __VGX_PREDICATOR_SMT_MASK) != 0;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_has_val
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_has_val( const vgx_predicator_t probe ) {
   // return true if predicator specifies a value
   return (probe.data & __VGX_PREDICATOR_EQU_MASK) != 0;
@@ -1736,6 +2148,12 @@ __inline static int _vgx_predicator_has_val( const vgx_predicator_t probe ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_relationship_anymod_anyval
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_relationship_anymod_anyval( const vgx_predicator_t probe ) {
   // return true if predicator probe specifies a relationship with a wildcard modifier (i.e. restricted by REL but not by MOD)
   return _vgx_predicator_has_rel( probe )     // REL
@@ -1747,6 +2165,12 @@ __inline static int _vgx_predicator_relationship_anymod_anyval( const vgx_predic
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_relationship_value_anymod
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_relationship_value_anymod( const vgx_predicator_t probe ) {
   // return true if predicator probe specifies a relationship and a value with a wildcard modifier (i.e. restricted by REL and VAL but not by MOD)
   return _vgx_predicator_has_rel( probe )     // REL
@@ -1758,6 +2182,12 @@ __inline static int _vgx_predicator_relationship_value_anymod( const vgx_predica
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_modifier_anyval_anyrel
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_modifier_anyval_anyrel( const vgx_predicator_t probe ) {
   // return true if predicator probe specifies a modifier with a wildcard relationship (i.e. restricted by MOD but not by REL)
   return _vgx_predicator_has_mod( probe )     // MOD
@@ -1768,6 +2198,12 @@ __inline static int _vgx_predicator_modifier_anyval_anyrel( const vgx_predicator
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_modifier_value_anyrel
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_modifier_value_anyrel( const vgx_predicator_t probe ) {
   // return true if predicator probe specifies a modifier and a value with a wildcard relationship (i.e. restricted by MOD and VAL but not by REL)
   return _vgx_predicator_has_mod( probe )     // MOD
@@ -1779,6 +2215,12 @@ __inline static int _vgx_predicator_modifier_value_anyrel( const vgx_predicator_
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_specific
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_specific( const vgx_predicator_t probe ) {
   // return true if predicator probe specifies both relationship and modifier
   return _vgx_predicator_has_rel( probe )     // REL
@@ -1788,6 +2230,12 @@ __inline static int _vgx_predicator_specific( const vgx_predicator_t probe ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_specific_anyval
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_specific_anyval( const vgx_predicator_t probe ) {
   // return true if predicator probe is fully specified with any value (i.e. no wildcard components except for the value)
   return _vgx_predicator_has_rel( probe )     // REL
@@ -1798,6 +2246,12 @@ __inline static int _vgx_predicator_specific_anyval( const vgx_predicator_t prob
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_specific_value
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_specific_value( const vgx_predicator_t probe ) {
   // return true if predicator probe is fully specified (i.e. no wildcard components)
   return _vgx_predicator_has_rel( probe )     // REL
@@ -1809,6 +2263,12 @@ __inline static int _vgx_predicator_specific_value( const vgx_predicator_t probe
 
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_sortable
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_sortable( const vgx_predicator_t probe ) {
   // return true if predicator probe defines a value-type, i.e. values of matching predicator will all be compatible and therefore sortable
   return (probe.data & __VGX_PREDICATOR_SMT_MASK) != __VGX_PREDICATOR_WILDCARD
@@ -1817,16 +2277,34 @@ __inline static int _vgx_predicator_is_sortable( const vgx_predicator_t probe ) 
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_as_modifier_enum
+ *
+ ******************************************************************************
+ */
 __inline static vgx_predicator_modifier_enum _vgx_predicator_as_modifier_enum( const vgx_predicator_t pred ) {
   return (vgx_predicator_modifier_enum)(pred.mod.bits & _VGX_PREDICATOR_MOD_STO_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_expiration
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_expiration( const vgx_predicator_t probe ) {
   return (probe.mod.bits & _VGX_PREDICATOR_MOD_STO_MASK) == VGX_PREDICATOR_MOD_TIME_EXPIRES;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_predicator_is_expired
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_predicator_is_expired( const vgx_predicator_t probe, uint32_t now_ts ) {
   return _vgx_predicator_is_expiration( probe ) && probe.val.uinteger <= now_ts;
 }
@@ -1976,10 +2454,22 @@ typedef enum e_vgx_vertex_probe_spec {
 
 
 
+
+/**************************************************************************//**
+ * __append_string
+ *
+ ******************************************************************************
+ */
 __inline static void __append_string( char **dest, const char *src ) {
   while( *src && (*(*dest)++ = *src++) != '\0' );
 }
 
+
+/**************************************************************************//**
+ * _vgx_probe_spec_as_new_string
+ *
+ ******************************************************************************
+ */
 __inline static char * _vgx_probe_spec_as_new_string( const vgx_vertex_probe_spec spec ) {
 #define APPEND( Source )        __append_string( &dest, Source )
 #define VCOMP( ISpec, Offset )  _vgx_vcomp_as_string( (vgx_value_comparison) (((ISpec) >> (Offset)) & VGX_VALUE_MASK) )
@@ -2127,19 +2617,43 @@ typedef enum e_vgx_sortspec_t {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sort_direction
+ *
+ ******************************************************************************
+ */
 __inline static vgx_sortspec_t _vgx_sort_direction( const vgx_sortspec_t spec ) {
   return (vgx_sortspec_t)((int)spec & _VGX_SORT_DIRECTION_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_sortby
+ *
+ ******************************************************************************
+ */
 __inline static vgx_sortspec_t _vgx_sortby( const vgx_sortspec_t spec ) {
   return (vgx_sortspec_t)((int)spec & _VGX_SORTBY_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_aggregate
+ *
+ ******************************************************************************
+ */
 __inline static vgx_sortspec_t _vgx_aggregate( const vgx_sortspec_t spec ) {
   return (vgx_sortspec_t)((int)spec & _VGX_AGGREGATE_MASK);
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_set_sort_direction
+ *
+ ******************************************************************************
+ */
 __inline static vgx_sortspec_t _vgx_set_sort_direction( vgx_sortspec_t *sortspec ) {
 
   // Set default sort direction if not specified
@@ -2171,6 +2685,12 @@ __inline static vgx_sortspec_t _vgx_set_sort_direction( vgx_sortspec_t *sortspec
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sortspec_valid
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_sortspec_valid( vgx_sortspec_t spec ) {
   if( _vgx_sortby( spec ) ) {
     if( _vgx_sort_direction( spec ) == VGX_SORT_DIRECTION_INVALID ) {
@@ -2229,6 +2749,12 @@ __inline static int _vgx_sortspec_valid( vgx_sortspec_t spec ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sortspec_numeric
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_sortspec_numeric( vgx_sortspec_t spec ) {
   switch( _vgx_sortby( spec ) ) {
   case VGX_SORTBY_PREDICATOR:
@@ -2250,6 +2776,12 @@ __inline static int _vgx_sortspec_numeric( vgx_sortspec_t spec ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sortspec_integer
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_sortspec_integer( vgx_sortspec_t spec ) {
   switch( _vgx_sortby( spec ) ) {
   case VGX_SORTBY_PREDICATOR:
@@ -2272,6 +2804,12 @@ __inline static int _vgx_sortspec_integer( vgx_sortspec_t spec ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sortspec_string
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_sortspec_string( vgx_sortspec_t spec ) {
   switch( _vgx_sortby( spec ) ) {
     case VGX_SORTBY_ANCHOR_OBID:
@@ -2286,6 +2824,12 @@ __inline static int _vgx_sortspec_string( vgx_sortspec_t spec ) {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_sortspec_dontcare
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_sortspec_dontcare( vgx_sortspec_t spec ) {
   switch( _vgx_sortby( spec ) ) {
   case VGX_SORTBY_NATIVE:
@@ -2366,40 +2910,94 @@ __inline static const char * _vgx_sort_direction_as_string( const vgx_sortspec_t
 
 
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_vertextype
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_vertextype( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_TYPE_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_degree
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_degree( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_DEGREE_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_indegree
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_indegree( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_INDEGREE_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_outdegree
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_outdegree( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_OUTDEGREE_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_any_degree
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_any_degree( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_ANY_DEGREE_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_id
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_id( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_ID_ENA;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_id_exact
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_id_exact( const vgx_vertex_probe_spec spec ) {
   // True if spec contains == or != for exact ID
   return (spec & _VERTEX_PROBE_ID_ENA) && ((spec & _VERTEX_PROBE_ID_EQU) == _VERTEX_PROBE_ID_EQU);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_id_prefix
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_id_prefix( const vgx_vertex_probe_spec spec ) {
   // True if spec contains == or != for ID prefix
   return (spec & _VERTEX_PROBE_ID_ENA) && ((spec & _VERTEX_PROBE_ID_EQU) == _VERTEX_PROBE_ID_LTE);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_has_advanced
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_has_advanced( const vgx_vertex_probe_spec spec ) {
   return spec & _VERTEX_PROBE_ADVANCED_ENA;
 }
@@ -2421,36 +3019,72 @@ __inline static int _vgx_vertex_condition_has_obid_not_match( vgx_vertex_probe_s
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_vertextype
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_vertextype( vgx_vertex_probe_spec *spec, const vgx_value_comparison value_test ) {
   int ret = ((int)value_test << (int)_VERTEX_PROBE_TYPE_OFFSET) | (int)_VERTEX_PROBE_TYPE_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_degree
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_degree( vgx_vertex_probe_spec *spec, const vgx_value_comparison value_test ) {
   int ret = ((int)value_test << (int)_VERTEX_PROBE_DEGREE_OFFSET) | (int)_VERTEX_PROBE_DEGREE_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_indegree
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_indegree( vgx_vertex_probe_spec *spec, const vgx_value_comparison value_test ) {
   int ret = ((int)value_test << (int)_VERTEX_PROBE_INDEGREE_OFFSET) | (int)_VERTEX_PROBE_INDEGREE_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_outdegree
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_outdegree( vgx_vertex_probe_spec *spec, const vgx_value_comparison value_test ) {
   int ret = ((int)value_test << (int)_VERTEX_PROBE_OUTDEGREE_OFFSET) | (int)_VERTEX_PROBE_OUTDEGREE_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_id
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_id( vgx_vertex_probe_spec *spec, const vgx_value_comparison value_test ) {
   int ret = ((int)value_test << (int)_VERTEX_PROBE_ID_OFFSET) | (int)_VERTEX_PROBE_ID_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_idlist
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_idlist( vgx_vertex_probe_spec *spec ) {
   static const vgx_value_comparison equ = VGX_VALUE_EQU;
   _vgx_vertex_condition_add_id( spec, equ );
@@ -2459,6 +3093,12 @@ __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_idlist( vgx_vert
   return *spec;
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_add_advanced
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_advanced( vgx_vertex_probe_spec *spec ) {
   int ret = ((int)VGX_VALUE_ANY << (int)_VERTEX_PROBE_ADVANCED_OFFSET) | (int)_VERTEX_PROBE_ADVANCED_ENA | (int)*spec;
   *spec = (vgx_vertex_probe_spec)ret;
@@ -2468,27 +3108,63 @@ __inline static vgx_vertex_probe_spec _vgx_vertex_condition_add_advanced( vgx_ve
 
 
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_vertextype
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_vertextype( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_TYPE_MASK | *spec) ^ _VERTEX_PROBE_TYPE_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_degree
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_degree( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_DEGREE_MASK | *spec) ^ _VERTEX_PROBE_DEGREE_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_indegree
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_indegree( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_INDEGREE_MASK | *spec) ^ _VERTEX_PROBE_INDEGREE_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_outdegree
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_outdegree( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_OUTDEGREE_MASK | *spec) ^ _VERTEX_PROBE_OUTDEGREE_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_id
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_id( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_IDLIST_MASK | *spec) ^ _VERTEX_PROBE_IDLIST_MASK);
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_ID_MASK | *spec) ^ _VERTEX_PROBE_ID_MASK);
 }
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_clear_advanced
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_vertex_condition_clear_advanced( vgx_vertex_probe_spec *spec ) {
   *spec = (vgx_vertex_probe_spec)((_VERTEX_PROBE_ADVANCED_MASK | *spec) ^ _VERTEX_PROBE_ADVANCED_MASK);
 }
@@ -3078,12 +3754,24 @@ typedef enum e_vgx_ArcFilter_type {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_is_arcfilter_type_generic
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_is_arcfilter_type_generic( const vgx_ArcFilter_type type ) {
   return (type & __VGX_ARC_FILTER_TYPE_MASK_GENERIC) == VGX_ARC_FILTER_TYPE_GEN_NONE;
 }
 
 
 
+
+/**************************************************************************//**
+ * _vgx_arcfilter_has_vertex_probe
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_arcfilter_has_vertex_probe( const vgx_ArcFilter_type type ) {
   return _vgx_is_arcfilter_type_generic( type ) && (type & __VGX_ARC_FILTER_TYPE_MASK_GEN_VERTEX) != 0;
 }
@@ -3853,7 +4541,3 @@ DLL_VISIBLE extern void vgx_SIM_DESTROY( void );
 
 
 #endif
-
-
-
-

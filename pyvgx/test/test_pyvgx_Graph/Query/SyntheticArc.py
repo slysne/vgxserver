@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    SyntheticArc.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from ..Query._query_test_support import *
 from pyvgx import *
 import pyvgx
@@ -9,7 +34,14 @@ graph = None
 
 REL_SYN = "__synthetic__"
 
+
+###############################################################################
+# outarc_dict
+#
+###############################################################################
 def outarc_dict( modstr, relstr, val ):
+    """
+    """
     return { 'direction'    : 'D_OUT',
              'modifier'     : modstr,
              'relationship' : relstr,
@@ -19,23 +51,56 @@ def outarc_dict( modstr, relstr, val ):
 SYNTHETIC_OUTARC = outarc_dict( 'M_NONE', REL_SYN, -1 )
 
 
+
+###############################################################################
+# arc_dir
+#
+###############################################################################
 def arc_dir( result, offset=0 ):
+    """
+    """
     return result[offset][ 'arc' ][ 'direction' ]
 
 
+
+###############################################################################
+# arc_rel
+#
+###############################################################################
 def arc_rel( result, offset=0 ):
+    """
+    """
     return result[offset][ 'arc' ][ 'relationship' ]
 
 
+
+###############################################################################
+# arc_mod
+#
+###############################################################################
 def arc_mod( result, offset=0 ):
+    """
+    """
     return result[offset][ 'arc' ][ 'modifier' ]
 
 
+
+###############################################################################
+# arc_val
+#
+###############################################################################
 def arc_val( result, offset=0 ):
+    """
+    """
     return result[offset][ 'arc' ][ 'value' ]
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_Struct
+#
+###############################################################################
 def TEST_SyntheticArc_Struct():
     """
     Synthetic Arc - structure/traversal
@@ -160,6 +225,11 @@ def TEST_SyntheticArc_Struct():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc
+#
+###############################################################################
 def TEST_SyntheticArc():
     """
     Synthetic Arc
@@ -482,7 +552,14 @@ def TEST_SyntheticArc():
 
 
 
+
+###############################################################################
+# bitvector_match
+#
+###############################################################################
 def bitvector_match( memobj, index, value ):
+    """
+    """
     memval = memobj[index]
     Expect( type(memval) == list and len(memval) == 1,  "bitvector encoded as singleton list, got %s" % type(memval) )
     bv_val = memval[0]
@@ -492,6 +569,11 @@ def bitvector_match( memobj, index, value ):
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_hasrel
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_hasrel():
     """
     Synthetic Arc - synarc.hasrel()
@@ -717,6 +799,11 @@ def TEST_SyntheticArc_synarc_hasrel():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_hasmod
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_hasmod():
     """
     Synthetic Arc - synarc.hasmod()
@@ -944,6 +1031,11 @@ def TEST_SyntheticArc_synarc_hasmod():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_hasrelmod
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_hasrelmod():
     """
     Synthetic Arc - synarc.hasrelmod()
@@ -1196,6 +1288,11 @@ def TEST_SyntheticArc_synarc_hasrelmod():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_value_single
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_value_single():
     """
     Synthetic Arc - synarc.value() single
@@ -1355,6 +1452,11 @@ def TEST_SyntheticArc_synarc_value_single():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_value_multiple
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_value_multiple():
     """
     Synthetic Arc - synarc.value() multiple
@@ -1413,6 +1515,11 @@ def TEST_SyntheticArc_synarc_value_multiple():
 
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_decay
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_decay():
     """
     Synthetic Arc - synarc.decay()
@@ -1513,13 +1620,25 @@ def TEST_SyntheticArc_synarc_decay():
 
 
 
+
+###############################################################################
+# float_equal
+#
+###############################################################################
 def float_equal( a, b, tolerance=0.0001 ):
+    """
+    """
     if b != 0:
         return ((a / b) - 1) < tolerance;
     else:
         return abs(a) < tolerance
 
 
+
+###############################################################################
+# TEST_SyntheticArc_synarc_decay_variants
+#
+###############################################################################
 def TEST_SyntheticArc_synarc_decay_variants():
     """
     Synthetic Arc - synarc.decay() variants
@@ -1621,11 +1740,17 @@ def TEST_SyntheticArc_synarc_decay_variants():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

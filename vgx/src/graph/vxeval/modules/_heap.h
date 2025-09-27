@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   _heap.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    _heap.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VXEVAL_MODULES_HEAP_H
 #define _VGX_VXEVAL_MODULES_HEAP_H
@@ -39,6 +55,12 @@ typedef int (*__f_heapcmp)( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb );
 
 
 
+
+/**************************************************************************//**
+ * __minheap_lt
+ *
+ ******************************************************************************
+ */
 __inline static int __minheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as min value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -52,6 +74,12 @@ __inline static int __minheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __minheap_gt
+ *
+ ******************************************************************************
+ */
 __inline static int __minheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as min value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -65,6 +93,12 @@ __inline static int __minheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __maxheap_lt
+ *
+ ******************************************************************************
+ */
 __inline static int __maxheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as max value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -78,6 +112,12 @@ __inline static int __maxheap_lt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __maxheap_gt
+ *
+ ******************************************************************************
+ */
 __inline static int __maxheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   // NONE interpreted as max value
   if( pa->type == STACK_ITEM_TYPE_NONE ) {
@@ -91,6 +131,12 @@ __inline static int __maxheap_gt( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *
 
 
 
+
+/**************************************************************************//**
+ * __heap_swap
+ *
+ ******************************************************************************
+ */
 __inline static vgx_EvalStackItem_t * __heap_swap( vgx_EvalStackItem_t *pa, vgx_EvalStackItem_t *pb ) {
   vgx_EvalStackItem_t tmp = *pa;
   *pa = *pb;

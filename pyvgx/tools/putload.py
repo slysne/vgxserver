@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    putload.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 import socket
 from threads import *
 import time
@@ -13,14 +38,28 @@ from pyvgx import StringQueue
 WORKING = True
 
 
+
+###############################################################################
+# getbig
+#
+###############################################################################
 def getbig( N ):
+    """
+    """
     return bytes( (random.randint(0,255) for n in range(N)) )
 
 
 X = Lock()
 nerr = 0
 
+
+###############################################################################
+# Error
+#
+###############################################################################
 def Error( lines ):
+    """
+    """
     global nerr
     X.acquire()
     try:
@@ -39,7 +78,14 @@ N=0
 
 tn = 1
 
+
+###############################################################################
+# connect
+#
+###############################################################################
 def connect( host, port ):
+    """
+    """
     s = socket.socket( socket.AF_INET, socket.SOCK_STREAM )
     s.connect( (host, port) )
     s.setblocking( False )
@@ -51,7 +97,14 @@ PORT1 = 9990
 PORT2 = 9990
 
 
+
+###############################################################################
+# new_state_data
+#
+###############################################################################
 def new_state_data( sock ):
+    """
+    """
     return [
         sock,           # Socket instance
         StringQueue(),  # Response data queue
@@ -61,7 +114,14 @@ def new_state_data( sock ):
 
 
 
+
+###############################################################################
+# reset_state_data
+#
+###############################################################################
 def reset_state_data( sdata ):
+    """
+    """
     s, Q, state, remain = sdata
     s.close()
     port = random.sample([PORT1,PORT2],1)[0]
@@ -73,7 +133,14 @@ def reset_state_data( sdata ):
 
 
 
+
+###############################################################################
+# parse_error
+#
+###############################################################################
 def parse_error( sdata ):
+    """
+    """
     Q, state, remain = sdata
     Q.unread()
     Error( Q.getvalue() )
@@ -81,17 +148,38 @@ def parse_error( sdata ):
 
 
 
+
+###############################################################################
+# parse_state_complete
+#
+###############################################################################
 def parse_state_complete( sdata ):
+    """
+    """
     return sdata[2] == 3 # COMPLETE
 
 
 
+
+###############################################################################
+# parse_state_reset
+#
+###############################################################################
 def parse_state_reset( sdata ):
+    """
+    """
     sdata[2] = 0 # INITIAL
 
 
 
+
+###############################################################################
+# parse
+#
+###############################################################################
 def parse( sdata ):
+    """
+    """
 
     s, Q, state, remain = sdata
     #print(s)
@@ -156,7 +244,14 @@ def parse( sdata ):
 
 
 
+
+###############################################################################
+# work
+#
+###############################################################################
 def work( qdata=None ):
+    """
+    """
     global N
     global tn
     X.acquire()
@@ -309,7 +404,14 @@ def work( qdata=None ):
 
 
 
+
+###############################################################################
+# main
+#
+###############################################################################
 def main():
+    """
+    """
     qdata = None
     try:
         init_n = int( sys.argv[1] )
@@ -362,5 +464,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

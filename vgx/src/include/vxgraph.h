@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   vxgraph.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxgraph.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef VGX_VXGRAPH_H
 #define VGX_VXGRAPH_H
@@ -273,6 +289,12 @@ typedef union u_vgx_Rank_t {
 #define vgx_RankGetLongitude vgx_RankGetC0
 #define vgx_RankGetLatitude vgx_RankGetC1
 
+
+/**************************************************************************//**
+ * __vgx_RankSetC
+ *
+ ******************************************************************************
+ */
 __inline static void __vgx_RankSetC( vgx_RankElement_t *e, float c ) {
   float_bits_t B = { .f = c };
   e->c24 = B.f24;
@@ -294,6 +316,12 @@ __inline static void __vgx_RankSetC( vgx_RankElement_t *e, float c ) {
 #define vgx_RankSetANNArcLSHRotate( Rank, RR ) vgx_RankSetB0( Rank, RR )
 
 
+
+/**************************************************************************//**
+ * __vgx_Rank_INIT
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Rank_t __vgx_Rank_INIT( float c1, float c0 ) {
   vgx_Rank_t rank;
   vgx_RankSetC1( &rank, c1 );
@@ -911,6 +939,12 @@ typedef struct s_vgx_Arc_t {
 #define VGX_COPY_ARC( DestArcPtr, SrcArcPtr ) (*(DestArcPtr) = *(SrcArcPtr))
 
 
+
+/**************************************************************************//**
+ * _vgx_arc_set_distance
+ *
+ ******************************************************************************
+ */
 __inline static void _vgx_arc_set_distance( vgx_Arc_t *arc, int distance ) {
   if( distance == 1 && arc->head.vertex == arc->tail ) {
     distance = 0;
@@ -1062,11 +1096,23 @@ __inline static vgx_collector_mode_t _vgx_collector_mode_collect( vgx_collector_
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_collector_mode_is_deep_collect
+ *
+ ******************************************************************************
+ */
 __inline static bool _vgx_collector_mode_is_deep_collect( vgx_collector_mode_t mode ) {
   return ((int)mode & VGX_COLLECTOR_MODE_DEEP_COLLECT) ? true : false;
 }
 
 
+
+/**************************************************************************//**
+ * _vgx_collector_mode_type
+ *
+ ******************************************************************************
+ */
 __inline static vgx_collector_mode_t _vgx_collector_mode_type( vgx_collector_mode_t mode ) {
   return (vgx_collector_mode_t)((int)mode & __VGX_COLLECTOR_MODE_TYPE_MASK);
 }
@@ -1805,6 +1851,12 @@ DLL_HIDDEN extern void vgx_Vertex_UnregisterClass( void );
 
 
 
+
+/**************************************************************************//**
+ * __vgx_default_vertex_descriptor
+ *
+ ******************************************************************************
+ */
 __inline static vgx_VertexDescriptor_t __vgx_default_vertex_descriptor( vgx_VertexStateContext_man_t man, vgx_VertexTypeEnumeration_t vxtype ) {
   switch( man ) {
   case VERTEX_STATE_CONTEXT_MAN_REAL:
@@ -2093,6 +2145,12 @@ typedef union u_vgx_Similarity_value_t {
 
 
 
+
+/**************************************************************************//**
+ * update_simconfig
+ *
+ ******************************************************************************
+ */
 static vgx_Similarity_config_t * update_simconfig( vgx_Similarity_config_t *dest, const vgx_Similarity_config_t *src ) {
   if( src->fingerprint.nsegm >= 0 )           dest->fingerprint.nsegm       = src->fingerprint.nsegm;
   if( src->fingerprint.nsign >= 0 )           dest->fingerprint.nsign       = src->fingerprint.nsign;
@@ -5476,6 +5534,12 @@ typedef struct s_vgx_neighborhood_probe_t {
 } vgx_neighborhood_probe_t;
 
 
+
+/**************************************************************************//**
+ * _vgx_is_neighborhood_probe_halted
+ *
+ ******************************************************************************
+ */
 __inline static bool _vgx_is_neighborhood_probe_halted( vgx_neighborhood_probe_t *probe ) {
   return _vgx_is_execution_halted( probe->conditional.arcfilter->timing_budget ) ||
          _vgx_is_execution_halted( probe->traversing.arcfilter->timing_budget );
@@ -5567,6 +5631,12 @@ typedef struct s_vgx_vertex_probe_t {
 
 
 
+
+/**************************************************************************//**
+ * _vgx_vertex_condition_full_wildcard
+ *
+ ******************************************************************************
+ */
 __inline static int _vgx_vertex_condition_full_wildcard( vgx_vertex_probe_spec spec, vgx_VertexStateContext_man_t manifestation ) {
   return manifestation == VERTEX_STATE_CONTEXT_MAN_ANY
          &&
@@ -7846,10 +7916,22 @@ __inline static uint64_t __vertex_get_index( const vgx_AllocatedVertex_t *V ) {
   return (uint64_t)V / 192;
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_bitindex
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t __vertex_get_bitindex( const vgx_AllocatedVertex_t *V ) {
   return (uint64_t)V / 12288; // 192*64
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_bitvector
+ *
+ ******************************************************************************
+ */
 __inline static uint64_t __vertex_get_bitvector( const vgx_AllocatedVertex_t *V ) {
   return 1ULL << (((uint64_t)V / 192) & 0x3F);
 }
@@ -7860,19 +7942,43 @@ __inline static int __vertex_get_semaphore_count( const vgx_Vertex_t *V  ) {
   return (int)V->descriptor.semaphore.count;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_semaphore_count
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_semaphore_count( vgx_Vertex_t *V ) {
   V->descriptor.semaphore.count = 0;
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_semaphore_count
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_semaphore_count( vgx_Vertex_t *V ) {
   return (int)(++(V->descriptor.semaphore.count));
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_semaphore_count_delta
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_semaphore_count_delta( vgx_Vertex_t *V, int8_t delta ) {
   V->descriptor.semaphore.count += delta;
   return (int)(V->descriptor.semaphore.count);
 }
 
+
+/**************************************************************************//**
+ * __vertex_dec_semaphore_count_delta
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_semaphore_count_delta( vgx_Vertex_t *V, int8_t delta ) {
   V->descriptor.semaphore.count -= delta;
   return (int)(V->descriptor.semaphore.count);
@@ -7880,6 +7986,12 @@ __inline static int __vertex_dec_semaphore_count_delta( vgx_Vertex_t *V, int8_t 
 
 
 
+
+/**************************************************************************//**
+ * __vertex_dec_semaphore_count
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_semaphore_count( vgx_Vertex_t *V ) {
   if( V->descriptor.semaphore.count > 0 ) {
     return (int)(--(V->descriptor.semaphore.count));
@@ -7889,10 +8001,22 @@ __inline static int __vertex_dec_semaphore_count( vgx_Vertex_t *V ) {
   }
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_semaphore_writer_reentrant
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_semaphore_writer_reentrant( const vgx_Vertex_t *V ){
   return V->descriptor.semaphore.count < VERTEX_SEMAPHORE_COUNT_REENTRANCY_LIMIT;
 }
 
+
+/**************************************************************************//**
+ * __vertex_has_semaphore_reader_capacity
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_semaphore_reader_capacity( const vgx_Vertex_t *V ) {
   return V->descriptor.semaphore.count < VERTEX_SEMAPHORE_COUNT_READERS_LIMIT;
 }
@@ -7903,18 +8027,42 @@ __inline static DWORD __vertex_get_writer_threadid( const vgx_Vertex_t *V ) {
   return V->descriptor.writer.threadid;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_writer_current_thread
+ *
+ ******************************************************************************
+ */
 __inline static DWORD __vertex_set_writer_current_thread( vgx_Vertex_t *V ) {
   return (V->descriptor.writer.threadid = GET_CURRENT_THREAD_ID());
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_writer_current_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_writer_current_thread( const vgx_Vertex_t *V ) {
   return V->descriptor.writer.threadid == GET_CURRENT_THREAD_ID(); 
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_writer_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_writer_thread( const vgx_Vertex_t *V, uint32_t threadid ) {
   return V->descriptor.writer.threadid == threadid;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_writer_thread
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_writer_thread( vgx_Vertex_t *V ) {
   V->descriptor.writer.threadid = VERTEX_WRITER_THREADID_NONE;
 }
@@ -7928,91 +8076,217 @@ __inline static bool __vertex_is_unlocked( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.lck == VERTEX_STATE_LOCK_LCK_OPEN;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_locked
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.lck == VERTEX_STATE_LOCK_LCK_LOCKED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_unlocked
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_unlocked( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.lck = VERTEX_STATE_LOCK_LCK_OPEN;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_locked
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_locked( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.lck = VERTEX_STATE_LOCK_LCK_LOCKED; 
 }
 
 // state.lock.rwl
+
+/**************************************************************************//**
+ * __vertex_is_writable
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_writable( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.rwl == VERTEX_STATE_LOCK_RWL_WRITABLE;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_readonly
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_readonly( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.rwl == VERTEX_STATE_LOCK_RWL_READONLY;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_writable
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_writable( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.rwl = VERTEX_STATE_LOCK_RWL_WRITABLE;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_writable
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_writable( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.rwl = VERTEX_STATE_LOCK_RWL_NONE;
 } // same thing as writable, but for clarity
 
+
+/**************************************************************************//**
+ * __vertex_set_readonly
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_readonly( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.rwl = VERTEX_STATE_LOCK_RWL_READONLY;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_locked_readonly
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_locked_readonly( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.bits = VERTEX_STATE_LOCK_READONLY;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_readonly
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_readonly( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.rwl = VERTEX_STATE_LOCK_RWL_NONE; 
 } // same thing as writable, but for clarity
 
 // writable:
+
+/**************************************************************************//**
+ * __vertex_is_locked_writable
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_writable( const vgx_Vertex_t *V ) {
   return __vertex_is_locked(V) && __vertex_is_writable(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_writer_reentrant
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_writer_reentrant( const vgx_Vertex_t *V ) {
   return __vertex_is_writer_current_thread(V) && __vertex_is_semaphore_writer_reentrant(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_locked_writable_by_current_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_writable_by_current_thread( const vgx_Vertex_t *V ) {
   return __vertex_is_locked_writable(V) && __vertex_is_writer_current_thread(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_locked_writable_by_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_writable_by_thread( const vgx_Vertex_t *V, uint32_t threadid ) {
   return __vertex_is_locked_writable(V) && V->descriptor.writer.threadid == threadid; 
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_locked_writable_by_other_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_writable_by_other_thread( const vgx_Vertex_t *V, uint32_t this_threadid ) {
   return __vertex_is_locked_writable( V ) && !__vertex_is_writer_thread( V, this_threadid );
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_not_locked_writable_by_other_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_not_locked_writable_by_other_thread( const vgx_Vertex_t *V, uint32_t this_threadid ) {
   return __vertex_is_unlocked( V ) || __vertex_is_readonly( V ) || __vertex_is_writer_thread( V, this_threadid );
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_writer_recursion
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_get_writer_recursion( const vgx_Vertex_t *V ) {
   return __vertex_get_semaphore_count(V); 
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_writer_recursion_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_writer_recursion_CS( vgx_Vertex_t *V ) {
   _vgx_graph_inc_vertex_WL_count_CS( V->graph );
   return __vertex_inc_semaphore_count(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_writer_recursion_delta_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_writer_recursion_delta_CS( vgx_Vertex_t *V, int8_t delta ) {
   _vgx_graph_inc_vertex_WL_count_delta_CS( V->graph, delta );
   return __vertex_inc_semaphore_count_delta( V, delta );
 }
 
+
+/**************************************************************************//**
+ * __vertex_dec_writer_recursion_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_writer_recursion_CS( vgx_Vertex_t *V ) {
   _vgx_graph_dec_vertex_WL_count_CS( V->graph );
   return __vertex_dec_semaphore_count(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_dec_writer_recursion_delta_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_writer_recursion_delta_CS( vgx_Vertex_t *V, int8_t delta ) {
   _vgx_graph_dec_vertex_WL_count_delta_CS( V->graph, delta );
   return __vertex_dec_semaphore_count_delta( V, delta );
@@ -8020,33 +8294,75 @@ __inline static int __vertex_dec_writer_recursion_delta_CS( vgx_Vertex_t *V, int
 
 
 // readonly:
+
+/**************************************************************************//**
+ * __vertex_is_locked_readonly
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_readonly( const vgx_Vertex_t *V ) {
   return __vertex_is_locked(V) && __vertex_is_readonly(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_has_reader_capacity
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_reader_capacity( const vgx_Vertex_t *V ) {
   return __vertex_has_semaphore_reader_capacity(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_readers
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_get_readers( const vgx_Vertex_t *V ) {
   return __vertex_get_semaphore_count(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_readers_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_readers_CS( vgx_Vertex_t *V ) {
   _vgx_graph_inc_vertex_RO_count_CS( V->graph );
   return __vertex_inc_semaphore_count(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_inc_readonly_recursion_delta_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_inc_readonly_recursion_delta_CS( vgx_Vertex_t *V, int8_t delta ) {
   _vgx_graph_inc_vertex_RO_count_delta_CS( V->graph, delta );
   return __vertex_inc_semaphore_count_delta( V, delta );
 }
 
+
+/**************************************************************************//**
+ * __vertex_dec_readers_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_readers_CS( vgx_Vertex_t *V ) {
   _vgx_graph_dec_vertex_RO_count_CS( V->graph );
   return __vertex_dec_semaphore_count(V);
 }
 
+
+/**************************************************************************//**
+ * __vertex_dec_readonly_recursion_delta_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_dec_readonly_recursion_delta_CS( vgx_Vertex_t *V, int8_t delta ) {
   _vgx_graph_dec_vertex_RO_count_delta_CS( V->graph, delta );
   return __vertex_dec_semaphore_count_delta( V, delta );
@@ -8054,22 +8370,46 @@ __inline static int __vertex_dec_readonly_recursion_delta_CS( vgx_Vertex_t *V, i
 
 
 // safe in CS?
+
+/**************************************************************************//**
+ * __vertex_is_locked_safe_for_thread_CS
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_locked_safe_for_thread_CS( const vgx_Vertex_t *V, uint32_t this_threadid ) {
   return __vertex_is_locked( V ) && ( __vertex_is_readonly( V ) || __vertex_is_writer_thread( V, this_threadid ) );
 }
 
 
 // state.lock.wrq
+
+/**************************************************************************//**
+ * __vertex_is_write_requested
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_write_requested( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.wrq == VERTEX_STATE_LOCK_WRQ_PENDING;
 }
 
 
+
+/**************************************************************************//**
+ * __vertex_is_write_requested_by_other_thread
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_write_requested_by_other_thread( const vgx_Vertex_t *V ) {
   return __vertex_is_write_requested( V ) && !__vertex_is_writer_current_thread( V );
 }
 
 
+
+/**************************************************************************//**
+ * __vertex_set_write_requested
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_set_write_requested( vgx_Vertex_t *V ) {
   if( __vertex_is_readonly(V) && !__vertex_is_write_requested(V) ) {
     V->descriptor.state.lock.wrq = VERTEX_STATE_LOCK_WRQ_PENDING;
@@ -8081,6 +8421,12 @@ __inline static vgx_Vertex_t * __vertex_set_write_requested( vgx_Vertex_t *V ) {
   }
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_writer_thread_or_redeem_write_request
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_writer_thread_or_redeem_write_request( vgx_Vertex_t *V ) {
   if( __vertex_is_write_requested(V) && __vertex_is_writer_current_thread(V) ) {
     // THIS IS THE PROBLEM:
@@ -8097,6 +8443,12 @@ __inline static void __vertex_set_writer_thread_or_redeem_write_request( vgx_Ver
   }
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_write_requested
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_clear_write_requested( vgx_Vertex_t *V ) {
   if( __vertex_is_write_requested(V) && __vertex_is_writer_current_thread(V) ) {
     V->descriptor.state.lock.wrq = VERTEX_STATE_LOCK_WRQ_NONE;
@@ -8109,31 +8461,73 @@ __inline static vgx_Vertex_t * __vertex_clear_write_requested( vgx_Vertex_t *V )
 }
 
 // state.lock.iny
+
+/**************************************************************************//**
+ * __vertex_is_inarcs_yielded
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_inarcs_yielded( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.iny == VERTEX_STATE_LOCK_INY_INARCS_YIELDED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_yield_inarcs
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_set_yield_inarcs( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.iny = VERTEX_STATE_LOCK_INY_INARCS_YIELDED; return V;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_yield_inarcs
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_clear_yield_inarcs( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.iny = VERTEX_STATE_LOCK_INY_INARCS_NORMAL; return V;
 }
 
 // state.lock.yib
+
+/**************************************************************************//**
+ * __vertex_is_borrowed_inarcs_busy
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_borrowed_inarcs_busy( const vgx_Vertex_t *V ) {
   return V->descriptor.state.lock.yib == VERTEX_STATE_LOCK_YIB_INARCS_BUSY;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_borrowed_inarcs_busy
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_set_borrowed_inarcs_busy( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.yib = VERTEX_STATE_LOCK_YIB_INARCS_BUSY; return V;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_borrowed_inarcs_busy
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_clear_borrowed_inarcs_busy( vgx_Vertex_t *V ) {
   V->descriptor.state.lock.yib = VERTEX_STATE_LOCK_YIB_INARCS_IDLE; return V;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_inarcs_available
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_inarcs_available( const vgx_Vertex_t *V ) {
   // Inarcs are available if the vertex is not locked or it is locked and
   // it has yielded its inarcs and the inarcs are not borrowed by someone else.
@@ -8150,6 +8544,12 @@ __inline static bool __vertex_is_inarcs_available( const vgx_Vertex_t *V ) {
 }
 
 // WRITABLE transitions
+
+/**************************************************************************//**
+ * __vertex_is_lockable_as_writable
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_lockable_as_writable( const vgx_Vertex_t *V ) {
  // Vertex is lockable for writable access if:  
   return  /* not locked and no other thread has requested write */
@@ -8174,6 +8574,12 @@ __inline static bool __vertex_is_lockable_as_writable( const vgx_Vertex_t *V ) {
           ;
 }
 
+
+/**************************************************************************//**
+ * __vertex_lock_writable_CS
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_lock_writable_CS( vgx_Vertex_t *V ) {
   // TODO: WE CANNOT lock writable if WRQ is set and we are not the same thread as the WRQ requestor!
   // ( WRQ will never be cleared in this case. )
@@ -8186,6 +8592,12 @@ __inline static vgx_Vertex_t * __vertex_lock_writable_CS( vgx_Vertex_t *V ) {
   return V;
 }
 
+
+/**************************************************************************//**
+ * __vertex_unlock_writable_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_unlock_writable_CS( vgx_Vertex_t *V ) {
   int count = __vertex_dec_writer_recursion_CS( V );
   if( count == 0 ) {
@@ -8197,6 +8609,12 @@ __inline static int __vertex_unlock_writable_CS( vgx_Vertex_t *V ) {
 }
 
 // READONLY transitions
+
+/**************************************************************************//**
+ * __vertex_is_lockable_as_readonly
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_lockable_as_readonly( const vgx_Vertex_t *V ) { 
   // Vertex is lockable for readonly access if:
   return __vertex_is_unlocked(V)                // it's not locked
@@ -8219,11 +8637,23 @@ __inline static bool __vertex_is_lockable_as_readonly( const vgx_Vertex_t *V ) {
          );
 }
 
+
+/**************************************************************************//**
+ * __vertex_lock_readonly_CS
+ *
+ ******************************************************************************
+ */
 __inline static vgx_Vertex_t * __vertex_lock_readonly_CS( vgx_Vertex_t *V ) {
   __vertex_set_locked_readonly( V );
   __vertex_inc_readers_CS( V );
   return V;
 }
+
+/**************************************************************************//**
+ * __vertex_unlock_readonly_CS
+ *
+ ******************************************************************************
+ */
 __inline static int __vertex_unlock_readonly_CS( vgx_Vertex_t *V ) {
   int count = __vertex_dec_readers_CS( V );
   if( count == 0 ) {
@@ -8244,6 +8674,12 @@ __inline static int __vertex_unlock_readonly_CS( vgx_Vertex_t *V ) {
 // DO NOT USE THIS FUNCTION!
 //
 //
+
+/**************************************************************************//**
+ * __vertex_is_readonly_lockable_as_writable
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_readonly_lockable_as_writable( const vgx_Vertex_t *V ) {
   // Vertex is locked readonly by single reader (presumably us) and no write requested
   return __vertex_is_locked_readonly(V)           // it's readonly
@@ -8263,47 +8699,113 @@ __inline static bool __vertex_is_active_context( const vgx_Vertex_t *V ) {
   return V->descriptor.state.context.sus == VERTEX_STATE_CONTEXT_SUS_ACTIVE; 
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_suspended_context
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_suspended_context( const vgx_Vertex_t *V ) {
   return V->descriptor.state.context.sus == VERTEX_STATE_CONTEXT_SUS_SUSPENDED; 
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_active_context
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_active_context( vgx_Vertex_t *V ) {
   V->descriptor.state.context.sus = VERTEX_STATE_CONTEXT_SUS_ACTIVE;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_suspended_context
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_suspended_context( vgx_Vertex_t *V ) {
   V->descriptor.state.context.sus = VERTEX_STATE_CONTEXT_SUS_SUSPENDED;
 }
 
 // state.context.man
+
+/**************************************************************************//**
+ * __vertex_is_manifestation_null
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_manifestation_null( const vgx_Vertex_t *V ) {
   return V->descriptor.state.context.man == VERTEX_STATE_CONTEXT_MAN_NULL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_manifestation_real
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_manifestation_real( const vgx_Vertex_t *V ) {
   return V->descriptor.state.context.man == VERTEX_STATE_CONTEXT_MAN_REAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_manifestation_virtual
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_manifestation_virtual( const vgx_Vertex_t *V ) {
   return V->descriptor.state.context.man == VERTEX_STATE_CONTEXT_MAN_VIRTUAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_manifestation_null
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_manifestation_null( vgx_Vertex_t *V ) {
   V->descriptor.state.context.man = VERTEX_STATE_CONTEXT_MAN_NULL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_manifestation_real
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_manifestation_real( vgx_Vertex_t *V ) {
   V->descriptor.state.context.man = VERTEX_STATE_CONTEXT_MAN_REAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_manifestation_virtual
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_manifestation_virtual( vgx_Vertex_t *V ) {
   V->descriptor.state.context.man = VERTEX_STATE_CONTEXT_MAN_VIRTUAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_manifestation
+ *
+ ******************************************************************************
+ */
 __inline static vgx_VertexStateContext_man_t __vertex_get_manifestation( const vgx_Vertex_t *V ) {
   return (vgx_VertexStateContext_man_t)(V->descriptor.state.context.man);
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_manifestation
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_manifestation( vgx_Vertex_t *V, vgx_VertexStateContext_man_t man ) {
   V->descriptor.state.context.man = man;
 }
@@ -8315,36 +8817,84 @@ __inline static bool __vertex_is_indexed_main( const vgx_Vertex_t *V ) {
   return V->descriptor.property.index.main == VERTEX_PROPERTY_INDEX_MAIN_INDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_indexed_main
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_indexed_main( vgx_Vertex_t *V ) {
   V->descriptor.property.index.main = VERTEX_PROPERTY_INDEX_MAIN_INDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_indexed_main
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_indexed_main( vgx_Vertex_t *V ) {
   V->descriptor.property.index.main = VERTEX_PROPERTY_INDEX_MAIN_UNINDEXED;
 }
 
 // property.index.type
+
+/**************************************************************************//**
+ * __vertex_is_indexed_type
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_indexed_type( const vgx_Vertex_t *V ) {
   return V->descriptor.property.index.type == VERTEX_PROPERTY_INDEX_TYPE_INDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_indexed_type
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_indexed_type( vgx_Vertex_t *V ) {
   V->descriptor.property.index.type = VERTEX_PROPERTY_INDEX_TYPE_INDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_indexed_type
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_indexed_type( vgx_Vertex_t *V ) {
   V->descriptor.property.index.type = VERTEX_PROPERTY_INDEX_TYPE_UNINDEXED;
 }
 
 // property.index
+
+/**************************************************************************//**
+ * __vertex_is_indexed
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_indexed( const vgx_Vertex_t *V ) {
   return V->descriptor.property.index.bits == VERTEX_PROPERTY_INDEX_INDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_unindexed
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_unindexed( const vgx_Vertex_t *V ) {
   return V->descriptor.property.index.bits == VERTEX_PROPERTY_INDEX_UNINDEXED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_indexed
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_indexed( vgx_Vertex_t *V ) {
   V->descriptor.property.index.bits = VERTEX_PROPERTY_INDEX_TYPE_UNINDEXED;
 }
@@ -8357,10 +8907,22 @@ __inline static bool __vertex_has_event_scheduled( const vgx_Vertex_t *V ) {
   return V->descriptor.property.event.sch == VERTEX_PROPERTY_EVENT_SCH_SCHEDULED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_event_scheduled
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_event_scheduled( vgx_Vertex_t *V ) {
   V->descriptor.property.event.sch = VERTEX_PROPERTY_EVENT_SCH_SCHEDULED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_event_scheduled
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_event_scheduled( vgx_Vertex_t *V ) {
   V->descriptor.property.event.sch = VERTEX_PROPERTY_EVENT_SCH_NONE;
 }
@@ -8373,16 +8935,34 @@ __inline static bool __vertex_scope_is_local( const vgx_Vertex_t *V ) {
   return V->descriptor.property.scope.def == VERTEX_PROPERTY_SCOPE_LOCAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_scope_local
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_scope_local( vgx_Vertex_t *V ) {
   V->descriptor.property.scope.def = VERTEX_PROPERTY_SCOPE_LOCAL;
 }
 
 
 // property.scope.global
+
+/**************************************************************************//**
+ * __vertex_scope_is_global
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_scope_is_global( const vgx_Vertex_t *V ) {
   return V->descriptor.property.scope.def == VERTEX_PROPERTY_SCOPE_GLOBAL;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_scope_global
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_scope_global( vgx_Vertex_t *V ) {
   V->descriptor.property.scope.def = VERTEX_PROPERTY_SCOPE_GLOBAL;
 }
@@ -8396,23 +8976,53 @@ __inline static bool __vertex_has_vector( const vgx_Vertex_t *V ) {
   return V->descriptor.property.vector.vec == VERTEX_PROPERTY_VECTOR_VEC_EXISTS;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_has_vector
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_has_vector( vgx_Vertex_t *V ) {
   V->descriptor.property.vector.vec = VERTEX_PROPERTY_VECTOR_VEC_EXISTS;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_has_vector
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_has_vector( vgx_Vertex_t *V ) {
   V->descriptor.property.vector.vec = VERTEX_PROPERTY_VECTOR_VEC_NONE;
 }
 
 // property.vector.ctr
+
+/**************************************************************************//**
+ * __vertex_has_centroid
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_centroid( const vgx_Vertex_t *V ) {
   return V->descriptor.property.vector.ctr == VERTEX_PROPERTY_VECTOR_CTR_CENTROID;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_has_centroid
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_has_centroid( vgx_Vertex_t *V ) {
   V->descriptor.property.vector.ctr = VERTEX_PROPERTY_VECTOR_CTR_CENTROID;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_has_centroid
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_has_centroid( vgx_Vertex_t *V ) {
   V->descriptor.property.vector.ctr = VERTEX_PROPERTY_VECTOR_CTR_STANDARD;
 }
@@ -8424,44 +9034,104 @@ __inline static bool __vertex_has_inarcs( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.in == VERTEX_PROPERTY_DEGREE_IN_NONZERO;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_has_inarcs
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_has_inarcs( vgx_Vertex_t *V ) {
   V->descriptor.property.degree.in = VERTEX_PROPERTY_DEGREE_IN_NONZERO;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_has_inarcs
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_has_inarcs( vgx_Vertex_t *V ) {
   V->descriptor.property.degree.in = VERTEX_PROPERTY_DEGREE_IN_ZERO;
 }
 
 // property.degree.out
+
+/**************************************************************************//**
+ * __vertex_has_outarcs
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_outarcs( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.out == VERTEX_PROPERTY_DEGREE_OUT_NONZERO;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_has_outarcs
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_has_outarcs( vgx_Vertex_t *V ) {
   V->descriptor.property.degree.out = VERTEX_PROPERTY_DEGREE_OUT_NONZERO;
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_has_outarcs
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_has_outarcs( vgx_Vertex_t *V ) {
   V->descriptor.property.degree.out = VERTEX_PROPERTY_DEGREE_OUT_ZERO;
 }
 
 // property.degree interpretations
+
+/**************************************************************************//**
+ * __vertex_set_isolated
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_isolated( vgx_Vertex_t *V ) {
   V->descriptor.property.degree.bits = VERTEX_PROPERTY_DEGREE_ISOLATED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_isolated
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_isolated( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.bits == VERTEX_PROPERTY_DEGREE_ISOLATED;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_source
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_source( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.bits == VERTEX_PROPERTY_DEGREE_SOURCE;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_sink
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_sink( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.bits == VERTEX_PROPERTY_DEGREE_SINK;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_internal
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_internal( const vgx_Vertex_t *V ) {
   return V->descriptor.property.degree.bits == VERTEX_PROPERTY_DEGREE_INTERNAL;
 }
@@ -8472,95 +9142,227 @@ __inline static vgx_vertex_type_t __vertex_get_type( const vgx_Vertex_t *V ) {
   return V->descriptor.type.enumeration;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_type
+ *
+ ******************************************************************************
+ */
 __inline static vgx_vertex_type_t __vertex_set_type( vgx_Vertex_t *V, vgx_vertex_type_t vt ) {
   return (V->descriptor.type.enumeration = vt);
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_type
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_type( vgx_Vertex_t *V ) {
   V->descriptor.type.enumeration = VERTEX_TYPE_ENUMERATION_NONE;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_defunct
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_set_defunct( vgx_Vertex_t *V ) {
   V->descriptor.type.enumeration = VERTEX_TYPE_ENUMERATION_DEFUNCT;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_defunct
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_defunct( const vgx_Vertex_t *V ) {
   return V->descriptor.type.enumeration == VERTEX_TYPE_ENUMERATION_DEFUNCT;
 }
 
 
 // TMX (vertex)
+
+/**************************************************************************//**
+ * __vertex_set_expiration_ts
+ *
+ ******************************************************************************
+ */
 __inline static uint32_t __vertex_set_expiration_ts( vgx_Vertex_t *V, uint32_t tmx_s ) {
   return V->TMX.vertex_ts = tmx_s;
 }
 
+
+/**************************************************************************//**
+ * __vertex_set_expiration_tms
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __vertex_set_expiration_tms( vgx_Vertex_t *V, int64_t tmx_ms ) {
   return __vertex_set_expiration_ts( V, (uint32_t)(tmx_ms/1000) );
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_expiration_ts
+ *
+ ******************************************************************************
+ */
 __inline static uint32_t __vertex_get_expiration_ts( const vgx_Vertex_t *V ) {
   return V->TMX.vertex_ts;
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_expiration_tms
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __vertex_get_expiration_tms( const vgx_Vertex_t *V ) {
   return 1000LL * __vertex_get_expiration_ts( V );
 }
 
+
+/**************************************************************************//**
+ * __vertex_clear_expiration
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_clear_expiration( vgx_Vertex_t *V ) {
   V->TMX.vertex_ts = TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_has_expiration
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_expiration( const vgx_Vertex_t *V ) {
   return V->TMX.vertex_ts < TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_is_expired
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_is_expired( const vgx_Vertex_t *V, uint32_t now_ts ) {
   return V->TMX.vertex_ts < now_ts;
 }
 
 
 // TMX (arc)
+
+/**************************************************************************//**
+ * __vertex_arcvector_set_expiration_ts
+ *
+ ******************************************************************************
+ */
 __inline static uint32_t __vertex_arcvector_set_expiration_ts( vgx_Vertex_t *V, uint32_t tmx_s ) {
   return V->TMX.arc_ts = tmx_s;
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_set_expiration_tms
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __vertex_arcvector_set_expiration_tms( vgx_Vertex_t *V, int64_t tmx_ms ) {
   return __vertex_arcvector_set_expiration_ts( V, (uint32_t)(tmx_ms/1000) );
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_get_expiration_ts
+ *
+ ******************************************************************************
+ */
 __inline static uint32_t __vertex_arcvector_get_expiration_ts( const vgx_Vertex_t *V ) {
   return V->TMX.arc_ts;
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_get_expiration_tms
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __vertex_arcvector_get_expiration_tms( const vgx_Vertex_t *V ) {
   return 1000LL * __vertex_arcvector_get_expiration_ts( V );
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_clear_expiration
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_arcvector_clear_expiration( vgx_Vertex_t *V ) {
   V->TMX.arc_ts = TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_has_expiration
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_arcvector_has_expiration( const vgx_Vertex_t *V ) {
   return V->TMX.arc_ts < TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_arcvector_is_expired
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_arcvector_is_expired( const vgx_Vertex_t *V, uint32_t now_ts ) {
   return V->TMX.arc_ts <= now_ts;
 }
 
+
+/**************************************************************************//**
+ * __vertex_has_any_expiration
+ *
+ ******************************************************************************
+ */
 __inline static bool __vertex_has_any_expiration( const vgx_Vertex_t *V ) {
   return V->TMX.vertex_ts < TIME_EXPIRES_NEVER || V->TMX.arc_ts < TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_all_clear_expiration
+ *
+ ******************************************************************************
+ */
 __inline static void __vertex_all_clear_expiration( vgx_Vertex_t *V ) {
   V->TMX.vertex_ts = TIME_EXPIRES_NEVER;
   V->TMX.arc_ts = TIME_EXPIRES_NEVER;
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_min_expiration_ts
+ *
+ ******************************************************************************
+ */
 __inline static uint32_t __vertex_get_min_expiration_ts( const vgx_Vertex_t *V ) {
   return minimum_value( V->TMX.vertex_ts, V->TMX.arc_ts );
 }
 
+
+/**************************************************************************//**
+ * __vertex_get_min_expiration_tms
+ *
+ ******************************************************************************
+ */
 __inline static int64_t __vertex_get_min_expiration_tms( const vgx_Vertex_t *V ) {
   return 1000LL * __vertex_get_min_expiration_ts( V );
 }
@@ -8574,6 +9376,12 @@ DLL_VISIBLE extern const vgx_Similarity_config_t UNSET_SIMCONFIG;
 
 
 
+
+/**************************************************************************//**
+ * __expect_vertex_WL_CS
+ *
+ ******************************************************************************
+ */
 static int __expect_vertex_WL_CS( const vgx_Vertex_t *vertex_WL ) {
   int status = 0;
   if( vertex_WL ) {
@@ -8588,6 +9396,12 @@ static int __expect_vertex_WL_CS( const vgx_Vertex_t *vertex_WL ) {
 }
 
 
+
+/**************************************************************************//**
+ * __expect_vertex_iWL_CS
+ *
+ ******************************************************************************
+ */
 static int __expect_vertex_iWL_CS( const vgx_Vertex_t *vertex_iWL ) {
   // vertex must be at least iWL (may be WL)
   int status = 0;

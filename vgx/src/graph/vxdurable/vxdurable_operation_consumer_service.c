@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# vxdurable_operation_consumer_service.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxdurable_operation_consumer_service.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vxoperation.h"
 
@@ -208,6 +224,12 @@ __inline static const char *__full_path( vgx_TransactionalConsumerService_t *con
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_request_recv
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_request_recv( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
@@ -244,6 +266,12 @@ static void __dump_tx_request_recv( const char *data, int64_t sz ) {
  ***********************************************************************
  */
 #ifdef OPSTREAM_DUMP_TX_IO
+
+/**************************************************************************//**
+ * __dump_tx_response_sent
+ *
+ ******************************************************************************
+ */
 static void __dump_tx_response_sent( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
@@ -2680,6 +2708,12 @@ static int64_t __append_tx( vgx_TransactionalConsumerService_t *consumer_service
  ***********************************************************************
  */
 #ifdef OPSTREAM_INJECT_RANDOM_ERROR_RATE 
+
+/**************************************************************************//**
+ * __random_noise_inject
+ *
+ ******************************************************************************
+ */
 static void __random_noise_inject( vgx_TransactionalConsumerService_t *consumer_service, const char *line, int64_t sz_line ) {
   // Corrupt inbound data at a low random rate to exercise the error detection / retry logic.
   if( randfloat() < (double)(OPSTREAM_INJECT_RANDOM_ERROR_RATE) ) {

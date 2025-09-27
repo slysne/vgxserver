@@ -1,10 +1,27 @@
-/*######################################################################
- *#
- *# __utest_vxquery_query.h
- *#
- *#
- *######################################################################
- */
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    __utest_vxquery_query.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef __UTEST_VXQUERY_QUERY_H
 #define __UTEST_VXQUERY_QUERY_H
@@ -34,6 +51,12 @@ static int __match_vertex_condition( const vgx_VertexCondition_t *vc1, const vgx
 
 
 
+
+/**************************************************************************//**
+ * __match_different_dword_pointers
+ *
+ ******************************************************************************
+ */
 static int __match_different_dword_pointers( const DWORD *p1, const DWORD *p2 ) {
   int equal = 
         ( p1 == NULL && p2 == NULL )
@@ -48,6 +71,12 @@ static int __match_different_dword_pointers( const DWORD *p1, const DWORD *p2 ) 
 
 
 
+
+/**************************************************************************//**
+ * __match_value
+ *
+ ******************************************************************************
+ */
 static int __match_value( const vgx_value_t *v1, const vgx_value_t *v2 ) {
   int equal = v1->type == v2->type
            && v1->data.bits == v2->data.bits;
@@ -56,6 +85,12 @@ static int __match_value( const vgx_value_t *v1, const vgx_value_t *v2 ) {
 
 
 
+
+/**************************************************************************//**
+ * __match_value_condition
+ *
+ ******************************************************************************
+ */
 static int __match_value_condition( const vgx_value_condition_t *vc1, const vgx_value_condition_t *vc2 ) {
   int equal = __match_value( &vc1->value1, &vc2->value1 )
            && __match_value( &vc1->value2, &vc2->value2 )
@@ -65,6 +100,12 @@ static int __match_value_condition( const vgx_value_condition_t *vc1, const vgx_
 
 
 
+
+/**************************************************************************//**
+ * __match_different_cstring_instances
+ *
+ ******************************************************************************
+ */
 static int __match_different_cstring_instances( const CString_t *CSTR__A, const CString_t *CSTR__B ) {
   // Match if both are NULL, or both are not NULL and not the same instance but equal strings.
   int equal = 
@@ -80,6 +121,12 @@ static int __match_different_cstring_instances( const CString_t *CSTR__A, const 
 
 
 
+
+/**************************************************************************//**
+ * __match_different_string_list_instances
+ *
+ ******************************************************************************
+ */
 static int __match_different_string_list_instances( const vgx_StringList_t *CSTR__listA, const vgx_StringList_t *CSTR__listB ) {
   // Match if both are NULL, or both are not NULL and contain not the same instances but equal strings.
   if( CSTR__listA == NULL && CSTR__listB == NULL ) {
@@ -105,6 +152,12 @@ static int __match_different_string_list_instances( const vgx_StringList_t *CSTR
 
 
 
+
+/**************************************************************************//**
+ * __match_cstring_and_chars
+ *
+ ******************************************************************************
+ */
 static int __match_cstring_and_chars( const CString_t *CSTR__A, const char *B ) {
   // Match if both are NULL, or both are not NULL and contain the same string value.
   int equal = 
@@ -119,6 +172,12 @@ static int __match_cstring_and_chars( const CString_t *CSTR__A, const char *B ) 
 
 
 
+
+/**************************************************************************//**
+ * __match_vectors
+ *
+ ******************************************************************************
+ */
 static int __match_vectors( const vgx_Vector_t *v1, const vgx_Vector_t *v2 ) {
   // Match if both are NULL, or both are not NULL and not the same instance but equal vectors.
   int equal =
@@ -133,6 +192,12 @@ static int __match_vectors( const vgx_Vector_t *v1, const vgx_Vector_t *v2 ) {
 
 
 
+
+/**************************************************************************//**
+ * __match_degree_condition
+ *
+ ******************************************************************************
+ */
 static int __match_degree_condition( const vgx_DegreeCondition_t *dc1, const vgx_DegreeCondition_t *dc2 ) {
   // Match if both are NLLL, of both are not NULL and not the same instance but equal
   int equal = 
@@ -147,6 +212,12 @@ static int __match_degree_condition( const vgx_DegreeCondition_t *dc1, const vgx
 }
 
 
+
+/**************************************************************************//**
+ * __match_similarity_condition
+ *
+ ******************************************************************************
+ */
 static int __match_similarity_condition( const vgx_SimilarityCondition_t *sc1, const vgx_SimilarityCondition_t *sc2 ) {
   // Match if both are NULL, of both are not NULL and not the same instance but equal
   int equal = 
@@ -163,6 +234,12 @@ static int __match_similarity_condition( const vgx_SimilarityCondition_t *sc1, c
 }
 
 
+
+/**************************************************************************//**
+ * __match_timestamp_condition
+ *
+ ******************************************************************************
+ */
 static int __match_timestamp_condition( const vgx_TimestampCondition_t *tc1, const vgx_TimestampCondition_t *tc2 ) {
   // Match if both are NULL, of both are not NULL and not the same instance but equal
   int equal = 
@@ -179,6 +256,12 @@ static int __match_timestamp_condition( const vgx_TimestampCondition_t *tc1, con
 }
 
 
+
+/**************************************************************************//**
+ * __match_properties
+ *
+ ******************************************************************************
+ */
 static int __match_properties( const vgx_VertexProperty_t *p1, const vgx_VertexProperty_t *p2 ) {
   if( p1->key == NULL || p2->key == NULL ) {
     // not equal by definition if key is NULL
@@ -199,6 +282,12 @@ static int __match_properties( const vgx_VertexProperty_t *p1, const vgx_VertexP
 }
 
 
+
+/**************************************************************************//**
+ * __match_property_conditions
+ *
+ ******************************************************************************
+ */
 static int __match_property_conditions( const vgx_PropertyConditionSet_t *api, CQwordList_t *c1, CQwordList_t *c2 ) {
   if( c1 == NULL && c2 == NULL ) {
     return 1;
@@ -224,6 +313,12 @@ static int __match_property_conditions( const vgx_PropertyConditionSet_t *api, C
 }
 
 
+
+/**************************************************************************//**
+ * __match_property_condition_set
+ *
+ ******************************************************************************
+ */
 static int __match_property_condition_set( const vgx_PropertyConditionSet_t *pc1, const vgx_PropertyConditionSet_t *pc2 ) {
   // Match if both are NULL, of both are not NULL and not the same instance but equal
   int equal = 
@@ -242,6 +337,12 @@ static int __match_property_condition_set( const vgx_PropertyConditionSet_t *pc1
 }
 
 
+
+/**************************************************************************//**
+ * __match_arc_condition
+ *
+ ******************************************************************************
+ */
 static int __match_arc_condition( const vgx_ArcCondition_t *a1, const vgx_ArcCondition_t *a2 ) {
   int equal = a1->positive == a2->positive
            && __match_different_cstring_instances( a1->CSTR__relationship, a2->CSTR__relationship )
@@ -254,6 +355,12 @@ static int __match_arc_condition( const vgx_ArcCondition_t *a1, const vgx_ArcCon
 
 
 
+
+/**************************************************************************//**
+ * __match_arc_conditions
+ *
+ ******************************************************************************
+ */
 static int __match_arc_conditions( vgx_ArcCondition_t **list1, vgx_ArcCondition_t **list2 ) {
   vgx_ArcCondition_t **cursor1 = list1;
   vgx_ArcCondition_t **cursor2 = list2;
@@ -277,6 +384,12 @@ static int __match_arc_conditions( vgx_ArcCondition_t **list1, vgx_ArcCondition_
 
 
 
+
+/**************************************************************************//**
+ * __match_arc_condition_set
+ *
+ ******************************************************************************
+ */
 static int __match_arc_condition_set( const vgx_ArcConditionSet_t *ac1, const vgx_ArcConditionSet_t *ac2 ) {
   // Match if both are NULL, of both are not NULL and not the same instance but equal
   int equal = 
@@ -296,6 +409,12 @@ static int __match_arc_condition_set( const vgx_ArcConditionSet_t *ac1, const vg
 
 
 
+
+/**************************************************************************//**
+ * __match_vertex_condition
+ *
+ ******************************************************************************
+ */
 static int __match_vertex_condition( const vgx_VertexCondition_t *vc1, const vgx_VertexCondition_t *vc2 ) {
   // Match if both are NULL, of both are not NULL and not the same instance but equal
   int equal = 

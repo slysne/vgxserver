@@ -1,11 +1,27 @@
-/*
-###################################################
-#
-# File:   opcodes.h
-# Author: Stian Lysne
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    opcodes.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef _VGX_VXDURABLE_OPCODES_H
 #define _VGX_VXDURABLE_OPCODES_H
@@ -111,6 +127,12 @@ __inline static void __trap_operator_error( op_BASE *op, const char *funcname, i
  ***********************************************************************
  */
 #ifdef HASVERBOSE
+
+/**************************************************************************//**
+ * __trap_operator_ignore
+ *
+ ******************************************************************************
+ */
 __inline static void __trap_operator_ignore( op_BASE *op, const char *funcname, int line ) {
   if( op ) {
     VERBOSE( 0x001, "(trap ignore) %s:%d %08X %s", funcname, line, op->op.code, op->op.name );
@@ -175,6 +197,12 @@ __inline static const char * __op_vertex( vgx_OperationParser_t *parser ) {
  ***********************************************************************
  */
 #ifdef HASVERBOSE
+
+/**************************************************************************//**
+ * __trap_parser_error
+ *
+ ******************************************************************************
+ */
 __inline static void __trap_parser_error( const char *funcname, int line ) {
   VERBOSE( 0x001, "%s:%d", funcname, line );
 }

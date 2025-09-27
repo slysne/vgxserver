@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# processor.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    processor.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_framehash.h"
 
@@ -311,6 +327,12 @@ static int64_t __cache_process_partial( framehash_processing_context_t * const p
  ***********************************************************************
  */
 #define __USE_HALFSLOT( Order_p )           ( (Order_p) <= _FRAMEHASH_MAX_P_SMALL_FRAME )
+
+/**************************************************************************//**
+ * __leaf_process
+ *
+ ******************************************************************************
+ */
 static int64_t __leaf_process( framehash_processing_context_t * const processor, int64_t *nproc ) {
   framehash_cell_t * const leaf = processor->instance.frame;
   XDO {
@@ -455,6 +477,12 @@ static int64_t __f_process_count_nactive( framehash_processing_context_t * const
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_count_nactive_limit
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_count_nactive_limit( framehash_cell_t *frame, framehash_dynamic_t *dynamic, int64_t limit ) {
   if( limit < 0 ) {
     limit = LLONG_MAX;
@@ -465,6 +493,12 @@ DLL_HIDDEN int64_t _framehash_processor__subtree_count_nactive_limit( framehash_
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__count_nactive_limit
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__count_nactive_limit( framehash_t * const self, int64_t limit ) {
   return _framehash_processor__subtree_count_nactive_limit( &self->_topframe, &self->_dynamic, limit );
 }
@@ -483,6 +517,12 @@ DLL_HIDDEN int64_t _framehash_processor__subtree_count_nactive( framehash_cell_t
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__count_nactive
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__count_nactive( framehash_t * const self ) {
   return _framehash_processor__subtree_count_nactive( &self->_topframe, &self->_dynamic );
 }
@@ -512,6 +552,12 @@ static int64_t __f_process_destroy_objects( framehash_processing_context_t * con
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_destroy_objects
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_destroy_objects( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t destroy_objects = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_destroy_objects );
   destroy_objects.flags.readonly = false;
@@ -519,6 +565,12 @@ DLL_HIDDEN int64_t _framehash_processor__subtree_destroy_objects( framehash_cell
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__destroy_objects
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__destroy_objects( framehash_t * const self ) {
   return _framehash_processor__subtree_destroy_objects( &self->_topframe, &self->_dynamic );
 }
@@ -537,6 +589,12 @@ static int64_t __f_process_collect_cell( framehash_processing_context_t * const 
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_cells
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells( framehash_cell_t *frame, framehash_dynamic_t *dynamic, f_framehash_cell_collector_t collector ) {
   framehash_processing_context_t collect_cells = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_cell );
   SUPPRESS_WARNING_TYPE_CAST_DATA_TO_FROM_FUNCTION_POINTER
@@ -545,6 +603,12 @@ DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells( framehash_cell_t
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_cells
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_cells( framehash_t * const self, f_framehash_cell_collector_t collector ) {
   return _framehash_processor__subtree_collect_cells( &self->_topframe, &self->_dynamic, collector ); 
 }
@@ -569,6 +633,12 @@ static int64_t __f_process_collect_cell_filter( framehash_processing_context_t *
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_cells_filter
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells_filter( framehash_cell_t *frame, framehash_dynamic_t *dynamic, f_framehash_cell_collector_t collector, f_framehash_cell_filter_t *filter ) {
   framehash_processing_context_t collect_cells_filter = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_cell_filter );
   SUPPRESS_WARNING_TYPE_CAST_DATA_TO_FROM_FUNCTION_POINTER
@@ -577,6 +647,12 @@ DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells_filter( framehash
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_cells_filter
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_cells_filter( framehash_t * const self, f_framehash_cell_collector_t collector, f_framehash_cell_filter_t *filter ) {
   return _framehash_processor__subtree_collect_cells_filter( &self->_topframe, &self->_dynamic, collector, filter );
 }
@@ -594,12 +670,24 @@ static int64_t __f_process_collect_cell_into_list( framehash_processing_context_
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_cells_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells_into_list( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_cells_into_list = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_cell_into_list );
   return _framehash_processor__process( &collect_cells_into_list );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_cells_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_cells_into_list( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_cells_into_list( &self->_topframe, &self->_dynamic ); 
 }
@@ -617,12 +705,24 @@ static int64_t __f_process_collect_cell_into_heap( framehash_processing_context_
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_cells_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_cells_into_heap( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_cells_into_heap = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_cell_into_heap );
   return _framehash_processor__process( &collect_cells_into_heap );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_cells_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_cells_into_heap( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_cells_into_heap( &self->_topframe, &self->_dynamic ); 
 }
@@ -640,12 +740,24 @@ static int64_t __f_process_collect_ref_into_list( framehash_processing_context_t
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_refs_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_refs_into_list( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_refs_into_list = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_ref_into_list );
   return _framehash_processor__process( &collect_refs_into_list );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_refs_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_refs_into_list( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_refs_into_list( &self->_topframe, &self->_dynamic ); 
 }
@@ -663,12 +775,24 @@ static int64_t __f_process_collect_ref_into_heap( framehash_processing_context_t
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_refs_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_refs_into_heap( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_refs_into_heap = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_ref_into_heap );
   return _framehash_processor__process( &collect_refs_into_heap );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_refs_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_refs_into_heap( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_refs_into_heap( &self->_topframe, &self->_dynamic ); 
 }
@@ -687,12 +811,24 @@ static int64_t __f_process_collect_annotation_into_list( framehash_processing_co
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_annotations_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_annotations_into_list( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_annotations_into_list = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_annotation_into_list );
   return _framehash_processor__process( &collect_annotations_into_list );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_annotations_into_list
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_annotations_into_list( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_annotations_into_list( &self->_topframe, &self->_dynamic ); 
 }
@@ -711,12 +847,24 @@ static int64_t __f_process_collect_annotation_into_heap( framehash_processing_co
 }
 
 // SUBTREE INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__subtree_collect_annotations_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__subtree_collect_annotations_into_heap( framehash_cell_t *frame, framehash_dynamic_t *dynamic ) {
   framehash_processing_context_t collect_annotations_into_heap = FRAMEHASH_PROCESSOR_NEW_CONTEXT( frame, dynamic, __f_process_collect_annotation_into_heap );
   return _framehash_processor__process( &collect_annotations_into_heap );
 }
 
 // OUTER INTERFACE
+
+/**************************************************************************//**
+ * _framehash_processor__collect_annotations_into_heap
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_processor__collect_annotations_into_heap( framehash_t * const self ) {
   return _framehash_processor__subtree_collect_annotations_into_heap( &self->_topframe, &self->_dynamic ); 
 }
@@ -834,4 +982,3 @@ DLL_HIDDEN test_descriptor_t _framehash_processor_tests[] = {
   {NULL}
 };
 #endif
-

@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Core.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 import time
 from pyvgx import *
 import pyvgx
@@ -6,6 +31,11 @@ import pyvgx
 graph = None
 
 
+
+###############################################################################
+# TEST_vxarcvector_comparator
+#
+###############################################################################
 def TEST_vxarcvector_comparator():
     """
     Core vxarcvector_comparator
@@ -18,6 +48,11 @@ def TEST_vxarcvector_comparator():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_filter
+#
+###############################################################################
 def TEST_vxarcvector_filter():
     """
     Core vxarcvector_filter
@@ -30,6 +65,11 @@ def TEST_vxarcvector_filter():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_fhash
+#
+###############################################################################
 def TEST_vxarcvector_fhash():
     """
     Core vxarcvector_fhash
@@ -42,6 +82,11 @@ def TEST_vxarcvector_fhash():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_cellproc
+#
+###############################################################################
 def TEST_vxarcvector_cellproc():
     """
     Core vxarcvector_cellproc
@@ -54,6 +99,11 @@ def TEST_vxarcvector_cellproc():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_traverse
+#
+###############################################################################
 def TEST_vxarcvector_traverse():
     """
     Core vxarcvector_traverse
@@ -66,6 +116,11 @@ def TEST_vxarcvector_traverse():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_exists
+#
+###############################################################################
 def TEST_vxarcvector_exists():
     """
     Core vxarcvector_exists
@@ -78,6 +133,11 @@ def TEST_vxarcvector_exists():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_delete
+#
+###############################################################################
 def TEST_vxarcvector_delete():
     """
     Core vxarcvector_delete
@@ -90,6 +150,11 @@ def TEST_vxarcvector_delete():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_expire
+#
+###############################################################################
 def TEST_vxarcvector_expire():
     """
     Core vxarcvector_expire
@@ -102,6 +167,11 @@ def TEST_vxarcvector_expire():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_dispatch
+#
+###############################################################################
 def TEST_vxarcvector_dispatch():
     """
     Core vxarcvector_dispatch
@@ -114,6 +184,11 @@ def TEST_vxarcvector_dispatch():
 
 
 
+
+###############################################################################
+# TEST_vxarcvector_api
+#
+###############################################################################
 def TEST_vxarcvector_api():
     """
     Core vxarcvector_api
@@ -127,6 +202,11 @@ def TEST_vxarcvector_api():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_arc
+#
+###############################################################################
 def TEST_vxgraph_arc():
     """
     Core vxgraph_arc
@@ -140,11 +220,17 @@ def TEST_vxgraph_arc():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

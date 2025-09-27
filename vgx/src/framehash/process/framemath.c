@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# framemath.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    framemath.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_framehash.h"
 
@@ -88,6 +104,12 @@ static int64_t __f_process_math_fmul( framehash_processing_context_t * const con
 }
 
 // CELL PROCESSOR: integer multiplication
+
+/**************************************************************************//**
+ * __f_process_math_imul
+ *
+ ******************************************************************************
+ */
 static int64_t __f_process_math_imul( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   int32_t factor = (int32_t)(*(double*)(context->processor.input));
   if( _CELL_IS_VALUE( cell ) ) {
@@ -107,6 +129,12 @@ static int64_t __f_process_math_imul( framehash_processing_context_t * const con
 }
 
 // INTERFACE: multiplication
+
+/**************************************************************************//**
+ * _framehash_framemath__mul
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__mul( framehash_t * const self, double factor ) {
   f_framehash_cell_processor_t mulfunc;
   if( floor(factor) == factor && factor < CXLIB_LONG_MAX && factor > CXLIB_LONG_MIN ) {
@@ -149,6 +177,12 @@ static int64_t __f_process_math_fadd( framehash_processing_context_t * const con
 }
 
 // CELL PROCESSOR: integer addition
+
+/**************************************************************************//**
+ * __f_process_math_iadd
+ *
+ ******************************************************************************
+ */
 static int64_t __f_process_math_iadd( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   int32_t value = (int32_t)(*(double*)(context->processor.input));
   if( _CELL_IS_VALUE( cell ) ) {
@@ -168,6 +202,12 @@ static int64_t __f_process_math_iadd( framehash_processing_context_t * const con
 }
 
 // INTERFACE: addition
+
+/**************************************************************************//**
+ * _framehash_framemath__add
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__add( framehash_t * const self, double value ) {
   f_framehash_cell_processor_t addfunc;
   if( floor(value) == value && value < CXLIB_LONG_MAX && value > CXLIB_LONG_MIN ) {
@@ -210,6 +250,12 @@ static int64_t __f_process_math_sqrt( framehash_processing_context_t * const con
 }
 
 // INTERFACE: square root
+
+/**************************************************************************//**
+ * _framehash_framemath__sqrt
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__sqrt( framehash_t * const self ) {
   framehash_processing_context_t math_sqrt = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_sqrt );
   FRAMEHASH_PROCESSOR_MAY_MODIFY( &math_sqrt );
@@ -244,6 +290,12 @@ static int64_t __f_process_math_pow( framehash_processing_context_t * const cont
 }
 
 // CELL PROCESSOR: square
+
+/**************************************************************************//**
+ * __f_process_math_square
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_square( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   uint64_t ival;
@@ -268,6 +320,12 @@ static int64_t __f_process_math_square( framehash_processing_context_t * const c
 }
 
 // CELL PROCESSOR: cube
+
+/**************************************************************************//**
+ * __f_process_math_cube
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_cube( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   uint64_t ival;
@@ -292,6 +350,12 @@ static int64_t __f_process_math_cube( framehash_processing_context_t * const con
 }
 
 // INTERFACE: power
+
+/**************************************************************************//**
+ * _framehash_framemath__pow
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__pow( framehash_t * const self, double exponent ) {
   f_framehash_cell_processor_t powfunc;
   if( exponent == 2.0 ) {
@@ -348,6 +412,12 @@ static int64_t __f_process_math_log( framehash_processing_context_t * const cont
 
 // CELL PROCESSOR: logarithm (base 2)
 #define __log2inv 1.4426950408889634
+
+/**************************************************************************//**
+ * __f_process_math_log2
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_log2( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   if( _CELL_IS_VALUE( cell ) ) {
@@ -372,6 +442,12 @@ static int64_t __f_process_math_log2( framehash_processing_context_t * const con
 }
 
 // INTERFACE: logarithm
+
+/**************************************************************************//**
+ * _framehash_framemath__log
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__log( framehash_t * const self, double base ) {
   double base_factor;
   f_framehash_cell_processor_t logfunc;
@@ -420,6 +496,12 @@ static int64_t __f_process_math_exp_base( framehash_processing_context_t * const
 }
 
 // CELL PROCESSOR: exponentiation (base = e)
+
+/**************************************************************************//**
+ * __f_process_math_exp
+ *
+ ******************************************************************************
+ */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int64_t __f_process_math_exp( framehash_processing_context_t * const context, framehash_cell_t * const cell ) {
   if( _CELL_IS_VALUE( cell ) ) {
@@ -439,6 +521,12 @@ static int64_t __f_process_math_exp( framehash_processing_context_t * const cont
 }
 
 // INTERFACE: exponentiation
+
+/**************************************************************************//**
+ * _framehash_framemath__exp
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__exp( framehash_t * const self, double base ) {
   f_framehash_cell_processor_t expfunc;
   if( base == 0.0 ) { // base=0 is shorthand for base=e, but e is hard to check for and 0 is meaningless anyway
@@ -484,6 +572,12 @@ static int64_t __f_process_math_decay( framehash_processing_context_t * const co
 }
 
 // INTERFACE: exponential decay
+
+/**************************************************************************//**
+ * _framehash_framemath__decay
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__decay( framehash_t * const self, double exponent ) {
   double factor = exp( exponent );
   framehash_processing_context_t math_decay = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_decay );
@@ -520,6 +614,12 @@ static int64_t __f_process_math_set( framehash_processing_context_t * const cont
 }
 
 // INTERFACE: set already populated cells to the same value, preserving existing data type in cells
+
+/**************************************************************************//**
+ * _framehash_framemath__set
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__set( framehash_t * const self, double value ) {
   framehash_processing_context_t math_set = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_set );
   FRAMEHASH_PROCESSOR_SET_IO( &math_set, &value, NULL );
@@ -555,6 +655,12 @@ static int64_t __f_process_math_randomize( framehash_processing_context_t * cons
 }
 
 // INTERFACE: set already populated cells to a random value, preserving existing data type in cells
+
+/**************************************************************************//**
+ * _framehash_framemath__randomize
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__randomize( framehash_t * const self ) {
   framehash_processing_context_t math_randomize = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_randomize );
   FRAMEHASH_PROCESSOR_MAY_MODIFY( &math_randomize );
@@ -581,6 +687,12 @@ static int64_t __f_process_math_int( framehash_processing_context_t * const cont
 }
 
 // INTERFACE: cast to int
+
+/**************************************************************************//**
+ * _framehash_framemath__int
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__int( framehash_t * const self ) {
   framehash_processing_context_t math_int = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_int );
   FRAMEHASH_PROCESSOR_MAY_MODIFY( &math_int );
@@ -612,6 +724,12 @@ static int64_t __f_process_math_float( framehash_processing_context_t * const co
 
 
 // INTERFACE: cast to float
+
+/**************************************************************************//**
+ * _framehash_framemath__float
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__float( framehash_t * const self ) {
   framehash_processing_context_t math_float = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_float );
   FRAMEHASH_PROCESSOR_MAY_MODIFY( &math_float );
@@ -651,6 +769,12 @@ static int64_t __f_process_math_abs( framehash_processing_context_t * const cont
 
 
 // INTERFACE: absolute value
+
+/**************************************************************************//**
+ * _framehash_framemath__abs
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__abs( framehash_t * const self ) {
   framehash_processing_context_t math_abs = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_abs );
   FRAMEHASH_PROCESSOR_MAY_MODIFY( &math_abs );
@@ -687,6 +811,12 @@ static int64_t __f_process_math_sum( framehash_processing_context_t * const cont
 }
 
 // INTERFACE: sum of cell values
+
+/**************************************************************************//**
+ * _framehash_framemath__sum
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__sum( framehash_t * const self, double *sum ) {
   framehash_processing_context_t math_sum = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_sum );
   FRAMEHASH_PROCESSOR_SET_IO( &math_sum, NULL, sum );
@@ -723,6 +853,12 @@ static int64_t __f_process_math_avg( framehash_processing_context_t * const cont
 }
 
 // INTERFACE: average cell value
+
+/**************************************************************************//**
+ * _framehash_framemath__avg
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__avg( framehash_t * const self, double *avg ) {
   __cell_accumulator_t acc = {0};
   framehash_processing_context_t math_avg = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_avg );
@@ -782,6 +918,12 @@ static int64_t __f_process_math_stdev( framehash_processing_context_t * const co
 }
 
 // INTERFACE: cell standard deviation
+
+/**************************************************************************//**
+ * _framehash_framemath__stdev
+ *
+ ******************************************************************************
+ */
 DLL_HIDDEN int64_t _framehash_framemath__stdev( framehash_t * const self, double *stdev ) {
   __cell_accumulator_t acc = {0};
   framehash_processing_context_t math_stdev = FRAMEHASH_PROCESSOR_NEW_CONTEXT( &self->_topframe, &self->_dynamic, __f_process_math_stdev );
@@ -850,4 +992,3 @@ DLL_HIDDEN test_descriptor_t _framehash_framemath_tests[] = {
   {NULL}
 };
 #endif
-

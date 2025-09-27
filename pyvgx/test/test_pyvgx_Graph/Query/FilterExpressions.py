@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    FilterExpressions.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from ..Query._query_test_support import *
 from pyvgx import *
 import pyvgx
@@ -12,6 +37,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_local
+#
+###############################################################################
 def TEST_FilterExpressions_local():
     """
     Local filters
@@ -120,6 +150,11 @@ def TEST_FilterExpressions_local():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_mixed
+#
+###############################################################################
 def TEST_FilterExpressions_mixed():
     """
     Mixed filter expressions for pyvgx.Graph.Neighborhood()
@@ -199,6 +234,11 @@ def TEST_FilterExpressions_mixed():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_registers
+#
+###############################################################################
 def TEST_FilterExpressions_registers():
     """
     Filter registers
@@ -487,6 +527,11 @@ def TEST_FilterExpressions_registers():
 
 
 
+
+###############################################################################
+# TEST_FilterExpressions_collect
+#
+###############################################################################
 def TEST_FilterExpressions_collect():
     """
     Stage, Commit, Collect
@@ -604,11 +649,17 @@ def TEST_FilterExpressions_collect():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Truncate()
     graph.Close()
     del graph
-

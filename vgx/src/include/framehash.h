@@ -1,12 +1,27 @@
-/*
-###################################################
-#
-# File:   framehash.h
-# Author: Stian Lysne
-#
-#
-###################################################
-*/
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  framehash
+ * File:    framehash.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef FRAMEHASH_H
 #define FRAMEHASH_H
@@ -691,26 +706,62 @@ DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_MAY_MODIFY( framehash_proce
 DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_PRESERVE_CACHE( framehash_processing_context_t *context );
 DLL_FRAMEHASH_PUBLIC extern void FRAMEHASH_PROCESSOR_DELETE_CELL( framehash_processing_context_t *context, framehash_cell_t *cell );
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_CURRENT_FRAME
+ *
+ ******************************************************************************
+ */
 __inline static framehash_cell_t * FRAMEHASH_PROCESSOR_CURRENT_FRAME( framehash_processing_context_t *context ) {
   return context->instance.frame;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_SET_FAILED
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_SET_FAILED( framehash_processing_context_t *context ) {
   context->flags.failed = 1;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_IS_FAILED
+ *
+ ******************************************************************************
+ */
 __inline static int FRAMEHASH_PROCESSOR_IS_FAILED( const framehash_processing_context_t *context ) {
   return context->flags.failed;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_SET_COMPLETED
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_SET_COMPLETED( framehash_processing_context_t *context ) {
   context->flags.completed = 1;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_IS_COMPLETED
+ *
+ ******************************************************************************
+ */
 __inline static int FRAMEHASH_PROCESSOR_IS_COMPLETED( const framehash_processing_context_t *context ) {
   return context->flags.completed;
 }
 
+
+/**************************************************************************//**
+ * FRAMEHASH_PROCESSOR_INHERIT_COMPLETION
+ *
+ ******************************************************************************
+ */
 __inline static void FRAMEHASH_PROCESSOR_INHERIT_COMPLETION( framehash_processing_context_t *dest, const framehash_processing_context_t *src ) {
   dest->flags.completed = src->flags.completed;
 }
@@ -1239,7 +1290,3 @@ DLL_IMPORT extern int framehash_DESTROY( void );
 
 
 #endif
-
-
-
-

@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    _http_support.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import urllib.request
@@ -8,7 +33,14 @@ import re
 
 
 
+
+###############################################################################
+# get_server_host_port
+#
+###############################################################################
 def get_server_host_port():
+    """
+    """
     server = system.Status()['httpserver']['server']
     m = re.match( r"http://([^:]+):(\d+)", server )
     host = m.group(1)
@@ -17,7 +49,14 @@ def get_server_host_port():
 
 
 
+
+###############################################################################
+# send_request
+#
+###############################################################################
 def send_request( path, headers={}, expect_status=200, admin=False, json=False, address=None ):
+    """
+    """
     if address:
         host, port = address
     else:
@@ -58,7 +97,14 @@ def send_request( path, headers={}, expect_status=200, admin=False, json=False, 
 
 
 
+
+###############################################################################
+# assert_headers
+#
+###############################################################################
 def assert_headers( header_dict, content, expected_content_type=None ):
+    """
+    """
     # Server
     server = header_dict.get( 'server' )
     if server is not None:
@@ -79,7 +125,14 @@ def assert_headers( header_dict, content, expected_content_type=None ):
 
 
 
+
+###############################################################################
+# response_from_json
+#
+###############################################################################
 def response_from_json( json_bytes, expect_status="OK", expect_base_port=None ):
+    """
+    """
     try:
         D = json.loads( json_bytes )
     except Exception as err:
@@ -111,7 +164,14 @@ def response_from_json( json_bytes, expect_status="OK", expect_base_port=None ):
 
 
 
+
+###############################################################################
+# validate_structure
+#
+###############################################################################
 def validate_structure( REF, subject, recursion=0 ):
+    """
+    """
     # collection
     if type(REF) in [dict, list]:
         # dict
@@ -158,5 +218,3 @@ def validate_structure( REF, subject, recursion=0 ):
             T = [type(REF)]
         # Verify expected type
         Expect( type( subject ) in T,               "type should be one of %s, got %s" % (T, type(subject)) )
-
-

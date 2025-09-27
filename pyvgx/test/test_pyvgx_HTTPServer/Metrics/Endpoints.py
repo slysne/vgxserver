@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Endpoints.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 from .. import _http_support as Support
 from pyvgx import *
 import pyvgx
@@ -10,7 +35,14 @@ import json
 graph = None
 
 
+
+###############################################################################
+# Setup
+#
+###############################################################################
 def Setup():
+    """
+    """
     # Remove all other graphs from memory
     for graph_name in system.Registry():
         if graph_name != graph.name:
@@ -34,6 +66,11 @@ def Setup():
 
 
 
+
+###############################################################################
+# TEST_vgx_server
+#
+###############################################################################
 def TEST_vgx_server():
     """
     Core vgx_server
@@ -46,6 +83,11 @@ def TEST_vgx_server():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_hc
+#
+###############################################################################
 def TEST_endpoint__vgx_hc():
     """
     /vgx/hc
@@ -63,6 +105,11 @@ def TEST_endpoint__vgx_hc():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_ping
+#
+###############################################################################
 def TEST_endpoint__vgx_ping():
     """
     /vgx/ping
@@ -98,6 +145,11 @@ def TEST_endpoint__vgx_ping():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_time
+#
+###############################################################################
 def TEST_endpoint__vgx_time():
     """
     /vgx/time
@@ -129,6 +181,11 @@ def TEST_endpoint__vgx_time():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_graphsum
+#
+###############################################################################
 def TEST_endpoint__vgx_graphsum():
     """
     /vgx/graphsum
@@ -244,6 +301,11 @@ def TEST_endpoint__vgx_graphsum():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_status
+#
+###############################################################################
 def TEST_endpoint__vgx_status():
     """
     /vgx/status
@@ -312,6 +374,11 @@ def TEST_endpoint__vgx_status():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_txstat
+#
+###############################################################################
 def TEST_endpoint__vgx_txstat():
     """
     /vgx/txstat
@@ -370,6 +437,11 @@ def TEST_endpoint__vgx_txstat():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_peerstat
+#
+###############################################################################
 def TEST_endpoint__vgx_peerstat():
     """
     /vgx/peerstat
@@ -418,6 +490,11 @@ def TEST_endpoint__vgx_peerstat():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_meminfo
+#
+###############################################################################
 def TEST_endpoint__vgx_meminfo():
     """
     /vgx/meminfo
@@ -455,6 +532,11 @@ def TEST_endpoint__vgx_meminfo():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_nodestat
+#
+###############################################################################
 def TEST_endpoint__vgx_nodestat():
     """
     /vgx/nodestat
@@ -535,6 +617,11 @@ def TEST_endpoint__vgx_nodestat():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_matrix
+#
+###############################################################################
 def TEST_endpoint__vgx_matrix():
     """
     /vgx/matrix
@@ -572,6 +659,11 @@ def TEST_endpoint__vgx_matrix():
 
 
 
+
+###############################################################################
+# TEST_endpoint__vgx_dispatch
+#
+###############################################################################
 def TEST_endpoint__vgx_dispatch():
     """
     /vgx/dispatch
@@ -683,11 +775,17 @@ def TEST_endpoint__vgx_dispatch():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     Setup()
     RunTests( [__name__] )
     graph.Close()
     del graph
-

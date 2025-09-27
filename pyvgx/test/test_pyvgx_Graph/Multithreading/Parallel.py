@@ -1,3 +1,28 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    Parallel.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
 from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
 from pytest.threads import Worker
 from pyvgx import *
@@ -12,7 +37,14 @@ graph_name = "parallel"
 
 
 
+
+###############################################################################
+# get_graph
+#
+###############################################################################
 def get_graph( create=False  ):
+    """
+    """
     g = Graph( graph_name )
     if create:
         g.Truncate()
@@ -26,7 +58,14 @@ def get_graph( create=False  ):
 
 
 
+
+###############################################################################
+# arcs
+#
+###############################################################################
 def arcs( g ):
+    """
+    """
     t0 = timestamp()
     g.Arcs( hits=10, sortby=S_DEG )
     t1 = timestamp()
@@ -34,7 +73,14 @@ def arcs( g ):
 
 
 
+
+###############################################################################
+# vertices
+#
+###############################################################################
 def vertices( g ):
+    """
+    """
     t0 = timestamp()
     g.Vertices( hits=10, sortby=S_DEG )
     t1 = timestamp()
@@ -42,7 +88,14 @@ def vertices( g ):
 
 
 
+
+###############################################################################
+# neighborhood
+#
+###############################################################################
 def neighborhood( g ):
+    """
+    """
     root = str( random.randint(0,9) )
     t0 = timestamp()
     g.Neighborhood( root, hits=10, arc=("index",D_OUT,M_INT), sortby=S_VAL )
@@ -51,11 +104,23 @@ def neighborhood( g ):
 
 
 
+
+###############################################################################
+# terminate
+#
+###############################################################################
 def terminate( self ):
+    """
+    """
     self.terminate()
 
 
 
+
+###############################################################################
+# TEST_Parallel_Writable
+#
+###############################################################################
 def TEST_Parallel_Writable():
     """
     Test concurrent pyvgx.Vertices(), pyvgx.Arcs() and pyvgx.Neighborhood() in WRITABLE graph
@@ -88,6 +153,11 @@ def TEST_Parallel_Writable():
 
 
 
+
+###############################################################################
+# TEST_Parallel_Readonly
+#
+###############################################################################
 def TEST_Parallel_Readonly():
     """
     Test concurrent pyvgx.Vertices(), pyvgx.Arcs() and pyvgx.Neighborhood() in READONLY graph
@@ -129,7 +199,13 @@ def TEST_Parallel_Readonly():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     RunTests( [__name__] )
     PerformCleanup()
-

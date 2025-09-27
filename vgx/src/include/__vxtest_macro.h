@@ -1,10 +1,27 @@
-/*######################################################################
- *#
- *# __vxtest_macro.h
- *#
- *#
- *######################################################################
- */
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    __vxtest_macro.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef __VXTEST_MACRO_H  
 #define __VXTEST_MACRO_H
@@ -13,6 +30,12 @@
 
 
 
+
+/**************************************************************************//**
+ * __INITIALIZE_GRAPH_FACTORY
+ *
+ ******************************************************************************
+ */
 static bool __INITIALIZE_GRAPH_FACTORY( const char *basedir, bool euclidean ) {
   if( igraphfactory.IsInitialized() ) {
     return false;
@@ -26,6 +49,12 @@ static bool __INITIALIZE_GRAPH_FACTORY( const char *basedir, bool euclidean ) {
 }
 
 
+
+/**************************************************************************//**
+ * __DESTROY_GRAPH_FACTORY
+ *
+ ******************************************************************************
+ */
 static void __DESTROY_GRAPH_FACTORY( bool do_it ) {
   if( do_it ) {
     igraphfactory.Shutdown();
@@ -220,6 +249,12 @@ static const char * __EXPECT_MULTIPLE_ARC_IN_ARRAY( const char *message, frameha
 }
 
 
+
+/**************************************************************************//**
+ * SET_STATIC_ARC
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_STATIC_ARC( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_rel_enum enc, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -231,6 +266,12 @@ static vgx_Arc_t * SET_STATIC_ARC( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Verte
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC_STATIC_QUERY
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC_STATIC_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_rel_enum enc, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -242,6 +283,12 @@ static vgx_Arc_t * SET_ARC_STATIC_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_rel_enum enc, vgx_predicator_mod_t mod, vgx_predicator_val_t val, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -253,6 +300,12 @@ static vgx_Arc_t * SET_ARC( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *he
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC_REL_QUERY
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC_REL_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_rel_enum enc, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -264,6 +317,12 @@ static vgx_Arc_t * SET_ARC_REL_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Ve
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC_MOD_QUERY
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC_MOD_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_mod_t mod, vgx_predicator_val_t val, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -275,6 +334,12 @@ static vgx_Arc_t * SET_ARC_MOD_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Ve
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC_QUERY
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_predicator_rel_enum enc, vgx_predicator_mod_t mod, vgx_predicator_val_t val, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -286,6 +351,12 @@ static vgx_Arc_t * SET_ARC_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex
 }
 
 
+
+/**************************************************************************//**
+ * SET_ARC_WILD_QUERY
+ *
+ ******************************************************************************
+ */
 static vgx_Arc_t * SET_ARC_WILD_QUERY( vgx_Arc_t *arc, vgx_Vertex_t *tail, vgx_Vertex_t *head, vgx_arc_direction direction ) {
   arc->tail = tail;
   arc->head.vertex = head;
@@ -379,5 +450,3 @@ do {                                                                            
 
 
 #endif
-
-

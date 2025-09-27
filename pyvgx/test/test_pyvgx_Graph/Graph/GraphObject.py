@@ -1,4 +1,29 @@
-﻿from pytest.pytest import RunTests, Expect, TestFailed
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    GraphObject.py
+# Author:  Stian Lysne <...>
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pytest.pytest import RunTests, Expect, TestFailed
 import time
 from pyvgx import *
 import pyvgx
@@ -7,6 +32,11 @@ graph = None
 
 
 
+
+###############################################################################
+# TEST_vxgraph_object
+#
+###############################################################################
 def TEST_vxgraph_object():
     """
     Core vxgraph_object
@@ -19,6 +49,11 @@ def TEST_vxgraph_object():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_tick
+#
+###############################################################################
 def TEST_vxgraph_tick():
     """
     Core vxgraph_tick
@@ -31,6 +66,11 @@ def TEST_vxgraph_tick():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_mapping
+#
+###############################################################################
 def TEST_vxgraph_mapping():
     """
     Core vxgraph_mapping
@@ -43,6 +83,11 @@ def TEST_vxgraph_mapping():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_caching
+#
+###############################################################################
 def TEST_vxgraph_caching():
     """
     Core vxgraph_caching
@@ -55,6 +100,11 @@ def TEST_vxgraph_caching():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_relation
+#
+###############################################################################
 def TEST_vxgraph_relation():
     """
     Core vxgraph_relation
@@ -67,6 +117,11 @@ def TEST_vxgraph_relation():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_state
+#
+###############################################################################
 def TEST_vxgraph_state():
     """
     Core vxgraph_state
@@ -79,6 +134,11 @@ def TEST_vxgraph_state():
 
 
 
+
+###############################################################################
+# TEST_vxgraph_vxtable
+#
+###############################################################################
 def TEST_vxgraph_vxtable():
     """
     Core vxgraph_vxtable
@@ -91,6 +151,11 @@ def TEST_vxgraph_vxtable():
 
 
 
+
+###############################################################################
+# TEST_vxapi_simple
+#
+###############################################################################
 def TEST_vxapi_simple():
     """
     Core vxapi_simple
@@ -104,6 +169,11 @@ def TEST_vxapi_simple():
 
 
 
+
+###############################################################################
+# TEST_vxapi_advanced
+#
+###############################################################################
 def TEST_vxapi_advanced():
     """
     Core vxapi_advanced
@@ -116,6 +186,11 @@ def TEST_vxapi_advanced():
 
 
 
+
+###############################################################################
+# TEST_SizeAndOrder
+#
+###############################################################################
 def TEST_SizeAndOrder():
     """
     pyvgx.Graph.size
@@ -152,6 +227,11 @@ def TEST_SizeAndOrder():
 
 
 
+
+###############################################################################
+# TEST_CurrentTS
+#
+###############################################################################
 def TEST_CurrentTS():
     """
     pyvgx.Graph.ts
@@ -163,6 +243,11 @@ def TEST_CurrentTS():
 
 
 
+
+###############################################################################
+# TEST_SimObject
+#
+###############################################################################
 def TEST_SimObject():
     """
     pyvgx.Graph.sim
@@ -175,10 +260,16 @@ def TEST_SimObject():
 
 
 
+
+###############################################################################
+# Run
+#
+###############################################################################
 def Run( name ):
+    """
+    """
     global graph
     graph = pyvgx.Graph( name )
     RunTests( [__name__] )
     graph.Close()
     del graph
-

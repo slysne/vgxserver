@@ -1,11 +1,27 @@
-/*######################################################################
- *#
- *# vxgraph_caching.c
- *#
- *#
- *######################################################################
- */
-
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vxgraph_caching.c
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #include "_vgx.h"
 
@@ -31,6 +47,12 @@ DLL_EXPORT vgx_ICache_t iCache = {
 
 
 
+
+/**************************************************************************//**
+ * __new_QtoS_2way_set_associative_cache
+ *
+ ******************************************************************************
+ */
 static vgx_QtoS_2way_set_associative_cache_t * __new_QtoS_2way_set_associative_cache( const char *name, int depth, int order ) {
   vgx_QtoS_2way_set_associative_cache_t *cache = NULL;
   
@@ -79,6 +101,12 @@ static vgx_QtoS_2way_set_associative_cache_t * __new_QtoS_2way_set_associative_c
 }
 
 
+
+/**************************************************************************//**
+ * __delete_QtoS_2way_set_associative_cache
+ *
+ ******************************************************************************
+ */
 static void __delete_QtoS_2way_set_associative_cache( vgx_QtoS_2way_set_associative_cache_t **cache ) {
   if( cache && *cache ) {
     if( (*cache)->next ) {
@@ -96,6 +124,12 @@ static void __delete_QtoS_2way_set_associative_cache( vgx_QtoS_2way_set_associat
 }
 
 
+
+/**************************************************************************//**
+ * __print_cache_stats
+ *
+ ******************************************************************************
+ */
 static void __print_cache_stats( vgx_QtoS_2way_set_associative_cache_t *cache ) {
   int level = 0;
   vgx_QtoS_2way_set_associative_cache_t *this_level = cache;
@@ -168,13 +202,3 @@ test_descriptor_t _vgx_vxgraph_caching_tests[] = {
   {NULL}
 };
 #endif
-
-
-
-
-
-
-
-
-
-

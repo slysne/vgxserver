@@ -1,10 +1,27 @@
-/*######################################################################
- *#
- *# __utest_vxeval.h
- *#
- *#
- *######################################################################
- */
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    __utest_vxeval.h
+ * Author:  Stian Lysne <...>
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
 
 #ifndef __UTEST_VXEVAL_H
 #define __UTEST_VXEVAL_H
@@ -128,6 +145,12 @@ typedef struct __s_test {
 
 
 
+
+/**************************************************************************//**
+ * __test_constructor
+ *
+ ******************************************************************************
+ */
 int __test_constructor( vgx_Graph_t *graph, vgx_Vector_t *vector, __test *test, int opcount, int runtime_depth, int n_strings, int this_accesses, int head_accesses, int traversals, int lookbacks, int identifiers, double rankscore, vgx_ExpressEvalMemory_t *evalmem, CString_t **CSTR__err ) {
   int ret = 0;
 
@@ -274,6 +297,12 @@ int __test_constructor( vgx_Graph_t *graph, vgx_Vector_t *vector, __test *test, 
 
 
 
+
+/**************************************************************************//**
+ * __test_expressions
+ *
+ ******************************************************************************
+ */
 static int __test_expressions( vgx_Graph_t *graph, __test *tests, double rankscore, vgx_ExpressEvalMemory_t *evalmem, vgx_EvalStackItem_t *default_prop  ) {
   int ret = 0;
   vgx_Evaluator_t *evaluator = NULL;
@@ -413,6 +442,12 @@ static int __test_expressions( vgx_Graph_t *graph, __test *tests, double ranksco
 
 
 
+
+/**************************************************************************//**
+ * __is_syntax_error
+ *
+ ******************************************************************************
+ */
 static int __is_syntax_error( vgx_Graph_t *graph, const char *expression ) {
   int ret = 0;
   vgx_Evaluator_t *evaluator = NULL;
@@ -436,6 +471,12 @@ static int __is_syntax_error( vgx_Graph_t *graph, const char *expression ) {
 }
 
 
+
+/**************************************************************************//**
+ * __populate_graph
+ *
+ ******************************************************************************
+ */
 static int __populate_graph( vgx_Graph_t *graph ) {
   int ret = 0;
   XTRY {
