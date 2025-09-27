@@ -141,30 +141,58 @@ class CmakeBuild(build_ext):
                 f"-DCMAKE_CXX_COMPILER={find_executable('g++')}"
             ])
         elif IS_WINDOWS:
+            include_dir = sysconfig.get_paths()["include"]
+            plat_include_dir = sysconfig.get_paths()["platinclude"]
+            python_lib = sysconfig.get_config_var("LIBRARY")
+            python_libdir = sysconfig.get_config_var("LIBDIR")
+            python_arch = sysconfig.get_platform()
+
+            # Full path to .lib file (e.g., python312.lib)
+            python_library_path = os.path.join(python_libdir, python_lib) if python_lib and python_libdir else None
+
+            # include path
+            if not include_dir or not os.path.exists(include_dir):
+                print(f"[WARN] Could not find sysconfig expected headers 'include': {include_dir}")
+                include_dir = "C:\\Python312\\Python-3.12.3\\Include" # TODO FIX
+                print(f"[WARN] Using hardcoded path: {include_dir}")
+            
+            # platinclude path
+            if not plat_include_dir or not os.path.exists(plat_include_dir):
+                print(f"[WARN] Could not find sysconfig expected headers 'platinclude': {plat_include_dir}")
+                plat_include_dir = "C:\\Python312\\Python-3.12.3\\PC" # TODO FIX
+                print(f"[WARN] Using hardcoded path: {plat_include_dir}")
+
+            # library path
+            if not python_library_path or not os.path.exists(python_library_path):
+                print(f"[WARN] Could not find sysconfig expected library {python_library_path}")
+                python_library_path = "C:\\Python312\\x64\\Release\\libs" # TODO FIX
+                print(f"[WARN] Using hardcoded path: {python_library_path}")
+
+            include_dirs = "{include_dir};{plat_include_dir}"
+
+            cmake_configure_cmd.extend([
+                f"-DPython3_INCLUDE_DIRS={include_dirs}",
+                f"-DPython3_LIBRARIES={python_library_path}"
+            ])
+
             # Use native VS generator for .sln and MSBuild (overrides Ninja from presets)
             cmake_configure_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])  # For VS 2022, x64 arch
 
             # For multi-config generators like VS, specify config in build
             config = 'Release' if preset == 'release' else 'Debug' if preset == 'debug' else 'RelWithDebInfo'
-            cmake_execute_build.extend(['--config', config])
-
-            # # Ensure MSVC compiler (CMake detects it automatically)
-            # cmake_configure_cmd.extend([
-            #     f"-DCMAKE_C_COMPILER=cl.exe",  # MSVC C compiler
-            #     f"-DCMAKE_CXX_COMPILER=cl.exe"  # MSVC C++ compiler
-            # ])
+            cmake_execute_build.extend(['--config', config])            
 
         # Configuration step (generate the build system)
         subprocess.run(
             cmake_configure_cmd,
-            cwd=cmake_build_dir,
+            #cwd=cmake_build_dir,
             check=True
         )
 
         # Execute build
         subprocess.run(
             cmake_execute_build,
-            cwd=cmake_build_dir,
+            #cwd=cmake_build_dir,
             check=True
         )
 
