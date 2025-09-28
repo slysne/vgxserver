@@ -59,7 +59,7 @@ cp -rp . ${BUILD_DIR}
 
 cd ${BUILD_DIR}
 
-python setup.py build_ext
+#python setup.py build_ext
 python -m build --wheel
 
 WHEEL=dist/*cp$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")*.whl

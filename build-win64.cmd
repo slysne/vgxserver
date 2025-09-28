@@ -34,20 +34,15 @@ if errorlevel 1 exit /b 1
 REM === Create sentinel ===
 type nul > "%BUILD_DIR%\%SENTINEL%"
 
-echo "will robocopy!"
 REM === Copy source code ===
 robocopy . "%BUILD_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD "%BUILD_DIR%" >nul
 
-
-echo "here!"
 REM === Enter build dir ===
 pushd "%BUILD_DIR%"
 
-echo "there!"
-
 REM === Build extension ===
-python setup.py build_ext
-if errorlevel 1 exit /b 1
+REM python setup.py build_ext
+REM if errorlevel 1 exit /b 1
 
 REM === Build wheel ===
 python -m build --wheel
