@@ -20,5 +20,5 @@ readme = { file = "README.md", content-type = "text/markdown" }
 vgxadmin = "pyvgx_scripts.vgxadmin:main"
 
 [tool.setuptools]
-script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
+script-files = ["pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
 

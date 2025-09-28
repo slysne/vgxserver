@@ -32,10 +32,18 @@ PYVGX = "pyvgx"
 VGXADMIN = "vgxadmin"
 VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
+
+PY_SRC_DIR = "pyvgx/src/py"
+
+scripts = []
+
 if IS_WINDOWS:
     PYTHON_EXECUTABLE = sys.executable
+    scripts.append(f"{PY_SRC_DIR}/vgxdemoservice.cmd")
 else:
     PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    scripts.append(f"{PY_SRC_DIR}/vgxdemoservice")
+
 
 preset = os.getenv("CMAKE_PRESET", "release")  # default to release
 
@@ -63,7 +71,7 @@ class CmakeBuild(build_ext):
 
         #raise NotImplementedError( "Working on it" )
 
-        pyvgx_src_dir = f"{ext.sourcedir}/pyvgx/src/py"
+        pyvgx_src_dir = f"{ext.sourcedir}/{PY_SRC_DIR}"
 
         # Final directory where the compiled extension (.so / .pyd) will be placed
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
@@ -121,7 +129,6 @@ class CmakeBuild(build_ext):
         shutil.copy2(f"{pyvgx_src_dir}/vgxinstance.py", f"{self.build_lib}/{VGXINSTANCE}")
         # copy "pyvgx_scripts" files
         copy_files(f"{pyvgx_src_dir}", f"{self.build_lib}/{PYVGX_SCRIPTS}", "py")
-        shutil.copy2(f"{pyvgx_src_dir}/vgxdemoservice", f"{self.build_lib}/{PYVGX_SCRIPTS}")
         shutil.copy2(f"{pyvgx_src_dir}/vgxdemoservice", f"{self.build_lib}/{PYVGX_SCRIPTS}")
 
         # overwrite python package __init__.py files
@@ -207,7 +214,7 @@ class CmakeBuild(build_ext):
 
         # File extensions to copy based on platform
         if IS_WINDOWS:
-            extensions_to_copy = ["lib", "dll", "pyd"]
+            extensions_to_copy = ["dll", "pyd"]
         else:
             extensions_to_copy = ["so", "a"]
             if IS_MACOS:
@@ -248,4 +255,5 @@ setup(
     zip_safe=False,
     packages=find_packages(include=["pyvgx", "vgxadmin", "vgxinstance", "pyvgx_scripts"]),
     package_data=package_data,
+    scripts=scripts
 )
