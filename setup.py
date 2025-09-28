@@ -25,6 +25,7 @@ VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
 PY_SRC_DIR = "pyvgx/src/py"
 
+
 if IS_WINDOWS:
     PYTHON_EXECUTABLE = sys.executable
     scripts = [ f"{PY_SRC_DIR}/vgxdemoservice.cmd" ]
@@ -52,11 +53,6 @@ else:
     package_version = os.environ.get('PROJECT_VERSION')
             
 
-include_dir = sysconfig.get_paths()["include"]
-plat_include_dir = sysconfig.get_paths()["platinclude"]
-python_lib = sysconfig.get_config_var("LIBRARY")
-python_libdir = sysconfig.get_config_var("LIBDIR")
-python_arch = sysconfig.get_platform()
 
 
 class PyVGX_Extension(Extension):
@@ -68,9 +64,11 @@ class PyVGX_Extension(Extension):
 
 class CmakeBuild(build_ext):
     def build_extension(self, ext: PyVGX_Extension) -> None:
-
-
-        #raise NotImplementedError( "Working on it" )
+        include_dir = sysconfig.get_paths()["include"]
+        plat_include_dir = sysconfig.get_paths()["platinclude"]
+        python_lib = sysconfig.get_config_var("LIBRARY")
+        python_libdir = sysconfig.get_config_var("LIBDIR")
+        python_arch = sysconfig.get_platform()
 
         pyvgx_src_dir = f"{ext.sourcedir}/{PY_SRC_DIR}"
 
@@ -212,7 +210,7 @@ class CmakeBuild(build_ext):
         if IS_WINDOWS:
             extensions_to_copy = ["dll", "pyd"]
         else:
-            extensions_to_copy = ["so", "a"]
+            extensions_to_copy = ["so"]
             if IS_MACOS:
                 extensions_to_copy.append("dylib")
 
