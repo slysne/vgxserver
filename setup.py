@@ -24,7 +24,7 @@ if IS_MACOS:
 elif IS_LINUX:
     package_data = {"": ["libcxlib.a", "libvgx.so", "pyvgx.so"]}
 elif IS_WINDOWS:
-    package_data = {"": ["libcxlib.lib", "libvgx.dll", "pyvgx.pyd"]} 
+    package_data = {"pyvgx": ["pyvgx*.pyd", "vgx.dll"]}
 else:
     raise Exception("Not supported: {}".format(PLAT))
 
@@ -32,7 +32,10 @@ PYVGX = "pyvgx"
 VGXADMIN = "vgxadmin"
 VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
-PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
+if IS_WINDOWS:
+    PYTHON_EXECUTABLE = sys.executable
+else:
+    PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
 
 preset = os.getenv("CMAKE_PRESET", "release")  # default to release
 
@@ -165,10 +168,10 @@ class CmakeBuild(build_ext):
             # library path
             if not python_library_path or not os.path.exists(python_library_path):
                 print(f"[WARN] Could not find sysconfig expected library {python_library_path}")
-                python_library_path = "C:\\Python312\\x64\\Release\\libs" # TODO FIX
+                python_library_path = "C:\\Python312\\x64\\Release\\libs\\python312.lib" # TODO FIX
                 print(f"[WARN] Using hardcoded path: {python_library_path}")
 
-            include_dirs = "{include_dir};{plat_include_dir}"
+            include_dirs = f"{include_dir};{plat_include_dir}"
 
             cmake_configure_cmd.extend([
                 f"-DPython3_INCLUDE_DIRS={include_dirs}",

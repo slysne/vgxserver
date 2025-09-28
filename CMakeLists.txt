@@ -53,11 +53,21 @@ if(APPLE)
   message(STATUS "Using Python Executable: ${Python3_EXECUTABLE}")
   message(STATUS "Using Python Library: ${Python3_LIBRARY}")
 
-   
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+  
+  message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+  message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+  message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
 
 endif()
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+  # we have passed in the variables
+  set(Python3_FOUND TRUE CACHE BOOL "")
+else()
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+endif()
+
 get_filename_component(Python3_LIB_DIR ${Python3_LIBRARIES} DIRECTORY)
 
 set(VERSION                     CACHE STRING "Sets the CAP version")
