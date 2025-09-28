@@ -19,31 +19,25 @@ IS_MACOS = PLAT == "Darwin"
 IS_LINUX = PLAT == "Linux"
 IS_WINDOWS = PLAT == "Windows"
 
-if IS_MACOS:
-    package_data = {"": ["libcxlib.a", "libvgx.dylib", "pyvgx.so"]}
-elif IS_LINUX:
-    package_data = {"": ["libcxlib.a", "libvgx.so", "pyvgx.so"]}
-elif IS_WINDOWS:
-    package_data = {"pyvgx": ["pyvgx*.pyd", "vgx.dll"]}
-else:
-    raise Exception("Not supported: {}".format(PLAT))
-
 PYVGX = "pyvgx"
 VGXADMIN = "vgxadmin"
 VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
-
 PY_SRC_DIR = "pyvgx/src/py"
-
-scripts = []
 
 if IS_WINDOWS:
     PYTHON_EXECUTABLE = sys.executable
-    scripts.append(f"{PY_SRC_DIR}/vgxdemoservice.cmd")
+    scripts = [ f"{PY_SRC_DIR}/vgxdemoservice.cmd" ]
+    package_data = {"pyvgx": ["*.pyd", "vgx.dll"]}
 else:
     PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
-    scripts.append(f"{PY_SRC_DIR}/vgxdemoservice")
-
+    scripts = [ f"{PY_SRC_DIR}/vgxdemoservice" ]
+    if IS_MACOS:
+        package_data = {"": ["libvgx.dylib", "pyvgx.so"]}
+    elif IS_LINUX:
+        package_data = {"": ["libvgx.so", "pyvgx.so"]}
+    else:
+        raise Exception("Not supported: {}".format(PLAT))
 
 preset = os.getenv("CMAKE_PRESET", "release")  # default to release
 
@@ -56,6 +50,13 @@ if 'SNAPSHOT' in os.environ.get('PROJECT_VERSION'):
                                                               f".dev0+{calendar.timegm(time.gmtime())}")
 else:
     package_version = os.environ.get('PROJECT_VERSION')
+            
+
+include_dir = sysconfig.get_paths()["include"]
+plat_include_dir = sysconfig.get_paths()["platinclude"]
+python_lib = sysconfig.get_config_var("LIBRARY")
+python_libdir = sysconfig.get_config_var("LIBDIR")
+python_arch = sysconfig.get_platform()
 
 
 class PyVGX_Extension(Extension):
@@ -128,7 +129,7 @@ class CmakeBuild(build_ext):
         shutil.copy2(f"{pyvgx_src_dir}/vgxadmin.py", f"{self.build_lib}/{VGXADMIN}")
         shutil.copy2(f"{pyvgx_src_dir}/vgxinstance.py", f"{self.build_lib}/{VGXINSTANCE}")
         # copy "pyvgx_scripts" files
-        copy_files(f"{pyvgx_src_dir}", f"{self.build_lib}/{PYVGX_SCRIPTS}", "py")
+        copy_files(f"{pyvgx_src_dir}", f"{self.build_lib}/{PYVGX_SCRIPTS}", ext="py", recursive=False)
         shutil.copy2(f"{pyvgx_src_dir}/vgxdemoservice", f"{self.build_lib}/{PYVGX_SCRIPTS}")
 
         # overwrite python package __init__.py files
@@ -151,11 +152,6 @@ class CmakeBuild(build_ext):
                 f"-DCMAKE_CXX_COMPILER={find_executable('g++')}"
             ])
         elif IS_WINDOWS:
-            include_dir = sysconfig.get_paths()["include"]
-            plat_include_dir = sysconfig.get_paths()["platinclude"]
-            python_lib = sysconfig.get_config_var("LIBRARY")
-            python_libdir = sysconfig.get_config_var("LIBDIR")
-            python_arch = sysconfig.get_platform()
 
             # Full path to .lib file (e.g., python312.lib)
             python_library_path = os.path.join(python_libdir, python_lib) if python_lib and python_libdir else None
@@ -222,17 +218,31 @@ class CmakeBuild(build_ext):
 
         # Copy matching files
         for ext in extensions_to_copy:
-            for file in glob.glob(os.path.join(extdir, f"**/*.{ext}"), recursive=True):
-                #shutil.copy(file, target_dir)  # CHANGED: Actually copy (your original has print(file)—was that a debug leftover?)
-                print(f"Copied: {file} to {target_dir}")
+            copy_files(extdir, target_dir, ext=ext, recursive=True)
 
 
 
-def copy_files(source_dir: str, destination_dir: str, type: str):
-    files = glob.iglob(os.path.join(source_dir, "*" if type == '*' else f"*.{type}"))
-    for file in files:
-        if os.path.isfile(file):
-            shutil.copy2(file, destination_dir)
+def copy_files(source_dir: str, destination_dir: str, ext: str, recursive: bool):
+    if recursive:
+        match = f"**/*.{ext}"
+    elif ext == "*":
+        match = "*"
+    else:
+        match = f"*.{ext}"
+
+    if not os.path.isabs(source_dir):
+        source_dir = os.path.abspath(source_dir)
+    if not os.path.isabs(destination_dir):
+        destination_dir = os.path.abspath(destination_dir)
+
+    pathname = os.path.join(source_dir, match)
+    for filepath in glob.glob(pathname, recursive=recursive):
+        if os.path.isfile(filepath):
+            if os.path.dirname(filepath) == destination_dir:
+                print(f"Already in destination dir: {filepath}")
+                continue
+            print(f"Will copy: {filepath} to {destination_dir}")
+            shutil.copy2(filepath, destination_dir)
 
 
 def find_executable(executable, path=None):
