@@ -71,27 +71,40 @@ class CmakeBuild(build_ext):
         python_arch = sysconfig.get_platform()
 
         pyvgx_src_dir = f"{ext.sourcedir}/{PY_SRC_DIR}"
+        
+        build_cmd = self.get_finalized_command('build')
+        
+        # Directories used by setuptools
+        build_base = os.path.abspath(build_cmd.build_base)
+        build_scripts = os.path.abspath(build_cmd.build_scripts)
+        build_lib = os.path.abspath(build_cmd.build_lib)
+        build_temp = os.path.abspath(build_cmd.build_temp)
+
+        ext_name_path = self.get_ext_fullpath(ext.name)
+        ext_name_dirpath =  os.path.dirname(ext_name_path)
 
         # Final directory where the compiled extension (.so / .pyd) will be placed
-        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        extdir = os.path.abspath(ext_name_dirpath)
 
         # Source directory for the CMake project (where CMakeLists.txt lives)
         cmake_source_dir = os.path.abspath(ext.sourcedir)
 
-        # Root build/temp directory used by setuptools for temporary build files
-        build_temp = os.path.abspath(self.build_temp)
         
         # Dedicated CMake build directory (per extension, inside build/temp)
         cmake_build_dir = os.path.join(build_temp, ext.name)
 
-        print(f"[BuildEnv] Platform:          {PLAT}")
-        print(f"[BuildEnv] Python Executable: {find_executable(PYTHON_EXECUTABLE)}")
-        print(f"[BuildEnv] self.build_lib:    {self.build_lib}")
-        print(f"[BuildEnv] pyvgx_src_dir:     {pyvgx_src_dir}")
-        print(f"[BuildEnv] extdir:            {extdir}")
-        print(f"[BuildEnv] cmake_source_dir:  {cmake_source_dir}")
-        print(f"[BuildEnv] build_temp:        {build_temp}")
-        print(f"[BuildEnv] cmake_build_dir:   {cmake_build_dir}")
+        print(f"[BuildEnv] Platform:            {PLAT}")
+        print(f"[BuildEnv] Python Executable:   {find_executable(PYTHON_EXECUTABLE)}")
+        print(f"[BuildEnv] ext.name:            {ext.name}")
+        print(f"[BuildEnv] ext_name_path:       {ext_name_path}")
+        print(f"[BuildEnv] extdir:              {extdir}")
+        print(f"[BuildEnv] cmake_source_dir:    {cmake_source_dir}")
+        print(f"[BuildEnv] cmake_build_dir:     {cmake_build_dir}")
+        print(f"[BuildEnv] pyvgx_src_dir:       {pyvgx_src_dir}")
+        print(f"[BuildEnv] build_base:          {build_base}")
+        print(f"[BuildEnv] build_scripts:       {build_scripts}")
+        print(f"[BuildEnv] build_lib:           {build_lib}")
+        print(f"[BuildEnv] build_temp:          {build_temp}")
 
 
         # Make sure the build directory exists
@@ -200,12 +213,6 @@ class CmakeBuild(build_ext):
             check=True
         )
 
-        # Target location where setuptools expects files for packaging
-        target_dir = os.path.join(self.build_lib, "pyvgx")
-
-        # Ensure target dir exists
-        os.makedirs(target_dir, exist_ok=True)
-
         # File extensions to copy based on platform
         if IS_WINDOWS:
             extensions_to_copy = ["dll", "pyd"]
@@ -213,10 +220,13 @@ class CmakeBuild(build_ext):
             extensions_to_copy = ["so"]
             if IS_MACOS:
                 extensions_to_copy.append("dylib")
+        
+        # Ensure target dir exists
+        os.makedirs(extdir, exist_ok=True)
 
         # Copy matching files
         for ext in extensions_to_copy:
-            copy_files(extdir, target_dir, ext=ext, recursive=True)
+            copy_files(build_base, extdir, ext=ext, recursive=True)
 
 
 
