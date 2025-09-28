@@ -58,7 +58,8 @@ if not defined WHEEL (
 )
 
 REM === Install new wheel ===
-pip install "%WHEEL%"
+echo "Now running pip install %WHEEL%"
+pip install "%WHEEL%" --force-reinstall
 
 popd
 exit /b 0
