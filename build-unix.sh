@@ -57,13 +57,23 @@ safe_clear_dir ${BUILD_DIR} ${SENTINEL}
 touch ${BUILD_DIR}/${SENTINEL}
 cp -rp . ${BUILD_DIR}
 
-cd ${BUILD_DIR}
+pushd ${BUILD_DIR}
 
-#python setup.py build_ext
+# Build
 python -m build --wheel
 
-WHEEL=dist/*cp$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")*.whl
-
+# Find and install wheel
+pushd dist
+WHEEL=./*cp$(python -c "import sys; print(f'{sys.version_info.major}{sys.version_info.minor}')")*.whl
 pip install $WHEEL
+popd
 
-cd -
+# Test
+mkdir -p test
+cp -rp pyvgx/test/* test
+pushd test
+python test_pyvgx.py -x -c Graph -m Arc -s Connect -t TEST_Connect_implicit
+python -c "from pyvgx import *; print( f'SUCCESS! {version(1)}')"
+popd
+
+popd

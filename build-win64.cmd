@@ -76,6 +76,8 @@ xcopy /E pyvgx\test test
 pushd test
 python test_pyvgx.py -x -c Graph -m Arc -s Connect -t TEST_Connect_implicit
 if errorlevel 1 exit /b 1
+python -c "from pyvgx import *; print( f'SUCCESS! {version(1)}')"
+if errorlevel 1 exit /b 1
 popd
 
 
