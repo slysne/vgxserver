@@ -250,8 +250,13 @@ add_subdirectory(pyvgx)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC) 
+        add_compile_options(/MP) 
+    endif()
+
     foreach(target cxlib vgx)
-        if(MSVC)
+        if(MSVC) 
+            add_compile_options(/MP) 
             # MSVC: /GL (compiler) and /LTCG (linker)
             target_compile_options(${target} PRIVATE /GL)
             target_link_options(${target} PRIVATE /LTCG)
