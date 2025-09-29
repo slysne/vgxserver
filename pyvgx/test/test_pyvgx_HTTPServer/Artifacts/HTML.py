@@ -42,6 +42,7 @@ def TEST_Artifacts_HTML_header():
     """
     header.html
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "header.html" )
@@ -65,6 +66,7 @@ def TEST_Artifacts_HTML_footer():
     """
     footer.html
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "footer.html" )
@@ -88,6 +90,7 @@ def TEST_Artifacts_HTML_admin():
     """
     admin
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "admin" )
@@ -111,6 +114,7 @@ def TEST_Artifacts_HTML_system():
     """
     system
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "system" )
@@ -132,6 +136,7 @@ def TEST_Artifacts_HTML_console():
     """
     console
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "console" )
@@ -155,6 +160,7 @@ def TEST_Artifacts_HTML_index():
     """
     index
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "" )
@@ -178,6 +184,7 @@ def TEST_Artifacts_HTML_plugin():
     """
     plugin
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "plugin" )
@@ -201,6 +208,7 @@ def TEST_Artifacts_HTML_search():
     """
     search
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "search" )
@@ -224,6 +232,7 @@ def TEST_Artifacts_HTML_status():
     """
     status
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "status" )

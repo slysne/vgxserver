@@ -14,7 +14,9 @@ echo Cleanup done.
 
 REM === Configuration Variables ===
 set "PRESET=%~1"
+set "TEST=%~2"
 if not defined PRESET set "PRESET=release"
+if not defined TEST set "TEST=none"
 
 set "VERSION=3.6"
 set "PROJECT_VERSION=%VERSION%"
@@ -70,21 +72,29 @@ echo "Now running pip install %WHEEL%"
 pip install "%WHEEL%" --force-reinstall
 popd
 
-REM === Quick test
-if not exist test mkdir test
-xcopy /E pyvgx\test test
-pushd test
-python test_pyvgx.py -x -c Graph -m Arc -s Connect -t TEST_Connect_implicit
-if errorlevel 1 exit /b 1
-python -c "from pyvgx import *; print( f'SUCCESS! {version(1)}')"
-if errorlevel 1 exit /b 1
-popd
+python -c "from pyvgx import *; print( f'SUCCESS {version(1)}')"
+
+REM === Run tests
+if /i not "%TEST%"=="none" (
+    if not exist test mkdir test
+    xcopy /E pyvgx\test test
+    pushd test
+    REM === Quick test
+    if /i "%TEST%" == "quick" (
+        python test_pyvgx.py -x --quick=1
+        if errorlevel 1 exit /b 1
+    )
+    REM === Full test
+    if /i "%TEST%" == "full" (
+        python test_pyvgx.py -x
+        if errorlevel 1 exit /b 1
+    )
+    popd
+)
 
 
 REM === Back to original source repo
 popd
-
-
 
 
 exit /b 0

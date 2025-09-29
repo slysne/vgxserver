@@ -26,6 +26,7 @@
 import argparse
 import inspect
 import code
+import webbrowser
 
 import pyvgx
 
@@ -206,6 +207,14 @@ def RunService( demo, instance_id, vgxroot=None, descriptor_file=None, interacti
                                                 descriptor = descriptor,
                                                 basedir    = vgxroot,
                                                 plugins    = plugins)
+
+    #
+    if instance.type in ["admin", "generic"]:
+        system_url = f"http://{instance.ip}:{instance.aport}/system"
+        try:
+            webbrowser.open( system_url )
+        except:
+            print( "failed to open system overview in browser" )
 
     # Interact before entring server loop
     if interactive:

@@ -252,18 +252,23 @@ def sysplugin__BeginAdmin( authtoken ):
     """
     global __ADMIN_IN_PROGRESS_TOKEN
     global __ADMIN_IN_PROGRESS_RECURSION
-    if not __ADMIN_LOCK.acquire( timeout=1.0 ):
-        raise Exception( "Internal admin error" )
-    try:
-        if __ADMIN_IN_PROGRESS_TOKEN is None:
-            __ADMIN_IN_PROGRESS_RECURSION = 0
-            __ADMIN_IN_PROGRESS_TOKEN = authtoken
-        elif __ADMIN_IN_PROGRESS_TOKEN != authtoken:
-            raise Exception( "Another admin operation is currently in progress" )
-        __ADMIN_IN_PROGRESS_RECURSION += 1
-    finally:
-        __ADMIN_LOCK.release()
-
+    MAX_WAIT = 15
+    deadline = time.time() + MAX_WAIT
+    while time.time() < deadline:
+        if not __ADMIN_LOCK.acquire( timeout=5.0 ):
+            raise Exception( "Internal admin error" )
+        try:
+            if __ADMIN_IN_PROGRESS_TOKEN is None:
+                __ADMIN_IN_PROGRESS_RECURSION = 1
+                __ADMIN_IN_PROGRESS_TOKEN = authtoken
+                return
+            elif __ADMIN_IN_PROGRESS_TOKEN == authtoken:
+                __ADMIN_IN_PROGRESS_RECURSION += 1
+                return
+        finally:
+            __ADMIN_LOCK.release()
+        time.sleep(2)
+    raise Exception( "Another admin operation is currently in progress" )
 
 
 

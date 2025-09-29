@@ -44,6 +44,7 @@ def TEST_Artifacts_javascript_header():
     """
     header.js
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "header.js" )
@@ -65,6 +66,7 @@ def TEST_Artifacts_javascript_uptime():
     """
     uptime.js
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "uptime.js" )
@@ -86,6 +88,7 @@ def TEST_Artifacts_javascript_boxstate():
     """
     boxstate.js
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "boxstate.js" )
@@ -107,6 +110,7 @@ def TEST_Artifacts_javascript_jquery():
     """
     jquery.js
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "jquery.js" )

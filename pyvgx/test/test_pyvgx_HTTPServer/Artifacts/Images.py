@@ -44,6 +44,7 @@ def TEST_Artifacts_images_logo():
     """
     logo_b-x.png
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "logo_b-x.png" )
@@ -61,6 +62,7 @@ def TEST_Artifacts_images_loader():
     """
     loader.gif
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "loader.gif" )
@@ -78,6 +80,7 @@ def TEST_Artifacts_images_favicon():
     """
     favicon.ico
     test_level=4101
+    t_nominal=1
     """
     # Send request
     bytes, headers = Support.send_request( "favicon.ico" )

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERSION=3.6
+
 OS_NAME="$(uname)"
 if [[ "$OS_NAME" == "Darwin" ]]; then
     export MACOSX_DEPLOYMENT_TARGET=14.0
@@ -7,10 +9,47 @@ fi
 
 set -e
 
+
+# Defaults
+TYPE="release"
+TEST="none"
+
+# Parse flags
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --type)
+            TYPE="$2"
+            if [[ "$TYPE" != "debug" && "$TYPE" != "release" ]]; then
+                echo "Error: Invalid build type: '$TYPE'"
+                echo "Allowed values: debug, release"
+                exit 1
+            fi
+            shift 2
+            ;;
+        --test)
+            TEST="$2"
+            if [[ "$TEST" != "quick" && "$TEST" != "full" ]]; then
+                echo "Error: Invalid test type: '$TEST'"
+                echo "Allowed values: quick, full"
+                exit 1
+            fi
+            shift 2
+            ;;
+        --help|-h)
+            echo "Usage: $0 --type <debug|release> [--test <quick|most|all>]"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Verify current directory is project root by checking for setup.py
 if [[ ! -f "setup.py" ]]; then
   echo "ERROR: setup.py not found in current directory."
-  echo "Please run this script from the project root directory."
+  echo "Run this script from the project root directory."
   exit 1
 fi
 
@@ -18,8 +57,10 @@ pip uninstall pyvgx
 
 echo "Cleanup done."
 
-PRESET="${1:-release}"
-VERSION=3.6
+
+PRESET="${TYPE:-release}"
+
+
 
 export PROJECT_VERSION=${VERSION}
 export CMAKE_PRESET=${PRESET}
@@ -68,12 +109,19 @@ WHEEL=./*cp$(python -c "import sys; print(f'{sys.version_info.major}{sys.version
 pip install $WHEEL
 popd
 
+python -c "from pyvgx import *; print( f'SUCCESS {version(1)}')"
+
 # Test
-mkdir -p test
-cp -rp pyvgx/test/* test
-pushd test
-python test_pyvgx.py -x -c Graph -m Arc -s Connect -t TEST_Connect_implicit
-python -c "from pyvgx import *; print( f'SUCCESS! {version(1)}')"
-popd
+if [[ "$TEST" == "quick" || "$TEST" == "full" ]]; then
+    mkdir -p test
+    cp -rp pyvgx/test/* test
+    pushd test
+    if [ "$TEST" == "quick" ]; then
+        python test_pyvgx.py -x --quick=1
+    else
+        python test_pyvgx.py -x 
+    fi
+    popd
+fi
 
 popd
