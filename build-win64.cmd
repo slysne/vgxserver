@@ -70,7 +70,21 @@ echo "Now running pip install %WHEEL%"
 pip install "%WHEEL%" --force-reinstall
 popd
 
+REM === Quick test
+if not exist test mkdir test
+xcopy /E pyvgx\test test
+pushd test
+python test_pyvgx.py -x -c Graph -m Arc -s Connect -t TEST_Connect_implicit
+if errorlevel 1 exit /b 1
 popd
+
+
+REM === Back to original source repo
+popd
+
+
+
+
 exit /b 0
 
 REM === Subroutine: Safely clear directory ===

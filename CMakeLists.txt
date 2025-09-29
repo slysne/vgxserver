@@ -135,7 +135,7 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     # Define compiler flags
     set(C_FLAGS "/TC")
 
-    set(CC_FLAGS "/W3;/Gm-;/Oi;/Ot;/Gy;/fp:precise;/Zc:wchar_t;/Zc:forScope;/Gd;/errorReport:prompt;/sdl-;/WX-;/Oy-;/nologo;/arch:AVX2;/utf-8")
+    set(CC_FLAGS "/W3;/Gm-;/Oi;/Ot;/Gy;/fp:precise;/Zc:wchar_t;/Zc:forScope;/Gd;/errorReport:prompt;/sdl-;/WX-;/Oy-;/nologo;/arch:AVX2;/utf-8;/MP")
     set(CC_FLAGS_DEBUG "/Od;/MDd;/RTC1")
     set(CC_FLAGS_RELEASE "/O2;/Ob2;/GL;/MD")
     
@@ -250,13 +250,8 @@ add_subdirectory(pyvgx)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    if(MSVC) 
-        add_compile_options(/MP) 
-    endif()
-
     foreach(target cxlib vgx)
         if(MSVC) 
-            add_compile_options(/MP) 
             # MSVC: /GL (compiler) and /LTCG (linker)
             target_compile_options(${target} PRIVATE /GL)
             target_link_options(${target} PRIVATE /LTCG)
