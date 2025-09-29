@@ -23,16 +23,15 @@ PYVGX = "pyvgx"
 VGXADMIN = "vgxadmin"
 VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
+
 PY_SRC_DIR = "pyvgx/src/py"
 
 
 if IS_WINDOWS:
     PYTHON_EXECUTABLE = sys.executable
-    scripts = [ f"{PY_SRC_DIR}/vgxdemoservice.cmd" ]
     package_data = {"pyvgx": ["*.pyd", "vgx.dll"]}
 else:
     PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
-    scripts = [ f"{PY_SRC_DIR}/vgxdemoservice" ]
     if IS_MACOS:
         package_data = {"": ["libvgx.dylib", "pyvgx.so"]}
     elif IS_LINUX:
@@ -271,7 +270,6 @@ setup(
         "build_ext": CmakeBuild,
     },
     zip_safe=False,
-    packages=find_packages(include=["pyvgx", "vgxadmin", "vgxinstance", "pyvgx_scripts"]),
-    package_data=package_data,
-    scripts=scripts
+    packages=find_packages(include= [PYVGX, VGXADMIN, VGXINSTANCE, PYVGX_SCRIPTS]),
+    package_data=package_data
 )

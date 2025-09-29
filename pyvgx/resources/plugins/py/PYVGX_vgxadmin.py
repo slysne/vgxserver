@@ -1520,7 +1520,11 @@ class vgxadmin__Descriptor( object ):
         self.dispatch_topology = {}
         self.graphs = []
         self.remote = remote
-        self.Reload( descriptor )
+        if not self.Reload( descriptor ):
+            if type(descriptor) is str:
+                self.console.Print( f"No system descriptor '{descriptor}'" )
+            else:
+                raise TypeError( "invalid descriptor type" )
 
 
 
@@ -1688,12 +1692,14 @@ class vgxadmin__Descriptor( object ):
     def Reload( self, descriptor ):
         if type(descriptor) is dict:
             self.data = descriptor
-        else:
+        elif os.path.exists(descriptor) and os.path.isfile(descriptor):
             f = open( descriptor )
             try:
                 self.data = json.loads( f.read() )
             finally:
                 f.close()
+        else:
+            return False
 
         # Normalize
         sysplugin__TransformLegacyDescriptor( self.data )
@@ -1746,6 +1752,7 @@ class vgxadmin__Descriptor( object ):
         self._process_transaction_topology( self.transaction_topology )
         # Process dispatch topology
         self._process_dispatch_topology( self.dispatch_topology )
+        return True
 
 
 
@@ -2071,11 +2078,19 @@ class vgxadmin__VGXAdmin( object ):
             console.Print()
 
 
+
+    @staticmethod
+    def GetVersion():
+        return [line for line in pyvgx.version(2).split('\n') if line.startswith('vgx')][0].split()[1]
+
+
+
     @staticmethod
     def GetArgs( a, dflt ):
         A = [ x.strip() for x in a.split(",",len(dflt)-1) ]
         A.extend( dflt[ len(A): ] )
         return A    
+
 
 
     @staticmethod
@@ -2160,6 +2175,9 @@ class vgxadmin__VGXAdmin( object ):
             for o, a in opts:
                 if o in ( "-h", "--help" ):
                     raise vgxadmin__InvalidUsageOrConfig()
+                if o in ( "-v", "--version" ):
+                    v = vgxadmin__VGXAdmin.GetVersion()
+                    console.Print( v )
 
             descriptor = None
             remote = None
@@ -2360,10 +2378,6 @@ class vgxadmin__VGXAdmin( object ):
                         instance = descriptor.Get( a )
                         ret = instance.Unbind()
                         R.append( (instance, ret) )
-
-                    elif o in ( "-v", "--version" ):
-                        v = [line for line in pyvgx.version(2).split('\n') if line.startswith('vgx')][0].split()[1]
-                        console.Print( v )
 
                     elif o in ( "-V", "--throttle" ):
                         id, rate, unit = vgxadmin__VGXAdmin.GetArgs( a, [None, -1.0, "bytes"] )
