@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import Expect
+from pyvgxtest.pyvgxtest import Expect
 from pyvgx import *
 import pyvgx
 import time

@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import operator

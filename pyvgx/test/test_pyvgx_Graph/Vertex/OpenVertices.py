@@ -23,9 +23,9 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from . import _vertex_test_support as Support
-from pytest.threads import Worker
+from pyvgxtest.threads import Worker
 from pyvgx import *
 import pyvgx
 import random

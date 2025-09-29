@@ -25,7 +25,7 @@
 
 from __future__ import absolute_import
 
-from pytest.pytest import LoadTimings, PrintSummary, TestFailed, RunOnly, DryrunOnly, RequireSuccess, SetMaxTNominal, SetMinTestLevel, SetMaxTestLevel, SetInteractOnFailed, SetPostFunc, SetOutput, CloseOutput, SetCleanup
+from pyvgxtest.pyvgxtest import LoadTimings, PrintSummary, TestFailed, RunOnly, DryrunOnly, RequireSuccess, SetMaxTNominal, SetMinTestLevel, SetMaxTestLevel, SetInteractOnFailed, SetPostFunc, SetOutput, CloseOutput, SetCleanup
 import sys
 import os
 import time

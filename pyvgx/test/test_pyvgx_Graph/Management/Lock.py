@@ -23,12 +23,12 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import re
 import time
-from pytest.threads import Worker
+from pyvgxtest.threads import Worker
 
 graph = None
 

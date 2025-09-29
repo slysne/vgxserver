@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed, PerformCleanup
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed, PerformCleanup
 from pyvgx import *
 import pyvgx
 import random

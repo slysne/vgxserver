@@ -4,7 +4,7 @@
 # Distributed engine for plugin-based graph and vector search
 # 
 # Module:  pyvgx
-# File:    pytest.py
+# File:    pyvgxtest.py
 # Author:  Stian Lysne <...>
 # 
 # Copyright © 2025 Rakuten, Inc.

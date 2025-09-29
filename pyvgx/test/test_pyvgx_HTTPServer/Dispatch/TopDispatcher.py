@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from .. import _http_support as Support
 from ..Metrics.Endpoints import TEST_endpoint__vgx_nodestat as endpoint_vgx_nodestat
 from ..Metrics.Endpoints import TEST_endpoint__vgx_matrix as endpoint_vgx_matrix

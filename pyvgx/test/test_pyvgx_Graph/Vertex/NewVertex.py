@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from . import _vertex_test_support as Support
 from pyvgx import *
 import pyvgx

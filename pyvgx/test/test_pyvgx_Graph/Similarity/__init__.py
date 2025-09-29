@@ -25,7 +25,7 @@
 
 import pkgutil
 __path__ = pkgutil.extend_path(__path__, __name__)
-from pytest.pytest import RunModules
+from pyvgxtest.pyvgxtest import RunModules
 
 
 from . import NewVector
