@@ -55,8 +55,8 @@ def getstr( N ):
 def getvec( N, C, common=[] ):
     """
     """
-  V = common + [ (getstr( C ), random.randint(0,1875)/1000.0) for n in range(N) ]
-  return sorted( V, key=lambda x:x[1], reverse=True )
+    V = common + [ (getstr( C ), random.randint(0,1875)/1000.0) for n in range(N) ]
+    return sorted( V, key=lambda x:x[1], reverse=True )
 
 
 
