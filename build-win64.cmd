@@ -49,8 +49,16 @@ python -m build --wheel
 if errorlevel 1 exit /b 1
 
 REM === Find built wheel ===
-for /f "delims=" %%w in ('python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"' ) do set "PY_VER=%%w"
-for %%f in (dist\*%PY_VER%*.whl) do set "WHEEL=%%f"
+REM find the python version
+for /f "delims=" %%w in (
+    'python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"'
+) do set "PY_VER=%%w"
+
+REM find first wheel file inside "dist" matching python version
+pushd dist
+for %%f in (
+    .\*%PY_VER%*.whl
+) do set "WHEEL=%%f"
 
 if not defined WHEEL (
     echo ERROR: Wheel file not found.
@@ -60,6 +68,7 @@ if not defined WHEEL (
 REM === Install new wheel ===
 echo "Now running pip install %WHEEL%"
 pip install "%WHEEL%" --force-reinstall
+popd
 
 popd
 exit /b 0
