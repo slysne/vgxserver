@@ -41,7 +41,7 @@ graph = None
 def is_sorted_asc( L ):
     """
     """
-  return all( a <= b for a, b in zip(L, L[1:]) )
+    return all( a <= b for a, b in zip(L, L[1:]) )
 
 
 ###############################################################################
@@ -51,7 +51,7 @@ def is_sorted_asc( L ):
 def is_sorted_desc( L ):
     """
     """
-  return all( a >= b for a, b in zip(L, L[1:]) )
+    return all( a >= b for a, b in zip(L, L[1:]) )
 
 
 

@@ -8,7 +8,9 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 )
 
 # Add the shared library
-add_library(${LIB_NAME} SHARED ${SRC_FILES})
+add_library(${LIB_NAME}
+  SHARED ${SRC_FILES}
+)
 
 add_custom_target(VGX_GENERATE_HEADER_FILE
   COMMAND ${Python3_EXECUTABLE} ${WEB_ROOT}/tools/convert.py ${WEB_ROOT}/artifacts ${CMAKE_CURRENT_SOURCE_DIR}/src/include/generated
@@ -17,10 +19,16 @@ add_custom_target(VGX_GENERATE_HEADER_FILE
 )
 
 # Link static library to the shared library
-target_link_libraries(${LIB_NAME} PRIVATE cxlib)
+target_link_libraries(${LIB_NAME}
+  PRIVATE
+    cxlib
+)
 
 # Ensure main target depends on the pre-build task
 add_dependencies(${LIB_NAME} VGX_GENERATE_HEADER_FILE)
 
 # Make headers accessible to users of this library
-target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+target_include_directories(${LIB_NAME}
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
+)

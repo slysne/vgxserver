@@ -53,11 +53,21 @@ if(APPLE)
   message(STATUS "Using Python Executable: ${Python3_EXECUTABLE}")
   message(STATUS "Using Python Library: ${Python3_LIBRARY}")
 
-   
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+  
+  message(STATUS "Python3_EXECUTABLE: ${Python3_EXECUTABLE}")
+  message(STATUS "Python3_INCLUDE_DIRS: ${Python3_INCLUDE_DIRS}")
+  message(STATUS "Python3_LIBRARIES: ${Python3_LIBRARIES}")
 
 endif()
 
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
+  # we have passed in the variables
+  set(Python3_FOUND TRUE CACHE BOOL "")
+else()
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+endif()
+
 get_filename_component(Python3_LIB_DIR ${Python3_LIBRARIES} DIRECTORY)
 
 set(VERSION                     CACHE STRING "Sets the CAP version")
@@ -123,16 +133,16 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
     set(LINKFLAGS "-Wl,-rpath,\$ORIGIN")
 elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     # Define compiler flags
-    set(C_FLAGS "/TC;/GR-")
+    set(C_FLAGS "/TC")
 
-    set(CC_FLAGS "/W3;/Gm-;/Oi;/Ot;/GT;/Gy;/fp:precise;/Zc:wchar_t;/Zc:forScope;/Gd;/errorReport:prompt;/sdl-;/WX-;/Oy-;/nologo;/arch:AVX2;/utf-8")
+    set(CC_FLAGS "/W3;/Gm-;/Oi;/Ot;/Gy;/fp:precise;/Zc:wchar_t;/Zc:forScope;/Gd;/errorReport:prompt;/sdl-;/WX-;/Oy-;/nologo;/arch:AVX2;/utf-8;/MP")
     set(CC_FLAGS_DEBUG "/Od;/MDd;/RTC1")
     set(CC_FLAGS_RELEASE "/O2;/Ob2;/GL;/MD")
     
     set(CXX_FLAGS "/EHsc;/GR")
 
     # Define platform-specific preprocessor symbols
-    set(CPP_DEFINES "WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;BOOST_ALL_NO_LIB")
+    set(CPP_DEFINES "_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;BOOST_ALL_NO_LIB")
     set(CPP_DEFINES_RELEASE "NDEBUG")
 
     # Define default libs
@@ -240,10 +250,17 @@ add_subdirectory(pyvgx)
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    target_compile_options(cxlib PRIVATE -flto)
-    target_compile_options(vgx PRIVATE -flto)
-    target_link_options(cxlib PRIVATE -flto)
-    target_link_options(vgx PRIVATE -flto)
+    foreach(target cxlib vgx)
+        if(MSVC) 
+            # MSVC: /GL (compiler) and /LTCG (linker)
+            target_compile_options(${target} PRIVATE /GL)
+            target_link_options(${target} PRIVATE /LTCG)
+        elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+            # GCC/Clang: -flto
+            target_compile_options(${target} PRIVATE -flto)
+            target_link_options(${target} PRIVATE -flto)
+        endif()
+    endforeach()
 endif()
 
 if(APPLE)
