@@ -75,7 +75,7 @@ popd
 python -c "from pyvgx import *; print( f'SUCCESS {version(1)}')"
 
 REM === Run tests
-if /i "%TEST%" != "none" (
+if /i not "%TEST%"=="none" (
     if not exist test mkdir test
     xcopy /E pyvgx\test test
     pushd test
