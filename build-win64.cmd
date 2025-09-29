@@ -74,20 +74,23 @@ popd
 
 python -c "from pyvgx import *; print( f'SUCCESS {version(1)}')"
 
-if not exist test mkdir test
-xcopy /E pyvgx\test test
-pushd test
-REM === Quick test
-if /i "%TEST%" == "quick" (
-    python test_pyvgx.py -x --quick=1
-    if errorlevel 1 exit /b 1
+REM === Run tests
+if /i "%TEST%" != "none" (
+    if not exist test mkdir test
+    xcopy /E pyvgx\test test
+    pushd test
+    REM === Quick test
+    if /i "%TEST%" == "quick" (
+        python test_pyvgx.py -x --quick=1
+        if errorlevel 1 exit /b 1
+    )
+    REM === Full test
+    if /i "%TEST%" == "full" (
+        python test_pyvgx.py -x
+        if errorlevel 1 exit /b 1
+    )
+    popd
 )
-REM === Full test
-if /i "%TEST%" == "full" (
-    python test_pyvgx.py -x
-    if errorlevel 1 exit /b 1
-)
-popd
 
 
 REM === Back to original source repo

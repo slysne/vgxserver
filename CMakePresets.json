@@ -23,8 +23,7 @@
       "description": "Build as Release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
-        "CMAKE_INTERPROCEDURAL_OPTIMIZATION_TYPE": "FULL"
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
       }
     },
     {
