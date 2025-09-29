@@ -9,12 +9,19 @@ SET "DEMOMODE=%~1"
 SET "PYTHONPATH=%PYTHONPATH%;%DIR%"
 
 if "%DEMOMODE%" == "" (
-  echo
-  echo "Usage:"
+  echo.
+  echo Usage:
   echo %~nx0 ^<single^|multi^|stop^>
-  echo
+  echo.
   exit /b
 )
+
+if /i "%DEMOMODE%" == "stop" (
+    vgxadmin %ADMIN% --stop "*" --confirm
+    exit /b 0
+)
+
+echo Preparing to start...
 
 vgxadmin %ADMIN% >nul 2>&1
 set RETCODE=%ERRORLEVEL%
@@ -26,10 +33,8 @@ if %RETCODE% EQU 0 (
     exit /b 1
 )
 
-if /i "%DEMOMODE%" == "stop" (
-    vgxadmin %ADMIN% --stop "*" --confirm
-    exit /b 0
-)
+
+set ntarget=0
 
 if /i "%DEMOMODE%" == "single" (
   set ntarget=1
@@ -89,7 +94,7 @@ if %retcode% NEQ 0 goto wait_loop
 
 rem Count lines with %COMPUTERNAME% in status output
 set nrunning=0
-for /f %%L in ('vgxadmin %ADMIN% --status "*" ^| find /i "%LOCALHOST%"') do (
+for /f %%L in ('vgxadmin %ADMIN% --status "*" ^| find /i "0d 00:"') do (
     set /a nrunning+=1
 )
 
