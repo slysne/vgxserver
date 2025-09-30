@@ -1,0 +1,539 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugRelease|x64">
+      <Configuration>DebugRelease</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C91E85D6-BE5E-41B3-AD44-2611C7A703E5}</ProjectGuid>
+    <RootNamespace>pyvgx</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>$(ProjectName)_d</TargetName>
+    <TargetExt>.pyd</TargetExt>
+    <SourcePath>$(SourcePath)</SourcePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <ReferencePath>$(VC_ReferencesPath_x64)</ReferencePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+    <TargetName>$(ProjectName)_d</TargetName>
+    <TargetExt>.pyd</TargetExt>
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <TargetExt>.pyd</TargetExt>
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <ClangTidyChecks>clang-analyzer-*,bugprone-*,modernize-*,performance-*,readability-*
+</ClangTidyChecks>
+    <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(PYTHON_INCLUDE);..\..\pyvgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;VERBOSITY=2;_DEBUG;FRAMEHASH_INSTRUMENTATION;CXMALLOC_CONSISTENCY_CHECK;VGX_CONSISTENCY_CHECK;INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <EnableEnhancedInstructionSet>$(AVXVERSION)</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <BrowseInformation>true</BrowseInformation>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>true</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);$(PYTHON_LIBS_DEBUG);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;vgx.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <PreBuildEvent>
+      <Command>..\..\pyvgx\resources\plugins\tools\convert.cmd ..\..\pyvgx\resources\plugins\py ..\..\pyvgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(PYTHON_INCLUDE);..\..\pyvgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;VERBOSITY=2;_DEBUG;NDEBUG;FRAMEHASH_INSTRUMENTATION;CXMALLOC_CONSISTENCY_CHECK;VGX_CONSISTENCY_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <BrowseInformation>true</BrowseInformation>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir);$(PYTHON_LIBS_DEBUG);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;vgx.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+    </Link>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
+    <PreBuildEvent>
+      <Command>..\..\pyvgx\resources\plugins\tools\convert.cmd ..\..\pyvgx\resources\plugins\py ..\..\pyvgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(PYTHON_INCLUDE);..\..\pybase\src\include;..\..\pyvgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <PreprocessorDefinitions>PYVGX_VERSION=$(VGXVERSION);WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;VERBOSITY=3;STOP_ON_FATAL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(OutDir);$(PYTHON_LIBS);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;vgx.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+      <Profile>true</Profile>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <PreBuildEvent>
+      <Command>..\..\pyvgx\resources\plugins\tools\convert.cmd ..\..\pyvgx\resources\plugins\py ..\..\pyvgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="..\..\docs\src\pyvgx\arcDirectionConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\arcModifierConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\arcSpecificationSyntax.adoc" />
+    <None Include="..\..\docs\src\pyvgx\constants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\exceptions.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graph.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphArc.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphManagement.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphMembers.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphMiscellaneous.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphQuery.adoc" />
+    <None Include="..\..\docs\src\pyvgx\graphVertex.adoc" />
+    <None Include="..\..\docs\src\pyvgx\limits.adoc" />
+    <None Include="..\..\docs\src\pyvgx\reference.adoc" />
+    <None Include="..\..\docs\src\pyvgx\resultFieldConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\resultListEntryConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarity.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarityAsDict.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarityCosine.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarityJaccard.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarityMembers.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similarityMethods.adoc" />
+    <None Include="..\..\docs\src\pyvgx\similaritySimilarity.adoc" />
+    <None Include="..\..\docs\src\pyvgx\sortSpecificationConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\stylesheet.css" />
+    <None Include="..\..\docs\src\pyvgx\timeout.adoc" />
+    <None Include="..\..\docs\src\pyvgx\tutorial.adoc" />
+    <None Include="..\..\docs\src\pyvgx\valueConditionConstants.adoc" />
+    <None Include="..\..\docs\src\pyvgx\valueConditions.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vector.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertex.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexAccess.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexFilter.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexMembers.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexMethods.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexMiscellaneous.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexProperty.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexTTL.adoc" />
+    <None Include="..\..\docs\src\pyvgx\vertexVector.adoc" />
+    <None Include="..\..\docs\src\pyvgx\VGXCoreConcepts.adoc" />
+    <None Include="..\..\pyvgx\resources\cf\sample\vgx.cf" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Attach.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Bind.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_CancelSync.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ClearReadonly.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Console.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Detach.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_DetachAll.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_GetAuthToken.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Persist.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ReloadPlugins.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ResetMetrics.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_RestartHTTP.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ResumeEvents.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ResumeTxInput.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ResumeTxOutput.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ServiceIn.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_ServiceOut.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_SetReadonly.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Shutdown.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Subscribe.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_SuspendEvents.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_SuspendTxInput.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_SuspendTxOutput.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Sync.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_SystemDescriptor.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Throttle.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Truncate.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Unbind.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_Unsubscribe.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\ADMIN_UpdateSubscribers.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_arcs.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_connect.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_createvertex.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_deletevertex.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_disconnect.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_echo.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_evaluate.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_eventbacklog.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_matrixplugins.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_graphinfo.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_init.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_matrix.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_memory.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_metrics.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_neighbor.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_ping.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_properties.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_system_counts.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_system_descriptor.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_system_overview.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_system_rates.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_vertex.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\BUILTIN_vertices.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\INTERNAL_admin.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\INTERNAL_ast_validator.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\PYVGX_vgxadmin.py" />
+    <None Include="..\..\pyvgx\resources\plugins\py\PYVGX_vgxinstance.py" />
+    <None Include="..\..\pyvgx\resources\plugins\tools\convert.cmd" />
+    <None Include="..\..\pyvgx\resources\plugins\tools\convert.py" />
+    <None Include="..\..\pyvgx\src\py\vgxadmin.cmd" />
+    <None Include="..\..\pyvgx\src\py\vgxadmin.py" />
+    <None Include="..\..\pyvgx\src\py\vgxadmin" />
+    <None Include="..\..\pyvgx\src\py\vgxdemoservice" />
+    <None Include="..\..\pyvgx\src\py\vgxinstance.py" />
+    <None Include="..\..\pyvgx\src\py\vgxdemoplugin.py" />
+    <None Include="..\..\pyvgx\src\py\vgxdemoservice.cmd" />
+    <None Include="..\..\pyvgx\src\py\vgxdemoservice.py" />
+    <None Include="..\..\pyvgx\src\py\__init__.py" />
+    <None Include="..\..\pyvgx\test\pytest\threads.py" />
+    <None Include="..\..\pyvgx\test\pytest\__init__.py" />
+    <None Include="..\..\pyvgx\test\pyvgxtest\pyvgxtest.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_foundation\lib_comlib\lib_comlib.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_foundation\lib_comlib\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_foundation\lib_framehash\lib_framehash.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_foundation\lib_framehash\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_foundation\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\Accumulate.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\Connect.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\Core.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\Count.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\Disconnect.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Arc\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\DebugCheckAllocators.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\DebugFindObjectByIdentifier.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\DebugGetObjectByAddress.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\DebugPrintAllocators.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\ShowVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\VertexDescriptor.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Debugging\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Evaluator\BasicEvaluator.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Evaluator\CoreEvaluator.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Evaluator\MathFunctions.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Evaluator\VectorArithmetic.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Evaluator\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Graph\GraphObject.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Graph\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Enumerator.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\EventProcessor.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\GetMemoryUsage.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Lock.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Order.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\PropertyKeys.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\PropertyStringValues.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\ReadonlyGraph.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Relationships.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Save.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Size.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\Truncate.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\VertexTypes.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Management\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\Chaos.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\ExpirationChaser.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\ExpirationFight.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\Parallel.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\RandomExpiration.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Multithreading\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Adjacent.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Aggregate.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Arcs.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\ArcValue.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Cull.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\data\cities.tsv" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\data\states.tsv" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Degree.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\DivergentTraversal.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\FilterExpressions.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Geo.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\GetVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\HasVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Inarcs.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Initials.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Neighborhood.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Outarcs.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Query.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Search.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\SyntheticArc.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Terminals.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Vertices.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\VerticesType.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\_query_test_support.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Results\Fields.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Results\Rank.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Results\Select.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Results\Sort.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Results\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\CharEncoding.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\Collector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\Filter.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\Limexec.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\Memory.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\Wildcards.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Special\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\AbortVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\CloseAll.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\CloseVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\CloseVertices.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\CommitVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\CreateVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\DeleteVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\EscalateVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\GetOpenVertices.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\NewVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\OpenVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\OpenVertices.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\RelaxVertex.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\ShowOpenVertices.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\_vertex_test_support.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Vertex\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Artifacts\HTML.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Artifacts\Images.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Artifacts\JavaScript.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Artifacts\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Dispatch\engines.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Dispatch\FeedPartials.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Dispatch\SimpleProxy.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Dispatch\TopDispatcher.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Dispatch\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Metrics\Endpoints.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Metrics\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Performance\Load.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Performance\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\BuiltinADMIN.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\BuiltinPlugin.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\CustomPlugin.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\JsonResponse.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\_http_support.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_module\Module\pyvgxmodule.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_module\Module\pyvgx_op.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_module\Module\pyvgx_system.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_module\Module\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_module\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Similarity\Similarity\Similarity.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Similarity\Similarity\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Similarity\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\EuclideanVector\EuclideanVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\EuclideanVector\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\FeatureVector\FeatureVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\FeatureVector\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Close.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Escalate.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Readable.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Readonly.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Relax.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\Writable.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Access\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\ClearExpiration.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\GetExpiration.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\IsExpired.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\Reschedule.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\SetExpiration.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Expiration\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Miscellaneous\AsDict.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Miscellaneous\Commit.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Miscellaneous\Descriptor.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Miscellaneous\IsVirtual.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Miscellaneous\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\dict_items.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\dict_keys.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\dict_values.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\GetProperties.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\GetProperty.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\HasProperties.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\HasProperty.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\IncProperty.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\NumProperties.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\RemoveProperties.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\RemoveProperty.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\SetProperties.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\SetProperty.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Property\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Query\QueryMethods.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Query\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Rank\GetRank.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Rank\SetRank.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Rank\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Type\GetType.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Type\GetTypeEnum.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Type\SetType.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Type\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vector\GetVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vector\HasVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vector\RemoveVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vector\SetVector.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vector\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vertex\VertexObject.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\Vertex\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vertex\__init__.py" />
+    <None Include="..\..\pyvgx\tools\avalanchetest.py" />
+    <None Include="..\..\pyvgx\tools\putload.py" />
+    <None Include="..\..\pyvgx\tools\threads.py" />
+    <None Include="..\..\pyvgx\tools\uniformity.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\docs\src\pyvgx\graphconnect.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial1.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial2.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial3.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial4.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial5.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial6.png" />
+    <Image Include="..\..\docs\src\pyvgx\tutorial7.png" />
+    <Image Include="..\..\docs\src\pyvgx\ValueCondition.png" />
+    <Image Include="..\..\docs\src\pyvgx\vgx1.png" />
+    <Image Include="..\..\docs\src\pyvgx\vgx2.png" />
+    <Image Include="..\..\docs\src\pyvgx\vgx3.png" />
+    <Image Include="..\..\docs\src\pyvgx\vgx4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\pyvgx\src\ipyvgx_builder.c" />
+    <ClCompile Include="..\..\pyvgx\src\ipyvgx_codec.c" />
+    <ClCompile Include="..\..\pyvgx\src\ipyvgx_parser.c" />
+    <ClCompile Include="..\..\pyvgx\src\ipyvgx_search_result.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_framehash.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_evalmem.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_graph.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_op.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_persist.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_plugin.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_query.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_sim.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_stringqueue.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_system.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_vector.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_vertex.c" />
+    <ClCompile Include="..\..\pyvgx\src\pyvgx_xvgxpartial.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_Adjacent.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_Aggregate.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_ArcValue.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_Degree.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_Global.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_neighborhood.c" />
+    <ClCompile Include="..\..\pyvgx\src\query\pyvgx_OpenNeighbor.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\pyvgx\src\include\generated\_pyvgx_plugin_builtins.h" />
+    <ClInclude Include="..\..\pyvgx\src\include\pyvgx.h" />
+    <ClInclude Include="..\..\pyvgx\src\include\_versioninfo.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

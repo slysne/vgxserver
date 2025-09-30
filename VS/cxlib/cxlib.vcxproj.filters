@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src/include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\cxlib\src\cxaptr.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxexcept.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxfileio.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxid.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxlib.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxlock.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxmath.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxmem.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxplat.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\cxsock.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\sha256.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\cxlib\src\lz4.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\cxlib\src\include\_versioninfo.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxaptr.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxexcept.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxfileio.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxid.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxlib.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxlock.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxmath.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxmem.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxobjbase.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxplat.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\cxsock.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\sha256.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\versiongen.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\cxlib\src\include\lz4.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,754 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugRelease|Win32">
+      <Configuration>DebugRelease</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugRelease|x64">
+      <Configuration>DebugRelease</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1781105D-24B2-4608-9BD9-7A81EAF9419C}</ProjectGuid>
+    <RootNamespace>vgx</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\VGXCompilerOptions.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>false</EnableClangTidyCodeAnalysis>
+    <ClangTidyChecks>clang-analyzer-*,bugprone-*,modernize-*,performance-*,readability-*
+</ClangTidyChecks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;VERBOSITY=2;FRAMEHASH_INSTRUMENTATION;CXMALLOC_CONSISTENCY_CHECK;VGX_CONSISTENCY_CHECK;NCSTRING_INDEX_PERSIST;NVXTABLE_PERSIST;NOPSTREAM_INLINE_JSON;OPSTREAM_IDLE;OPSTREAM_VALIDATE_OUTPUT;NOPSTREAM_INJECT_RANDOM_ERROR_RATE=0.000001;OPSTREAM_DUMP_TX_IO;__SYSOUT_LIMIT=100000000;__THROTTLE_SYSOUT=50000000;__THROTTLE_TRANSACTION=1000000000;TRANSACTION_LOG_ROTATE_MAX_MINUTES=1;DEFAULT_PORT="18099";VGXSERVER_RECV_CHUNK_ORDER=8;VGXSERVER_SEND_CHUNK_ORDER=8;VGX_GRAPH_VERTEX_BLOCK_ORDER=16;VGX_GRAPH_VECTOR_BLOCK_SIZE_MB=32;VGX_GRAPH_EXT_VECTOR_BLOCK_SIZE_MB=2;VGX_GRAPH_CSTRING_BLOCK_SIZE_MB=32;INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <EnableEnhancedInstructionSet>$(AVXVERSION)</EnableEnhancedInstructionSet>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+    <PreBuildEvent>
+      <Command>..\..\vgx\src\resources\WEB-ROOT\tools\convert.cmd ..\..\vgx\src\resources\WEB-ROOT\artifacts ..\..\vgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;VERBOSITY=2;NDEBUG;FRAMEHASH_INSTRUMENTATION;CXMALLOC_CONSISTENCY_CHECK;VGX_CONSISTENCY_CHECK;NCSTRING_INDEX_PERSIST;NVXTABLE_PERSIST;NOPSTREAM_INLINE_JSON;OPSTREAM_IDLE;OPSTREAM_VALIDATE_OUTPUT;NOPSTREAM_INJECT_RANDOM_ERROR_RATE=0.000001;OPSTREAM_DUMP_TX_IO;__SYSOUT_LIMIT=100000000;__THROTTLE_SYSOUT=50000000;__THROTTLE_TRANSACTION=1000000000;TRANSACTION_LOG_ROTATE_MAX_MINUTES=1;DEFAULT_PORT="18099";VGXSERVER_RECV_CHUNK_ORDER=8;VGXSERVER_SEND_CHUNK_ORDER=8;INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+    <PreBuildEvent>
+      <Command>..\..\vgx\src\resources\WEB-ROOT\tools\convert.cmd ..\..\vgx\src\resources\WEB-ROOT\artifacts ..\..\vgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <Profile>true</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\cxlib\src\include;..\..\vgx\src\include;$(ProjectDir)\var;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>false</CompileAsManaged>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <PreprocessorDefinitions>VGX_VERSION=$(VGXVERSION);WIN32;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;_WIN64;_AMD64_;DO_SELF_TEST;NCSTRING_INDEX_PERSIST;NVXTABLE_PERSIST;VERBOSITY=3;STOP_ON_FATAL;NVGX_STATE_LOCK_CHECK;NOPSTREAM_INLINE_JSON;NOPSTREAM_INJECT_RANDOM_ERROR_RATE=0.000001;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <AssemblerOutput>AssemblyAndSourceCode</AssemblerOutput>
+      <CompileAs>CompileAsC</CompileAs>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ShowIncludes>false</ShowIncludes>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cxlib.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <GenerateMapFile>true</GenerateMapFile>
+      <MapExports>true</MapExports>
+      <Profile>true</Profile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <PreBuildEvent>
+      <Command>..\..\vgx\src\resources\WEB-ROOT\tools\convert.cmd ..\..\vgx\src\resources\WEB-ROOT\artifacts ..\..\vgx\src\include\generated</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_basementallocator.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_dynamic.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_frameallocator.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_memory.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_cstring.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_graph.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_vector.h" />
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_vertex.h" />
+    <ClInclude Include="..\..\vgx\src\comlib\tests\__utest_comlib.h" />
+    <ClInclude Include="..\..\vgx\src\comlib\tests\__utest_cxcstring.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_class.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_generic.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_info.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_int56.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_iterator.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_manage.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_object.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_pointer.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_real56.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_simple.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_framehash.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_changelog.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_delete.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_framemath.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_processor.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_serialization.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_basement.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_cache.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_fmacro.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_hashing.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_leaf.h" />
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_radix.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_advanced.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_profile.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_simple.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__advanced_add_remove.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__basic_add_remove.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__basic_get.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__chaotic_add_remove.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__complete_add_remove.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_cellproc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_comparator.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_delete.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_dispatch.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_exists.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_expire.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_fhash.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_filter.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_serialization.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_traverse.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_arc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_ard.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_vid.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_vod.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_add_string128.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_add_string64.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_dea.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ded.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_del_string128.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_del_string64.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_kea.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ked.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_rea.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_red.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_sea.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_sed.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_vea.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ved.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\execf.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_clg.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_evx.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grd.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_gre.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_gri.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grn.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grp.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grr.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grs.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grt.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grw.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lockstate.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lsr.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lxw.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_ula.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_ulv.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_val.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_vrl.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_deny.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_nop.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_null.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\opcodes.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\oputil.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\profiles.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vpc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vpd.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vps.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_com.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_dat.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_rcl.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_scf.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_sya.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_syd.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_tic.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vector\_op_vvd.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vector\_op_vvs.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxd.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxn.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxr.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxt.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxx.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_commit.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_buffers.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_capture.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_consumer_service.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_emitter.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_parser.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_produce_op.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_system.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_transaction.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_registry.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_serialization.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_system.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_dim.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_propkey.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_propval.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_rel.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_vtx.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\eval.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_arc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_avx2.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_avx512.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_bitwise.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_cast.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_collect.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_conditional.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_constant.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_geo.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_heap.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_logical.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_machine.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_maps.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_math.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_memory.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_neon.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_noavx.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_object.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_pi8.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_probe.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_random.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_rank.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_stack.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_string.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_vector.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_vertex.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_enum.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_numeric.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_output.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_string.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_varmap.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_shunt.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_synerr.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_tokenizer.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnarc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnconstant.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpndef.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnvertex.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\tests\__utest_vxeval.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventapi.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventexec.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventmon.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_arc.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_caching.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_mapping.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_object.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_relation.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_state.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_tracker.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_vxtable.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_tick.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_aggregator.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_collector.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_inspect.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_probe.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_query.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_rank.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_response.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_traverse.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_centroid.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_lsh.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_vector.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxvertex\tests\__utest_vxvertex_object.h" />
+    <ClInclude Include="..\..\vgx\src\graph\vxvertex\tests\__utest_vxvertex_property.h" />
+    <ClInclude Include="..\..\vgx\src\include\basementallocator.h" />
+    <ClInclude Include="..\..\vgx\src\include\classdefs.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlib.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\comlibsequence_defs.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_aptr_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_code.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_header.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m128i_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m256i_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m512i_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_tptr_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_x2tptr_ops.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__comlibtest_macro.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__utest_comlibsequence_basic.h" />
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__utest_comlibsequence_heap.h" />
+    <ClInclude Include="..\..\vgx\src\include\cxcstring.h" />
+    <ClInclude Include="..\..\vgx\src\include\cxlog.h" />
+    <ClInclude Include="..\..\vgx\src\include\cxmalloc.h" />
+    <ClInclude Include="..\..\vgx\src\include\cxthread.h" />
+    <ClInclude Include="..\..\vgx\src\include\cxtokenizer.h" />
+    <ClInclude Include="..\..\vgx\src\include\debug.h" />
+    <ClInclude Include="..\..\vgx\src\include\default_allocator.h" />
+    <ClInclude Include="..\..\vgx\src\include\demo_class.h" />
+    <ClInclude Include="..\..\vgx\src\include\frameallocator.h" />
+    <ClInclude Include="..\..\vgx\src\include\framehash.h" />
+    <ClInclude Include="..\..\vgx\src\include\messages.h" />
+    <ClInclude Include="..\..\vgx\src\include\moduledefs.h" />
+    <ClInclude Include="..\..\vgx\src\include\objectmodel.h" />
+    <ClInclude Include="..\..\vgx\src\include\utest.h" />
+    <ClInclude Include="..\..\vgx\src\include\versiongen.h" />
+    <ClInclude Include="..\..\vgx\src\include\vgx.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxapiservice.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxarc.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxbase.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxdlldef.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxgraph.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxoperation.h" />
+    <ClInclude Include="..\..\vgx\src\include\vxvertexdefs.h" />
+    <ClInclude Include="..\..\vgx\src\include\_comlib.h" />
+    <ClInclude Include="..\..\vgx\src\include\_cxmalloc.h" />
+    <ClInclude Include="..\..\vgx\src\include\_fcell.h" />
+    <ClInclude Include="..\..\vgx\src\include\_fhbase.h" />
+    <ClInclude Include="..\..\vgx\src\include\_fmacro.h" />
+    <ClInclude Include="..\..\vgx\src\include\_framehash.h" />
+    <ClInclude Include="..\..\vgx\src\include\_simple.h" />
+    <ClInclude Include="..\..\vgx\src\include\_versioninfo.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vgx.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vgx_serialization.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxalloc.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxarcvector.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxcollector.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxenum.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxevent.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxgraph.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxhtml.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_cstring.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_graph.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_vector.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_vertex.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxoperation.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxpathdef.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxprivate.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxserver.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxserver_dispatcher.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxsim.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxeval.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxtest.h" />
+    <ClInclude Include="..\..\vgx\src\include\_vxtraverse.h" />
+    <ClInclude Include="..\..\vgx\src\include\__vxtest_macro.h" />
+    <ClInclude Include="..\..\vgx\src\io\tests\__utest_vxio_uri.h" />
+    <ClInclude Include="..\..\vgx\src\server\tests\__utest_vgx_server.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\vgx\src\allocator\basementallocator.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_allocator.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_api.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_block.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_chain.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_class.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_family.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_line.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_object_processor.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_serialization.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_shape.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\default_cxmalloc.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\dynamic.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\frameallocator.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\memory.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\vxalloc.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_cstring.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_graph.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_vector.c" />
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_vertex.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\captrbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cbytebuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cdwordbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm128ibuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm256ibuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm512ibuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cqwordbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cstringbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\ctptrbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cwordbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cx2tptrbuffer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\comlib.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\comlibtest.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\cxcstring.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\cxlog.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\cxthread.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\cxtokenizer.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\debug.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\demo_class.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cbyteheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cdwordheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm128iheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm256iheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm512iheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cqwordheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cwordheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\captrheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\ctptrheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\cx2tptrheap.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\linearsequence.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cbytelist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cdwordlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm128ilist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm256ilist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm512ilist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cqwordlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cwordlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\captrlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\ctptrlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\cx2tptrlist.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\messages.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\objectmodel.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cbytequeue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cdwordqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm128iqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm256iqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm512iqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cqwordqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cstringqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cwordqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\captrqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\ctptrqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\cx2tptrqueue.c" />
+    <ClCompile Include="..\..\vgx\src\comlib\utest.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_class.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_generic.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_info.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_int56.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_iterator.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_manage.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_object.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_pointer.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_real56.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_simple.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\api\framehash.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\changelog.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\delete.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\fhtest.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\framemath.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\processor.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\process\serialization.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\basement.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\cache.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\fmacro.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\hashing.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\leaf.c" />
+    <ClCompile Include="..\..\vgx\src\framehash\radix\radix.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_advanced.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_profile.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_simple.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_api.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_cellproc.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_comparator.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_delete.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_dispatch.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_exists.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_expire.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_fhash.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_filter.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_serialization.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_traverse.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_commit.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_buffers.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_capture.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_consumer_service.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_emitter.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_parser.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_produce_op.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_produce_opjson.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_system.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_transaction.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_registry.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_serialization.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_system.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_dim.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_propkey.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_propval.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_rel.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_vtx.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxeval\vxeval.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxeval\vxeval_parser.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventapi.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventexec.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventmon.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_arc.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_caching.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_mapping.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_object.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_relation.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_state.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_tracker.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_vxtable.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_tick.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_aggregator.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_collector.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_dump.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_inspect.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_probe.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_query.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_rank.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_response.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_traverse.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_centroid.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_lsh.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_vector.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxvertex\vxvertex_object.c" />
+    <ClCompile Include="..\..\vgx\src\graph\vxvertex\vxvertex_property.c" />
+    <ClCompile Include="..\..\vgx\src\io\vxio_uri.c" />
+    <ClCompile Include="..\..\vgx\src\runvgxtest.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\asynctask.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\channel.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\client.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\dispatch.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\io.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\matrix.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\partial.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\partition.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\replica.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\response.c" />
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\streams.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_artifacts.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_buffers.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_client.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_config.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_counters.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_dispatch.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_endpoint.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_executor.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_io.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_parser.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_plugin.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_request.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_resource.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_response.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_service.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_sync.c" />
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_util.c" />
+    <ClCompile Include="..\..\vgx\src\vgxtest.c" />
+    <ClCompile Include="..\..\vgx\src\vxdefs.c" />
+    <ClCompile Include="..\..\vgx\src\vxinit.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\vgx\src\resources\vimfiles\color\vgx.vim" />
+    <None Include="..\..\vgx\src\resources\vimfiles\color\_vimrc" />
+    <None Include="..\..\vgx\src\resources\vimfiles\syntax\vgx.vim" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\admin.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\boxstate.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\clock.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\console.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\digest.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\footer.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\header.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\header.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\index.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\jquery-3.6.0.min.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\plugin.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\search.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\status.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\system.html" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\uptime.js" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\vgx.css" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\tools\convert.cmd" />
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\tools\convert.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\favicon.ico" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\loader.gif" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\lock.png" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_b-w.png" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_b-x.png" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_w-b.png" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_w-x.png" />
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\unlocked.png" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

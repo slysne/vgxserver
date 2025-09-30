@@ -1,0 +1,1711 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="src\allocator">
+      <UniqueIdentifier>{57683d7e-b4cc-4117-81fe-8a44fac30826}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\allocator\tests">
+      <UniqueIdentifier>{d308eb34-5ec0-4423-88cc-b8039bb95358}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph">
+      <UniqueIdentifier>{5201317e-15d9-44bb-93c2-38248e8a6c89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxarcvector">
+      <UniqueIdentifier>{212f7e0f-3120-47d8-a4d8-38478c3e949c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxarcvector\tests">
+      <UniqueIdentifier>{f103c6eb-46a0-43ad-88a2-d63b54293ca2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxgraph">
+      <UniqueIdentifier>{119234b1-f2ad-4d91-b401-aed68aa0c63c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxgraph\tests">
+      <UniqueIdentifier>{590b2723-24ce-4799-afec-9b07c0d61a49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxvertex">
+      <UniqueIdentifier>{af27c732-f14a-447c-8c34-1ccecb367acf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxvertex\tests">
+      <UniqueIdentifier>{4b7a5b73-b37e-463d-b5b6-c2ae006e0d93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxevent">
+      <UniqueIdentifier>{292ea2ed-365e-458f-9d46-617210f21904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxevent\tests">
+      <UniqueIdentifier>{bf00a23b-eb15-4259-b57b-05570d6dd103}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxquery">
+      <UniqueIdentifier>{d1652c5a-46be-4393-bd9f-391ed64ff246}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxquery\tests">
+      <UniqueIdentifier>{f9aaf3a4-1df5-49e2-9fd0-f42ae42014bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxapi">
+      <UniqueIdentifier>{407c32b9-b7d4-4900-b37a-45f66ccf11a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxapi\tests">
+      <UniqueIdentifier>{096fa31f-2729-4d07-9dca-0cede8d30c66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxenum">
+      <UniqueIdentifier>{ae473f3e-527d-4695-a908-ab7c6afd7457}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxenum\tests">
+      <UniqueIdentifier>{caa3c2ff-8c96-46c9-8991-c28d19fff3c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxsim">
+      <UniqueIdentifier>{1da8da06-681d-4da5-8fc6-946256534c03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxsim\tests">
+      <UniqueIdentifier>{6b96f072-95ab-478a-876e-fb83a1daba4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable">
+      <UniqueIdentifier>{8d2dd1b5-03cf-46e4-9275-3309cb43f7bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\tests">
+      <UniqueIdentifier>{cd16fc29-407b-4df5-9834-bb80f536cfce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op">
+      <UniqueIdentifier>{9e528848-492f-47c9-bf64-d0aa36dd2c8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\vertex">
+      <UniqueIdentifier>{5476ed0c-5e75-41a9-8de3-16c2711055c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\vector">
+      <UniqueIdentifier>{be10a52b-9463-42ea-b513-1df698f13d75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\arc">
+      <UniqueIdentifier>{fbf44402-055f-43a7-9e3f-64dcc7da2dbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\graph">
+      <UniqueIdentifier>{905ebe33-d7e4-4de9-a374-340f45d3045f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\lock">
+      <UniqueIdentifier>{3c4f7e88-b521-4f29-8f9e-20ba60fea292}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\property">
+      <UniqueIdentifier>{1458efdb-06be-4c15-b72d-23b872808266}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\system">
+      <UniqueIdentifier>{200a0349-756e-4236-a6c1-8412f706f253}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\enum">
+      <UniqueIdentifier>{684cdf1d-1494-466a-a7ba-b5b8fcdb44f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxdurable\op\nop">
+      <UniqueIdentifier>{1f779b53-eb14-42e8-8ba0-eac532b7afab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxeval">
+      <UniqueIdentifier>{76810e53-457f-45e8-be86-cd458e95fb53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxeval\tests">
+      <UniqueIdentifier>{e19200f4-cdcd-4497-bbd9-f91b712229b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxeval\modules">
+      <UniqueIdentifier>{b77c2291-f85c-49b4-8404-94ce9e9c2ec6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxeval\rpndef">
+      <UniqueIdentifier>{af9c22cd-dd5d-41fd-baa0-2d5786365f2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\graph\vxeval\parser">
+      <UniqueIdentifier>{ebba266b-82d4-4286-94dc-091988548cb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\server">
+      <UniqueIdentifier>{93fc1152-bfc7-437b-a62a-f236b8dda9d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\server\tests">
+      <UniqueIdentifier>{3766acf0-c14d-4641-9686-a3da445dedcd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\server\dispatcher">
+      <UniqueIdentifier>{5045e14d-1db1-44a6-8f57-c8250e0e62c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\io">
+      <UniqueIdentifier>{797aed6c-315b-4556-a89d-12b004a123a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\io\tests">
+      <UniqueIdentifier>{0119913d-f0d2-4a45-83b9-00582b129555}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash">
+      <UniqueIdentifier>{58027eb2-a296-42aa-b745-69307b85f7ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\api">
+      <UniqueIdentifier>{bcc82be6-34c5-46dd-9a8a-1a3470d3db00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\api\tests">
+      <UniqueIdentifier>{91cc2f41-de6d-496a-8bb2-6794bf52a789}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\process">
+      <UniqueIdentifier>{c2330cc0-c3b8-409f-9c1b-95bb455e6bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\process\tests">
+      <UniqueIdentifier>{690075aa-81a7-4dbf-9d2b-44464c062b2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\radix">
+      <UniqueIdentifier>{880a556d-6ebb-4f7e-8e26-61636a646030}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\framehash\radix\tests">
+      <UniqueIdentifier>{2196e8ab-6e26-44f3-966d-c3215cd7a370}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib">
+      <UniqueIdentifier>{a0feeaa0-5db3-42fd-bb1d-f8740f8f8512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\tests">
+      <UniqueIdentifier>{e86688bd-85fe-40d6-8f4e-1a599c516120}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\buffers">
+      <UniqueIdentifier>{539dd5ec-050d-4ca2-9bef-236821dc9d79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\buffers\general">
+      <UniqueIdentifier>{d7605bb3-c9f8-4c55-aa01-eca0a257335f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\heaps">
+      <UniqueIdentifier>{7449afc2-11cb-49b6-bfe3-7be4c01729ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\heaps\general">
+      <UniqueIdentifier>{b25cbe99-e342-46f2-8d64-779b0073eeb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\heaps\typed">
+      <UniqueIdentifier>{69fcef2e-7c0b-4033-9c6b-fa3b738b33d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\lists">
+      <UniqueIdentifier>{3ea369a2-43dd-4969-b8b4-5edc4ed2f76c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\lists\general">
+      <UniqueIdentifier>{090689bc-c82f-4b5a-a9e5-24c5412158fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\lists\typed">
+      <UniqueIdentifier>{4a47fd08-e12d-4b0b-8183-a6e1945bddb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\queues">
+      <UniqueIdentifier>{604acc91-ca70-46b6-b4f0-19fa628b1e50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\queues\general">
+      <UniqueIdentifier>{11939fb0-9ca2-4100-852b-98b4134b1503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\comlib\queues\typed">
+      <UniqueIdentifier>{0d052c5a-7d85-4c8e-bd2c-943632585d4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="src/include\comlibsequence">
+      <UniqueIdentifier>{b9a0f2d1-5ff6-485a-a311-99491770e34b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="src/resources\vimfiles">
+      <UniqueIdentifier>{1e0bd9d5-a698-40b6-b26e-12e3e195a88e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\vimfiles\syntax">
+      <UniqueIdentifier>{da8a9997-e554-4fa4-8187-a37a321458a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\vimfiles\color">
+      <UniqueIdentifier>{9691b342-198a-403f-96ad-9caa24f471b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT">
+      <UniqueIdentifier>{e7ec8b16-bd0a-4a65-ac46-62029f2eb20b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\tools">
+      <UniqueIdentifier>{5d168965-f4c6-4ee6-b798-dfa588b8c13d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\artifacts">
+      <UniqueIdentifier>{4596d0a2-8162-4435-9537-a14787fac8ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\artifacts\html">
+      <UniqueIdentifier>{f8efe74f-0198-43cd-9ace-f7d80c556d34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\artifacts\css">
+      <UniqueIdentifier>{f9930330-0294-4726-8640-a9cf57127aae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\artifacts\js">
+      <UniqueIdentifier>{4fe2a451-902d-4ca9-9355-9401cd71ee31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src/resources\WEB-ROOT\artifacts\images">
+      <UniqueIdentifier>{aba5293d-43c4-47f2-9922-7ca8d4c74038}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\vgx\src\include\__vxtest_macro.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_versioninfo.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vgx.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vgx_serialization.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxalloc.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxarcvector.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxcollector.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxenum.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxevent.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxgraph.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxhtml.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_cstring.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_graph.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_vector.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxoballoc_vertex.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxoperation.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxpathdef.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxprivate.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxserver.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxserver_dispatcher.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxsim.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxeval.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxtest.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_vxtraverse.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vgx.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxapiservice.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxarc.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxbase.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxdlldef.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxgraph.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxoperation.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\vxvertexdefs.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\server\tests\__utest_vgx_server.h">
+      <Filter>src\server\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\io\tests\__utest_vxio_uri.h">
+      <Filter>src\io\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxvertex\tests\__utest_vxvertex_object.h">
+      <Filter>src\graph\vxvertex\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxvertex\tests\__utest_vxvertex_property.h">
+      <Filter>src\graph\vxvertex\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim.h">
+      <Filter>src\graph\vxsim\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_centroid.h">
+      <Filter>src\graph\vxsim\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_lsh.h">
+      <Filter>src\graph\vxsim\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxsim\tests\__utest_vxsim_vector.h">
+      <Filter>src\graph\vxsim\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_aggregator.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_collector.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_inspect.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_probe.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_query.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_rank.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_response.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxquery\tests\__utest_vxquery_traverse.h">
+      <Filter>src\graph\vxquery\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_arc.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_caching.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_mapping.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_object.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_relation.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_state.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_tracker.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_vxtable.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventapi.h">
+      <Filter>src\graph\vxevent\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventexec.h">
+      <Filter>src\graph\vxevent\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxevent\tests\__utest_vxevent_eventmon.h">
+      <Filter>src\graph\vxevent\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_dim.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_propkey.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_propval.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_rel.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxenum\tests\__utest_vxenum_vtx.h">
+      <Filter>src\graph\vxenum\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_commit.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_buffers.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_capture.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_consumer_service.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_emitter.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_parser.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_produce_op.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_system.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_operation_transaction.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_registry.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_serialization.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\tests\__utest_vxdurable_system.h">
+      <Filter>src\graph\vxdurable\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\execf.h">
+      <Filter>src\graph\vxdurable\op</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\opcodes.h">
+      <Filter>src\graph\vxdurable\op</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\oputil.h">
+      <Filter>src\graph\vxdurable\op</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\profiles.h">
+      <Filter>src\graph\vxdurable\op</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_arc.h">
+      <Filter>src\graph\vxdurable\op\arc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_ard.h">
+      <Filter>src\graph\vxdurable\op\arc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_vid.h">
+      <Filter>src\graph\vxdurable\op\arc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\arc\_op_vod.h">
+      <Filter>src\graph\vxdurable\op\arc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_add_string64.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_add_string128.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_dea.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ded.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_del_string64.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_del_string128.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_kea.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ked.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_rea.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_red.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_sea.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_sed.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_vea.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\enum\_op_ved.h">
+      <Filter>src\graph\vxdurable\op\enum</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_clg.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_evx.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grd.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_gre.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_gri.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grn.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grp.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grr.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grs.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grt.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\graph\_op_grw.h">
+      <Filter>src\graph\vxdurable\op\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lockstate.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lsr.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_lxw.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_ula.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_ulv.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_val.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\lock\_op_vrl.h">
+      <Filter>src\graph\vxdurable\op\lock</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_deny.h">
+      <Filter>src\graph\vxdurable\op\nop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_nop.h">
+      <Filter>src\graph\vxdurable\op\nop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\nop\_op_null.h">
+      <Filter>src\graph\vxdurable\op\nop</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vpc.h">
+      <Filter>src\graph\vxdurable\op\property</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vpd.h">
+      <Filter>src\graph\vxdurable\op\property</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\property\_op_vps.h">
+      <Filter>src\graph\vxdurable\op\property</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_com.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_dat.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_rcl.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_scf.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_sya.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_syd.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\system\_op_tic.h">
+      <Filter>src\graph\vxdurable\op\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vector\_op_vvd.h">
+      <Filter>src\graph\vxdurable\op\vector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vector\_op_vvs.h">
+      <Filter>src\graph\vxdurable\op\vector</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxc.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxd.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxn.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxr.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxt.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxdurable\op\vertex\_op_vxx.h">
+      <Filter>src\graph\vxdurable\op\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__advanced_add_remove.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__basic_add_remove.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__basic_get.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__chaotic_add_remove.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_api__complete_add_remove.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_cellproc.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_comparator.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_delete.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_dispatch.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_exists.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_expire.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_fhash.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_filter.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_serialization.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxarcvector\tests\__utest_vxarcvector_traverse.h">
+      <Filter>src\graph\vxarcvector\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_advanced.h">
+      <Filter>src\graph\vxapi\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_profile.h">
+      <Filter>src\graph\vxapi\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxapi\tests\__utest_vxapi_simple.h">
+      <Filter>src\graph\vxapi\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_cstring.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_graph.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_vector.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_vxoballoc_vertex.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxgraph\tests\__utest_vxgraph_tick.h">
+      <Filter>src\graph\vxgraph\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\tests\__utest_vxeval.h">
+      <Filter>src\graph\vxeval\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_arc.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_avx2.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_avx512.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_bitwise.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_cast.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_collect.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_conditional.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_constant.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_geo.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_heap.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_logical.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_math.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_memory.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_noavx.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_object.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_pi8.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_probe.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_random.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_rank.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_stack.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_string.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_vector.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_vertex.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\eval.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_machine.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpndef.h">
+      <Filter>src\graph\vxeval\rpndef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_shunt.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnvertex.h">
+      <Filter>src\graph\vxeval\rpndef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnarc.h">
+      <Filter>src\graph\vxeval\rpndef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\rpndef\_rpnconstant.h">
+      <Filter>src\graph\vxeval\rpndef</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_tokenizer.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_synerr.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_varmap.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_enum.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_numeric.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_string.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\parser\_output.h">
+      <Filter>src\graph\vxeval\parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_fcell.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_fhbase.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_fmacro.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_framehash.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_simple.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\basementallocator.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\frameallocator.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\framehash.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_basementallocator.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_dynamic.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_frameallocator.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\allocator\tests\__utest_framehash_memory.h">
+      <Filter>src\allocator\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_class.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_generic.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_info.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_int56.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_iterator.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_manage.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_object.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_pointer.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_real56.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_api_simple.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\api\tests\__utest_framehash_framehash.h">
+      <Filter>src\framehash\api\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_changelog.h">
+      <Filter>src\framehash\process\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_delete.h">
+      <Filter>src\framehash\process\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_framemath.h">
+      <Filter>src\framehash\process\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_processor.h">
+      <Filter>src\framehash\process\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\process\tests\__utest_framehash_serialization.h">
+      <Filter>src\framehash\process\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_cxmalloc.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\cxmalloc.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\default_allocator.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_aptr_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_code.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_header.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m128i_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m256i_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_m512i_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_tptr_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\_comlibsequence_x2tptr_ops.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\comlibsequence_defs.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\_comlib.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\classdefs.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlib.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\cxcstring.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\cxthread.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\cxtokenizer.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\debug.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\demo_class.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\messages.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\moduledefs.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\objectmodel.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\utest.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\comlib\tests\__utest_comlib.h">
+      <Filter>src\comlib\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\comlib\tests\__utest_cxcstring.h">
+      <Filter>src\comlib\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__utest_comlibsequence_basic.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__utest_comlibsequence_heap.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\comlibsequence\__comlibtest_macro.h">
+      <Filter>src/include\comlibsequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\versiongen.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_maps.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\include\cxlog.h">
+      <Filter>src/include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_basement.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_cache.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_fmacro.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_hashing.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_leaf.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\framehash\radix\tests\__utest_framehash_radix.h">
+      <Filter>src\framehash\radix\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\vgx\src\graph\vxeval\modules\_neon.h">
+      <Filter>src\graph\vxeval\modules</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\vgx\src\vgxtest.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\vxdefs.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\vxinit.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\asynctask.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\channel.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\client.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\dispatch.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\io.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\matrix.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\partition.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\replica.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\response.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_artifacts.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_buffers.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_client.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_config.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_counters.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_dispatch.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_endpoint.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_executor.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_io.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_parser.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_plugin.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_request.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_resource.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_response.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_service.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_sync.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\vgx_server_util.c">
+      <Filter>src\server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\io\vxio_uri.c">
+      <Filter>src\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxvertex\vxvertex_object.c">
+      <Filter>src\graph\vxvertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxvertex\vxvertex_property.c">
+      <Filter>src\graph\vxvertex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim.c">
+      <Filter>src\graph\vxsim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_centroid.c">
+      <Filter>src\graph\vxsim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_lsh.c">
+      <Filter>src\graph\vxsim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxsim\vxsim_vector.c">
+      <Filter>src\graph\vxsim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_aggregator.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_collector.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_dump.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_inspect.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_probe.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_query.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_rank.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_response.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxquery\vxquery_traverse.c">
+      <Filter>src\graph\vxquery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_arc.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_caching.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_mapping.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_object.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_relation.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_state.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_tracker.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_vxtable.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventapi.c">
+      <Filter>src\graph\vxevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventexec.c">
+      <Filter>src\graph\vxevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxevent\vxevent_eventmon.c">
+      <Filter>src\graph\vxevent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_dim.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_propkey.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_propval.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_rel.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxenum\vxenum_vtx.c">
+      <Filter>src\graph\vxenum</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_commit.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_buffers.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_capture.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_consumer_service.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_emitter.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_parser.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_produce_op.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_produce_opjson.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_system.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_operation_transaction.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_registry.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_serialization.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxdurable\vxdurable_system.c">
+      <Filter>src\graph\vxdurable</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_api.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_cellproc.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_comparator.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_delete.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_dispatch.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_exists.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_expire.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_fhash.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_filter.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_serialization.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxarcvector\vxarcvector_traverse.c">
+      <Filter>src\graph\vxarcvector</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_advanced.c">
+      <Filter>src\graph\vxapi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_profile.c">
+      <Filter>src\graph\vxapi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxapi\vxapi_simple.c">
+      <Filter>src\graph\vxapi</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\vxalloc.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_cstring.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_graph.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_vector.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\vxoballoc_vertex.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxgraph\vxgraph_tick.c">
+      <Filter>src\graph\vxgraph</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxeval\vxeval.c">
+      <Filter>src\graph\vxeval</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\graph\vxeval\vxeval_parser.c">
+      <Filter>src\graph\vxeval</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\partial.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\server\dispatcher\streams.c">
+      <Filter>src\server\dispatcher</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\basementallocator.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\dynamic.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\frameallocator.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\memory.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_class.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_generic.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_info.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_int56.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_iterator.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_manage.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_object.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_pointer.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_real56.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\api_simple.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\api\framehash.c">
+      <Filter>src\framehash\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\changelog.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\delete.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\fhtest.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\framemath.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\processor.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\process\serialization.c">
+      <Filter>src\framehash\process</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_allocator.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_api.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_block.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_chain.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_class.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_family.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_line.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_object_processor.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_serialization.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\cxmalloc_shape.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\allocator\default_cxmalloc.c">
+      <Filter>src\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\comlib.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\comlibtest.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\cxcstring.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\cxthread.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\cxtokenizer.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\debug.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\demo_class.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\linearsequence.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\messages.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\objectmodel.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\utest.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\captrbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cbytebuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cdwordbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm128ibuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm256ibuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cm512ibuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cqwordbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cstringbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\ctptrbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cwordbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\buffers\general\cx2tptrbuffer.c">
+      <Filter>src\comlib\buffers\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cbyteheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cdwordheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm128iheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm256iheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cm512iheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cqwordheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\general\cwordheap.c">
+      <Filter>src\comlib\heaps\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\captrheap.c">
+      <Filter>src\comlib\heaps\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\ctptrheap.c">
+      <Filter>src\comlib\heaps\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\heaps\typed\cx2tptrheap.c">
+      <Filter>src\comlib\heaps\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cbytelist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cdwordlist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm128ilist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm256ilist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cm512ilist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cqwordlist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\general\cwordlist.c">
+      <Filter>src\comlib\lists\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\captrlist.c">
+      <Filter>src\comlib\lists\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\ctptrlist.c">
+      <Filter>src\comlib\lists\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\lists\typed\cx2tptrlist.c">
+      <Filter>src\comlib\lists\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cbytequeue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cdwordqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm128iqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm256iqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cm512iqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cqwordqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cstringqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\general\cwordqueue.c">
+      <Filter>src\comlib\queues\general</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\captrqueue.c">
+      <Filter>src\comlib\queues\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\ctptrqueue.c">
+      <Filter>src\comlib\queues\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\queues\typed\cx2tptrqueue.c">
+      <Filter>src\comlib\queues\typed</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\comlib\cxlog.c">
+      <Filter>src\comlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\basement.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\cache.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\fmacro.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\hashing.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\leaf.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\framehash\radix\radix.c">
+      <Filter>src\framehash\radix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\vgx\src\runvgxtest.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\tools\convert.cmd">
+      <Filter>src/resources\WEB-ROOT\tools</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\tools\convert.py">
+      <Filter>src/resources\WEB-ROOT\tools</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\vgx.css">
+      <Filter>src/resources\WEB-ROOT\artifacts\css</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\admin.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\console.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\footer.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\header.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\index.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\plugin.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\search.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\status.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\system.html">
+      <Filter>src/resources\WEB-ROOT\artifacts\html</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\boxstate.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\digest.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\header.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\jquery-3.6.0.min.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\uptime.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\vimfiles\syntax\vgx.vim">
+      <Filter>src/resources\vimfiles\syntax</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\vimfiles\color\_vimrc">
+      <Filter>src/resources\vimfiles\color</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\vimfiles\color\vgx.vim">
+      <Filter>src/resources\vimfiles\color</Filter>
+    </None>
+    <None Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\clock.js">
+      <Filter>src/resources\WEB-ROOT\artifacts\js</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\favicon.ico">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\loader.gif">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\lock.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\unlocked.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_b-w.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_b-x.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_w-b.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+    <Image Include="..\..\vgx\src\resources\WEB-ROOT\artifacts\logo_w-x.png">
+      <Filter>src/resources\WEB-ROOT\artifacts\images</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
