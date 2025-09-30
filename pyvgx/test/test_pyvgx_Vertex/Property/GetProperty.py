@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgxtest
 # File:    GetProperty.py
 # Author:  Stian Lysne <...>
 # 

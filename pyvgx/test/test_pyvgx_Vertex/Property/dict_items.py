@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgxtest
 # File:    dict_items.py
 # Author:  Stian Lysne <...>
 # 

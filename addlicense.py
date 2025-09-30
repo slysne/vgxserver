@@ -70,6 +70,8 @@ def get_module_name(filepath):
         return "framehash"
     if "comlib" in filepath:
         return "comlib"
+    if "pyvgx/test" in filepath:
+        return "pyvgxtest"
     if "pyvgx" in filepath:
         return "pyvgx"
     if "vgx" in filepath:
