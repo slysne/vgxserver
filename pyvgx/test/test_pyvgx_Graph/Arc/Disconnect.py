@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    Disconnect.py
 # Author:  Stian Lysne <...>
 # 
@@ -23,8 +23,8 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
-from pytest.threads import Worker
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
+from pyvgxtest.threads import Worker
 import time
 from pyvgx import *
 import pyvgx

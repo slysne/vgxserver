@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    DivergentTraversal.py
 # Author:  Stian Lysne <...>
 # 
@@ -23,14 +23,14 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from ..Query._query_test_support import *
 from pyvgx import *
 import pyvgx
 from math import *
 import operator
 import random
-from pytest.threads import Worker
+from pyvgxtest.threads import Worker
 import threading
 
 graph = None

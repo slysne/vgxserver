@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    SetProperty.py
 # Author:  Stian Lysne <...>
 # 
@@ -24,7 +24,7 @@
 ###############################################################################
 
 from ast import Try
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from pyvgx import *
 import pyvgx
 import random

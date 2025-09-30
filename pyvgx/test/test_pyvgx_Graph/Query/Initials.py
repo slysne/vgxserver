@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    Initials.py
 # Author:  Stian Lysne <...>
 # 
@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from . import _query_test_support as QuerySupport
 from pyvgx import *
 import pyvgx

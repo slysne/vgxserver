@@ -1,6 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
+set "VERSION=3.6"
+
 REM === Verify current directory ===
 if not exist "setup.py" (
     echo ERROR: setup.py not found in current directory.
@@ -18,7 +20,6 @@ set "TEST=%~2"
 if not defined PRESET set "PRESET=release"
 if not defined TEST set "TEST=none"
 
-set "VERSION=3.6"
 set "PROJECT_VERSION=%VERSION%"
 set "CMAKE_PRESET=%PRESET%"
 set "BUILT_BY=%COMPUTERNAME%"

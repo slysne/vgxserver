@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    GetOpenVertices.py
 # Author:  Stian Lysne <...>
 # 
@@ -23,7 +23,7 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 import threading
 from pyvgx import *
 import pyvgx

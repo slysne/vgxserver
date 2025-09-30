@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    DeleteVertex.py
 # Author:  Stian Lysne <...>
 # 
@@ -23,11 +23,11 @@
 # 
 ###############################################################################
 
-from pytest.pytest import RunTests, Expect, TestFailed
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
 from . import _vertex_test_support as Support
 from pyvgx import *
 import pyvgx
-from pytest.threads import Worker
+from pyvgxtest.threads import Worker
 import time
 import random
 

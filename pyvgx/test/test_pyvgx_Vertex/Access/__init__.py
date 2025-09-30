@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgx
+# Module:  pyvgx.test
 # File:    __init__.py
 # Author:  Stian Lysne <...>
 # 
@@ -25,7 +25,7 @@
 
 import pkgutil
 __path__ = pkgutil.extend_path(__path__, __name__)
-from pytest.pytest import ListTestSets, RunTestSets
+from pyvgxtest.pyvgxtest import ListTestSets, RunTestSets
 
 
 import pyvgx
