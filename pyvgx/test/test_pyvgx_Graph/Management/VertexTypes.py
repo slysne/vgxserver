@@ -3,7 +3,7 @@
 # VGX Server
 # Distributed engine for plugin-based graph and vector search
 # 
-# Module:  pyvgxtest
+# Module:  pyvgx.test
 # File:    VertexTypes.py
 # Author:  Stian Lysne <...>
 # 
