@@ -108,7 +108,7 @@ echo
 echo "Sample code location: ${LOCATION}"
 echo
 echo "Show system status:"
-echo "vgxadmin $ADMIN --status *"
+echo "vgxadmin $ADMIN --status @"
 echo
 echo "Display effective system descriptor:"
 echo "vgxadmin $ADMIN --show"

@@ -25,6 +25,7 @@ VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
 
 PY_SRC_DIR = "pyvgx/src/py"
+PYTHON_VERSION = f"{sys.version_info.major}{sys.version_info.minor}"
 
 
 if IS_WINDOWS:
@@ -81,6 +82,8 @@ class CmakeBuild(build_ext):
 
         ext_name_path = self.get_ext_fullpath(ext.name)
         ext_name_dirpath =  os.path.dirname(ext_name_path)
+
+        print(dir(ext))
 
         # Final directory where the compiled extension (.so / .pyd) will be placed
         extdir = os.path.abspath(ext_name_dirpath)
@@ -163,28 +166,35 @@ class CmakeBuild(build_ext):
             ])
         elif IS_WINDOWS:
 
-            # Full path to .lib file (e.g., python312.lib)
-            python_library_path = os.path.join(python_libdir, python_lib) if python_lib and python_libdir else None
+            include_paths = []
 
-            # include path
-            if not include_dir or not os.path.exists(include_dir):
-                print(f"[WARN] Could not find sysconfig expected headers 'include': {include_dir}")
-                include_dir = "C:\\Python312\\Python-3.12.3\\Include" # TODO FIX
-                print(f"[WARN] Using hardcoded path: {include_dir}")
-            
-            # platinclude path
-            if not plat_include_dir or not os.path.exists(plat_include_dir):
-                print(f"[WARN] Could not find sysconfig expected headers 'platinclude': {plat_include_dir}")
-                plat_include_dir = "C:\\Python312\\Python-3.12.3\\PC" # TODO FIX
-                print(f"[WARN] Using hardcoded path: {plat_include_dir}")
+            # include path (containing Python.h)
+            path1 = include_dir
+            while not path1 or not os.path.exists(path1) or not os.path.exists(os.path.join(path1,"Python.h")):
+                path1 = input( "Enter include directory containing Python.h: " )
+
+            include_paths.append(path1)
+
+            # include path (pyconfig.h)
+            path2 = include_dir
+            while not path2 or not os.path.exists(path2) or not os.path.exists(os.path.join(path2,"pyconfig.h")):
+                path2 = input( "Enter include directory containing pyconfig.h: " )
+
+            if path2 not in include_paths:
+                include_paths.append(path2)
+
+            include_dirs = ";".join(include_paths)
 
             # library path
-            if not python_library_path or not os.path.exists(python_library_path):
-                print(f"[WARN] Could not find sysconfig expected library {python_library_path}")
-                python_library_path = "C:\\Python312\\x64\\Release\\libs\\python312.lib" # TODO FIX
-                print(f"[WARN] Using hardcoded path: {python_library_path}")
+            # Full path to .lib file (e.g., python312.lib)
+            if python_lib is None or not python_lib.startswith("python"):
+                python_lib = f"python{PYTHON_VERSION}.lib"
 
-            include_dirs = f"{include_dir};{plat_include_dir}"
+            while not python_libdir or not os.path.exists(python_libdir) or not os.path.exists(os.path.join(python_libdir,python_lib)):
+                python_libdir = input( f"Enter include directory containing {python_lib}: " )
+
+            python_library_path = os.path.join(python_libdir, python_lib)
+
 
             cmake_configure_cmd.extend([
                 f"-DPython3_INCLUDE_DIRS={include_dirs}",

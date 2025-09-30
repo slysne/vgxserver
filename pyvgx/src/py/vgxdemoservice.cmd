@@ -1,7 +1,8 @@
 @echo off
 
-SET LOCALHOST="127.0.0.1"
-SET ADMIN="%LOCALHOST%:9001"
+SET "LOCALHOST=127.0.0.1"
+SET "ADMIN=%LOCALHOST%:9001"
+SET "DISPATCH="
 
 SET "DIR=%~dp0"
 SET "DEMOMODE=%~1"
@@ -40,7 +41,7 @@ if /i "%DEMOMODE%" == "single" (
   set ntarget=1
   echo Starting single instance demo
   echo:
-
+  SET "DISPATCH=%LOCALHOST%:9000"
   echo G1
   @start /MIN python -m vgxdemoservice --demo single --instanceid G1
 )
@@ -49,6 +50,8 @@ if /i "%DEMOMODE%" == "multi" (
   set ntarget=6
   echo Starting multi instance demo
   echo:
+
+  SET "DISPATCH=%LOCALHOST%:9990"
 
   echo A1
   @start /MIN python -m vgxdemoservice --demo multi --instanceid A1
@@ -114,7 +117,7 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 
-
+REM Attach
 if /i "%DEMOMODE%"=="multi" (
     echo *** Attaching Builder instances
     echo.
@@ -122,16 +125,22 @@ if /i "%DEMOMODE%"=="multi" (
     echo.
 )
 
+REM Add sample data
+vgxadmin %DISPATCH% --endpoint "/vgx/plugin/add?N=10000&count=100000"
+
+REM Run sample search
+vgxadmin %DISPATCH% --endpoint "/vgx/plugin/search?name=1234&hits=3"
+
 
 echo:
 echo Sample code location: %DIR%
 echo:
 echo Show system status:
-echo vgxadmin 127.0.0.1:9001 --status *
+echo vgxadmin %ADMIN% --status @
 echo:
 echo Display effective system descriptor:
-echo vgxadmin 127.0.0.1:9001 --show
+echo vgxadmin %ADMIN% --show
 echo:
 echo Write effective system descriptor to local file:
-echo vgxadmin 127.0.0.1:9001 --show ^> vgx.cf
+echo vgxadmin %ADMIN% --show ^> vgx.cf
 
