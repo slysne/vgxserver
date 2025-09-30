@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros">
+    <AVXVERSION>AdvancedVectorExtensions2</AVXVERSION>
+    <VGXVERSION>3.6.dev</VGXVERSION>
+    <PYTHON_INCLUDE>C:\Python312\Python-3.12.3\Include;C:\Python312\Python-3.12.3\PC</PYTHON_INCLUDE>
+    <PYTHON_LIBS>C:\Python312\x64\Release\libs</PYTHON_LIBS>
+    <PYTHON_LIBS_DEBUG>C:\Python312\x64\Debug\libs</PYTHON_LIBS_DEBUG>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>$(AVXVERSION)</EnableEnhancedInstructionSet>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugRelease|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>$(AVXVERSION)</EnableEnhancedInstructionSet>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <EnableEnhancedInstructionSet>$(AVXVERSION)</EnableEnhancedInstructionSet>
+      <!--PreprocessorDefinitions>FRAMEHASH_INSTRUMENTATION;INCLUDE_UNIT_TESTS;%(PreprocessorDefinitions)</PreprocessorDefinitions-->
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>
