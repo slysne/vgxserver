@@ -627,13 +627,17 @@ static void __eval_binary_lte( vgx_Evaluator_t *self ) {
  ***********************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-__inline static int __vertex_has_property_by_keyhash( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex, vgx_EvalStackItem_t *item ) {
-  // keyhash
-  if( item->type == STACK_ITEM_TYPE_INTEGER ) {
+__inline static int __vertex_has_property( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex, vgx_EvalStackItem_t *item ) {
+  switch( item->type ) {
+  case STACK_ITEM_TYPE_INTEGER:
     // TODO: cache? &self->cache.VERTEX
     return __has_vertex_property( vertex, item->integer );
+  case STACK_ITEM_TYPE_CSTRING:
+    // Not ideal to compute this at runtime, but in some situation it's a necessary fallback
+    return __has_vertex_property( vertex, CStringHash64( item->CSTR__str ) );
+  default:
+    return 0;
   }
-  return 0;
 }
 
 
@@ -846,7 +850,7 @@ static void __eval_binary_elementof( vgx_Evaluator_t *self ) {
   int match;
   switch( y.type ) {
   case STACK_ITEM_TYPE_VERTEX:
-    SET_INTEGER_PITEM_VALUE( px, __vertex_has_property_by_keyhash( self, y.vertex, px ) );
+    SET_INTEGER_PITEM_VALUE( px, __vertex_has_property( self, y.vertex, px ) );
     return;
   case STACK_ITEM_TYPE_RANGE:
     match = __value_in_range( self, &px );

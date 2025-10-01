@@ -250,6 +250,52 @@ static int32_t __tokenizer__back_token( __tokenizer_context *tokenizer ) {
  * 
  ***********************************************************************
  */ 
+static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str ) {
+  tokinfo_t nextinfo;
+  const char *peek = (char*)CALLABLE( tokenizer->engine )->PeekTokenAndInfo( tokenizer->engine, tokenizer->tokmap, &nextinfo );
+  // No next token or not expected length or no match
+  if( peek == NULL || nextinfo.len != strlen(str) || memcmp(str, peek, nextinfo.len) ) {
+    return false;
+  }
+  // Match
+  return true;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */ 
+static bool __tokenizer__immediate_next_chars( __tokenizer_context *tokenizer, char chars[] ) {
+  tokinfo_t nextinfo;
+  const char *peek = (char*)CALLABLE( tokenizer->engine )->PeekTokenAndInfo( tokenizer->engine, tokenizer->tokmap, &nextinfo );
+  // No next token or not single char or not exactly one character after current position
+  if( peek == NULL || nextinfo.len != 1 || nextinfo.soffset != tokenizer->tokinfo.soffset + 1 ) {
+    return false;
+  }
+
+  // Next token must match one of the supplied chars
+  const char *p = chars;
+  while( *p != '\0' ) {
+    if( *peek == *p ) {
+      return true;
+    }
+    ++p;
+  }
+
+  // No match
+  return false;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */ 
 static const char * __tokenizer__next_token( __tokenizer_context *tokenizer ) {
   uint16_t lin = 0;
   while( tokenizer->hasnext ) {
