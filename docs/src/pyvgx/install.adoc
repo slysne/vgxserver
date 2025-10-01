@@ -1,0 +1,126 @@
+[[pyvgxinstall]]
+= PyVGX {project-version} Install <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: images/
+:linkattrs:
+:source-highlighter: highlightjs
+:pyvgx-version: 3.3
+
+include::common/_copyable.adoc[]
+
+PyVGX is available as a Python package and Docker image.
+
+
+== Python Package
+
+[source, bash]
+----
+pip install pyvgx
+----
+
+[NOTE]
+====
+Public availability on PyPI is planned for a future release.
+
+In the interim, please use the internally hosted repository:
+
+.Release Version {pyvgx-version}
+[.copyable]
+[source, bash, subs=attributes+]
+----
+pip install -i https://gsp-artifacts-us.intra.rakuten-it.com/repository/am-bdd-pip/simple pyvgx={pyvgx-version}
+----
+
+====
+
+=== Required Python Version
+
+* Python 3.12 or later
+
+
+=== Supported Platforms
+
+[IMPORTANT]
+====
+Currently the x86-64 architecture is supported.
+
+Support for Mac OS / Apple Silicon is planned for a future release. (Rosetta 2 does not support AVX translation and will not work.)
+====
+
+Linux:: Minimum Requirement: glibc 2.17 (Run `ldd --version` to verify)
+
+Windows:: Minimum Requirement: Windows 10
+
+
+
+== Docker Images
+
+Docker images conveniently bundle pyvgx, Python, and other dependencies. These images are often used for production deployments.
+
+.Release Version {pyvgx-version}
+[.copyable]
+[source, bash, subs=attributes+]
+----
+docker pull gsp-docker.intra.rakuten-it.com/cap-base:{pyvgx-version}
+----
+
+
+=== Test Docker Image
+
+Once the Docker image has been downloaded it can be tested. The best way to get started is to start a container interactively with a TTY.
+
+.Interactive - mount current directory as `/home/ngsuser/sandbox`
+[.copyable]
+[source, bash, subs=attributes+]
+----
+docker run \
+--name interactive \
+--net=host \
+--rm \
+-v ~:/home/ngsuser/sandbox \
+-it pull gsp-docker.intra.rakuten-it.com/cap-base:{pyvgx-version} \
+/bin/bash
+----
+
+[IMPORTANT]
+====
+Docker image requires user name `ngsuser`
+====
+
+.Inside Container
+[.copyable]
+[source, bash]
+----
+cd /home/ngsuser/sandbox
+python3
+----
+
+[WARNING]
+====
+The Python interpreter pass:[<b><u>must be started with <i>python3</i></u></b>]. If you run `python` instead, it will launch Python 2.7 which is not compatible with pyvgx.
+====
+
+.Inside Python3
+[.copyable]
+[source, python]
+----
+import pyvgx
+pyvgx.system.Initialize( "test" )
+g = pyvgx.Graph( "g1" )
+g.CreateVertex( "A" )
+----
+
+___
+
+[.float-group]
+--
+[.left]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>

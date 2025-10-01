@@ -1,0 +1,261 @@
+[[sortspecification]]
+= Sort Specification Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<timestampConstants.adoc#, icon:arrow-circle-right[title="Timestamp Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants control the ordering of results returned from the various search methods.
+
+A single sort-by constant can be combined with a direction control constant using the bitwise-OR (|) operator.
+
+[source, python]
+----
+sortby=S_*|S_ASC
+sortby=S_*|S_DESC
+----
+
+WARNING: Sort-by constants cannot be combined with other sort-by constants.
+
+== Sort Direction
+
+These constants control the overall direction of the sorted results.
+
+[[sortby_dir_constants]]
+[cols="3,7"]
+|===
+|Sort Constant |Description
+
+|<<S_ASC>>
+|Sort ascending, i.e. low to high
+
+|<<S_DESC>>
+|Sort descending, i.e. high to low
+
+|===
+
+== Sort By
+
+These constants control how results are ordered.
+
+[[sortby_type_constants]]
+[cols="2,1,3,3,2"]
+|===
+|Sort Constant |Type| Sort by |Description |Default Order
+
+|<<S_NONE>>
+|-
+|-
+|Search results are ordered according to internal traversal. This is generally faster than other sorts.
+|undefined
+
+|<<S_VAL>>
+|_int_ or _float_
+|Arc (predicator) value
+|Effective only for methods supporting `arc=` filters.
+|Descending
+
+|<<S_ADDR>>
+|_int_
+|Memory address
+|Sort by terminal vertex object's internal memory address. This may lead to faster processing of large search results in some cases.
+|Ascending
+
+|<<S_OBID>>
+|_str_
+|Vertex internalid
+|Sort by vertex internalid
+|Ascending
+
+|<<S_ID>>
+|_str_
+|Vertex identifier
+|Sort by vertex identifier string
+|Ascending
+
+|<<S_DEG>>
+|_int_
+|Vertex degree
+|Sort by vertex total degree (indegree + outdegree)
+|Descending
+
+|<<S_IDEG>>
+|_int_
+|Vertex indegree
+|Sort by vertex indegree
+|Descending
+
+|<<S_ODEG>>
+|_int_
+|Vertex outdegree
+|Sort by vertex outdegree
+|Descending
+
+|<<S_SIM>>
+|_float_
+|Vertex vector similarity
+|Sort by the similarity score computed for terminal vertex vector and probe vector supplied in the query
+|Descending
+
+|<<S_HAM>>
+|_int_
+|Vertex vector fingerprint hamming distance
+|Sort by the fingerprint hamming distance for terminal vertex vector and probe vector supplied in the query
+|Ascending
+
+|<<S_RANK>>
+|_float_
+|Generic rank score
+|Sort by a rank score as computed by a rank score evaluation function (query dependent feature).
+
+When supported by a query method, the rank scoring specification must be provided in the `rank=` query parameter:
+
+`rank=<rank_spec>`
+
+The `<rank_spec>` syntax depends on the query method.
+|Descending
+
+|<<S_TMC>>
+|_int_
+|Vertex created timestamp
+|Sort by vertex creation time (1 second resolution)
+|Ascending
+
+|<<S_TMM>>
+|_int_
+|Vertex modified timestamp
+|Sort by vertex modification time (1 second resolution)
+|Ascending
+
+|<<S_TMX>>
+|_int_
+|Vertex expires timestamp
+|Sort by vertex expiration time (1 second resolution)
+|Ascending
+
+|<<S_NATIVE>>
+|_int_
+|No sorting
+|Similar to <<S_NONE>> but will complete deep traversal to gather counts and other metrics
+|undefined
+
+|<<S_RANDOM>>
+|_float_
+|Random sorting
+|The sort order will be randomized. Repeated searches will return a different random sort order each time.
+|undefined
+|===
+
+[[S_NONE]]
+== pyvgx.S_NONE
+
+`pyvgx.S_NONE = 0`
+
+[[S_ASC]]
+== pyvgx.S_ASC
+
+`pyvgx.S_ASC = 1`
+
+[[S_DESC]]
+== pyvgx.S_DESC
+
+`pyvgx.S_DESC = 2`
+
+[[S_VAL]]
+== pyvgx.S_VAL
+
+`pyvgx.S_VAL = 16`
+
+[[S_ADDR]]
+== pyvgx.S_ADDR
+
+`pyvgx.S_ADDR = 32`
+
+[[S_OBID]]
+== pyvgx.S_OBID
+
+`pyvgx.S_OBID = 48`
+
+[[S_ID]]
+== pyvgx.S_ID
+
+`pyvgx.S_ID = 64`
+
+[[S_DEG]]
+== pyvgx.S_DEG
+
+`pyvgx.S_DEG = 80`
+
+[[S_IDEG]]
+== pyvgx.S_IDEG
+
+`pyvgx.S_IDEG = 96`
+
+[[S_ODEG]]
+== pyvgx.S_ODEG
+
+`pyvgx.S_ODEG = 112`
+
+[[S_SIM]]
+== pyvgx.S_SIM
+
+`pyvgx.S_SIM = 144`
+
+[[S_HAM]]
+== pyvgx.S_HAM
+
+`pyvgx.S_HAM = 128`
+
+[[S_RANK]]
+== pyvgx.S_RANK
+
+`pyvgx.S_RANK = 160`
+
+[[S_TMC]]
+== pyvgx.S_TMC
+
+`pyvgx.S_TMC = 176`
+
+[[S_TMM]]
+== pyvgx.S_TMM
+
+`pyvgx.S_TMM = 192`
+
+[[S_TMX]]
+== pyvgx.S_TMX
+
+`pyvgx.S_TMX = 208`
+
+[[S_NATIVE]]
+== pyvgx.S_NATIVE
+
+`pyvgx.S_NATIVE = 224`
+
+[[S_RANDOM]]
+== pyvgx.S_RANDOM
+
+`pyvgx.S_RANDOM = 240`
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=resultListEntryConstants.adoc#, title="Result List Entry Constants"]
+<<resultListEntryConstants.adoc#, icon:arrow-circle-left[size=2x, title="Result List Entry Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=timestampConstants.adoc#, title="Timestamp Constants"]
+<<timestampConstants.adoc#, icon:arrow-circle-right[size=2x, title="Timestamp Constants"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

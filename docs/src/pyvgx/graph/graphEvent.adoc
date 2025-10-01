@@ -1,0 +1,96 @@
+[[grapheventmethods]]
+= Graph Event Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphMiscellaneous.adoc#, icon:arrow-circle-right[title="Graph Miscellaneous Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Event Methods |Description
+
+|<<grapheventenable>>
+|Start event processor
+
+|<<grapheventdisable>>
+|Suspend event processor
+
+|<<grapheventflush>>
+|Flush TTL events
+
+|<<grapheventbacklog>>
+|Return event processor state
+
+|<<grapheventparam>>
+|Return event processor parameters
+
+|===
+
+[[grapheventenable]]
+== pyvgx.Graph.EventEnable()
+
+[source, python]
+----
+pyvgx.Graph.EventEnable()
+----
+
+Start the internal event processor responsible for executing scheduled event, such as vertex and arc expiration (TTL).
+
+[[grapheventdisable]]
+== pyvgx.Graph.EventDisable()
+
+[source, python]
+----
+pyvgx.Graph.EventDisable()
+----
+
+Stop the internal event processor. Vertices and arcs with expiration times will never be deleted while the event processor is stopped.
+
+[[grapheventflush]]
+== pyvgx.Graph.EventFlush()
+
+[source, python]
+----
+pyvgx.Graph.EventFlush()
+----
+
+Manually propagate internal events from queues to schedules. Provided for debugging purposes.
+
+[[grapheventbacklog]]
+== pyvgx.Graph.EventBacklog()
+
+[source, python]
+----
+pyvgx.Graph.EventBacklog()
+----
+
+Return the current state of the internal event processor.
+
+[[grapheventparam]]
+== pyvgx.Graph.EventParam()
+
+[source, python]
+----
+pyvgx.Graph.EvenParam()
+----
+
+Return all parameters currently in effect for the event processor.
+
+___
+
+[.float-group]
+--
+[.left]
+<<graphEnum.adoc#, icon:arrow-circle-left[size=2x, title="Graph Enumeration Methods"]>>
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+<<graphMiscellaneous.adoc#, icon:arrow-circle-right[size=2x, title="Graph Miscellaneous Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

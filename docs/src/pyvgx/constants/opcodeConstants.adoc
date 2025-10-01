@@ -1,0 +1,1226 @@
+[[opcodeconstants]]
+= Opcode Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<arcDirectionConstants.adoc#, icon:arrow-circle-right[title="Arc Direction Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants represent operator opcodes, groups of opcodes, and opcode filter profiles as related to the operation transfer protocol used for network communication between VGX instances.
+
+|===
+|Constant | Description
+
+2+|*<<vertexoperators>>*
+
+|<<OP_vxn>>
+|New vertex
+
+|<<OP_vxd>>
+|Delete vertex
+
+|<<OP_vxr>>
+|Set vertex rank
+
+|<<OP_vxt>>
+|Set vertex type
+
+|<<OP_vxx>>
+|Set vertex expiration
+
+|<<OP_vxc>>
+|Convert vertex manifestation
+
+|<<OP_vps>>
+|Set vertex property
+
+|<<OP_vpd>>
+|Delete vertex property
+
+|<<OP_vpc>>
+|Clear vertex properties
+
+|<<OP_vvs>>
+|Set vertex vector
+
+|<<OP_vvd>>
+|Delete vertex vector
+
+|<<OP_vod>>
+|Delete vertex outarcs
+
+|<<OP_vid>>
+|Delete vertex inarcs
+
+|<<OP_val>>
+|Acquire vertex write lock
+
+|<<OP_vrl>>
+|Release vertex write lock
+
+2+|*<<arcoperators>>*
+
+|<<OP_arc>>
+|Create arc
+
+|<<OP_ard>>
+|Delete arc
+
+2+|*<<systemoperators>>*
+
+|<<OP_nop>>
+|No operation
+
+|<<OP_sya>>
+|System attach
+
+|<<OP_syd>>
+|System detach
+
+|<<OP_rcl>>
+|Clear registry
+
+|<<OP_scf>>
+|Configure similarity
+
+|<<OP_grn>>
+|New graph
+
+|<<OP_grd>>
+|Delete graph
+
+|<<OP_com>>
+|Send data as comment
+
+|<<OP_dat>>
+|Send raw data
+
+|<<OP_clg>>
+|Clone graph
+
+2+|*<<graphoperators>>*
+
+|<<OP_grt>>
+|Truncate graph
+
+|<<OP_grp>>
+|Persist graph
+
+|<<OP_grs>>
+|Assert graph state
+
+|<<OP_grr>>
+|Set graph readonly
+
+|<<OP_grw>>
+|Set graph writable
+
+|<<OP_gre>>
+|Enable background TTL
+
+|<<OP_gri>>
+|Disable background TTL
+
+2+|*<<syncoperators>>*
+
+|<<OP_tic>>
+|Heartbeat
+
+|<<OP_evx>>
+|Execute all due TTL events
+
+2+|*<<lockoperators>>*
+
+|<<OP_lxw>>
+|Acquire multiple vertex write locks atomically
+
+|<<OP_ulv>>
+|Release multiple vertex write locks atomically
+
+|<<OP_ula>>
+|Release all vertex write locks atomically
+
+2+|*<<enumoperators>>*
+
+|<<OP_vea>>
+|Add vertex type enumeration
+
+|<<OP_ved>>
+|Remove vertex type enumeration
+
+|<<OP_rea>>
+|Add relationship enumeration
+
+|<<OP_red>>
+|Remove relationship enumeration
+
+|<<OP_dea>>
+|Add vector dimension enumeration
+
+|<<OP_ded>>
+|Remove vector dimension enumeration
+
+|<<OP_kea>>
+|Add property key enumeration
+
+|<<OP_ked>>
+|Remove property key enumeration
+
+|<<OP_sea>>
+|Add property string value enumeration
+
+|<<OP_sed>>
+|Remove property string value enumeration
+
+2+|*<<anyop>>*
+
+|<<OP_ANY>>
+|All operators
+
+2+|*<<actiongroups>>*
+
+|<<OP_ACTION_assign>>
+|Operators modifying existing attributes
+
+|<<OP_ACTION_create>>
+|Operators creating new objects
+
+|<<OP_ACTION_delete>>
+|Operators deleting objects
+
+|<<OP_ACTION_event>>
+|Operators communicating events 
+
+2+|*<<scopegroups>>*
+
+|<<OP_SCOPE_single>>
+|Operators affecting single objects
+
+|<<OP_SCOPE_multiple>>
+|Operators affecting multiple objects
+
+2+|*<<targetgroups>>*
+
+|<<OP_TARGET_vertex>>
+|Operators affecting vertex objects
+
+|<<OP_TARGET_arc>>
+|Operators affecting arcs
+
+|<<OP_TARGET_system>>
+|Operators with system-wide effect
+
+|<<OP_TARGET_graph>>
+|Operators affecting graphs
+
+|<<OP_TARGET_rw>>
+|Operators modifying read-write state of graphs
+
+|<<OP_TARGET_evp>>
+|Operators modifying the TTL event processor state
+
+|<<OP_TARGET_time>>
+|Operators affecting heartbeat and time synchronization
+
+|<<OP_TARGET_exec>>
+|Operators performing mass-execution of events
+
+|<<OP_TARGET_acquire>>
+|Operators modifying write-locks of multiple vertices
+
+|<<OP_TARGET_enum>>
+|Operators affecting enumerations
+
+2+|*<<operatorprofiles>>*
+
+|<<OP_PROFILE_consumer>>
+|Filter profile suitable for VGX instances that do not generate their own data
+
+|===
+
+[[operatoropcodes]]
+== Operator Opcodes
+
+These constants represent individual operator opcodes and are suitable for use with <<../reference.adoc#op_allow_func, `pyvgx.op.Allow()`>> and <<../reference.adoc#op_deny_func, `pyvgx.op.Deny()`>>.
+
+[[vertexoperators]]
+=== Vertex Instance Operators
+
+[[OP_vxn]]
+==== pyvgx.op.OP_vxn
+
+Create a new vertex if it does not already exist.
+
+Operator <<../io/vgxopxfer.adoc#vxn, `vxn`>> is the equivalent of graph instance method <<../graph/graphVertex.adoc#graphcreatevertex, `pyvgx.Graph.CreateVertex()`>>.
+
+[[OP_vxd]]
+==== pyvgx.op.OP_vxd
+
+Delete an existing vertex.
+
+Operator <<../io/vgxopxfer.adoc#vxd, `vxd`>> is the equivalent of graph instance method <<../graph/graphVertex.adoc#graphdeletevertex, `pyvgx.Graph.DeleteVertex()`>>.
+
+[[OP_vxr]]
+==== pyvgx.op.OP_vxr
+
+Assign <<../vertex/vertexMembers.adoc#vertexrankc1, rank coefficients>> to an existing vertex.
+
+Operator <<../io/vgxopxfer.adoc#vxr, `vxr`>> is the equivalent of vertex instance method <<../vertex/vertexRank.adoc#vertexsetrank, `pyvgx.Vertex.SetRank()`>>.
+
+[[OP_vxt]]
+==== pyvgx.op.OP_vxt
+
+Modify the type of an existing vertex.
+
+Operator <<../io/vgxopxfer.adoc#vxt, `vxt`>> is the equivalent of vertex instance method <<../vertex/vertexMiscellaneous.adoc#vertexsettype, `pyvgx.Vertex.SetType()`>>.
+
+[[OP_vxx]]
+==== pyvgx.op.OP_vxx
+
+Set the vertex expiration time.
+
+Operator <<../io/vgxopxfer.adoc#vxx, `vxx`>> is the equivalent of vertex instance method <<../vertex/vertexTTL.adoc#vertexTTL, `pyvgx.Vertex.SetExpiration()`>>.
+
+[[OP_vxc]]
+==== pyvgx.op.OP_vxc
+
+Convert vertex manifestation from VIRTUAL to REAL.
+
+Operator <<../io/vgxopxfer.adoc#vxc, `vxc`>> is managed automatically and has no direct API equivalent.
+
+[[OP_vps]]
+==== pyvgx.op.OP_vps
+
+Set vertex property.
+
+Operator <<../io/vgxopxfer.adoc#vps, `vps`>> is the equivalent of vertex instance method <<../vertex/vertexProperty.adoc#vertexsetproperty, `pyvgx.Vertex.SetProperty()`>>.
+
+[[OP_vpd]]
+==== pyvgx.op.OP_vpd
+
+Delete vertex property.
+
+Operator <<../io/vgxopxfer.adoc#vpd, `vpd`>> is the equivalent of vertex instance method <<../vertex/vertexProperty.adoc#vertexremoveproperty, `pyvgx.Vertex.RemoveProperty()`>>.
+
+[[OP_vpc]]
+==== pyvgx.op.OP_vpc
+
+Clear vertex properties.
+
+Operator <<../io/vgxopxfer.adoc#vpc, `vpc`>> is the equivalent of vertex instance method <<../vertex/vertexProperty.adoc#vertexremoveproperties, `pyvgx.Vertex.RemoveProperties()`>>.
+
+[[OP_vvs]]
+==== pyvgx.op.OP_vvs
+
+Set vertex vector.
+
+Operator <<../io/vgxopxfer.adoc#vvs, `vvs`>> is the equivalent of vertex instance method <<../vertex/vertexVector.adoc#vertexsetvector, `pyvgx.Vertex.SetVector()`>>.
+
+[[OP_vvd]]
+==== pyvgx.op.OP_vvd
+
+Delete vertex vector.
+
+Operator <<../io/vgxopxfer.adoc#vvd, `vvd`>> is the equivalent of vertex instance method <<../vertex/vertexVector.adoc#vertexremovevector, `pyvgx.Vertex.RemoveVector()`>>.
+
+[[OP_vod]]
+==== pyvgx.op.OP_vod
+
+Remove all vertex outarcs.
+
+Operator <<../io/vgxopxfer.adoc#vod, `vod`>> has no direct API equivalent but has the same effect as calling <<../graph/graphArc.adoc#graphdisconnect, `graph.Disconnect( _vertex_, pyvgx.D_OUT )`>>.
+
+[[OP_vid]]
+==== pyvgx.op.OP_vid
+
+Remove all vertex inarcs.
+
+Operator <<../io/vgxopxfer.adoc#vid, `vid`>> has no direct API equivalent but has the same effect as calling <<../graph/graphArc.adoc#graphdisconnect, `graph.Disconnect( _vertex_, pyvgx.D_IN )`>>.
+
+[[OP_val]]
+==== pyvgx.op.OP_val
+
+Acquire vertex write lock.
+
+Operator <<../io/vgxopxfer.adoc#val, `val`>> is managed automatically and has no direct API equivalent.
+
+[[OP_vrl]]
+==== pyvgx.op.OP_vrl
+
+Release vertex lock.
+
+Operator <<../io/vgxopxfer.adoc#vrl, `vrl`>> is managed automatically and has no direct API equivalent.
+
+[[arcoperators]]
+=== Arc Operators
+
+[[OP_arc]]
+==== pyvgx.op.OP_arc
+
+Create arc between two vertices.
+
+Operator <<../io/vgxopxfer.adoc#arc, `arc`>> is the equivalent of graph instance method <<../graph/graphArc.adoc#graphconnect, `pyvgx.Graph.Connect()`>>.
+
+[[OP_ard]]
+==== pyvgx.op.OP_ard
+
+Delete arc(s) between two vertices.
+
+Operator <<../io/vgxopxfer.adoc#ard, `ard`>> is the equivalent of graph instance method <<../graph/graphArc.adoc#graphdisconnect, `pyvgx.Graph.Disconnect()`>> when an exact _neighbor_ vertex is specified.
+
+[[systemoperators]]
+=== System Operators
+
+[[OP_nop]]
+==== pyvgx.op.OP_nop
+
+Operator <<../io/vgxopxfer.adoc#nop, `nop`>> has no effect.
+
+[[OP_sya]]
+==== pyvgx.op.OP_sya
+
+System attach notification.
+
+Operator <<../io/vgxopxfer.adoc#sya, `sya`>> is generated by <<../reference.adoc#op_attach_func, `pyvgx.op.Attach()`>>. This operator has no functional significance other than indicating the time of the attach and information about the operation stream source.
+
+[[OP_syd]]
+==== pyvgx.op.OP_syd
+
+System detach notification.
+
+Operator <<../io/vgxopxfer.adoc#syd, `syd`>> is generated by <<../refernce.adoc#op_detach_func, `pyvgx.op.Detach()`>>. This operator has no functional significance other than indicating the time of the detach and information about the operation stream source.
+
+[[OP_rcl]]
+==== pyvgx.op.OP_rcl
+
+Clear system registry.
+
+Operator <<../io/vgxopxfer.adoc#rcl, `rcl`>> has no direct API equivalent but has the same effect as calling <<../reference.adoc#system_delete_graph_func, `system.DeleteGraph()`>> on all currently loaded graph instances.
+
+[[OP_scf]]
+==== pyvgx.op.OP_scf
+
+Configure similarity parameters.
+
+TBD.
+(Operator <<../io/vgxopxfer.adoc#scf, `scf`>>)
+
+[[OP_grn]]
+==== pyvgx.op.OP_grn
+
+Create new graph instance.
+
+Operator <<../io/vgxopxfer.adoc#grn, `grn`>> is the equivalent of graph constructor <<../reference.adoc#graphobject, `pyvgx.Graph()`>>.
+
+[[OP_grd]]
+==== pyvgx.op.OP_grd
+
+Delete graph instance.
+
+Operator <<../io/vgxopxfer.adoc#grd, `grd`>> is the equivalent of system function <<../reference.adoc#system_delete_graph_func, `system.DeleteGraph()`>>.
+
+[[OP_com]]
+==== pyvgx.op.OP_com
+
+Inject a log message string into the operation stream.
+
+Operator <<../io/vgxopxfer.adoc#com, `com`>> is emitted by operation function <<../reference.adoc#op_produce_comment_func, `op.ProduceComment()`>>.
+
+[[OP_dat]]
+==== pyvgx.op.OP_dat
+
+Inject arbitrary data into the operation stream.
+
+Operator <<../io/vgxopxfer.adoc#dat, `dat`>> is emitted by operation function <<../reference.adoc#op_produce_raw_func, `op.ProduceRaw()`>>.
+
+[[OP_clg]]
+==== pyvgx.op.OP_clg
+
+Clone graph.
+
+TBD.
+(Operator <<../io/vgxopxfer.adoc#clg, `clg`>>)
+
+[[graphoperators]]
+=== Graph Instance Operators
+
+[[OP_grt]]
+==== pyvgx.op.OP_grt
+
+Truncate graph.
+
+Operator <<../io/vgxopxfer.adoc#grt, `grt`>> is the equivalent of graph instance method <<../graph/graphManagement.adoc#graphtruncate, `pyvgx.Graph.Truncate()`>>.
+
+[[OP_grp]]
+==== pyvgx.op.OP_grp
+
+Persist graph.
+
+Operator <<../io/vgxopxfer.adoc#grp, `grp`>> is the equivalent of graph instance method <<../graph/graphManagement.adoc#graphsave, `pyvgx.Graph.Save()`>>.
+
+[[OP_grs]]
+==== pyvgx.op.OP_grs
+
+Graph state, with optional assert.
+
+Operator <<../io/vgxopxfer.adoc#grs, `grs`>> is emitted with assert flag for all graphs when operation function <<../reference.adoc#op_assert_func, `op.Assert()`>> is called. Operator `grs` may also be emitted automatically by the system (without assert flag) as part of other operations.
+
+[[OP_grr]]
+==== pyvgx.op.OP_grr
+
+Set graph readonly.
+
+Operator <<../io/vgxopxfer.adoc#grr, `grr`>> is emitted when graph instance method <<../graph/graphManagement.adoc#graphsetgraphreadonly, `pyvgx.Graph.SetGraphReadonly()`>> is called, and may also be emitted automatically by the system in other situations.
+
+[[OP_grw]]
+==== pyvgx.op.OP_grw
+
+Set graph writable.
+
+Operator <<../io/vgxopxfer.adoc#grw, `grw`>> is emitted when graph instance method <<../graph/graphManagement.adoc#graphcleargraphreadonly, `pyvgx.Graph.ClearGraphReadonly()`>> is called, and may also be emitted automatically by the system in other situations.
+
+[[OP_gre]]
+==== pyvgx.op.OP_gre
+
+Enable graph TTL events.
+
+Operator <<../io/vgxopxfer.adoc#gre, `gre`>> is emitted when graph instance method <<../graph/graphManagement.adoc#grapheventenable, `pyvgx.Graph.EventEnable()`>> is called, and may also be emitted automatically by the system in other situations.
+
+[[OP_gri]]
+==== pyvgx.op.OP_gri
+
+Disable graph TTL events.
+
+Operator <<../io/vgxopxfer.adoc#gri, `gri`>> is emitted when graph instance method <<../graph/graphManagement.adoc#grapheventdisable, `pyvgx.Graph.EventDisable()`>> is called, and may also be emitted automatically by the system in other situations.
+
+[[syncoperators]]
+=== Synchronization Operators
+
+[[OP_tic]]
+==== pyvgx.op.OP_tic
+
+System heartbeat.
+
+Operator <<../io/vgxopxfer.adoc#tic, `tic`>> is emitted automatically by the system when more than 4000 milliseconds have elapsed since the last operator.
+
+[[OP_evx]]
+==== pyvgx.op.OP_evx
+
+Execute all due TTL events.
+
+Operator <<../io/vgxopxfer.adoc#evx, `evx`>> has no direct API equivalent.
+
+[[lockoperators]]
+=== Vertex Acquisition Operators
+
+[[OP_lxw]]
+==== pyvgx.op.OP_lxw
+
+Atomic write-lock acquisition for multiple vertices.
+
+Operator <<../io/vgxopxfer.adoc#lxw, `lxw`>> is the equivalent of graph instance method <<../graph/graphVertex.adoc#graphopenvertices, `pyvgx.Graph.OpenVertices()`>>.
+
+[[OP_ulv]]
+==== pyvgx.op.OP_ulv
+
+Atomic lock release for multiple vertices.
+
+Operator <<../io/vgxopxfer.adoc#ulv, `ulv`>> is the equivalent of graph instance method <<../graph/graphVertex.adoc#graphclosevertices, `pyvgx.Graph.CloseVertices()`>>.
+
+[[OP_ula]]
+==== pyvgx.op.OP_ula
+
+Release all vertex locks.
+
+Operator <<../io/vgxopxfer.adoc#ula, `ula`>> does not have a direct API equivalent.
+
+[[enumoperators]]
+=== Enumeration Operators
+
+[[OP_vea]]
+==== pyvgx.op.OP_vea
+
+Add new vertex type enumeration to graph instance.
+
+Operator <<../io/vgxopxfer.adoc#vea, `vea`>> is generated whenever a previously unused vertex type _T_ is specified for a new vertex in a graph, i.e. the first call to <<../graph/graphVertex.adoc#graphcreatevertex, `pyvgx.Graph.CreateVertex()`>> or <<../graph/graphVertex.adoc#graphnewvertex, `pyvgx.Graph.NewVertex()`>> with _type_ = _T_.
+
+[[OP_ved]]
+==== pyvgx.op.OP_ved
+
+Remove a vertex type enumeration from graph instance.
+
+Operator <<../io/vgxopxfer.adoc#ved, `ved`>> is managed automatically by the system and has no direct API equivalent.
+
+[[OP_rea]]
+==== pyvgx.op.OP_rea
+
+Add new relationship type enumeration to graph instance.
+
+Operator <<../io/vgxopxfer.adoc#rea, `rea`>> is generated whenever an arc is created with a previously unused relationship type _R_, i.e. the first call to <<../graph/graphArc.adoc#graphconnect, `pyvgx.Graph.Connect()`>> with _arc_ = ( _R_, ... ).
+
+[[OP_red]]
+==== pyvgx.op.OP_red
+
+Remove a relationship type enumeration from graph instance.
+
+Operator <<../io/vgxopxfer.adoc#red, `red`>> is managed automatically by the system and has no direct API equivalent.
+
+[[OP_dea]]
+==== pyvgx.op.OP_dea
+
+Add new vector dimension enumeration to graph instance.
+
+Operator <<../io/vgxopxfer.adoc#dea, `dea`>> is generated whenever a new vector is created containing a previously unused dimension _D_, i.e. the first call to <<../vertex/vertexVector.adoc#vertexsetvector, `pyvgx.Vertex.SetVector()`>> where _elements_ contains an entry ( _D_, _weight_ ).
+
+[[OP_ded]]
+==== pyvgx.op.OP_ded
+
+Remove a vector dimension enumeration from graph instance.
+
+Operator <<../io/vgxopxfer.adoc#ded, `ded`>> is managed automatically by the system and has no direct API equivalent.
+
+[[OP_kea]]
+==== pyvgx.op.OP_kea
+
+Add new property key enumeration to graph instance.
+
+Operator <<../io/vgxopxfer.adoc#kea, `kea`>> is generated whenever a vertex property is assigned using a previously unused key _K_, i.e. the first call to <<../vertex/vertexProperty.adoc#vertexsetproperty, `pyvgx.Vertex.SetProperty()`>> (or equivalent) where _name_ = _K_.
+
+[[OP_ked]]
+==== pyvgx.op.OP_ked
+
+Remove a property key enumeration from graph instance.
+
+Operator <<../io/vgxopxfer.adoc#ked, `ked`>> is managed automatically by the system and has no direct API equivalent.
+
+[[OP_sea]]
+==== pyvgx.op.OP_sea
+
+Add new property string value enumeration to graph instance.
+
+Operator <<../io/vgxopxfer.adoc#sea, `sea`>> is generated whenever a vertex string property is assigned with a previously unused string value _S_, i.e. the first call to <<../vertex/vertexProperty.adoc#vertexsetproperty, `pyvgx.Vertex.SetProperty()`>> (or equivalent) where _value_ = _S_.
+
+[[OP_sed]]
+==== pyvgx.op.OP_sed
+
+Remove a property string value enumeration from graph instance.
+
+Operator <<../io/vgxopxfer.adoc#sed, `sed`>> is managed automatically by the system and has no direct API equivalent.
+
+[[operatorgroups]]
+== Operator Groups
+
+Operator groups are constants used to identify sets of operator opcodes. 
+
+These constants are suitable for use with <<../reference.adoc#op_allow_func, `pyvgx.op.Allow()`>> and <<../reference.adoc#op_deny_func, `pyvgx.op.Deny()`>>.
+
+[[actiongroups]]
+=== Action Groups
+
+[[OP_ACTION_assign]]
+==== pyvgx.op.OP_ACTION_assign
+
+`pyvgx.op.OP_ACTION_assign` covers all operators that re-assign an existing attribute.
+
+[width="33%"]
+|===
+|ACTION Assign Operator
+
+|<<OP_vxr>>
+
+|<<OP_vxt>>
+
+|<<OP_vxx>>
+
+|<<OP_vxc>>
+
+|===
+
+[[OP_ACTION_create]]
+==== pyvgx.op.OP_ACTION_create
+
+`pyvgx.op.OP_ACTION_create` covers all operators that create new objects.
+
+[width="33%"]
+|===
+|ACTION Create Operator
+
+|<<OP_vxn>>
+
+|<<OP_vps>>
+
+|<<OP_vvs>>
+
+|<<OP_arc>>
+
+|<<OP_scf>>
+
+|<<OP_clg>>
+
+|<<OP_grn>>
+
+|<<OP_vea>>
+
+|<<OP_rea>>
+
+|<<OP_dea>>
+
+|<<OP_kea>>
+
+|<<OP_sea>>
+
+|===
+
+[[OP_ACTION_delete]]
+==== pyvgx.op.OP_ACTION_delete
+
+`pyvgx.op.OP_ACTION_delete` covers all operators that delete objects.
+
+[width="33%"]
+|===
+|ACTION Delete Operator
+
+|<<OP_vxd>>
+
+|<<OP_vpd>>
+
+|<<OP_vpc>>
+
+|<<OP_vvd>>
+
+|<<OP_vod>>
+
+|<<OP_vid>>
+
+|<<OP_ard>>
+
+|<<OP_rcl>>
+
+|<<OP_grd>>
+
+|<<OP_grt>>
+
+|<<OP_ved>>
+
+|<<OP_red>>
+
+|<<OP_ded>>
+
+|<<OP_ked>>
+
+|<<OP_sed>>
+
+|===
+
+[[OP_ACTION_event]]
+==== pyvgx.op.OP_ACTION_event
+
+`pyvgx.op.OP_ACTION_event` covers all operators that communicate events or other actions.
+
+[width="33%"]
+|===
+|ACTION Event Operator
+
+|<<OP_nop>>
+
+|<<OP_com>>
+
+|<<OP_dat>>
+
+|<<OP_grp>>
+
+|<<OP_grs>>
+
+|<<OP_tic>>
+
+|<<OP_evx>>
+
+|===
+
+[[scopegroups]]
+=== Scope Groups
+
+[[OP_SCOPE_single]]
+==== pyvgx.op.OP_SCOPE_single
+
+`pyvgx.op.OP_SCOPE_single` covers all operators affecting single objects.
+
+[width="33%"]
+|===
+|SCOPE Single Operator
+
+|<<OP_nop>>
+
+|<<OP_vxn>>
+
+|<<OP_vxd>>
+
+|<<OP_vxr>>
+
+|<<OP_vxt>>
+
+|<<OP_vxx>>
+
+|<<OP_vxc>>
+
+|<<OP_vps>>
+
+|<<OP_vpd>>
+
+|<<OP_vvs>>
+
+|<<OP_vvd>>
+
+|<<OP_val>>
+
+|<<OP_vrl>>
+
+|<<OP_arc>>
+
+|<<OP_scf>>
+
+|<<OP_grn>>
+
+|<<OP_grd>>
+
+|<<OP_com>>
+
+|<<OP_dat>>
+
+|<<OP_clg>>
+
+|<<OP_grt>>
+
+|<<OP_grp>>
+
+|<<OP_grs>>
+
+|<<OP_grr>>
+
+|<<OP_grw>>
+
+|<<OP_gre>>
+
+|<<OP_gri>>
+
+|<<OP_tic>>
+
+|<<OP_evx>>
+
+|<<OP_vea>>
+
+|<<OP_ved>>
+
+|<<OP_rea>>
+
+|<<OP_red>>
+
+|<<OP_dea>>
+
+|<<OP_ded>>
+
+|<<OP_kea>>
+
+|<<OP_ked>>
+
+|<<OP_sea>>
+
+|<<OP_sed>>
+
+|===
+
+[[OP_SCOPE_multiple]]
+==== pyvgx.op.OP_SCOPE_multiple
+
+`pyvgx.op.OP_SCOPE_multiple` covers all operators affecting multiple objects.
+
+[width="33%"]
+|===
+|SCOPE Multiple Operator
+
+|<<OP_vpc>>
+
+|<<OP_vod>>
+
+|<<OP_vid>>
+
+|<<OP_val>>
+
+|<<OP_ard>>
+
+|<<OP_sya>>
+
+|<<OP_syd>>
+
+|<<OP_rcl>>
+
+|<<OP_lxw>>
+
+|<<OP_ulv>>
+
+|<<OP_ula>>
+
+|===
+
+[[targetgroups]]
+=== Target Groups
+
+[[OP_TARGET_vertex]]
+==== pyvgx.op.OP_TARGET_vertex
+
+`pyvgx.op.OP_TARGET_vertex` covers all operators affecting vertex objects.
+
+[width="33%"]
+|===
+|TARGET Vertex Operator
+
+|<<OP_vxn>>
+
+|<<OP_vxd>>
+
+|<<OP_vxr>>
+
+|<<OP_vxt>>
+
+|<<OP_vxx>>
+
+|<<OP_vxc>>
+
+|<<OP_vps>>
+
+|<<OP_vpd>>
+
+|<<OP_vpc>>
+
+|<<OP_vvs>>
+
+|<<OP_vvd>>
+
+|<<OP_vod>>
+
+|<<OP_vid>>
+
+|<<OP_val>>
+
+|<<OP_vrl>>
+
+|===
+
+[[OP_TARGET_arc]]
+==== pyvgx.op.OP_TARGET_arc
+
+`pyvgx.op.OP_TARGET_arc` covers all operators affecting arcs.
+
+[width="33%"]
+|===
+|TARGET Arc Operator
+
+|<<OP_arc>>
+
+|<<OP_ard>>
+
+|===
+
+[[OP_TARGET_system]]
+==== pyvgx.op.OP_TARGET_system
+
+`pyvgx.op.OP_TARGET_system` covers all operators with system-wide effect.
+
+[width="33%"]
+|===
+|TARGET System Operator
+
+|<<OP_sya>>
+
+|<<OP_syd>>
+
+|<<OP_rcl>>
+
+|<<OP_scf>>
+
+|<<OP_com>>
+
+|<<OP_dat>>
+
+|<<OP_clg>>
+
+|===
+
+[[OP_TARGET_graph]]
+==== pyvgx.op.OP_TARGET_graph
+
+`pyvgx.op.OP_TARGET_graph` covers all operators affecting graph objects.
+
+[width="33%"]
+|===
+|TARGET Graph Operator
+
+|<<OP_grn>>
+
+|<<OP_grd>>
+
+|<<OP_grt>>
+
+|<<OP_grp>>
+
+|<<OP_grs>>
+
+|===
+
+[[OP_TARGET_rw]]
+==== pyvgx.op.OP_TARGET_rw
+
+`pyvgx.op.OP_TARGET_rw` covers operators modifying read-write state of graphs.
+
+[width="33%"]
+|===
+|TARGET RW Operator
+
+|<<OP_grr>>
+
+|<<OP_grw>>
+
+|===
+
+[[OP_TARGET_evp]]
+==== pyvgx.op.OP_TARGET_evp
+
+`pyvgx.op.OP_TARGET_evp` covers operators modifying the TTL event processor state.
+
+[width="33%"]
+|===
+|TARGET EVP Operator
+
+|<<OP_gre>>
+
+|<<OP_gri>>
+
+|===
+
+[[OP_TARGET_time]]
+==== pyvgx.op.OP_TARGET_time
+
+`pyvgx.op.OP_TARGET_time` covers operators affecting heartbeat and time synchronization. 
+
+[width="33%"]
+|===
+|TARGET Time Operator
+
+|<<OP_tic>>
+
+|===
+
+[[OP_TARGET_exec]]
+==== pyvgx.op.OP_TARGET_exec
+
+`pyvgx.op.OP_TARGET_exec` covers operators performing mass-execution of events.
+
+[width="33%"]
+|===
+|TARGET Exec Operator
+
+|<<OP_evx>>
+
+|===
+
+[[OP_TARGET_acquire]]
+==== pyvgx.op.OP_TARGET_acquire
+
+`pyvgx.op.OP_TARGET_acquire` covers operators that modify the write-lock state of many vertices at the same time.
+
+[width="33%"]
+|===
+|TARGET Acquire Operator
+
+|<<OP_lxw>>
+
+|<<OP_ulv>>
+
+|<<OP_ula>>
+
+|===
+
+
+
+[[OP_TARGET_enum]]
+==== pyvgx.op.OP_TARGET_enum
+
+`pyvgx.op.OP_TARGET_enum` covers operators that create or delete enumerations.
+
+[width="33%"]
+|===
+|TARGET Enum Operator
+
+|<<OP_vea>>
+
+|<<OP_ved>>
+
+|<<OP_rea>>
+
+|<<OP_red>>
+
+|<<OP_dea>>
+
+|<<OP_ded>>
+
+|<<OP_kea>>
+
+|<<OP_ked>>
+
+|<<OP_sea>>
+
+|<<OP_sed>>
+
+|===
+
+[[operatorprofiles]]
+== Operator Profiles
+
+Operator profile constants represent pre-defined sets of allowed and denied operators.
+
+Operator profile constants must be applied using <<../reference.adoc#op_profile_func, `pyvgx.op.Profile()`>>.
+
+[[consumerprofile]]
+=== Consumer Profile
+
+The consumer profile is suitable for VGX instances that do not generate their own data.
+
+[[OP_PROFILE_consumer]]
+==== pyvgx.op.OP_PROFILE_consumer
+
+The profile `pyvgx.op.OP_PROFILE_consumer` prevents various system operations, mass-deletion and graph persist.
+
+.OP_PROFILE_consumer: ALLOW the following operators
+[width="50%"]
+|===
+|`pyvgx.op.OP_PROFILE_consumer` ALLOW
+
+|<<OP_vxn>>
+
+|<<OP_vxd>>
+
+|<<OP_vxr>>
+
+|<<OP_vxt>>
+
+|<<OP_vxx>>
+
+|<<OP_vxc>>
+
+|<<OP_vps>>
+
+|<<OP_vpd>>
+
+|<<OP_vpc>>
+
+|<<OP_vvs>>
+
+|<<OP_vvd>>
+
+|<<OP_vod>>
+
+|<<OP_vid>>
+
+|<<OP_val>>
+
+|<<OP_vrl>>
+
+|<<OP_arc>>
+
+|<<OP_ard>>
+
+|<<OP_scf>>
+
+|<<OP_com>>
+
+|<<OP_dat>>
+
+|<<OP_grn>>
+
+|<<OP_tic>>
+
+|<<OP_lxw>>
+
+|<<OP_ulv>>
+
+|<<OP_ula>>
+
+|<<OP_vea>>
+
+|<<OP_ved>>
+
+|<<OP_rea>>
+
+|<<OP_red>>
+
+|<<OP_dea>>
+
+|<<OP_ded>>
+
+|<<OP_kea>>
+
+|<<OP_ked>>
+
+|<<OP_sea>>
+
+|<<OP_sed>>
+
+|===
+
+.OP_PROFILE_consumer: DENY the following operators
+[width="50%"]
+|===
+|`pyvgx.op.OP_PROFILE_consumer` DENY
+
+|<<OP_sya>>
+
+|<<OP_syd>>
+
+|<<OP_rcl>>
+
+|<<OP_clg>>
+
+|<<OP_grd>>
+
+|<<OP_grt>>
+
+|<<OP_grp>>
+
+|<<OP_grs>>
+
+|<<OP_grr>>
+
+|<<OP_grw>>
+
+|<<OP_gre>>
+
+|<<OP_gri>>
+
+|<<OP_evx>>
+
+|===
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=timestampConstants.adoc#, title="Timestamp Constants"]
+<<timestampConstants.adoc#, icon:arrow-circle-left[size=2x, title="Timestamp Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=arcDirectionConstants.adoc#, title="Arc Direction Constants"]
+<<arcDirectionConstants.adoc#, icon:arrow-circle-right[size=2x, title="Arc Direction Constants"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,2945 @@
+[[pyvgxreference]]
+= PyVGX {project-version} Reference <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:stem:
+:xrefstyle: full
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+This is a complete _pyvgx_ reference. A <<shortref.adoc#pyvgxshortreference, compact reference>> is also available.
+
+[[preface]]
+== pyvgx: Python API for VGX
+
+*VGX* is a general purpose graph and vector search platform. With its open ended architecture you can build search engines, vector databases, graph databases, reinforcement learning models, approximate nearest neighbor analysis, recommendation engines, and many other applications.
+
+The <<install.adoc#, *PyVGX* Python module>> exposes the VGX platform's SDK to enable application development via <<service/pluginadapter.adoc#, Python _plugins_>>. You write plugin code to implement your application's functionality and to define its service API endpoints.
+
+You first define a _graph model_ to represent your data, then implement plugin algorithms to populate and query your model. All data is kept in memory for maximum performance. Graph updates are made in real-time with no indexing delay. 
+
+VGX and pyvgx are both implemented in C. The latter is an extension module that can be imported and used to build applications in Python.
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+pyvgx.system.Initialize()
+g = pyvgx.Graph( "mygraph" )
+g.Connect( "A", "to", "B" )
+g.Connect( "A", "to", "C" )
+g.Neighborhood( "A" ) # -> ['B', 'C']
+----
+
+When implementing plugins it is useful to think of the Python interpreter as the orchestration layer and VGX as the execution engine. Pyvgx acts as a bridge between the two. An optimal plugin implementation, in terms of computational efficiency, spends a minimal amount of time in the Python interpreter. You should strive to avoid loops in pure Python and instead find ways to use the pyvgx API to perform iterative operations for you. Performing as much work as possible within the VGX core has the dual benefit of 1) more efficient (native) execution and 2) bypassing the Python global interpreter lock, allowing full parallel utilization of multi-core CPU hardware.
+
+<<service/multinode.adoc#, Multiple VGX instances>> can be connected together to form a cluster. The <<service/service.adoc#, HTTP Server>> can <<service/service.adoc#vgx_server_dispatcher, dispatch requests>> to multiple partitions and automatically handle load balancing or failover among multiple replica. <<service/multinode.adoc#descriptor_topology_transaction, Data input per partition>> is fed to each partition's master/provider instance which <<op_attach_func, attaches>> to one or more subscriber instances mirroring graph data in the master instance. A special dispatcher for feeding data can be set up, distributing input data among partitions <<service/pluginadapter.adoc#request_attr_partial, according to plugin-defined rules>>.
+
+When adding a plugin pyvgx automatically generates an endpoint in the VGX built-in HTTP server. A minimal application will usually have one plugin endpoint for feeding data and another for serving search requests.
+
+The standard anatomy of a VGX service built on pyvgx is a Python program that bootstraps and configures the service, registers the application's plugins, and then runs in the background until shutdown. Aside from process startup and shutdown activities, the Python interpreter is only invoked as part of plugin execution triggered via service endpoints. 
+
+.Example.py
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "service" )
+
+def sqrt( request, x:float ) -> float:
+    return x ** 0.5
+
+system.AddPlugin( sqrt )
+system.StartHTTP( 9000 )
+system.RunServer( "Square Root Server" )
+----
+
+When you run the above Example.py you have a server that can compute square roots. The request `http://localhost:9000/vgx/plugin/sqrt?x=9` returns:
+
+[source, json]
+----
+{ 
+    "status": "OK",
+    "response": 3.0,
+    "port": [9000, 1],
+    "exec_id": 1,
+    "exec_ms": 0.548
+}
+----
+
+For multi-node systems the <<service/multinode.adoc#pyvgx_vgxinstance, pyvgx.VGXInstance helper class>> can be used for implementing services.
+
+=== Summary of Features
+
+==== Basic Structure
+Graphs are built from two basic object types: _vertices_ (nodes) and _arcs_ (directed edges). Vertices are connected _explicitly_ via arcs or _implicitly_ via their similarity to other vertices. Explicit connections (i.e. arcs) are expressed by special vertex attributes called _adjacency vectors_, thus implementing index-free adjacency. Implicit connections (i.e. similarity) are based on special vertex attributes called _similarity vectors_ and expressed via a global similarity index.footnote:simindexfootnote[The global similarity index is currently under development and will be included in a future release. Implicit connections can be emulated by manually building arc-based indices and using vector similarity query filters.]
+
+Two vertices may be explicitly connected by a _simple arc_ (one connection) or a _multiple arc_ (many connections). A vertex may have explicit connections to any number of other vertices. Two explicitly connected vertices are _neighbors_. The set of arcs between a vertex and all its neighbors is the vertex _neighborhood_.
+
+The number of explicit connections a vertex has is the vertex _degree_, while _outdegree_ and _indegree_ refer to the number of outbound and inbound connections, respectively. The graph _size_ is the sum of all degrees for all vertices in the graph, i.e. the total number of explicit connections in the graph. The total number of vertices in a graph is the graph _order_.
+
+Both vertices and arcs may be assigned _properties_ that can be used by graph traversal queries for filtering, sorting and display of search results. Vertices can hold any number of freely assignable key-value properties. Arcs may be assigned a _relationship_ type, _modifier_ (value type), and a _numeric value_.
+
+==== Graph Search
+Graph search can be _global_ or _local_. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex. Neighborhood queries can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.
+
+==== Implicit Connections
+A vertex becomes implicitly connected to other vertices by setting the vertex _vector_.footnote:simindexfootnote[] <<vectorobject, Vectors>> are numeric arrays or lists of weighted features.
+
+The implicit connection strength between two vertices with vectors is determined by their vector similarity. When configured in Euclidean Vector mode similarity is computed either as the _Euclidean distance_ or as the _Cosine similarity_ between vectors. When configured in Feature Vector mode similarity is computed as the _Cosine similarity_ or the _Jaccard index_, or a combination of the two.
+
+A global similarity query will return all vertices implicitly connected to a probe vertex using a globally configured similarity threshold to determine whether a sufficiently strong connection exists. Vector similarity can also be combined with explicit connection filters in neighborhood queries.
+
+==== Capacity
+All graph data is held in memory, ensuring low latency and predictable performance (soft realtime) for all operations. The system may hold any number of independent graphs of any size and order at the same time, limited only by the available memory on your machine. Graphs may be persisted from memory to disk and restored from disk to memory later.
+
+==== Object Expiration
+Vertices and arcs may be assigned expiration timestamps (time-to-live or TTL) for automatic deletion at a future point in time. Expiration times are independently assignable for all objects. TTL has a resolution of one second for any expiration timestamp ranging from imminent to infinity.
+
+==== Concurrency
+Graphs may be accessed simultaneously by multiple threads. Safe, concurrent access is governed by various internal locking mechanisms that appear seamless at the API level. Optional timeouts may be specified for most operations. Python's global interpreter lock (GIL) is released during execution of graph operations, thus allowing parallel execution across multiple CPU-cores within the same Python process.
+
+==== Plugins and VGX Server
+A plugin framework allows remote execution of Python functions that you define and register with the system. Plugins are invoked by sending HTTP requests to VGX Server, a fully asynchronous, multithreaded socket server running within the VGX core. This server is independent from the Python interpreter. 
+
+=== API Components
+
+<<pyvgxmodule, pyvgx module>>::
+Common functions, constants, exceptions, and classes:
++
+* <<system_namespace, `pyvgx.system`>>
+* <<op_namespace, `pyvgx.op`>>
+* <<pyvgx_namespace, `pyvgx`>>
+
+<<graphobject, pyvgx.Graph Objects>>::
+Create graph structure, run graph traversal queries, and manage graph lifecycle.
++
+* <<graphobject_attributes>>
+* <<graphobject_methods>>
+
+<<vertexobject, pyvgx.Vertex Objects>>::
+Inspect and modify vertices.
++
+* <<vertexobject_attributes>>
+* <<vertexobject_methods>>
+
+<<memoryobject, pyvgx.Memory Objects>>::
+Create and manipulate raw memory arrays for use with expression evaluators.
++
+* <<evaluator/evaluator.adoc#, VGX Expression Language>>
+* <<evaluator/selectEvaluator.adoc#, Select Statement>>
+
+<<vectorobject, pyvgx.Vector Objects>>::
+Similarity vectors.
+
+<<similarityobject, pyvgx.Similarity Objects>>::
+Compute vector similarity and manage similarity parameters.
+
+<<queryobject, pyvgx.Query Objects>>::
+Reusable graph queries with pre-defined parameters.
+
+<<service/service.adoc#, VGX Server - Multi-node System Framework with Plugin Support>>::
+Define application plugins and expose functions as HTTP endpoints.
+* <<service/service.adoc#, VGX Server>>
+* <<service/pluginadapter.adoc#, Plugin Adapter>>
+* <<service/multinode.adoc#, Multi Node Systems>>
+* <<service/sysadmin.adoc#, System Administration>>
+
+<<io/vgxopxfer.adoc#stream_building_blocks, VGX Transaction Protocol>>::
+Protocol used by VGX Transaction Interconnect to send graph data to subscribers.
+
+[[pyvgxmodule]]
+== pyvgx module
+
+The pyvgx module API provides functions for initializing the system, managing graph objects, printing log messages, and a few other convenience functions. The module also defines object types, exception types, and several constants that are used in method calls throughout the API.
+
+[[pyvgxfunctions]]
+=== Functions
+
+[[system_namespace]]
+==== `pyvgx.*system*` Namespace
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===== AddPlugin
+
+[[system_addplugin_func]]`pyvgx.*system.AddPlugin*( **[**_plugin_**[**, _name_**[**, _graph_**[**, _engine_**[**, _pre_**[**, _post_**]]]]]]** )`::
+See <<service/pluginadapter.adoc#system_addplugin_func, VGX Server *system.AddPlugin()*>>
+
+___
+
+===== CancelSync
+
+[[system_cancelsync_func]]`pyvgx.*system.CancelSync*()`::
+Stop any synchronization that was started with <<system_sync_func, pyvgx.System.Sync()>>.
++
+WARNING: Subscribers are generally left in an inconsistent state if synchronization is terminated before it completes.
+
+___
+
+===== ClearReadonly
+
+[[system_clear_readonly_func]]`pyvgx.*system.ClearReadonly*()`::
+Exit readonly mode for all loaded graphs. (Make all graphs writable.)
+
+___
+
+===== CountReadonly
+
+[[system_count_readonly_func]]`pyvgx.*system.CountReadonly*()`::
+Return the number of readonly graphs.
+
+___
+
+===== DeleteGraph
+
+[[system_delete_graph_func]]`pyvgx.*system.DeleteGraph*( _name_**[**, _path_**[**, _timeout_**]]** )`::
+Remove a graph identified by _name_ and optionally _path_ from the *graph registry*. If the graph is currently in use and cannot be freed within the given _timeout_ (in milliseconds) an exception is raised. The default behavior is nonblocking, i.e. _timeout_=0.
++
+This will only remove the graph from memory and the graph registry file on disk, not the actual graph data on disk. Future initializations will not automatically load this graph into memory.
++
+Return `True` if graph was deleted, `False` otherwise.
+
+___
+
+===== DispatcherConfig
+
+[[system_dispatcherconfig_func]]`pyvgx.*system.DispatcherConfig*()`::
+See <<service/service.adoc#system_dispatcherconfig_func, VGX Server *system.DispatcherConfig()*>>
+
+___
+
+===== DurabilityPoint
+
+[[system_durabilitypoint_func]]`pyvgx.*system.DurabilityPoint*()`::
+Return a 3-tuple (_txid_, _serial_, _ts_) representing the most recent durable transaction received from an attached provider. A durable transaction is a transaction whose effects are included in a graph snapshot on disk, i.e. a transaction applied prior to a call to `pyvgx.system.Persist()`. The durability point is thus the last transaction applied before the snapshot was created.
+
+___
+
+===== EventsResumable
+
+[[system_events_resumable_func]]`pyvgx.*system.EventsResumable*()`::
+Return `True` if any loaded graph has its TTL event processor suspended, otherwise return `False`.
+
+___
+
+===== Fingerprint
+
+[[system_fingerprint_func]]`pyvgx.*system.Fingerprint*()`::
+Return a digest string representative of the current state of all loaded graphs. Two VGX instances will have the same fingerprint only when their loaded graphs are identical.
+
+___
+
+===== GetBuiltins
+
+[[system_getbuiltins_func]]`pyvgx.*system.GetBuiltins*()`::
+See <<service/pluginadapter.adoc#system_getbuiltins_func, VGX Server *system.GetBuiltins()*>>
+
+___
+
+===== GetGraph
+
+[[system_getgraph_func]]`pyvgx.*system.GetGraph*( _name_ )`::
+Return an already open graph instance. This is useful for temporarily accessing graphs currently owned by another thread.
+
+___
+
+===== GetPlugins
+
+[[system_getplugins_func]]`pyvgx.*system.GetPlugins*()`::
+See <<service/pluginadapter.adoc#system_getplugins_func, VGX Server *system.GetPlugins()*>>
+
+___
+
+===== GetProperties
+
+[[system_get_properties_func]]`pyvgx.*system.GetProperties*( **[** _timeout_ **]** )`::
+Return a dict of all system properties. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== GetProperty
+
+[[system_get_property_func]]`pyvgx.*system.GetProperty*( _key_**[**, _default_**[**, _timeout_ **]]** )`::
+Return system property _key_ if it exists, otherwise return _default_ if provided or raise LookupError if no default provided. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== HasProperty
+
+[[system_has_property_func]]`pyvgx.*system.HasProperty*( _key_**[**, _timeout_ **]** )`::
+Return `True` if system property _key_ exists, otherwise return `False`. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== Initialize
+
+[[system_initialize_func]]`pyvgx.*system.Initialize*( **[**_vgxroot_**[**, _http_**[**, _attach_**[**, _bind_**[**, _durable_**[**, _events_**[**, _idle_**[**, _readonly_**[**, _euclidean_** ]]]]]]]]]** )`::
+Initialize the library, with one or more optional configuration parameters.
++
+*vgxroot:* Specify disk storage location for graph data by supplying a root directory in the optional _vgxroot_ parameter. The default root directory is the current working directory.
++
+*http:* Start HTTP service on port _http_ if > 0. The service enables plugin execution via HTTP requests. Use <<service/service.adoc#system_addplugin_func, system.AddPlugin()>> to make a plugin available in the HTTP service.
++
+*attach:* Stream <<op_attach_func, _VGX Transactions_>> to remote VGX destination(s) and/or local file(s) by specifying a <<io/vgxopxfer.adoc#uri_format, URI string>> (or list of URI strings) in the optional _attach_ parameter. When attached, the local VGX instance becomes a _VGX operation source_. In a multi-node setup this instance takes on the _Data Provider_ role.
++
+*bind:* Start <<op_bind_func, _VGX Transaction service_>> on port _bind_ if > 0. When this service is running, the local VGX instance becomes a _VGX operation destination_. At most one VGX source can be attached at any given time. In a multi-node setup this instance takes on the _Data Subscriber_ role.
++
+*durable:* When _bind_ is specified and _durable_ is `True` this instance supports durable writes for transactional input data provided by an attached VGX operation source. See <<op_bind_func, pyvgx.op.Bind()>> for details.
++
+*events:* Globally disable event processing (TTL) for all graphs by setting optional _events_ parameter to `False`. Default is `True`, i.e. TTL event processing is enabled.
++
+NOTE: It is highly recommended to disable TTL events for a VGX instance that will inhabit the role of Data Subscriber. I.e., if the _bind_ parameter is given one should also set _events_ to `False`. Deletion of graph data is thus completely driven by the Data Provider, which guarantees data consistency across all VGX instances.
++
+*idle:* When _idle_ parameter is `True` load all graphs with event processing (TTL) temporarily paused. Resume event processing per graph as needed using <<eventenable_func, pyvgx.Graph.EventEnable()>>. Default is `False`, i.e. TTL event processing is running (unless globally disabled with _events_=`False`.)
++
+*readonly:* When _readonly_ parameter is `True` load all graphs in readonly mode. Default is `False`, i.e. readonly/writable state is restored from persisted state.
++
+*euclidean:* When _euclidean_ parameter is `True` (default) VGX is initialized in *Euclidean Vector* mode, i.e. <<vectorobject, pyvgx.Vector>> objects are numeric arrays `[c~1~, c~2~, ..., c~n~]`. When _euclidean_ parameter is `False` VGX is initialized in *Feature Vector* mode, i.e. vectors are maps of (`dimension`, `weight`) key-value pairs.
++
+*Graph registry*
++
+Existing graph data in the selected root directory will be loaded into memory for all graphs in the _graph registry_. The graph registry is stored in the `.registry` directory within the root directory and contains references to all active graphs. Inactive graphs will not be loaded automatically. Inactive graphs are made active and loaded into memory by calling the <<graph/graph.adoc#preface, Graph()>> constructor with the graph name of an existing, inactive graph. Active graphs are made inactive and deleted from memory (but not from disk) by calling <<system_delete_graph_func, system.DeleteGraph()>> with the graph name of an active graph.
++
+It is possible to make all graphs under the root directory inactive by manually removing the graph registry before calling <<system_initialize_func, system.Initialize()>>.
++
+NOTE: It is not possible to remove graphs from disk using this API. Graphs can be made _inactive_ in the registry, but their data will still exist on disk. Fully removing graph data from disk can be performed by calling <<erase_func, pyvgx.Graph.Erase()>> on a graph instance.
++
+This function should only be called when the system is uninitialized. Repeated calls will raise an exception. To reset the system to the uninitialized state, use <<system_unload_func, system.Unload()>>.
+
+___
+
+===== IsInitialized
+
+[[system_isinitialized_func]]`pyvgx.*system.IsInitialized*()`::
+Returns `True` if the system has been initialized, otherwise `False`.
+
+___
+
+===== Meminfo
+
+[[system_meminfo_func]]`pyvgx.*system.Meminfo*()`::
+Return a tuple (_total_, _process_) where _total_ is the amount of memory installed on the host machine and _process_ is the amount of memory currently used by the Python process. Both numbers are in bytes.
+
+___
+
+===== NumProperties
+
+[[system_num_properties_func]]`pyvgx.*system.NumProperties*( **[** _timeout_ **]** )`::
+Return the number of system properties. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== Persist
+
+[[system_persist_func]]`pyvgx.*system.Persist*( **[**_timeout_**[**, _force_**[**, _remote_**]]]** )`::
+Persist all loaded graphs and <<system_system_func, system graph>> to disk. This is a shorthand for calling <<save_func, pyvgx.Graph.Save()>> on each graph individually, and the optional parameters apply as they do for Save(), except for the system graph where _remote_ is ignored (local only.)
+
+___
+
+===== Registry
+
+[[system_registry_func]]`pyvgx.*system.Registry*()`::
+This function returns a dictionary `{ <graph_name> : (<size>, <order>) }` of all graph names and their order/size that currently exist in the *graph registry*, i.e. all graph data currently residing in memory.
+
+___
+
+===== RemovePlugin
+
+[[system_removeplugin_func]]`pyvgx.*system.RemovePlugin*( _name_ )`::
+See <<service/pluginadapter.adoc#system_removeplugin_func, VGX Server *system.RemovePlugin()*>>
+
+___
+
+===== RemoveProperties
+
+[[system_remove_properties_func]]`pyvgx.*system.RemoveProperties*( **[** _timeout_ **]** )`::
+Remove all system properties and return the number of properties removed. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== RemoveProperty
+
+[[system_remove_property_func]]`pyvgx.*system.RemoveProperty*( _key_**[**, _timeout_ **]** )`::
+Remove system property _key_ if it exists, otherwise raise LookupError. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== RequestHTTP
+
+[[system_requesthttp_func]]`pyvgx.*system.RequestHTTP*( _address_**[**, _path_**[**, _query_**[**, _content_**[**, _headers_**[**, _timeout_**]]]]]** )`::
+Send HTTP request.
+This function returns the raw response content returned by the server.
++
+* _address_ is a tuple (_host_, _port_)
+* _path_ is the URI path, defaults to `/`
+* _query_ is a URI-encoded string, or a list of key-val tuples, or a dict
+* _content_ is a string, and implies HTTP POST
+* _headers_ is a dict of HTTP headers to include in the request
+* _timeout_ is in milliseconds, defaults to 5000
+
+___
+
+===== RequestRate
+
+[[system_requestrate_func]]`pyvgx.*system.RequestRate*()`::
+See <<service/service.adoc#system_requestrate_func, VGX Server *system.RequestRate()*>>
+
+___
+
+===== ResetMetrics
+
+[[system_resetmetrics_func]]`pyvgx.*system.ResetMetrics*()`::
+See <<service/service.adoc#system_resetmetrics_func, VGX Server *system.ResetMetrics()*>>
+
+___
+
+===== RestartHTTP
+
+[[system_restarthttp_func]]`pyvgx.*system.RestartHTTP*()`::
+See <<service/service.adoc#system_restarthttp_func, VGX Server *system.RestartHTTP()*>>
+
+___
+
+===== ResumeEvents
+
+[[system_resume_events_func]]`pyvgx.*system.ResumeEvents*()`::
+Resume the TTL event processor for all loaded graphs.
+
+___
+
+===== Root
+
+[[system_root_func]]`pyvgx.*system.Root*()`::
+Return the graph root directory.
+
+___
+
+===== RunServer
+
+[[system_runserver_func]]`pyvgx.*system.RunServer*( **[** _name_**[**, _watchdog_**[**, _interval_**[**, _logpath_ **]]]]** )`::
+Block forever until interrupted by `signal.SIGINT`.
++
+An optional _name_ string may be used to identify a VGX instance when accessed via the <<system_starthttp_func, HTTP Service>>.
++
+A parameterless function may be supplied to _watchdog_, and will be called regularly as defined by _interval_ (in milliseconds). Default _interval_ is 5000 ms.
++
+When _logpath_ directory is specified, all output normally written to stdout and stderr is redirected to files under the _logpath_ directory. Log files are rotated once per hour and automatically deleted after 30 days. Two sets of logs are produced:
++
+. `_logpath_/vgx.YYYY-mm-dd-HHMMSS`  (`LogInfo()`, `LogWarning()`, `LogError()`)
+. `_logpath_/access.YYYY-mm-dd-HHMMSS`  (<<LogTimestamp_func, `LogTimestamp()`>>)
+
+___
+
+===== ServerAdminIP
+
+[[system_serveradminip_func]]`pyvgx.*system.ServerAdminIP*()`::
+See <<service/service.adoc#system_serveradminip_func, VGX Server *system.ServerAdminIP()*>>
+
+___
+
+===== ServerHost
+
+[[system_serverhost_func]]`pyvgx.*system.ServerHost*()`::
+See <<service/service.adoc#system_serverhost_func, VGX Server *system.ServerHost()*>>
+
+___
+
+===== ServerMetrics
+
+[[system_servermetrics_func]]`pyvgx.*system.ServerMetrics*( _percentiles_ )`::
+See <<service/service.adoc#system_servermetrics_func, VGX Server *system.ServerMetrics()*>>
+
+___
+
+===== ServerPorts
+
+[[system_serverports_func]]`pyvgx.*system.ServerPorts*()`::
+See <<service/service.adoc#system_serverports_func, VGX Server *system.ServerPorts()*>>
+
+___
+
+
+===== ServerPrefix
+
+[[system_serverprefix_func]]`pyvgx.*system.ServerPrefix*()`::
+See <<service/service.adoc#system_serverprefix_func, VGX Server *system.ServerPrefix()*>>
+
+___
+
+===== ServiceInHTTP
+
+[[system_serviceinhttp_func]]`pyvgx.*system.ServiceInHTTP*( **[**service_in**]** )`::
+See <<service/service.adoc#system_serviceinhttp_func, VGX Server *system.ServerInHTTP()*>>
+
+___
+
+===== SetProperties
+
+[[system_set_properties_func]]`pyvgx.*system.SetProperties*( _properties_**[**, _timeout_ **]** )`::
+Set multiple system properties from key-value pairs in dict _properties_. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== SetProperty
+
+[[system_set_property_func]]`pyvgx.*system.SetProperty*( _key_, _value_**[**, _timeout_ **]** )`::
+Assign _value_ to system property _key_. Raise <<AccessError_exc, AccessError>> if the operation cannot complete within the given _timeout_ in milliseconds which defaults to 1000 ms.
+
+___
+
+===== SetReadonly
+
+[[system_set_readonly_func]]`pyvgx.*system.SetReadonly*()`::
+Enter readonly mode for all loaded graphs. (Make all graphs readonly.)
++
+The <<system_system_func, system graph>> is not affected by this, and is always writable.
+
+___
+
+===== StartHTTP
+
+[[system_starthttp_func]]`pyvgx.*system.StartHTTP*( _port_**[**, _ip_**[**, _prefix_**[**, _servicein_**[**, _dispatcher_**]]]]** )`::
+See <<service/service.adoc#system_starthttp_func, VGX Server *system.StartHTTP()*>>
+
+___
+
+===== Status
+
+[[system_status_func]]`pyvgx.*system.Status*( **[**_graph_**[**, _simple_**]]** )`::
+Return a dictionary of various system information, counters and resource usage. Alternatively request information about a specific _graph_. In both cases a smaller set of essential information is returned if _simple_ is `True`.
+
+___
+
+===== StopHTTP
+
+[[system_stophttp_func]]`pyvgx.*system.StopHTTP*()`::
+See <<service/service.adoc#system_stophttp_func, VGX Server *system.StopHTTP()*>>
+
+___
+
+===== SuspendEvents
+
+[[system_suspend_events_func]]`pyvgx.*system.SuspendEvents*()`::
+Suspend the TTL event processor for all loaded graphs.
+
+___
+
+===== Sync
+
+[[system_sync_func]]`pyvgx.*system.Sync*( **[**_hard_**[**, _timeout_**]]** )`::
+Transfer the entire contents of ths graph instance to any attached VGX destinations. When _hard_ is `True` (default is `False`) this operation implies <<truncate_func, pyvgx.Graph.Truncate()>> at all destinations before loading the transferred graph data.
++
+WARNING: Synchronizing data this way temporarily suspends normal operation of the VGX source instance and may take a long time to complete.
+
+___
+
+===== System
+
+[[system_system_func]]`pyvgx.*system.System*()`::
+Return the system graph instance. The system graph is automatically created when vgx is initialized. This function raises EnvironmentError if the system graph cannot be acquired within 5 seconds.
+
+CAUTION: Do not modify the system graph. Doing so may destabilize the system and lead to undefined behavior.
+
+___
+
+===== Unload
+
+[[system_unload_func]]`pyvgx.*system.Unload*( **[**_persist_**]** )`::
+Reset the system to the uninitialized state. This will remove all graph data from memory. After calling this function it is possible to call <<system_initialize_func, system.Initialize()>> again. An exception is raised if any system components are currently in use.
++
+The optional _persist_ parameter takes a boolean value and controls whether any unsaved graph data in memory will be persisted to disk. By default data is not persisted. Pass `True` to persist all data.
+
+___
+
+===== WritableVertices
+
+[[system_writablevertices_func]]`pyvgx.*system.WritableVertices*()`::
+Return the total number of vertices currently opened writable for all loaded graphs.
+
+___
+
+
+[[op_namespace]]
+==== `pyvgx.*op*` Namespace
+
+It is possible to capture API operations in a _VGX source instance_ and transfer them as <<io/vgxopxfer.adoc#, _VGX Transactions_>> to another _VGX destination instance_. This is achieved by _attaching_ the source instance (provider) to the destination instance (subscriber.) A source can attach to one or more destinations. When attached, a socket connection is established between source and destination.
+
+Operations performed on graphs in the VGX source instance will be captured and streamed over the connected sockets to all VGX destination instances. A destination instance consumes the incoming operation stream to maintain an identical copy of the source graphs.
+
+Below are the API functions used to manage production, transfer and consumption of the operation data stream.
+
+
+===== Allow
+
+[[op_allow_func]]`pyvgx.*op.Allow*( _opcode_filter_ )`::
+Enable execution by <<op_bind_func, VGX Transaction service>> or <<op_consume_func, `pyvgx.op.Consume()`>> of any opcode(s) specified by _opcode_filter_, which may be an individual <<constants/opcodeConstants.adoc#operatoropcodes, operator opcode>> or an <<constants/opcodeConstants.adoc#operatorgroups, operator group>>. Filters are cumulative, i.e. repeated calls to this function will add to the set of allowed opcodes. Filters are exclusive, i.e. an allowed opcode is not denied.
+
+___
+
+===== Assert
+
+[[op_assert_func]]`pyvgx.*op.Assert*()`::
+Transmit a state-assert operation for all graphs in the system to any attached destination(s). This communicates expected object counts as extracted from local graph(s), which the remote graphs can use to validate against. Remote graphs may then choose the appropriate action depending on the degree of mismatch, if any.
++
+Implicit calls to <<op_fence_func, `op.Fence()`>> are made before and after the local object counts are gathered. The transactions produced by state-assert itself will be sent in between the two fence operations.
++
+If the assert operation cannot complete within one minute <<OperationTimeout_exc, OperationTimeout>> is raised.
++
+Any other error condition will raise <<InternalError_exc, InternalError>>.
+
+___
+
+===== Attach
+
+[[op_attach_func]]`pyvgx.*op.Attach*( **[**_URIs_**[**, _handshake_**[**, _timeout_**]]]** )`::
+Establish producer-consumer relationships between the local VGX source/producer instance and one or more VGX destination/consumer instances. Destinations will receive a stream of graph modification operations (VGX Transactions) in real time as they are applied to the local VGX instance.
++
+When attached, the local VGX instance becomes a _VGX operation source_. (The source is sometimes also referred to as _producer_ or _provider_.)
++
+The <<io/vgxopxfer.adoc#uri_format, _URIs_>> parameter can be a string (single destination) or a list of strings (multiple destinations.) If the _URIs_ parameter is omitted any URIs registered with a previous call to <<op_set_default_uris_func, system.SetDefaultURIs()>> will be used by default.
++
+URI scheme `vgx` is used for streaming operations to a remote VGX instance. Attaching to a remote instance implies opening a TCP/IP socket connection. The state of being _attached_ is independent of the state of any TCP/IP socket connection. The connection may break due to network issues or other temporary conditions, but the source is still considered attached to the destination. A broken connection will be re-established automatically without loss of data.
++
+URI scheme `file` is used to write operations to a local file. This can be useful for testing or development purposes.
++
+The _handshake_ parameter has a default value of `True` and implies verification of protocol version and other internal information exchange when attaching to a destination.
++
+The default attach _timeout_ is 30000 (in milliseconds.)
+
+___
+
+===== Attached
+
+[[op_attached_func]]`pyvgx.*op.Attached*()`::
+Return a list of URI strings identifying this VGX instance's currently attached subscribers.
+
+___
+
+===== Bind
+
+[[op_bind_func]]`pyvgx.*op.Bind*( _port_**[**, _durable_**[**, _snapshot_threshold_**]]** )`::
+Start VGX Transaction service on the given _port_.
++
+When bound, the local VGX instance becomes a _VGX operation destination_ (also referred to as _consumer_ or _subscriber_.)
++
+A VGX operation source may attach to the local VGX instance and stream its operations over the connection into the local instance. Operations are streamed as <<io/vgxopxfer.adoc#stream_building_blocks, VGX transactions>>. The local instance applies all incoming VGX transactions as they arrive, thus re-creating exact replicas of graphs in the source instance.
++
+CAUTION: At most one VGX operation source may be attached at a time. Attempting to attach a second source will disconnect the first source. Since all attached sources automatically try to re-connect if connection is lost there will be a constant fight between sources, most likely resulting in errors and data inconsistencies. *Do not attach more than once source to any destination*.
++
+When _durable_ is `True` (default is `False`) the VGX instance will maintain a durable transaction log on disk.
++
+When bound in durable mode all inbound transactions are persisted to disk in real time. The operation source does not consider the transaction complete until the operation destination has confirmed the durable write. 
++
+NOTE: Inbound transactions are persisted to transaction logs on disk. Transaction logs are kept until a new snapshot is created. When a graph snapshot is created using <<save_func, Save()>>, all transactions applied prior to this _durability point_ are no longer needed by that particular graph. The earliest durability point of all loaded graphs determines the cutoff at which old transactions are discarded. Transactions older than the earliest durability point are automatically removed from disk.
++
+Enable automatic snapshots by setting _snapshot_threshold_ to the maximum number of transaction log bytes allowed on disk. When this limit is exceeded the system will persist all graphs and clear the transaction log.
+
+___
+
+===== Bound
+
+[[op_bound_func]]`pyvgx.*op.Bound*()`::
+Return a tuple `(port, durable)` indicating the running state of VGX Transaction Service, where _port_ and _durable_ reflect corresponding parameters values provided to <<op_bind_func, op.Bind()>>.
++
+If no VGX Transaction service is running `(0, False)` is returned.
+
+___
+
+===== Consume
+
+[[op_consume_func]]`pyvgx.*op.Consume*( _data_**[**, _timeout_ **]** )`::
+Submit operation data for execution by the local VGX instance. The _data_ parameter is either a single string (`str` or `bytes`) or a list of strings. If _timeout_ is 0 (the default) this function returns immediately after queuing operations for asynchronous execution. Specify a positive _timeout_ (in milliseconds) to block while waiting for operations to be executed, or otherwise raise <<OperationTimeout_exc, OperationTimeout>>.
++
+Data submitted via this function will incrementally modify the local instance. The only requirement for _data_ is no partial tokens are allowed, i.e. the _data_ string (or each string in list of strings) must start and end on complete token boundaries. 
+<<io/vgxopxfer.adoc#format_overview, Operation tokens>> are separated by whitespace characters (`" "`, `"\t"` or `"\n"`.)
++
+TIP: If the pyvgx instance is populated exclusively via this call it is recommended to initialize the system with event processing globally disabled using <<system_initialize_func, `pyvgx.system.Initialize( events=False )`>>. Expiration events (TTL) are managed by the source instance and transferred via the operation stream.
++
+TIP: Instead of manually calling `op.Consume()`, use <<op_bind_func, `op.Bind()`>> in a VGX destination instance to start the VGX Transaction service, which allows a VGX source instance to attach using <<op_attach_func, `op.Attach()`>> and have its data automatically transferred to the destination.
+
+___
+
+===== Counters
+
+[[op_counters_func]]`pyvgx.*op.Counters*()`::
+Return a dict of various internal counters related to operation I/O. Mainly useful for debugging and performance reporting.
+
+___
+
+===== DataCRC32c
+
+[[op_datacrc32c_func]]`pyvgx.*op.DataCRC32c*( _data_ )`::
+Return the CRC32-c checksum of _data_ (`str` or `bytes`). This differs from standard CRC32-c computation in that the checksum is computed over all tokens in _data_, not the raw string.
+
+___
+
+===== Deny
+
+[[op_deny_func]]`pyvgx.*op.Deny*( _opcode_filter_ )`::
+Prevent execution by <<op_bind_func, VGX Transaction service>> or <<op_consume_func, `pyvgx.op.Consume()`>> of any opcode(s) specified by _opcode_filter_, which may be an individual <<constants/opcodeConstants.adoc#operatoropcodes, operator opcode>> or an <<constants/opcodeConstants.adoc#operatorgroups, operator group>>. Filters are cumulative, i.e. repeated calls to this function will add to the set of denied opcodes. Filters are exclusive, i.e. a denied opcode is not allowed.
+
+___
+
+===== Detach
+
+[[op_detach_func]]`pyvgx.*op.Detach*( **[**_URI_**[**, _force_**]]** )`::
+Disconnect the operation stream from all attached destinations, or from a specific destination if _URI_ is specified.
++
+Normally any attached destination will remain attached even if the socket loses its connection. A new connection will be attempted periodically, while transactions are queued internally until such connection can be made. To override this behavior set _force_=`True`. A forced detach will erase the pending backlog of transactions and immediately detach destinations that are currently without a socket connection.
++
+CAUTION: All vertices acquired writable by any thread at the time of op.Detach() will be forcibly released, even if no operation stream was attached. Calling op.Detach() thus has the side-effect similar to calling <<closeall_func, pyvgx.Graph.CloseAll()>> once for each running thread.
+
+___
+
+===== Fence
+
+[[op_fence_func]]`pyvgx.*op.Fence*( [_timeout_] )`::
+Flush all pending transactions, then return None. This has the effect of enforcing transaction order in such a way that any graph modifications made prior to the call of this function are guaranteed to have arrived at and been accepted by any attached destination(s) before any graph modifications made after the call of this function. It is the equivalent of calling <<op_suspend_func, `op.Suspend()`>> immediately followed by <<op_resum_func, `op.Resume()`>>.
++
+If the system cannot flush all pending transactions within the given _timeout_ (in milliseconds) <<OperationTimeout_exc, OperationTimeout>> is raised. The default _timeout_ is 60000 (one minute.)
++
+Any other error condition will raise <<InternalError_exc, InternalError>>.
+
+___
+
+===== GetDefaultURIs
+
+[[op_get_default_uris_func]]`pyvgx.*op.GetDefaultURIs*()`::
+Return a list of the current default URIs.
+
+___
+
+===== Heartbeat
+
+[[op_heartbeat_func]]`pyvgx.*op.Heartbeat*( _tick_ )`::
+Enable (_tick_=True) or disable (_tick_=False) transmission of the <<io/vgxopxfer.adoc#tic, TIC opcode>> to any <<op_attach_func, attached VGX destinations>>. It is enabled by default.
++
+A heartbeat tick is sent after 4 seconds of inactivity and will continue to be sent every 4 seconds for as long as no other operations are sent.
+
+___
+
+===== Pending
+
+[[op_pending_func]]`pyvgx.*op.Pending*()`::
+Return the amount of data (in bytes) waiting to be processed asynchronously following a non-blocking call to <<op_consume_func, `pyvgx.op.Consume()`>>, or currently waiting to be processed by a running <<op_bind_func, VGX Transaction service>>.
+
+___
+
+===== ProduceComment
+
+[[op_produce_comment_func]]`pyvgx.*op.ProduceComment*( _string_ )`::
+Inject message _string_ (`str` or `bytes`) into the operation output stream. This has no functional side-effects and is provided for logging, testing, debugging, etc.
+
+___
+
+===== ProduceRaw
+
+[[op_produce_raw_func]]`pyvgx.*op.ProduceRaw*( _data_ )`::
+Inject arbitrary _data_ (`str` or `bytes`) into the operation stream. This currently has no functional side-effects and is reserved for future implementations where transferring arbitrary data payloads to remote VGX instances may be required.
+
+___
+
+===== Profile
+
+[[op_profile_func]]`pyvgx.*op.Profile*( _profile_ )`::
+Apply an opcode execution <<constants/opcodeConstants.adoc#operatorprofiles, _profile_>>, which is a pre-defined set of allowed and denied opcodes. Allowed opcodes will be executed by <<op_bind_func, VGX Transaction service>> or calls to <<op_consume_func, `pyvgx.op.Consume()`>>, and denied opcodes will be ignored. Applying a profile is destructive, i.e. any existing opcode filters will be overridden by the profile. However, after applying a profile it is possible to modify the filters in effect with additional calls to <<op_deny_func, `pyvgx.op.Deny()`>> or <<op_allow_func, `pyvgx.op.Allow()`>>.
+
+___
+
+===== Reset
+
+[[op_reset_func]]`pyvgx.*op.Reset*()`::
+Reset the operation parser used by <<op_consume_func, `pyvgx.op.Consume()`>> to its initial state. This will permit already consumed transactions to be processed again.
++
+CAUTION: This function is useful for testing and debugging. Re-processing already processed transactions may have unintended side-effects and should never be performed in a live system unless part of a carefully designed recovery protocol.
+
+___
+
+===== Resume
+
+[[op_resume_func]]`pyvgx.*op.Resume*()`::
+Resume the production of operation output and return None on success. After this function returns all graphs will start producing output transactions for committed changes, including any modifications that were queued while in a suspended state. Transaction order is guaranteed.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised immediately if production of transaction data cannot be resumed. 
++
+Any other error condition will raise <<InternalError_exc, InternalError>>.
+
+___
+
+===== ResumeTxInput
+
+[[op_resumetxinput_func]]`pyvgx.*op.ResumeTxInput*( [timeout_ms] )`::
+Resume subscriber's internal processing of transactions received when <<op_bind_func, VGX Transaction service>> is running. Previously queued data will start modifying the state of graphs, while new incoming data is applied to the back of this queue, until the entire backlog has been processed. Depending on how long transaction input was suspended it may take some time for the subscriber's state to reflect provider's state in real time.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised if internal processing cannot be resumed by the given _timeout_ (default 60000.)
+
+___
+
+===== ResumeTxOutput
+
+[[op_resumetxoutput_func]]`pyvgx.*op.ResumeTxOutput*( [timeout_ms] )`::
+Resume provider's output of transaction data to attached subscribers. All buffered data will be flushed to attached outputs as fast as possible until drained.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised if transaction output cannot be resumed by the given _timeout_ (default 60000.)
+
+___
+
+===== SetDefaultURIs
+
+[[op_set_default_uris_func]]`pyvgx.*op.SetDefaultURIs*( _URIs_ )`::
+Register one or more URIs to use as default when calling <<system_initialize_func, `system.Initialize()`>> or <<op_attach_func, `op.Attach()`>> without the URI parameter. The _URI_ parameter is a string or a list of strings. Pass `[]` or `None` to clear the default URIs.
+
+___
+
+===== StrictSerial
+
+[[op_strictserial_func]]`pyvgx.*op.StrictSerial*( _strict_ )`::
+Enable (_strict_=True) or disable (_strict_=False) check for strictly increasing transaction serial numbers by the operation parser. This check is enabled by default.
++
+When enabled all data received by <<op_bind_func, VGX Transaction service>> or manually submitted via <<op_consume_func, `pyvgx.op.Consume()`>> is required to contain sequential transactions with serial numbers increasing by exactly one for each new transaction.
++
+If a transaction's serial number is less than the previous serial number the transaction data is ignored and a regression error is logged.
++
+If a transaction's serial number is greater than the previous serial number plus one the transaction is accepted and a gap warning is logged.
+
+___
+
+===== Subscribe
+
+[[op_subscribe_func]]`pyvgx.*op.Subscribe*( _address_**[**, _hardsync_**[**, _timeout_**]]** )`::
+Send a request to VGX provider instance located at _address_ to become a subscriber of that instance's graph data updates. If the provider is able to accept the request it will attach to the local VGX Transaction service, which must already be running. If a local VGX Transaction is not running this function will raise an exception.
++
+The provider _address_ is given as a tuple (_host_, _port_), where _port_ is the <<system_starthttp_func, HTTP Service>> running on provider _host_.
++
+When subscription is successfully established, the provider will transfer all its data to the subscriber. Assuming the subscriber is empty (no graph data) at the time of subscription the subscriber will be fully synchronized with the provider once that transfer completes.
++
+If _hardsync_ is `True`, any pre-existing subscriber data will be truncated before the provider transfers its data.
++
+An optional _timeout_ in milliseconds may be specified. This only relates to the time it takes to establish a connection between the provider and subscriber, NOT to the time it takes to synchronize all data.
++
+CAUTION: This operation may take a long time to complete. Any other subscribers will not receive updates from the provider during the time it takes to synchronize the new subscriber.
+
+___
+
+===== Suspend
+
+[[op_suspend_func]]`pyvgx.*op.Suspend*( [_timeout_] )`::
+Suspend the production of operation output and return None on success. After this function returns it is guaranteed that all committed changes to all graphs have been sent to and confirmed by any attached destination(s). No further transactions will be produced while in the suspended state. Local graph modifications are still allowed and will be queued up for transmission once the system is no longer in a suspended state. The system will remain in a suspended state until <<op_resume_func, `op.Resume()`>> is called.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised if production of transaction data cannot be suspended by the given _timeout_ (default 60000.)
++
+Any other error condition will raise <<InternalError_exc, InternalError>>.
+
+___
+
+===== SuspendTxInput
+
+[[op_suspendtxinput_func]]`pyvgx.*op.SuspendTxInput*( [timeout_ms] )`::
+Halt subscriber's internal processing of transactions received when <<op_bind_func, VGX Transaction service>> is running. The attached provider may continue to send data but it will be queued in the subscriber's memory (and disk if VGX Transaction service is configured durable) while transaction input is suspended. Incoming data will not modify the state of any graphs while suspended.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised if internal processing cannot be suspended by the given _timeout_ (default 60000.)
+
+___
+
+===== SuspendTxOutput
+
+[[op_suspendtxoutput_func]]`pyvgx.*op.SuspendTxOutput*( [timeout_ms] )`::
+Halt provider's output of transaction data to attached subscribers. Internal graph operations continue to produce transactions, but these are queued in buffers that continue to grow for as long as output is suspended.
++
+<<OperationTimeout_exc, OperationTimeout>> is raised if transaction output cannot be suspended by the given _timeout_ (default 60000.)
+
+___
+
+===== Throttle
+
+[[op_throttle_func]]`pyvgx.*op.Throttle*( **[**_rate_**[**, _unit_ **]]**)`::
+Configure global data consumption rate limits. Operation data streamed to a running <<op_bind_func, VGX Transaction service>> or submitted manually via <<op_consume_func, `pyvgx.op.Consume()`>> will be processed internally at a maximum _rate_ specified in __unit__s per second.
++
+Available units are `"transactions"`, `"operations"`, `"opcodes"` and `"bytes"`. Multiple rate limits can be set by calling `op.Throttle()` more than once with different _unit_ parameters. Throttling occurs when any configured limit is reached.
++
+Throttle _rate_ must be a non-negative number or `None`. When _rate_ is numeric a data processing speed limit is set for the selected _unit_ measured in such __unit__s per second. The default _unit_ is `"bytes"`. When _rate_ is `None` or 0.0 and _unit_ is given any limit is removed for that _unit_. When _rate_ is `None` or 0.0 and _unit_ is not given all limits are removed and no throttling occurs.
++
+This method returns a dictionary of configured rate limits.
+
+___
+
+===== URI
+
+[[op_uri_func]]`pyvgx.*op.URI*( _uri_string_ )`::
+Parse _uri_string_ and return a 7-tuple containing the extracted URI elements: ( _scheme_, _user_, _host_, _port_, _path_, _query_, _fragment_ ).
+
+___
+
+===== Unbind
+
+[[op_unbind_func]]`pyvgx.*op.Unbind*()`::
+Stop a running VGX Transaction service.
+___
+
+===== Unsubscribe
+
+[[op_unsubscribe_func]]`pyvgx.*op.Unsubscribe*()`::
+Request an already attached VGX provider instance to detach itself. No further graph data updates will be received once the provider has detached.
+
+___
+
+===== VerifyCRC
+
+[[op_verifycrc_func]]`pyvgx.*op.VerifyCRC*( _verify_ )`::
+Enable (_verify_=True) or disable (_verify_=False) CRC validation in the operation parser. CRC validation is enabled by default. When enabled the operation data parser performs CRC validation of all data received by <<op_bind_func, VGX Transaction service>> or manually submitted via <<op_consume_func, `pyvgx.op.Consume()`>>.
+
+___
+
+
+[[pyvgx_namespace]]
+==== `pyvgx` Namespace
+
+===== AutoArcTimestamps
+
+[[AutoArcTimestamps_func]]`pyvgx.*AutoArcTimestamps*( [_enable_] )`::
+Enable (_enable_=`True`) or disable (_enable_=`False`) automatic inclusion of timestamp arcs for new relationships.
+Disabled by default.
+
+___
+
+===== avxbuild
+
+[[avxbuild_func]]`pyvgx.*avxbuild*()`::
+Return the AVX version used when pyvgx was built.
+
+___
+
+===== compress
+[[compress_func]]`pyvgx.*compress*( _obj_ )`::
+Return bytes representing a compressed, serialized Python object _obj_.
+
+___
+
+===== cpuid
+
+[[cpuid_func]]`pyvgx.*cpuid*( _leaf_**[**, _subleaf_**[**, _obj_ **]]** )`::
+Execute the https://en.wikipedia.org/wiki/CPUID[cpuid^] instruction to return information about your machine's processor. This maps directly to the CPUID instruction and requires knowledge of the CPU vendor's documentation to supply the appropriate values in _leaf_ and _subleaf_, and to interpret the return value.
++
+By default a 4-tuple (EAX, EBX, ECX, EDX) is returned. If _obj_ is non-zero a more verbose dict is returned.
+
+___
+
+===== crc32c
+
+[[crc32c_func]]`pyvgx.*crc32c*( _x_ )`::
+Return the CRC32-c checksum of string _x_.
+
+___
+
+===== decode_utf8
+
+[[decodeutf8_func]]`pyvgx.*decode_utf8*( _utf8_ )`::
+Decode bytes _utf8_ to string.
+
+___
+
+===== decompress
+[[decompress_func]]`pyvgx.*decompress*( _bytes_ )`::
+Return Python object represented by _bytes_ previously generated by <<compress_func, pyvgx.compress()>>.
+
+___
+
+===== deserialize
+[[deserialize_func]]`pyvgx.*deserialize*( _bytes_ )`::
+Return Python object represented by _bytes_ previously generated by <<serialize_func, pyvgx.serialize()>>.
+
+___
+
+===== enable_selftest
+
+[[enable_selftest_func]]`pyvgx.*enable_selftest*( _enable_ )`::
+Specify _enable_ `True` or `False` to globally enable or disable <<selftest_func, selftest()>> and <<selftest_all_func, selftest_all()>>. The selftest functions are enabled by default.
+
+___
+
+===== encode_utf8
+
+[[encodeutf8_func]]`pyvgx.*encode_utf8*( _string_ )`::
+Encode _string_ to utf8 bytes.
+
+___
+
+===== ihash128
+
+[[ihash128_func]]`pyvgx.*ihash128*( _x_ )`::
+Compute a 128-bit hash of integer _x_ and return the result as a string of 32 hex digits.
+
+___
+
+===== ihash64
+
+[[ihash64_func]]`pyvgx.*ihash64*( _x_ )`::
+Return a 64-bit integer hash of integer _x_.
+
+___
+
+===== initadmin
+
+[[initadmin_func]]`pyvgx.*initadmin*()`::
+Initialize basic administrative plugins, without the need for <<system_initialize_func, system.Initialize()>>.
+
+___
+
+===== LogDebug
+
+[[LogDebug_func]]`pyvgx.*LogDebug*( _message_ )`::
+Output a log message with the DEBUG label. This may have no effect if debug messages are disabled in the core as is typical in release builds of the software. For debug messages to be emitted a debug build of pyvgx may be necessary.
+
+___
+
+===== LogError
+
+[[LogError_func]]`pyvgx.*LogError*( _message_ )`::
+Output a log message with the ERROR label.
+
+___
+
+===== LogInfo
+
+[[LogInfo_func]]`pyvgx.*LogInfo*( _message_ )`::
+Output a log message with the INFO label.
+
+___
+
+===== LogTimestamp
+
+[[LogTimestamp_func]]`pyvgx.*LogTimestamp*( _obj_**[**, _ts_**[**, _clf_**]]** )`::
+Write the contents of _obj_ to the log output file specified by a previous call to <<openaccesslog_func, OpenAccessLog()>>. If no output is open the call to LogTimestamp() is silently ignored.
++
+Supported types for _obj_ are: string, <<service/pluginadapter.adoc#pyvgx_pluginrequest, PluginRequest>> and <<service/pluginadapter.adoc#pyvgx_pluginresponse, PluginResponse>>.
++
+When timestamp _ts_ is not provided the current system time is implied. When a specific timestamp is provided it is interpreted according to type. An integer is interpreted as nanoseconds since 1970. A float is interpreted as seconds since 1970.
++
+When _obj_ is a PluginRequest or PluginResponse the log entry may be written in the Common Log Format when _clf_ is True. When _obj_ is a string _clf_ is ignored.
++
+.Common Log Format (clf=1)
+----
+127.0.0.1 - - [11/Jun/2025:16:43:41 -0400] "GET /vgx/plugin/myservice HTTP/1.1" 200 -
+----
++
+.Plain Output (clf=0 default)
+----
+[2025-06-11 16:25:28.984]  <string_value_if_obj_is_string>
+[2025-06-11 16:43:37.640]  GET /vgx/plugin/myservice <request_serial_number>
+----
+
+___
+
+===== LogWarning
+
+[[LogWarning_func]]`pyvgx.*LogWarning*( _message_ )`::
+Output a log message with the WARNING label.
+
+___
+
+===== md5
+
+[[md5_func]]`pyvgx.*md5*( _x_ )`::
+Compute md5 of string _x_ and return the result as a string of 32 hex digits.
+
+___
+
+===== meminfo
+
+[[meminfo_func]]`pyvgx.*meminfo*()`::
+Return a 2-tuple (_total_, _used_) where _total_ is the total system memory (bytes) and _used_ is the memory (bytes) currently in use by this VGX instance.
+
+___
+
+===== OpenAccessLog
+
+[[openaccesslog_func]]`pyvgx.*OpenAccessLog*( _filepath_ )`::
+Enable asynchronous log output to _filepath_. Use <<LogTimestamp_func, LogTimestamp()>> to write log entry to file.
++
+Passing _filepath_=None closes the file and disables further logging.
+
+___
+
+===== popcnt
+
+[[popcnt_func]]`pyvgx.*popcnt*( _x_ )`::
+Return the number of bits set to one in integer _x_.
+
+___
+
+===== profile
+
+[[profile_func]]`pyvgx.*profile*()`::
+Execute a basic system performance benchmark and print results to stdout.
+
+___
+
+===== rstr
+
+[[rstr_func]]`pyvgx.*rstr*( _n_ )`::
+Return a random string value with _n_ characters [a-z]
+
+___
+
+===== selftest
+
+[[selftest_func]]`pyvgx.*selftest*( _testroot_**[**, _library_**[**, _names_**[**, _force_**]]]** )`::
+Run selected internal test(s) of the core libraries, using directory _testroot_ to store temporary data on disk. Allowed _library_ values are `vgx`, `comlib`, `framehash`. Supply list of strings in _names_ to specify individual tests defined for the library. These names are subject to change and not documented here. Use _force_=`True` to delete existing output files generated by previous tests.
+
+___
+
+===== selftest_all
+
+[[selftest_all_func]]`pyvgx.*selftest_all*( _testroot_ )`::
+Run all internal tests of the core libraries, using directory _testroot_ to store temporary data on disk.
+
+___
+
+===== serialize
+[[serialize_func]]`pyvgx.*serialize*( _obj_ )`::
+Return bytes representing a serialized Python object _obj_.
+
+___
+
+===== SetOutputStream
+
+[[SetOutputStream_func]]`pyvgx.*SetOutputStream*( _filepath_ )`::
+Redirect all log output to the file specified by _filepath_. Set _filepath_=`None` to redirect all log output to stderr. This is the default.
+
+___
+
+===== sha256
+
+[[sha256_func]]`pyvgx.*sha256*( _x_ )`::
+Compute sha256 of string _x_ and return the result as a string of 64 hex digits.
+
+___
+
+===== strhash64
+
+[[strhash64_func]]`pyvgx.*strhash64*( _x_ )`::
+Return a 64-bit integer hash of string _x_.
+
+___
+
+===== threadid
+
+[[threadid_func]]`pyvgx.*threadid*()`::
+Return the integer ID of the current thread.
+
+___
+
+===== threadinit
+
+[[threadinit_func]]`pyvgx.*threadinit*( **[**_seed_**]** )`::
+Seed the internal random generators with unique starting points for the current thread.
+
+___
+
+===== threadlabel
+
+[[threadlabel_func]]`pyvgx.*threadlabel*( _label_ )`::
+Assign a string _label_ (up to 15 characters) identifying the calling thread. This can be changed at any time and as many times as you need. It can be useful in certain debugging scenarios as it allows certain error messages to be more easily identified and interpreted.
+
+___
+
+===== timestamp
+
+[[timestamp_func]]`pyvgx.*timestamp*()`::
+Return the number of seconds since computer system boot time.
+
+___
+
+===== tokenize
+
+[[tokenize_func]]`pyvgx.*tokenize*( _text_ )`::
+Return a list of all tokens in UTF-8 encoded string _text_ using simple, pre-defined tokenization rules. This tokenizer will preserve case and accents. Tokens are sequences of word characters unbroken by punctuation or whitespace. Punctuation characters become individual tokens. A partial definition of word characters and punctuation has been implemented for the unicode basic multilingual plane, from ASCII through Cyrillic (codepoints 0 - 0x4FF).
+
+___
+
+===== tokenize_min
+
+[[tokenize_min_func]]`pyvgx.*tokenize_min*( _text_ )`::
+Return a list of normalized and lowercased non-punctuation tokens in UTF-8 encoded string _text_.
+
+___
+
+===== version
+
+[[version_func]]`pyvgx.*version*( **[**_verbosity_**]** )`::
+Return a string containing version information for various system components. Pass an integer to the optional _verbosity_ parameter. Higher _verbosity_ produces more version information.
+
+___
+
+===== vgxrpndefs
+
+[[vgxrpndefs_func]]`pyvgx.*vgxrpndefs*()`::
+Return a dict containing all functions and constants supported by the <<evaluator/evaluator.adoc#, VGX Expression Language>>.
+
+___
+
+
+=== Constants
+
+Several types of integer constants are available for use with API methods. The first letter of the constant name indicates the type of constant:
+
+* <<constants/arcDirectionConstants.adoc#arcdirectionconstants, Arc Direction Constants>> (`*D_*`) are used to specify arc direction in queries that perform arc filtering and traversal.
+* <<constants/arcModifierConstants.adoc#arcmodifierconstants, Arc Modifier Constants>> (`*M_*`) specify the value modifiers for arc relationships. They may be used when creating arcs and in query filters.
+* <<constants/valueConditionConstants.adoc#valueconditionconstants, Value Condition Constants>> (`*V_*`) are used in query filters to specify a value condition when matching arcs or vertex properties.
+* <<constants/collectConstants.adoc#collectconstants, Collect Constants>> (`*C_*`) are used in neighborhood queries to control how results are produced.
+* <<constants/resultFieldConstants.adoc#resultfieldconstants, Result Field Constants>> (`*F_*`) are used in queries to specify which attributes to return in search results.
+* <<constants/resultListEntryConstants.adoc#resultlistentryconstants, Result List Entry Constants>> (`*R_*`) are used in queries to specify the general format of search results.
+* <<constants/sortSpecificationConstants.adoc#sortspecification, Sort Specification Constants>> (`*S_*`) are used in queries to specify how search results are sorted.
+* <<constants/timestampConstants.adoc#timestampconstants, Timestamp Constants>> (`*T_*`) represent various internal timestamp limits.
+* <<constants/opcodeConstants.adoc#opcodeconstants, Opcode Constants>> (`*op.OP_*`) represent operator opcodes, filters and profiles.
+
+Additionally, the following constants can be used to reference <<evaluator/evaluator.adoc#evaluatormemory, Evaluator Memory Register slots>>.
+
+[[Rn_const]]`pyvgx.*R__n__*`::
+Memory register R__n__ index = `-__n__` where _n_ is 1, 2, 3 or 4.
+
+[[pyvgxobjects]]
+=== Objects
+
+[[DefaultSim_obj]]`pyvgx.*DefaultSimilarity*`::
+A built-in <<similarityobject, Similarity Object>> used for creating and comparing stand-alone <<similarity/vector.adoc#, Vector Objects>>.
+
+=== Exceptions
+
+A number of specialized <<exceptions/exceptions.adoc#, pyvgx exceptions>> are defined. They are summarized below.
+
+___
+
+==== AccessError
+
+[[AccessError_exc]]`_exception_ pyvgx.*AccessError*`::
+Sufficient access to a vertex, graph, or other object could not be obtained.
+
+___
+
+==== ArcError
+
+[[ArcError_exc]]`_exception_ pyvgx.*ArcError*`::
+An invalid arc specification was used, or a delete operation could not complete due to locked terminal(s).
+
+___
+
+==== DataError
+
+[[DataError_exc]]`_exception_ pyvgx.*DataError*`::
+Bad configuration or corrupted data found.
+
+___
+
+
+==== EnumerationError
+
+[[EnumerationError_exc]]`_exception_ pyvgx.*EnumerationError*`::
+The core system was unable to translate between external and internal representations of data.
+
+___
+
+==== InternalError
+
+[[InternalError_exc]]`_exception_ pyvgx.*InternalError*`::
+An unknown, internal error has occurred.
+
+___
+
+==== OperationTimeout
+
+[[OperationTimeout_exc]]`_exception_ pyvgx.*OperationTimeout*`::
+A system management operation could not be completed.
+
+___
+
+==== PluginError
+
+[[PluginError_exc]]`_exception_ pyvgx.*PluginError*`::
+Internal error encountered during plugin execution.
+
+___
+
+==== QueryError
+
+[[QueryError_exc]]`_exception_ pyvgx.*QueryError*`::
+A graph query is invalid.
+
+___
+
+==== RequestError
+
+[[RequestError_exc]]`_exception_ pyvgx.*RequestError*`::
+Incorrect parameters or invalid data encountered when processing a PluginRequest object.
+
+___
+
+==== ResponseError
+
+[[ResponseError_exc]]`_exception_ pyvgx.*ResponseError*`::
+Incorrect parameters or invalid data encountered when processing a PluginResponse object.
+
+___
+
+==== ResultError
+
+[[ResultError_exc]]`_exception_ pyvgx.*ResultError*`::
+A result could not be generated after query completion.
+
+___
+
+==== SearchError
+
+[[SearchError_exc]]`_exception_ pyvgx.*SearchError*`::
+The execution of a graph query failed due to an internal error.
+
+___
+
+==== VertexError
+
+[[VertexError_exc]]`_exception_ pyvgx.*VertexError*`::
+A vertex was assigned an invalid name, type, or other attribute.
+
+___
+
+
+
+
+
+[[graphobject]]
+== Graph Objects
+
+The <<graph/graph.adoc#class, pyvgx.Graph>> type represents graph objects.
+
+[[graphobject_type]]
+=== Graph Class
+
+[[graph_class]]`_class_ <<graph/graph.adoc#, pyvgx.*Graph*>>( _name_**[**, _path_**[**, _local_**[**, _timeout_** ]]]** )`::
+Create a Python wrapper object for VGX graph _name_, which is created if it does not already exist. Optionally store data on disk in directory _path_ under <<system_initialize_func, _vgxroot_>>.
++
+Graph operations are normally broadcast to <<op_attach_func, remote instances when attached>> but this can be overridden by setting _local_=`True`. Local graphs are private to the local VGX instance.
++
+Allow blocking for _timeout_ milliseconds if VGX graph is not immediately available for ownership by current thread.
+
+[[graphobject_attributes]]
+=== Graph Attributes
+
+[[name_attr]]`<<graph/graphMembers.adoc#graphname, *name*>>`::
+The graph's name as defined by the graph <<graphobject, constructor's _name_>> parameter.
+
+___
+
+[[path_attr]]`<<graph/graphMembers.adoc#graphpath, *path*>>`::
+The graph's full path as defined by a combination of <<system_initialize_func, _vgxroot_>> and the graph <<graph/graph.adoc#, constructor's (optional) _path_>> parameter.
+
+___
+
+[[size_attr]]`<<graph/graphMembers.adoc#graphsize, *size*>>`::
+The graph _size_ is the number of explicit connections (arcs) in the graph.
+
+___
+
+[[order_attr]]`<<graph/graphMembers.adoc#graphorder, *order*>>`::
+The graph _order_ is the number of vertices in the graph.
+
+___
+
+[[objcnt_attr]]`<<graph/graphMembers.adoc#graphobjcnt, *objcnt*>>`::
+The graph _objcnt_ is a dict of object counters: +
+`{'order': _o_, 'size': _s_, 'properties': _p_, 'vectors': _v_}`
+
+___
+
+[[ts_attr]]`<<graph/graphMembers.adoc#graphts, *ts*>>`::
+The current timestamp (floating point) of the graph, measured in seconds since 1970.
+
+___
+
+[[sim_attr]]`<<graph/graphMembers.adoc#graphsim, *sim*>>`::
+Return the graph's <<similarityobject, pyvgx.Similarity>> object used for configuring vector similarity computation.
+
+___
+
+[[graphobject_methods]]
+=== Graph Methods
+
+==== Accumulate
+
+[[accumulate_func]]`<<graph/graphArc.adoc#graphaccumulate, *Accumulate*>>( _initial_, _relationship_, _terminal_**[**, _delta_**[**, _timeout_ **]]** )`::
+Accumulate the floating point value for <<constants/arcModifierConstants.adoc#M_ACC, M_ACC>> arc of type _relationship_ from _initial_ to _terminal_ (names or writable vertex objects.) The accumulation value is specified by _delta_ parameter, which defaults to 1.0. Negative _delta_ is allowed. If the arc does not exist it is created with a value equal to _delta_. An optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access. The default is nonblocking. Returns the new floating point value of the arc after accumulation has been applied.
+
+___
+
+==== Adjacent
+
+[[adjacent_func]]`<<graph/graphQuery.adoc#graphadjacent, *Adjacent*>>( _id_**[**, _arc_**[**, _neighbor_**[**, _filter_**[**, _memory_**[**, _timeout_**[**, _limexec_ **]]]]]]**)`::
+Return `True` if the vertex _id_ (name or readable vertex object) has a neighbor matching <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, _arc_>>, <<vertex/vertexFilter.adoc#, _neighbor_>> and <<evaluator/evaluator.adoc#quickfilter, _filter_>> query conditions, otherwise return `False`. Evaluation of _filter_ may optionally use the specified <<evaluator/evaluator.adoc#evaluatormemory, _memory_>> object (advanced use case.) By default this method will not block. Optional _timeout_ (in milliseconds) and hard execution limit _limexec_ can be specified. See <<graph/graphQuery.adoc#graphadjacent, Adjacent()>> for details.
+
+___
+
+==== Aggregate
+
+[[aggregate_func]]`<<graph/graphQuery.adoc#graphaggregate, *Aggregate*>>( _id_**[**, ... **]** )`::
+Perform aggregation of property values in the neighborhood of _id_ (name or readable vertex object.) See <<graph/graphQuery.adoc#graphaggregate, Aggregate()>> for usage.
+
+___
+
+==== ArcValue
+
+[[arcvalue_func]]`<<graph/graphQuery.adoc#grapharcvalue, *ArcValue*>>( _initial_, _arc_, _terminal_**[**, _timeout_**[**, _limexec_ **]]** )`::
+Return the value of an explicit connection from _initial_ to _terminal_ (names or readable vertex objects) matching the specified <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, _arc_>> filter. The optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access, or sets an upper execution time limit when _limexec_ is true. The default is nonblocking without execution limit. See <<graph/graphQuery.adoc#grapharcvalue, ArcValue()>> for details.
+
+___
+
+==== Arcs
+
+[[arcs_func]]`<<graph/graphQuery.adoc#grapharcs, *Arcs*>>( **[** ... **]** )`::
+Perform a global arc search in the graph. See <<graph/graphQuery.adoc#grapharcs, Arcs()>> for usage.
+
+___
+
+==== ClearGraphReadonly
+
+[[cleargraphreadonly_func]]`<<graph/graphManagement.adoc#graphcleargraphreadonly, *ClearGraphReadonly*>>()`::
+Make a readonly graph writable. <<OperationTimeout_exc, OperationTimeout>> is raised if the graph cannot become writable at this time.
+
+___
+
+==== Close
+
+[[close_func]]`<<graph/graphManagement.adoc#graphclose, *Close*>>()`::
+Close graph instance. This has the same effect as using the `del` operator on the Python graph instance.
+
+___
+
+==== CloseAll
+
+[[closeall_func]]`<<graph/graphVertex.adoc#graphcloseall, *CloseAll*>>()`::
+Close all vertices opened by the current thread.
++
+[CAUTION]
+====
+*ADVICE*: Do not re-open any vertices in the same scope after `CloseAll()` has been called.
+
+This method releases all vertex locks directly in the VGX core without notifying the Python objects (i.e. `pyvgx.Vertex` wrappers) referencing those core vertices. If access is later attempted via a `pyvgx.Vertex` instance whose core vertex was closed an exception will be raised.
+
+Furthermore, and more importantly, if the core vertex is later re-opened in another part of the program while the original `pyvgx.Vertex` instance never went out of scope it will again be able to access the core vertex, including the ability to close the vertex, which most certainly will have unintended consequences for the part of the program which is currently the legitimate owner of the core vertex.
+====
+
+___
+
+==== CloseVertex
+
+[[closevertex_func]]`<<graph/graphVertex.adoc#graphclosevertex, *CloseVertex*>>( _vertex_object_ )`::
+Release the _vertex_object_ access lock. Returns `True` if lock was released, `False` otherwise. Although the Python _vertex_object_ object still exists it can no longer be used to access the graph. Deleting _vertex_object_ using Python's `del` operator, or waiting for _vertex_object_ to go out of scope implicitly releases the vertex lock.
++
+WARNING: Implicit vertex release depends on Python's garbage collection. The only way to guarantee immediate release is to call `CloseVertex()`.
+
+___
+
+==== CloseVertices
+
+[[closevertices_func]]`<<graph/graphVertex.adoc#graphclosevertices, *CloseVertices*>>( _vertex_objects_ )`::
+Release one lock for each vertex object in _vertex_objects_ list. Returns the number of vertices for which a lock was released, which may be less than the length of _vertex_objects_ if any of those vertices were already released.
+
+___
+
+
+==== CommitAll
+
+[[commitall_func]]`<<graph/graphVertex.adoc#graphcommitall, *CommitAll*>>()`::
+Commit modifications to all write-locked vertices owned by the current thread, and keep vertices open. Return the number of write-locked vertices.
+
+___
+
+==== Connect
+
+[[connect_func]]`<<graph/graphArc.adoc#graphconnect, *Connect*>>( _initial_, _arc_, _terminals_**[**, _lifespan_**[**, _condition_**[**, _timeout_ **]]]** )`::
+Create explicit connection(s) between vertices by inserting an <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, _arc_>> from the _initial_ vertex to each vertex in _terminals_, which may be a list or a singleton. A vertex may be given as a string (vertex ID) or a writable vertex object.
++
+The arc encapsulates a relationship type, modifier and value. Specify _arc_ parameter as a tuple of zero to three elements using <<specification/arcSpecificationSyntax.adoc#arcinsertionsyntax, arc insertion syntax>>:
++
+`_arc_ ::= ( [_relationship_[, _modifier_[, _value_]]] )`
++
+Omitted arc elements default to `"+++__related__+++"`, `M_STAT`, and `1`, respectively.
++
+Optionally specify arc _lifespan_ in seconds, after which the relationship is automatically deleted.
++
+WARNING: Specifying _lifespan_ implicitly creates (or updates) three additional timestamp arcs for the relationship with modifiers `M_TMC` (creation time), `M_TMM` (modification time), and `M_TMX` (expiration time). At or after the expiration time all arcs from _initial_ to _terminal_ sharing the same _relationship_ are automatically deleted.
++
+TIP: Save memory by using <<constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY>> modifier bitmask to prevent implicit creation of reverse arc from terminal back to initial.
++
+When the optional _condition_ parameter is supplied the arc is created or updated only if the condition is met. The condition references an already existing arc from _initial_ to _terminal_, and it may reference an arc with any relationship or modifier. The _condition_ parameter uses <<specification/arcSpecificationSyntax.adoc#arcfiltersyntax, arc filter syntax>>:
++
+`_condition_ ::= ( [_relationship_[, _direction_[, _modifier_[, _condition_, _value_]]]] )`
++
+An optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access. The default is nonblocking. Returns 1 if a new arc was created, 0 otherwise.
+
+___
+
+==== Count
+
+[[count_func]]`<<graph/graphArc.adoc#graphcount, *Count*>>( _initial_, _relationship_, _terminal_**[**, _delta_**[**, _timeout_ **]]** )`::
+Increment the integer value for <<constants/arcModifierConstants.adoc#M_CNT, M_CNT>> arc of type _relationship_ from _initial_ to _terminal_ (names or writable vertex objects.) The increment value is specified by _delta_ parameter, which defaults to 1. Negative _delta_ is allowed. If the arc does not exist it is created with a value equal to _delta_. An optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access. The default is nonblocking. Returns the new integer value of the arc after increment has been applied.
+
+___
+
+==== CreateVertex
+
+[[createvertex_func]]`<<graph/graphVertex.adoc#graphcreatevertex, *CreateVertex*>>( _id_**[**, _type_**[**, _lifespan_**[**, properties **]]]** )`::
+Create a new vertex identified by _id_ and with optional _type_. An optional _lifespan_ (in seconds) may be specified to trigger automatic vertex deletion when the vertex reaches the maximum age (which is infinite by default.) A dict of { `str` : `object` } pairs may be passed in _properties_ to initialize or update the vertex properties. Returns 1 if the vertex is created, 0 if the vertex already exists.
+
+___
+
+==== DebugCheckAllocators
+
+[[debugcheckallocators_func]]`<<graph/graphMiscellaneous.adoc#graphdebugcheckallocators, *DebugCheckAllocators*>>( **[** _name_ **]** )`::
+Perform allocator consistency checks. By default all allocators are checked. Select a specific allocator with _name_.
+This method returns `None`. If internal allocator problems are detected an exception is raised.
+
+___
+
+==== DebugDumpGraph
+
+[[debugdumpgraph_func]]`<<graph/graphMiscellaneous.adoc#graphdebugdumpgraph, *DebugDumpGraph*>>()`::
+Print internal graph information.
+
+___
+
+==== DebugFindObjectByIdentifier
+
+[[debugfindobjectbyidentifier_func]]`<<graph/graphMiscellaneous.adoc#graphfindobjectbyidentifier, *DebugFindObjectByIdentifier*>>( _identifier_ )`::
+Return a representation of an internal object identified by string _identifier_.
+
+___
+
+==== DebugGetObjectByAddress
+
+[[debuggetobjectbyaddress_func]]`<<graph/graphMiscellaneous.adoc#graphgetobjectbyaddress, *DebugGetObjectByAddress*>>( _address_ )`::
+Return a representation of an internal object located at memory _address_.
+
+___
+
+==== DebugPrintAllocators
+
+[[debugprintallocators_func]]`<<graph/graphMiscellaneous.adoc#graphdebugprintallocators, *DebugPrintAllocators*>>( **[** _name_ **]** )`::
+Print internal allocator information to stdout. By default all allocators are dumped. Select a specific allocator with _name_.
+
+___
+
+==== Define
+
+[[define_func]]`<<evaluator/evaluator.adoc#define, *Define*>>( _expression_ )`::
+Create a new function formula that can be used by queries for filtering and ranking. The _expression_ parameter is a string of the form `<name> := <formula>`. See <<evaluator/evaluator.adoc#evaluatordefine, Define()>> for details.
+
+___
+
+==== Degree
+
+[[degree_func]]`<<graph/graphQuery.adoc#graphdegree, *Degree*>>( _id_**[**, _arc_**[**, _filter_**[**, _timeout_**[**, _limexec_ **]]]]** )`::
+Return the number of arcs incident on _id_ (name or readable vertex object) matching the optional <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, _arc_>> and <<evaluator/evaluator.adoc#quickfilter, _filter_>> conditions. The optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access, or sets an upper execution time limit when _limexec_ is true. The default is nonblocking without execution limit. See <<graph/graphQuery.adoc#graphdegree, Degree()>> for details.
+
+___
+
+==== DeleteVertex
+
+[[deletevertex_func]]`<<graph/graphVertex.adoc#graphdeletevertex, *DeleteVertex*>>( _id_**[**, _timeout_ **]** )`::
+Remove the vertex identified by _id_ from the graph. An optional _timeout_ (in milliseconds) can be specified to wait for vertex access in case it may be in use by other threads.
+
+___
+
+==== Dimension
+
+[[dimension_func]]`<<graph/graphEnum.adoc#graphdimension, *Dimension*>>( _code_ )`::
+*Feature vectors*: Return vector dimension associated with enumeration _code_ if mapping exists, otherwise raise <<EnumerationError_exc, `EnumerationError`>>.
++
+*Euclidean vectors*: N/A
+
+___
+
+==== Disconnect
+
+[[disconnect_func]]`<<graph/graphArc.adoc#graphdisconnect, *Disconnect*>>( _id_**[**, _arc_**[**, _neighbor_**[**, _timeout_ **]]]** )`::
+Remove one or more explicit connections incident on the specified _id_ (name or writable object). The optional <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, _arc_>> and <<vertex/vertexFilter.adoc#, _neighbor_>> filters are used to limit arc removal to only those arcs matching the filter criteria. An optional _timeout_ (in milliseconds) allows blocking while waiting for necessary graph access to be obtained. Returns the number of arcs removed.
+
+___
+
+==== EnumDimension
+
+[[enumdimension_func]]`<<graph/graphEnum.adoc#graphenumdimension, *EnumDimension*>>( _dim_ )`::
+*Feature vectors*: Return enumeration code for vector dimension _dim_ after defining mapping if it does not already exist.
++
+*Euclidean vectors*: N/A
+
+___
+
+==== EnumKey
+
+[[enumkey_func]]`<<graph/graphEnum.adoc#graphenumkey, *EnumKey*>>( _key_ )`::
+Return enumeration code for property _key_ after defining mapping if it does not already exist.
+
+___
+
+==== EnumRelationship
+
+[[enumrelationship_func]]`<<graph/graphEnum.adoc#graphenumrelationship, *EnumRelationship*>>( _rel_ )`::
+Return enumeration code for relationship type _rel_ after defining mapping if it does not already exist.
+
+___
+
+==== EnumValue
+
+[[enumvalue_func]]`<<graph/graphEnum.adoc#graphenumvalue, *EnumValue*>>( _string_ )`::
+Return enumeration code for property _key_ after defining mapping if it does not already exist.
+
+___
+
+==== EnumVertexType
+
+[[enumvertextype_func]]`<<graph/graphEnum.adoc#graphenumvertextype, *EnumVertexType*>>( _vtype_ )`::
+Return enumeration code for vertex type _vtype_ after defining mapping if it does not already exist.
+
+___
+
+==== Erase
+
+[[erase_func]]`<<graph/graphManagement.adoc#grapherase, *Erase*>>()`::
+Remove all graph data from memory and disk. Only a basic file structure for the graph will remain.
+
+___
+
+==== EscalateVertex
+
+[[escalatevertex_func]]`<<graph/graphVertex.adoc#graphescalatevertex, *EscalateVertex*>>( _readonly_vertex_object_**[**, _timeout_ **]** )`::
+Promote acquisition status from readonly to writable for _readonly_vertex_object_ without intermittent release. An optional _timeout_ (in milliseconds) allows blocking while waiting for writable access to be obtained. The default is nonblocking. If the vertex is already writable or the readonly vertex cannot be acquired writable <<AccessError_exc, AccessError>> is raised. This method returns nothing.
+
+___
+
+==== Evaluate
+
+[[evaluate_func]]`<<evaluator/evaluator.adoc#evaluate, *Evaluate*>>( _expression_**[**, _tail_**[**, _arc_**[**, _head_**[**, _vector_**[**, _memory_ **]]]]]** )`::
+Execute the _expression_, which is a string defining a new formula, or referencing a pre-defined formula. The optional parameters are used to supply information that may be referenced in the formula. See <<evaluator/evaluator.adoc#evaluate, Evaluate()>> for details.
+
+___
+
+==== EventBacklog
+
+[[eventbacklog_func]]`<<graph/graphEvent.adoc#grapheventbacklog, *EventBacklog*>>()`::
+Return a string representing the current state of the internal event processor.
+
+___
+
+==== EventDisable
+
+[[eventdisable_func]]`<<graph/graphEvent.adoc#grapheventdisable, *EventDisable*>>()`::
+Disable the internal event processor. This halts the time-to-live processing of vertices and arcs, i.e. TTL will be disabled.
+
+___
+
+==== EventEnable
+
+[[eventenable_func]]`<<graph/graphEvent.adoc#grapheventenable, *EventEnable*>>()`::
+Start the internal event processor. This resumes the time-to-live processing of vertices and arcs, i.e. TTL will be enabled.
+
+___
+
+==== EventFlush
+
+[[eventflush_func]]`<<graph/graphEvent.adoc#grapheventflush, *EventFlush*>>()`::
+Manually move all pending internal events from queues to their respective schedules. The method is provided for debugging purposes.
+
+___
+
+==== EventParam
+
+[[eventparam_func]]`<<graph/graphEvent.adoc#grapheventparam, *EventParam*>>()`::
+Return a dictionary of parameters currently in effect for the event processor.
+
+___
+
+==== GetDefinition
+
+[[getdefinition_func]]`*GetDefinition*( _name_ )`::
+Return the expression string of previously defined formula _name_.
+
+___
+
+==== GetDefinitions
+
+[[getdefinitions_func]]`*GetDefinitions*()`::
+Return a list of all previously defined formulas.
+
+___
+
+==== GetMemoryUsage
+
+[[getmemoryusage_func]]`<<graph/graphManagement.adoc#graphgetmemoryusage, *GetMemoryUsage*>>( **[** _metric_ **]** )`::
+Return current memory usage information for graph.
+
+___
+
+==== GetOpenVertices
+
+[[getopenvertices_func]]`<<graph/graphVertex.adoc#getopenvertices, *GetOpenVertices*>>( **[** _threadid_ **]** )`::
+Return a list of all of this graph's vertices currently acquired by all threads (the default), or by a single thread specified by _threadid_.
+
+___
+
+==== GetVertex
+
+[[getvertex_func]]`<<graph/graphQuery.adoc#graphgetvertex, *GetVertex*>>( _id_ )`::
+Return a <<vertexobject, pyvgx.Vertex>> object identified by _id_ in readonly mode.
+
+___
+
+==== GetVertexID
+
+[[getvertexid_func]]`*GetVertexID*( **[** _offset_ **]** )`::
+Return the identifier string for the vertex specified by its internal integer _offset_. If _offset_ is not specified return the identifier string of a random vertex in the graph. Vertices are enumerated by offsets in the range [0, <<order_func, order-1>>]. A negative _offset_ counts from the end. Out of range offsets raise IndexError.
+
+___
+
+==== HasVertex
+
+[[hasvertex_func]]`<<graph/graphQuery.adoc#graphhasvertex, *HasVertex*>>( _id_ )`::
+Return `True` if vertex identified by _id_ exists in this graph, otherwise return `False`.
+
+___
+
+==== Inarcs
+
+[[inarcs_func]]`<<graph/graphQuery.adoc#graphinarcs, *Inarcs*>>( _id_**[**, _hits_**[**, _timeout_**[**, _limexec_ **]]]** )`::
+Return a list of all outarcs of _id_ (name or readable object), up to a maximum of _hits_ entries. The default is to return all outarcs. The optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access, or sets an upper execution time limit when _limexec_ is true. The default is nonblocking without execution limit.
+
+___
+
+==== Initials
+
+[[initials_func]]`<<graph/graphQuery.adoc#graphinitials, *Initials*>>( _id_**[**, ... **]** )`::
+Return a list of vertex names of all vertices with explicit connection(s) *to* the vertex _id_ (name or readable object), optionally filtered and sorted as specified by other parameters. See <<graph/graphQuery.adoc#graphinitials, Initials()>> for details.
+
+___
+
+
+==== IsGraphLocal
+
+[[isgraphlocal_func]]`*IsGraphLocal*( _id_ )`::
+Return True if the graph is <<graphobject_type, local only>>, otherwise False. 
+
+___
+
+==== IsGraphReadonly
+
+[[isgraphreadonly_func]]`<<graph/graphManagement.adoc#graphisgraphreadonly, *IsGraphReadonly*>>()`::
+Return `True` if the graph is currently readonly, otherwise `False`.
+
+___
+
+==== Key
+
+[[key_func]]`<<graph/graphEnum.adoc#graphkey, *Key*>>( _code_ )`::
+Return property key associated with enumeration _code_ if mapping exists, otherwise raise <<EnumerationError_exc, `EnumerationError`>>.
+
+___
+
+==== Lock
+
+[[lock_func]]`<<graph/graphManagement.adoc#graphlock, *Lock*>>( **[** _id_**[**, _linger_**[**, _timeout_ **]]]** )`::
+Acquire and return a mutex lock object. All arguments are optional.
+
+___
+
+==== Memory
+
+[[memory_func]]`<<evaluator/evaluator.adoc#evaluatormemory, *Memory*>>( _initializer_ )`::
+Return a new <<memoryobject, pyvgx.Memory>> object associated with this graph. See <<evaluator/evaluator.adoc#evaluatormemory, Evaluator Memory>> for usage details.
+
+___
+
+==== Neighborhood
+
+[[neighborhood_func]]`<<graph/graphQuery.adoc#graphneighborhood, *Neighborhood*>>( _id_**[**, ... **]** )`::
+Perform a neighborhood search in the graph starting at _id_ (name or readable vertex object.) See <<graph/graphQuery.adoc#graphneighborhood, Neighborhood()>> for usage.
+
+___
+
+==== NewAdjacencyQuery
+
+[[newadjacencyquery_func]]`*NewAdjacencyQuery*( **[** ... **]** )`::
+Create a new reusable <<queryobject, pyvgx.Query>> object for performing adjacency tests in the graph. This methods takes the same arguments as <<graph/graphQuery.adoc#graphadjacent, pyvgx.Graph.Adjacent()>>, except for `timeout` and `limexec` which are instead specified as arguments to <<query_execute, pyvgx.Query.Execute()>>. It is possible to omit the `id` argument (anchor vertex) when creating the query object, but <<query_id_attr, pyvgx.Query.id>> needs to be assigned before calling pyvgx.Query.Execute().
+
+___
+
+==== NewAggregatorQuery
+
+[[newaggregatorquery_func]]`*NewAggregatorQuery*( **[** ... **]** )`::
+Create a new reusable <<queryobject, pyvgx.Query>> object for performing aggregations in the graph. This methods takes the same arguments as <<graph/graphQuery.adoc#graphaggregate, pyvgx.Graph.Aggregate()>>, except for `timeout` and `limexec` which are instead specified as arguments to <<query_execute, pyvgx.Query.Execute()>>. It is possible to omit the `id` argument (anchor vertex) when creating the query object, but <<query_id_attr, pyvgx.Query.id>> needs to be assigned before calling pyvgx.Query.Execute().
+
+___
+
+==== NewArcsQuery
+
+[[newarcsquery_func]]`*NewArcsQuery*( **[** ... **]** )`::
+Create a new reusable <<queryobject, pyvgx.Query>> object for performing global arc searches in the graph. This methods takes the same arguments as <<graph/graphQuery.adoc#grapharcs, pyvgx.Graph.Arcs()>>, except for `hits`, `offset`, `timeout`, and `limexec` which are instead specified as arguments to <<query_execute, pyvgx.Query.Execute()>>.
+
+___
+
+==== NewNeighborhoodQuery
+
+[[newneighborhoodquery_func]]`*NewNeighborhoodQuery*( **[** ... **]** )`::
+Create a new reusable <<queryobject, pyvgx.Query>> object for performing neighborhood searches in the graph. This methods takes the same arguments as <<graph/graphQuery.adoc#graphneighborhood, pyvgx.Graph.Neighborhood()>>, except for `hits`, `offset`, `timeout`, and `limexec` which are instead specified as arguments to <<query_execute, pyvgx.Query.Execute()>>. It is possible to omit the `id` argument (anchor vertex) when creating the query object, but <<query_id_attr, pyvgx.Query.id>> needs to be assigned before calling pyvgx.Query.Execute().
+
+___
+
+==== NewVertex
+
+[[newvertex_func]]`<<graph/graphVertex.adoc#graphnewvertex, *NewVertex*>>( _id_**[**, _type_**[**, _lifespan_**[**, _properties_**[**, _timeout_ **]]]]** )`::
+Return a <<vertexobject, pyvgx.Vertex>> object identified by _id_. An optional _type_ may be specified. An optional _lifespan_ (in seconds) may be specified to trigger automatic vertex deletion when the vertex reaches the maximum age (which is infinite by default.) A dict of { `str` : `object` } pairs may be passed in _properties_ to initialize or update the vertex properties. If the vertex does not already exist it is created and committed. The returned vertex is acquired in the writable state. By default this method will not block. An optional _timeout_ (in milliseconds) can be specified.
+
+___
+
+==== NewVerticesQuery
+
+[[newverticesquery_func]]`*NewVerticesQuery*( **[** ... **]** )`::
+Create a new reusable <<queryobject, pyvgx.Query>> object for performing global vertex searches in the graph. This methods takes the same arguments as <<graph/graphQuery.adoc#graphvertices, pyvgx.Graph.Vertices()>>, except for `hits`, `offset`, `timeout`, and `limexec` which are instead specified as arguments to <<query_execute, pyvgx.Query.Execute()>>.
+
+___
+
+==== OpenNeighbor
+
+[[openneighbor_func]]`<<graph/graphQuery.adoc#graphopenneighbor, *OpenNeighbor*>>( _id_**[**, _arc_**[**, _mode_**[**, _timeout_**]]]** )`::
+Acquire and return one of the neighbors of vertex _id_, optionally filtered by _arc_. The returned pyvgx.Vertex object will be acquired according to _mode_, which may be 'r' (the default) or 'a'. The optional _timeout_ (in milliseconds, default=0) allows blocking while waiting for vertex access.
+
+___
+
+==== OpenVertex
+
+[[openvertex_func]]`<<graph/graphVertex.adoc#graphopenvertex, *OpenVertex*>>( _id_**[**, _mode_**[**, _timeout_ **]]** )`::
+Acquire and return a <<vertexobject, pyvgx.Vertex>> object identified by _id_, which may be a string or a memory address. Use the optional _mode_ parameter to control how the vertex is acquired. Acquisition is recursive. Mode `'w'` acquires the vertex writable after implicitly creating and committing the vertex if it does not already exist. Mode `'r'` acquires an already existing vertex readonly. Mode `'a'` (the default) acquires the vertex writable without creating. Supplying an integer _id_ (memory address) is only supported for modes `'r'` and `'a'`.
+
+___
+
+==== OpenVertices
+
+[[openvertices_func]]`<<graph/graphVertex.adoc#graphopenvertices, *OpenVertices*>>( _idlist_**[**, _mode_**[**, _timeout_ **]]** )`::
+Acquire and return multiple <<vertexobject, pyvgx.Vertex>> objects identified by strings or vertex instances in _idlist_. Use the optional _mode_ parameter to control how the vertices are acquired. Acquisition is recursive. Mode `'r'` acquires vertices readonly. Mode `'a'` (the default) acquires vertices writable. All vertices must be acquired for this method to succeed. If one or more vertices cannot be acquired <<AccessError_exc, AccessError>> is raised.
++
+WARNING: When VGX is <<op_attach_func, attached to an output stream>> *all output is halted while one or more vertices are acquired writable via this method*. All graph operations performed while at least one writable acquisition by this method is in effect will be queued internally and emitted in bulk once all such acquired vertices have been released.
+
+___
+
+==== Order
+
+[[order_func]]`<<graph/graphManagement.adoc#graphorder, *Order*>>( **[** _type_ **]** )`::
+Return the number of vertices in the graph, optionally restricted to vertices of the specified _type_.
+
+___
+
+==== Outarcs
+
+[[outarcs_func]]`<<graph/graphQuery.adoc#graphoutarcs, *Outarcs*>>( _id_**[**, _hits_**[**, _timeout_**[**, _limexec_ **]]]** )`::
+Return a list of all inarcs of _id_ (name or readable object), up to a maximum of _hits_ entries. The default is to return all inarcs. The optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access, or sets an upper execution time limit when _limexec_ is true. The default is nonblocking without execution limit.
+
+___
+
+==== PropertyKeys
+
+[[propertykeys_func]]`<<graph/graphEnum.adoc#graphpropertykeys, *PropertyKeys*>>()`::
+Return dict of all existing property key mappings.
+
+___
+
+==== PropertyStringValues
+
+[[propertyvalues_func]]`<<graph/graphEnum.adoc#graphpropertyvalues, *PropertyStringValues*>>()`::
+Return dict of all existing property string value mappings.
+
+___
+
+==== Relationship
+
+[[relationship_func]]`<<graph/graphEnum.adoc#graphrelationship, *Relationship*>>( _code_ )`::
+Return relationship type associated with enumeration _code_ if mapping exists, otherwise raise <<EnumerationError_exc, `EnumerationError`>>.
+
+___
+
+==== Relationships
+
+[[relationships_func]]`<<graph/graphEnum.adoc#graphrelationships, *Relationships*>>()`::
+Return dict of all existing relationship mappings.
+
+___
+
+==== RelaxVertex
+
+[[relaxvertex_func]]`<<graph/graphVertex.adoc#graphrelaxvertex, *RelaxVertex*>>( _writable_vertex_object_ )`::
+Relax acquisition status from writable to readonly for _writable_vertex_object_ without intermittent release, then return True. If vertex was acquired writable more than once then this method has the same effect as <<closevertex_func, `CloseVertex()`>> and False is returned. This method will never block.
+
+___
+
+==== ResetCounters
+
+[[resetcounters_func]]`<<graph/graphManagement.adoc#graphresetcounters, *ResetCounters*>>()`::
+Reset query counters.
+
+___
+
+==== ResetSerial
+
+[[resetserial_func]]`<<graph/graphManagement.adoc#graphresetserial, *ResetSerial*>>( **[** _sn_ **]** )`::
+Force the graph _input serial number_ to 0, or to _sn_ if provided. This allows already consumed operation data to be re-submitted.
+
+___
+
+==== Save
+
+[[save_func]]`<<graph/graphManagement.adoc#graphsave, *Save*>>( **[** _timeout_**[**, _force_**[**, _remote_ **]]]** )`::
+Persist the graph to disk. An optional _timeout_ (in milliseconds) allows blocking while waiting for the entire graph to become idle in order for the operation to proceed. The default is 1000. Data is normally saved incrementally, i.e. only modified structures are written to disk. To perform a complete serialization set _force_ to `True`. <<op_attach_func, Remote destinations>> will be notified about the local persist only if _remote_ is set to `True` (default is `False`.)
+
+___
+
+==== Search
+
+[[search_func]]`<<graph/graphQuery.adoc#graphsearch, *Search*>>( **[** ... **]** )`::
+Perform a generic graph search and print the results in human readable form to stdout. See <<graph/graphQuery.adoc#graphsearch, Search()>> for usage.
+
+___
+
+==== SetGraphReadonly
+
+[[setgraphreadonly_func]]`<<graph/graphManagement.adoc#graphsetgraphreadonly, *SetGraphReadonly*>>( **[** _timeout_ **]** )`::
+Make the graph readonly. An optional _timeout_ (in milliseconds) allows blocking while waiting for graph to become idle. The default is nonblocking. <<OperationTimeout_exc, OperationTimeout>> is raised if the graph cannot enter readonly mode. No vertices can be acquired writable when a graph is readonly. However, queries are still allowed.
+
+___
+
+==== ShowOpenVertices
+
+[[showopenvertices_func]]`<<graph/graphMiscellaneous.adoc#showopenvertices, *ShowOpenVertices*>>()`::
+Print a summary of all of this graph's vertices currently acquired by all threads.
+
+___
+
+==== ShowVertex
+
+[[showvertex_func]]`<<graph/graphMiscellaneous.adoc#graphshowvertex, *ShowVertex*>>( _id_ **[**, _timeout_ **]** )`::
+Print a representation of internal data for the vertex identified by _id_. This method does not block by default. An optional _timeout_ may be specified.
+
+___
+
+==== Size
+
+[[size_func]]`<<graph/graphManagement.adoc#graphsize, *Size*>>()`::
+Return the number of explicit connections in the graph.
+
+___
+
+==== Status
+
+[[status_func]]`<<graph/graphManagement.adoc#graphstatus, *Status*>>()`::
+Return a dictionary of various information, counters, and resource usage for the graph.
+
+___
+
+==== Sync
+
+[[sync_func]]`<<graph/graphManagement.adoc#graphsync, *Sync*>>( **[** _hard_**[**, _timeout_ **]]** )`::
+Update data on all <<op_attach_func, attached destinations>> to match this VGX source instance. When the optional parameter _hard_ (bool) is True the destination VGX instances are <<truncate_func, truncated>> before they are re-populated with data from the source. The default is _hard_=False, which means the destinations are not truncated prior to receiving the source data.
++
+The optional _timeout_ (in milliseconds) has a default of 30000, and is applied at multiple stages internally when switching states.
+
+___
+
+==== Synchronized
+
+[[synchronized_func]]`<<graph/graphManagement.adoc#graphsynchronized, *Synchronized*>>(  _function_, *args, **kwds )`::
+
+Call _function_( *_args_, **_kwds_ ) in a synchronized context and return its returned value. Only one thread of execution will be allowed to perform a synchronized call at a time, even if the called functions are different.
+
+___
+
+==== Terminals
+
+[[terminals_func]]`<<graph/graphQuery.adoc#graphterminals, *Terminals*>>( _id_**[**, ... **]** )`::
+Return a list of vertex names of all vertices with explicit connection(s) *from* the vertex _id_ (name or readable object), optionally filtered and sorted as specified by other parameters. See <<graph/graphQuery.adoc#graphterminals, Terminals()>> for details.
+
+___
+
+==== Truncate
+
+[[truncate_func]]`<<graph/graphManagement.adoc#graphtruncate, *Truncate*>>( **[** _type_ **]** )`::
+Delete all graph data, or if _type_ is specified erase all vertices of that type. All arcs incident on the removed vertices will also be removed.
+
+___
+
+==== Value
+
+[[value_func]]`<<graph/graphEnum.adoc#graphvalue, *Value*>>( _code_ )`::
+Return property string value associated with enumeration _code_ if mapping exists, otherwise raise <<EnumerationError_exc, `EnumerationError`>>.
+
+___
+
+==== VertexDescriptor
+
+[[vertexdescriptor_func]]`<<graph/graphMiscellaneous.adoc#graphvertexdescriptor, *VertexDescriptor*>>( _id_ )`::
+Return a string representing internal descriptor data for the vertex identified by _id_.
+
+___
+
+==== VertexIdByAddress
+
+[[vertexidbyaddress_func]]`<<graph/graphQuery.adoc#graphvertexidbyaddress, *VertexIdByAddress*>>( _address_ )`::
+Return the identifier of vertex at memory _address_.
+
+___
+
+==== VertexType
+
+[[vertextype_func]]`<<graph/graphEnum.adoc#graphvertextype, *VertexType*>>( _code_ )`::
+Return vertex type associated with enumeration _code_ if mapping exists, otherwise raise <<EnumerationError_exc, `EnumerationError`>>.
+
+___
+
+==== VertexTypes
+
+[[vertextypes_func]]`<<graph/graphEnum.adoc#graphvertextypes, *VertexTypes*>>()`::
+Return dict of all existing vertex type mappings.
+
+___
+
+==== Vertices
+
+[[vertices_func]]`<<graph/graphQuery.adoc#graphvertices, *Vertices*>>( **[** ... **]** )`::
+Perform a global vertex search in the graph. See <<graph/graphQuery.adoc#graphvertices, Vertices()>> for usage.
+
+___
+
+==== VerticesType
+
+[[verticestype_func]]`<<graph/graphQuery.adoc#graphverticestype, *VerticesType*>>( _type_ )`::
+Return a list of names of all vertices of the given _type_ in this graph.
+
+___
+
+
+[[vertexobject]]
+== Vertex Objects
+
+Vertices are exposed via the Python layer as <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects that allow access to vertices within a graph. Vertex objects are created using a suitable <<graphobject_vertexmethods, vertex access method>> of the <<graph/graph.adoc#preface, pyvgx.Graph>> object. See the <<VGXCoreConcepts.adoc#objectsandwrapper, wrapper object>> description for more details around the interaction between Python objects and the core graph.
+
+To modify a vertex (e.g. set a property) it has to be acquired writable from the graph. Query operations can be performed with either writable or readonly access. Only one thread can hold writable access to a vertex at a time. Multiple threads can hold readonly access simultaneously. Writable access and readonly access are mutually exclusive.
+
+[[vertexobject_type]]
+=== Vertex Class
+
+[[vertex_class]]`_class_ <<vertex/vertex.adoc#, pyvgx.*Vertex*>>( _graph_, _id_**[**, type_**[**, _mode_**[**, _timeout_ **]]]** )`::
+Create a Python wrapper object for VGX vertex _id_ in _graph_, optionally specifying a vertex _type_ if a new vertex is created and controlling writable or readonly access via _mode_. Optionally block for _timeout_ milliseconds while waiting for vertex to become accessible to the calling thread.
+
+[[vertexobject_attributes]]
+=== Vertex Attributes
+
+[[vertex_id_attr]]`<<vertex/vertexMembers.adoc#vertexidentifier, *id*>>`::
+The vertex name
+
+[[vertex_internalid_attr]]`<<vertex/vertexMembers.adoc#vertexinternalid, *internalid*>>`::
+Internal 128-bit hash of vertex name
+
+[[vertex_type_attr]]`<<vertex/vertexMembers.adoc#vertextype, *type*>>`::
+The vertex type name
+
+[[vertex_isolated_attr]]`<<vertex/vertexMembers.adoc#vertexisolated, *isolated*>>`::
+True when vertex degree is zero, False otherwise
+
+[[vertex_degree_attr]]`<<vertex/vertexMembers.adoc#vertexdegree, *deg*>>`::
+The total number of arcs incident on this vertex
+
+[[vertex_indegree_attr]]`<<vertex/vertexMembers.adoc#vertexindegree, *ideg*>>`::
+The number of inbound arcs, i.e. the number of arcs for which this vertex is a terminal vertex
+
+[[vertex_outdegree_attr]]`<<vertex/vertexMembers.adoc#vertexoutdegree, *odeg*>>`::
+The number of outbound arcs, i.e. the number of arcs for which this vertex is an initial vertex
+
+[[vertex_vector_attr]]`<<vertex/vertexMembers.adoc#vertexvector, *vector*>>`::
+Similarity vector
+
+[[vertex_properties_attr]]`<<vertex/vertexMembers.adoc#vertexproperties, *properties*>>`::
+Dictionary of vertex properties
+
+[[vertex_tmc_attr]]`<<vertex/vertexMembers.adoc#vertexTMC, *tmc*>>`::
+Vertex creation timestamp, in seconds since 1970
+
+[[vertex_tmm_attr]]`<<vertex/vertexMembers.adoc#vertexTMM, *tmm*>>`::
+Vertex modification timestamp, in seconds since 1970
+
+[[vertex_tmx_attr]]`<<vertex/vertexMembers.adoc#vertexTMX, *tmx*>>`::
+Vertex expiration timestamp, in seconds since 1970
+
+[[vertex_rtx_attr]]`<<vertex/vertexMembers.adoc#vertexRTX, *rtx*>>`::
+Vertex remaining time to live (seconds) until expiration
+
+[[vertex_rankc1_attr]]`<<vertex/vertexMembers.adoc#vertexrankc1, *c1*>>`::
+Dynamic rank 1^st^ order coefficient `c1`. This attribute is writable
+
+[[vertex_rankc0_attr]]`<<vertex/vertexMembers.adoc#vertexrankc0, *c0*>>`::
+Dynamic rank 0^th^ order coefficient `c0`. This attribute is writable
+
+[[vertex_rankb1_attr]]`<<vertex/vertexMembers.adoc#vertexrankb1, *b1*>>`::
+Special internal use: ANN seed number. This attribute is readonly
+
+[[vertex_rankb0_attr]]`<<vertex/vertexMembers.adoc#vertexrankb0, *b0*>>`::
+Special internal use: ANN arc LSH rotate amount. This attribute is readonly
+
+[[vertex_virtual_attr]]`<<vertex/vertexMembers.adoc#vertexvirtual, *virtual*>>`::
+`True` if the vertex is virtual, `False` if the vertex is real
+
+[[vertex_address_attr]]`<<vertex/vertexMembers.adoc#vertexaddress, *address*>>`::
+Vertex memory address
+
+[[vertex_index_attr]]`<<vertex/vertexMembers.adoc#vertexindex, *index*>>`::
+Vertex object offset in memory
+
+[[vertex_bitindex_attr]]`<<vertex/vertexMembers.adoc#vertexbitindex, *bitindex*>>`::
+Vertex bitvector quadword offset
+
+[[vertex_bitvector_attr]]`<<vertex/vertexMembers.adoc#vertexbitvector, *bitvector*>>`::
+Vertex bitvector quadword
+
+[[vertex_opcnt_attr]]`<<vertex/vertexMembers.adoc#vertexopcnt, *op*>>`::
+Operation id of the last modifying graph operation for this vertex
+
+[[vertex_refc_attr]]`<<vertex/vertexMembers.adoc#vertexrefc, *refc*>>`::
+Vertex object reference count (for diagnostic purposes)
+
+[[vertex_bidx_attr]]`<<vertex/vertexMembers.adoc#vertexrefc, *bidx*>>`::
+Vertex object allocator block index (for diagnostic purposes)
+
+[[vertex_oidx_attr]]`<<vertex/vertexMembers.adoc#vertexrefc, *oidx*>>`::
+Vertex object allocator block offset (for diagnostic purposes)
+
+[[vertex_handle_attr]]`<<vertex/vertexMembers.adoc#vertexhandle, *handle*>>`::
+Numeric (_long_) vertex identifier (process independent, unlike <<vertex_address_attr, address>>)
+
+[[vertex_enum_attr]]`<<vertex/vertexMembers.adoc#vertexenum, *enum*>>`::
+Numeric (_int_) vertex identifier (process independent, unlike <<vertex_address_attr, address>>), usable in graphs with < 2 billion vertices. (May return -1 in larger graphs, if so use <<vertex_handle_attr, handle>>)
+
+[[vertex_descriptor_attr]]`<<vertex/vertexMembers.adoc#vertexdescriptor, *descriptor*>>`::
+A numeric value representing various internal attributes (for diagnostic purposes)
+
+[[vertex_readers_attr]]`<<vertex/vertexMembers.adoc#vertexreaders, *readers*>>`::
+Number of readonly acquisitions for this vertex
+
+[[vertex_owner_attr]]`<<vertex/vertexMembers.adoc#vertexowner, *owner*>>`::
+ID of thread holding one or more write-locks for this vertex. Positive integer when write-locked, 0 when no thread owns write-lock
+
+[[vertex_xrecursion_attr]]`<<vertex/vertexMembers.adoc#vertexxrecursion, *xrecursion*>>`::
+Number of write-locks held by vertex owner
+
+[[vertexobject_methods]]
+=== Vertex Methods
+
+
+==== Adjacent
+
+[[vertex_adjacent_func]]`<<adjacent_func, *Adjacent*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Adjacent( _id_, ... )` where _id_ is implied.
+
+___
+
+==== Aggregate
+
+[[vertex_aggregate_func]]`<<aggregate_func, *Aggregate*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Aggregate( _id_, ... )` where _id_ is implied.
+
+___
+
+==== ArcLSH
+
+[[vertex_arclsh_func]]`<<vertex/vertexVector.adoc#vertexarclsh, *ArcLSH*>>()`::
+Return 32 lsh bits from a region of the 64-bit LSH not overlapping with LSH segment used to generate a projection key
+
+___
+
+==== ArcValue
+
+[[vertex_arcvalue_func]]`<<arcvalue_func, *ArcValue*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.ArcValue( _initial_, ... )` where _initial_ is implied.
+
+___
+
+==== AsDict
+
+[[vertex_asdict_func]]`<<vertex/vertexMiscellaneous.adoc#vertexasdict, *AsDict*>>()`::
+Return a dictionary representation of the vertex.
+
+___
+
+==== ClearExpiration
+
+[[vertex_clearexpiration_func]]`<<vertex/vertexTTL.adoc#vertexclearexpiration, *ClearExpiration*>>()`::
+Remove any TTL expiration for this vertex.
+
+___
+
+==== Close
+
+[[vertex_close_func]]`<<vertex/vertexAccess.adoc#vertexclose, *Close*>>()`::
+Release vertex access lock.
+
+___
+
+==== Commit
+
+[[vertex_commit_func]]`<<vertex/vertexMiscellaneous.adoc#vertexcommit, *Commit*>>()`::
+Commit all vertex modifications and mark vertex object as dirty. This has the same effect as <<closevertex_func, CloseVertex()>> but without releasing the lock. Returns the graph operation id.
+
+___
+
+==== Debug
+
+[[vertex_debug_func]]`<<vertex/vertexMiscellaneous.adoc#vertexdebug, *Debug*>>()`::
+Print various internal vertex object information.
+___
+
+==== Degree
+
+[[vertex_degree_func]]`<<degree_func, *Degree*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Degree( _id_, ... )` where _id_ is implied.
+
+___
+
+==== Descriptor
+
+[[vertex_descriptor_func]]`<<vertex/vertexMiscellaneous.adoc#vertexdescriptor, *Descriptor*>>()`::
+Return a string representation of the vertex descriptor.
+
+___
+
+==== Escalate
+
+[[vertex_escalate_func]]`<<vertex/vertexAccess.adoc#vertexescalate, *Escalate*>>( **[** _timeout_ **]** )`::
+Promote vertex acquisition status from readonly to writable. An optional _timeout_ (in milliseconds) allows blocking while waiting for writable access to be obtained. The default is nonblocking. If the vertex is already writable or the readonly vertex cannot be acquired writable <<AccessError_exc, AccessError>> is raised.
+
+___
+
+==== GetExpiration
+
+[[vertex_getexpiration_func]]`<<vertex/vertexTTL.adoc#vertexgetexpiration, *GetExpiration*>>()`::
+Return the vertex expiration time in seconds since 1970.
+
+___
+
+==== GetProperties
+
+[[vertex_getproperties_func]]`<<vertex/vertexProperty.adoc#vertexgetproperties, *GetProperties*>>()`::
+Return all vertex properties as a dictionary.
+
+___
+
+==== GetProperty
+
+[[vertex_getproperty_func]]`<<vertex/vertexProperty.adoc#vertexgetproperty, *GetProperty*>>( _name_**[**, _default_ **]** )`::
+Return the value of vertex property _name_. If the property does not exist the _default_ value is returned. If no _default_ is specified, `None` is returned.
++
+Python dictionary syntax is also supported: `vertex[ _name_ ]`. However, in this case LookupError is raised if the property does not exist.
+
+___
+
+==== GetRank
+
+[[vertex_getrank_func]]`<<vertex/vertexRank.adoc#vertexgetrank, *GetRank*>>()`::
+Return the currently assigned ranking coefficients.
+
+___
+
+==== GetType
+
+[[vertex_gettype_func]]`<<vertex/vertexMiscellaneous.adoc#vertexgettype, *GetType*>>( _type_)`::
+Return the vertex type.
+
+___
+
+==== GetTypeEnum
+
+[[vertex_gettypeenum_func]]`<<vertex/vertexMiscellaneous.adoc#vertexgettypeenum, *GetTypeEnum*>>()`::
+Return the vertex type enumeration code.
+
+___
+
+==== GetVector
+
+[[vertex_getvector_func]]`<<vertex/vertexVector.adoc#vertexgetvector, *GetVector*>>()`::
+Return a <<similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> object representing the similarity vector assigned to vertex. If vertex has no similarity vector a null-vector is returned.
+
+___
+
+==== HasProperties
+
+[[vertex_hasproperties_func]]`<<vertex/vertexProperty.adoc#vertexhasproperties, *HasProperties*>>()`::
+Return `True` if vertex has any properties, `False` otherwise.
+
+___
+
+==== HasProperty
+
+[[vertex_hasproperty_func]]`<<vertex/vertexProperty.adoc#vertexhasproperty, *HasProperty*>>( _name_**[**, _value_filter_ **]** )`::
+Return `True` if the vertex has a property called _name_ optionally matching <<constants/valueConditionConstants.adoc#, _value_filter_>>, otherwise `False`.
++
+Python dictionary syntax is also supported: `_name_ in vertex`
+
+___
+
+==== HasVector
+
+[[vertex_hasvector_func]]`<<vertex/vertexVector.adoc#vertexhasvector, *HasVector*>>()`::
+Return `True` if the vertex has a similarity vector, otherwise `False`.
+
+___
+
+==== Inarcs
+
+[[vertex_inarcs_func]]`<<inarcs_func, *Inarcs*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Inarcs( _id_, ... )` where _id_ is implied.
+
+___
+
+==== IncProperty
+
+[[vertex_incproperty_func]]`<<vertex/vertexProperty.adoc#vertexincproperty, *IncProperty*>>( _name_**[**, _increment_ **]** )`::
+Increment the vertex property _name_ by numeric _increment_ value, which defaults to 1. Positive and negative numbers are allowed. If the property does not exist it is created and initialized to _increment_. The resulting value of property _name_ after increment is returned.
+
+___
+
+==== Initials
+
+[[vertex_initials_func]]`<<initials_func, *Initials*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Initials( _id_, ... )` where _id_ is implied.
+
+___
+
+==== IsExpired
+
+[[vertex_isexpired_func]]`<<vertex/vertexTTL.adoc#vertexisexpired, *IsExpired*>>()`::
+Return `True` if this vertex has an expiration timestamp in the past, otherwise `False`. It is possible for the vertex to be expired and not deleted if it is currently in use.
+
+___
+
+==== IsVirtual
+
+[[vertex_isvirtual_func]]`<<vertex/vertexMiscellaneous.adoc#vertexisvirtual, *IsVirtual*>>()`::
+Return `True` if the vertex is virtual. Return `False` if the vertex is real.
+
+___
+
+==== items
+
+[[vertex_items_func]]`<<vertex/vertexProperty.adoc#vertexitems, *items*>>()`::
+Return a list of all key-value pairs for all properties of this vertex.
+
+___
+
+==== keys
+
+[[vertex_keys_func]]`<<vertex/vertexProperty.adoc#vertexkeys, *keys*>>()`::
+Return a list of all property names of this vertex.
+
+___
+
+==== Neighborhood
+
+[[vertex_neighborhood_func]]`<<neighborhood_func, *Neighborhood*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Neighborhood( _id_, ... )` where _id_ is implied.
+
+___
+
+==== Neighbors
+
+[[vertex_neighbors_func]]`<<neighbors_func, *Neighbors*>>( **[** ... **]**)`::
+Shorthand for combining the results of <<vertex_initials_func, `Initials( ... )`>> and <<vertex_terminals_func, `Terminals( ... )`>> into one list.
+
+___
+
+==== NumProperties
+
+[[vertex_numproperties_func]]`<<vertex/vertexProperty.adoc#vertexnumproperties, *NumProperties*>>()`::
+Return the number of properties for this vertex.
+
+___
+
+==== OpenNeighbors
+
+[[vertex_openneighbors_func]]`<<openneighbors_func, *OpenNeighbors*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.OpenNeighbors( _id_, ... )` where _id_ is implied.
+
+___
+
+==== Outarcs
+
+[[vertex_outarcs_func]]`<<outarcs_func, *Outarcs*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Outarcs( _id_, ... )` where _id_ is implied.
+
+___
+
+==== Readable
+
+[[vertex_readable_func]]`<<vertex/vertexAccess.adoc#vertexreadable, *Readable*>>()`::
+Return `True` if vertex object has access to the graph (writable or readonly), otherwise `False`.
+
+___
+
+==== Readonly
+
+[[vertex_readonly_func]]`<<vertex/vertexAccess.adoc#vertexreadonly, *Readonly*>>()`::
+Return `True` if vertex object is readonly, otherwise `False`.
+
+___
+
+==== Relax
+
+[[vertex_relax_func]]`<<vertex/vertexAccess.adoc#vertexrelax, *Relax*>>()`::
+Relax vertex acquisition status from writable to readonly. Return `True` if vertex was relaxed. Return `False` if vertex is still writable.
+
+___
+
+==== RemoveProperties
+
+[[vertex_removeproperties_func]]`<<vertex/vertexProperty.adoc#vertexremoveproperties, *RemoveProperties*>>()`::
+Remove all properties for this vertex.
+
+___
+
+==== RemoveProperty
+
+[[vertex_removeproperty_func]]`<<vertex/vertexProperty.adoc#vertexremoveproperty, *RemoveProperty*>>( _name_ )`::
+Delete the vertex property _name_. LookupError is raised if the property does not exist.
++
+Python dictionary syntax is also supported: `del vertex[ name ]`
+
+___
+
+==== RemoveVector
+
+[[vertex_removevector_func]]`<<vertex/vertexVector.adoc#vertexremovevector, *RemoveVector*>>()`::
+Remove the similarity vector from vertex if one exists.
+
+___
+
+==== SetExpiration
+
+[[vertex_setexpiration_func]]`<<vertex/vertexTTL.adoc#vertexsetexpiration, *SetExpiration*>>( _expires_**[**, _relative_ **]** )`::
+Schedule the vertex for automatic deletion (time-to-live). If _relative_ is `False` (the default), _expires_ is an absolute timestamp in seconds since 1970. If _relative_ is `True`, _expires_ is a number of seconds into the future relative to the current time.
+
+___
+
+==== SetProperties
+
+[[vertex_setproperties_func]]`<<vertex/vertexProperty.adoc#vertexsetproperties, *SetProperties*>>( _dict_ )`::
+Set multiple vertex properties provided in dictionary _dict_.
+
+___
+
+==== SetProperty
+
+[[vertex_setproperty_func]]`<<vertex/vertexProperty.adoc#vertexsetproperty, *SetProperty*>>( _name_**[**, _value_**[**, _virtual_ **]]** )`::
+Assign a property _name_ to the vertex. If no _value_ is supplied it defaults to `None`. Acceptable values are numbers, strings, lists of numeric values, dicts of {int:float} items, or any Python object supporting the Pickle protocol. This method does not return anything.
++
+Properties are stored in memory by default. To store properties on disk instead set _virtual_=True or prefix _name_ with asterisk (*). 
++
+Python dictionary syntax is also supported: `vertex[ _name_ ] = _value_`
+
+___
+
+==== SetRank
+
+[[vertex_setrank_func]]`<<vertex/vertexRank.adoc#vertexsetrank, *SetRank*>>( **[** _c1_**[**, _c0_ **]]** )`::
+Assign dynamic rank coefficients to vertex for use in <<evaluator/evaluator.adoc#quickrank, ranking expressions>>.
+The normal use of these coefficients is for evaluating the linear ranking function `rank() = c1 &#x22c5; &#x2211;x + c0`, but can also be used for other ranking functions where they take on different meanings depending on context (such as c1=latitude, c0=longitude for the `georank()` function). It is also possible to use `c1` and `c0` as light-weight general purpose numeric properties.
+
+___
+
+==== SetType
+
+[[vertex_settype_func]]`<<vertex/vertexMiscellaneous.adoc#vertexsettype, *SetType*>>( _type_)`::
+Change the vertex type.
+
+___
+
+==== SetVector
+
+[[vertex_setvector_func]]`<<vertex/vertexVector.adoc#vertexsetvector, *SetVector*>>( _elements_ )`::
+Assign a similarity vector to this vertex. The vector is generated from dimension-weight pairs (feature vector) or floating point values (euclidean vector) in _elements_. Any previous vector is removed and replaced by a new vector.
+
+___
+
+==== Terminals
+
+[[vertex_terminals_func]] `<<terminals_func, *Terminals*>>( **[** ... **]**)`::
+Shorthand for `pyvgx.Graph.Terminals( _id_, ... )` where _id_ is implied.
+
+___
+
+==== values
+
+[[vertex_values_func]]`<<vertex/vertexProperty.adoc#vertexvalues, *values*>>()`::
+Return a list of all property values of this vertex.
+
+___
+
+==== Writable
+
+[[vertex_writable_func]]`<<vertex/vertexAccess.adoc#vertexwritable, *Writable*>>()`::
+Return `True` if vertex object is writable, otherwise `False`.
+
+___
+
+
+[[memoryobject]]
+== Memory Objects
+
+The <<evaluator/evaluator.adoc#evaluatormemory, pyvgx.Memory>> type represents arrays of numeric data which can be used with expression evaluators in queries.
+
+`_class_ pyvgx.*Memory*( _graph_instance_, _initializer_ )`::
+Create a memory object associated with _graph_instance_, initialized according to _initializer_. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <<AccessError_exc, AccessError>>.
++
+The memory object _initializer_ can be an integer specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.
++
+Memory objects can be passed as arguments to queries, which may read or write the elements as part of executing filters and ranking formulas. The same memory object can be used multiple times with queries, making it possible to pass information from one query to the next.
++
+Memory objects support sequence lookup, assignment and length methods, i.e. `memobj[ _n_ ]`, `memobj[ _n_ ] = _x_`, and `len( memobj )`. Slice syntax is also supported, i.e. `memobj[ _a:b_ ]`, `memobj[ _a:b_ ] = [...]`.
+
+[[memoryobject_attributes]]
+=== Memory Attributes
+
+[[memory_order_attr]]`<<evaluator/evaluator.adoc#evaluatormemory, *order*>>`::
+The memory order is the log2 of its size. The memory object size is always a power of two and will be returned by `len( memobj )`.
+
+[[memory_Rn_attr]]`<<evaluator/evaluator.adoc#evaluatormemoryregisters, *R__n__*>>`::
+Memory register R__n__ (read and write), where _n_ is 1, 2, 3, or 4.
+
+[[memoryobject_methods]]
+
+=== Memory Methods
+
+==== AsList
+
+[[memory_object_aslist]]`<<evaluator/evaluator.adoc#evaluatormemory, *AsList*>>()`::
+Return a new list object from the memory object's data. Other ways to achieve the same are `list( memobj )` and `memobj[:]`.
+
+___
+
+==== DualInt
+
+[[memory_object_dualint]]`*DualInt*( _a_**[**, _b_**]** )`::
+Convert between packed and unpacked 2-tuple of unsigned 32-bit integer values as follows: 
+* When both integers _a_ and _b_ are given return integer `(_a_ << 32) | _b_`
+* When _a_ is a 2-tuple (and _b_ omitted) return integer `(_a_[0] << 32) | _a_[1]`
+* When _a_ is an integer (and _b_ omitted) return tuple `( (_a_ >> 32), (_a_ & 0xffffffff) )`
+
+___
+
+==== Reset
+
+[[memory_object_reset]]`<<evaluator/evaluator.adoc#evaluatormemory, *Reset*>>( _value_**[**, _increment_ **]** )`::
+Initialize all elements of the memory array to _value_, optionally incrementing the value of each successive element by _increment_. Both parameters must be numeric (integer or floating point.) This also resets the stack pointer and cleans up all previously assigned string objects. Note that _all_ elements of the memory array are affected, including registers R1 - R4.
+
+___
+
+==== Sort
+
+[[memory_object_sort]]`<<evaluator/evaluator.adoc#evaluatormemorysort, *Sort*>>( **[** _start_**[**, _end_**[**, _reverse_ **]** **]** **]** )`::
+Sort the elements in the specified range [_start_, _end_-1] using an element comparator automatically chosen according to the type of the element at index _start_. By default, _start_ = 0, _end_ = R4, _reverse_ = False.
+
+___
+
+==== Stack
+
+[[memory_object_stack]]`<<evaluator/evaluator.adoc#evaluatormemorystack, *Stack*>>()`::
+Return a new list object containing the values currently pushed on the memory stack. (The stack pointer can only be manipulated in evaluator expressions using push/pop operations.)
+
+___
+
+
+[[vectorobject]]
+== Vector Objects
+
+The <<similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> type represents vectors that can be used for 
+similarity matching. Two distinct and mutually exclusive vector modes are supported: _feature vectors_ and _Euclidean vectors_. Vector mode is selected at <<system_initialize_func, system initialization>> and applies globally to all graphs in the vgx instance. Once selected at first initialization the vector mode cannot be changed.
+
+`_class_ pyvgx.*Vector*( **[** _data_ **]** )`::
+Create a new vector using the default <<similarityobject, similarity context>>. If no _data_ is supplied a null-vector is created. If _data_ is a vector object a copy is created. Otherwise the supplied _data_ must be compatible with the selected vector mode.
++
+*Feature vector mode:* _data_ has the form `[(<dimension>, <weight>), (<dimension>, <weight>), ...]` where <dimension> is a string and <weight> is a number. The <<limits.adoc#featurevector, maximum length>> of `<dimension>` is <<limits.adoc#limits, 27>> bytes. The range of `<weight>` is [0.0078125, 1.875], internally quantized into 64 discrete buckets. The maximum number of vector features is <<limits.adoc#limits, 48>>. See <<similarity/vector.adoc#pyvgxvector>> for details.
++
+*Euclidean vector mode:* _data_ has the form `[c~1~, c~2~, ..., c~n~]` where _c~i~_ is a number, and _n_ is a multiple of 32 or 64. (The required multiple is 64 if <<avxbuild_func>> returns 512, otherwise the multiple is 32.) The maximum number of vector components is <<limits.adoc#limits, 65472>>. For performance reasons vector components are quantized to eight bits internally (7-bit resolution plus sign.) The component with the largest absolute value will be most accurately stored, while the component with the smallest absolute value will be least accurately stored.
+
+[[vectorobject_attributes]]
+=== Vector Attributes
+
+[[vector_length_attr]]`<<similarity/vector.adoc#vectorlength, *length*>>`::
+The number of vector components
+
+[[vector_magnitude_attr]]`<<similarity/vector.adoc#vectormagnitude, *magnitude*>>`::
+The vector magnitude
+
+[[vector_fingerprint_attr]]`<<similarity/vector.adoc#vectorfingerprint, *fingerprint*>>`::
+A 64-bit dimensionality-reduced representation of the vector. This is a pre-computed fingerprint equal to <<vector_fingerprint_func, `pyvgx.Vector.Fingerprint(0)`>>.
+
+[[vector_external_attr]]`<<similarity/vector.adoc#vectorexternal, *external*>>`::
+*Feature vectors*: The original list of dimension-weight pairs
++
+*Euclidean vectors*: A list of (quantized) floating point values
+
+[[vector_internal_attr]]`<<similarity/vector.adoc#vectorinternal, *internal*>>`::
+*Feature vectors*: The internal enumerated version of the vector
++
+*Euclidean vectors*: A bytearray of internally encoded vector components
+
+[[vectorobject_methods]]
+=== Vector Methods
+
+==== AsDict
+
+[[vector_asdict_func]]`<<similarity/vector.adoc#vector_asdict_method, *AsDict*>>()`::
+Return a dictionary representation of the vector.
+
+___
+
+==== Debug
+
+[[vector_debug_func]]`*Debug*`::
+Print an internal representation of the vector to stdout.
+
+==== Fingerprint
+
+[[vector_fingerprint_func]]`<<similarity/vector.adoc#vectorfingerprint, *Fingerprint*>>( [_seed_] )`::
+
+Return a 64-bit fingerprint representing the vector. Different values for _seed_ (default 0) will result in alternative projections of the n-dimensional vector onto 64-dimensional binary space. Fingerprints are proxies for vector direction only, and are thus insensitive to vector magnitude.
+
+___
+
+==== Projections
+
+[[vector_projections_func]]`<<similarity/vector.adoc#vector_projections_method, *Projections*>>( _seed_[, _lsh_[, _lcm_[, _reduce_[, _expand_]]]] )`::
+Return the vector’s LSH, "low confidence mask", and index projections for a given seed.
+
+___
+
+////
+TODO: Add link for Debug function once documentation exists
+////
+
+
+___
+
+[[similarityobject]]
+== Similarity Objects
+
+The <<similarity/similarity.adoc#preface, pyvgx.Similarity>> type represents a context within which <<vectorobject, similarity vectors>> can be created, stored and compared.
+
+`_class_ pyvgx.*Similarity*( **[** _graph_ **]** )`::
+Create a new similarity object, optionally associated with _graph_ instance. If no _graph_ instance is specified a stand-alone similarity object is created. When _graph_ is specified the new similarity object will replace the previous similarity object associated with that graph.
++
+Similarity objects can be configured by modifying its attributes as outlined below.
+
+NOTE: All graph instances contain their own unique similarity contexts which can be configured independently per graph. When creating a new graph it will be assigned a default similarity object automatically, which can be configured later. If a new similarity object is explicitly created and then assigned to the graph, it will replace the default similarity object.
+
+[[similarityobject_attributes]]
+=== Similarity Attributes
+
+[[similarity_hamming_threshold_attr]]`<<similarity/similarityMembers.adoc#similarityhamming, *hamming_threshold*>>`::
+Maximum number of fingerprint bits that may differ for two vectors to be considered similar.
+
+___
+
+[[similarity_sim_threshold_attr]]`<<similarity/similarityMembers.adoc#similaritysim, *sim_threshold*>>`::
+The lowest similarity measure between two vectors for those vectors to be considered similar.
+
+___
+
+[[similarity_cosine_exp_attr]]`<<similarity/similarityMembers.adoc#similaritycosineexp, *cosine_exp*>>`::
+A number between 0.0 and 1.0 determining how strongly Cosine similarity contributes to vector similarity score.
+
+___
+
+[[similarity_jaccard_exp_attr]]`<<similarity/similarityMembers.adoc#similarityjaccardexp, *jaccard_exp*>>`::
+*Feature Vector mode*: A number between 0.0 and 1.0 determining how strongly Jaccard index contributes to vector similarity score.
++
+*Euclidean Vector mode*: Not applicable. Must be set to 0.0.
+
+___
+
+[[similarity_min_cosine_attr]]`<<similarity/similarityMembers.adoc#similaritymincosine, *min_cosine*>>`::
+The minimum Cosine similarity allowed between two vectors for similarity score to be nonzero.
+
+___
+
+[[similarity_min_jaccard_attr]]`<<similarity/similarityMembers.adoc#similarityminjaccard, *min_jaccard*>>`::
+*Feature Vector mode*: The minimum Jaccard index allowed for two vectors for similarity score to be nonzero.
++
+*Euclidean Vector mode*: Ignored.
+
+___
+
+[[similarity_min_isect_attr]]`<<similarity/similarityMembers.adoc#similarityminisect, *min_isect*>>`::
+*Feature Vector mode*: The minimum number of shared dimensions allowed for two vectors for similarity score to be nonzero.
++
+*Euclidean Vector mode*: Must be set to 1.
+
+___
+
+[[similarity_max_vector_size_attr]]`<<similarity/similarityMembers.adoc#similaritymaxvector, *max_vector_size*>>`::
+The maximum number of dimensions allowed in vectors.
+
+___
+
+[[similarity_seeds_attr]]`<<similarity/similarityMembers.adoc#similarityseeds, *seeds*>>`::
+*Feature Vector mode*: Ignored.
++
+*Euclidean Vector mode*: [0, 1087, 1381, 1663, 1993, 2293, 2621, 2909]
+
+___
+
+[[similarity_nsegm_attr]]`<<similarity/similarityMembers.adoc#similaritynsegm, *nsegm*>>`::
++
+NOTE: Currently not used.
+
+___
+
+[[similarity_nsign_attr]]`<<similarity/similarityMembers.adoc#similaritynsign, *nsign*>>`::
++
+NOTE: Currently not used.
+
+___
+
+[[similarityobject_methods]]
+=== Similarity Methods
+
+==== AsDict
+
+[[similarity_asdict]]`<<similarity/similarityMethods.adoc#similarityasdict, *AsDict*>>()`::
+Return a dictionary containing all the configuration attributes of the similarity object.
+
+___
+
+==== Cosine
+
+[[similarity_cosine]]`<<similarity/similarityMethods.adoc#similaritycosine, *Cosine*>>( _v1_, _v2_ )`::
+Return the cosine similarity of two vectors _v1_ and _v2_.
++
+*Feature vectors*: The cosine similarity measures how aligned two feature vectors are, i.e. the direction of the vectors are compared resulting in score 1.0 when fully aligned (regardless of magnitude) and 0.0 when the vectors are orthogonal (no shared dimensions.)
++
+*Euclidean vectors*: The cosine similarity of two euclidean vectors equals cos( &theta; ) where &theta; is the angle between the vectors, and ranges from -1 to 1 since vector components may be negative or positive.
+
+___
+
+==== CreateProjectionSets
+
+[[similarity_createprojectionsets]]`<<similarity/similarityMethods.adoc#similaritycreateprojectionsets, *CreateProjectionSets*>>( _nseeds_, _ksize_ )`::
+Initialize a graph structure used for approximate nearest neighbor (ANN) vector search. Parameter _nseeds_ specifies the number of sets, and _ksize_ specifies the number of bits per projection key.
+
+___
+
+==== DeleteProjectionSets
+
+[[similarity_deleteprojectionsets]]`<<similarity/similarityMethods.adoc#similaritydeleteprojectionsets, *DeleteProjectionSets*>>()`::
+Destroy graph structure previously created by <<similarity_createprojectionsets, CreateProjectonSets()>>.
+
+___
+
+==== EuclideanDistance
+
+[[similarity_euclideandistance]]`<<similarity/similarityMethods.adoc#similarityeuclideandistance, *EuclideanDistance*>>( _v1_, _v2_ )`::
+Return the Euclidean distance between two vectors _v1_ and _v2_.
++
+NOTE: This method is only relevant in *Euclidean vector* mode.
+
+___
+
+==== Fingerprint
+
+[[similarity_fingerprint]]`<<similarity/similarityMethods.adoc#similarityfingerprint, *Fingerprint*>>( _vector_[, _seed_] )`::
+Return a 64-bit fingerprint for _vector_ (instance or element list.) The default _seed_ = 0. Different values for _seed_ will result in alternative projections of the n-dimensional vector onto 64-dimensional binary space.
+
+___
+
+==== HammingDistance
+
+[[similarity_hammingdistance]]`<<similarity/similarityMethods.adoc#similarityhammingdistance, *HammingDistance*>>( _v1_, _v2_ )`::
+Return the number of differing bits (0 - 64) in the fingerprints of vectors _v1_ and _v2_. The vector fingerprint is a 64-bit integer representing the vector, i.e. a dimensionality reduced representation of the vector. Similar vectors will generally have similar fingerprints and the number of differing bits will be small.
++
+NOTE: Hamming distance is an effective similarity measure for vectors with many dimensions (>10), since each dimensions has limited contribution to the fingerprint. Vectors with fewer dimensions are more sensitive to changes, and for such vectors the fingerprints are less reliable indicators of similarity. For large vectors where fingerprints are reasonably reliable representations of the vectors, similarity comparison using hamming distance is computationally orders of magnitude more efficient than cosine or jaccard.
+
+___
+
+==== Jaccard
+
+[[similarity_jaccard]]`<<similarity/similarityMethods.adoc#similarityjaccard, *Jaccard*>>( _v1_, _v2_ )`::
+Return the weighted jaccard similarity (0.0 - 1.0) of two vectors _v1_ and _v2_. The jaccard similarity measures the relative amount of overlap between the two vectors. Vectors interpreted as sets rather than geometric objects in this context, i.e. the jaccard similarity can be much less than 1.0 even if the vectors are completely aligned, if their magnitudes are different.
++
+NOTE: This method is only relevant in *Feature vector* mode.
+
+___
+
+==== NewCentroid
+
+[[similarity_newcentroid]]`<<similarity/similarityMethods.adoc#similaritynewcentroid, *NewCentroid*>>( _vector_list_ )`::
+Return a new centroid vector computed from vectors in _vector_list_.
++
+*Feature vectors*: The centroid represents the common dimensions of all vectors in _vector_list_ and can be used to extract the most prominent features from a set of vectors.
++
+*Euclidean vectors*: The centroid represent an average of the set of vectors.
+
+___
+
+==== NewVector
+
+[[similarity_newvector]]`<<similarity/similarityMethods.adoc#similaritynewvector, *NewVector*>>( _elements_list_ )`::
+Return a new vector associated with this similarity object, setting the <<vectorobject, vector elements>> according to _elements_list_.
+
+___
+
+==== Projections
+
+[[similarity_projections]]`<<similarity/similarityMethods.adoc#similarityprojections, *Projections*>>( _seed_ )`::
+Return list of projection names [`b'_xxxx|xxx'`, ...].
+
+___
+
+==== rvec
+
+[[similarity_rvec]]`<<similarity/similarityMethods.adoc#similarityrvec, *rvec*>>( _n_ )`::
+Return a new, random Euclidean vector with _n_ dimensions.
+
+___
+
+==== Similarity
+
+[[similarity_similarity]]`<<similarity/similarityMethods.adoc#similaritysimilarity, *Similarity*>>( _v1_, _v2_ )`::
+Return the similarity score for two vectors _v1_ and _v2_. The similarity score is computed as cosine(_v1_, _v2_)^cosine_exp^ * jaccard(_v1_,_v2_)^jaccard_exp^. The returned value is in the range 0.0 - 1.0.
++
+NOTE: This method is only relevant in *Feature vector* mode.
+
+___
+
+[[queryobject]]
+== Query Objects
+
+The pyvgx.Query type represents reusable queries that are defined once and may be executed multiple times.
+
+There are five concrete "pseudo subtypes" of this type that behave differently:
+
+* pyvgx.ArcsQuery
+* pyvgx.VerticesQuery
+* pyvgx.NeighborhoodQuery
+* pyvgx.AdjacencyQuery
+* pyvgx.AggregatorQuery
+
+The behavior is dictated by internal object properties that cannot be modified once the object instance has been created.
+
+[[queryobject_factory_functions]]
+=== Query Object Factory Functions 
+
+It is not possible to instantiate a pyvgx.Query object directly. Instead, one of the following graph query object methods must be called to return the appropriately configured pyvgx.Query object:
+
+* <<newarcsquery_func>>
+* <<newverticesquery_func>>
+* <<newneighborhoodquery_func>>
+* <<newadjacencyquery_func>>
+* <<newaggregatorquery_func>>
+
+[[queryobject_execution]]
+=== Executing Query Objects
+
+Once the desired pyvgx.Query object has been created it can be executed by calling its <<query_execute, Execute()>> method. The query may be executed more than once, possibly generating different result sets each time depending on the state of the graph at execution time or the presence of any random or cumulative elements in the query itself.
+
+[[queryobject_attributes]]
+=== Query Attributes
+
+[[query_type_attr]]`*type*`::
+Return the name of query pseudo subtype as a string.
+
+[[query_id_attr]]`*id*`::
+Return or assign query anchor vertex identifier. (Not available for global queries.)
+
+[[query_opid_attr]]`*opid*`::
+Return the (integer) value of the graph's internal operation counter as it was at the end of the most recent call to <<query_execute, Execute()>>.
+
+[[query_texec_attr]]`*texec*`::
+Return the total execution time in seconds for the most recent call to <<query_execute, Execute()>>.
+
+[[query_error_attr]]`*error*`::
+Return the error message as a string for the most recent call to <<query_execute, Execute()>> if query execution failed. Return `None` if query execution was successful.
+
+[[query_reason_attr]]`*reason*`::
+Return the error reason integer code for the most recent call to <<query_execute, Execute()>> if query execution failed. Return 0 if query execution was successful.
+
+___
+
+[[queryobject_methods]]
+=== Query Methods
+
+==== Execute
+
+[[query_execute]]`*Execute*( **[** _hits_**[**, _offset_**[**, _timeout_**[**, _limexec_**[**, _cache_ **]]]]]** )`::
++
+_hits_ : (int) Maximum number of search hits to return. (default=-1, all results)
++
+_offset_ : (int) Search offset. Must be 0 or greater. (default=0)
++
+_timeout_ : (int) Query <<specification/timeout.adoc#pyvgxtimeout, timeout specification>> in milliseconds. (default=0, non-blocking)
++
+_limexec_ : (bool) When `True`, limit query execution in accordance with _timeout_ even when not blocked on vertex acquisition. When `False`, any _timeout_ is applied to vertex acquisition only. (default=False)
++
+_cache_ : (bool) When `True`, enable returning of previous result set (without internal re-execution of search) if the graph state remains unchanged since previous execution *and* none of the query parameters have changed since previous execution. (default=False)
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<shortref.adoc#, icon:arrow-circle-left[size=2x, title="Compact pyvgx Reference"]>>
+//icon:arrow-circle-up[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+//icon:arrow-circle-right[size=2x, link=VGXCoreConcepts.adoc#, title="VGX Core Concepts"]
+<<VGXCoreConcepts.adoc#, icon:arrow-circle-right[size=2x, title="VGX Core Concepts"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

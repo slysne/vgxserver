@@ -1,0 +1,402 @@
+[[vgxlimits]]
+= VGX Limits <<tutorial.adoc#, icon:arrow-circle-up[title="pyvgx Tutorial"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+
+[[limits]]
+== Limits, Sizes and Special Numbers
+
+[cols="1, 1, 3"]
+|===
+|Item |Value |Description
+
+|Max Relationships
+|15,616
+|Relationship types are enumerated. This is the maximum number of unique relationship types that can exist within a graph instance.
+
+|Max Vertex Types
+|208
+|Vertex types are enumerated. This is the maximum number of unique vertex types that can exist within a graph instance.
+
+|Max Feature Vector Dimensions
+|22,366,890
+|Feature vector dimensions are enumerated. This is the maximum number of unique vector dimension strings that can exist within a graph instance.
+
+|Max Feature Vector Dimension Length
+|27
+|A feature vector dimension string can be no longer than 27 bytes (utf-8 encoded string.)
+
+|Max Feature Vector Components
+|42
+|A feature vector may contain up to 42 enumerated dimensions.
+
+|Max Euclidean Vector Components
+|65,472
+|A euclidean vector may contain up to 65,472 components, and the number of components must be a multiple of 32.
+
+|Arc Memory
+|32 bytes
+|One arc consumes 16 bytes of memory, but since every arc has a hidden reverse arc 32 bytes are used. Note that additional overhead for maintaining internal mapping structures should be expected. See <<arcs>> for details.
+
+|Arcs per vertex (hard limit)
+|25,165,824,000
+|For perspective this is about 500 GiB of memory.
+
+|Vertex Memory
+|192 bytes
+|A vertex with an identifier shorter than 40 bytes, and without properties and no more than one inarc and one outarc takes 192 bytes of memory. See <<vertices>> for details.
+
+|Short Vertex ID
+|1 - 39 bytes
+|A vertex identifier shorter than 40 bytes is embedded in the basic vertex object. If the vertex identifier is 40 bytes or more an additional string object is allocated and linked with the vertex object. Note that this limit applies to the utf-8 encoded string.
+
+|Recursive Vertex Acquisition Limit
+|112
+|A vertex may be acquired recursively no more than 112 times.
+
+|Property Memory
+|16+ bytes
+|A vertex property occupies a 16-byte slot in the vertex property map, which is established only when the first property is set for a vertex. There is additional overhead in managing the map itself, which manifests in quantized increments as the map structure is expanded (or first established.) Property key and value strings have an additional one-time storage cost per unique string for a graph instance, equal to the size of the string. 
+
+|Max String Length
+|131,000 bytes
+|This is the largest string size (in bytes, after utf-8 encoding) that is allowed for vertex names and types, property keys, and relationship types. It is also the maximum length of evaluator expressions.
+ +
+ +
+Property string values may exceed this limit because long value strings are compressed. However, if the number of bytes in the compressed data is too large the value cannot be stored. Since the compression ratio depends on the actual string data it is not possible to define a specific upper bound for the raw string length.
+
+|Max Numeric Array Property Length
+|16,375
+|This is the largest numeric array that can be assigned to a vertex property.
+
+|Max Keyval Mapping Property Length
+|5,406
+|This is the maximum number of items in a hash map that can be assigned to a vertex property.
+
+|===
+
+
+[[vertices]]
+== Vertices
+
+Vertex objects are fixed-size structures of 192 bytes, with optional references to additional members such as properties, arcs, feature vector and (long) ID string. If a vertex has no properties, no feature vector, a short identifier (less than 40 bytes) and at most 1 inarc and outarc it is completely contained in the 192-byte vertex structure.
+
+image::vertex.png[vertex, title="Vertex"]
+
+[[vertexproperties]]
+=== Properties
+
+Vertex <<vertex/vertexProperty.adoc#, properties>> are key-value pairs stored in a map object. When the first property is added to a vertex a new map object is created and associated with the vertex. The minimum map size is 64 bytes and can hold up to two properties. The next map size is 128 bytes and can hold up to six properties. (The property map structure is similar to that used for arcs, see <<arcvectorcapacities, capacity chart>> for more details.)
+
+In addition to the property map structure a global map (per graph instance) maintains a mapping of unique property key strings and value strings. Repeated use of the same property key and value strings for multiple vertices does not require additional storage for the strings. Vertex property maps only store integer enumerations.
+
+[[vertexarcs]]
+=== Arcs
+
+If a vertex is connected to other vertices the arcs are stored in separate _arcvector_ objects associated with the vertex. However, the vertex structure is capable of storing one outarc and one inarc without the need for separate arcvector objects. See <<arcs>> for more details.
+
+[[vertexvector]]
+=== Vectors
+
+System wide vector mode is selected at <<reference.adoc#system_initialize_func, initialization>>. The default is feature vector mode. Alternatively euclidean vector mode can be selected by setting _euclidean_=`True`.
+
+[[featurevector]]
+
+==== Feature Vector
+
+A <<vertex/vertexVector.adoc#, feature vector>> is a <<similarity/vector.adoc#, vector object>> uniquely associated with a vertex. The feature vector object size depends on the number of vector features, as summarized in the table below.
+
+In addition to the vector object a global map (per graph instance) maintains a mapping of unique feature strings. Repeated use of the same feature for multiple vectors does not require additional storage for the feature strings. Vectors only store integer enumerations. (Feature enumerations are 32-bit hashes of the feature strings, with collision protection provided by the global map.)
+
+[[featurevectorsizes]]
+.Feature Vector Sizes
+[cols="1, 1"]
+|===
+|Feature Vector Length |Memory Usage
+
+|1 - 16
+|128 bytes
+
+|17 - 32
+|192 bytes
+
+|33 - 48 (max)
+|256 bytes
+
+|===
+
+==== Euclidean Vector
+
+A <<vertex/vertexVector.adoc#, Euclidean vector>> is a <<similarity/vector.adoc#, vector object>> uniquely associated with a vertex. The vector object size depends on the number of vector components. The number of components must be a multiple of 32. Euclidean vector object sizes are summarized in the table below.
+
+[[euclideanvectorsizes]]
+.Euclidean Vector Sizes
+[cols="1, 1"]
+|===
+|Euclidean Vector Length |Memory Usage
+
+|32 and 64
+|128 bytes
+
+|96 and 128
+|192 bytes
+
+|160 and 192
+|256 bytes
+
+|224 and 256
+|320 bytes
+
+|...
+|...
+
+|65,440 and 65,472 (max)
+|65,536 bytes
+
+|===
+
+
+
+=== Long Identifier
+
+Vertex identifiers require additional storage when their utf-8 encoding exceeds 39 bytes. A separate string object holding the full identifier is associated with the vertex in this case. The 39-byte identifier prefix is always stored in the vertex structure.
+
+[[arcs]]
+== Arcs
+
+Arcs are stored in _arcvectors_ representing the outarcs and inarcs of a vertex. When a new arc is created from initial A to terminal B, another entry is added to A's outarcs arcvector (pointing to B) and to B's inarcs arcvector (pointing back to A.) Each arcvector entry is 16 bytes and therefore the arc from A to B consumes 32 bytes.
+
+The size of an arcvector object is always a power of two, determined by the number of arcs as shown in the table below. When arcs are added beyond the capacity of an existing arcvector the arcvector is expanded to the next higher size. When arcs are removed the size of the arcvector is adjusted to the next lower size as needed to minimize unused space. Note that system memory usage will appear to change in steps as a result of how memory pools are managed internally.
+
+When an arcvector grows larger than what can be held in a 4KiB array, it is split into pieces that are chained together in a trie structure. When leaf nodes in the trie grow too large they are again split and new levels are created.
+
+[[arcvectorcapacities]]
+.Arcvector Capacities
+[cols="1, 1, 1, 1, 1, 2"]
+|===
+|Arcvector Size |Min Capacity* |Max Capacity |Typical Capacity |Typical Arc Count Range |Comment
+
+|N/A
+|1
+|1
+|1
+|0 - 1
+|Arc is embedded in vertex object
+
+|64 bytes
+|2
+|2
+|2
+|2
+|Always holds exactly two arcs
+
+|128 bytes
+|6
+|6
+|6
+|3 - 6
+|
+
+|256 bytes
+|10
+|14
+|12
+|7 - 12
+|
+
+|512 bytes
+|12
+|28
+|24
+|13 -24
+|
+
+|1024 bytes
+|16
+|60
+|52
+|25 - 52
+|
+
+|2048 bytes
+|20
+|124
+|108
+|53 - 108
+|
+
+|4096 bytes
+|24
+|252
+|220
+|109 - 220
+|
+
+|4352 bytes
+|22
+|256
+|220+
+|109 - 220+
+|Initial trie structure
+
+|4416 - 537,961,697,280 bytes
+|26
+|25,165,824,000
+|
+|221 - 25,165,824,000
+|Trie structure
+
+|===
+
+NOTE: *) The minimum capacity is a theoretical minimum and is listed for completeness only. The actual capacity of an arcvector is a function of the hash of the memory locations of vertices it references. On average the actual capacity is close the the maximum capacity. The low end capacity is extremely unlikely to occur.
+
+=== Simple Arc
+
+A simple arc is represented in the arcvector as a cell consisting of a _predicator_ and a pointer to a vertex. For outarcs the pointer points to the head vertex. For inarcs the pointer points to the tail vertex. The predicator stores information about the arc, including the relationship type and its value. Relationships are stored as integers representing strings. The strings themselves are stored in a separate enumeration map.
+
+image::arcvector.png[arcvector, title="Arcvector"]
+
+=== Multiple Arc
+
+A multiple arc (i.e. more than one arc pointing to the same vertex) adds a _predicator map_ layer to represent individual arcs terminating at the same vertex. The growth and capacity characteristics for the predicator map are exactly the same as for the main arcvector.
+
+image::arcvector_multi.png[arcvector_multi, title="Arcvector Multi"]
+
+=== Arcvectors Size Increments
+
+Arcvector arrays come in eight sizes, from 0 to 4096 bytes. When a vertex has only one simple arc there is no arcvector array (i.e. size=0) and the arc is embedded in the vertex structure. Two or more arcs require arcvector arrays ranging from 64 to 4096 bytes. If the arcs cannot fit in the largest arcvector array a trie structure containing multiple linked arrays is created.
+
+==== Embedded arcvector (0 bytes)
+
+The first arc added to a vertex has no memory overhead as it is embedded in the basic vertex object.
+
+image::arcvector_embed.png[arcvector_embed, title="Embedded arcvector can store a simple arc"]
+
+==== Minimal arcvector object (64 bytes)
+
+The second arc added to a vertex establishes a new arcvector array object separate from the vertex object. This is a 64-byte structure now holding two arcs plus 32 bytes of management overhead.
+
+image::arcvector_0.png[arcvector_0, title="Minimal arcvector object holds two arcs"]
+
+==== Arcvector with 6 cells (128 bytes)
+
+The third arc added to an arcvector expands the 64-byte structure to 128 bytes now holding three arcs. The fourth, fifth and sixth arcs added will also fit in this 128-byte structure.
+
+image::arcvector_1.png[arcvector_1, title="Arcvector with 6 cells"]
+
+==== Arcvector with 14 cells (256 bytes)
+
+The seventh arc added to an arcvector expands the 128-byte structure to 256 bytes now holding seven arcs. The 256-byte structure has a maximum capacity of 14 arcs, but due to probabilistic effects it may reach a full state after 10 arcs. 
+
+image::arcvector_2.png[arcvector_2, title="Arcvector with 14 cells"]
+
+==== Arcvector with 28 cells (512 bytes)
+
+The next size up is 512 bytes with a capacity of at least 12 and at most 28 arcs. It is highly unlikely for the low end of the capacity range to apply. In fact, it is quite likely that most arcvectors will have an actual capacity close to the upper limit.
+
+image::arcvector_3.png[arcvector_3, title="Arcvector with 28 cells"]
+
+==== Arcvector with 60 - 252 cells (1024 - 4096 bytes)
+
+As arcs are added the arcvector structure keeps expanding until it reaches 4096 bytes. After this, expansion continues by breaking the array into pieces that are linked together in a trie structure.
+
+image::arcvector_4.png[arcvector_4, title="Arcvector with 60 cells"]
+
+image::arcvector_5.png[arcvector_5, title="Arcvector with 124 cells"]
+
+image::arcvector_6.png[arcvector_6, title="Arcvector with 252 cells"]
+
+==== Arcvector trie
+
+Expansion beyond what fits in the largest arcvector array requires a trie structure where the top array links to sub-arrays. When the sub-arrays grow too large, they link to sub-sub-arrays, and so on, until four layers of arrays have been created. When the fourth layer has reached its maximum size, a simpler chain of smaller blocks is used to continue the expansion. The small blocks at the deeper levels each holds 6 arcs. There is a maximum of 255 layers, including the upper four array layers.
+
+.Arcvector Trie Layers
+[cols="1, 1, 1, 1, 1"]
+|===
+|Layer |Type |Capacity |Chains to next |First chain at size
+
+|1
+|Array
+|252
+|64
+|~220
+
+|2
+|Array
+|252
+|64
+|~15,000
+
+|3
+|Array
+|252
+|64
+|~1,000,000
+
+|4
+|Array
+|252
+|64
+|~60,000,000
+
+|5
+|Block
+|6
+|1
+|~80,000,000
+
+|6
+|Block
+|6
+|1
+|~150,000,000
+
+|...
+|Block
+|6
+|1
+|...
+
+|254
+|Block
+|6
+|1
+|~25,000,000,000
+
+|255
+|Block
+|6
+|0
+|N/A (end)
+
+|===
+
+
+image::arcvector_trie.png[arcvector_trie, title="Arcvector trie"]
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=reference.adoc#, title="pyvgx Reference"]
+<<reference.adoc#, icon:arrow-circle-left[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-up[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<tutorial.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Tutorial"]>>
+//icon:arrow-circle-right[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<tutorial.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Tutorial"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

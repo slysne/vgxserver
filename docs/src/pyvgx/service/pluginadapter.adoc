@@ -1,0 +1,883 @@
+[[pyvgxserver_pluginadapter]]
+= VGX Server Plugin Adapter <<../../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<sysadmin.adoc#, icon:arrow-circle-right[title="System Administration"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:xrefstyle: full
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+Python plugins can be installed and invoked via HTTP requests. A plugin is a regular Python function registered via <<system_addplugin_func, pyvgx.system.AddPlugin()>>. A unique service URI is automatically created for the registered function. It is executed by sending a HTTP request to that URI.
+
+== Hello World
+It is easy to create a new service as illustrated by this minimal implementation example.
+
+.Step 1: Complete code for Hello World Service
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+system.Initialize( "hello", http=9000 )
+
+def hello( request:PluginRequest, message:str ):
+  return "Hello, you said '{}'".format( message )
+
+system.AddPlugin( hello )
+----
+
+.Step 2: Test the service
+[.copyable]
+[source, shell]
+----
+curl "http://127.0.0.1:9000/vgx/plugin/hello?message=hi"
+----
+
+.Step 3: Inspect the response
+[source, json]
+----
+{
+    "status": "OK",
+    "response": "Hello, you said 'hi'",
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.061
+}
+----
+
+[[plugin_functions]]
+== Plugin Functions
+
+Plugins are regular Python functions.  A plugin function can serve one of three roles (<<pre_post_engine>>):
+
+[[plugin_function_pre]]pre:: Request pre-processor executed in a VGX Dispatch instance before the request is forwarded to the dispatch back-end matrix
+
+[[plugin_function_post]]post:: Response post-processor executed in a VGX Dispatch instance after the aggregated response has been created from dispatch back-end matrix responses
+
+[[plugin_function_engine]]engine:: Main request processor executed in a VGX Engine
+
+=== Request Flow
+
+A request is generally processed as shown below. When a dispatcher is used both _pre_ and _post_-processors are optional. Any number of dispatcher layers is allowed.
+
+[[pre_post_engine]]
+image::pre_post_engine.png[pre_post_engine, title="Plugin Functions"]
+
+[[plugin_function_arguments]]
+=== Plugin Function Arguments
+
+HTTP request parameters with matching plugin function argument names are mapped directly to those arguments. Function arguments without default values require matching HTTP parameters to be present in the request. Function arguments with type annotation `param: _type_` require compatible values to be passed in the HTTP request.
+
+See <<service.adoc#request_parameter_annotation, Parameter Annotation>> for supported annotation types.
+
+Any number of plugin function arguments can be declared for *_pre_* and *_engine_* plugins. Some argument names are reserved as described in <<pre_engine_signature>>. One such argument is <<pyvgx_pluginrequest, _request_>> which exposes all HTTP request parameters as dict attribute <<request_attr_params, _request.params_>>.
+
+Arguments for *_post_* plugins are described in <<post_signature>>.
+
+.HTTP parameters are mapped to plugin function arguments
+----
+http://127.0.0.1:9000/vgx/plugin/test?num=123&txt=456&extra=[7,8,9]
+----
+
+.Annotated arguments are converted, all arguments in request.params
+[source, python]
+----
+def test( request, num:int, txt):
+  return {
+    "num": "type:{} value:{}".format(type(num),num),
+    "txt": "type:{} value:{}".format(type(txt),txt),
+    "all": request.params
+  }
+----
+
+.Non-annotated arguments are strings
+[source, json]
+----
+{
+    "status": "OK",
+    "response": {
+        "num": "type:<class 'int'> value:123",
+        "txt": "type:<class 'str'> value:456",
+        "all": {
+            "num": 123,
+            "txt": "456",
+            "extra": "[7,8,9]"
+        }
+    },
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.096
+}
+----
+
+
+[[plugin_signature]]
+=== Plugin Function Signatures
+
+Plugin functions for *engine* and *pre*-processors may include any number of user defined arguments, optionally annotated, and with default values where appropriate. Some argument names are reserved for special use. Plugin functions for *post*-processors take one or two reserved arguments.
+
+
+[[pre_engine_signature]]
+==== Engine and Pre-processor Signature
+Function signatures for *pre* and *engine* plugins are the same and include five reserved keyword arguments which automatically receive their values as described in <<pre_engine_reserved_args>>.
+
+.Five reserved arguments for *engine* and *pre* plugin functions, *_request_* is mandatory
+[source, python]
+----
+def func( request[, graph[, method[, headers[, content, ...]]]] ):
+  ...
+----
+
+[[post_signature]]
+==== Post-processor Signature
+Function signatures for *post* plugins have two reserved keyword arguments which automatically receive their values as described in <<post_reserved_args>>.
+
+The function takes no user defined arguments.
+
+.Two reserved arguments for *post* plugin functions, *_response_* is mandatory
+[source, python]
+----
+def func( response[, graph] ):
+  ...
+----
+
+[[pre_engine_reserved_args]]
+==== Engine and Pre-processor Reserved Keyword Arguments
+
+[cols="2,4,4,6"]
+|===
+|Argument |Type |Required? |Description
+
+|anchor:pre_engine_arg_request[]*request*
+|_<<pyvgx_pluginrequest, pyvgx.PluginRequest>>_
+|Always required
+|Contains all request parameters, general request information, and meta data
+
+|anchor:pre_engine_arg_graph[]*graph*
+|_<<../reference.adoc#graphobject_type, pyvgx.Graph>>_
+|Required when system.AddPlugin() is called with _graph_ argument
+|Graph instance passed to system.AddPlugin() when registering the plugin function.
+If registered without a graph this function argument is not required and can be freely used for other purposes.
+
+|anchor:pre_engine_arg_method[]*method*
+|_str_
+|Optional
+|"GET" or "POST"
+
+|anchor:pre_engine_arg_headers[]*headers*
+|_bytes_ (default) +
+_str_ +
+_dict_ +
+_list_
+|Optional
+|HTTP request headers are received according to declared type:
+
+_bytes_: Raw bytes, as received
+
+_str_: Raw UTF-8 header bytes, decoded to string
+
+_dict_: Key-value pairs as {field:value}
+
+_list_: Key-value pairs as [(field,value), ...]
+
+|anchor:pre_engine_arg_content[]*content*
+|_bytes_ (default) +
+_str_ +
+_json_
+
+|Optional
+|Receives HTTP content in POST requests according to declared type:
+
+_bytes_: Raw bytes, as received
+
+_str_: Raw UTF-8 content bytes, decoded to string
+
+_json_: Python object decoded from raw JSON data
+
+|===
+
+
+[[post_reserved_args]]
+==== Post Reserved Keyword Arguments
+
+[cols="2,4,4,6"]
+|===
+|Argument |Type |Required? |Description
+
+|anchor:post_arg_response[]*response*
+|_<<pyvgx_pluginresponse, pyvgx.PluginResponse>>_
+|Always required
+|Contains response payload, general response information and meta data
+
+|anchor:post_arg_graph[]*graph*
+|_<<../reference.adoc#graphobject_type, pyvgx.Graph>>_
+|Required when system.AddPlugin() is called with _graph_ argument
+|Graph instance passed to system.AddPlugin() when registering the plugin function.
+If registered without a graph this function argument is not used.
+
+|===
+
+[[plugin_return_values]]
+=== Plugin Function Return Values
+
+The types of objects returned from plugin function depend on plugin type and context. Two general rules apply:
+
+Dispatcher Forward:: If a pre-processor request is to be forwarded to a back-end matrix the returned object type must be *PluginRequest*
+
+Dispatcher Merge:: If a response is to be merged with other responses in a higher dispatcher layer the returned object type must be *PluginResponse*
+
+[[pre_return_value]]
+==== Return value from pre-processor plugin
+Pre-processors can return a <<pyvgx_pluginrequest, PluginRequest>> object, a <<pyvgx_pluginresponse, PluginResponse>> object, or a regular Python object.
+The plugin controls dispatcher behavior by the type of object returned.
+
+pre: return PluginRequest:: This can be the original object passed to the plugin function's _request_ argument or a new instance created by the function. When this object type is returned VGX Server will forward the request to the VGX Dispatch back-end matrix.
+
+pre: return PluginResponse:: The plugin pre-processor may create and return a response object. This prevents the request from being dispatched to the back-end matrix, resulting in early termination of the request.
+
+pre: return any other Python object:: A plugin running in a topmost VGX Dispatch instance may return any serializable Python object. This prevents the request from being dispatched to the back-end matrix, resulting in early termination of the request. Only top level dispatchers are allowed to return a regular Python object. Doing so in a lower level dispatcher will generate a partial merge error in the dispatcher above.
+
+.Return object types for *pre* plugin functions
+[source, python]
+----
+def pre( request:PluginRequest, ... ):
+  # PluginRequest: Forward to back-end
+  if continue_dispatch():
+    return request
+  # PluginResponse: Early termination at lower level dispatch
+  elif not request.toplevel:
+    r = PluginResponse( sortby=S_VAL|S_ASC )
+    r.Append( 1, "First" )
+    r.Append( 2, "Second" )
+    return r
+  # Any object: Early termination at top level dispatch
+  else:
+    return [(1, "First"), (2, "Second")]
+----
+
+
+[[engine_return_value]]
+==== Return value from engine processor plugin
+Main request processors must return a <<pyvgx_pluginresponse, PluginResponse>> object if part of a dispatcher back-end matrix. A stand-alone engine can return any Python object.
+
+engine: return PluginResponse:: The main request processor must create and return a new object of this type if a higher level dispatcher will merge this response with responses from other engine instances
+
+engine: return any other Python object:: The main request processor may return any Python object if no higher level merge will take place
+
+.Return object types for *engine* plugin functions
+[source, python]
+----
+def engine( request:PluginRequest, ... ):
+  # PluginResponse: when result will be merged at higher level
+  if is_part_of_backend():
+    r = PluginResponse( sortby=S_VAL|S_ASC )
+    r.Append( 1, "First" )
+    r.Append( 2, "Second" )
+    return r
+  # Any object: when this engine is standalone instance
+  else:
+    return [(1, "First"), (2, "Second")]
+
+
+----
+
+[[post_return_value]]
+==== Return value from post-processor plugin
+Post-processors can return a <<pyvgx_pluginresponse, PluginResponse>> object or a regular Python object.
+
+post: return PluginResponse:: The plugin post-processor may modify the original response object or create and return a new response object.
+
+post: return any other Python object:: A plugin running in a topmost VGX Dispatch instance may return any serializable Python object. Only top level dispatchers are allowed to return a regular Python object. Doing so in a lower level dispatcher will generate a partial merge error in the dispatcher above.
+
+.Return object types for *post* plugin functions
+[source, python]
+----
+def post( response:PluginResponse ):
+  # PluginResponse: when result will be merged at higher level
+  if not response.toplevel:
+    return response
+  # Any object: this is the top dispatcher
+  else:
+    return [(1, "First"), (2, "Second")]
+----
+
+
+== pyvgx.system Plugin Management
+
+=== AddPlugin
+
+[[system_addplugin_func]]`pyvgx.*system.AddPlugin*( **[**_plugin_**[**, _name_**[**, _graph_**[**, _engine_**[**, _pre_**[**, _post_**]]]]]]** )`::
+*_plugin_*: Register Python function _plugin_ as a new HTTP endpoint. The plugin is published at its unique service URL:
++
+`http://_host_:_port_/vgx/plugin/**_servicename_**?_parameters_`
++
+HTTP _parameters_ are passed to the plugin function as described in <<request_parameters>>.
++
+*_name_*: Specify _servicename_ with this optional argument. By default _servicename_ is the function name (i.e. _pass:[plugin.__name__]_).
++
+*_graph_*: A plugin may be bound to a specific graph instance by supplying it through the _graph_ argument. Such plugins are required to have a <<pre_engine_arg_graph, _graph_ argument in their function signature>>.
++
+*_engine_*: Alias for _plugin_, useful for making plugin function role more explicit in multi-instance deployments.
++
+*_pre_* and *_post_*: In <<service.adoc#dispatcher_configuration, dispatcher mode>> create a new HTTP endpoint with Python functions _pre_ and/or _post_ acting as request pre-processor and response post-processor. Endpoint must be specified with _name_ in this configuration, and _pre_/_post_ cannot be combined with _plugin_ or _engine_.
+
+___
+
+=== RemovePlugin
+
+[[system_removeplugin_func]]`pyvgx.*system.RemovePlugin*( _name_ )`::
+Remove a <<system_addplugin_func, registered plugin>> from the system. 
+
+___
+
+=== GetPlugins
+
+[[system_getplugins_func]]`pyvgx.*system.GetPlugins*()`::
+Return a list of <<system_addplugin_func, registered plugins>>. Each entry in the list is a dictionary containing the following information:
++
+* `path`: http service path for invoking plugin function.
+* `description`: plugin function's docstring.
+* `parameters`: dict mapping plugin function's parameter names to their type annotations.
+* `bound_graph`: graph instance, if plugin function takes `graph` parameter.
++
+[source, python]
+----
+[
+    {
+        "path":         <URI_path>,
+        "description":  <plugin_docstring>,
+        "parameters":   {
+            <param1>:       <annotation>,
+            <param2>:       <annotation>,
+            ...
+        },
+        "bound_graph":  <graph_instance_repr_or_None>
+    },
+    ...
+]
+----
+
+___
+
+=== GetBuiltins
+
+[[system_getbuiltins_func]]`pyvgx.*system.GetBuiltins*()`::
+Return a list of built-in plugins. The return format is the same as for <<system_getplugins_func, GetPlugins()>>.
+
+___
+
+
+
+[[pyvgx_pluginrequest]]
+== pyvgx.PluginRequest
+
+PluginRequest objects are passed in the _request_ argument of *_pre_* and *_engine_* plugin functions.
+When a *_pre_* plugin returns an object of this type the request is forwarded to the VGX Dispatch instance back-end matrix.
+
+=== PluginRequest Class
+
+[[pluginrequest_class]]`_class_ *pyvgx.PluginRequest*( _plugin_**[**, _params_**[**, _headers_**[**, _content_**[**, _partial_**]]]]** )`::
+Create a new PluginRequest instance.
++
+The request target path will be `/vgx/plugin/_plugin_`
++
+Assign request parameters and headers via dicts _params_ and _headers_
++
+Assign request payload data via _content_ (becomes POST request)
++
+Target specific partition in back-end matrix with non-negative _partial_
+
+=== PluginRequest Methods
+
+[[pluginrequest_serialize]]`*Serialize*()`::
+Return the raw HTTP request bytes representing this request object
+
+[[pluginrequest_get]]`*get*( _param_**[**, _default_**]** )`::
+Like PluginRequest.<<request_attr_params, params>>.get()
+
+[[pluginrequest_items]]`*items*()`::
+Like PluginRequest.<<request_attr_params, params>>.items()
+
+[[pluginrequest_keys]]`*keys*()`::
+Like PluginRequest.<<request_attr_params, params>>.keys()
+
+[[pluginrequest_values]]`*values*()`::
+Like PluginRequest.<<request_attr_params, params>>.values()
+
+
+=== PluginRequest Attributes
+
+[[pluginrequest_attributes]]
+.PluginRequest Attributes
+[cols="2,2,1,6"]
+|===
+|Attribute |Type |Access |Description
+
+|anchor:request_attr_baseport[]`*affinity*`
+|_int_
+|r/w
+|Non-negative index of preferred replica (row) for this request when forwarded to VGX Dispatch back-end matrix. This attribute is writable and should be set in a pre-processor to specify replica affinity. The selected replica will be used regardless of its current running execution cost, but if unavailable (due to channel exhaustion or other reasons) another available replica will be used instead.
+
+|anchor:request_attr_baseport[]`*baseport*`
+|_int_
+|readonly
+|Server <<service.adoc#server_a_port, main port>>
+
+|anchor:request_attr_channel[]`*channel*`
+|_int_
+|readonly
+|Channel id (0 an up) for current socket connection from parent dispatcher which issued this request
+
+|anchor:request_attr_content[]`*content*`
+|_bytes_
+|r/w
+|Raw content data as received in POST request. Type is _bytes_ regardless of annotation used for _content_ argument in plugin function if declared.
+
+|anchor:request_attr_depth[]`*depth*`
+|_int_
+|readonly
+|Maximum number of channels to this VGX Server instance from parent dispatcher which issued this request
+
+|anchor:request_attr_depth[]`*executor*`
+|_int_
+|readonly
+|Identifier number 0-31 of executor assigned to handle this request
+
+|anchor:request_attr_flag[]`*flag*` (*DEPRECATED*, use `local` instead)
+|_str_ or None
+|r/w
+|Assignable string of up to eight characters (bytes) which is carried forward to <<response_attr_flag, _response.flag_>> in post-processor. This allows up to 64 bits of user-defined meta data for a request to be communicated from a pre-processor to a post-processor.
+
+|anchor:request_attr_hasmatrix[]`*hasmatrix*`
+|_bool_
+|readonly
+|Return True if server request may be dispatched to a back-end matrix, False otherwise.
+
+|anchor:request_attr_headers[]`*headers*`
+|_bytes_ +
+_str_ +
+_dict_ +
+_list_ +
+|readonly
+|HTTP request headers object. Always a _dict_ for POST requests. Defaults to _bytes_ for GET requests. If plugin function declares a _headers_ argument then for GET requests _headers_ argument and _request.headers_ attribute always share the same underlying object. For POST requests the underlying object is shared if annotated as _dict_.
+
+|anchor:request_attr_height[]`*height*`
+|_int_
+|height
+|Number of replicas in matrix of parent dispatcher which issued this request
+
+|anchor:request_attr_ident[]`*ident*`
+|_tuple_
+|readonly
+|Matrix identity parameters for this VGX Server instance as viewed from dispatcher which issued the request:
+
+(_defined_, _width_, _height_, _depth_, _partition_, _replica_, _channel_, _primary_)
+
+The first parameter _defined_ is 1 if request came from a dispatcher instance, 0 otherwise. +
+All other parameters _<p>_ are the same as _request.<p>_.
+
+|anchor:request_attr_local[]`*local*`
+|_object_ or None
+|r/w
+|Assignable object to be carried forward to <<response_attr_local, _response.local_>> in post-processor. This allows any Python object created in a pre-processor to be picked up later in a post-processor for the same request.
+
+|anchor:request_attr_method[]`*method*`
+|_str_
+|readonly
+|"GET" or "POST"
+
+|anchor:request_attr_params[]`*params*`
+|_dict_
+|readonly
+|All request parameters, i.e. all key-value pairs after the first "?" in URL. The dictionary can be modified, but a new dictionary cannot be assigned.
+
+|anchor:request_attr_partial[]`*partial*`
+|_int_ or None
+|r/w
+a|Non-negative index of target partition for this request when forwarded to VGX Dispatch back-end matrix. This attribute is writable and should be set in a pre-processor if the request is to target a specific partition in the back-end matrix.
+
+Value of HTTP header <<service.adoc#request_header_x_vgx_partial_target, `x-vgx-partial-target`>>, if present, is automatically assigned to this attribute. Attribute is cleared (and will have value None) if deleted using `del`, or assigned None or a negative integer.
+
+Effective target partition index is computed as _request.partial_ MOD _P_, where _P_ is the number of partitions managed by this dispatcher.
+
+[IMPORTANT]
+====
+Target partition index is propagated to lower level dispatcher(s) via the `x-vgx-partial-target` header. 
+Each dispatcher level is responsible for overriding or clearing this attribute as necessary.
+====
+
+|anchor:request_attr_partition[]`*partition*`
+|_int_
+|readonly
+|This VGX Server instance's partition id (0 and up) in matrix of parent dispatcher which issued this request
+
+|anchor:request_attr_path[]`*path*`
+|_str_
+|readonly
+|URL path for this request "/vgx/plugin/<name>?<params>"
+
+|anchor:request_attr_port[]`*port*`
+|_int_
+|readonly
+|Port used for this request
+
+|anchor:request_attr_primary[]`*primary*`
+|_int_
+|r/w
+|1 if this VGX Server instance is the primary replica in matrix of parent dispatcher which issued this request, or if request did not come from a dispatcher. Otherwise 0.
+
+|anchor:request_attr_replica[]`*replica*`
+|_int_
+|readonly
+|This VGX Server instance's replica id (0 and up) in matrix of parent dispatcher which issued this request
+
+|anchor:request_attr_signature[]`*signature*`
+|_str_
+|r/w
+|Digest of request parameters
+
+|anchor:request_attr_sn[]`*sn*`
+|_int_
+|readonly
+|Unique serial number assigned to this request instance
+
+|anchor:request_attr_t0[]`*t0*`
+|_int_
+|readonly
+|Timestamp of first request byte handled by server loop, in nanoseconds since 1970, as measured by server loop thread. (Do not compare with timestamps generated by other threads.)
+
+|anchor:request_attr_toplevel[]`*toplevel*`
+|_bool_
+|readonly
+a|True if VGX Server instance is topmost in a dispatcher matrix hierarchy, i.e. the first instance receiving a request by an external client.
+
+False if VGX Server is part of another dispatcher's back-end matrix.
+
+[TIP]
+====
+Use this to determine the object type to <<pre_return_value, return in a pre-processor>> if the request is terminated early.
+====
+
+|anchor:request_attr_width[]`*width*`
+|_int_
+|readonly
+|Number of partitions in matrix of parent dispatcher which issued this request
+
+|===
+
+
+
+
+[[pyvgx_pluginresponse]]
+== pyvgx.PluginResponse
+
+All plugin processors in VGX Server instances part of a back-end matrix must return a PluginResponse object.
+If any other object is returned the parent dispatcher will raise an exception.
+Dispatchers only know how to merge and post-process objects of type PluginResponse.
+
+Processors running in a <<response_attr_toplevel, toplevel>> VGX Server may return any Python object, as long as it is serializable according to the request's `accept` header. PluginResponse implements a <<pluginresponse_json_serializer, default JSON serializer>>.
+
+PluginResponse is a container whose primary purposes are:
+
+. Encapsulate a list of (optionally sorted) items
+. Specify sort order and key type
+. Manage numeric aggregation fields
+. Expose meta data
+
+Plugin *_pre_* processor functions may create and return a PluginResponse instance to terminate the request early.
+
+Plugin *_engine_* processor functions create and return a new PluginResponse instance.
+
+Plugin *_post_* processor functions receive a PluginResponse object in the _response_ parameter. The object may be inspected and modified before it is returned. A new PluginResponse instance may also be created and returned instead, replacing the original response with a new one.
+
+=== PluginResponse Class
+
+[[pluginresponse_class]]`_class_ *pyvgx.PluginResponse*( **[**_maxhits_**[**, _sortby_**]]** )`::
+Create a new PluginResponse instance.
++
+Set _maxhits_ to a positive integer to limit the number of result entries that can be added. By default _maxhits_ is -1 (unlimited). It is also possible to change this value later via the <<response_attr_maxhits, _maxhits_ attribute>>.
++
+Define sort order and key type using _sortby_ parameter. Valid <<../constants/sortSpecificationConstants.adoc#, sortby constants>> are the same as those used in graph queries. By default _sortby_ is `S_NONE`. 
++
+A dispatcher automatically creates its own internal PluginResponse instance for each request. Partial responses arriving from the back-end matrix carry result items along with _maxhits_ and _sortby_ parameters. The dispatcher response object inherits these parameters by picking the greatest _maxhits_ among all partial results and _sortby_ from the lowest partition's response with non-zero hits. As a best practice, configure all PluginResponse instances with identical _sortby_ and _maxhits_ to avoid confusion.
+
+=== PluginResponse Methods
+
+[[pluginresponse_append]]`*Append*( **[**_sortkey_**,]** _item_ )`::
+Add a result item to the response object.
++
+Optional first argument _sortkey_ must be _int_, _float_, _str_ or _bytes_. Any other object type will be ignored. Note that arguments are positional (not keywords). If only a single argument is given it is interpreted as _item_.
++
+Calls to `Append()` must provide a _sortkey_ compatible with the response object's _sortby_ configuration, otherwise `pyvgx.ResponseError` is raised. A compatible _sortkey_ is one with the <<../constants/sortSpecificationConstants.adoc#, expected type>> and a value consistent with <<../constants/sortSpecificationConstants.adoc#, sort direction>>.
++
+As a shorthand for adding items with a sequence number as their _sortkey_ `Append()` may be called with _item_ only, provided _sortby_ direction is `S_ASC`. In this case every _n_^th^ call to `Append()` without _sortkey_ will pass the integer _n_ as _sortkey_, where _n_=1 for the first call.
++
+If the response object's _sortby_ is undefined (`S_NONE`) it is automatically determined from _sortkey_ when `Append()` is *first* called. _sortby_ is set to `S_VAL|S_ASC` when _sortkey_ type is _int_ or _float_, and `S_ID|S_ASC` when _sortkey_ type is _str_ or _bytes_.
++
+Attempting to call `Append()` more times than the response object's _maxhits_ limit will raise `pyvgx.ResponseError`. If _maxhits_ is -1 (unlimited) `Append()` can be called any number of times.
+
+[[pluginresponse_serialize]]`*Serialize*()`::
+Serialize response object to bytes. This method is provided for internal testing and debugging.
+
+[[pluginresponse_deserialize]]`*Deserialize*( _data_ )`::
+Deserialize _data_ bytes to a new PluginResponse object. This method is provided for internal testing and debugging.
+
+[[pluginresponse_tojson]]`*ToJSON*()`::
+Serialize response object to JSON string. This method is provided for internal testing and debugging. When a <<response_attr_toplevel, toplevel>> dispatcher returns a PluginResponse object it is <<pluginresponse_json_serializer, rendered>> using this method.
+
+
+=== PluginResponse Attributes
+
+[[pluginresponse_attributes]]
+.PluginResponse Attributes
+[cols="2,2,1,6"]
+|===
+|Attribute |Type |Access |Description
+
+|anchor:response_attr_baseport[]`*baseport*`
+|_int_
+|readonly
+|Server <<service.adoc#server_a_port, main port>>
+   
+|anchor:response_attr_channel[]`*channel*`
+|_int_
+|readonly
+|<<request_attr_channel, See _request.channel_>>
+
+|anchor:response_attr_depth[]`*depth*`
+|_int_
+|readonly
+|<<request_attr_depth, See _request.depth_>>
+
+|anchor:response_attr_entries[]`*entries*`
+|_list_
+|readonly
+a|List of tuples [(_sortkey_, _item_), ...] stored in the response object resulting from calls to <<pluginresponse_append, Append()>>.
+
+[WARNING]
+====
+Be careful when modifying this list. Every entry in _response.entries_ must be a tuple (_sortkey_, _item_). It is best to use <<pluginresponse_append, Append()>> to add new items. Since an existing entry is a tuple it cannot be modified, but any contained _item_ is safe to modify if it is a mutable object such as _dict_ or _list_.
+====
+
+|anchor:response_attr_depth[]`*executor*`
+|_int_
+|readonly
+|Identifier number 0-31 of executor assigned to process this response
+
+|anchor:response_attr_f2[]`*f2*`
+|_float_
+|r/w
+|General purpose float aggregator. Partial response _f2_ values are summed into dispatcher's merged response _f2_ value.
+
+|anchor:response_attr_f3[]`*f3*`
+|_float_
+|r/w
+|General purpose float aggregator. Partial response _f3_ values are summed into dispatcher's merged response _f3_ value.
+
+|anchor:response_attr_flag[]`*flag*` (*DEPRECATED*, use `local` instead)
+|_str_ or None
+|readonly
+|Up to 64 bits of information communicated from pre-processor's <<request_attr_flag, _request.flag_>>, in the form of a string containing up to eight characters (bytes).
+
+|anchor:response_attr_hasmatrix[]`*hasmatrix*`
+|_bool_
+|readonly
+|<<request_attr_height, See _request.hasmatrix_>>
+
+|anchor:response_attr_height[]`*height*`
+|_int_
+|readonly
+|<<request_attr_height, See _request.height_>>
+
+|anchor:response_attr_hitcount[]`*hitcount*`
+|_int_
+|r/w
+|Freely assignable non-negative integer indicating the maximum number of result entries that could have been returned.
+
+By default it is set to the number of times <<pluginresponse_append, Append()>> has been called. 
+
+|anchor:response_attr_i0[]`*i0*`
+|_int_
+|r/w
+|General purpose integer aggregator. Partial response _i0_ values are summed into dispatcher's merged response _i0_ value.
+
+|anchor:response_attr_i1[]`*i1*`
+|_int_
+|r/w
+|General purpose integer aggregator. Partial response _i1_ values are summed into dispatcher's merged response _i1_ value.
+
+|anchor:response_attr_ident[]`*ident*`
+|_tuple_
+|readonly
+|<<request_attr_ident, See _request.ident_>>
+
+|anchor:response_attr_level[]`*level*`
+|_int_
+|readonly
+|Number of dispatcher levels this VGX Server instance is removed from the bottommost instance in the back-end matrix that produced a response.
+
+|anchor:response_attr_levelparts[]`*levelparts*`
+|_int_
+|readonly
+|Number of VGX Server instances at the immediate lower level in dispatcher's back-end matrix.
+
+|anchor:response_attr_local[]`*local*`
+|_object_ or None
+|r/w
+|Object carried forward from <<request_attr_local, _request.local_>> in pre-processor. This allows any Python object created in a pre-processor to be picked up later in a post-processor for the same request.
+
+|anchor:response_attr_maxhits[]`*maxhits*`
+|_int_
+|r/w
+|Maximum number of entries that can be added to a response. Default is -1 (unlimited).
+
+|anchor:response_attr_message[]`*message*`
+|_str_ or None
+|r/w
+a|For internal use and debugging purposes. Can be used in a top level dispatcher to render a message string in the final response.
+[WARNING]
+====
+Message strings set in matrix back-end responses are discarded when those responses are merged in a dispatcher.
+====
+
+|anchor:response_attr_partials[]`*partials*`
+|_int_
+|r/w
+|Number of VGX Server instances in the dispatcher back-end matrix that contributed to this response. For multi-level dispatch hierarchies this is the deep aggregation of all leaf instances reached.
+
+|anchor:response_attr_partition[]`*partition*`
+|_int_
+|readonly
+|<<request_attr_partition, See _request.partition_>>
+
+|anchor:response_attr_port[]`*port*`
+|_int_
+|readonly
+|Port used for this request
+
+|anchor:response_attr_replica[]`*replica*`
+|_int_
+|readonly
+|<<request_attr_replica, See _request.replica_>>
+
+|anchor:response_attr_requestmethod[]`*requestmethod*`
+|_str_
+|readonly
+|"GET" or "POST"
+
+|anchor:response_attr_requestpath[]`*requestpath*`
+|_str_
+|readonly
+|<<request_attr_path, See _request.path_>>
+
+|anchor:response_attr_resubmits[]`*resubmits*`
+|_int_
+|readonly
+|Number of times request was resubmitted to backend matrix
+
+|anchor:response_attr_signature[]`*signature*`
+|_str_ or None
+|readonly
+|<<request_attr_signature, See _request.signature_>>. The value of _response.signature_ equals _request.signature_ as it was at completion of pre-processor. This value is None if there is no pre-processor, or _request.signature_ was not accessed (or deleted after access) in the pre-processor.
+
+|anchor:response_attr_sn[]`*sn*`
+|_int_
+|readonly
+|<<request_attr_sn, See _request.sn_>>
+
+|anchor:response_attr_sortby[]`*sortby*`
+|_int_
+|readonly
+|Sort order and key type in effect for this response
+
+|anchor:response_attr_t0[]`*t0*`
+|_int_
+|readonly
+|<<request_attr_t0, See _request.t0_>>
+
+|anchor:response_attr_texec[]`*texec*`
+|_float_
+|readonly
+|Execution time in seconds elapsed since start of request until all response(s) received from back-end matrix. (Does not include time spent merging results or any time spent in a post-processor.)
+
+|anchor:response_attr_toplevel[]`*toplevel*`
+|_bool_
+|readonly
+a|<<request_attr_toplevel, See _request.toplevel_>>
+[TIP]
+====
+Use this to determine the object type to <<post_return_value, return in a post-processor>>.
+====
+
+|anchor:response_attr_width[]`*width*`
+|_int_
+|readonly
+|<<request_attr_width, See _request.width_>>
+
+|===
+
+
+[[pluginresponse_json_serializer]]
+=== PluginResponse Serialized as JSON
+
+A topmost dispatcher or engine returning a PluginResponse object will automatically render the object as JSON by default.
+
+
+[source, JSON]
+----
+{
+  "status": "OK",
+  "response": {
+    "level": 0,
+    "levelparts": 1,
+    "partials": 1,
+    "hitcount": 3,
+    "aggregator": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "entries": [
+      [
+        1,
+        "First"
+      ],
+      [
+        2,
+        "Second"
+      ],
+      [
+        3,
+        "Third"
+      ]
+    ]
+  },
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 0.241
+}
+----
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<service.adoc#, icon:arrow-circle-left[size=2x, title="VGX Server"]>>
+<<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<sysadmin.adoc#, icon:arrow-circle-right[size=2x, title="System Administration"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+
+

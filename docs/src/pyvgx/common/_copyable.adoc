@@ -1,0 +1,63 @@
+
+
+++++
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+++++

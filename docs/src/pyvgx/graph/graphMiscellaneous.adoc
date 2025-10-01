@@ -1,0 +1,135 @@
+[[graphmiscellaneousmethods]]
+= Graph Miscellaneous Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphMembers.adoc#, icon:arrow-circle-right[title="Graph Members"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Miscellaneous Methods |Description
+
+|<<graphshowvertex>>
+|Print a representation of internal data
+
+|<<graphvertexdescriptor>>
+|Return vertex descriptor
+
+|<<graphshowopenvertices>>
+|Print open vertices
+
+|<<graphdebugprintallocators>>
+|Print allocator information
+
+|<<graphdebugcheckallocators>>
+|Perform allocator integrity check
+
+|<<graphdebuggetobjectbyaddress>>
+|Return an object by memory address
+
+|<<graphdebugfindobjectbyidentifier>>
+|Return an object by its identifier
+
+|<<graphdebugdumpgraph>>
+|Print internal graph information
+
+|===
+
+[[graphshowvertex]]
+== pyvgx.Graph.ShowVertex()
+
+Print vertex details
+
+[source, python]
+----
+pyvgx.Graph.ShowVertex( id[, timeout ] )
+----
+
+[[graphvertexdescriptor]]
+== pyvgx.Graph.VertexDescriptor()
+
+Return vertex descriptor
+
+[source, python]
+----
+pyvgx.Graph.VertexDescriptor( id )
+----
+
+[[graphshowopenvertices]]
+== pyvgx.Graph.ShowOpenVertices()
+
+Print open vertices
+
+[source, python]
+----
+pyvgx.Graph.ShowOpenVertices()
+----
+
+[[graphdebugprintallocators]]
+== pyvgx.Graph.DebugPrintAllocators()
+
+Print internal allocator information to stdout. Specify allocator _name_ to dump a specific allocator.
+
+[source, python]
+----
+pyvgx.Graph.DebugPrintAllocators( [ name ] )
+----
+
+[[graphdebugcheckallocators]]
+== pyvgx.Graph.DebugCheckAllocators()
+
+Run internal allocator diagnostics. Specify _name_ to run diagnostics for a specific allocator.
+
+[source, python]
+----
+pyvgx.Graph.DebugCheckAllocators( [ name ] )
+----
+
+[[graphdebuggetobjectbyaddress]]
+== pyvgx.Graph.DebugGetObjectByAddress()
+
+Return a VGX object located as memory _address_.
+
+[source, python]
+----
+pyvgx.Graph.DebugGetObjectByAddress( address )
+----
+
+[[graphdebugfindobjectbyidentifier]]
+== pyvgx.Graph.DebugFindObjectByIdentifier()
+
+Return a VGX object with a specific _identifier_.
+
+[source, python]
+----
+pyvgx.Graph.DebugFindObjectByIdentifier( identifier )
+----
+
+[[graphdebugdumpgraph]]
+== pyvgx.Graph.DebugDumpGraph()
+
+Print internal graph information.
+
+[source, python]
+----
+pyvgx.Graph.DebugDumpGraph()
+----
+
+___
+
+[.float-group]
+--
+[.left]
+<<graphEvent.adoc#, icon:arrow-circle-left[size=2x, title="Graph Event Methods"]>>
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+<<graphMembers.adoc#, icon:arrow-circle-right[size=2x, title="Graph Members"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

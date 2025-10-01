@@ -1,0 +1,70 @@
+[[collectconstants]]
+= Collect Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<resultFieldConstants.adoc#, icon:arrow-circle-right[title="Result Field Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants are used with the `collect=` query parameter.
+
+|===
+|Constant |Value |Description
+
+|<<C_NONE>>
+|False
+|No arcs collected
+
+|<<C_COLLECT>>
+|True
+|All arcs collected
+
+|<<C_SCAN>>
+|(False, '*')
+|No arcs collected, but traversal continues
+
+|===
+
+[[C_NONE]]
+== pyvgx.C_NONE
+
+`pyvgx.C_NONE = False`
+
+Arcs encountered in the neighborhood corresponding to the vertex condition level at which `collect=` appears will not be collected into the result set. Neighborhood evaluation terminates after the first vertex condition match is detected, unless a deeper level vertex condition exists where collection is enabled.
+
+[[C_COLLECT]]
+== pyvgx.C_COLLECT
+
+`pyvgx.C_COLLECT = True`
+
+All arcs encountered in the neighborhood corresponding to the vertex condition level at which `collect=` appears will be collected into the result set when the vertex condition detects a match.
+
+[[C_SCAN]]
+== pyvgx.C_SCAN
+
+`pyvgx.C_SCAN = (False, '*')`
+
+Arcs encountered in the neighborhood corresponding to the vertex condition level at which `collect=` appears will not be collected into the result set. Neighborhood evaluation will continue until all neighbors have been evaluated, even if a vertex condition match is detected earlier.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=valueConditionConstants.adoc#, title="Value Condition Constants"]
+<<valueConditionConstants.adoc#, icon:arrow-circle-left[size=2x, title="Value Condition Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=resultFieldConstants.adoc#, title="Result Field Constants"]
+<<resultFieldConstants.adoc#, icon:arrow-circle-right[size=2x, title="Result Field Constants"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

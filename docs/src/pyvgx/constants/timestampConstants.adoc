@@ -1,0 +1,70 @@
+[[timestampconstants]]
+= Timestamp Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<opcodeConstants.adoc#, icon:arrow-circle-right[title="Opcode Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants represent valid internal timestamp limits.
+
+|===
+|Constant |Integer Value |Time (GMT)
+
+|<<T_MIN>>
+| 1
+| Thu Jan 01 00:00:01 1970
+
+|<<T_MAX>>
+| 4,102,444,799
+| Thu Dec 31 23:59:59 2099
+
+|<<T_NEVER>>
+| 4,102,444,800
+| Infinity
+
+|===
+
+[[T_MIN]]
+== pyvgx.T_MIN
+
+`pyvgx.T_MIN = 1`
+
+Minimum timestamp, in seconds in 1970.
+
+[[T_MAX]]
+== pyvgx.T_MAX
+
+`pyvgx.T_MAX = 4102444799`
+
+Maximum timestamp, in seconds in 1970.
+
+[[T_NEVER]]
+== pyvgx.T_NEVER
+
+`pyvgx.T_NEVER = 4102444800`
+
+Infinitely far into the future.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=sortSpecificationConstants.adoc#, title="Sort Specification Constants"]
+<<sortSpecificationConstants.adoc#, icon:arrow-circle-left[size=2x, title="Sort Specification Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=opcodeConstants.adoc#, title="Opcode Constants"]
+<<opcodeConstants.adoc#, icon:arrow-circle-right[size=2x, title="Opcode Constants"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

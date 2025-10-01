@@ -1,0 +1,81 @@
+= VGX/PyVGX v{project-version} <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: pyvgx/images/
+:linkattrs:
+:source-highlighter: highlightjs
+
+*VGX* is a general purpose graph and vector search platform. *PyVGX* is a Python module exposing the VGX C-API to enable application development via Python plugins. 
+
+
+== Getting Started
+
+<<pyvgx/install.adoc#, Install PyVGX>>::
+Download Python Package or Docker Image
+
+<<pyvgx/tutorial.adoc#, PyVGX Tutorial>>::
+An introduction to pyvgx, the Python module used for creating graph algorithms
+
+== PyVGX Reference
+
+<<pyvgx/reference.adoc#, Full Reference>>::
+A complete description of the VGX Python API. 
+
+<<pyvgx/shortref.adoc#, Compact Reference>>::
+A compact summary of the VGX Python API.
+
+== VGX Server
+
+Create scalable, multi-node services built on pyvgx plugins
+
+**
+... <<pyvgx/service/service.adoc#, VGX Server>>
+... <<pyvgx/service/pluginadapter.adoc#, Plugins>>
+... <<pyvgx/service/multinode.adoc#, Multi-Node>>
+... <<pyvgx/service/sysadmin.adoc#, Admin>>
+**
+
+
+== Quick Links
+
+
+**
+... <<pyvgx/graph/graph.adoc#, Graph Objects>>
+... <<pyvgx/vertex/vertex.adoc#pyvgxvertex, Vertex Objects>>
+... <<pyvgx/reference.adoc#memoryobject, Memory Objects>>
+... <<pyvgx/similarity/vector.adoc#pyvgxvector, Vector Objects>>
+**
+
+**
+... <<pyvgx/graph/graphQuery.adoc#, Queries>>
+... <<pyvgx/vertex/vertexFilter.adoc#vertexfilter, Vertex Condition>>
+... <<pyvgx/constants/constants.adoc#, Constants>>
+... <<pyvgx/limits.adoc#, Limits>>
+**
+
+**
+... <<pyvgx/evaluator/evaluator.adoc#, VGX Expression Language>>
+... <<pyvgx/evaluator/selectEvaluator.adoc#, Select Statement>>
+**
+
+== Other Useful Information
+
+<<pyvgx/io/vgxopxfer.adoc#stream_building_blocks, VGX Transaction Protocol>>::
+VGX Transaction Interconnect protocol definition
+
+<<pyvgx/VGXCoreConcepts.adoc#, VGX Core Concepts>>::
+VGX Core Concepts
+
+___
+
+[.float-group]
+--
+[.left]
+
+include::pyvgx/common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>

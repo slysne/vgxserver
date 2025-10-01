@@ -1,0 +1,1438 @@
+[[pyvgxserver_sysadmin]]
+= VGX Server System Administration <<../../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<multinode.adoc#, icon:arrow-circle-right[title="Multi-Node Setup"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:xrefstyle: full
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+System administration can be performed in three ways: +
+<<admin_ui>> +
+<<admin_service_endpoints>> +
+<<vgxadmin_tool>>
+
+
+[[admin_ui]]
+== Admin Pages
+
+* <<admin_ui_top>>
+* <<admin_ui_admin>>
+* <<admin_ui_status>>
+* <<admin_ui_console>>
+* <<admin_ui_search>>
+* <<admin_ui_plugin>>
+* <<admin_ui_system>>
+
+
+[[admin_ui_top]]
+=== Top Menu `/`
+
+Click on a grey box to open its page.
+
+image::ui_index.png[ui_index]
+
+[[admin_ui_admin]]
+=== Admin `/admin`
+
+Use this page for basic administration of a singe VGX Server instance.
+
+[TIP]
+====
+Click the lock icon in the middle of the page to enable/disable the various action buttons.
+====
+
+image::ui_admin.png[ui_admin]
+
+==== Display Readout
+
+[cols="1,1,4"]
+|===
+|Group |Box |Description
+
+.3+|*Service*
+|Name
+|Name of service, as provided to <<../reference.adoc#system_runserver_func, system.RunServer()>> _name_ argument, or `?` if running interactively.
+|State
+|`Running` or `Interactive`
+|Uptime
+|`days:hours:minutes:seconds` since VGX Server started
+
+.3+|*Order / Size*
+|Order
+|Total number of vertices in all loaded graphs
+|Size
+|Total number of arcs in all loaded graphs
+|Memory Usage
+|Memory used by this VGX Instance (% of physical memory on host)
+
+.2+|*Request*
+|Request Rate
+|Current requests per second reaching this VGX Server instance
+|Latency
+|Average / 99th Percentile request latency in milliseconds
+
+.2+|*Durability*
+|Persistence
+|`Durable` VGX Transaction Service has been started in durable mode with <<../reference.adoc#op_bind_func, op.Bind()>>
+
+`Volatile` Persist before shutdown required to retain data
+|State
+|`Streaming` Received graph data continuously persisted to transaction log
+
+`In-Memory` Data exists in memory only
+
+`Sync` Transaction data is being synchronized from this VGX Server instance to all its subscribers
+
+`Writing` All data in memory is being written to disk snapshot
+
+.2+|*Mutability*
+|Execution Mode
+|`Local` Graph modification logic is executing in local VGX Server instance
+
+`Bound: _txport_` VGX Transaction Service is running on _txport_, but no provider has attached
+
+`Suspended` VGX Transaction Service has temporarily suspended input processing
+
+`Streaming` A real-time transaction stream is established from an attached provider to this VGX Server instance
+
+|Mutable Mode
+|`Readonly` VGX Server instance data is currently not modifiable
+
+`TTL Active` Automatic expiration is running
+
+`TTL Frozen` Expiration events are currently suspended
+
+`TTL Passive` Expiration via VGX Transaction Service input only
+
+.2+|*TX I/O kiB/s*
+|Transaction Input Rate
+|Current data received from subscriber
+|Transaction Output Rate
+|Current data sent to subscriber(s)
+
+.3+|*Local*
+|State
+|`Idle`
+
+`Active`
+|Digest
+|Identicon representing current local state
+|Serial Number
+|Transaction sequence number
+
+.4+|*Provider*
+|State
+|`Idle` Attached provider is currently not sending data
+
+`Stream` Attached provider is currently sending data
+
+`Delta` Data is not in sync between provider and this VGX Server instance
+
+`Paused` VGX Transaction Service has temporarily suspended input processing
+
+|Digest
+|Identicon representing provider's current state
+|Hostname
+|Provider's hostname or IP address
+|Hport
+|Provider's HTTP server admin port (visible only when initiating subscription)
+
+.4+|*Subscriber*
+|State
+|`Idle` Currently not sending data to attached subscriber
+
+`Stream` Currently sending data to attached subscriber
+
+`Delta` Data is not in sync between this VGX Server instance and the subscriber
+
+`Paused` Output transactions are temporarily suspended
+
+`Sync` Data is being synchronized from this VGX Server instance to the subscriber
+
+`Down` Attached subscriber is currently unreachable
+
+|Digest
+|Identicon representing subscriber's current state
+|Hostname
+|Subscriber's hostname or IP address
+|Tport
+|Subscriber's input _txport_
+
+|===
+
+==== Action Buttons
+
+[NOTE]
+====
+Some actions are available only in certain modes. A button is not shown if its associated action is not applicable to this VGX Server instance.
+====
+
+[cols="1,1,4"]
+|===
+|Action |Opposite Action |Description
+
+|`*Shutdown*`
+|
+|Stop VGX Server instance
+
+|`*Service Out*`
+|`*Service In*`
+|Toggle S-OUT/S-IN mode for HTTP server plugin execution
+
+|`*Reset*`
+|
+|Reset all HTTP Server performance metrics to their initial state
+
+|`*Snapshot*`
+|
+|Persist all in-memory data to disk
+
+|`*Sync*`
+|
+|Initiate bulk synchronization of all data from this VGX Server instance to all attached subscribers
+
+|`*Truncate*`
+|
+|Remove all data from memory
+
+|`*Bind*`
+|`*Unbind*`
+|Start or stop VGX Transaction Service
+
+|`*Freeze TTL*`
+|`*Thaw TTL*`
+|Pause or resume automatic expiration events for all graphs
+
+|`*Readonly*`
+|`*Mutable*`
+|Toggle readonly state for all graphs
+
+|`*Pause I*`
+|`*Resume I*`
+|Pause or resume transaction input stream
+
+|`*Pause O*`
+|`*Resume O*`
+|Pause or resume transaction output stream
+
+|`*Detach All*`
+|
+|Detach all subscribers
+
+|`*Subscribe*`
+|
+|Request to become a subscriber of the specified provider
+
+|`*Detach*`
+|
+|Provider row: Detach from provider
+
+Subscriber row(s): Detach from subscriber
+
+|`*Attach*`
+|
+|Become a provider for the specified subscriber
+
+|===
+
+[[admin_ui_status]]
+=== Status `/status`
+
+This is a readonly summary page showing various metrics and counters.
+
+Service:: HTTP Socket Server metrics
+
+Transaction:: VGX Transaction Service metrics
+
+Graph:: Total graph object summary
+
+Memory:: Memory usage information
+
+image::ui_status.png[ui_status]
+
+[[admin_ui_console]]
+=== Console `/console`
+
+This page is a general purpose command interface for detailed manipulation and investigation of a running system, useful for troubleshooting and repair.
+
+[TIP]
+====
+`dir();` shows available commands
+
+`python: <expression>;` evaluates expression
+
+API command arguments are supplied as dict: +
+e.g. `Graph.Vertices: {'hits':5, 'sortby':S_IDEG}`
+====
+
+image::ui_console.png[ui_console]
+
+[[admin_ui_search]]
+=== General Search `/search`
+
+This page provides a general search interface.
+
+Neighborhood:: Maps to <<../graph/graphQuery.adoc#graphneighborhood, pyvgx.Graph.Neighborhood()>>
+
+Vertices:: Maps to <<../graph/graphQuery.adoc#graphvertices, pyvgx.Graph.Vertices()>>
+
+Arcs:: Maps to <<graph/graphQuery.adoc#grapharcs, pyvgx.Graph.Arcs()>>
+
+Vertex:: Display all vertex attributes and properties
+
+Expression:: Maps to <<../evaluator/evaluator.adoc#evaluate, Evaluate()>>
+
+image::ui_search.png[ui_search]
+
+[[admin_ui_plugin]]
+=== User Plugins and Builtin Plugins `/plugin`
+
+This page allows plugins to be tested.
+
+[WARNING]
+====
+Normally all admin UI pages should be accessed on the <<service.adoc#server_b_port, admin port>>. However, this page must be loaded on the <<service.adoc#server_a_port, main port>> when the plugin is a dispatcher pre-processor. If not, an error `Preprocessor plugin only allowed in dispatcher context` will be returned.
+
+Page header is shaded in light red when accessed on the main port as a warning, because admin tasks can lock executor threads for an extended period of time, which could lead to problems in a live system. Click the bar counter `||||||||||` next to `Port` before it goes to zero to remain on the main port. The page will otherwise reload on the admin port.
+====
+
+image::ui_plugin.png[ui_plugin]
+
+[[admin_ui_system]]
+=== Multi-Node System Dashboard `/system`
+
+Multiple VGX Server instances can be deployed together as a system. This page shows a summary of all nodes in the system and their roles.
+
+[NOTE]
+====
+For this page to work the <<multinode.adoc#system_descriptor, *SYSTEM_Descriptor*>> property has to be defined. This is a property of the <<../reference.adoc#system_system_func, system graph>> describing all nodes and their roles.
+====
+
+Consider a system with eight VGX Server instances deployed as show below:
+
+image::exampleservice.png[exampleservice, 480, 480, align="center"]
+
+The System Overview dashboard for this example system will look like this:
+
+image::ui_system.png[ui_system]
+
+[[admin_ui_system_columns]]
+==== System Dashboard Description
+
+The dashboard's upper segment shows a summary of information aggregated across all instances in the system. The <<multinode.adoc#descriptor_name, *System Name*>> is the name defined in the system descriptor.
+
+.Top level summary
+[cols="1,1,3"]
+|===
+|Column |Value |Description
+
+.2+|*Status*
+|`*OK*`
+|All components are running normally
+|`*Check _n_ warnings*`
+|One or more components requires attention
+
+|*Instances*
+|_i_ (_h_ hosts)
+|Total number of instances _i_ running on _h_ separate hosts
+
+|*Partitions*
+|_p_
+|Number of partitions (Builder instances)
+
+|*Vertices*
+|_order_
+|Total number of vertices across all partitions
+
+|*Arcs*
+|_size_
+|Total number of arcs across all partitions
+
+|*Properties*
+|_nprop_
+|Total number of properties across all partitions
+
+|*Vectors*
+|_nvec_
+|Total number of vectors across all partitions
+
+|*CPU*
+|_model_
+|CPU _model_ brand string installed on server(s)
+
+|*Memory*
+|_used_ (_hostmem_)
+|Total _used_ memory for all instances in system, out of the total _hostmem_ memory available on all hosts
+
+|===
+
+The dashboard's lower segment shows details for each system instance.
+
+.System instances
+[cols="1,1,4"]
+|===
+|Column |Value |Description
+
+3+|
+3+|*[Instance]*
+
+|<<multinode.adoc#descriptor_instance_id, *Id*>>
+|Instance Label
+|Unique instance identifier
+
+.6+|<<multinode.adoc#descriptor_instance_type, *Type*>>
+|`*Admin*`
+|Holds system configuration master and orchestrates multi-node admin operations
+|`*Dispatch*`
+|Request dispatcher responsible for distributing requests to back-end matrix, merging results, and executing any pre or post processing plugins
+|`*Builder*`
+|Responsible for generating graph data which is distributed to Search nodes, and plugin engine execution
+|`*Search*`
+|Responsible for plugin engine execution against graph data received from Builder node
+|`*TXProxy*`
+|Intermediary whose main purpose is to receive transaction data from Builder and forward to Search nodes, while optionally providing streaming persistence (durability)
+|`*Generic*`
+|Default, unspecified node type
+
+.17+|*Status*
+|`*OK*`
+|Instance is running normally
+|`*Busy*`
+|Transaction input processing is lagging more than 30 seconds behind provider
+|`*S/N*`
+|Serial number difference between this instance and its provider
+|`*No Input*`
+|Instance with VGX Transaction Service running (bound txport) has no provider attached
+|`*S-OUT*`
+|Service Out: HTTP Server plugin execution is paused
+|`*Sync*`
+|Instance is synchronizing its data to attached subscriber(s)
+|`*Snapshot*`
+|Instance is persisting data to disk
+|`*Down*`
+|Instance does not respond to status requests and is either not running or not reachable
+|`*Partial*`
+|Dispatcher's back-end matrix is incomplete due to one or more partitions without any replicas
+|`*OK/Delta*`
+|Dispatcher's back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is our of sync with its provider
+|`*Degraded*`
+|Dispatcher's back-end matrix has one or more unavailable replicas (reduced capacity)
+|`*Memory*`
+|Memory warning, instance's physical host memory usage is 80% - 83%
+|`*Mem _x_%*`
+|Memory warning, instance's physical host memory usage is 83% - 93%
+|`*! MEM _x_%*`
+|Memory critical, instance's physical host memory usage is above 93%
+|`*Readonly*`
+|Instance is in readonly mode
+|`*Init...*`
+|Instance is initializing after startup
+|`*---*`
+|State unknown due to incomplete status information
+
+|*Uptime*
+|`D:H:M:S`
+|Time since instance was started
+
+|<<multinode.adoc#descriptor_instance_host, *Address*>>
+|`host:port`
+|Hostname/IP and admin port of instance
+
+3+|
+3+|*[Server Load]*
+
+.4+|*Matrix*
+|`S-IN`
+|Service In: Back end engine instance operating normally
+|`S-OUT`
+|Service Out: Back end or dispatcher instance not accepting plugin requests
+|`**__m__**R x **__n__**P`
+|Dispatcher's back-end matrix dimensions (_m_ replicas, _n_ partitions)
+|Empty
+|N/A
+
+|*In*
+|Sockets
+|Number of connected clients
+
+|*Out*
+|Sockets
+|Number of channels connected to backend matrix
+
+|*Bal*
+|Load Balance
+|Relative request rate in group
+
+|*RPS*
+|Request Rate
+|HTTP Server requests per second
+
+|*95th ms*
+|Request Latency
+|HTTP Server 95th percentile request latency in milliseconds
+
+3+|
+3+|*[Memory]*
+
+|*Instance/Host*
+|Instance/Total
+|Memory used (in GiB) by instance / Physical host total memory usage
+
+3+|
+3+|*[Graph]*
+
+|*Order*
+|Vertices
+|Total number of vertices in all graphs
+
+|*Size*
+|Arcs
+|Total number of arcs in all graphs
+
+3+|
+3+|*[Interconnect]*
+
+|*Subs*
+|Subscribers
+|Currently attached subscribers
+
+|*Out*
+|Data Out Rate
+|Provider transaction data output rate
+
+|*In*
+|Data In Rate
+|Subscriber transaction data input rate
+
+|*Lag*
+|Data In Lag
+|Subscriber transaction input lag
+
+3+|
+3+|*[Transaction]*
+
+|*Digest*
+|State identicon
+|Representing current state of instance data
+
+|*S/N*
+|Serial Number
+|Most recent transaction serial number
+
+|*TX Log*
+|TX Log Size
+|In durable mode, transaction log grows until max size triggers batch persist, which clears the log and starts filling it again
+
+|===
+
+[[admin_ui_system_action]]
+==== System Dashboard Actions
+
+Many of the UI elements can be clicked to perform an action. Some elements open another page. Some elements perform an administrative action. When clicking an element that performs an action a dialog appears. The instance identifier for the clicked instance is pre-populated in the dialog. It is possible to edit the instance identifier, e.g. to perform the action on multiple instances by using the `+++*+++` wildcard symbol. For example, if clicking `S-IN` in the Matrix column for instance `S1.1` you can edit the instance to `S*` in the pup-up dialog. This will perform the action on all instances whose identifier starts with `S`.
+
+===== Dialog Bypass
+Hold down the `Shift` key to reveal action buttons describing the actions associated with elements.
+
+To bypass the dialog hold down `Shift-Alt` (Windows) / `Shift-Opt` (MacOS) while clicking an action button.
+
+To bypass the dialog for potentially destructive actions you have to click the action button three times while holding down `Shift-Alt`/`Shift-Opt`.
+
+===== Links
+Elements that open another page when clicked will open the link in a new window by default.
+
+Hold down the `Shift` key to open the link in the current window.
+
+Hold down `Shift-Ctrl` (Windows) / `Shift-Cmd` (MacOS) to open the link in a new tab.
+
+
+===== Action Description
+.Actions
+[cols="1,3"]
+|===
+|Column Element |Action When Clicked
+
+|*Id*
+|Open instance `/console`
+
+|*Type*
+|Open instance `/admin`
+
+|*Status*
+|Open instance `/status`
+
+|*Uptime*
+|Perform instance `/vgx/ping`
+
+|*Address*
+|Open instance `/index`
+
+|*Matrix*
+|Toggle instance S-IN/S-OUT state. The performed action depends on the current service state of the clicked instance.
+
+|*RPS*
+|Restart the instance HTTP server. This does not restart the VGX Server instance, only the HTTP server.
+
+|*95th ms*
+|N/A
+
+|*Memory*
+|Persist instance to disk
+
+|*Order*
+|Perform reverse synchronization of data. This only applies to provider instances already attached to one or more subscribers.
+
+|*Size*
+|Perform forward synchronization of data. This only applies to provider instances already attached to one or more subscribers.
+
+|*Subs*
+|Toggle attach/detach of provider instance. Applies to provider instances only.
+
+|*Out*
+|Toggle pause/resume of provider instance transaction output. Applies to attached provider instances only.
+
+|*In*
+|Toggle pause/resume of subscriber instance transaction input. Applies to attached subscriber instances only.
+
+|*Lag*
+|Unsubscribe from provider. Applies to attached subscriber instances only.
+
+|*Digest*
+|Attempt to repair/synchronize instances that are configured as subscribers of the clicked provider instance.
+
+|*S/N*
+|Perform a rolling update / synchronization of the provider instance's attached subscriber instances. At least two subscribers are required for this operation.
+
+|*TX Log*
+|N/A
+
+|===
+
+
+
+
+[[admin_service_endpoints]]
+== Administrative Service Endpoints
+
+All administrative tasks can be performed using the service endpoints described in this section.
+
+[[admin_service_authtoken]]
+=== authtoken
+
+All administrative plugins require parameter `authtoken`, which helps prevent accidental execution of administrative tasks. Before calling any of these plugins, first retrieve a new token via `/vgx/builtin/ADMIN_GetAuthToken`, then pass the returned token as `authtoken` parameter for the administrative plugin.
+
+The authtoken retrieved by `/vgx/builtin/ADMIN_GetAuthToken` can only be used once and expires 100 seconds after its was retrieved.
+
+==== authtoken Example
+
+.Request
+----
+http://127.0.0.1:9000/vgx/builtin/ADMIN_GetAuthToken
+----
+
+.Response
+[source, json]
+----
+{
+    "status": "OK",
+    "response": {
+        "authtoken": "3c8b886d2ef4565378339d580b689ef7fff8bf0ce55da1bbc5f6c1a140f1cf71",
+        "t0": 1715134438.5777998,
+        "tx": 1715134738.5777998
+    },
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.142
+}
+----
+
+[[admin_service_plugins]]
+=== ADMIN Plugins
+
+Call these endpoints to perform administrative tasks. Obtain a unique <<admin_service_authtoken, _authtoken_>> for each new request.
+
+==== ADMIN Plugin Parameters
+Use endpoint `/vgx/builtin/argspec?plugin=*_name_*` to see a description of parameters for each service.
+
+.Example
+----
+http://127.0.0.1:9000/vgx/builtin/argspec?plugin=ADMIN_Throttle
+----
+
+[source, json]
+----
+{
+    "status": "OK",
+    "response": [
+        {
+            "path": "/vgx/builtin/ADMIN_Throttle",
+            "description": [
+                "",
+                "ADMIN: Throttle TX input",
+                "rate : Limit TX input processing to units per second",
+                "unit : bytes, opcodes, operations, transactions",
+                "    "
+            ],
+            "parameters": {
+                "request": "<class 'pyvgx.PluginRequest'>",
+                "headers": "dict",
+                "authtoken": "str",
+                "rate": [
+                    "float",
+                    -1
+                ],
+                "unit": [
+                    "str",
+                    "bytes"
+                ]
+            },
+            "bound_graph": "None"
+        }
+    ],
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.182
+}
+----
+
+
+==== General
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|`/vgx/builtin/ADMIN_Console`
+|View or edit graph information, as in <<admin_ui_console>>
+
+|`/vgx/builtin/ADMIN_Shutdown`
+|Initiate instance shutdown. This requires two authtokens. Obtain the first token and pass in `authshutdown` parameter. Then obtain the second token and pass in `authtoken` parameter.
+
+|`/vgx/builtin/ADMIN_SystemDescriptor`
+|Update the <<multinode.adoc#system_descriptor, system descriptor>>
+
+|===
+
+==== Plugin Management
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|anchor:vgx_builtin_ADMIN_ReloadPlugins[]`/vgx/builtin/ADMIN_ReloadPlugins`
+|Reload all plugins initially loaded with <<multinode.adoc#pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>>, whose 
+<<multinode.adoc#vgxinstance_plugin_definitions, definitions>> are located in dynamically re-loadable modules (i.e. reference functions in _package_/_module_.)
+
+New plugins can be dynamically added by POSTing plugin definition JSON. The plugin module file containing functions referenced in the definition must already exist on the server's filesystem.
+
+|===
+
+==== Data Management
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|`/vgx/builtin/ADMIN_CancelSync`
+|Stop synchronization of subscribers (<<../reference.adoc#system_cancelsync_func, pyvgx.system.CacnelSync()>>)
+
+|`/vgx/builtin/ADMIN_Persist`
+|Create snapshot on disk for all loaded graphs (<<../reference.adoc#system_persist_func, pyvgx.system.Persist()>>)
+
+|`/vgx/builtin/ADMIN_Sync`
+|Synchronize all subscribers (<<../reference.adoc#system_sync_func, pyvgx.system.Sync()>>)
+
+|`/vgx/builtin/ADMIN_Truncate`
+|Delete all graph data (<<../reference.adoc#truncate_func, pyvgx.Graph.Truncate()>>)
+
+|===
+
+==== Graph State
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|`/vgx/builtin/ADMIN_ClearReadonly`
+|Make all graphs writable (<<../reference.adoc#system_clear_readonly_func, pyvgx.system.ClearReadonly()>>)
+
+|`/vgx/builtin/ADMIN_ResumeEvents`
+|Resume TTL process for all graphs (<<../reference.adoc#system_resume_events_func, pyvgx.system.ResumeEvents()>>)
+
+|`/vgx/builtin/ADMIN_SetReadonly`
+|Make all graphs readonly (<<../reference.adoc#system_set_readonly_func, pyvgx.system.SetReadonly()>>)
+
+|`/vgx/builtin/ADMIN_SuspendEvents`
+|Suspend TTL process for all graphs (<<../reference.adoc#system_suspend_events_func, pyvgx.system.SuspendEvents()>>)
+
+|===
+
+==== Socket Server
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|`/vgx/builtin/ADMIN_ResetMetrics`
+|Reset VGX Server metrics (<<service.adoc#system_resetmetrics_func, pyvgx.system.ResetMetrics()>>)
+
+|`/vgx/builtin/ADMIN_ServiceIn`
+|Enable VGX Server plugin execution (<<service.adoc#system_serviceinhttp_func, pyvgx.system.ServiceInHTTP(True)>>)
+
+|`/vgx/builtin/ADMIN_ServiceOut`
+|Disable VGX Server plugin execution (<<service.adoc#system_serviceinhttp_func, pyvgx.system.ServiceInHTTP(False)>>)
+
+|===
+
+==== Transaction Flow Management
+
+[cols="2,4"]
+|===
+|URI Path |Description
+
+|`/vgx/builtin/ADMIN_Attach`
+|Become a provider for the attached subscriber (<<../reference.adoc#op_attach_func, pyvgx.op.Attach()>>)
+
+|`/vgx/builtin/ADMIN_Bind`
+|Start VGX Transaction service on this VGX instance (<<../reference.adoc#op_bind_func, pyvgx.op.Bind()>>)
+
+|`/vgx/builtin/ADMIN_Detach`
+|Detach subscriber (<<../reference.adoc#op_detach_func, pyvgx.op.Detach()>>)
+
+|`/vgx/builtin/ADMIN_DetachAll`
+|Detach all subscribers (<<../reference.adoc#op_detach_func, pyvgx.op.Detach()>>)
+
+|`/vgx/builtin/ADMIN_ResumeTxInput`
+|Resume processing of input transactions (<<../reference.adoc#op_resumetxinput_func, pyvgx.op.ResumeTxInput()>>)
+
+|`/vgx/builtin/ADMIN_ResumeTxOutput`
+|Resume output of transaction data (<<../reference.adoc#op_resumetxoutput_func, pyvgx.op.ResumeTxOutput()>>)
+
+|`/vgx/builtin/ADMIN_Subscribe`
+|Request to become a subscriber of the specified provider instance (<<../reference.adoc#op_subscribe_func, pyvgx.op.Subscribe()>>)
+
+|`/vgx/builtin/ADMIN_SuspendTxInput`
+|Pause processing of input transactions (<<../reference.adoc#op_suspendtxinput_func, pyvgx.op.SuspendTxInput()>>)
+
+|`/vgx/builtin/ADMIN_SuspendTxOutput`
+|Pause output of transaction data (<<../reference.adoc#op_suspendtxoutput_func, pyvgx.op.SuspendTxOutput()>>)
+
+|`/vgx/builtin/ADMIN_Throttle`
+|Limit consumption rate of inbound transaction data (<<../reference.adoc#op_throttle_func, pyvgx.op.Throttle()>>)
+
+|`/vgx/builtin/ADMIN_Unbind`
+|Stop VGX Transaction service on this VGX instance (<<../reference.adoc#op_unbind_func, pyvgx.op.Unbind()>>)
+
+|`/vgx/builtin/ADMIN_Unsubscribe`
+|Unsubscribe from provider (<<../reference.adoc#op_unsubscribe_func, pyvgx.op.Unsubscribe()>>)
+
+|`/vgx/builtin/ADMIN_UpdateSubscribers`
+|Effectuate a provider's subscriber state according to a specified goal.
+
+|===
+
+[[vgxadmin_tool]]
+== _vgxadmin_ Command Line Tool
+
+Command line tool `vgxadmin` offers a convenient way to manage and monitor a multi-node system.
+
+A <<multinode.adoc#system_descriptor, system descriptor>> is required for this tool to work. By default a file named `vgx.cf` in the current working directory is expected. An alternative file can be specified with option `--cf`. An optional `<address>` (`host:port`) can be specified to point the tool directly at a running VGX Server instance, using that instance's system descriptor instead of a local file.
+
+[source, shell]
+----
+$ vgxadmin --help
+
+usage: vgxadmin [<address>] <options>
+-a, --attach <id>[,<sub>[,...]] Attach instance to subscribers
+-B, --bind <id>                 Bind transaction input port
+-c, --confirm                   Confirm operation (skip y/n prompt)
+-C, --command <id>,<gr>,<cmd>   Send console command <cmd> to graph <gr>
+-d, --detach <id>               Detach instance from subscribers
+-D, --restarthttp <id>          Restart HTTP server with refreshed config
+-E, --endpoint <path>           Send request to <address>
+-f, --cf <file>                 Use this local system descriptor file
+-g, --readonly <id>             Make graph(s) readonly
+-G, --writable <id>             Make graph(s) writable
+-i, --serviceout <id>           Service out
+-I, --servicein <id>            Service in
+-J, --show                      Show effective system descriptor
+-k, --cancelsync <id>           Terminate sync in progress
+-K, --forcecopy <src>,<dst>     Force hard sync from <src> to <dst>
+-L, --rollingupdate <id>        Forward sync subscribers one at a time in S-OUT
+-m, --resetmetrics <id>         Clear performance and error counters
+-M, --opdump <id>               Dump instance data to output file
+-n, --nodestat <id>[,<key>]     Nodestat
+-N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file
+-p, --pausein <id>              Pause transaction input
+-P, --pauseout <id>             Pause transaction output
+-Q, --instancecfg <id>          Show instance configuration
+-r, --resumein <id>             Resume transaction input
+-R, --resumeout <id>            Resume transaction output
+-s, --start <id>                Start instance on the local host
+-S, --status <id>               System summary
+-t, --pausettl <id>             Pause TTL event processor
+-T, --resumettl <id>            Resume TTL event processor (if enabled)
+-u, --unsubscribe <id>          Detach instance from provider
+-U, --unbind <id>               Unbind transaction input port
+-V, --throttle <id>[,<r>,<u>]   Throttle TX input rate <r>, unit <u>
+-w, --waitforidle <id>          Wait until instance input is idle
+-W, --persist <id>              Write instance data to disk
+-x, --stop <id>                 Stop instance
+-X, --truncate <id>             Erase instance data
+-y, --sync <id>[,<mode>]        Sync instance data to attached subscribers
+                                <mode>: [repair|hard|soft]
+-Y, --reversesync <id>          Reverse sync instance data from subscriber
+-Z, --descriptor <id>           Update instance system descriptor
+----
+
+=== _vgxadmin_ Options
+
+Many options require an argument `<id>`, which is a reference to <<multinode.adoc#descriptor_instance_id, instance identifiers>> in the system descriptor. `<id>` can be a single instance identifier, multiple identifiers separated by commas, or a wildcard pattern using `+++*+++`. (Some options do not accept multiple identifiers.)
+
+The same option can occur multiple times. Actions are performed sequentially, i.e. one action has to complete before the next action starts.
+
+If `<address>` is specified, it can either be a valid instance identifier or the `<host>:<port>` of a running VGX Server instance. In this case the `<id>` argument for all specified options defaults to that instance's identifier and can be omitted.
+
+When only `<address>` is provided (no other options specified) a summary of the running VGX Server instance is printed.
+
+[[vgxadmin_option_attach]]
+==== `--attach <id>` (`-a`)
+Attach provider instance(s) to subscribers in accordance with the <<multinode.adoc#descriptor_topology_transaction, transaction topology>> definition.
+
+.Example: Attach instances "B0.1" and "B0.2" to their configured subscribers
+[.copyable]
+[source, shell]
+----
+vgxadmin --attach "B0.1, B0.2"
+----
+
+[[vgxadmin_option_bind]]
+==== `--bind <id>` (`-B`)
+Start the transaction input service on the <<multinode.adoc#descriptor_instance_tport, tport>> defined for this instance.
+
+.Example: Start transaction input service on instance "S1.1"
+[.copyable]
+[source, shell]
+----
+vgxadmin --bind S1.1
+----
+
+[[vgxadmin_option_confirm]]
+==== `--confirm` (`-c`)
+Bypass y/n prompts for options that require confirmation.
+
+.Example: Remove all data from instance "S1.1" without prompting for confirmation
+[.copyable]
+[source, shell]
+----
+vgxadmin --confirm --truncate S1.1
+----
+
+[[vgxadmin_option_command]]
+==== `--command <id>,<gr>,<cmd>` (`-C`)
+Send console command `<cmd>` for graph `<gr>`. The `<cmd>` syntax is the same used on the <<admin_ui_console, `/console` page>>.
+
+.Example: Execute a remote pyvgx command on instance "S1.1"
+[.copyable]
+[source, shell]
+----
+vgxadmin --command S1.1,g1,"Graph.Vertices: {'hits':5, 'sortby':S_IDEG}"
+----
+
+[[vgxadmin_option_detach]]
+==== `--detach <id>` (`-d`)
+Detach provider instance(s) for all attached subscribers.
+
+.Example: Detach all instances with "B" prefix from their subscribers
+[.copyable]
+[source, shell]
+----
+vgxadmin --detach "B*"
+----
+
+[[vgxadmin_option_restarthttp]]
+==== `--restarthttp <id>` (`-D`)
+Restart HTTP server(s) with refreshed config. This is useful for dispatcher instances after making changes to the <<multinode.adoc#descriptor_topology_dispatch, dispatch topology>>.
+
+.Example: Restart the HTTP server on instance "TD"
+[.copyable]
+[source, shell]
+----
+vgxadmin --restarthttp TD
+----
+
+[[vgxadmin_option_endpoint]]
+==== `--endpoint <path>` (`-E`)
+Send HTTP request `<path>` to instance specified in `<address>`, which is required for this option.
+
+.Example: Send request for metrics to instance running locally on port 9990
+[.copyable]
+[source, shell]
+----
+vgxadmin 127.0.0.1:9990 --endpoint "/vgx/builtin/metrics"
+----
+
+[[vgxadmin_option_cf]]
+==== `--cf <file>` (`-f`)
+Use this local system descriptor file instead of the default `vgx.cf`.
+
+.Example: Print status of all instances defined in system descriptor `another.cf`
+[.copyable]
+[source, shell]
+----
+vgxadmin --cf another.cf --status "*"
+----
+
+[[vgxadmin_option_readonly]]
+==== `--readonly <id>` (`-g`)
+Make all graph(s) in instance(s) readonly.
+
+.Example: Set all instances with identifier prefix "S" to readonly
+[.copyable]
+[source, shell]
+----
+vgxadmin --readonly "S*"
+----
+
+[[vgxadmin_option_writable]]
+==== `--writable <id>` (`-G`)
+Make all graph(s) in instance(s) writable.
+
+.Example: Set instance "S1.1" writable
+[.copyable]
+[source, shell]
+----
+vgxadmin --writable S1.1
+----
+
+[[vgxadmin_option_serviceout]]
+==== `--serviceout <id>` (`-i`)
+Set instance(s) HTTP server to the S-OUT state. Plugin requests on the <<service.adoc#server_a_and_server_b, main port>> will return HTTP code <<service.adoc#status_503_service_out, "503 Service out">>. If a dispatcher is used, any S-OUT instances in its backend matrix will be ignored.
+
+.Example: S-OUT the second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --serviceout "S2*"
+----
+
+[[vgxadmin_option_servicein]]
+==== `--servicein <id>` (`-I`)
+Set instance(s) HTTP server to the S-IN state. Plugin requests on the <<service.adoc#server_a_and_server_b, main port>> will execute normally.
+
+.Example: S-IN the second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --servicein "S2*"
+----
+
+[[vgxadmin_option_show]]
+==== `--show` (`-J`)
+Show effective system descriptor.
+
+.Example: Retrieve and print system descriptor used by local instance on port 9111
+[.copyable]
+[source, shell]
+----
+vgxadmin 127.0.0.1:9111 --show
+----
+
+[[vgxadmin_option_cancelsync]]
+==== `--cancelsync <id>` (`-k`)
+Terminate any data synchronization currently in progress.
+
+.Example: Stop sync from instances with prefix "B" to their subscribers
+[.copyable]
+[source, shell]
+----
+vgxadmin --cancelsync "B*"
+----
+
+[[vgxadmin_option_forcecopy]]
+==== `--forcecopy <src>,<dst>` (`-K`)
+Force <<vgxadmin_option_sync, hard sync>> from `<src>` instance to `<dst>` instance. This allows data to be copied between any nodes within a system, bypassing the configured <<multinode.adoc#descriptor_topology_transaction, transaction topology>>.
+
+[TIP]
+====
+By creating a temporary system descriptor referencing instances in both system A and B it is possible to copy data between any nodes in both systems.
+====
+
+.Example: Copy data from one partition builder to another
+[.copyable]
+[source, shell]
+----
+vgxadmin --forcecopy "B0.2, B0.1"
+----
+
+[[vgxadmin_option_rollingupdate]]
+==== `--rollingupdate <id>` (`-L`)
+Synchronize data from provider instance to all its subscribers, one at a time, with each destination subscriber in S-OUT state while being updated. Since each destination is hard-sync'ed (destructive truncation followed by rebuild) the S-OUT state is required to avoid live traffic reaching the updated instance.
+
+[NOTE]
+====
+At least two destination subscribers must be actively serving in S-IN mode for rolling update to be performed.
+====
+
+.Example: Perform rolling update of two partitions
+[.copyable]
+[source, shell]
+----
+vgxadmin --rollingupdate B0.1 --rollingupdate B0.2
+----
+
+[[vgxadmin_option_resetmetrics]]
+==== `--resetmetrics <id>` (`-m`)
+Clear errors and performance counters for instance(s).
+
+.Example: Reset counters and errors for all search instances with prefix "S"
+[.copyable]
+[source, shell]
+----
+vgxadmin --resetmetrics "S*"
+----
+
+[[vgxadmin_option_opdump]]
+==== `--opdump <id>` (`-M`)
+Dump all graph data to an output file on the instance's local file system. The file will be named `opdump_<timestamp>.tx` located directly under the instance _vgxroot_ directory. Output data is written as <<../io/vgxopxfer.adoc#stream_building_blocks, VGX transactions>> and can be used to populate other instances.
+
+To allow an instance to restore data from a local file, the service implementation can use <<reference.adoc#_consume, pyvgx.op.Consume()>>. Data can be read line by line from `opdump_<timestamp>.tx` and submitted to `pyvgx.op.Consume()`.
+
+[NOTE]
+====
+The instance being dumped must not be attached to any subscribers and must not have the transaction input service running. Use `--detach`, `--unsubscribe` and `--unbind` as appropriate before performing `--opdump`.
+====
+
+.Example: Dump instance B0.1 data to output file as VGX transactions
+[.copyable]
+[source, shell]
+----
+vgxadmin --opdump B0.1
+
+# Output written to builder_B0.1/opdump_1731703450.tx
+----
+
+[[vgxadmin_option_nodestat]]
+==== `--nodestat <id>[,<key>]` (`-n`)
+Retrieve `/vgx/nodestat` from instance(s) and print result, optionally filtered to only show attribute `<key>`.
+
+.Example: Show memory consumed by all builder instances
+[.copyable]
+[source, shell]
+----
+vgxadmin --nodestat "B*",memory-process
+----
+
+[[vgxadmin_option_reloadplugins]]
+==== `--reloadplugins <id>[,<pd>]` (`-N`)
+Reload already registered plugins, or add plugins in `<pd>` json file. If adding new plugins the `<pd>` file format is the JSON equivalent of the Python <<multinode.adoc#vgxinstance_plugin_definitions, plugin definition list>> used with <<multinode.adoc#pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>>.
+
+The plugin implementation Python code must already exist on the filesystem of the instance being updated, and the plugin definition list must correctly specify the plugin package(s) and function(s).
+
+===== Example: Add square root capabilities to running system
+
+Assuming the running service implementation exists in a package called `service`, add a new file `extras.py` to the package containing the following Python code:
+
+[IMPORTANT]
+====
+The plugin implementation Python code must be placed on disk on every host for which we intend to execute the update. 
+====
+
+.service/extras.py
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+def SquareRoot( request:PluginRequest, graph:Graph, x:float ):
+    return x ** 0.5
+----
+
+On the local machine (where vgxadmin is to be executed) place a new file `sqrt.json` in the current directory with the following content:
+
+.sqrt.json
+[.copyable]
+[source, json]
+----
+[
+  {
+    "name":    "sqrt",
+    "package": "service",
+    "module":  ".extras",
+    "engine":  "SquareRoot",
+    "pre":     null,
+    "post":    null,
+    "graph":   "*"
+  }
+]
+----
+
+Execute the reload command:
+
+.Add new endpoint /vgx/plugin/sqrt to TD instance
+[.copyable]
+[source, shell]
+----
+vgxadmin --reloadplugins TD,sqrt.json
+----
+
+Now, assuming TD runs locally on port 9990, we can make requests to compute square roots:
+
+.Compute square root of 123
+[.copyable]
+[source, shell]
+----
+curl http://127.0.0.1:9990/vgx/plugin/sqrt?x=123
+----
+
+.Square root result
+[source, shell]
+----
+{
+    "status": "OK",
+    "response": 11.090536506409418,
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.072
+}
+----
+
+[[vgxadmin_option_pausein]]
+==== `--pausein <id>` (`-p`)
+Pause transaction input service on subscriber instance(s). Transaction data is received and queued, but not applied while in the paused state.
+
+.Example: Pause transaction input on the second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --pausein "S2*"
+----
+
+[[vgxadmin_option_pauseout]]
+==== `--pauseout <id>` (`-P`)
+Pause transaction output emitter on provider instance(s). Transaction data is produced and queued, but not sent to subscribers while in the paused state.
+
+.Example: Pause transaction output on the builders
+[.copyable]
+[source, shell]
+----
+vgxadmin --pauseout "B*"
+----
+
+[[vgxadmin_option_instancecfg]]
+==== `--instancecfg <id>` (`-Q`)
+Show effective instance configuration parameters as determined by system descriptor.
+
+.Example: Print the top dispatcher's configuration
+[.copyable]
+[source, shell]
+----
+vgxadmin --instancecfg TD
+----
+
+[[vgxadmin_option_resumein]]
+==== `--resumein <id>` (`-r`)
+Resume transaction input service on subscriber instance(s). Transactions previously received and queued while in the paused state are immediately applied,  followed by normal streaming operation.
+
+.Example: Resume transaction input on the second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --resumein "S2*"
+----
+
+[[vgxadmin_option_resumeout]]
+==== `--resumeout <id>` (`-R`)
+Resume transaction output
+Resume transaction output emitter on provider instance(s). Transactions previously produced and queued while in the paused state are immediately sent to subscribers, followed by normal streaming operation.
+
+.Example: Resume transaction output on the builders
+[.copyable]
+[source, shell]
+----
+vgxadmin --resumeout "B*"
+----
+
+[[vgxadmin_option_start]]
+==== `--start <id>` (`-s`)
+
+[IMPORTANT]
+====
+For internal development. Do not use. 
+====
+
+[[vgxadmin_option_status]]
+==== `--status <id>` (`-S`)
+Print status summary for instance(s).
+
+.Example: Print status for all instances in system
+[.copyable]
+[source, shell]
+----
+vgxadmin --status "*"
+----
+
+[[vgxadmin_option_pausettl]]
+==== `--pausettl <id>` (`-t`)
+Pause TTL event processor. Objects with expiration time set will not be deleted while in the paused state.
+
+.Example: Prevent deletion of expired objects on builder row
+[.copyable]
+[source, shell]
+----
+vgxadmin --pausettl "B*"
+----
+
+[[vgxadmin_option_resumettl]]
+==== `--resumettl <id>` (`-T`)
+Resume TTL event processor, if globally enabled. Expired objects will be deleted immediately.
+
+.Example: Resume deletion of expired objects on builder row
+[.copyable]
+[source, shell]
+----
+vgxadmin --resumettl "B*"
+----
+
+[[vgxadmin_option_unsubscribe]]
+==== `--unsubscribe <id>` (`-u`)
+Detach subscriber instance(s) from provider(s).
+
+.Example: Detach second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --unsubscribe "S2*"
+----
+
+[[vgxadmin_option_unbind]]
+==== `--unbind <id>` (`-U`)
+Stop the transaction input service on instance.
+
+.Example: Stop transaction input service on second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --unbind S2.1 --unbind S2.2
+----
+
+[[vgxadmin_option_throttle]]
+==== `--throttle <id>[,<r>,<u>]` (`-V`)
+Get or set data consumption rate limits for the transaction input service. When no rate `<r>` and unit `<u>` are specified the configured throttle parameters are returned. When supplied, update consumption rate `<r>` for consumption unit `<u>`. Allowed values for `<u>` are: `bytes`, `opcodes`, `operations`, `transactions`. Rate `<r>` is specified as units per second. Remove all limits using rate 0 and unit `all_unlimited`.
+
+.Example: On search nodes, limit input data consumption to 1,000 transactions/sec and 50,000 opcodes/sec
+[.copyable]
+[source, shell]
+----
+vgxadmin --throttle "S*",1000,transactions --throttle "S*",50000,opcodes
+----
+
+[[vgxadmin_option_waitforidle]]
+==== `--waitforidle <id>` (`-w`)
+Wait until instance transaction input has not been processing data for at least 5 seconds. This is useful when stringing several actions together in the same command and subsequent actions depend on previous actions to be fully completed.
+
+.Example: Synchronize data from builders to search rows, then S-IN search rows
+[.copyable]
+[source, shell]
+----
+vgxadmin --sync "B*" --waitforidle "S*" --servicein "S*"
+----
+
+[[vgxadmin_option_persist]]
+==== `--persist <id>` (`-W`)
+Write instance data to disk.
+
+.Example: Save builder snapshots to disk
+[.copyable]
+[source, shell]
+----
+vgxadmin --persist "B*"
+----
+
+[[vgxadmin_option_stop]]
+==== `--stop <id>` (`-x`)
+Shut down instance(s).
+
+.Example: Shut down the second search row
+[.copyable]
+[source, shell]
+----
+vgxadmin --stop "S2*"
+----
+
+[[vgxadmin_option_truncate]]
+==== `--truncate <id>` (`-X`)
+Erase instance data.
+
+.Example: Delete all builder data (propagated to any attached subscribers)
+[.copyable]
+[source, shell]
+----
+vgxadmin --truncate B0.1 --truncate B0.2
+----
+
+[[vgxadmin_option_sync]]
+==== `--sync <id>[,<mode>]` (`-y`)
+Synchronize data from provider instance(s) to their attached subscriber(s). Synchronization is performed according to the specified `<mode>`, which must be one of `hard`, `soft`, or `repair`.
+
+`hard`::
+Truncate all attached subscribers, then send all data
+
+`soft`::
+Send all data to attached subscribers without truncating first
+
+`repair` (default)::
+Perform hard sync of subscribers that require it, i.e. subscribers with data different from their respective providers. Subscribers that are in sync with their providers are unaffected. Affected subscribers must be set to S-OUT for this operation to proceed.
+
+.Example: Copy data from all builders to their subscribers
+[.copyable]
+[source, shell]
+----
+vgxadmin --sync "B*",hard
+----
+
+[[vgxadmin_option_reversesync]]
+==== `--reversesync <id>` (`-Y`)
+Perform reverse synchronization of provider instance data from its subscriber with the highest master serial number.
+
+.Example: Restore builder B0.1 with data from one of its configured subscribers
+[.copyable]
+[source, shell]
+----
+vgxadmin --reversesync B0.1
+----
+
+[[vgxadmin_option_descriptor]]
+==== `--descriptor <id>` (`-Z`)
+Update system descriptor on instance(s) with the effective system descriptor.
+
+.Example: Send the local `vgx.cf` to all defined instances
+[.copyable]
+[source, shell]
+----
+vgxadmin --descriptor "*"
+----
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<pluginadapter.adoc#, icon:arrow-circle-left[size=2x, title="Plugin Adapter"]>>
+<<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<multinode.adoc#, icon:arrow-circle-right[size=2x, title="Multi-Node Setup"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+
+
+

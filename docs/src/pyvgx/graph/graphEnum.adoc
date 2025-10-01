@@ -1,0 +1,238 @@
+[[graphenummethods]]
+= Graph Enumeration Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphEvent.adoc#, icon:arrow-circle-right[title="Graph Event Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Enumeration Methods |Description
+
+2+|*<<relationships>>*
+
+|<<graphenumrelationship>>
+|Define relationship type
+
+|<<graphrelationship>>
+|Return relationship type by enum
+
+|<<graphrelationships>>
+|Return defined relationship types
+
+2+|*<<vertextypes>>*
+
+|<<graphenumvertextype>>
+|Define vertex type
+
+|<<graphvertextype>>
+|Return vertex type by enum
+
+|<<graphvertextypes>>
+|Return defined vertex types
+
+2+|*<<dimensions>>*
+
+|<<graphenumdimension>>
+|Define vector dimension
+
+|<<graphdimension>>
+|Return vector dimension by enum
+
+2+|*<<keys>>*
+
+|<<graphenumkey>>
+|Define property key
+
+|<<graphkey>>
+|Return property key by enum
+
+|<<graphpropertykeys>>
+|Return defined property keys
+
+2+|*<<values>>*
+
+|<<graphenumvalue>>
+|Define property string value
+
+|<<graphvalue>>
+|Return property string value by enum
+
+|<<graphpropertyvalues>>
+|Return defined property string values
+
+|===
+
+[[relationships]]
+== Relationships
+
+[[graphenumrelationship]]
+=== pyvgx.Graph.EnumRelationship()
+
+[source, python]
+----
+pyvgx.Graph.EnumRelationship( relationship_name )
+----
+
+Return enumeration code for _relationship_name_. New enumeration mapping is created if _relationship_name_ is previously undefined.
+
+[[graphrelationship]]
+=== pyvgx.Graph.Relationship()
+
+[source, python]
+----
+pyvgx.Graph.Relationship( code )
+----
+
+Return the relationship name associated with enumeration _code_ if it exists, otherwise raise <<../reference.adoc#EnumerationError_exc, `pyvgx.EnumerationError`>>.
+
+[[graphrelationships]]
+=== pyvgx.Graph.Relationships()
+
+[source, python]
+----
+pyvgx.Graph.Relationships()
+----
+
+Return a dictionary of all existing { _relationship_name_ : _code_ } mappings.
+
+[[vertextypes]]
+== Vertex Types
+
+[[graphenumvertextype]]
+=== pyvgx.Graph.EnumVertexType()
+
+[source, python]
+----
+pyvgx.Graph.EnumVertexType( vertex_type )
+----
+
+Return enumeration code for _vertex_type_. New enumeration mapping is created if _vertex_type_ is previously undefined.
+
+[[graphvertextype]]
+=== pyvgx.Graph.VertexType()
+
+[source, python]
+----
+pyvgx.Graph.VertexType( code )
+----
+
+Return the vertex type name associated with enumeration _code_ if it exists, otherwise raise <<../reference.adoc#EnumerationError_exc, `pyvgx.EnumerationError`>>.
+
+[[graphvertextypes]]
+=== pyvgx.Graph.VertexTypes()
+
+[source, python]
+----
+pyvgx.Graph.VertexTypes()
+----
+
+Return a dictionary of all existing { _vertex_type_ : _code_ } mappings.
+
+[[dimensions]]
+== Vector Dimensions
+
+[[graphenumdimension]]
+=== pyvgx.Graph.EnumDimension()
+
+[source, python]
+----
+pyvgx.Graph.EnumDimension( dimension )
+----
+
+Return enumeration code for _dimension_. New enumeration mapping is created if _dimension_ is previously undefined.
+
+[[graphdimension]]
+=== pyvgx.Graph.Dimension()
+
+[source, python]
+----
+pyvgx.Graph.Dimension( code )
+----
+
+Return the dimension associated with enumeration _code_ if it exists, otherwise raise <<../reference.adoc#EnumerationError_exc, `pyvgx.EnumerationError`>>.
+
+[[keys]]
+== Property Keys
+
+[[graphenumkey]]
+=== pyvgx.Graph.EnumKey()
+
+[source, python]
+----
+pyvgx.Graph.EnumKey( key )
+----
+
+Return enumeration code for property _key_. New enumeration mapping is created if _key_ is previously undefined.
+
+[[graphkey]]
+=== pyvgx.Graph.Key()
+
+[source, python]
+----
+pyvgx.Graph.Key( code )
+----
+
+Return the property key associated with enumeration _code_ if it exists, otherwise raise <<../reference.adoc#EnumerationError_exc, `pyvgx.EnumerationError`>>.
+
+[[graphpropertykeys]]
+=== pyvgx.Graph.PropertyKeys()
+
+[source, python]
+----
+pyvgx.Graph.PropertyKeys()
+----
+
+Return a dictionary of all existing { _key_ : _code_ } mappings.
+
+[[values]]
+== Property String Values
+
+[[graphenumvalue]]
+=== pyvgx.Graph.EnumValue()
+
+[source, python]
+----
+pyvgx.Graph.EnumValue( string )
+----
+
+Return enumeration code for property _string_ value. New enumeration mapping is created if _string_ is previously undefined.
+
+[[graphvalue]]
+=== pyvgx.Graph.Value()
+
+[source, python]
+----
+pyvgx.Graph.Value( code )
+----
+
+Return the property string value associated with enumeration _code_ if it exists, otherwise raise <<../reference.adoc#EnumerationError_exc, `pyvgx.EnumerationError`>>.
+
+[[graphpropertyvalues]]
+=== pyvgx.Graph.PropertyStringValues()
+
+[source, python]
+----
+pyvgx.Graph.PropertyStringValues()
+----
+
+Return a dictionary of all existing { _string_ : _code_ } mappings.
+
+___
+
+[.float-group]
+--
+[.left]
+<<graphManagement.adoc#, icon:arrow-circle-left[size=2x, title="Graph Management Methods"]>>
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+<<graphEvent.adoc#, icon:arrow-circle-right[size=2x, title="Graph Event Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

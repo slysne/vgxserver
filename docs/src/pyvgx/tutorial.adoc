@@ -1,0 +1,625 @@
+[[pyvgxtutorial]]
+= PyVGX {project-version} Tutorial <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+image::pyvgx.png[PYVGX,220,220,align="left"]
+
+[[install]]
+== Setup
+
+[source, bash]
+----
+pip install pyvgx
+----
+
+If you want to install the Docker Image instead, or use a different package repository than PyPI, see <<install.adoc#, how to install>>.
+
+== Introduction
+
+This tutorial describes *pyvgx*, a Python module for building and querying graph structures, like this:
+
+.Create some nodes and run a query
+[.copyable]
+[source, python]
+----
+import pyvgx
+
+# Make some friends
+graph = pyvgx.Graph( "friends" )
+graph.Connect( "Alice", "knows", "Bob" )
+graph.Connect( "Alice", "knows", "Charlie" )
+graph.Connect( "Alice", "knows", "Diane" )
+graph.Connect( "Charlie", "likes", "coffee" )
+
+# Which of Alice's friends likes coffee?
+graph.Neighborhood(
+    "Alice",
+    arc      = "knows",
+    neighbor = {
+        'arc'      : "likes",
+        'neighbor' : "coffee"
+    }
+)
+----
+
+=== Hello World Service
+
+To create a useful service you must write at least one plugin to perform the required graph operations.
+
+Here is a complete implementation of a basic hello world service.
+
+.Step 1: Complete code for Hello World Service
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+system.Initialize( "hello", http=9000 )
+
+def hello( request:PluginRequest, message:str ):
+  return "Hello, you said '{}'".format( message )
+
+system.AddPlugin( hello )
+----
+
+.Step 2: Test the service
+----
+http://127.0.0.1:9000/vgx/plugin/hello?message=hi
+----
+
+.Step 3: Inspect the response
+[source, json]
+----
+{
+    "status": "OK",
+    "response": "Hello, you said 'hi'",
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.061
+}
+----
+
+=== Quick Note about Multithreading
+Don't worry about the Python GIL.
+
+PyVGX is a wrapper around a lower-level library called *vgx* written in C.
+All features of the C library are exposed to Python via pyvgx. When you call API methods like
+`Connect()` and `Neighborhood()` in the example above, the calling thread leaves the Python
+interpreter and continues execution within the *vgx* core until the operation completes.
+This means multiple threads can execute simultaneously, even when those threads originate
+in the Python interpreter as part of your Python code.
+
+TIP: Try to minimize the amount of pure Python you write to implement algorithms, especially
+loops and time consuming operations on Python objects such as lists and dictionaries. Instead,
+<<reference.adoc#, learn the pyvgx API>> and see if you can find ways to construct queries
+to perform all the work for you. Pyvgx includes an
+<<evaluator/evaluator.adoc#evaluatoroverview, expression language>> for use in graph queries
+and gives access to platform native <<evaluator/evaluator.adoc#evaluatormemory, memory arrays>>
+which let you write efficient algorithms that bypass the Python interpreter.
+
+
+[[gettingstarted]]
+== Getting Started
+
+At this point you should have Python and pyvgx <<install.adoc#, installed on your system>>,
+either running in a Docker image or installed directly on your system.
+
+Let's start the Python interpreter and make a graph.
+
+[[makenewgraph]]
+=== Import, Initialize and Make a New Graph
+
+[.copyable]
+[source, python, subs=+attributes]
+----
+# Import the contents of pyvgx
+from pyvgx import *
+
+# Initialize pyvgx by declaring a home directory for data
+system.Initialize("data/graph")
+
+# Create a new graph (or restore from disk if it already exists)
+g = Graph( "testgraph" )
+----
+
+After running these statements we have a graph object `*g*` to play with.
+
+Let's insert two persons, `*Alice*` and `*Bob*`, using the <<graph/graphVertex.adoc#graphcreatevertex, `CreateVertex()`>> method:
+
+[.copyable]
+[source, python]
+----
+g.CreateVertex( "Alice", type="person" )
+g.CreateVertex( "Bob", type="person" )
+----
+
+[[makeconnection]]
+=== Make a Connection
+
+Next, we connect the two persons with a `likes` relationship using the <<graph/graphArc.adoc#graphconnect, `Connect()`>> method:
+
+image::tutorial1.png[tutorial1]
+
+[.copyable]
+[source, python]
+----
+g.Connect( "Alice", "likes", "Bob" )
+----
+
+This inserts a directed edge of type _likes_ from _Alice_ to _Bob_. In pyvgx all edges are directed.
+A directed edge is commonly referred to as *_arc_*.
+
+The arc created above has no attributes aside from its type name (_likes_). It is possible for an arc to
+also have a value and sometimes automatic behaviors. We will see examples later.
+
+You will see this notation used to express a relationship: _Alice->[likes]->Bob_
+
+[[initialterminal]]
+=== Initial and Terminal Vertices
+
+We will use the terms *_vertex_* and *_node_* interchangeably. They mean the same thing. When talking about connected nodes in a directed graph we refer to the start node as the *_initial_* (or *_tail vertex_*) and the end node as the *_terminal_* (or *_head vertex_*).
+
+Above, _Alice_ is the initial/tail and _Bob_ is the terminal/head for the _likes_ arc. If _Bob_ also likes _Alice_ we could insert another arc going the opposite direction. This would reverse the initial/terminal vertex roles for that arc. We only refer to initials and terminals in relation to the arc that connects them.
+
+[NOTE]
+====
+Be aware that inserting an arc implicitly creates another _hidden reverse arc_. This is necessary to allow reverse relationship lookup in queries. You should NOT create the reverse arc yourself, that would be a waste of system memory. It is not necessary to explicitly create the reverse arc in order to traverse in reverse. (If you did there would be *four* arcs between the nodes!)
+
+It is possible to suppress creation of the implicit reverse arc via the <<constants/arcModifierConstants.adoc#M_FWDONLY>> modifier bitmask.
+
+image::tutorial2.png[tutorial2, title="Implicit reverse arc"]
+====
+
+[[arcsdegree]]
+=== Arcs and Degree
+
+Vertices are connected by arcs. The arcs originating at a vertex are called *_outarcs_*. The arcs arriving at a vertex from somewhere else are called *_inarcs_*. The number of outarcs leaving a vertex is the vertex *_outdegree_*. The number of inarcs entering a vertex is the vertex *_indegree_*. The total number of arcs of any direction incident on a vertex is the vertex *_degree_*.
+
+For example, vertex `*B*` below has three outarcs and two inarcs, and therefore outdegree=3, indegree=2 and degree=5.
+
+image::tutorial3.png[tutorial3, 500,500, title="Outarcs, inarcs, and degree"]
+
+When an initial vertex is connected to a terminal with exactly one arc we call this arc a *_simple arc_*. An initial vertex can also be connected by more than one arc to the same terminal. We call this a *_multiple arc_*. The degree accounts for all individual arcs, including each member of a multiple arc. For example, `*A*` above has a multiple arc to `*C*`.
+
+Vertices are sometimes classified according to their inarcs and outarcs. A vertex with one or more outarcs but no inarcs is called a *_source_*. In the figure above `*A*` is the only source. A vertex with one or more inarcs but no outarcs is called a *_sink_*. In the figure above `*C*` and `*D*` are sinks. A vertex with both inarcs and outarcs is called *_internal_*. In the figure above `*B*` and `*E*` are internal. A vertex with no arcs is called *_isolated_*. In the figure above `*F*` is the only isolated vertex.
+
+[[virtualreal]]
+=== Virtual and Real Vertices
+
+In pyvgx vertices are either <<VGXCoreConcepts.adoc#realvirtualvertices, *_real_* or *_virtual_*>>. A vertex created explicitly with <<graph/graphVertex.adoc#graphcreatevertex, `CreateVertex()`>> or <<graph/graphVertex.adoc#graphnewvertex, `NewVertex()`>> is a *_real vertex_*. However, it is possible to create a new node in the graph implicitly by connecting an arc from an existing node to another node that does not already exist. I.e. when <<graph/graphArc.adoc#graphconnect, `Connect()`>> specifies a non-existent terminal, the terminal will be _implicitly created_ as a *_virtual vertex_*. The terminal is created only to serve as a destination for the arc.
+
+If the initial vertex does not exist (or exists as a virtual vertex) `Connect()` will implicitly create a real vertex (or convert the virtual to real.) In this case the vertex will have no type, just as if `CreateVertex()` were called prior to `Connect()` without a type parameter.
+
+For example:
+
+[.copyable]
+[source, python]
+----
+# "Alice" and "Bob" already exist and are connected
+
+# Implicitly create "Charlie" as VIRTUAL
+g.Connect( "Alice", "visits", "Charlie" )
+
+# "Charlie" becomes REAL, "coffee" is new VIRTUAL
+g.Connect( "Charlie", "drinks", "coffee" )
+----
+
+Our graph now looks like this:
+
+image::tutorial4.png[tutorial4, 400, 400, title="REAL and VIRTUAL vertices"]
+
+NOTE: The type of a typeless vertex is the reserved string `"+++__+++vertex+++__+++"`.
+
+A virtual vertex automatically disappears from the graph when it no longer has any inarcs. If _Charlie_ no longer drinks _coffee_ then once the _drinks_ arc is disconnected _coffee_ is automatically deleted. However, if _Alice_ no longer _visits_ _Charlie_ then once the _visits_ arc is disconnected _Charlie_ will still continue to exist.
+
+Another scenario arises if _Charlie_ is explicitly removed. When _Charlie_ is deleted all of _Charlie_'s outarcs are also removed, which means _coffee_ will be deleted too. However, since _Charlie_ has inarcs it will continue to exist in the graph to serve as destination for _Alice_'s _visits_. _Charlie_ is therefore converted to virtual. In other words, deleting a node from the graph will remove the node's outarcs but will not remove the node's inarcs. If the deleted node has inarcs then the node will remain in the graph as a virtual node.
+
+[.copyable]
+[source, python]
+----
+# Charlie is converted to virtual
+g.DeleteVertex( "Charlie" )
+----
+
+image::tutorial5.png[tutorial5, 250, 250]
+
+[[simplequery]]
+=== Run a Simple Query
+
+Let's see how _Alice_ is connected:
+
+[.copyable]
+[source, python]
+----
+g.Neighborhood( "Alice" )
+----
+
+This query returns all of _Alice_'s outarcs. The result of the query looks like this:
+
+[source, python]
+----
+[ 'Bob', 'Charlie' ]
+----
+
+[[morecomplex]]
+== A More Complex Graph
+
+We will now create the graph shown below and run some queries.
+
+image::tutorial6.png[tutorial6]
+
+=== Create the Graph
+
+The following code will generate the graph shown in the picture above (with some random elements.) Notice how most _Persons_ and _Companies_ will be connected to _Coffee_ or _Tea_ through _drinks_ and _purchased_ relationships.
+
+(You should be able to copy-paste this entire code snippet and run it.)
+
+[.copyable]
+[source, python]
+----
+# ======== Let's create all the vertices first ========
+
+# Person P0-P99999
+for n in range( 100000 ):
+    r = g.CreateVertex( "P%d" % n, type="person" )
+
+# Company C0-C99
+for n in range( 100 ):
+    r = g.CreateVertex( "C%d" % n, type="company" )
+
+Alice = g.NewVertex( "Alice", type="person" )
+Bob = g.NewVertex( "Bob", type="person" )
+g.Connect( Alice, "visits", "Charlie" )
+Charlie = g.OpenVertex( "Charlie" )
+Coffee = g.NewVertex( "Coffee", type="product" )
+Tea = g.NewVertex( "Tea", type="product" )
+Joes = g.NewVertex( "Joe's", type="shop" )
+
+# ======== Hook up everything as shown in the diagram above ========
+g.Connect( Alice, "likes", Bob )
+g.Connect( Bob, "drinks", Coffee )
+g.Count( Bob, "purchased", Coffee )
+g.Count( Bob, "purchased", Coffee )
+g.Count( Bob, "purchased", Coffee )
+g.Connect( Charlie, "drinks", Tea )
+g.Count( Charlie, "drinks", Tea, 17 )
+
+# Some random behaviors
+import random
+random.seed( 1234 )
+# Person P0-P99999 behavior
+for n in range( 100000 ):
+    Pn = "P%d" % n
+    if random.random() > 0.1:
+        r = g.Connect( Pn, "drinks", Coffee )
+        how_many = int(random.lognormvariate(2,0.5))
+        r = g.Count( Pn, "purchased", Coffee, how_many )
+    if random.random() > 0.3:
+        r = g.Connect( Pn, "drinks", Tea )
+        how_many = int(random.lognormvariate(2,0.5))
+        r = g.Count( Pn, "purchased", Tea, how_many  )
+
+# Company C0-C99 behavior
+for n in range( 100 ):
+    Cn = "C%d" % n
+    how_many = int(random.lognormvariate(6,0.3))
+    r = g.Count( Cn, "purchased", Coffee, how_many )
+    how_many = int(random.lognormvariate(6,0.2))
+    r = g.Count( Cn, "purchased", Tea, how_many  )
+
+g.Connect( Joes, "sells", Coffee )
+g.Connect( initial=Joes, arc=("price",M_FLT,2.99), terminal=Coffee )
+g.Connect( Joes, "sells", Tea )
+g.Connect( Joes, ("price",M_FLT,1.79), Tea )
+
+g.CloseAll()
+----
+
+
+This example uses <<graph/graphVertex.adoc#graphnewvertex, `NewVertex()`>> and <<graph/graphVertex.adoc#graphopenvertex, `OpenVertex()`>> to acquire the vertices and return vertex objects that can later be used with other graph methods. Most graph methods that take an identifier string as argument can also take a <<vertex/vertex.adoc#pyvgxvertex, Python Vertex>> object in its place. Not only is this more efficient for repeated uses of the vertex but it also ensures the operations will succeed (and not time out) since the vertices are already acquired by the current thread. When all operations have completed we use <<graph/graphVertex.adoc#graphcloseall, `CloseAll()`>> to release (and commit) all open vertices. This makes the vertices available for other threads.
+
+The example also illustrates how to <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, create arcs with values>> using the general syntax:
+
+`arc = ( [ <relationship> [ , <modifier> [ , <value> ] ] ] )`
+
+=== Run Some Queries
+
+We are now ready to run a few search queries on the graph. Some commonly used query methods are:
+
+* <<graph/graphQuery.adoc#graphneighborhood, `Neighborhood()`>>: Search the vertices adjacent to an anchor vertex.
+* <<graph/graphQuery.adoc#graphaggregate, `Vertices()`>>: Search all vertices in a graph.
+* <<graph/graphQuery.adoc#graphaggregate, `Aggregate()`>>: Count the number of adjacent vertices and the total sum of numeric properties of the neighborhood such as relationship values and vertex degree.
+
+A complete description of all query methods can be found in the <<graph/graphQuery.adoc#graphquerymethods, query methods reference>>.
+
+==== Query 1: Who purchased the most Coffee?
+
+[.copyable]
+[source, python]
+----
+top5_coffee = g.Neighborhood(
+    id       = "Coffee",
+    arc      = ("purchased", D_IN, M_CNT),
+    neighbor = {'type' : 'person'},
+    result   = R_DICT|R_METAS,
+    fields   = F_ID|F_VAL,
+    hits     = 5,
+    sortby   = S_VAL|S_DESC
+)
+----
+
+This query performs a neighborhood search around _Coffee_ looking for all inbound (D_IN) _purchased_ relationships with the *counter modifier* (M_CNT) originating at a vertex of type _person_, and returns those with the highest value for the _purchased_ counter.
+
+The result is a sorted list (S_VAL) of dictionaries (R_DICT), each containing the vertex id (F_ID) and the _purchased_ counter value (F_VAL).
+
+Several pre-defined <<constants/constants.adoc#pyvgxconstants, pyvgx constants>>, such as <<constants/arcDirectionConstants.adoc#D_IN, D_IN>>, <<constants/arcModifierConstants.adoc#M_CNT, M_CNT>>, and <<constants/sortSpecificationConstants.adoc#S_VAL, S_VAL>>, are used in the query. D_IN stands for "direction = inbound", M_CNT stands for "value modifier = counter", and S_VAL stands for "sort by relationship predicator value."
+
+*_Predicator_* is sometimes used to describe the whole of the *_relationship type_* (e.g. "purchased") along with its *_modifier_* (e.g. M_CNT) and its *_value_* (e.g. 20).
+
+The <<constants/arcModifierConstants.adoc#M_CNT, M_CNT>> modifier has automatic behavior in that <<graph/graphArc.adoc#graphconnect, `Connect()`>> _increments_ the arc value by a specified amount, whereas M_INT or M_FLT _assign_ a value. Other modifiers with automatic behavior include <<constants/arcModifierConstants.adoc#M_ACC, M_ACC>> and <<constants/arcModifierConstants.adoc#M_TMX, M_TMX>>. The latter is used to expire a relationship at a future point in time.
+
+The `arc=` parameter takes a predicator. Not all parts of the predicator have to be supplied. We will see a few variants in the next queries below.
+
+==== Query 2: How much do Companies spend on Tea?
+
+[.copyable]
+[source, python]
+----
+#
+tea_price = g.ArcValue( "Tea", ("price",D_IN), "" )
+tea_purchases = g.Aggregate(
+    "Tea",
+    arc      = ("purchased",D_IN,M_CNT),
+    neighbor = {'type':'company'}
+)['predicator_value']
+total = tea_price * tea_purchases
+----
+
+Here we use two queries to gather the information needed to answer the question.
+
+First, we get the price of Tea as sold by Joe's shop using the <<graph/graphQuery.adoc#grapharcvalue, `ArcValue()`>> method.
+
+Second, we get the total number of tea purchases made by companies using <<graph/graphQuery.adoc#graphaggregate, `Aggregate()`>> to compute the sum of all predicator values in those arcs matching the full set of filter conditions.
+
+Finally, we multiply the two results to get the total cost of tea purchased by companies.
+
+It is also possible to compute the same result in a single query:
+
+[.copyable]
+[source, python]
+----
+total = g.Neighborhood(
+    id        = "Joe's",
+    arc       = "price",
+    filter    = "do( store(R1,next.arc.value), store(R2,0) )",
+    neighbor  = {
+        'id'        : "Tea",
+        'arc'       : ("purchased",D_IN),
+        'collect'   : C_SCAN,
+        'neighbor'  : {
+            'type'      : 'company',
+            'filter'    : "add( R2, prev.arc.value*load(R1) )"
+        }
+    },
+    select    = "sum=load(R2)",
+    result    = R_SIMPLE
+)[0]['sum']
+----
+
+Although for this example the single query is more complex than the first example running two queries, it illustrates how the <<evaluator/evaluator.adoc#evaluator, expression language>> and <<evaluator/evaluator.adoc#evaluatormemory, memory arrays>> can be used to construct powerful search queries.
+
+==== Query 3: How Many People Purchased at Least 20 Coffees and 20 Teas?
+
+[.copyable]
+[source, python]
+----
+result = g.Aggregate(
+    id        = "Coffee",
+    arc       = ("purchased",D_IN,M_CNT,V_GTE,20),
+    neighbor  = {
+        'type'      : 'person',
+        'arc'       : ("purchased",D_OUT,M_CNT,V_GTE,20),
+        'neighbor'  : {
+            'id':'Tea'
+        }
+    }
+)
+
+# Persons who purchased both coffee and tea at least 20 times
+print( result['aggregation']['neighbors'] )
+
+# Total number of coffees purchased by these persons
+print( result['aggregation']['predicator_value'] )
+----
+
+This query uses nested neighborhood conditions. For example, you can filter on a neighbor's relationship to other neighbors. You may nest up to 15 neighbor conditions.
+
+For example, you could ask "Show me all of my friends who purchased a device made by Apple in the last 30 days." In fact, we'll do just that in another example below after we construct a different graph.
+
+==== Query 4: Who Purchased More than 30 Coffees, But No Tea?
+
+[.copyable]
+[source, python]
+----
+only_coffee_drinkers = g.Neighborhood(
+    id        = "Coffee",
+    result    = R_DICT,
+    fields    = F_ID,
+    arc       = ("purchased",D_IN,M_CNT,V_GT,30),
+    filter    = "next.type == 'person'",
+    neighbor  = (False,{
+        'arc'      : ("purchased",D_OUT),
+        'neighbor' : 'Tea'
+    })
+)
+----
+
+This query shows how to specify a negative condition. It starts traversal at _Coffee_ and requires a _purchased_ value > 30 coming from a _person_, and that _person_ must not have a _purchased_ arc going to _Tea_. The `neighbor=` condition is a tuple `(False, {...})` to indicate the negative condition.
+
+== Another Complex Graph
+
+Let's construct a graph with people, products and manufacturers:
+
+image::tutorial7.png[tutorial7]
+
+Here we have a mix of various products and their manufacturers, along with a population of people, some of whom are friends of the "Me" person.
+
+Let's create a population of 1,000,000 people who have made purchases at some point in the last year. The "Me" person knows 500 of these people.
+
+[.copyable]
+[source, python]
+----
+g = Graph("friends")
+
+DEVICES = [
+  ("iPhone",  "Apple"),
+  ("iPad",    "Apple"),
+  ("Galaxy",  "Samsung"),
+  ("Xperia",  "Sony"),
+  ("Nexus",   "Google"),
+]
+
+FOODS = [
+  ("Twinkies",  "Hostess"),
+  ("Peanuts",   "Planters"),
+  ("Soup",      "Campbell"),
+  ("Soup",      "Progresso"),
+  ("Stew",      "Progresso")
+]
+
+def make_people( how_many ):
+    for n in xrange( how_many ):
+        g.CreateVertex( "Person_%d" % n, type="person" )
+
+def employ_people( how_many ):
+    companies = list(set([ mfg for thing,mfg in DEVICES+FOODS ]))
+    for n in xrange( how_many ):
+        company = companies[ random.randint(0,len(companies)-1) ]
+        g.Connect( "Person_%d" % n, "works_at", company )
+
+def make_devices():
+    for device, manuf in DEVICES:
+        D = g.NewVertex( device, type="device" )
+        product = "P_%s" % device
+        P = g.NewVertex( product, type="product" )
+        g.Connect( D, "is_a", P )
+        g.Connect( manuf, "makes", P )
+
+def make_foods():
+    for food, manuf in FOODS:
+        F = g.NewVertex( food, type="food" )
+        product = "P_%s" % food
+        P = g.NewVertex( product, type="product" )
+        g.Connect( F, "is_a", P )
+        g.Connect( manuf, "makes", P )
+
+def make_friends( how_many, pick_from ):
+    for n in xrange( how_many ):
+        pn = random.randint( 0, pick_from-1 )
+        friend = "Person_%d" % pn
+        g.Connect( "Me", "knows", friend )
+
+def pick_a_device_maybe():
+    if random.random() > 0.33:
+        return DEVICES[ random.randint( 0, len(DEVICES)-1 ) ][0]
+    else:
+        return None
+
+def pick_a_food_maybe():
+    if random.random() > 0.33:
+        return FOODS[ random.randint( 0, len(FOODS)-1 ) ][0]
+    else:
+        return None
+
+def run_shopping( how_many_people ):
+    for n in xrange( how_many_people ):
+        person = "Person_%d" % n
+        device = pick_a_device_maybe()
+        if device:
+            when = random.randint( 0, 365 ) # days since purchase
+            g.Connect( person, ("purchased",M_TMC,when), device )
+        food = pick_a_food_maybe()
+        if food:
+            when = random.randint( 0, 365 ) # days since purchase
+            g.Connect( person, ("purchased",M_TMC,when), food )
+
+def setup( how_many_people=1000000, how_many_friends=500 ):
+    make_people( how_many_people )
+    employ_people( how_many_people / 2 )
+    make_devices()
+    make_foods()
+    g.CreateVertex( "Me", type="person" )
+    make_friends( how_many_friends, how_many_people )
+    run_shopping( how_many_people )
+
+setup( 1000000, 500 )
+----
+
+There are about 1 million vertices and about 1.8 million arcs is this graph. Now let's run some queries against it.
+
+TIP: But before we do, notice how we created the seemingly unnecessary via-vertices between manufacturers and the devices and foods they make. This is to illustrate a trick which has a huge performance benefit. When running queries it is much faster to filter on arcs when there are few other arcs of the same direction incident on the vertex. Filtering on a vertex' inarcs is faster when the vertex has few inarcs, while the number of outarcs doesn't matter. Conversely, filtering on a vertex' outarcs is faster when the vertex has few outarcs, while the number of inarcs doesn't matter. We'll see the effect of this in the next query.
+
+=== Query 5: Which of My Friends Purchased an Apple Device in the Last 30 Days?
+
+[.copyable]
+[source, python]
+----
+apple_friends = g.Neighborhood(
+    id       = "Me",
+    result   = R_DICT|R_METAS,
+    fields   = F_ID,
+    arc      = "knows",
+    neighbor = {
+        'arc'     :("purchased",D_OUT,M_TMC,V_LT,30),
+        'neighbor':{
+            'type'    :'device',
+            'arc'     :("is_a"),
+            'neighbor':{
+                'type'    :'product',
+                'arc'     :("makes",D_IN),
+                'neighbor':{
+                    'id':'Apple'
+                }
+            }
+        }
+    }
+)
+----
+
+== Summary and Next Steps
+
+At this point we have covered some of the things you can do with pyvgx and graphs. We have created vertices and arcs,
+and performed several types of queries. As you have seen, graphs can be as simple or complex as you need them to be.
+Graph queries can be simple or recursive, with arbitrarily complex filters.
+
+Some of the features we have not touched on in this tutorial are <<vertex/vertexProperty.adoc#vertexproperty, vertex properties>>,
+<<evaluator/selectEvaluator.adoc#select, field select statement>>, <<evaluator/evaluator.adoc#quickrank, ranking functions>>,
+<<vertex/vertexTTL.adoc#vertexTTL, automatic vertex expiration>>, <<reference.adoc#graphobject_managementmethods, graph management>>,
+and many other functions related to the lifecycle of objects in the graph.
+
+For a complete description of the pyvgx API the <<reference.adoc#preface, pyvgx Reference>> will teach you everything
+you need to know.
+
+___
+
+[.float-group]
+--
+[.left]
+<<VGXCoreConcepts.adoc#, icon:arrow-circle-left[size=2x, title="VGX Core Concepts"]>>
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<shortref.adoc#, icon:arrow-circle-right[size=2x, title="Compact pyvgx Reference"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

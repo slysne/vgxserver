@@ -1,0 +1,1569 @@
+[[graphquerymethods]]
+= Graph Query Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphManagement.adoc#, icon:arrow-circle-right[title="Graph Management Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Summary
+
+Query methods are used to perform graph searches. The available methods are listed below.
+
+
+[cols="3,5"]
+|===
+|pyvgx.Graph Query Methods |Description
+
+|<<graphglobal>>
+|Perform a global <<grapharcs, arc search>> or <<graphvertices, vertex search>>
+
+|<<graphverticestype>>
+|Return a list of names of all vertices of the given type
+
+|<<graphhasvertex>>
+|Check if a vertex exists in the graph
+
+|<<graphgetvertex>>
+|Return a <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance for the named vertex
+
+|<<graphvertexidbyaddress>>
+|Return the identifier of vertex at memory address
+
+|<<graphneighborhood>>
+|Perform a graph neighborhood search
+
+|<<graphopenneighbor>>
+|Return a neighbor of a vertex
+
+|<<graphadjacent>>
+|Check if vertex is adjacent to other vertices
+
+|<<graphaggregate>>
+|Perform aggregation of neighborhood arc values
+
+|<<grapharcvalue>>
+|Return the value of a specific arc
+
+|<<graphdegree>>
+|Return the vertex degree, with optional conditions
+
+|<<graphinarcs>>
+|Return the inarc of a vertex
+
+|<<graphoutarcs>>
+|Return the outarcs of a vertex
+
+|<<graphinitials>>
+|Return vertices for which anchor is a terminal
+
+|<<graphterminals>>
+|Return vertices for which anchor is an initial
+
+|<<graphsearch>>
+|Perform a neighborhood search and print the result as human readable text
+|===
+
+[[graphglobal]]
+== Global Search
+
+Perform a global graph search using either <<grapharcs>> or <<graphvertices>>.
+
+[[grapharcs]]
+=== pyvgx.Graph.Arcs()
+
+Perform a global arc search in the graph.
+
+[[graphvertices]]
+=== pyvgx.Graph.Vertices()
+
+Perform a global vertex search in the graph.
+
+
+Both methods share a common parameter syntax.
+
+==== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Arcs( ... ) -> result_object
+pyvgx.Graph.Vertices( ... ) -> result_object
+
+parameters:
+[ condition[, vector[, result[, fields[, select[, rank[, sortby[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ]
+----
+
+Arguments can be supplied positionally or as keywords.
+
+==== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_condition_
+|<<../vertex/vertexFilter.adoc#vertexfilter, Vertex condition>>
+|None
+|Vertex must meet this condition to be included in result
+
+|_vector_
+|<<../similarity/vector.adoc#, &#60;vector&#62;>> or Python list
+|[]
+|Probe vector to use when _condition_ includes similarity criteria
+
+|_result_
+|<<../constants/resultListEntryConstants.adoc#, Result specification>>
+|<<../constants/resultListEntryConstants.adoc#R_STR, pyvgx.R_STR>>
+|Control the overall format of the returned result
+
+|_fields_
+|<<../constants/resultFieldConstants.adoc#, Field specification>>
+|<<../constants/resultFieldConstants.adoc#F_ID, pyvgx.F_ID>>
+|Control which fields are included in the result
+
+|_select_
+|<<../evaluator/selectEvaluator.adoc#select, Select specification>>
+|None
+|Advanced specification of returned fields
+
+|_rank_
+|<<../evaluator/evaluator.adoc#quickrank, Rank specification>>
+|None
+|Define how to rank results when _sortby_=pyvgx.S_RANK
+
+|_sortby_
+|<<../constants/sortSpecificationConstants.adoc#, Sort specification>>
+|<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_NONE>>
+|Determine how returned results are sorted
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, Memory Object>> or _int_
+|4
+|General purpose array of numerical elements for use by <<../evaluator/evaluator.adoc#, expression evaluators>>
+
+|_offset_
+|_int_
+|0
+|Start result listing at this offset
+
+|_hits_
+|_int_
+|-1
+|Number of hits to include in result. The default is -1 which returns all results.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+==== Return Value
+
+This method returns a search result object. The format of this object is either a list or a dictionary.
+The format is defined by the _result_ parameter. See <<../constants/resultListEntryConstants.adoc#, result specification>>
+for details.
+
+==== Remarks
+
+Arc and vertex search are global graph operations, which means they are not restricted to a particular graph neighborhood. Matching and retrieval of every arc or vertex in the graph is possible, but comes at the cost of longer execution time. These methods also block other threads from performing operations on the graph while executing, unless the graph is in <<../graph/graphManagement.adoc#graphsetgraphreadonly, readonly mode>>.
+
+It is possible to reduce the overall system impact of global queries by restricting searches to a specific vertex type using the `type` filter within the _condition_ parameter.
+
+==== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+# Return all vertices in the graph
+g.Vertices()
+
+# Return all arcs in the graph
+g.Arcs()
+
+# Return 10 products sorted by identifier
+g.Vertices( hits=10, sortby=S_ID, condition={ 'type':'product' } )
+
+# Return all products and include their name and
+# "color" properties in the result
+g.Vertices( condition={ 'type':'product' }, fields=F_ID|F_PROP, select="color" )
+
+# Return all relationships originating at initial
+# vertices of type "person"
+g.Arcs( condition={ 'type':'person' } )
+
+# Return all relationships of type "knows" involving
+# initial and/or terminal of type "person"
+g.Arcs( condition={ 'arc':('knows',D_ANY), 'type':'person' } )
+----
+
+[[graphverticestype]]
+== pyvgx.Graph.VerticesType()
+
+Perform a global search for a specific vertex type in the graph.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.VerticesType( type ) -> list
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_type_
+|_str_
+|
+|Only vertices of this type are returned
+
+|===
+
+=== Return Value
+
+This method returns a list of identifier strings of all vertices in the graph
+of the specified type.
+
+=== Remarks
+
+Use `_type_=_None_` or `_type_="+++__vertex__+++"` to return typeless vertices, i.e.
+vertices created without a specific type.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+# Return all person vertices in the graph
+g.VerticesType( "person" )
+----
+
+[[graphhasvertex]]
+== pyvgx.Graph.HasVertex()
+
+Check if a vertex exists in the graph.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.HasVertex( id ) -> bool
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_
+|
+|The vertex identifier to look up.
+
+|===
+
+=== Return Value
+
+This method returns True if the vertex exists, or False if the vertex does not exist.
+
+=== Remarks
+
+It is also possible to use the built-in Python +++__contains__+++ syntax to
+perform the same operation:
+
+[source, python]
+----
+name in g
+# is equivalent to
+g.HasVertex( name )
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph( "graph" )
+g.CreateVertex( "A" )                # Create vertex A
+print( g.HasVertex( "A" ) )           # True
+print( g.HasVertex( "B" ) )          # False
+----
+
+[[graphgetvertex]]
+== pyvgx.Graph.GetVertex()
+
+Return a <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object in readonly mode.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.GetVertex( id ) -> pyvgx.Vertex
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_
+|
+|The identifier of the vertex to return
+
+|===
+
+=== Return Value
+
+If the vertex exists in the graph a new <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> wrapper object for the vertex is created and returned in readonly mode. If the vertex does not exist an exception is raised.
+
+=== Remarks
+
+It is also possible to use the built-in Python +++__getitem__+++ syntax to
+perform the same operation:
+
+----
+V = g[ name ]
+# is equivalent to
+V = g.GetVertex( name )
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+g.CreateVertex( "A" )             # Create but do not open A
+B = g.NewVertex( "B" )            # Create and open B writable
+
+# Get the wrapper object for A but do not acquire it.
+# No guarantees for the consistency of A.
+A = g.GetVertex( "A" )            
+----
+
+[[graphvertexidbyaddress]]
+== pyvgx.Graph.VertexIdByAddress()
+
+Return the identifier of vertex at memory address.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.VertexIdByAddress( address ) -> identifier
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_address_
+|_<int>_
+|
+|The memory address of vertex whose identifier will be returned
+
+|===
+
+=== Return Value
+
+If the given _address_ contains a valid vertex object its identifier string is returned, otherwise KeyError is raised.
+
+=== Remarks
+
+It is possible for queries to return addresses of vertices instead of identifiers. Such queries may be constructed to limit the number of locks required to render the result. This method allows a vertex name to be resolved by its address.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+g.Connect( "X", "to", "A" )             # X -> A
+g.Connect( "X", "to", "B" )             # X -> B
+g.Connect( "X", "to", "C" )             # X -> C
+r = g.Neighborhood( "X", fields=F_ADDR, result=R_SIMPLE )
+g.VertexIdByAddress( r[0] )             # 'A'
+g.VertexIdByAddress( r[1] )             # 'B'
+g.VertexIdByAddress( r[2] )             # 'C'
+----
+
+[[graphneighborhood]]
+== pyvgx.Graph.Neighborhood()
+
+Perform a graph neighborhood search around a specific vertex _id_.
+
+=== Syntax
+[source, python]
+----
+pyvgx.Graph.Neighborhood( id[, arc[, pre[, filter[, post[, neighbor[, vector[, collect[, result[, fields[, select[, rank[, sortby[, aggregate[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] )
+----
+
+Arguments can be supplied positionally or as keywords.
+
+[[graphneighborhood_parameters]]
+=== Parameters
+
+[cols="1,2,3,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|Neighborhood search starts at this vertex.
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|(None, <<../constants/arcDirectionConstants.adoc#D_OUT, pyvgx.D_OUT>>)
+|Arcs incident on _id_ must match this filter.
+
+|_pre_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will *not* be executed if the neighborhood is empty.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.
+
+|_post_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Post-filter executed after neighborhood traversal and only if _pre_ matched. The expression return value is ignored.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+|`&#42;`
+|Arcs incident on _id_ must be connected to a neighbor vertex matching this filter.
+
+|_vector_
+|<<../similarity/vector.adoc#, &#60;vector&#62;>> or Python list
+|[ ]
+|Use this probe vector for similarity matching when _neighbor_ includes similarity filters.
+
+|_collect_
+|<bool> or <<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|<<../constants/collectConstants.adoc#collectconstants, pyvgx.C_COLLECT>>
+|Control how neighborhood arcs are collected and returned in the result.
+
+|_result_
+|<<../constants/resultListEntryConstants.adoc#resultlistentryconstants, &#60;result_format&#62;>>
+|<<../constants/resultListEntryConstants.adoc#R_STR, pyvgx.R_STR>>
+|Specify the overall format of the returned result.
+
+|_fields_
+|<<../constants/resultFieldConstants.adoc#resultfieldconstants, &#60;result_fields&#62;>>
+|<<../constants/resultFieldConstants.adoc#F_ID, pyvgx.F_ID>>
+|Simple specification of fields to be included in the returned result list.
+
+|_select_
+|<<../evaluator/selectEvaluator.adoc#selectstatement, &#60;select_statement&#62;>>
+|None
+|Advanced specification of fields to be included in the returned result list, allowing inclusion of vertex properties and evaluation of expressions.
+
+|_rank_
+|<<../evaluator/evaluator.adoc#quickrank, &#60;ranking_formula&#62;>>
+|None
+|Specify an expression to compute dynamic rank scores when
+_sortby_=<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_RANK>>
+
+|_sortby_
+|<<../constants/sortSpecificationConstants.adoc#sortspecification, &#60;sort_specification&#62;>>
+|<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_NONE>>
+|Control the ordering of returned results.
+
+|_aggregate_
+|See <<neighborhood_aggregate>>
+|None
+|Perform value aggregation rather than returning individual arcs and values.
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, &#60;memory_object&#62;>> or _int_
+|4
+|Supply a general purpose array of numeric elements for use with <<../evaluator/evaluator.adoc#evaluator, expression evaluators>> in _filter_, _rank_, and _select_.
+
+|_offset_
+|_<int>_
+|0
+|Start the result listing at this offset in the returned result.
+
+|_hits_
+|_<int>_
+|-1
+|Set the maximum number of hits to return in the result. A negative number will return all results.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+CAUTION: Parameters _arc_, _filter_, _neighbor_ and _collect_ have the same meaning as the correspondingly
+named entries within the `'traverse':{...}` section of <<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>.
+These four parameters define arc matching, traversal and collection in the _immediate neighborhood_. +
+    +
+    However, the default values of _arc_ and _collect_ for the immediate neighborhood differ from those 
+    of the generic <vertex_condition>. The immediate neighborhood _arc_ parameter defaults to `D_OUT` while the
+    `'arc':` entry in <vertex_condition> defaults to `D_ANY`. The immediate neighborhood _collect_ parameter defaults
+    to `True` while the `'collect':` entry in <vertex_condition> defaults to `C_NONE`.
+
+TIP: For syntax consistency between <<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+and this methods's _arc_, _filter_, _neighbor_ and _collect_ parameters it may be helpful to submit these
+parameters using Python +++**kwargs+++. The kwargs dictionary is then a proper subset of <vertex_condition>.
+    +
+    Example:
+    +
+    >>> condition = { 'arc':D_ANY), 'filter':"next.arc.type == 'friend' && next.arc.value == 100", 'neighbor':{ 'type':'person' }, 'collect':("called", D_OUT) }
+    +
+    >>> g.Neighborhood( "me", hits=10, **condition )
+
+=== Return Value
+
+This method returns a list of search results or a dictionary containing a list of search results along with other meta information.
+See <<../constants/resultListEntryConstants.adoc#resultlistentryconstants, Result Format>> for details.
+
+=== Remarks
+
+The Neighborhood() method is a powerful graph search tool, allowing arbitrary and practically unlimited graph traversal. For a full understanding of how to match, traverse, and collect relationships across a graph, study the descriptions of
+      <<../vertex/vertexFilter.adoc#evalorder, evaluation order>>,
+      <<../vertex/vertexFilter.adoc#vertexfilterfilter, filter>>,
+      <<../vertex/vertexFilter.adoc#vertexfilteradjacent, adjacent>>,
+      <<../vertex/vertexFilter.adoc#vertexfiltertraverse, traverse>>,
+  and <<../vertex/vertexFilter.adoc#vertexfiltertraversecollect, collect>>.
+
+==== Overview
+
+A neighborhood search starts at the specified vertex _id_ and processes the arcs incident on that vertex according to the query parameters. Arcs are matched against any filters supplied, and they may be traversed to reach the terminal vertices on the other side to continue processing there. Arc matching is a depth-first process. In order for an arc to match, it first has to match its own filter criteria and then any recursive criteria by traversal. Neighborhood queries may traverse arcs to other vertices and then continue traversal recursively from those vertices as specified by the query parameters.
+
+Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Recursive queries may be configured to collect at some levels of the recursion and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.
+
+Collecting an arc means to collect that arc's attributes (i.e. relationship and value) and the arc head vertex attributes and properties. The _fields_ and _select_ parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a recursive query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item's distance from the anchor vertex.
+
+Result lists can be order by any attribute or vertex property, or according to user-defined ranking formulas.
+
+A _timeout_ can be specified for neighborhood queries. It represents an upper limit for how long the query is allowed to run before terminating the query and raising an exception.
+
+When _limexec_ is False (the default) the timeout deadline is considered only whenever a blocking condition is encountered, i.e. when waiting to acquire a vertex. If no vertex acquisition blocks after the timeout deadline has been reached the query is allowed to run to completion. A timeout in this case raises `pyvgx.AccessError`.
+
+In contrast, when _limexec_ is True the timeout deadline is continually monitored, terminating the query after the timeout deadline has been reached even if progress is being made without blocking. A timeout in this case raises `pyvgx.SearchError`.
+
+[[neighborhood_aggregate]]
+==== Aggregation
+
+It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an _aggregated arc_ with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a recursive traversal scenario, so long as their heads terminate at the same vertex.
+
+To enable aggregation use the _aggregate_ parameter:
+
+[source, python]
+----
+g.Neighborhood(
+    ...,
+    aggregate = {
+        'arc'       : <arc_postfilter>,
+        'mode'      : <mode_spec>
+    }
+)
+"""
+where:
+    <arc_postfilter ::= ( <relationship>, D_ANY, M_INTAGGR[, <condition>, <value> ] )
+    or
+    <arc_postfilter> ::= ( <relationship>, D_ANY, M_FLTAGGR[, <condition>, <value> ] )
+
+<mode> ::= "first" | "max" | "min" | "average" | "count" | "sum" | "sqsum" | "product"
+"""
+----
+
+The aggregation `'mode': <mode>` determines how aggregated values are computed:
+
+[cols="1,5"]
+|===
+|Mode |Description
+
+|_first_
+|Only collect the *first traversed arc* from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_max_
+|Collect the *maximum value arc* from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_min_
+|Collect the *minimum value arc* from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_average_
+|Set the value of aggregated arcs to the *average of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_count_
+|(*DEFAULT*) Set the value of the aggregated arcs to the *number of arcs* in each set of arcs sharing the same head vertex, regardless of value type
+
+|_sum_
+|Set the value of aggregated arcs to the *sum of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_sqsum_
+|Set the value of aggregated arcs to the *square-sum of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|_product_
+|Set the value of aggregated arcs to the *product of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
+
+|===
+
+The optional `'arc': <arc_postfilter>` operates on the aggregated value, making it possible to perform aggregation among a large set of arcs sharing value types and head vertices and only returning those aggregations that satisfy certain value cutoff criteria. The default is `'arc':()`, meaning no post filtering.
+
+NOTE: Post filters are not directional. Specify arc direction `D_OUT` for post filters.
+
+Aggregated arc values lose the modifier types of their collected source arcs. Instead, aggregation values are separated into integer or floating point types. Arcs whose modifiers have an integer value are binned together and assigned a special _aggregation modifier_ <<../constants/arcModifierConstants.adoc#M_INTAGGR, M_INTAGGR>>. Similarly, arcs with float values are assigned the aggregation modifier <<../constants/arcModifierConstants.adoc#M_FLTAGGR, M_FLTAGGR>>. Arc post filters must use one of the aggregation modifiers. It is not possible to use a post filter that works on integer and floating point values at the same time. Note that `'mode': 'count'` generates an integer type aggregation value.
+
+[cols="1,3"]
+|===
+|Aggregation Modifier |Represents
+
+|<<../constants/arcModifierConstants.adoc#M_INTAGGR, M_INTAGGR>>
+|M_STAT, M_LSH, M_INT, M_UINT, M_CNT, M_TMC, M_TMM, M_TMX
+
+|<<../constants/arcModifierConstants.adoc#M_FLTAGGR, M_FLTAGGR>>
+|M_SIM, M_DIST, M_FLT, M_ACC
+
+|===
+
+[[graphopenneighbor]]
+== pyvgx.Graph.OpenNeighbor()
+
+Acquire and return one of the neighbors of a given vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.OpenNeighbor( id[, arc[, mode[, timeout]]] )
+----
+
+=== Parameters
+
+[cols="1,2,3,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|This is the vertex whose neighbor will be returned
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|(None, <<../constants/arcDirectionConstants.adoc#D_OUT, pyvgx.D_OUT>>)
+|The first neighbor connected to _id_ with an arc matching this filter will be returned
+
+|_mode_
+|_chr_
+|'r'
+|Access mode is one of:
+
+'r' = Readonly
+
+'a' = Writable (do not create)
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for vertex acquisition
+
+|===
+
+=== Return Value
+
+This method returns a `pyvgx.Vertex` object opened according to access _mode_. If no neighbor exists `KeyError` is raised. If acquisition of _id_ or its neighbor cannot be performed within _timeout_ `pyvgx.AccessError` is raised.
+
+=== Remarks
+
+At most one neighbor is returned by this method, and if multiple neighbors matching _arc_ filter exist the returned neighbor is generally unknown which neighbor is returned. For this reason, the primary use case of this method is when uniquely associating a vertex with a neighbor using a special relationship.
+
+Using this method to access special neighbors is more efficient than storing the identifiers of those neighbors in properties, because arcs take less space than properties and fewer Python steps are required to acquire the neighbor vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+g.Connect( "Alice", "knows", "Bob"  )
+g.Connect( "Alice", "knows", "Charlie"  )
+g.Connect( "Alice", "knows", "Dave"  )
+g.Connect( "Alice", "special_friend", "Dave"  )
+g.Connect( "Alice", "knows", "Eve"  )
+
+# May return any of Alice's connections
+Anyone = g.OpenNeighbor( "Alice" )
+
+# Dave
+Dave = g.OpenNeighbor( "Alice", "special_friend" )
+----
+
+[[graphadjacent]]
+== pyvgx.Graph.Adjacent()
+
+Test if a vertex has a neighbor, optionally matching arc and/or neighbor filters.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Adjacent( id[, arc[, neighbor[, pre[, filter[, post[, memory[, timeout[, limexec ] ] ] ] ] ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,3,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|This is the vertex whose adjacency to neighbors will be tested.
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|(None, <<../constants/arcDirectionConstants.adoc#D_OUT, pyvgx.D_OUT>>)
+|Arcs incident on vertex _id_ must match this filter.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+|`&#42;`
+|Arcs incident on vertex _id_ must be connected to a neighbor vertex matching this filter.
+
+|_pre_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will *not* be executed if the neighborhood is empty.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.
+
+|_post_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Post-filter executed after neighborhood traversal and only if _pre_ matched, and must evaluate to a positive number in order to match.
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, &#60;memory_object&#62;>> or _int_
+|4
+|Supply a general purpose array of numeric elements for use with <<../evaluator/evaluator.adoc#evaluator, expression evaluators>> in _filter_.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns `True` if vertex _id_ has at least one neighbor reachable via _arc_ and matching the _filter_ and _neighbor_ conditions, otherwise `False` is returned. Additionally, if _pre_ and _post_ filters are used, both must return positive numbers, otherwise `False` is returned.
+
+=== Remarks
+
+This method ignores the use of `'collect'` filter(s) in the _neighbor_ filter's <<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>. Since this method only tests adjacency no arcs arc collected, only tested.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+g.Connect( "Alice", "knows", "Bob" )
+g.Connect( "Alice", "likes", "coffee" )
+
+g.Adjacent( "Alice" )       # True
+g.Adjacent( "Bob" )         # False, arc direction is D_OUT by default
+g.Adjacent( "Bob", D_ANY )  # True
+g.Adjacent( "Alice", "likes", "Bob" )       # False
+g.Adjacent( "Alice", "likes", "coffee" )    # True
+----
+
+[[graphaggregate]]
+== pyvgx.Graph.Aggregate()
+
+Compute the sum of all matching arc values and vertex degrees in one or more neighborhoods originating at the anchor vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Aggregate( id[, arc[, pre[, filter[, post[, collect[, neighbor[, result[, fields[, memory[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|Aggregation starts at this vertex
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|(None, <<../constants/arcDirectionConstants.adoc#D_OUT, pyvgx.D_OUT>>)
+|Arcs incident on vertex _id_ must match this filter to contribute to aggregated
+sums (when _collect_ is `True`), and to be traversed if _neighbor_ extends
+aggregation into other neighborhoods.
+
+|_pre_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will *not* be executed if the neighborhood is empty.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.
+
+|_post_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Post-filter executed after neighborhood traversal and only if _pre_ matched. The expression return value is ignored.
+
+|_collect_
+|<<../constants/collectConstants.adoc#collectconstants, &#60;collect_constant&#62;>>
+|<<../constants/collectConstants.adoc#C_COLLECT, pyvgx.C_COLLECT>>
+|Control whether arcs in the immediate neighborhood contribute to aggregated sums.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+|`&#42;`
+|Arcs incident on vertex _id_ must be connected to a neighbor vertex matching this filter.
+Aggregation continues in extended neighborhood if <vertex_condition> specifies `'collect': True`.
+
+|_result_
+|<<../constants/resultListEntryConstants.adoc#resultmetas, &#60;result_metas&#62;>>
+|<<../constants/resultListEntryConstants.adoc#R_COUNTS, pyvgx.R_COUNTS>>
+|Control whether hit counts and/or search execution time are included in the result. The returned
+result is always a dictionary.
+
+|_fields_
+|<<../constants/resultFieldConstants.adoc#resultfieldconstants, &#60;aggregation_fields&#62;>>
+|<<../constants/resultFieldConstants.adoc#F_NONE, pyvgx.F_NONE>>
+|Select the fields to aggregate. Fields available for aggregation are F_VAL, F_DEG, F_IDEG
+and F_ODEG. Other fields specified here will be ignored. Note that F_VAL requires the _arc_
+filter with a specific modifier.
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, &#60;memory_object&#62;>> or _int_
+|4
+|Supply a general purpose array of numeric elements for use with <<../evaluator/evaluator.adoc#evaluator, expression evaluators>> in _filter_.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method always returns a dictionary object. Aggregated values are returned in a dictionary like this:
+
+[source, python]
+----
+<aggregation> ::= {
+    'neighbors'         : <head_vertices>,
+    'arcs'              : <traversed_arcs>,
+    'predicator_value'  : <integer_sum> | <float_sum>,
+    'degree'            : <head_vertices_degree_sum>,
+    'indegree'          : <head_vertices_indegree_sum>,
+    'outdegree'         : <head_vertices_outdegree_sum>
+}
+----
+
+Keys `'neighbors'` and `'arcs'` are always included. Others depend on what is selected in the _fields_ parameter.
+
+If _result_ contains R_TIMING <aggregation> is wrapped in an outer result dictionary like this:
+
+[source, python]
+----
+<result_with_timing> ::= {
+    'aggregation'   : <aggregation>,
+    'time'          : {
+        'search'        : <seconds>,
+        'total'         : <seconds>
+    }
+}
+----
+
+=== Remarks
+
+To enable aggregation of arcs (_predicator values_) the _arc_ parameter is required and the filter
+must contain a specific <<../constants/arcModifierConstants.adoc#arcmodifierconstants, modifier>>.
+Furthermore, if extending aggregation beyond the immediate neighborhood _neighbor_(s) must include
+`'arc'` filter(s) with the same modifier as the one specified in the _arc_ parameter. (If integer
+and floating point modifiers are mixed, the aggregated values are undefined.)
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range( 100 ):
+    g.Connect( "Alice", ("called", M_INT, n), "person_%d" % n )
+    g.Connect( "Alice", ("visited", M_INT, n/10), "person_%d" % n )
+
+# How many times did Alice call somebody?
+g.Aggregate(
+    "Alice",
+    arc    = ("called", D_OUT, M_INT),
+    fields = F_VAL
+) # -> {'neighbors': 100, 'predicator_value': 4950, 'arcs': 100}
+
+# How many total interactions with those with whom she either called
+# exactly once or twice or visited exactly once or twice?
+g.Aggregate(
+    "Alice",
+    arc    = ("", D_OUT, M_INT, V_RANGE, (1,2)),
+    fields = F_VAL
+) # -> {'neighbors': 22, 'predicator_value': 33, 'arcs': 22}
+----
+
+[[grapharcvalue]]
+== pyvgx.Graph.ArcValue()
+
+Return the value of a specific arc.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.ArcValue( initial, arc, terminal[, timeout[, limexec ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_initial_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|The tail of the arc whose value is returned
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|
+|The returned value will match this arc filter
+
+|_terminal_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|The head of the arc whose value is returned
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+The returned value is an integer, float or None depending on the modifier type of the selected arc:
+
+[cols="7,3"]
+|===
+|Modifier of Selected Arc |Return Value Type
+
+|M_STAT
+|None
+
+|M_SIM, M_DIST, M_FLT, M_ACC
+|<float>
+
+|M_LSH, M_INT, M_UINT, M_CNT, M_TMC, M_TMM, M_TMX
+|<int>
+
+|===
+
+
+If no matching arc is found <<../exceptions/exceptions.adoc#SearchError, pyvgx.SearchError>> is raised.
+
+=== Remarks
+
+This method will retrieve and return the value of the first arc found between _initial_ and
+_terminal_ matching the _arc_ filter. If _initial_ has a multiple arc to _terminal_ it is
+generally undefined which of the individual arc values is returned unless _arc_ specifies
+a unique relationship, direction and modifier.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+g.Connect( "Alice", ("called",M_TMM,1544635200), "Bob" )
+g.Connect( "Alice", ("called",M_CNT,17), "Bob" )
+g.Connect( "Alice", ("visited",M_TMM,154552331), "Bob" )
+g.Connect( "Alice", ("called",M_TMM,1544412231), "Charlie" )
+
+# When did Alice last call Bob?
+g.ArcValue( "Alice", ("called",D_OUT,M_TMM), "Bob" )
+
+# How many times has Alice called Bob?
+g.ArcValue( "Alice", ("called",D_OUT,M_CNT), "Bob" )
+----
+
+[[graphdegree]]
+== pyvgx.Graph.Degree()
+
+Return the number of arcs incident on a vertex, optionally matching an arc filter.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Degree( id[, arc[, filter[, timeout[, limexec ] ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,3,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|The vertex whose degree is computed
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
+|(None, <<../constants/arcDirectionConstants.adoc#D_ANY, pyvgx.D_ANY>>)
+|Arcs matching this filter contribute to the computed degree. The default is
+the standard definition of vertex degree, i.e. all outarcs and inarcs are counted.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter expression must evaluate to a positive number in order to match.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns the number of arcs incident on vertex _id_ matching _arc_ and _filter_.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+    g = Graph( "graph" )
+
+for n in range( 10 ):
+    g.Connect( "Alice", "friend", "person_%d" % n )
+
+for n in range( 100 ):
+    g.Connect( "Alice", "knows", "person_%d" % n )
+
+# How many connections does Alice have?
+g.Degree( "Alice", ("*",D_OUT) ) # -> 110
+
+# Hom many friends does Alice have?
+g.Degree( "Alice", ("friend",D_OUT) ) # -> 10
+----
+
+[[graphinarcs]]
+== pyvgx.Graph.Inarcs()
+
+Return the inbound arcs for a vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Inarcs( id[, hits[, timeout[, limexec ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,3,1,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|Vertex whose inarcs are returned
+
+|_hits_
+|<int>
+|-1
+|Maximum number of inarcs to return. By default all inarcs are returned.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns a list of arc tuples:
+
+[source, python]
+----
+result ::= [
+    ( D_IN, <relationship>, <modifier>, <value>, <anchor> ),
+    ( D_IN, <relationship>, <modifier>, <value>, <anchor> ),
+    ...
+]
+----
+
+=== Remarks
+
+All returned inarcs have direction D_IN and terminate at the _id_ vertex.
+
+The order of returned results is not defined.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range( 1000 ):
+    g.Connect( "person_%d" % n, "friend", "Alice" )
+
+# Return five of Alice's friend connections
+g.Inarcs( "Alice", hits=5 )
+----
+
+[[graphoutarcs]]
+== pyvgx.Graph.Outarcs()
+
+Return the outbound arcs for a vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Outarcs( id[, hits[, timeout[, limexec ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,3,1,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|Vertex whose outarcs are returned
+
+|_hits_
+|<int>
+|-1
+|Maximum number of outarcs to return. By default all outarcs are returned.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns a list of arc tuples:
+
+[source, python]
+----
+result ::= [
+    ( D_OUT, <relationship>, <modifier>, <value>, <terminal> ),
+    ( D_OUT, <relationship>, <modifier>, <value>, <terminal> ),
+    ...
+]
+----
+
+=== Remarks
+
+All returned outarcs have direction D_OUT.
+
+The order of returned results is not defined.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range( 10 ):
+    g.Connect( "Alice", "called", "person_%d" % n )
+
+# Return five of Alice's calls to other people
+g.Outarcs( "Alice", hits=5 )
+----
+
+[[graphinitials]]
+== pyvgx.Graph.Initials()
+
+Return the identifiers of vertices with arc(s) to this anchor vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Initials( id[, pre[, filter[, post[, neighbor[, rank[, sortby[, memory[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|The vertex whose initials are returned
+
+|_pre_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will *not* be executed if vertex has no inarcs.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.
+
+|_post_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Post-filter executed after neighborhood traversal and only if _pre_ matched. The expression return value is ignored.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+|`&#42;`
+|Returned initials must match this vertex filter
+
+|_rank_
+|<<../evaluator/evaluator.adoc#quickrank, &#60;ranking_formula&#62;>>
+|None
+|Specify an expression to compute dynamic rank scores when
+_sortby_=<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_RANK>>
+
+|_sortby_
+|<<../constants/sortSpecificationConstants.adoc#, Sort specification>>
+|<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_NONE>>
+|Determine how returned initials are sorted
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, &#60;memory_object&#62;>> or _int_
+|4
+|Supply a general purpose array of numeric elements for use with <<../evaluator/evaluator.adoc#evaluator, expression evaluators>> in _filter_ and _rank_.
+
+|_hits_
+|<int>
+|-1
+|The maximum number of initials to return. By default all initials are returned.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns a list of vertex identifiers:
+
+[source, python]
+----
+result ::= [
+    <vertex_identifier_1>,
+    <vertex_identifier_2>,
+    <vertex_identifier_3>,
+    ...
+]
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range( 10 ):
+    g.Connect( "person_%d" % n, "called", "Alice" )
+
+# Return the id of everyone who called Alice, sorted by name
+g.Initials( "Alice", sortby=S_ID )
+----
+
+[[graphterminals]]
+== pyvgx.Graph.Terminals()
+
+Return the identifiers of this anchor's terminal vertices.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Terminals( id[, pre[, filter[, post[, neighbor[, rank[, sortby[, memory[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] )
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_<str>_ or <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> instance
+|
+|The vertex whose terminals are returned
+
+|_pre_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will *not* be executed if vertex has no outarcs.
+
+|_filter_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.
+
+|_post_
+|<<../evaluator/evaluator.adoc#quickfilter, &#60;expression&#62;>>
+|None
+|Post-filter executed after neighborhood traversal and only if _pre_ matched. The expression return value is ignored.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, &#60;vertex_condition&#62;>>
+|`&#42;`
+|Returned terminals must match this vertex filter
+
+|_rank_
+|<<../evaluator/evaluator.adoc#quickrank, &#60;ranking_formula&#62;>>
+|None
+|Specify an expression to compute dynamic rank scores when
+_sortby_=<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_RANK>>
+
+|_sortby_
+|<<../constants/sortSpecificationConstants.adoc#, Sort specification>>
+|<<../constants/sortSpecificationConstants.adoc#S_NONE, pyvgx.S_NONE>>
+|Determine how returned terminals are sorted
+
+|_memory_
+|<<../evaluator/evaluator.adoc#evaluatormemory, &#60;memory_object&#62;>> or _int_
+|4
+|Supply a general purpose array of numeric elements for use with <<../evaluator/evaluator.adoc#evaluator, expression evaluators>> in _filter_ and _rank_.
+
+|_hits_
+|<int>
+|-1
+|The maximum number of terminals to return. By default all terminals are returned.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when _limexec_ is true.
+
+|_limexec_
+|_boolean_
+|False
+|When True, limits query execution time according to _timeout_ even when not blocked on vertex acquisition.
+
+|===
+
+=== Return Value
+
+This method returns a list of vertex identifiers:
+
+[source, python]
+----
+result ::= [
+    <vertex_identifier_1>,
+    <vertex_identifier_2>,
+    <vertex_identifier_3>,
+    ...
+]
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range( 10 ):
+    g.Connect( "Alice", "called", "person_%d" % n )
+
+# Return the name of all people Alice called, sorted by name
+g.Terminals( "Alice", sortby=S_ID )
+----
+
+[[graphsearch]]
+== pyvgx.Graph.Search()
+
+Simplified version of <<graphneighborhood>> and <<graphvertices>> that renders a human-readable result listing to the selected output stream.
+
+The same parameters are available with the exception of those controlling fields and result format.
+
+When no anchor vertex is specified the behavior is that of <<graphvertices>>.
+When anchor is specified the behavior is that of <<graphneighborhood>>.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+for n in range(100):
+    g.Connect( "Alice", "knows", "person_%d" % n )
+
+# Equivalent to g.Vertices(), printing a human-readable result listing
+g.Search()
+
+# Equivalent to g.Neighborhood( "Alice", D_OUT, hits=5, sortby=S_ID )
+# printing a human-readable result listing
+g.Search( "Alice", D_OUT, hits=5, sortby=S_ID )
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphArc.adoc#, title="Graph Arc Methods"]
+<<graphArc.adoc#, icon:arrow-circle-left[size=2x, title="Graph Arc Methods"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
+<<graphManagement.adoc#, icon:arrow-circle-right[size=2x, title="Graph Management Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
