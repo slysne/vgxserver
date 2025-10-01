@@ -322,14 +322,10 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
           case '\'':
             JUMP_STATE( LITERAL );
           case 'b':
-          {
-            tokinfo_t next;
-            const BYTE *peek = CALLABLE( tokenizer->engine )->PeekTokenAndInfo( tokenizer->engine, tokenizer->tokmap, &next );
-            if( next.len == 1 && peek && (*peek == '"' || *peek == '\'') && next.soffset == tokenizer->tokinfo.soffset + 1 ) {
+            if( __tokenizer__immediate_next_chars( tokenizer, "'\"" ) ) {
               JUMP_STATE( LITERAL );
             }
             break;
-          } 
           // Open group
           case '(':
             current_op = &RpnGroup;
@@ -495,8 +491,8 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                 // Variable
                 // Object Pointer Operand can either stand on its own (address) or take a subscript (e.g. prev, vertex, next[ "prop1" ], etc. )
                 else if( __is_object_operand( current_op ) ) {
-                  // Enumerate property if "in" operator preceded object
-                  if( __enum__conditional_args( graph, program, shuntstack, current_op, NULL ) ) {
+                  // Enumerate property if "in" operator preceded object without subscript
+                  if( !__tokenizer__is_next_token( tokenizer, "[" ) && __enum__conditional_args( graph, program, shuntstack, current_op, NULL ) ) {
                     // Account for the deref of head in this case, since by default the head address on its own does not require deref and was not accounted for above
                     if( current_op->type == OP_HEAD_VERTEX_OBJECT ) {
                       program->deref.head++;
@@ -1010,7 +1006,7 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
 
             // Operation immediately preceding the literal
             __rpn_operation *pre = (shuntstack->sp-1);
-            // Literal is preceded by '[', we are parsing a subscript
+            // Literal is preceded by '[', we are parsing a subscript (presumably vertex property lookup)
             if( shuntstack->sp->type == OP_LEFT_BRACKET ) {
               // The subscript type is immediately before the '[' on the stack
               if( (stackitem.integer = __enum__key( graph, __STACK_ITEM_PROP_STR, CSTR__literal )) != 0 ) {

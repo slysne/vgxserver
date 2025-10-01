@@ -125,7 +125,7 @@ static void __eval_unary_hash( vgx_Evaluator_t *self ) {
     return;
   // hash64() of string
   case STACK_ITEM_TYPE_CSTRING:
-    SET_INTEGER_PITEM_VALUE( px, hash64( (unsigned char*)CStringValue( px->CSTR__str ), CStringLength( px->CSTR__str ) ) );
+    SET_INTEGER_PITEM_VALUE( px, CStringHash64( px->CSTR__str ) );
     return;
   // Interpret hash(vector) as its fingerprint
   case STACK_ITEM_TYPE_VECTOR:
