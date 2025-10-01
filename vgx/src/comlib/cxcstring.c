@@ -1731,7 +1731,7 @@ static CString_t * __slice( const char *data, int32_t *p_start, int32_t *p_end, 
   int64_t uclen_rest = uclen - ucstart;
 
   // [?:b]
-  int32_t idx_slice = end < 0 ? end : end - (int)ucstart;
+  int32_t idx_slice = end < 0 ? end : end >= (int)ucstart ? end - (int)ucstart : 0 ;
   int64_t uclen_slice;
   int64_t len_slice;
   if( (len_slice = COMLIB_offset_utf8( (const BYTE*)slice, uclen_rest, idx_slice, &uclen_slice, &errpos )) < 0 ) {
