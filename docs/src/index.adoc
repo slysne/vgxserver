@@ -11,8 +11,10 @@
 
 == Getting Started
 
-<<pyvgx/install.adoc#, Install PyVGX>>::
-Download Python Package or Docker Image
+[source, bash]
+----
+pip install pyvgx
+----
 
 <<pyvgx/tutorial.adoc#, PyVGX Tutorial>>::
 An introduction to pyvgx, the Python module used for creating graph algorithms
