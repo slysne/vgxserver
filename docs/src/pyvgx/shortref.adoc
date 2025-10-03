@@ -3040,6 +3040,11 @@ g.Neighborhood(
 |(attribute) .arc.dist
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcisfwd, `.arc.isfwd`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.isfwd
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_nextarcissyn, `.arc.issyn`>>
 |[TRAVERSE]SYMBOLIC
 |(attribute) .arc.issyn
@@ -3775,6 +3780,11 @@ g.Neighborhood(
 |hash( a )
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_idx, `idx`>>
+|FUNCTION
+|idx( a, b )
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_in, `in`>>
 |INFIX
 |(binary) in
@@ -3908,6 +3918,11 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_isutf8, `isutf8`>>
 |FUNCTION
 |isutf8( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isvector, `isvector`>>
+|FUNCTION
+|isvector( a )
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_jaccard, `jaccard`>>
@@ -4840,6 +4855,11 @@ g.Neighborhood(
 |(attribute) next.arc.dist
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.isfwd, `next.arc.isfwd`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.isfwd
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_nextarc.issyn, `next.arc.issyn`>>
 |[TRAVERSE]SYMBOLIC
 |(attribute) next.arc.issyn
@@ -5058,6 +5078,11 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_prevarcdist, `prev.arc.dist`>>
 |[LOOKBACK]SYMBOLIC
 |(attribute) prev.arc.dist
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcisfwd, `prev.arc.isfwd`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.isfwd
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_prevarcissyn, `prev.arc.issyn`>>

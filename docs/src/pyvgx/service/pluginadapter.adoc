@@ -596,14 +596,16 @@ Plugin *_post_* processor functions receive a PluginResponse object in the _resp
 
 === PluginResponse Class
 
-[[pluginresponse_class]]`_class_ *pyvgx.PluginResponse*( **[**_maxhits_**[**, _sortby_**]]** )`::
+[[pluginresponse_class]]`_class_ *pyvgx.PluginResponse*( **[**_maxhits_**[**, _sortby_**[**, _keytype_**]]]** )`::
 Create a new PluginResponse instance.
 +
 Set _maxhits_ to a positive integer to limit the number of result entries that can be added. By default _maxhits_ is -1 (unlimited). It is also possible to change this value later via the <<response_attr_maxhits, _maxhits_ attribute>>.
 +
 Define sort order and key type using _sortby_ parameter. Valid <<../constants/sortSpecificationConstants.adoc#, sortby constants>> are the same as those used in graph queries. By default _sortby_ is `S_NONE`. 
 +
-A dispatcher automatically creates its own internal PluginResponse instance for each request. Partial responses arriving from the back-end matrix carry result items along with _maxhits_ and _sortby_ parameters. The dispatcher response object inherits these parameters by picking the greatest _maxhits_ among all partial results and _sortby_ from the lowest partition's response with non-zero hits. As a best practice, configure all PluginResponse instances with identical _sortby_ and _maxhits_ to avoid confusion.
+Explicitly define the _keytype_ as _int_, _float_, _bytes_ or _str_. Must be comparible with _sortby_ if provided.
++
+A dispatcher automatically creates its own internal PluginResponse instance for each request. Partial responses arriving from the back-end matrix carry result items along with _maxhits_ and _sortby_ parameters. The dispatcher response object inherits these parameters by picking the greatest _maxhits_ among all partial results and _sortby_ from the lowest partition's response with non-zero hits. As a best practice, configure all PluginResponse instances with identical _sortby_, _keytype_ and _maxhits_ to avoid confusion.
 
 === PluginResponse Methods
 
@@ -612,7 +614,7 @@ Add a result item to the response object.
 +
 Optional first argument _sortkey_ must be _int_, _float_, _str_ or _bytes_. Any other object type will be ignored. Note that arguments are positional (not keywords). If only a single argument is given it is interpreted as _item_.
 +
-Calls to `Append()` must provide a _sortkey_ compatible with the response object's _sortby_ configuration, otherwise `pyvgx.ResponseError` is raised. A compatible _sortkey_ is one with the <<../constants/sortSpecificationConstants.adoc#, expected type>> and a value consistent with <<../constants/sortSpecificationConstants.adoc#, sort direction>>.
+Calls to `Append()` must provide a _sortkey_ compatible with the response object's _sortby_ and _keytype_ configuration, otherwise `pyvgx.ResponseError` is raised. A compatible _sortkey_ is one with the <<../constants/sortSpecificationConstants.adoc#, expected type>> and a value consistent with <<../constants/sortSpecificationConstants.adoc#, sort direction>>.
 +
 As a shorthand for adding items with a sequence number as their _sortkey_ `Append()` may be called with _item_ only, provided _sortby_ direction is `S_ASC`. In this case every _n_^th^ call to `Append()` without _sortkey_ will pass the integer _n_ as _sortkey_, where _n_=1 for the first call.
 +
@@ -620,11 +622,14 @@ If the response object's _sortby_ is undefined (`S_NONE`) it is automatically de
 +
 Attempting to call `Append()` more times than the response object's _maxhits_ limit will raise `pyvgx.ResponseError`. If _maxhits_ is -1 (unlimited) `Append()` can be called any number of times.
 
-[[pluginresponse_serialize]]`*Serialize*()`::
-Serialize response object to bytes. This method is provided for internal testing and debugging.
-
 [[pluginresponse_deserialize]]`*Deserialize*( _data_ )`::
 Deserialize _data_ bytes to a new PluginResponse object. This method is provided for internal testing and debugging.
+
+[[pluginresponse_resubmittable]]`*Resubmittable*()`::
+Return a <<pluginrequest_class, PluginRequest>> object which, when returned from a plugin *_post_* processor function, will resubmit the request to the back-end matrix.
+
+[[pluginresponse_serialize]]`*Serialize*()`::
+Serialize response object to bytes. This method is provided for internal testing and debugging.
 
 [[pluginresponse_tojson]]`*ToJSON*()`::
 Serialize response object to JSON string. This method is provided for internal testing and debugging. When a <<response_attr_toplevel, toplevel>> dispatcher returns a PluginResponse object it is <<pluginresponse_json_serializer, rendered>> using this method.
@@ -714,6 +719,11 @@ By default it is set to the number of times <<pluginresponse_append, Append()>> 
 |_tuple_
 |readonly
 |<<request_attr_ident, See _request.ident_>>
+
+|anchor:response_attr_keytype[]`*keytype*`
+|_type_
+|readonly
+|Type of sortkey (int, float, str, bytes), or None if undefined
 
 |anchor:response_attr_level[]`*level*`
 |_int_

@@ -6,6 +6,7 @@
 :sectnumlevels: 5
 :imagesdir: images/
 :source-highlighter: highlightjs
+:pyvgx-version: 3.5
 
 include::common/_copyable.adoc[]
 

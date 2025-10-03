@@ -5,7 +5,7 @@
 :imagesdir: images/
 :linkattrs:
 :source-highlighter: highlightjs
-:pyvgx-version: 3.3
+:pyvgx-version: 3.5
 
 include::common/_copyable.adoc[]
 
@@ -29,7 +29,7 @@ In the interim, please use the internally hosted repository:
 [.copyable]
 [source, bash, subs=attributes+]
 ----
-pip install -i https://gsp-artifacts-us.intra.rakuten-it.com/repository/am-bdd-pip/simple pyvgx={pyvgx-version}
+pip install -i https://gsp-artifacts-us.intra.rakuten-it.com/repository/am-bdd-pip/simple pyvgx=={pyvgx-version}
 ----
 
 ====
@@ -45,7 +45,7 @@ pip install -i https://gsp-artifacts-us.intra.rakuten-it.com/repository/am-bdd-p
 ====
 Currently the x86-64 architecture is supported.
 
-Support for Mac OS / Apple Silicon is planned for a future release. (Rosetta 2 does not support AVX translation and will not work.)
+Support for Mac OS / Apple Silicon is planned for late 2025.
 ====
 
 Linux:: Minimum Requirement: glibc 2.17 (Run `ldd --version` to verify)

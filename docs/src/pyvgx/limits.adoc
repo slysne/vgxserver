@@ -43,7 +43,13 @@ include::common/_copyable.adoc[]
 
 |Arc Memory
 |32 bytes
-|One arc consumes 16 bytes of memory, but since every arc has a hidden reverse arc 32 bytes are used. Note that additional overhead for maintaining internal mapping structures should be expected. See <<arcs>> for details.
+ +
+ +
+ (16 bytes with M_FWDONLY)
+|One arc consumes 16 bytes of memory, but since every arc has an implicit reverse arc 32 bytes are used. Note that additional overhead for maintaining internal mapping structures should be expected. See <<arcs>> for details.
+ +
+ +
+ Note the special case of arcs created with <<constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY>> consume only 16 bytes.
 
 |Arcs per vertex (hard limit)
 |25,165,824,000
@@ -100,7 +106,7 @@ In addition to the property map structure a global map (per graph instance) main
 [[vertexarcs]]
 === Arcs
 
-If a vertex is connected to other vertices the arcs are stored in separate _arcvector_ objects associated with the vertex. However, the vertex structure is capable of storing one outarc and one inarc without the need for separate arcvector objects. See <<arcs>> for more details.
+When a vertex is connected to other vertices the arcs are stored in separate _arcvector_ objects associated with the vertex. A vertex is capable of storing one outarc and one inarc without the need for separate arcvector objects. See <<arcs>> for more details.
 
 [[vertexvector]]
 === Vectors
@@ -171,11 +177,13 @@ Vertex identifiers require additional storage when their utf-8 encoding exceeds 
 [[arcs]]
 == Arcs
 
-Arcs are stored in _arcvectors_ representing the outarcs and inarcs of a vertex. When a new arc is created from initial A to terminal B, another entry is added to A's outarcs arcvector (pointing to B) and to B's inarcs arcvector (pointing back to A.) Each arcvector entry is 16 bytes and therefore the arc from A to B consumes 32 bytes.
+Arcs are stored in _arcvectors_ representing the outarcs and inarcs of a vertex. When a new arc is created from initial A to terminal B, another entry is added to A's outarcs arcvector (A pointing to B) and also to B's inarcs arcvector (B pointing back to A.) Each arcvector entry is 16 bytes and therefore the arc from A to B consumes 32 bytes.
+
+Implicit addition of a reverse arc from B back to A can be prevented with the <<constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY modifier bitmask>>. This reduces overall memory consumption by up to 50%, but makes reverse graph traversal impossible.
 
 The size of an arcvector object is always a power of two, determined by the number of arcs as shown in the table below. When arcs are added beyond the capacity of an existing arcvector the arcvector is expanded to the next higher size. When arcs are removed the size of the arcvector is adjusted to the next lower size as needed to minimize unused space. Note that system memory usage will appear to change in steps as a result of how memory pools are managed internally.
 
-When an arcvector grows larger than what can be held in a 4KiB array, it is split into pieces that are chained together in a trie structure. When leaf nodes in the trie grow too large they are again split and new levels are created.
+When an arcvector grows larger than what can be held in a 4KiB array, it is split into pieces that are chained together in a radix structure. When leaf nodes in the structure grow too large they are again split and new levels are created.
 
 [[arcvectorcapacities]]
 .Arcvector Capacities
@@ -244,14 +252,14 @@ When an arcvector grows larger than what can be held in a 4KiB array, it is spli
 |256
 |220+
 |109 - 220+
-|Initial trie structure
+|Initial radix structure
 
 |4416 - 537,961,697,280 bytes
 |26
 |25,165,824,000
 |
 |221 - 25,165,824,000
-|Trie structure
+|Radix structure
 
 |===
 
@@ -271,7 +279,7 @@ image::arcvector_multi.png[arcvector_multi, title="Arcvector Multi"]
 
 === Arcvectors Size Increments
 
-Arcvector arrays come in eight sizes, from 0 to 4096 bytes. When a vertex has only one simple arc there is no arcvector array (i.e. size=0) and the arc is embedded in the vertex structure. Two or more arcs require arcvector arrays ranging from 64 to 4096 bytes. If the arcs cannot fit in the largest arcvector array a trie structure containing multiple linked arrays is created.
+Arcvector arrays come in eight sizes, from 0 to 4096 bytes. When a vertex has only one simple arc there is no arcvector array (i.e. size=0) and the arc is embedded in the vertex structure. Two or more arcs require arcvector arrays ranging from 64 to 4096 bytes. If the arcs cannot fit in the largest arcvector array a radix structure containing multiple linked arrays is created.
 
 ==== Embedded arcvector (0 bytes)
 
@@ -305,7 +313,7 @@ image::arcvector_3.png[arcvector_3, title="Arcvector with 28 cells"]
 
 ==== Arcvector with 60 - 252 cells (1024 - 4096 bytes)
 
-As arcs are added the arcvector structure keeps expanding until it reaches 4096 bytes. After this, expansion continues by breaking the array into pieces that are linked together in a trie structure.
+As arcs are added the arcvector structure keeps expanding until it reaches 4096 bytes. After this, expansion continues by breaking the array into pieces that are linked together in a radix structure.
 
 image::arcvector_4.png[arcvector_4, title="Arcvector with 60 cells"]
 
@@ -313,11 +321,11 @@ image::arcvector_5.png[arcvector_5, title="Arcvector with 124 cells"]
 
 image::arcvector_6.png[arcvector_6, title="Arcvector with 252 cells"]
 
-==== Arcvector trie
+==== Arcvector Radix Structure
 
-Expansion beyond what fits in the largest arcvector array requires a trie structure where the top array links to sub-arrays. When the sub-arrays grow too large, they link to sub-sub-arrays, and so on, until four layers of arrays have been created. When the fourth layer has reached its maximum size, a simpler chain of smaller blocks is used to continue the expansion. The small blocks at the deeper levels each holds 6 arcs. There is a maximum of 255 layers, including the upper four array layers.
+Expansion beyond what fits in the largest arcvector array requires a radix structure where the top array links to sub-arrays. When the sub-arrays grow too large, they link to sub-sub-arrays, and so on, until four layers of arrays have been created. When the fourth layer has reached its maximum size, a simpler chain of smaller blocks is used to continue the expansion. The small blocks at the deeper levels each holds 6 arcs. There is a maximum of 255 layers, including the upper four array layers.
 
-.Arcvector Trie Layers
+.Arcvector Radix Layers
 [cols="1, 1, 1, 1, 1"]
 |===
 |Layer |Type |Capacity |Chains to next |First chain at size
@@ -379,7 +387,7 @@ Expansion beyond what fits in the largest arcvector array requires a trie struct
 |===
 
 
-image::arcvector_trie.png[arcvector_trie, title="Arcvector trie"]
+image::arcvector_radix.png[arcvector_radix, title="Arcvector radix structure"]
 
 ___
 

@@ -350,7 +350,7 @@ The final result of an expression is interpreted according to the context where 
 |<<datatype_real, _string_>>
 |true
 |real( _first_5_bytes_as_int_ )
-|<<_isstr, isstr()>>.
+|<<_isstr, isstr()>>
 |Text string or raw bytes. May appear as function argument or return value.
 
 |<<datatype_group, _group_>>
@@ -374,7 +374,7 @@ The final result of an expression is interpreted according to the context where 
 |<<datatype_vector, _vector_>>
 |true
 |real( _address_ )
-|
+|<<_isvector, isvector()>>
 |Object of type <<../similarity/vector.adoc#, &#60;vector&#62;>>
 
 |<<datatype_bitvector, _bitvector_>>
@@ -1430,6 +1430,15 @@ Here `"Alice"` is the current anchor, `next.arc.type` is the relationship type o
 |_bool_
 |Value is `true` if arc is a synthetic arc or `false` if arc is explicit. Explicit arcs are normal graph arcs. Synthetic arcs are produced as temporary arguments to expressions evaluated outside of arc traversal context.
 
+|`prev.arc.isfwd` [[_prevarcisfwd]]
+|`next.arc.isfwd` [[_nextarcisfwd]]
+ +
+ `.arc.isfwd`
+|_bool_
+|Value is `true` if arc is a <<../constants/arcModifierConstants.adoc#M_FWDONLY, forward-only arc>>, or `false` otherwise.
+
+
+
 |===
 
 NOTE: References to `prev.arc*` have meaning only when evaluated in a context where a traversal has already taken place. All `prev.arc*` attributes will be zero otherwise.
@@ -1748,8 +1757,8 @@ graph.Neighborhood(
     fields    = F_AARC,
     collect   = C_COLLECT,
     neighbors = {
-        'arc'    : D_OUT
-        'collect': C_COLLECT,
+        'arc'    : D_OUT,
+        'collect': C_COLLECT
     }
 ) -> list of 12 entries
 ----
@@ -2722,6 +2731,9 @@ graph.Evaluate( "hash( 'helloworld!' )" ) -> 7982852363355633418
 |`isstr( _x_ )` [[_isstr]]
 |Return 1 if _x_ is a string object, otherwise return 0
 
+|`isvector( _x_ )` [[_isvector]]
+|Return 1 if _x_ is a vector object, otherwise return 0
+
 |`isbitvector( _x_ )` [[_isbitvector]]
 |Return 1 if _x_ is a bitvector, otherwise return 0
 
@@ -3522,6 +3534,11 @@ For subscript syntax `[n]` the behavior is the same as for `list`.
 |_string_
 |Assign a string _value_ to memory location _n_
 
+|`memobj[ _n_ ] = _value_`
+|_pyvgx.Vector_
+|_vector_
+|Assign a _vector_ object to memory location _n_
+
 |`memobj[ _n_ ] = [ _value_ ]`
 |[ _int_ ]
 |_bitvector_
@@ -3565,6 +3582,11 @@ For subscript syntax `[n]` the behavior is the same as for `list`.
 |Retrieve a string value from memory location _n_ as a Python _str_
 
 |`memobj[ _n_ ]`
+|_vector_
+|_pyvgx.Vector_
+|Retrieve a vector object from memory location _n_ as pyvgx.Vector
+
+|`memobj[ _n_ ]`
 |_bitvector_
 |[ _int_ ]
 |Retrieve a bitvector from memory location _n_ as a Python _list_ with a single _int_ value  
@@ -3597,6 +3619,7 @@ mem[13] = [0xFF00]  # Assign bitvector 0xFF00 to memory location 12
 mem[14] = (42, 1.7) # Assign keyval 42:1.7 to memory location 14
 mem[15] = bytearray( [10,20,0,0,50] ) # Assign raw bytes to mem 15
 mem[16] = bytes( [1,2,3,4] ) # Assign raw bytes to mem 16
+mem[17] = graph.sim.rvec(64) # Assign random vector to mem 17
 
 # int
 list( mem[10] )       # <class 'int'>
@@ -3626,6 +3649,11 @@ list( mem[15] )       # [10, 20, 0, 0, 50]
 # bytes
 type( mem[16] )       # <class 'bytes'>
 list( mem[16] )       # [1,2,3,4]
+
+# vector
+type( mem[17] )       # <class 'pyvgx.Vector'>
+print( mem[17] )      # <PyVGX_Vector: ...>
+
 ----
 
 [[evaluatormemoryslice]]
@@ -3826,50 +3854,62 @@ type(mem[9]) -> <class 'float'>
 mem[9] -> inf
 ----
 
+_vector_::
+Maps directly to Python `pyvgx.Vector`
++
+[source, python]
+----
+mem[10] = g.sim.rvec(128)
+g.Evaluate( "isvector(load(10))", memory=mem ) -> true
+mem[10] -> '<PyVGX_Vector: typ=euclidean len=128 mag=6.948...'
+----
+
+
 [[evaluatormemory_note_on_strings]]
-==== A note about strings in evaluator expressions
+==== A note about strings and vectors in evaluator expressions
 
 [CAUTION]
 ====
+String and vector objects can be assigned to memory locations from within expressions and from the Python interpreter. The `pyvgx.Memory` instance becomes an owner of the assigned object, either by creating a copy or by owning an additonal reference.
 
-By default string objects are in scope only while an expression is executing. For this reason it is not possible for an expression to directly write strings to memory locations because accessing such strings later would be invalid once execution of the expression has completed. Attempting to assign a string object to a memory location via an evaluator expression will therefore result in `NaN` being assigned. E.g. `"store( 0, next.id )"` will assign `NaN` to location 0.
+String and vector objects are retained by the `pyvgx.Memory` associated with the expression being evaluated. Each time a string-generating function (such as `str()` or `replace()`) is used, or a string or vector object is assigned to a memory location, the `pyvgx.Memory` instance will accumulate ownership of assigned objects even if the memory location is later overwritten by another value.
 
-However, it is possible to create durable string objects via explicit cast using <<_str, `str()`>> or another function that manipulates strings, like <<_join, `join()>> or <<_replace, `replace()`>>. New string objects are created each time one of these functions is used. For instance, `"write( 0, str( 'hello' ), str( 'hello' ) )"` will create two new unique string objects (both with value 'hello') and assign them to locations 0 and 1.
+If a memory instance is long-lived manual cleanup of strings and vectors is required to avoid unbounded buildup of objects that are no longer in use. Cleanup is performed explicitly via `pyvgx.Memory.Reset()` or evaluator function <<_mreset, `"mreset()"`>>. (Cleanup is automatic when the `pyvgx.Memory` instance itself is deleted.)
 
-String objects can also be assigned to memory objects from the Python interpreter, and each assignment creates a new unique string object instance just like the evaluator functions described above.
+Note that copying existing strings or vectors between memory locations _does not_ create new instances or additional ownership when performed by an expression. For instance, `"store( 0, str('hello') ); mov( 1, 0 )"` creates one new string object referenced from two separate memory locations, i.e. locations 0 and 1 point to the same string object owned _once_ by the memory object. (Python interpreter copy (e.g. `mem[1] = mem[0]`) is normal assignment and therefore creates new object ownership each time.)
 
-String objects are retained by the `pyvgx.Memory` associated with the expression being evaluated. Each time one of the string-generating evaluator functions is called the `pyvgx.Memory` object will continue to grow in size, even if the string is not written to a memory location or if the string is written to a memory location and later overwritten by another value. The same applies for strings assigned via Python.
-
-Cleanup must be performed manually by an explicit call to `pyvgx.Memory.Reset()` or by using the evaluator function <<_mreset, `"mreset()"`>>. String cleanup is also handled automatically when the `pyvgx.Memory` object is deleted.
-
-Finally, note that copying existing string objects _does not_ create new instances. For instance, `"store( 0, str('hello') ); mov( 1, 0 )"` creates one new string referenced twice, i.e. locations 0 and 1 point to the same string object.
 ====
 
 .Example: Value Types
 [source, python]
 ----
-mem = graph.Memory( 8 )
+mem = graph.Memory( 16 )
 
 mem[0] = 0xFF0000     # Type is integer
 mem[1] = [ 0xFF0000 ] # Type is bitvector
 mem[2] = 3.14         # Type is real
 mem[3] = "Alice"      # Type is string
+mem.R1 = graph.sim.rvec(64) # Type is vector
+mem.R2 = graph.sim.rvec(64) # Type is vector
 
 mem[0]                # -> 16711680
 mem[1]                # -> [16711680]
 mem[2]                # -> 3.14
 mem[3]                # -> 'Alice'
+mem.R1                # -> <PyVGX_Vector: ...>
+mem.R2                # -> <PyVGX_Vector: ...>
 
 graph.Evaluate( "isbitvector( load(0) )", memory=m ) # -> 0
 graph.Evaluate( "isbitvector( load(1) )", memory=m ) # -> 1
 graph.Evaluate( "mul( 2, 10 )", memory=m )           # -> 31.4
 graph.Evaluate( "load( 3 ) == 'Ali*'  ", memory=m )  # -> 1
-graph.Evaluate( "store( 4, 'No' )", memory=m )       # -> nan
-graph.Evaluate( "store( 4, str('Yes') )", memory=m ) # -> 'Yes'
+graph.Evaluate( "store( 4, 'Bob' )", memory=m )      # -> 'Bob'
 graph.Evaluate( "mov( 5, 3 )", memory=m )            # -> 'Alice'
-graph.Evaluate( "mov( 6, 4 )", memory=m )            # -> 'Yes'
+graph.Evaluate( "mov( 6, 4 )", memory=m )            # -> 'Bob'
+graph.Evaluate( "isvector(r1)", memory=m )           # -> 1
+graph.Evaluate( "cosine(r1,r2)", memory=m )          # -> 0.02157
 
-# Strings 'Alice' and 'Yes' are now deleted
+# Strings 'Alice' and 'Bob', and vectors are now deleted
 graph.Evaluate( "mreset()", memory=m )
 ----
 
