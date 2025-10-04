@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Value Condition Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="valueconditionconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Value Condition Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="collectConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Collect Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_value_conditions">1. Value Conditions</a></li>
+<li><a href="#_value_condition_comparison_constants">2. Value Condition Comparison Constants</a>
+<ul class="sectlevel2">
+<li><a href="#V_LTE">2.1. pyvgx.V_LTE</a></li>
+<li><a href="#V_LT">2.2. pyvgx.V_LT</a></li>
+<li><a href="#V_GTE">2.3. pyvgx.V_GTE</a></li>
+<li><a href="#V_GT">2.4. pyvgx.V_GT</a></li>
+<li><a href="#V_EQ">2.5. pyvgx.V_EQ</a></li>
+<li><a href="#V_NEQ">2.6. pyvgx.V_NEQ</a></li>
+<li><a href="#V_RANGE">2.7. pyvgx.V_RANGE</a></li>
+<li><a href="#V_NRANGE">2.8. pyvgx.V_NRANGE</a></li>
+<li><a href="#V_DYN_LTE">2.9. pyvgx.V_DYN_LTE</a></li>
+<li><a href="#V_DYN_LT">2.10. pyvgx.V_DYN_LT</a></li>
+<li><a href="#V_DYN_GTE">2.11. pyvgx.V_DYN_GTE</a></li>
+<li><a href="#V_DYN_GT">2.12. pyvgx.V_DYN_GT</a></li>
+<li><a href="#V_DYN_EQ">2.13. pyvgx.V_DYN_EQ</a></li>
+<li><a href="#V_DYN_NEQ">2.14. pyvgx.V_DYN_NEQ</a></li>
+<li><a href="#V_DYN_DELTA">2.15. pyvgx.V_DYN_DELTA</a></li>
+<li><a href="#V_DYN_RATIO">2.16. pyvgx.V_DYN_RATIO</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_value_conditions">1. Value Conditions</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># A value condition is a 2-tuple: (pyvgx.V_&lt;x&gt;, &lt;value_or_range&gt;)
+# Conditions may use single-ended values or value ranges.
+</span>
+<span class="c1"># Single-ended conditions are 2-tuples where the second item is
+# a number or a string.
+</span><span class="p">(</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">V_</span><span class="o">*</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+<span class="c1"># Range conditions are 2-tuples where the second item is another
+# 2-tuple of numbers representing the range.
+</span><span class="p">(</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">V_RANGE</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="p">(</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_DELTA</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="p">(</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_RATIO</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Value conditions may be <em>static</em> or <em>dynamic</em>.</p>
+</div>
+<div class="paragraph">
+<p>A <em>static value condition</em> compares the evaluated value directly to the constant given in the condition.</p>
+</div>
+<div class="paragraph">
+<p>A <em>dynamic value condition</em> compares the evaluated value to the <em>corresponding value one level earlier in the parent neighborhood</em> during recursive neighborhood traversal.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_value_condition_comparison_constants">2. Value Condition Comparison Constants</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants are used to control the evaluation of value conditions in value filters.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Constant</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Numeric Comparison</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_LTE">pyvgx.V_LTE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Less-than or equal (≤)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_LTE, <em>n</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_LT">pyvgx.V_LT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Less-than (&lt;)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_LT, <em>n</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_GTE">pyvgx.V_GTE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Greater-than or equal (≥)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_GTE, <em>n</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_GT">pyvgx.V_GT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Greater-than (&gt;)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_GT, <em>n</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_EQ">pyvgx.V_EQ</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Equal (=)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_EQ, <em>n</em></p>
+<p class="tableblock">V_EQ, <em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Numeric</p>
+<p class="tableblock">String</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_NEQ">pyvgx.V_NEQ</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Not equal (≠)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_NEQ, <em>n</em></p>
+<p class="tableblock">V_NEQ, <em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Numeric</p>
+<p class="tableblock">String</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_RANGE">pyvgx.V_RANGE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Within set / interval ( ∈ [a,b] )</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_RANGE, (<em>a</em>, <em>b</em>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Both endpoints included</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_NRANGE">pyvgx.V_NRANGE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Outside set / interval ( ∉ [a,b] )</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_NRANGE, (<em>a</em>, <em>b</em>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Both endpoints excluded</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_LTE">pyvgx.V_DYN_LTE</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic less-than or equal (≤)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_LTE [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_LT">pyvgx.V_DYN_LT</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic less-than (&lt;)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_LT [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_GTE">pyvgx.V_DYN_GTE</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic greater-than or equal (≥)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_GTE [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_GT">pyvgx.V_DYN_GT</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic greater-than (&gt;)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_GT [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_EQ">pyvgx.V_DYN_EQ</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic equal (=)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_EQ [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_NEQ">pyvgx.V_DYN_NEQ</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic not equal (≠)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_NEQ [, <em>n</em>]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_DELTA">pyvgx.V_DYN_DELTA</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic value deviation (±) by delta</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_DELTA, (<em>a</em>, <em>b</em>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#V_DYN_RATIO">pyvgx.V_DYN_RATIO</a> *</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic value deviation (±) by ratio</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">V_DYN_RATIO, (<em>p</em>, <em>q</em>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See * note below</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+*) Dynamic value comparison matches the evaluated value against another <em>corresponding</em> value previously found during multi-level neighborhood traversal. A corresponding value is a value of the same kind (e.g. arc value). The current corresponding values which are made available for dynamic comparison are updated and in effect every time graph traversal continues in an extended (next) neighborhood. Dynamic matching is always performed against the current corresponding value from the immediate previous neighborhood. The optional [, n] is an offset (positive or negative) added to the dynamic value from the previous neighborhood before evaluating the condition.
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ValueCondition.png" alt="ValueCondition">
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_LTE">2.1. pyvgx.V_LTE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_LTE = 4</code></p>
+</div>
+<div class="paragraph">
+<p>Less-than or equal-to value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value ≤ <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_LTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value &lt;= n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_LTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value &lt;= n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# less than or equal to 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_LTE</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_LT">2.2. pyvgx.V_LT</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_LT = 10</code></p>
+</div>
+<div class="paragraph">
+<p>Less-than value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value &lt; <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_LT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value &lt; n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_LT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value &lt; n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# less than 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_LT</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_GTE">2.3. pyvgx.V_GTE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_GTE = 8</code></p>
+</div>
+<div class="paragraph">
+<p>Greater-than or equal-to value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value ≥ <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_GTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value &gt;= n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_GTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value &gt;= n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# greater than or equal to 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_GTE</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_GT">2.4. pyvgx.V_GT</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_GT = 6</code></p>
+</div>
+<div class="paragraph">
+<p>Greater-than value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value &gt; <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_GT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value &gt; n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_GT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value &gt; n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# greater than 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_GT</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_EQ">2.5. pyvgx.V_EQ</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_EQ = 12</code></p>
+</div>
+<div class="paragraph">
+<p>Equal-to value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value = <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_EQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value == n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_EQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value == n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# equal to 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_EQ</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_NEQ">2.6. pyvgx.V_NEQ</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_NEQ = 14</code></p>
+</div>
+<div class="paragraph">
+<p>Not-equal-to value condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value ≠ <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_NEQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>                     <span class="c1"># value != n
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_NEQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span>  <span class="c1"># arc value != n
+</span>
+<span class="c1"># Does "A" connect to anything with an integer value
+# not equal to 1000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_NEQ</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_RANGE">2.7. pyvgx.V_RANGE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_RANGE = 16</code></p>
+</div>
+<div class="paragraph">
+<p>Value within range condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value ∈ [a, b].  (Both endpoints included.)</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># value in interval [a, b]
+</span><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_RANGE</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># arc value in interval [a, b]
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_RANGE</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Does "A" connect to anything with an integer value
+# between 1000 and 2000, both included?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_RANGE</span><span class="p">,</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">2000</span><span class="p">))</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_NRANGE">2.8. pyvgx.V_NRANGE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_NRANGE = 18</code></p>
+</div>
+<div class="paragraph">
+<p>Value outside range condition.</p>
+</div>
+<div class="paragraph">
+<p>Match if inspected value ∉ [a, b].  (Both endpoints excluded.)</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># value outside interval [a, b]
+</span><span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_NRANGE</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># arc value outside interval [a, b]
+</span><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_NRANGE</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Does "A" connect to anything with an integer value
+# less than 1000 or greater than 2000?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_NRANGE</span><span class="p">,</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">2000</span><span class="p">))</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_LTE">2.9. pyvgx.V_DYN_LTE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_LTE = 26</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically less-than or equal-to value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value &lt;= previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_LTE</span> <span class="p">)</span>
+
+<span class="c1"># arc value &lt;= previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_LTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is less than or equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> ≤ <em>p</em>, or optionally <em>v</em> ≤ <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_LT">2.10. pyvgx.V_DYN_LT</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_LT = 29</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically less-than value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value &lt; previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_LT</span> <span class="p">)</span>
+
+<span class="c1"># arc value &lt; previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_LT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is less than the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> &lt; <em>p</em>, or optionally <em>v</em> &lt; <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_GTE">2.11. pyvgx.V_DYN_GTE</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_GTE = 28</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically greater-than or equal-to value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value &gt;= previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_GTE</span> <span class="p">)</span>
+
+<span class="c1"># arc value &gt;= previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_GTE</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is greater than or equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> ≥ <em>p</em>, or optionally <em>v</em> ≥ <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_GT">2.12. pyvgx.V_DYN_GT</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_GT = 27</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically greater-than value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value &gt; previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_GT</span> <span class="p">)</span>
+
+<span class="c1"># arc value &gt; previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_GT</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is greater than the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> &gt; <em>p</em>, or optionally <em>v</em> &gt; <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_EQ">2.13. pyvgx.V_DYN_EQ</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_EQ = 30</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically equal-to value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value == previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_EQ</span> <span class="p">)</span>
+
+<span class="c1"># arc value == previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_EQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> = <em>p</em>, or optionally <em>v</em> = <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_NEQ">2.14. pyvgx.V_DYN_NEQ</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_NEQ = 31</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically not-equal-to value comparison.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value != previous neighborhood's arc value
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_NEQ</span> <span class="p">)</span>
+
+<span class="c1"># arc value != previous neighborhood's arc value + n
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_NEQ</span><span class="p">,</span> <span class="n">n</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is not equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal, with optional offset <em>n</em>.</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> ≠ <em>p</em>, or optionally <em>v</em> ≠ <em>p</em> + <em>n</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_DELTA">2.15. pyvgx.V_DYN_DELTA</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_DELTA = 24</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically-within value deviation (additive).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value v matches previous neighborhood's arc value p
+# if v in the interval [p+a, p+b]
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_DELTA</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is approximately equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal.
+The approximation interval is defined as [<em>p</em>+<em>a</em>, <em>p</em>+<em>b</em>].</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> ∈ [<em>p</em>+<em>a</em>, <em>p</em>+<em>b</em>], end points included.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="V_DYN_RATIO">2.16. pyvgx.V_DYN_RATIO</h3>
+<div class="paragraph">
+<p><code>pyvgx.V_DYN_RATIO = 25</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamically-within value deviation (multiplicative).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># arc value v matches previous neighborhood's arc value p
+# if v in the interval [p*a, p*b]
+</span><span class="o">&lt;</span><span class="n">arc</span> <span class="n">value</span><span class="o">&gt;</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">rel</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">dir</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">mod</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">V_DYN_DELTA</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Match if the inspected arc value <em>v</em> is approximately equal to the arc value <em>p</em> that led to the previous neighborhood during recursive neighborhood traversal.
+The approximation interval is defined as [<em>p</em>•<em>a</em>, <em>p</em>•<em>b</em>].</p>
+</div>
+<div class="paragraph">
+<p>Modifiers must be the same for value comparison to evaluate to true.</p>
+</div>
+<div class="paragraph">
+<p>If mod1 = mod2 dynamically match:</p>
+</div>
+<div class="paragraph">
+<p>(A) -[ &lt;rel&gt;, mod2, <em>v</em> ]&#8594; (B)</p>
+</div>
+<div class="paragraph">
+<p>with previous arc:</p>
+</div>
+<div class="paragraph">
+<p>(*) -[ &lt;rel&gt;, mod1, <em>p</em> ]&#8594; (A)</p>
+</div>
+<div class="paragraph">
+<p>if <em>v</em> ∈ [<em>p</em>•<em>a</em>, <em>p</em>•<em>b</em>], end points included.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="arcModifierConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Arc Modifier Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="collectConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Collect Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

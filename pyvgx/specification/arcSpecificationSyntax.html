@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Arc Syntax</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="arcspecificationsyntax" class="article toc2 toc-left">
+<div id="header">
+<h1>Arc Syntax <a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Reference"></i></span></a> <a href="timeout.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Timeout Specification"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_two_syntax_forms">1. Two Syntax Forms</a></li>
+<li><a href="#arcinsertion">2. Arc Insertion</a>
+<ul class="sectlevel2">
+<li><a href="#_arc_insertion_syntax">2.1. Arc Insertion Syntax</a></li>
+<li><a href="#_arc_elements">2.2. Arc Elements</a></li>
+<li><a href="#_shortcut_notation">2.3. Shortcut Notation</a></li>
+<li><a href="#_automatic_value_assignment">2.4. Automatic Value Assignment</a></li>
+</ul>
+</li>
+<li><a href="#arcfilter">3. Arc Filter</a>
+<ul class="sectlevel2">
+<li><a href="#_arc_filter_syntax">3.1. Arc Filter Syntax</a></li>
+<li><a href="#_arc_filter_elements">3.2. Arc Filter Elements</a></li>
+<li><a href="#_shortcut_notation_2">3.3. Shortcut Notation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_two_syntax_forms">1. Two Syntax Forms</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Arc syntax is common for all methods that take <code>arc=</code> arguments. There are two distinct syntax forms, one for arc <a href="#arcinsertion">insertion</a> and one for arc <a href="#arcfilter">filters</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="arcinsertion">2. Arc Insertion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Methods that create relationships between vertices accept a tuple of zero, one, two, or three elements in the <code>arc=</code> parameter.</p>
+</div>
+<div class="paragraph">
+<p>Inserting or modifying a relationship will always create an outbound arc from the <em>initial</em> to the <em>terminal</em> vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_arc_insertion_syntax">2.1. Arc Insertion Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">arc</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">(</span> <span class="p">[</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_arc_elements">2.2. Arc Elements</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default Value</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;relationship&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;str&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"__related__"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship type names are enumerated as integers internally in the graph, using a limited enumeration space. The <a href="../limits.html#vgxlimits">maximum number</a> of unique relationship types allowed per graph instance is <a href="../limits.html#limits">15616</a>. An insertion attempt that exhausts the enumeration space will raise <a href="../exceptions/exceptions.html#EnumerationError">pyvgx.EnumerationError</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;modifier&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#arcmodifierconstants">Arc Modifier</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#M_STAT">pyvgx.M_STAT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc modifier constants are integer values. Although a method will perform the correct operation if the correct plain integer is used for the arc modifier, the method behavior is generally undefined if an invalid integer is passed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;value&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p>
+<p class="tableblock">&lt;float&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;modifier&gt; dependent</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The value type and range depend on the modifier.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_shortcut_notation">2.3. Shortcut Notation</h3>
+<div class="listingblock">
+<div class="title">Insert a fully unspecified arc pass None or the empty tuple ()</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="n">arc</span> <span class="o">=</span> <span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Insert an arc with unspecified relationship type, pass None for &lt;relationship&gt;</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="bp">None</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_automatic_value_assignment">2.4. Automatic Value Assignment</h3>
+<div class="listingblock">
+<div class="title">Create arc and set creation time to now (set once, cannot be changed)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">M_TMC</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Create/modify arc and update modification time to current time</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">M_TMM</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Counter (integer value)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Increment arc value, or set it to &lt;assign_value&gt;
+</span><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">M_CNT</span><span class="p">[,</span> <span class="o">&lt;</span><span class="n">assign_value</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Accumulator (float value)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Accumulate arc value, or set it to &lt;assign_value&gt;
+</span><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">M_ACC</span><span class="p">[,</span> <span class="o">&lt;</span><span class="n">assign_value</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="arcfilter">3. Arc Filter</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Query methods that support the <code>arc=</code> parameter accept a filter tuple of zero, one, two, three or five elements. (Four-element tuples are not valid since &lt;condition&gt; also requires &lt;value&gt;.)</p>
+</div>
+<div class="paragraph">
+<p>The filter logic is inverted when wrapping the filter tuple within another tuple (False, filter).</p>
+</div>
+<div class="sect2">
+<h3 id="_arc_filter_syntax">3.1. Arc Filter Syntax</h3>
+<div class="listingblock">
+<div class="title">positive (default) logic</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arcfilter</span> <span class="p">::</span><span class="o">=</span> <span class="p">(</span> <span class="p">[</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">direction</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">condition</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">inverse logic</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arcfilter</span> <span class="p">::</span><span class="o">=</span> <span class="p">(</span> <span class="bp">False</span><span class="p">,</span> <span class="p">(</span> <span class="p">[</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">direction</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span> <span class="p">[,</span> <span class="o">&lt;</span><span class="n">condition</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_arc_filter_elements">3.2. Arc Filter Elements</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default Value</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;relationship&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;str&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">To match any relationship type use <code>None</code> or <code>"&#42;"</code>.</p>
+<p class="tableblock">Wildcard syntax for partial string match is not supported.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;direction&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcDirectionConstants.html#arcdirectionconstants">Arc Direction</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Query method dependent</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;modifier&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#arcmodifierconstants">Arc Modifier</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#M_ANY">pyvgx.M_ANY</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;condition&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/valueConditionConstants.html#valueconditionconstants">Value Condition</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specifying a &lt;condition&gt; also requires &lt;modifier&gt; and &lt;value&gt; to be specified. The specified
+&lt;modifier&gt; cannot be <a href="../constants/arcModifierConstants.html#M_ANY">pyvgx.M_ANY</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;value&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;numeric&gt;</p>
+<p class="tableblock">or</p>
+<p class="tableblock">( &lt;numeric&gt;, &lt;numeric&gt; )</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Depending on the &lt;condition&gt; code this may either be a single numeric value <em>n</em> or a 2-tuple (<em>a</em>, <em>b</em>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_shortcut_notation_2">3.3. Shortcut Notation</h3>
+<div class="listingblock">
+<div class="title">Match any arc by specifying None or the empty tuple ()</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="n">arc</span> <span class="o">=</span> <span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Match any relationship by using None for &lt;relationship&gt;</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">arc</span> <span class="o">=</span> <span class="p">(</span> <span class="bp">None</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">...</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="timeout.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Timeout"></i></span></a>
+<a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="timeout.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Timeout"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

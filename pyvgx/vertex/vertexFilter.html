@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Condition Syntax</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexfilter" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Condition Syntax <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Members"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_summary">1. Summary</a>
+<ul class="sectlevel2">
+<li><a href="#generalsyntax">1.1. Syntax</a></li>
+<li><a href="#constraints">1.2. Constraints</a></li>
+</ul>
+</li>
+<li><a href="#evalorder">2. Evaluation Order</a></li>
+<li><a href="#vertexfilters">3. Vertex Filters</a>
+<ul class="sectlevel2">
+<li><a href="#vertexfiltervirtual">3.1. <code><strong>virtual</strong></code> - Vertex Manifestation Constraint</a>
+<ul class="sectlevel3">
+<li><a href="#_remarks">3.1.1. Remarks</a></li>
+</ul>
+</li>
+<li><a href="#vertexfiltertype">3.2. <code><strong>type</strong></code> - Vertex Type Name</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax">3.2.1. Syntax</a></li>
+<li><a href="#_remarks_2">3.2.2. Remarks</a></li>
+<li><a href="#_examples">3.2.3. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterdegree">3.3. <code><strong>degree</strong></code> - Number of Vertex Arcs</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_2">3.3.1. Syntax</a></li>
+<li><a href="#_remarks_3">3.3.2. Remarks</a></li>
+<li><a href="#_examples_2">3.3.3. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterindegree">3.4. <code><strong>indegree</strong></code> - Number of Vertex Inarcs</a></li>
+<li><a href="#vertexfilteroutdegree">3.5. <code><strong>outdegree</strong></code> - Number of Vertex Outarcs</a></li>
+<li><a href="#vertexfilterid">3.6. <code><strong>id</strong></code> - Vertex Identifier Name</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_3">3.6.1. Syntax</a></li>
+<li><a href="#_remarks_4">3.6.2. Remarks</a></li>
+<li><a href="#_examples_3">3.6.3. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterabstime">3.7. <code><strong>abstime</strong></code> - Absolute Vertex Timestamps</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_4">3.7.1. Syntax</a></li>
+<li><a href="#_remarks_5">3.7.2. Remarks</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterreltime">3.8. <code><strong>reltime</strong></code> - Relative Vertex Timestamps</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_5">3.8.1. Syntax</a></li>
+<li><a href="#_remarks_6">3.8.2. Remarks</a></li>
+</ul>
+</li>
+<li><a href="#vertexfiltersimilarity">3.9. <code><strong>similarity</strong></code> - Vertex Vector Similarity</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_6">3.9.1. Syntax</a></li>
+<li><a href="#_probe_vector_syntax">3.9.2. Probe Vector Syntax</a></li>
+<li><a href="#_similarity_measures">3.9.3. Similarity Measures</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterproperty">3.10. <code><strong>property</strong></code> - Vertex Property Constraint</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_7">3.10.1. Syntax</a></li>
+<li><a href="#_remarks_7">3.10.2. Remarks</a></li>
+<li><a href="#_examples_4">3.10.3. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterfilter">3.11. <code><strong>filter</strong></code> - General Filter Expression</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_8">3.11.1. Syntax</a></li>
+<li><a href="#_remarks_8">3.11.2. Remarks</a></li>
+<li><a href="#_examples_5">3.11.3. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilteradjacent">3.12. <code><strong>adjacent</strong></code> - Neighborhood Adjacency Constraint</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_9">3.12.1. Syntax</a></li>
+<li><a href="#vertexfilteradjacentarc">3.12.2. <code><strong>adjacent : arc</strong></code></a></li>
+<li><a href="#vertexfilteradjacentfilter">3.12.3. <code><strong>adjacent : filter</strong></code></a></li>
+<li><a href="#vertexfilteradjacentneighbor">3.12.4. <code><strong>adjacent : neighbor</strong></code></a></li>
+<li><a href="#vertexfilteradjacentassert">3.12.5. <code><strong>adjacent : assert</strong></code></a></li>
+<li><a href="#_remarks_9">3.12.6. Remarks</a></li>
+<li><a href="#_examples_6">3.12.7. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfiltertraverse">3.13. <code><strong>traverse</strong></code> - Neighborhood Adjacency Constraint with Arc Collection</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_10">3.13.1. Syntax</a></li>
+<li><a href="#vertexfiltertraversearc">3.13.2. <code><strong>traverse : arc</strong></code></a></li>
+<li><a href="#vertexfiltertraversefilter">3.13.3. <code><strong>traverse : filter</strong></code></a></li>
+<li><a href="#vertexfiltertraverseneighbor">3.13.4. <code><strong>traverse : neighbor</strong></code></a></li>
+<li><a href="#vertexfiltertraverseassert">3.13.5. <code><strong>adjacent : assert</strong></code></a></li>
+<li><a href="#vertexfiltertraversecollect">3.13.6. <code><strong>traverse : collect</strong></code></a></li>
+<li><a href="#_remarks_10">3.13.7. Remarks</a></li>
+<li><a href="#_examples_7">3.13.8. Examples</a></li>
+</ul>
+</li>
+<li><a href="#vertexfilterpost">3.14. <code><strong>post</strong></code> - General Filter Expression - Post Traversal</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_11">3.14.1. Syntax</a></li>
+<li><a href="#_remarks_11">3.14.2. Remarks</a></li>
+<li><a href="#_examples_8">3.14.3. Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">1. Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A <code>vertex condition</code> is a set of one or more constraints applied to vertices when evaluating graph queries, expressed as key/value pairs within a dictionary.</p>
+</div>
+<div class="sect2">
+<h3 id="generalsyntax">1.1. Syntax</h3>
+<div class="paragraph">
+<p>The general syntax of &lt;vertex_condition&gt; is a Python dictionary:</p>
+</div>
+<div class="listingblock">
+<div class="title">General Syntax</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">vertex_condition</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">{</span>
+    <span class="o">&lt;</span><span class="n">constraint_1</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">constraint_2</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="bp">...</span>
+<span class="p">}</span>
+
+<span class="n">where</span> <span class="o">&lt;</span><span class="n">constraint_n</span><span class="o">&gt;</span>  <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">constraint_name</span><span class="o">&gt;</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">constraint_value</span><span class="o">&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As a shorthand, when the only constraint is vertex name &lt;vertex_condition&gt; may be a string:</p>
+</div>
+<div class="listingblock">
+<div class="title">Vertex Name Shorthand</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">vertex_condition</span><span class="o">&gt;</span> <span class="p">::</span> <span class="o">=</span> <span class="sh">"</span><span class="s">&lt;str&gt;</span><span class="sh">"</span> <span class="o">|</span> <span class="sh">"</span><span class="s">&lt;prefix&gt;*</span><span class="sh">"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="constraints">1.2. Constraints</h3>
+<div class="paragraph">
+<p>The following constraints are available for use in a <code>vertex condition</code>. Multiple constraints are evaluated using AND-logic, i.e. all must evaluate to True for <code>vertex condition</code> to match.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 8.3333%;">
+<col style="width: 58.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Syntax</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfiltervirtual">virtual</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'virtual': &lt;bool&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Controls whether to restrict vertex matching to vertices of a particular <a href="../VGXCoreConcepts.html#vgxcoreconcepts">manifestation</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfiltertype">type</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'type': &lt;str&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those of the specified type.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterdegree">degree</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'degree': &lt;value condition&gt;</code>
+<br>
+ or
+<br>
+<code>'degree': (&lt;arc_filter&gt;, &lt;value_condition&gt;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertices must have a certain number of incident arcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterindegree">indegree</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'indegree': &lt;value condition&gt;</code>
+<br>
+ or
+<br>
+<code>'indegree': (&lt;arc_filter&gt;, &lt;value_condition&gt;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertices must have a certain number of inarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilteroutdegree">outdegree</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'outdegree': &lt;value condition&gt;</code>
+<br>
+ or
+<br>
+<code>'outdegree': (&lt;arc_filter&gt;, &lt;value_condition&gt;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertices must have a certain number of outarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterid">id</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'id': &lt;str&gt;</code>
+<br>
+ or
+<br>
+<code>'id': &lt;vertex_instance&gt;</code>
+<br>
+ or
+<br>
+<code>'id': [&lt;id1&gt;, &lt;id2&gt;, &#8230;&#8203;]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict on vertex identifier. When a string is used it may contain a wildcard '*' at the end to specify prefix match. A list can also be used to specify individual ids (as vertex instances or non-wildcard strings.)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterabstime">abstime</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'abstime': { '&lt;ts_name&gt;' : &lt;value_condition&gt; }</code>
+<br>
+ where
+<br>
+<code>&lt;ts_name&gt; ::= created &#124; modified &#124; expires</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Match vertex timestamps relative to an absolute time constraint.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterreltime">reltime</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'reltime': { '&lt;ts_name&gt;' : &lt;value_condition&gt; }</code>
+<br>
+ where
+<br>
+<code>&lt;ts_name&gt; ::= created &#124; modified &#124; expires</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Match vertex timestamps relative to the current time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfiltersimilarity">similarity</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'similarity': {</code></p>
+<p class="tableblock"><code>'vector' : &lt;probe_vector&gt;,</code></p>
+<p class="tableblock"><code>'score'  : &lt;value_condition&gt;,</code></p>
+<p class="tableblock"><code>'hamdist': &lt;value_condition&gt;</code></p>
+<p class="tableblock"><code>}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those vertices with a vector similar to a probe vector.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterproperty">property</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'property': { &lt;prop&gt; : &lt;value_condition&gt;, &#8230;&#8203; }</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those vertices containing the specified property or properties.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterfilter">filter</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'filter': &lt;expression&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those for which <a href="../evaluator/evaluator.html">&lt;expression</a>&gt; evaluates to a positive numeric value. The expression is evaluated <em>before</em> <code>'adjacent'</code> or <code>'traverse'</code> and must be a <em>local evaluator</em>, i.e. it cannot reference any <code>next*</code> attributes/properties or perform any <code>stage*()</code> or <code>collect*()</code> operations.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilteradjacent">adjacent</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'adjacent': {</code></p>
+<p class="tableblock"><code>'arc'     : &lt;arc_condition&gt;,</code></p>
+<p class="tableblock"><code>'filter'  : &lt;expression&gt;,</code></p>
+<p class="tableblock"><code>'neighbor': &lt;vertex_condition&gt;</code> (&#8592; recursive)</p>
+<p class="tableblock"><code>}</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'adjacent': &lt;arc_condition&gt;</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'adjacent': &lt;identifier&gt;</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'adjacent': [&lt;id1&gt;, &lt;id2&gt;, &#8230;&#8203;]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those vertices which have at least one neighbor matching the <code>'arc'</code>, <code>'filter'</code> and recursive <code>'neighbor'</code> conditions.
+<br>
+<br>
+ Traversal (which  may be recursive) is terminated on the first match. The <code>'adjacent'</code> constraint is evaluated before <code>'traverse'</code> and is completely independent of any subsequent traversal that may occur in <code>'traverse'</code>.
+<br>
+<br>
+ The short form <code>'adjacent': &lt;arc_condition&gt;</code> is equivalent to <code>'adjacent':{ 'arc':&lt;arc_condition&gt; }</code> (<code>&lt;arc_condition&gt;</code> is a tuple.)
+<br>
+<br>
+ The short form <code>'adjacent': &lt;identifier&gt;</code> is equivalent to <code>'adjacent':{ 'neighbor':&lt;identifier&gt; }</code> (<code>&lt;identifier&gt;</code> is a string or vertex instance.)
+<br>
+<br>
+ The short form <code>'adjacent': [&lt;id1&gt;, &lt;id2&gt;, &#8230;&#8203;]</code> is equivalent to <code>'adjacent':{ 'neighbor':[&lt;id1&gt;, &lt;id2&gt;, &#8230;&#8203;] }</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfiltertraverse">traverse</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'traverse': {</code></p>
+<p class="tableblock"><code>'arc'     : &lt;arc_condition&gt;,</code></p>
+<p class="tableblock"><code>'filter'  : &lt;expression&gt;,</code></p>
+<p class="tableblock"><code>'neighbor': &lt;vertex_condition&gt;,</code> (&#8592; recursive)</p>
+<p class="tableblock"><code>'collect': C_COLLECT &#124; C_SCAN &#124; C_NONE &#124; &lt;arc_condition&gt;</code></p>
+<p class="tableblock"><code>}</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'traverse': &lt;arc_condition&gt;</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'traverse': &lt;identifier&gt;</code>
+<br>
+<br>
+ or
+<br>
+<br>
+ <code>'traverse': [&lt;id1&gt;, &lt;id2&gt;, &#8230;&#8203;]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Same behavior as <code>'adjacent'</code> when <code>'collect'</code> is not specified. Otherwise behavior depends on <code>'collect'</code> as follows:
+<br>
+<br>
+ <code>'collect':C_COLLECT</code>: Evaluate the current neighborhood exhaustively and collect into the result set every arc for which all constraints are met.
+<br>
+<br>
+ <code>'collect':C_SCAN</code>: Evaluate the current neighborhood exhaustively but do not collect anything.
+<br>
+<br>
+ <code>'collect':&lt;arc_condition&gt;</code>: Evaluate the current neighborhood exhaustively and collect into the result set every arc for which all constraints are met AND the traversed arc also matches the additional collect <code>'&lt;arc_condition&gt;'</code>.
+<br>
+<br>
+ <code>'collect':C_NONE</code>: Same behavior as <code>'adjacent'</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexfilterpost">post</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'post': &lt;expression&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restrict vertex matches to those for which <a href="../evaluator/evaluator.html">&lt;expression</a>&gt; evaluates to a positive numeric value. The expression is evaluated <em>after</em> <code>'adjacent'</code> or <code>'traverse'</code> and must be a <em>local evaluator</em>, i.e. it cannot reference any <code>next*</code> attributes/properties or perform any <code>stage*()</code> or <code>collect*()</code> operations.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="evalorder">2. Evaluation Order</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Constraints are evaluated in the following order.</p>
+</div>
+<div class="paragraph">
+<p>Order matters for execution performance because evaluation is terminated (producing a vertex condition miss) as soon as a non-matching constraint is encountered. Writing smart vertex conditions that eliminate as many matches as possible as early as possible will result in more efficient algorithms.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><a href="#vertexfiltervirtual"><code>virtual</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfiltertype"><code>type</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilterdegree"><code>degree</code></a> (when value condition is simple numeric)</p>
+</li>
+<li>
+<p><a href="#vertexfilterid"><code>id</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilterdegree"><code>degree</code></a> (when degree condition is a value range or includes arc filter)</p>
+</li>
+<li>
+<p><a href="#vertexfilterabstime"><code>abstime</code></a> and <a href="#vertexfilterabstime"><code>reltime</code></a> (abstime and reltime conditions are merged)</p>
+</li>
+<li>
+<p><a href="#vertexfiltersimilarity"><code>similarity : hamdist</code></a> (hamming distance)</p>
+</li>
+<li>
+<p><a href="#vertexfiltersimilarity"><code>similarity : score</code></a> (cosine / jaccard)</p>
+</li>
+<li>
+<p><a href="#vertexfilterproperty"><code>property</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilterfilter"><code>filter</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilteradjacent"><code>adjacent : neighbor</code></a> (exact ID check if included in neighbor constraint)</p>
+</li>
+<li>
+<p><a href="#vertexfilteradjacentarc"><code>adjacent : arc</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilteradjacentfilter"><code>adjacent : filter</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilteradjacentneighbor"><code>adjacent : neighbor</code></a> (may be recursive)</p>
+</li>
+<li>
+<p><a href="#vertexfilteradjacentassert"><code>adjacent : assert</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfiltertraverse"><code>traverse : neighbor</code></a> (exact ID check if include in neighbor constraint)</p>
+</li>
+<li>
+<p><a href="#vertexfiltertraversearc"><code>traverse : arc</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfiltertraversefilter"><code>traverse : filter</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfiltertraverseneighbor"><code>traverse : neighbor</code></a> (may be recursive)</p>
+</li>
+<li>
+<p><a href="#vertexfiltertraversecollect"><code>traverse : collect</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfiltertraverseassert"><code>traverse : assert</code></a></p>
+</li>
+<li>
+<p><a href="#vertexfilterpost"><code>post</code></a></p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexfilters">3. Vertex Filters</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="vertexfiltervirtual">3.1. <code><strong>virtual</strong></code> - Vertex Manifestation Constraint</h3>
+<div class="paragraph">
+<p>The <code>virtual</code> constraint controls whether to restrict vertex matching to vertices of a particular <a href="../VGXCoreConcepts.html#vgxcoreconcepts">manifestation</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">virtual</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">boolean_condition</span><span class="o">&gt;</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks">3.1.1. Remarks</h4>
+<div class="paragraph">
+<p>If &lt;boolean_condition&gt; is False only REAL vertices will be matched.</p>
+</div>
+<div class="paragraph">
+<p>If &lt;boolean_condition&gt; is True only VIRTUAL vertices will be matched.</p>
+</div>
+<div class="paragraph">
+<p>If the <code>virtual</code> constraint is not included in a vertex condition both VIRTUAL and REAL vertices will be matched.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfiltertype">3.2. <code><strong>type</strong></code> - Vertex Type Name</h3>
+<div class="paragraph">
+<p>The <code>type</code> constraint will restrict vertex matches to those of the specified type.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax">3.2.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">type_name</span><span class="o">&gt;</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_2">3.2.2. Remarks</h4>
+<div class="paragraph">
+<p>The <code>type</code> constraint can be used to restrict matches to vertices of the specified type. When &lt;type_name&gt; is a string, this must match the vertex type exactly. Wildcards are not supported for type matching, with the exception of full wildcard <code>&#42;</code> which will match any vertex type. When &lt;type_name&gt; is None, only <a href="../graph/graphVertex.html#graphopenvertex">typeless vertices</a> are matched.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples">3.2.3. Examples</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Match only vertices of type "person"
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">}</span>
+
+<span class="c1"># Match all vertices (same as not specifying type filter)
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">*</span><span class="sh">"</span> <span class="p">}</span>
+
+<span class="c1"># Special case, match only typeless vertices
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">None</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterdegree">3.3. <code><strong>degree</strong></code> - Number of Vertex Arcs</h3>
+<div class="paragraph">
+<p>The <code>degree</code> constraint will match vertices with a certain number of incident arcs, optionally restricted by arc direction or by other arc conditions.</p>
+</div>
+<div class="paragraph">
+<p>A shorthand for restricting arc direction is provided by the <code>indegree</code> and <code>outdegree</code> constraints.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_2">3.3.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">degree</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="n">degree_condition</span><span class="o">&gt;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="sh">'</span><span class="s">indegree</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">degree_condition</span><span class="o">&gt;</span> <span class="p">}</span>             <span class="c1"># D_IN implied
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">outdegree</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">degree_condition</span><span class="o">&gt;</span> <span class="p">}</span>             <span class="c1"># D_OUT implied</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The &lt;degree_condition&gt; is one of:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># Apply &lt;value_condition&gt; to a vertex degree attribute
+# (degree, indegree, or outdegree)
+&lt;value_condition&gt;
+
+# Apply &lt;value_condition&gt; to the number of arcs incident
+# on vertex matching &lt;arc_filter&gt;
+( &lt;arc_filter&gt;, &lt;value_condition&gt; )</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_3">3.3.2. Remarks</h4>
+<div class="paragraph">
+<p>When &lt;degree_condition&gt; is a <a href="../constants/valueConditionConstants.html#valueconditionconstants">&#60;value condition&#62;</a> it is applied directly to the vertex degree attribute. When &lt;degree_condition&gt; is ( &lt;arc_condition&gt;, &lt;value_condition&gt; ) the value condition is applied to the count obtained by evaluating the <a href="../specification/arcSpecificationSyntax.html#arcspecificationsyntax">&#60;arc_condition&#62;</a> for all arcs incident on the vertex.</p>
+</div>
+<div class="paragraph">
+<p>The simple value condition is faster to evaluate because the value to compare is readily available as a vertex attribute.</p>
+</div>
+<div class="paragraph">
+<p>The arc-conditional evaluation requires recursive processing at each vertex to compute the number of arcs matching the arc condition.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_2">3.3.3. Examples</h4>
+<div class="listingblock">
+<div class="title">Regular Degree Conditions</div>
+<div class="content">
+<pre># Vertex degree must be exactly 10
+neighbor = { 'degree'   : 10 }
+
+# Vertex degree must be &gt; 10
+neighbor = { 'degree'   : (V_GT,10) }
+
+# Vertex indegree must be between 5 and 15
+neighbor = { 'indegree' : (V_RANGE, (5,15)) }</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Arc-conditional Degree Conditions</div>
+<div class="content">
+<pre># Vertex must have exactly 20 inarcs with the "likes" relationship
+neighbor = { 'indegree' : ( "likes", 20 ) }
+
+# Vertex must have exactly 20 inarcs with the "likes" relationship
+# having a counter value greater than 5.
+neighbor = { 'degree'   : ( ("likes",D_IN,M_CNT,V_GT,5), 20 ) }
+
+# Vertex must have &lt; 20 inarcs with the "likes" relationship
+# having a counter value greater than 5.
+neighbor = { 'degree'   : ( ("likes",D_IN,M_CNT,V_GT,5), (V_LT,20) ) }
+
+# Vertex must have between 15 and 25 inarcs with the "likes"
+# relationship having a counter value between 3 and 7.
+neighbor = {
+    'degree'   : (
+        ( "likes", D_IN, M_CNT, V_RANGE, (3,7) ),
+        (V_RANGE, (15,25))
+    )
+}</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterindegree">3.4. <code><strong>indegree</strong></code> - Number of Vertex Inarcs</h3>
+<div class="paragraph">
+<p>See <a href="#vertexfilterdegree"><code><strong>degree</strong></code> - Number of Vertex Arcs</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilteroutdegree">3.5. <code><strong>outdegree</strong></code> - Number of Vertex Outarcs</h3>
+<div class="paragraph">
+<p>See <a href="#vertexfilterdegree"><code><strong>degree</strong></code> - Number of Vertex Arcs</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterid">3.6. <code><strong>id</strong></code> - Vertex Identifier Name</h3>
+<div class="paragraph">
+<p>The  <code>id</code> constraint will restrict vertex matches to those with specific identifier(s).</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_3">3.6.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">exact</span><span class="o">&gt;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">prefix</span><span class="o">&gt;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">instance</span><span class="o">&gt;</span> <span class="p">}</span>
+<span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">exact1</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">exact2</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">...]</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_4">3.6.2. Remarks</h4>
+<div class="paragraph">
+<p>The <code>id</code> constraint can be used to restrict matches to vertices with specific name(s). Four types of constraint values are supported:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>&lt;exact&gt;</code> (string) : A vertex with this exact name will match</p>
+</li>
+<li>
+<p><code>&lt;prefix&gt;</code> (string ending with <code>&#42;</code>) : Vertices with names starting with this prefix will match</p>
+</li>
+<li>
+<p><code>&lt;instance&gt;</code> (pyvgx.Vertex) : Only this exact vertex instance will match</p>
+</li>
+<li>
+<p><code>[&lt;exact1&gt;, &lt;exact2&gt;, &#8230;&#8203;]</code> : Vertices with any of these exact names will match</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_3">3.6.3. Examples</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Match only the vertex "Alice"
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">}</span>
+
+<span class="c1"># Match vertices starting with "Ali", including "Ali", "Alice", "Alien"
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">Ali*</span><span class="sh">"</span> <span class="p">}</span>
+
+<span class="c1"># No id constraint
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">*</span><span class="sh">"</span> <span class="p">}</span>
+
+<span class="c1"># Assuming A=graph.OpenVertex( "Alice" ), this will match "Alice"
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="n">A</span> <span class="p">}</span>
+
+<span class="c1"># Match vertices "Alice", "Bob" or "Charlie"
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="p">[</span><span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span><span class="p">]</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterabstime">3.7. <code><strong>abstime</strong></code> - Absolute Vertex Timestamps</h3>
+<div class="paragraph">
+<p>This constraint specifies timestamp conditions that are evaluated relative to the absolute timestamp, i.e. seconds since 1970.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_4">3.7.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">abstime</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">created</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">modified</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">expires</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_5">3.7.2. Remarks</h4>
+<div class="paragraph">
+<p>The timestamp conditions <em>'created'</em>, <em>'modified'</em> and <em>'expires'</em> are all optional and may be specified at the same time.
+When more than one of these are specified they must all match, i.e. AND logic applies.</p>
+</div>
+<div class="paragraph">
+<p>A timestamp <a href="../constants/valueConditionConstants.html#valueconditionconstants">&#60;value_condition&#62;</a> is specified as absolute time, i.e. seconds since 1970.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterreltime">3.8. <code><strong>reltime</strong></code> - Relative Vertex Timestamps</h3>
+<div class="paragraph">
+<p>This constraint specifies timestamp conditions that are evaluated relative to the current time.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_5">3.8.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">reltime</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">created</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">modified</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">expires</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_6">3.8.2. Remarks</h4>
+<div class="paragraph">
+<p>The timestamp conditions <em>'created'</em>, <em>'modified'</em> and <em>'expires'</em> are all optional and may be specified at the same time.
+When more than one of these are specified they must all match, i.e. AND logic applies.</p>
+</div>
+<div class="paragraph">
+<p>A timestamp <a href="../constants/valueConditionConstants.html#valueconditionconstants">&#60;value_condition&#62;</a> is specified relative to the current time. Positive values indicate the number of seconds into the future relative to current time. Negative values indicate a number of seconds in the past relative to current time.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfiltersimilarity">3.9. <code><strong>similarity</strong></code> - Vertex Vector Similarity</h3>
+<div class="paragraph">
+<p>The <code>similarity</code> constraint is used to restrict vertex matches to those vertices with a vector similar to a probe vector.</p>
+</div>
+<div class="paragraph">
+<p>Similarity of two vectors can be expressed using the similarity <em>score</em> or the <em>hamming distance</em> of the vectors' fingerprints.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_6">3.9.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Similarity score, e.g. Cosine or Jaccard
+</span><span class="p">{</span>
+    <span class="sh">'</span><span class="s">similarity</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">probe_vector</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">score</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># Hamming distance
+</span><span class="p">{</span>
+    <span class="sh">'</span><span class="s">similarity</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">probe_vector</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">hamdist</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># Cosine/Jaccard AND Hamming distance
+</span><span class="p">{</span>
+    <span class="sh">'</span><span class="s">similarity</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">probe_vector</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">score</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">hamdist</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_probe_vector_syntax">3.9.2. Probe Vector Syntax</h4>
+<div class="paragraph">
+<p>There are four ways to express the <a href="../similarity/vector.html#pyvgxvector">&#60;probe_vector&#62;</a>:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>A <a href="vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="o">&gt;</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>A Python list:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span> <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span> <span class="p">:</span> <span class="p">[</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">term1</span><span class="o">&gt;</span> <span class="p">,</span> <span class="o">&lt;</span><span class="n">weight1</span><span class="o">&gt;</span> <span class="p">),</span> <span class="p">(</span> <span class="o">&lt;</span><span class="n">term2</span><span class="o">&gt;</span> <span class="p">,</span> <span class="o">&lt;</span><span class="n">weight2</span><span class="o">&gt;</span> <span class="p">),</span> <span class="p">...</span> <span class="p">]</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>A <a href="vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># use the vector of this vertex instance
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="o">&gt;</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>The literal string <code>"tail"</code> (applicable for neighborhood queries):</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># use the vector of the anchor vertex
+</span><span class="p">{</span> <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">tail</span><span class="sh">"</span> <span class="p">}</span></code></pre>
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_similarity_measures">3.9.3. Similarity Measures</h4>
+<div class="paragraph">
+<p>When <em>'score'</em> is used, a similarity score from 0.0 - 1.0 is computed using the currently active similarity parameters for the graph, typically a combination of Cosine and Jaccard computed between the vertex vector and the &lt;probe_vector&gt;. The &lt;value_condition&gt; must express matching for a value in the appropriate 0.0 - 1.0 range.</p>
+</div>
+<div class="paragraph">
+<p>When <em>'hamdist'</em> is used, the hamming distance of the fingerprints for the vertex vector and the &lt;probe_vector&gt; is computed. Fingerprints are 64-bit integers. The &lt;value_condition&gt; must express matching for a value in the range 0 - 64.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterproperty">3.10. <code><strong>property</strong></code> - Vertex Property Constraint</h3>
+<div class="paragraph">
+<p>This constraint is used to match vertices based their property names and property values.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_7">3.10.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">property</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="o">&lt;</span><span class="n">prop1</span><span class="o">&gt;</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="o">&lt;</span><span class="n">prop2</span><span class="o">&gt;</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">value_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="bp">...</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_7">3.10.2. Remarks</h4>
+<div class="paragraph">
+<p>The <code>property</code> constraint may contain any number of conditions. When multiple &lt;prop&gt; : <a href="../constants/valueConditionConstants.html#valueconditionconstants">&#60;value_condition&#62;</a> entries are given they must all match, i.e. AND logic applies.</p>
+</div>
+<div class="paragraph">
+<p>To test for the existence of a property regardless of its value specify <code>None</code> for the &lt;value_condition&gt;.</p>
+</div>
+<div class="paragraph">
+<p>Property values can be numeric (integer or float) or strings. Prefix matching on strings is supported, i.e. a wildcard <code>&#42;</code> is permitted at the end of the string condition.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_4">3.10.3. Examples</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Only match vertices that:
+#   have a numeric property 'price' with value less than 100.0
+#     AND
+#   have a string property 'color' with value equal to 'black'
+#     AND
+#   have a string property 'manufacturer' with a value starting
+#   with 'Mic'
+#     AND
+#   have a property called 'screen_size' regardless of
+#   value / value type
+</span>
+<span class="p">{</span>
+    <span class="sh">'</span><span class="s">property</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">price</span><span class="sh">'</span>         <span class="p">:</span> <span class="p">(</span><span class="n">V_LT</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">color</span><span class="sh">'</span>         <span class="p">:</span> <span class="sh">'</span><span class="s">black</span><span class="sh">'</span>
+        <span class="sh">'</span><span class="s">manufacturer</span><span class="sh">'</span>  <span class="p">:</span> <span class="sh">'</span><span class="s">Mic*</span><span class="sh">'</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">screen_size</span><span class="sh">'</span>   <span class="p">:</span> <span class="bp">None</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterfilter">3.11. <code><strong>filter</strong></code> - General Filter Expression</h3>
+<div class="paragraph">
+<p>This constraint uses the general <a href="../evaluator/evaluator.html#quickfilter">VGX Expression Language</a> to express arbitrarily complex filters.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_8">3.11.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_8">3.11.2. Remarks</h4>
+<div class="paragraph">
+<p>This constraint is a match if <a href="../evaluator/evaluator.html#quickfilter"><em>&lt;expression&gt;</em></a> evaluates to a positive numeric value, or produces a string, vertex, or other non-NULL object.</p>
+</div>
+<div class="paragraph">
+<p>The expression must be a <strong><em>local evaluator</em></strong>, i.e. it cannot reference any of the <code>next*</code> arc attributes or head vertex attributes/properties, or perform any <code>stage*()</code> or <code>collect*()</code> operations. (Use <code>adjacent</code> or <code>traverse</code> filters for non-local evaluators.)</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Due to the <a href="../evaluator/evaluator.html#noshortcircuiting">no short-circuiting policy</a> in the expression language it is important to take advantage of the overall vertex condition&#8217;s other constraints that can be <a href="#evalorder">applied before</a> the filter expression is evaluated. Although it may be tempting to pack all constraints into a single evaluator expression this is usually not the most efficient way to write vertex conditions.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_5">3.11.3. Examples</h4>
+<div class="listingblock">
+<div class="title">Vertex matches if it contains a 'score' property with value within a specific range and its identifier ends with 's'.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+  <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">vertex[</span><span class="sh">'</span><span class="s">score</span><span class="sh">'</span><span class="s">] in range( 2.5, 7.5 ) &amp;&amp; .id == </span><span class="sh">'</span><span class="s">*s</span><span class="sh">'"</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilteradjacent">3.12. <code><strong>adjacent</strong></code> - Neighborhood Adjacency Constraint</h3>
+<div class="paragraph">
+<p>This constraint requires a vertex to be adjacent to at least one other vertex in the graph according to a set of criteria, all of which are optional.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_9">3.12.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="o">&lt;</span><span class="n">arc_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">vertex_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">assert</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="nb">bool</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfilteradjacentarc">3.12.2. <code><strong>adjacent : arc</strong></code></h4>
+<div class="paragraph">
+<p>The <a href="../specification/arcSpecificationSyntax.html#arcspecificationsyntax">&#60;arc condition&#62;</a> matches arcs between a vertex and its neighbors. The default arc condition is to accept all arcs in any direction, i.e. ("*", pyvgx.D_ANY). This condition is evaluated first.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfilteradjacentfilter">3.12.3. <code><strong>adjacent : filter</strong></code></h4>
+<div class="paragraph">
+<p>The filter expression is evaluated for each matching arc. It must evaluate to a positive numeric value in order to match, which is the default.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfilteradjacentneighbor">3.12.4. <code><strong>adjacent : neighbor</strong></code></h4>
+<div class="paragraph">
+<p>Each matching <code>arc</code> which also passes the <code>filter</code> test is traversed to the neighbor vertex, where a new vertex condition is evaluated recursively. The default vertex condition is <code>*</code> which means no traversal occurs. If this condition is a match the overall <code>adjacency</code> constraint is a match.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfilteradjacentassert">3.12.5. <code><strong>adjacent : assert</strong></code></h4>
+<div class="paragraph">
+<p>The adjacent constraint evaluates to True or False depending on whether all specified criteria are met. However, by setting <code>'assert' : True</code> or <code>'assert' : False</code> it is possible to explicitly control the effect the adjacent constraint has on the containing vertex condition. It may be desirable to continue the query even if the adjacent constraint is not met, which, for instance, would be the case when using adjacent to modify a running score.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_9">3.12.6. Remarks</h4>
+<div class="paragraph">
+<p>The <code>adjacent</code> constraint is non-greedy. It will traverse arcs and recursively evaluate neighbor vertex conditions only until the first match is found. This means not all arcs are necessarily traversed, thus speeding up execution in cases where a match is found.</p>
+</div>
+<div class="paragraph">
+<p>Remember that a vertex can be connected to another vertex via a <em>multiple arc</em>, i.e. several individual arcs with different relationship types and/or modifiers. In this case traversal will potentially occur multiple times from a vertex to its head vertex. Every arc, including each individual arc within a multiple arc, is evaluated and traversed independently.</p>
+</div>
+<div class="paragraph">
+<p>The neighbor <a href="#vertexfilter">&#60;vertex condition&#62;</a> is applied recursively. This enables powerful, complex graph traversal specifications to be expressed in a single statement.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+It should be noted that nesting <code>neighbor</code> conditions will increase query execution time due to the
+recursive traversal patterns that must be followed during evaluation. Query execution time can range from microseconds
+to years depending on the graph structure and the amount of neighbor recursion used.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_6">3.12.7. Examples</h4>
+<div class="listingblock">
+<div class="title">Vertex matches if it 'likes' one of its neighbors with a floating point score greater than 2.5</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span> <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">likes</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="n">V_GT</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Vertex matches if it is a person who knows someone who is exactly 80, 90 or 100 years of age. However, this vertex condition is inefficient. See next example for an improved version.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>    <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">knows</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">vertex.type == </span><span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="s"> &amp;&amp; next[</span><span class="sh">'</span><span class="s">age</span><span class="sh">'</span><span class="s">] in {80,90,100}</span><span class="sh">"</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Improved version of the above example. This is faster because the vertex type filter is applied before any (needless) arc traversal and head property lookup take place.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>   <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>    <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">knows</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">next[</span><span class="sh">'</span><span class="s">age</span><span class="sh">'</span><span class="s">] in {80,90,100}</span><span class="sh">"</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Vertex matches if it is a person, and register R1 is multiplied by 100 if they also know Bob. If they don&#8217;t know Bob the person is still a match but no multiplication of R1 occurs.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>   <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">knows</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>   <span class="p">:</span> <span class="sh">"</span><span class="s">mul( R1, 100 )</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">assert</span><span class="sh">'</span>   <span class="p">:</span> <span class="bp">True</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Vertex matches if it 'likes' one of its neighbors with a floating point score greater than 2.5 and the neighbor 'knows' 'Bob'.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">likes</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="n">V_GT</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">knows</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">id</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">'</span><span class="s">Bob</span><span class="sh">'</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Vertex matches if it is a person who was called by another person named Bob who purchased a product made by a company called ACME.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_IN</span><span class="p">)</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">'</span><span class="s">Bob</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">product</span><span class="sh">'</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_IN</span><span class="p">)</span>
+                        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">'</span><span class="s">company</span><span class="sh">'</span><span class="p">,</span>
+                            <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>          <span class="p">:</span> <span class="sh">'</span><span class="s">ACME</span><span class="sh">'</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Match vertex only if it has at least one neighbor vertex of type 'person'</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Match vertex only if it has at least one neighbor vertex of type 'person' who has 'visited' the country 'Italy'</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>     <span class="p">:</span> <span class="sh">'</span><span class="s">country</span><span class="sh">'</span><span class="p">,</span>
+                    <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>       <span class="p">:</span> <span class="sh">'</span><span class="s">Italy</span><span class="sh">'</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Match vertex only if it is a 'person' with a 'friend' who is a 'person' who 'purchased' a 'product' with a 'price' higher than 1000.0 that has been 'viewed' by 'Bob'</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">friend</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">purchased</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">product</span><span class="sh">'</span><span class="p">,</span>
+                    <span class="sh">'</span><span class="s">price</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="n">V_GT</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">),</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">viewed</span><span class="sh">'</span><span class="p">,</span> <span class="n">D_IN</span><span class="p">)</span>
+                        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">Bob</span><span class="sh">'</span>
+                        <span class="p">}</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfiltertraverse">3.13. <code><strong>traverse</strong></code> - Neighborhood Adjacency Constraint with Arc Collection</h3>
+<div class="paragraph">
+<p>This constraint requires a vertex to be adjacent to at least one other vertex in the graph according to a set of criteria, all of which are optional. Matched arcs can be collected into the query result set. If no collection is specified <code>traverse</code> and <code>adjacent</code> have equivalent behavior.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_10">3.13.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="o">&lt;</span><span class="n">arc_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">vertex_condition</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">assert</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="nb">bool</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="n">C_NONE</span> <span class="o">|</span> <span class="n">C_COLLECT</span> <span class="o">|</span> <span class="n">C_SCAN</span> <span class="o">|</span> <span class="o">&lt;</span><span class="n">arc_condition</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfiltertraversearc">3.13.2. <code><strong>traverse : arc</strong></code></h4>
+<div class="paragraph">
+<p>The <a href="../specification/arcSpecificationSyntax.html#arcspecificationsyntax">&#60;arc condition&#62;</a> matches arcs between a vertex and its neighbors. The default arc condition is to accept all arcs in any direction, i.e. ("*", pyvgx.D_ANY). This condition is evaluated first.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfiltertraversefilter">3.13.3. <code><strong>traverse : filter</strong></code></h4>
+<div class="paragraph">
+<p>The filter expression is evaluated for each matching arc. It must evaluate to a positive numeric value in order to match, which is the default.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfiltertraverseneighbor">3.13.4. <code><strong>traverse : neighbor</strong></code></h4>
+<div class="paragraph">
+<p>Each matching <code>arc</code> which also passes the <code>filter</code> test is traversed to the neighbor vertex, where a new vertex condition is evaluated recursively. The default vertex condition is <code>*</code> which means no traversal occurs. If this condition is a match the overall <code>traverse</code> constraint is a match.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfiltertraverseassert">3.13.5. <code><strong>adjacent : assert</strong></code></h4>
+<div class="paragraph">
+<p>The traverse constraint evaluates to True or False depending on whether all specified criteria are met. However, by setting <code>'assert' : True</code> or <code>'assert' : False</code> it is possible to explicitly control the effect the traverse constraint has on the containing vertex condition. It may be desirable to continue the query even if the traverse constraint results in no traversal, which, for instance, would be the case when using traverse to modify a running score.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vertexfiltertraversecollect">3.13.6. <code><strong>traverse : collect</strong></code></h4>
+<div class="paragraph">
+<p>Arcs which satisfy all of <code>arc</code>, <code>filter</code> and <code>neighbor</code> can be collected into the result set. Possible settings for <code>collect</code> are:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 77.7778%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Collect Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>C_COLLECT</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All matching arcs are collected into the result set.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&lt;arc_condition&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Individual arcs of a multiple arc that has at least one match can be collected using a separate arc condition. <code>C_COLLECT</code> can be thought of as the special case where
+<br>
+<code>collect: &lt;arc_condition&gt;</code> and <code>arc: &lt;arc_condition&gt;</code> are the same.
+<br>
+<br>
+<strong>NOTE</strong>: <code>collect: &lt;arc_condition&gt;</code> and <code>arc: &lt;arc_condition&gt;</code> must have the same direction.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>C_SCAN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This turns <code>traverse</code> into a greedy version of <code>adjacent</code>, exhaustively traversing all arcs in the neighborhood. Nothing is collected.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>C_NONE</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the default when <code>collect</code> is not specified. Nothing is collected and <code>traverse</code> is equivalent to <code>adjacent</code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_remarks_10">3.13.7. Remarks</h4>
+<div class="paragraph">
+<p>When no <code>collect</code> clause is given <code>traverse</code> and <code>adjacent</code> have the same behavior. When a <code>collect</code> clause other than <code>C_NONE</code> is specified <code>traverse</code> becomes a greedy version of <code>adjacent</code>. The overall match outcome of a <code>traverse</code> constraint is independent of the <code>collect</code> clause.</p>
+</div>
+<div class="paragraph">
+<p>Both <code>adjacent</code> and <code>traverse</code> can be used at the same time in a vertex condition. This allows a fork to be created, enabling completely independent neighborhood constraints to be specified. However, <code>adjacent</code> must produce a match in order for <code>traverse</code> to be evaluated.</p>
+</div>
+<div class="paragraph">
+<p>If <code>adjacent</code> includes a recursive vertex condition it is possible to include both <code>adjacent</code> and <code>traverse</code> in the nested vertex condition. A recursive bifurcating query structure can thus be created, like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="bp">...</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="bp">...</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                <span class="p">},</span>
+                <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="bp">...</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="bp">...</span>
+        <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="bp">...</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                <span class="p">}</span>
+            <span class="p">},</span>
+            <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span> <span class="p">:</span> <span class="bp">...</span>
+                <span class="p">},</span>
+                <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="bp">...</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="bp">...</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_7">3.13.8. Examples</h4>
+<div class="listingblock">
+<div class="title">Match the vertex if it has at least one outbound relationship "called" and collect all such arcs from the vertex neighborhood into the result set.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span> <span class="p">:</span> <span class="n">C_COLLECT</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Match a person if it has at least one friend, and collect all their friends whom they visited at least twice.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">friend</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span> <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_CNT</span><span class="p">,</span> <span class="n">V_GTE</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Collect people&#8217;s visits to countries provided they have a friend who visited Japan.</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">friend</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">country</span><span class="sh">'</span><span class="p">,</span>
+                    <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">'</span><span class="s">Japan</span><span class="sh">'</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="n">C_COLLECT</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">country</span><span class="sh">'</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexfilterpost">3.14. <code><strong>post</strong></code> - General Filter Expression - Post Traversal</h3>
+<div class="paragraph">
+<p>This constraint uses the general <a href="../evaluator/evaluator.html#quickfilter">VGX Expression Language</a> to express arbitrarily complex filters applied after any adjacency/traversal constraints.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_11">3.14.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="sh">'</span><span class="s">post</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_11">3.14.2. Remarks</h4>
+<div class="paragraph">
+<p>This constraint is a match if <a href="../evaluator/evaluator.html#quickfilter"><em>&lt;expression&gt;</em></a> evaluates to a positive numeric value, or produces a string, vertex, or other non-NULL object.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>post</code> filter will be evaluated even if <code>adjacent</code> or <code>traverse</code> produces a miss. I.e., once the vertex condition has made it past <code>filter</code> then <code>post</code> will be evaluated. However, even if <code>post</code> produces a hit it will not override a miss produced by <code>adjacent</code> or <code>traverse</code>. If <code>post</code> produces a miss the vertex condition is a miss in any case.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The expression must be a <strong><em>local evaluator</em></strong>, i.e. it cannot reference any of the <code>next*</code> arc attributes or head vertex attributes/properties, or perform any <code>stage*()</code> or <code>collect*()</code> operations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_examples_8">3.14.3. Examples</h4>
+<div class="listingblock copyable">
+<div class="title">Collect neighbor&#8217;s neighbor arc with the highest value and return the top 10 of those arcs</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+  <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span>
+  <span class="n">hits</span>     <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+  <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>   <span class="p">:</span> <span class="sh">"</span><span class="s">do( store( R1, 0 ) )</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="p">(</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span> <span class="p">),</span>
+      <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>   <span class="p">:</span> <span class="sh">"""</span><span class="s">
+                   void(
+                       storeif(
+                           stageif( next.arc.value &gt; load( R1 ) ),
+                           R1,
+                           next.arc.value
+                       )
+                   )
+                   </span><span class="sh">"""</span>
+    <span class="p">},</span>
+    <span class="sh">'</span><span class="s">post</span><span class="sh">'</span>     <span class="p">:</span> <span class="sh">"</span><span class="s">commit()</span><span class="sh">"</span>
+  <span class="p">},</span>
+  <span class="n">sortby</span>   <span class="o">=</span> <span class="n">S_VAL</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This query uses the <a href="../evaluator/evaluator.html#collectorstagingfunctions">stage/commit</a> technique to pick a single arc from the second level neighborhood. We use <code>'filter'</code> to reset a threshold level to zero before each inner traversal. Then we use <code>'adjacent'</code> to iterate over all second level neighbors. The use of <code>void(&#8230;&#8203;)</code> ensures exhaustive scan since it produces a miss for each arc traversed. When an arc with a larger value than the current threshold is encountered it is staged and the threshold is updated with the new value. (Staging a new arc will replace any previously staged arc.)</p>
+</div>
+<div class="paragraph">
+<p>At the end of each inner traversal (when <code>'adjacent'</code> completes) the <code>'post'</code> expression is evaluated. Here we commit the staged arc, which collects it into the result set.</p>
+</div>
+<div class="paragraph">
+<p>Note that <code>'post'</code> is executed even through <code>'adjacent'</code> always returns False (due to <code>void()</code> in its filter. Also note that no first-level arcs are collected since the neighbor={&#8230;&#8203;} condition is always False (again due to <code>void()</code> in the inner filter.)</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Miscellaneous Methods"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Members"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

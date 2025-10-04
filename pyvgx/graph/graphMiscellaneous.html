@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Miscellaneous Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphmiscellaneousmethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Miscellaneous Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Members"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#graphshowvertex">1. pyvgx.Graph.ShowVertex()</a></li>
+<li><a href="#graphvertexdescriptor">2. pyvgx.Graph.VertexDescriptor()</a></li>
+<li><a href="#graphshowopenvertices">3. pyvgx.Graph.ShowOpenVertices()</a></li>
+<li><a href="#graphdebugprintallocators">4. pyvgx.Graph.DebugPrintAllocators()</a></li>
+<li><a href="#graphdebugcheckallocators">5. pyvgx.Graph.DebugCheckAllocators()</a></li>
+<li><a href="#graphdebuggetobjectbyaddress">6. pyvgx.Graph.DebugGetObjectByAddress()</a></li>
+<li><a href="#graphdebugfindobjectbyidentifier">7. pyvgx.Graph.DebugFindObjectByIdentifier()</a></li>
+<li><a href="#graphdebugdumpgraph">8. pyvgx.Graph.DebugDumpGraph()</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Miscellaneous Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphshowvertex">pyvgx.Graph.ShowVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print a representation of internal data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphvertexdescriptor">pyvgx.Graph.VertexDescriptor()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vertex descriptor</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphshowopenvertices">pyvgx.Graph.ShowOpenVertices()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print open vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdebugprintallocators">pyvgx.Graph.DebugPrintAllocators()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print allocator information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdebugcheckallocators">pyvgx.Graph.DebugCheckAllocators()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform allocator integrity check</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdebuggetobjectbyaddress">pyvgx.Graph.DebugGetObjectByAddress()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return an object by memory address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdebugfindobjectbyidentifier">pyvgx.Graph.DebugFindObjectByIdentifier()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return an object by its identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdebugdumpgraph">pyvgx.Graph.DebugDumpGraph()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print internal graph information</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphshowvertex">1. pyvgx.Graph.ShowVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Print vertex details</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ShowVertex</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphvertexdescriptor">2. pyvgx.Graph.VertexDescriptor()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return vertex descriptor</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">VertexDescriptor</span><span class="p">(</span> <span class="nb">id</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphshowopenvertices">3. pyvgx.Graph.ShowOpenVertices()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Print open vertices</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ShowOpenVertices</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdebugprintallocators">4. pyvgx.Graph.DebugPrintAllocators()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Print internal allocator information to stdout. Specify allocator <em>name</em> to dump a specific allocator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DebugPrintAllocators</span><span class="p">(</span> <span class="p">[</span> <span class="n">name</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdebugcheckallocators">5. pyvgx.Graph.DebugCheckAllocators()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run internal allocator diagnostics. Specify <em>name</em> to run diagnostics for a specific allocator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DebugCheckAllocators</span><span class="p">(</span> <span class="p">[</span> <span class="n">name</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdebuggetobjectbyaddress">6. pyvgx.Graph.DebugGetObjectByAddress()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a VGX object located as memory <em>address</em>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DebugGetObjectByAddress</span><span class="p">(</span> <span class="n">address</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdebugfindobjectbyidentifier">7. pyvgx.Graph.DebugFindObjectByIdentifier()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a VGX object with a specific <em>identifier</em>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DebugFindObjectByIdentifier</span><span class="p">(</span> <span class="n">identifier</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdebugdumpgraph">8. pyvgx.Graph.DebugDumpGraph()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Print internal graph information.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DebugDumpGraph</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphEvent.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Event Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Members"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

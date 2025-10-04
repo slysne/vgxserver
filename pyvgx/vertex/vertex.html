@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Objects</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxvertex" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Objects <a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Reference"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#class">pyvgx.Vertex</a></li>
+<li><a href="#api">pyvgx.Vertex API</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="class">pyvgx.Vertex</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code><em>class</em> pyvgx.<strong>Vertex</strong>( <em>graph</em>, <em>id</em><strong>[</strong>, type_<strong>[</strong>, <em>mode</em><strong>[</strong>, <em>timeout</em> <strong>]]]</strong> )</code></dt>
+<dd>
+<p>The <code>pyvgx.Vertex</code> type represents the Python layer&#8217;s view of VGX vertex objects. Objects of this class are wrappers that enable Python code to access core VGX vertices.</p>
+<div class="paragraph">
+<p><strong>Parameters</strong></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 27.2727%;">
+<col style="width: 18.1818%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>graph</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../graph/graph.html"><code>pyvgx.Graph</code> instance</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parent graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <em>bytes</em> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique vertex identifier string or memory address known to reference vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>type</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <em>bytes</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>None</code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>mode</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>chr</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"a"</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access mode: "w" (writable), "a" (modify), or "r" (readonly)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Milliseconds to block while waiting for access</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Remarks</strong></p>
+</div>
+<div class="paragraph">
+<p>The pyvgx.Vertex type represents VGX core vertex objects. The returned Python object is a wrapper around the internal VGX vertex object.</p>
+</div>
+<div class="paragraph">
+<p>This constructor creates a new VGX vertex in parent <em>graph</em> or opens an existing VGX vertex. If the vertex already exists <em>id</em> may be given as a string or as a memory address known to reference the vertex. If the vertex does not already exist <em>id</em> must be a string.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>type</em> string may only be specified if the <em>mode</em> is "w", otherwise ValueError is raised. If the vertex already exists with a type other than <em>type</em> ValueError is raised. When <em>type</em> is <code>None</code> (the default) a typeless vertex is created.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>mode</em> character specifies access type.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"w"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open vertex writable and create if it does not exist</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"a"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open vertex writable but do not create</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"r"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open vertex readonly</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Both <code>"a"</code> and <code>"r"</code> will raise KeyError if vertex does not exist.</p>
+</div>
+<div class="paragraph">
+<p>An optional <em>timeout</em> in milliseconds may be specified to allow blocking while waiting for vertex to become available to the calling thread.</p>
+</div>
+<div class="paragraph">
+<p>Instead of calling this constructor directly it is recommended to use one of the following pyvgx.Graph API methods:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../graph/graphVertex.html#graphcreatevertex"><code>pyvgx.Graph.CreateVertex( <em>id</em><strong>[</strong>, <em>type</em><strong>]</strong> )</code></a></p>
+</li>
+<li>
+<p><a href="../graph/graphVertex.html#graphnewvertex"><code>pyvgx.Graph.NewVertex( <em>id</em><strong>[</strong>, <em>type</em><strong>[</strong>, <em>timeout</em><strong>]]</strong> )</code></a></p>
+</li>
+<li>
+<p><a href="../graph/graphVertex.html#graphopenvertex"><code>pyvgx.Graph.OpenVertex( <em>id</em><strong>[</strong>, <em>mode</em><strong>[</strong>, <em>timeout</em><strong>]]</strong> )</code></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong></p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Vertex</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">node</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># create "A" of type "node"
+</span><span class="k">del</span> <span class="n">A</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Vertex</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># open "A" readonly</span></code></pre>
+</div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="api">pyvgx.Vertex API</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Vertex API Section</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexMembers.html#vertexmembers">Vertex Members</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object members</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexAccess.html#vertexaccess">Vertex Access Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for checking and modifying vertex access mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexProperty.html#vertexproperty">Vertex Property Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for managing vertex properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexRank.html#vertexrank">Vertex Rank Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for accessing vertex ranking coefficients</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexVector.html#vertexvector">Vertex Vector Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for managing vertex vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexTTL.html#vertexTTL">Vertex TTL Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for managing vertex expiration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexMiscellaneous.html#vertexmiscellaneous">Vertex Miscellaneous Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for accessing and managing various vertex attributes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="vertexFilter.html#vertexfilter">Vertex Condition Syntax</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Syntax rules for vertex conditions used in queries
+<br>
+ <a href="vertexFilter.html#generalsyntax">General Syntax</a>
+<br>
+ <a href="vertexFilter.html#constraints">Constraints</a>
+<br>
+ <a href="vertexFilter.html#evalorder">Evaluation Order</a>
+<br>
+ <a href="vertexFilter.html#vertexfilters">Vertex Filters</a></p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexFilter.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Condition Syntax"></i></span></a>
+<a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="vertexMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Members"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

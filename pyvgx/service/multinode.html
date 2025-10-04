@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Server Multi-Node Setup</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxserver_multinode" class="article toc2 toc-left">
+<div id="header">
+<h1>VGX Server Multi-Node Setup <a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="service.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="VGX Server"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#system_descriptor">1. System Descriptor</a>
+<ul class="sectlevel2">
+<li><a href="#descriptor_name">1.1. System Name (<code><strong>name</strong></code>)</a></li>
+<li><a href="#descriptor_graphs_list">1.2. Graph Names (<code>graphs</code>)</a></li>
+<li><a href="#descriptor_instances">1.3. VGX Server Instance Definitions (<code><strong>instances</strong></code>)</a></li>
+<li><a href="#descriptor_common">1.4. VGX Server Instance Common Parameters (<code>common</code>)</a></li>
+<li><a href="#descriptor_topology">1.5. System Deployment Topology (<code>topology</code>)</a>
+<ul class="sectlevel3">
+<li><a href="#descriptor_topology_transaction">1.5.1. Data Input Transaction Flow (<code>topology.transaction</code>)</a>
+<ul class="sectlevel4">
+<li><a href="#descriptor_topology_transaction_default">1.5.1.1. Default Value</a></li>
+<li><a href="#_transaction_topology_example">1.5.1.2. Transaction Topology Example</a></li>
+</ul>
+</li>
+<li><a href="#descriptor_topology_dispatch">1.5.2. Request Dispatch Matrix <code>topology.dispatch</code></a>
+<ul class="sectlevel4">
+<li><a href="#descriptor_topology_dispatch_configuration_mapping">1.5.2.1. Descriptor Dispatcher Topology vs. Dispatcher Configuration</a></li>
+<li><a href="#descriptor_topology_dispatch_partial_results">1.5.2.2. Allow Partial Results</a></li>
+<li><a href="#descriptor_dispatch_topology_example">1.5.2.3. Dispatch Topology Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#vgxinstance_plugin_definitions">2. Plugin Definition List</a>
+<ul class="sectlevel2">
+<li><a href="#_plugin_definitions_example">2.1. Plugin Definitions Example</a></li>
+</ul>
+</li>
+<li><a href="#pyvgx_vgxinstance">3. pyvgx.VGXInstance</a>
+<ul class="sectlevel2">
+<li><a href="#_pyvgx_vgxinstance_example">3.1. pyvgx.VGXInstance Example</a></li>
+</ul>
+</li>
+<li><a href="#service_example">4. Service Example</a>
+<ul class="sectlevel2">
+<li><a href="#service_example_topology">4.1. Service Example Topology</a></li>
+<li><a href="#service_example_descriptor">4.2. Service Example Descriptor</a></li>
+<li><a href="#service_example_python_service">4.3. Service Example Python Program</a></li>
+<li><a href="#service_example_plugin_code">4.4. Service Example Plugin Code</a></li>
+<li><a href="#service_example_start_instances">4.5. Service Example Start Instances</a></li>
+<li><a href="#service_example_verify">4.6. Service Example Verify System Overview</a></li>
+<li><a href="#service_example_feed_request">4.7. Service Example Load Data</a></li>
+<li><a href="#service_example_search_request">4.8. Service Example Search Request</a></li>
+<li><a href="#service_example_system_overview">4.9. Service Example System Overview</a></li>
+<li><a href="#service_example_shutdown">4.10. Service Example Shutdown</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>Multi-node deployments require a <a href="#system_descriptor"><strong>system descriptor</strong></a> defining roles of all instances and how they are connected.
+Configuring and starting each VGX Server instance can be simplified by using the <a href="#pyvgx_vgxinstance">built-in <code>pyvgx.VGXInstance</code> class</a>, which removes the need to explicitly call system.Initialize(), op.Bind(), system.AddPlugin(), system.StartHTTP() and other common preparation steps.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="system_descriptor">1. System Descriptor</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A reserved system property <code>"SYSTEM_Descriptor"</code> holds a dict describing all members of the system. At least one VGX Server instance must have this property set, allowing it to orchestrate administrative actions across all instances, and to display the <a href="sysadmin.html#admin_ui_system">Multi-Node System Dashboard</a>.</p>
+</div>
+<div class="paragraph">
+<p>A default system descriptor with a single <code>generic</code> instance is automatically generated when <a href="service.html#system_starthttp_func">system.StartHTTP()</a> is called and the property is not already defined.</p>
+</div>
+<div class="listingblock">
+<div class="title">System descriptor property</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+    <span class="c1"># Friendly system name shown on Dashboard
+</span>    <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span> <span class="n">system_name</span><span class="p">,</span>
+
+    <span class="c1"># Declare graphs names to be used
+</span>    <span class="sh">"</span><span class="s">graphs</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+      <span class="o">&lt;</span><span class="n">graph_name_1</span><span class="o">&gt;</span><span class="p">,</span>
+      <span class="bp">...</span>
+    <span class="p">],</span>
+
+    <span class="c1"># Define all VGX Server instances
+</span>    <span class="sh">"</span><span class="s">instances</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">"</span><span class="s">S1</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">"</span><span class="s">group</span><span class="sh">"</span><span class="p">:</span>        <span class="n">display_group_number</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">:</span>        <span class="n">graph_name</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">type</span><span class="sh">"</span><span class="p">:</span>         <span class="n">instance_type</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">host</span><span class="sh">"</span><span class="p">:</span>         <span class="n">hostname_or_ip</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">hport</span><span class="sh">"</span><span class="p">:</span>        <span class="n">http_main_port</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">prefix</span><span class="sh">"</span><span class="p">:</span>       <span class="n">http_service_prefix</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">s-in</span><span class="sh">"</span><span class="p">:</span>         <span class="n">http_service_in_at_startup</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">tport</span><span class="sh">"</span><span class="p">:</span>        <span class="n">tx_input_port</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">durable</span><span class="sh">"</span><span class="p">:</span>      <span class="n">true_or_false</span><span class="p">,</span>
+            <span class="sh">"</span><span class="s">description</span><span class="sh">"</span><span class="p">:</span>  <span class="n">instance_description</span>
+        <span class="p">},</span>
+        <span class="p">...,</span>
+        <span class="sh">"</span><span class="s">Sn</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="c1"># Common instance parameters
+</span>    <span class="sh">"</span><span class="s">common</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="o">&lt;</span><span class="n">instance_param</span><span class="o">&gt;</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">param_value</span><span class="o">&gt;</span><span class="p">,</span>
+      <span class="bp">...</span>
+    <span class="p">},</span>
+
+    <span class="c1"># Define how instances are connected
+</span>    <span class="sh">"</span><span class="s">topology</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="c1"># Transaction input flow
+</span>        <span class="sh">"</span><span class="s">transaction</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># S1 attached to S2 and S3
+</span>            <span class="sh">"</span><span class="s">S1</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+              <span class="sh">"</span><span class="s">S2</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">S3</span><span class="sh">"</span>
+            <span class="p">],</span>
+            <span class="c1"># Nesting: S4 attached to S5, S5 attached to S6 and S7
+</span>            <span class="sh">"</span><span class="s">S4</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+              <span class="sh">"</span><span class="s">S5</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span><span class="sh">"</span><span class="s">S6</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">S7</span><span class="sh">"</span><span class="p">],</span>
+              <span class="bp">...</span>
+            <span class="p">},</span>
+            <span class="bp">...</span>
+        <span class="p">},</span>
+        <span class="c1"># HTTP Server dispatch matrix
+</span>        <span class="sh">"</span><span class="s">dispatch</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># Dispatcher S10 matrix: replicas and partitions
+</span>            <span class="sh">"</span><span class="s">S10</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+              <span class="c1"># First row
+</span>              <span class="p">{</span>
+                <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="n">max_socket_connections</span><span class="p">,</span>
+                <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="n">reference_cost</span><span class="p">,</span>
+                <span class="sh">"</span><span class="s">primary</span><span class="sh">"</span><span class="p">:</span> <span class="n">true_or_false</span><span class="p">,</span>
+                <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="sh">"</span><span class="s">S11</span><span class="sh">"</span><span class="p">,</span>
+                  <span class="sh">"</span><span class="s">S12</span><span class="sh">"</span><span class="p">,</span>
+                  <span class="sh">"</span><span class="s">S13</span><span class="sh">"</span><span class="p">,</span>
+                <span class="p">]</span>
+              <span class="p">},</span>
+              <span class="c1"># Second row
+</span>              <span class="p">{</span> <span class="p">...</span> <span class="p">},</span>
+              <span class="bp">...</span>
+            <span class="p">],</span>
+            <span class="c1"># Dispatcher S20 matrix: replicas only
+</span>            <span class="sh">"</span><span class="s">S20</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+              <span class="sh">"</span><span class="s">S21</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="n">max_socket_connections</span><span class="p">,</span>
+                <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="n">reference_cost</span>
+              <span class="p">},</span>
+              <span class="sh">"</span><span class="s">S22</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span> <span class="p">...</span> <span class="p">},</span>
+              <span class="bp">...</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="descriptor_name">1.1. System Name (<code><strong>name</strong></code>)</h3>
+<div class="paragraph">
+<p>[Default=<code>"Unspecified <em>n</em>-node System"</code>]<br>
+This <em>system_name</em> will be displayed on the <a href="sysadmin.html#admin_ui_system">Multi-Node System Dashboard</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="descriptor_graphs_list">1.2. Graph Names (<code>graphs</code>)</h3>
+<div class="paragraph">
+<p>[Default=<code>[]</code>]<br>
+This list of graph names declare all graphs that will be used by instances.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="descriptor_instances">1.3. VGX Server Instance Definitions (<code><strong>instances</strong></code>)</h3>
+<div class="paragraph">
+<p>All VGX Server instances are defined in this dict, as unique instance identifiers <strong>S<em>i</em></strong> mapping to parameter dicts.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="descriptor_instance_id"></a>Instance Identifier: <code>instances.Si</code></dt>
+<dd>
+<p>[<strong>Required</strong>]<br>
+Unique instance identifier</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_group"></a>Display Group: <code>instances.Si.<strong>group</strong></code></dt>
+<dd>
+<p>[Default=<code>0.0</code>]<br>
+Numeric (float) value used for visually grouping instances shown on the Multi-Node System Dashboard. Instances in the same group are shown together between horizontal lines, and instances are rendered in increasing order sorted by the group value. Engine instances (of type <code>builder</code>, <code>txproxy</code>, or <code>search</code>) belonging to the same partition must have the same group number.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_graph"></a>Graph Name: <code>instances.Si.<strong>graph</strong></code></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+The name of the graph to be loaded for this instance. This name must match one of the <a href="#descriptor_graphs_list">previously declared</a> names.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_type"></a>Instance Type: <code>instances.Si.<strong>type</strong></code></dt>
+<dd>
+<p>[Default=<code>"generic"</code>]<br>
+Instance type must be one of <code>"admin"</code>, <code>"dispatch"</code>, <code>"search"</code>, <code>"builder"</code>, <code>"txproxy"</code> or <code>"generic"</code>. This affects how <a href="#pyvgx_vgxinstance_startinstance_func">pyvgx.VGXInstance.StartInstance()</a> initializes the instance, and how it is rendered on the Multi-Node System Dashboard.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_host"></a>Hostname: <code>instances.Si.<strong>host</strong></code></dt>
+<dd>
+<p>[Default=<code>"127.0.0.1"</code>]<br>
+Hostname or IP address of server where instance is running</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_hport"></a>HTTP Port: <code>instances.Si.<strong>hport</strong></code></dt>
+<dd>
+<p>[<strong>Required</strong>]<br>
+HTTP Socket Server <a href="service.html#server_a_port">main port</a></p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_prefix"></a>HTTP Service Prefix: <code>instances.Si.<strong>prefix</strong></code></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+HTTP Service <a href="service.html#system_starthttp_func__prefix">path prefix</a> for URI aliases.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <em>prefix</em> parameter must be the same for all instances.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="descriptor_instance_servicein"></a>HTTP S-IN Startup State: <code>instances.Si.<strong>s-in</strong></code></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+HTTP <a href="service.html#system_starthttp_func__servicein">Service In state</a> at startup. Instances of type <code>"search"</code> and <code>"txproxy"</code> start <code>S-OUT</code> by default. All other instance types start <code>S-IN</code> by default.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_tport"></a>Transaction Port: <code>instances.Si.<strong>tport</strong></code></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+VGX Transaction Service input port. If specified, the instance will listen for incoming transactions on this port.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_durable"></a>Durable Flag: <code>instances.Si.<strong>durable</strong></code></dt>
+<dd>
+<p>[Default=<code>False</code>]<br>
+If <code>True</code>, incoming transactions are streamed to disk if VGX Transaction Service is running.</p>
+</dd>
+<dt class="hdlist1"><a id="descriptor_instance_description"></a>Instance Description: <code>instances.Si.<strong>description</strong></code></dt>
+<dd>
+<p>[Default=<code>"<em>type</em> <em>Si</em> at <em>host</em>:<em>hport</em>"</code>]<br>
+Free text describing this instance</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Instance definition example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+  <span class="sh">"</span><span class="s">instances</span><span class="sh">"</span><span class="p">:</span> <span class="p">{}</span>
+    <span class="sh">"</span><span class="s">T1</span><span class="sh">"</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">"</span><span class="s">group</span><span class="sh">"</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">testgraph</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">type</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">txproxy</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">host</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">the.host.running.this.instance</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">hport</span><span class="sh">"</span><span class="p">:</span> <span class="mi">9500</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">prefix</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">/my-service/path/</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">s-in</span><span class="sh">"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">tport</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10500</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">durable</span><span class="sh">"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">description</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">Transaction proxy and durable archiver #1</span><span class="sh">"</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="descriptor_common">1.4. VGX Server Instance Common Parameters (<code>common</code>)</h3>
+<div class="paragraph">
+<p>Key-value pairs in this dict are applied to all instance definitions as defaults. (Parameters explicitly defined per instance take precedence.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="descriptor_topology">1.5. System Deployment Topology (<code>topology</code>)</h3>
+<div class="paragraph">
+<p>The topology descriptor section defines how VGX Server instances are connected. Two types of connections must be defined: 1) Transaction input flow and 2) HTTP server dispatcher hierarchy.</p>
+</div>
+<div class="sect3">
+<h4 id="descriptor_topology_transaction">1.5.1. Data Input Transaction Flow (<code>topology.transaction</code>)</h4>
+<div class="paragraph">
+<p>[Default=<strong>see below</strong>]<br>
+The transaction sub-section defines the provider/subscriber relationships between all instances in the system. A provider may have zero or more subscribers. A subscriber has exactly one provider. A subscriber may itself be a provider for other subscribers.</p>
+</div>
+<div class="paragraph">
+<p>A provider is defined by mapping its instance identifier <strong>S<em>i</em></strong> to a dict or list of zero or more subscribers. Leaf-instance subscribers may be specified as a list of identifiers, or as a dict of identifiers mapping to <code>null</code>, <code>{}</code>, or <code>[]</code>.</p>
+</div>
+<div class="paragraph">
+<p>Instance identifiers can appear at most once in the transaction topology, thus preventing illegal loops and multi-input subscribers.</p>
+</div>
+<div class="paragraph">
+<p>Referencing an undefined instance identifier is not allowed.</p>
+</div>
+<div class="sect4">
+<h5 id="descriptor_topology_transaction_default">1.5.1.1. Default Value</h5>
+<div class="paragraph">
+<p>All instances defined in <a href="#descriptor_instances"><code>instances</code> section</a> must be part of the topology. Any instance not explicitly referenced in <code>topology.transaction</code> or <code>topology.dispatch</code> is automatically added to <code>topology.transaction</code> as an isolated instance.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_transaction_topology_example">1.5.1.2. Transaction Topology Example</h5>
+<div class="listingblock">
+<div class="title">Transaction topology example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+  <span class="sh">"</span><span class="s">topology</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">transaction</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="c1"># Isolated instance A
+</span>      <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+
+      <span class="c1"># B1 has two subscribers S1 and S2
+</span>      <span class="sh">"</span><span class="s">B1</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+          <span class="sh">"</span><span class="s">S1</span><span class="sh">"</span><span class="p">,</span>
+          <span class="sh">"</span><span class="s">S2</span><span class="sh">"</span>
+      <span class="p">],</span>
+
+      <span class="c1"># B2 has three subscribers T1, T2, and S30
+</span>      <span class="sh">"</span><span class="s">B2</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="c1"># T1 has three subscribers S10, S11, S12
+</span>          <span class="sh">"</span><span class="s">T1</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+              <span class="sh">"</span><span class="s">S10</span><span class="sh">"</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+              <span class="sh">"</span><span class="s">S11</span><span class="sh">"</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+              <span class="c1"># S12 has one subscriber S12b
+</span>              <span class="sh">"</span><span class="s">S12</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+                  <span class="sh">"</span><span class="s">S12b</span><span class="sh">"</span>
+              <span class="p">]</span>
+          <span class="p">},</span>
+          <span class="c1"># T2 has two subscribers S20 and S21
+</span>          <span class="sh">"</span><span class="s">T2</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+              <span class="sh">"</span><span class="s">S20</span><span class="sh">"</span><span class="p">,</span>
+              <span class="sh">"</span><span class="s">S21</span><span class="sh">"</span>
+          <span class="p">],</span>
+          <span class="c1"># S30 has no subscribers
+</span>          <span class="sh">"</span><span class="s">S30</span><span class="sh">"</span><span class="p">:</span> <span class="bp">None</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Although not enforced, it is recommended to define instance types in accordance with the intended transaction topology.</p>
+</div>
+<div class="paragraph">
+<p>Isolated instances should have <code>admin</code>, <code>generic</code> or <code>builder</code> types.</p>
+</div>
+<div class="paragraph">
+<p>Instances with one or more outputs but no input should have <code>builder</code> type.</p>
+</div>
+<div class="paragraph">
+<p>Instances with input but no outputs should have <code>search</code> type.</p>
+</div>
+<div class="paragraph">
+<p>Instances with both input and outputs should have <code>txproxy</code> or <code>search</code> types.</p>
+</div>
+<div class="paragraph">
+<p>Normally <code>dispatch</code> instances are not part of the transaction topology, but it is allowed and may be appropriate in some deployments.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="descriptor_topology_dispatch">1.5.2. Request Dispatch Matrix <code>topology.dispatch</code></h4>
+<div class="paragraph">
+<p>[Default=<code>{}</code>]<br>
+This dispatch sub-section defines the back-end matrix for all dispatchers in the system.</p>
+</div>
+<div class="paragraph">
+<p>The dispatcher topology is described by mapping each dispatcher instance to a definition of its immediate lower layer. Instances referenced in the definition of a layer may themselves be dispatchers if so declared elsewhere in the dispatcher topology.</p>
+</div>
+<div class="paragraph">
+<p>A dispatcher back-end is a matrix of <em>M</em> replicas (rows) split into <em>N</em> partitions. The general syntax specifies a list of <em>M</em> replica dicts, each with a set of parameters including the list of partition instances.</p>
+</div>
+<div class="listingblock">
+<div class="title">General syntax of dispatcher&#8217;s immediate lower back-end layer</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">dispatcher</span><span class="p">:</span> <span class="p">[</span>
+    <span class="c1"># Replica/row 1
+</span>    <span class="p">{</span>
+        <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="n">max_sockets_per_part_i_instance</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="n">reference_cost_of_parts_in_this_row</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">primary</span><span class="sh">"</span><span class="p">:</span> <span class="n">true_if_primary_row</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">part_1_instance</span><span class="p">,</span>
+            <span class="n">part_2_instance</span><span class="p">,</span>
+            <span class="bp">...</span>
+            <span class="n">part_N_instance</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="c1"># Replica/row 2
+</span>    <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+    <span class="p">,</span>
+    <span class="p">...,</span>
+    <span class="c1"># Replica/row M
+</span>    <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For dispatchers with a single partition back-end the following alternative syntax is allowed.</p>
+</div>
+<div class="listingblock">
+<div class="title">Alternative syntax of single partition dispatcher back-end</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">dispatcher</span><span class="p">:</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">replica_1_instance</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="n">max_sockets_to_replica_1_instance</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="n">reference_cost_of_replica_1_instance</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">primary</span><span class="sh">"</span><span class="p">:</span> <span class="n">true_if_primary_replica</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="sh">"</span><span class="s">replica_2_instance</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span> <span class="p">...</span> <span class="p">},</span>
+    <span class="p">...,</span>
+    <span class="sh">"</span><span class="s">replica_N_instance</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="descriptor_topology_dispatch_configuration_mapping">1.5.2.1. Descriptor Dispatcher Topology vs. Dispatcher Configuration</h5>
+<div class="paragraph">
+<p><a href="service.html#dispatcher_configuration">Dispatcher Configuration</a> describes the configuration passed to <a href="service.html#system_starthttp_func">system.StartHTTP()</a> in <em>dispatcher</em> argument. The system descriptor&#8217;s dispatcher topology is used by <a href="#pyvgx_vgxinstance">pyvgx.VGXInstance helper class</a> to generate appropriate dispatcher configurations for all instances.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="descriptor_topology_dispatch_partial_results">1.5.2.2. Allow Partial Results</h5>
+<div class="paragraph">
+<p>By default a dispatcher requires all back-end partitions to be available, which means at least one replica must exist per partition. If a partition has no replicas the dispatcher refuses to process the request and returns error <a href="service.html#status_503_partitions_down"><code>503 Partition(s) down</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>To override this behavior and allow a dispatcher to process a request with an incomplete set of partitions, add a <strong>fallback empty replica</strong> as the last row in the dispatcher specification:</p>
+</div>
+<div class="listingblock">
+<div class="title">Fallback empty replica</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Fallback replica
+</span><span class="p">{</span>
+  <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+<span class="c1">#     |
+#     |
+# maps to system.StartHTTP()
+# dispatcher argument 'options' element:
+#     |
+#     V
+</span><span class="p">{</span>
+    <span class="sh">"</span><span class="s">options</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="sh">"</span><span class="s">allow-incomplete</span><span class="sh">"</span><span class="p">:</span> <span class="bp">True</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The combination of <code>"priority": -1</code> and <code>"partitions": []</code> results in a dispatcher configuration being generated with <a href="service.html#config_options_allow_incomplete">allow-incomplete option</a> set to <code>True</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="descriptor_dispatch_topology_example">1.5.2.3. Dispatch Topology Example</h5>
+<div class="listingblock copyable">
+<div class="title">Dispatch topology example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">{</span>
+  <span class="sh">"</span><span class="s">topology</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">dispatch</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="c1"># Top-level proxy dispatcher
+</span>      <span class="sh">"</span><span class="s">TOP</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+          <span class="c1"># Single back-end instance
+</span>          <span class="sh">"</span><span class="s">D1</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+              <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="mi">64</span>
+          <span class="p">}</span>
+      <span class="p">},</span>
+
+      <span class="c1"># Dispatcher with 2x3 back-end,
+</span>      <span class="c1"># allowing partial results
+</span>      <span class="sh">"</span><span class="s">D1</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span>
+          <span class="c1"># First row of searchers S1, S2, S3
+</span>          <span class="p">{</span>
+              <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="c1"># Max sockets from D1
+</span>                              <span class="c1"># to each searcher
+</span>              <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># More traffic
+</span>              <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span> <span class="sh">"</span><span class="s">S1</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">S2</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">S3</span><span class="sh">"</span> <span class="p">]</span>
+          <span class="p">},</span>
+          <span class="c1"># Second row of builders B1, B2, B3
+</span>          <span class="p">{</span>
+              <span class="sh">"</span><span class="s">channels</span><span class="sh">"</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>  <span class="c1"># Max sockets from D1
+</span>                               <span class="c1"># to each builder
+</span>              <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>  <span class="c1"># Less traffic
+</span>              <span class="sh">"</span><span class="s">primary</span><span class="sh">"</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="c1"># Feed requests go to this row
+</span>              <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span> <span class="sh">"</span><span class="s">B1</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B2</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B3</span><span class="sh">"</span> <span class="p">]</span>
+          <span class="p">},</span>
+          <span class="c1"># Fallback row, allowing partial results
+</span>          <span class="p">{</span>
+              <span class="sh">"</span><span class="s">priority</span><span class="sh">"</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">partitions</span><span class="sh">"</span><span class="p">:</span> <span class="p">[]</span>
+          <span class="p">}</span>
+      <span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vgxinstance_plugin_definitions">2. Plugin Definition List</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When passing a list of plugin definitions in <a href="#pyvgx_vgxinstance_startinstance_func">pyvgx.VGXInstance.StartInstance()</a> <em>plugins</em> argument, this function will automatically register the plugins in accordance with the instance type.</p>
+</div>
+<div class="paragraph">
+<p>A plugin is specified as a <em>name</em>d group of <em>pre</em>, <em>engine</em>, and <em>post</em> functions, optionally located in <em>module</em> within <em>package</em>, along with an optional <em>graph</em> to be bound to those plugin functions.</p>
+</div>
+<div class="listingblock">
+<div class="title">Service endpoint definitions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">[</span>
+    <span class="c1"># First service endpoint
+</span>    <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span> <span class="n">service_name_1</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">package</span><span class="sh">"</span><span class="p">:</span> <span class="n">python_package</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">module</span><span class="sh">"</span><span class="p">:</span> <span class="n">python_module</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span><span class="p">:</span> <span class="n">engine_main_processor_1</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span><span class="p">:</span> <span class="n">dispatcher_pre_processor_1</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">post</span><span class="sh">"</span><span class="p">:</span> <span class="n">dispatcher_post_processor_1</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">:</span> <span class="n">name_of_bound_graph_1</span>
+    <span class="p">},</span>
+    <span class="c1"># Second service endpoint
+</span>    <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span> <span class="n">service_name_2</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">package</span><span class="sh">"</span><span class="p">:</span> <span class="n">python_package</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">module</span><span class="sh">"</span><span class="p">:</span> <span class="n">python_module</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span><span class="p">:</span> <span class="n">engine_main_processor_2</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span><span class="p">:</span> <span class="n">dispatcher_pre_processor_2</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">post</span><span class="sh">"</span><span class="p">:</span> <span class="n">dispatcher_post_processor_2</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">:</span> <span class="n">name_of_bound_graph_2</span>
+    <span class="p">},</span>
+    <span class="p">...,</span>
+    <span class="c1"># N-th service endpoint
+</span>    <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><em>name</em></dt>
+<dd>
+<p>[<strong>Required</strong>]<br>
+Define name of service endpoint: <code>/vgx/plugin/<strong><em>service_name_i</em></strong></code></p>
+</dd>
+<dt class="hdlist1"><em>package</em></dt>
+<dd>
+<p>[<strong>Optional</strong>]<br>
+Python package containing plugin module(s)</p>
+</dd>
+<dt class="hdlist1"><em>module</em></dt>
+<dd>
+<p>[<strong>Optional</strong>]<br>
+Python module<sup>[1]</sup> containing plugin function(s) to be referenced by name in <em>engine</em>, <em>pre</em>, and <em>post</em>.</p>
+</dd>
+<dt class="hdlist1"><em>engine</em></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+Plugin function<sup>[2]</sup> to be registered as <a href="pluginadapter.html#plugin_function_engine">main engine processor</a>. Instances of type <code>builder</code>, <code>search</code>, <code>txproxy</code>, <code>generic</code> and <code>admin</code> will execute this plugin for request path <code>/vgx/plugin/<strong><em>service_name_i</em></strong></code>.</p>
+</dd>
+<dt class="hdlist1"><em>pre</em></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+Plugin function<sup>[2]</sup> to be registered as a <a href="pluginadapter.html#plugin_function_pre">dispatcher pre-processor</a>. Instances of type <code>dispatch</code> will execute this plugin for request path <code>/vgx/plugin/<strong><em>service_name_i</em></strong></code>.</p>
+</dd>
+<dt class="hdlist1"><em>post</em></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+Plugin function<sup>[2]</sup> to be registered as a <a href="pluginadapter.html#plugin_function_post">dispatcher post-processor</a>. Instances of type <code>dispatch</code> will execute this plugin when all responses from the back-end matrix have been received and merged.</p>
+</dd>
+<dt class="hdlist1"><em>graph</em></dt>
+<dd>
+<p>[Default=<code>None</code>]<br>
+Name of graph to be passed in the <em>graph</em> argument of <a href="pluginadapter.html#pre_engine_arg_graph">engine, pre</a>, and <a href="pluginadapter.html#post_arg_graph">post</a> functions.<br>
+If <code>None</code> the plugin functions will not be bound to a graph.<br>
+If <code>"*"</code> the plugin functions will be bound to the <a href="#descriptor_instance_graph">descriptor instance graph</a>.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p><strong><sup>[1]</sup></strong> Plugins defined in modules are <a href="sysadmin.html#vgx_builtin_ADMIN_ReloadPlugins">dynamically re-loadable</a> allowing plugin code changes without restarting.</p>
+</div>
+<div class="paragraph">
+<p><strong><sup>[2]</sup></strong> Functions may be given as callable objects or strings. When function is located in <em>package</em>/<em>module</em> it must be referenced by name (string).</p>
+</div>
+<div class="sect2">
+<h3 id="_plugin_definitions_example">2.1. Plugin Definitions Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+
+
+<span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
+  <span class="sh">"""</span><span class="s">
+  Dispatcher pre-processor: look for cached query response
+  and return immediately if cached, otherwise forward
+  request to back-end
+  </span><span class="sh">"""</span>
+  <span class="n">response</span> <span class="o">=</span> <span class="nf">get_cached</span><span class="p">(</span> <span class="n">query</span> <span class="p">)</span>
+  <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">response</span>
+  <span class="k">return</span> <span class="n">request</span>
+
+
+<span class="k">def</span> <span class="nf">complete</span><span class="p">(</span> <span class="n">response</span><span class="p">:</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">PluginResponse</span> <span class="p">):</span>
+  <span class="sh">"""</span><span class="s">
+  Dispatcher post-processor: format the final merged
+  response as a list of strings
+  </span><span class="sh">"""</span>
+  <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">for</span> <span class="n">score</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">response</span><span class="p">.</span><span class="n">entries</span><span class="p">:</span>
+    <span class="n">items</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span> <span class="sh">"</span><span class="s">{:.4f}: {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">score</span><span class="p">,</span> <span class="nf">transform</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+  <span class="k">return</span> <span class="n">items</span>
+
+
+<span class="k">def</span> <span class="nf">search</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
+  <span class="sh">"""</span><span class="s">
+  Execute search and return response object
+  </span><span class="sh">"""</span>
+  <span class="n">response</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">sortby</span><span class="o">=</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">S_RANK</span> <span class="p">)</span>
+  <span class="k">for</span> <span class="n">score</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nf">run_query</span><span class="p">(</span> <span class="n">query</span> <span class="p">):</span>
+    <span class="n">response</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="n">score</span><span class="p">,</span> <span class="n">item</span> <span class="p">)</span>
+  <span class="k">return</span> <span class="n">response</span>
+
+
+<span class="n">PluginDefs</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="c1"># Use locally defined plugin functions
+</span>  <span class="p">{</span>
+    <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span>    <span class="sh">"</span><span class="s">PluginFromLocalFunctions</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span><span class="p">:</span>  <span class="n">search</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span><span class="p">:</span>     <span class="n">prepare</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">post</span><span class="sh">"</span><span class="p">:</span>    <span class="n">complete</span>
+  <span class="p">},</span>
+  <span class="c1"># Use plugin functions defined in class Example
+</span>  <span class="c1"># within module example.plugin_module
+</span>  <span class="p">{</span>
+    <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span>    <span class="sh">"</span><span class="s">PluginFromModuleFunctions</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">package</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">example</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">module</span><span class="sh">"</span><span class="p">:</span>  <span class="sh">"</span><span class="s">.plugin_module</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span><span class="p">:</span>  <span class="sh">"</span><span class="s">Example.Engine</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span><span class="p">:</span>     <span class="sh">"</span><span class="s">Example.PreProcessor</span><span class="sh">"</span><span class="p">,</span>
+    <span class="sh">"</span><span class="s">post</span><span class="sh">"</span><span class="p">:</span>    <span class="sh">"</span><span class="s">Example.PostProcessor</span><span class="sh">"</span><span class="p">,</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="c1"># Now use PluginDefs with
+# pyvgx.VGXInstance.StartInstance( plugins=PluginDefs )
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="pyvgx_vgxinstance">3. pyvgx.VGXInstance</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When implementing services it is possible to use built-in helper class <code>pyvgx.VGXInstance</code> to simplify development. This class understands <a href="#system_descriptor">system descriptors</a> and handles all initialization and startup of a specified instance.</p>
+</div>
+<div class="paragraph">
+<p>It is necessary to call <code>pyvgx.initadmin()</code> before use <code>pyvgx.VGXInstance</code> can be used:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">pyvgx</span><span class="p">.</span><span class="nf">initadmin</span><span class="p">()</span>
+
+<span class="c1"># pyvgx.VGXInstance is now available
+</span><span class="n">descriptor</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXInstance</span><span class="p">.</span><span class="nc">Descriptor</span><span class="p">(</span> <span class="sh">"</span><span class="s">vgx.cf</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Two static methods of pyvgx.VGXInstance are available:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="pyvgx_vgxinstance_getdescriptor_func"></a><code>pyvgx.VGXInstance.GetDescriptor( <strong>[</strong><em>descriptor_file</em><strong>]</strong> )</code></dt>
+<dd>
+<p>Return a <code>pyvgx.Descriptor</code> instance, suitable for passing in the <em>descriptor</em> argument of <a href="#pyvgx_vgxinstance_startinstance_func">pyvgx.VGXInstance.StartInstance()</a>. (Avoid accessing the returned object&#8217;s attributes and methods, as these are for internal use only.)</p>
+<div class="paragraph">
+<p><strong><em>descriptor_file</em></strong>: Full path to a file on disk containing a valid <a href="#system_descriptor">system descriptor</a> in JSON format. Defaults to <code>"vgx.cf"</code>.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="pyvgx_vgxinstance_startinstance_func"></a><code>pyvgx.VGXInstance.StartInstance( <em>id</em>, <em>descriptor</em><strong>[</strong>, <em>basedir</em><strong>[</strong>, <em>plugins</em><strong>]]</strong> )</code></dt>
+<dd>
+<p>Initialize, configure and start a VGX Server instance. The instance&#8217;s <em>vgxroot</em> is automatically named <code>&lt;instance.type&gt;_&lt;instance.id&gt;</code>, e.g. "builder_B01".</p>
+<div class="paragraph">
+<p><strong><em>id</em></strong>: Instance identifier string, as defined in the system descriptor</p>
+</div>
+<div class="paragraph">
+<p><strong><em>descriptor</em></strong>: System descriptor object, which may be <em>dict</em>, <em>str</em>, <em>None</em> or <em>pyvgx.Descriptor</em>. If <em>str</em> or <em>None</em> the descriptor is loaded using <a href="#pyvgx_vgxinstance_getdescriptor_func">pyvgx.VGXInstance.GetDescriptor( descriptor_file=<em>descriptor</em> )</a>.</p>
+</div>
+<div class="paragraph">
+<p><strong><em>basedir</em></strong>: Directory path where <em>vgxroot</em> will be located. Default is current directory.</p>
+</div>
+<div class="paragraph">
+<p><strong><em>plugins</em></strong>: <a href="#vgxinstance_plugin_definitions">Plugin definitions</a> list, specifying names and function references for all plugins to be automatically registered.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="sect2">
+<h3 id="_pyvgx_vgxinstance_example">3.1. pyvgx.VGXInstance Example</h3>
+<div class="paragraph">
+<p>Set up a single instance that can compute square roots.</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+
+<span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span> <span class="n">request</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="nb">float</span> <span class="p">):</span>
+  <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mf">0.5</span>
+
+<span class="n">PLUGINS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">SquareRoot</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span><span class="p">:</span> <span class="n">sqrt</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">DESCRIPTOR</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">Square Root Service</span><span class="sh">"</span><span class="p">,</span>
+  <span class="sh">"</span><span class="s">instances</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">SQRT01</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+      <span class="sh">"</span><span class="s">type</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">generic</span><span class="sh">"</span><span class="p">,</span>
+      <span class="sh">"</span><span class="s">host</span><span class="sh">"</span><span class="p">:</span><span class="sh">"</span><span class="s">127.0.0.1</span><span class="sh">"</span><span class="p">,</span>
+      <span class="sh">"</span><span class="s">hport</span><span class="sh">"</span><span class="p">:</span><span class="mi">9500</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="sh">"</span><span class="s">topology</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">transaction</span><span class="sh">"</span><span class="p">:{</span>
+      <span class="sh">"</span><span class="s">SQRT01</span><span class="sh">"</span><span class="p">:</span> <span class="p">{}</span>
+    <span class="p">},</span>
+    <span class="sh">"</span><span class="s">dispatch</span><span class="sh">"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="sh">"</span><span class="s">graphs</span><span class="sh">"</span><span class="p">:[]</span>
+<span class="p">}</span>
+
+<span class="n">pyvgx</span><span class="p">.</span><span class="nf">initadmin</span><span class="p">()</span>
+
+<span class="n">instance</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXInstance</span><span class="p">.</span><span class="nc">StartInstance</span><span class="p">(</span>
+  <span class="nb">id</span><span class="o">=</span><span class="sh">"</span><span class="s">SQRT01</span><span class="sh">"</span><span class="p">,</span>
+  <span class="n">descriptor</span><span class="o">=</span><span class="n">DESCRIPTOR</span><span class="p">,</span>
+  <span class="n">plugins</span><span class="o">=</span><span class="n">PLUGINS</span>
+<span class="p">)</span>
+
+<span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">RunServer</span><span class="p">(</span> <span class="n">name</span><span class="o">=</span><span class="n">instance</span><span class="p">.</span><span class="nb">id</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Test SquareRoot endpoint</div>
+<div class="content">
+<pre>http://127.0.0.1:9501/vgx/plugin/SquareRoot?x=2</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">SquareRoot response</div>
+<div class="content">
+<pre>{
+  "status": "OK",
+  "response": 1.4142135623730951,
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 0.072
+}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="service_example">4. Service Example</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this section we will create a multi-node demo service. We will need a system descriptor file (vgx.cf) and some Python code to implement the service. You can try to run this system by following the steps outlined below.</p>
+</div>
+<div class="paragraph">
+<p>The first step is to create a new folder (e.g. "demo") somewhere on your computer. You will populate this directory with a system descriptor file <code>vgx.cf</code> and a sub-directory named <code>service</code>, which will contain the Python code for your service implementation. This establishes a Python package named <code>service</code> in the <code>demo</code> directory.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example Service Directory</div>
+<div class="content">
+<pre>demo/
+├─ vgx.cf
+├─ run.cmd
+├─ run.sh
+├─ service/
+│  ├─ exampleservice.py
+│  ├─ exampleplugin.py</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following sections describe how to get our system up and running. Here is a quick summary:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="#service_example_topology">Section 4.1, &#8220;Service Example Topology&#8221;</a></dt>
+<dd>
+<p>Summary of service components</p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_descriptor">Section 4.2, &#8220;Service Example Descriptor&#8221;</a></dt>
+<dd>
+<p><code>vgx.cf</code><br>
+System descriptor file in JSON format</p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_python_service">Section 4.3, &#8220;Service Example Python Program&#8221;</a></dt>
+<dd>
+<p><code>service/exampleservice.py</code><br>
+Run this to start a service instance</p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_plugin_code">Section 4.4, &#8220;Service Example Plugin Code&#8221;</a></dt>
+<dd>
+<p><code>service/exampleplugin.py</code><br>
+Module containing plugin code used by exampleservice.py</p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_start_instances">Section 4.5, &#8220;Service Example Start Instances&#8221;</a></dt>
+<dd>
+<p>Start components from a terminal</p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_verify">Section 4.6, &#8220;Service Example Verify System Overview&#8221;</a></dt>
+</dl>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="#service_example_feed_request">Section 4.7, &#8220;Service Example Load Data&#8221;</a></dt>
+</dl>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl <span class="s2">"http://127.0.0.1:9990/vgx/plugin/add?N=250000&amp;count=3000000"</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="#service_example_search_request">Section 4.8, &#8220;Service Example Search Request&#8221;</a></dt>
+</dl>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl <span class="s2">"http://127.0.0.1:9990/vgx/plugin/search?name=12345"</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="#service_example_system_overview">Section 4.9, &#8220;Service Example System Overview&#8221;</a></dt>
+<dd>
+<p><code><a href="http://127.0.0.1/system" class="bare">http://127.0.0.1/system</a></code></p>
+</dd>
+<dt class="hdlist1"><a href="#service_example_shutdown">Section 4.10, &#8220;Service Example Shutdown&#8221;</a></dt>
+</dl>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> <span class="s2">"*"</span> <span class="nt">--confirm</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_topology">4.1. Service Example Topology</h3>
+<div class="paragraph">
+<p>Our system will have two shards with one builder row and two search rows. A top dispatcher is responsible for routing requests and merging responses. We also use a dedicated admin instance.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="../images/exampleservice.png" alt="exampleservice" width="480" height="480">
+</div>
+<div class="title">Figure 1. Service Example Topology</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_descriptor">4.2. Service Example Descriptor</h3>
+<div class="paragraph">
+<p>The system descriptor for our example topology is shown below. Place this JSON data in a file named <code>vgx.cf</code> in your demo directory.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>demo/
+├─ vgx.cf</pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">vgx.cf</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Example Service"</span><span class="p">,</span><span class="w">
+
+    </span><span class="nl">"instances"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"A1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"admin"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Admin"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"group"</span><span class="p">:</span><span class="w"> </span><span class="mf">1000.001</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9000</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"TD"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dispatch"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Top Dispatcher"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"group"</span><span class="p">:</span><span class="w"> </span><span class="mf">2000.001</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9990</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"B0.1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"builder"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Builder 0.1"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9100</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10100</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"S1.1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"search"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search 1.1"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9110</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10110</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"S2.1"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"search"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search 2.1"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9120</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10120</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"B0.2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"builder"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Builder 0.2"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9200</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10200</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"S1.2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"search"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search 1.2"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9210</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10210</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"S2.2"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"search"</span><span class="p">,</span><span class="w"> </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Search 2.2"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"hport"</span><span class="p">:</span><span class="w"> </span><span class="mi">9220</span><span class="p">,</span><span class="w"> </span><span class="nl">"tport"</span><span class="p">:</span><span class="w"> </span><span class="mi">10220</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+
+    </span><span class="nl">"common"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"host"</span><span class="p">:</span><span class="w"> </span><span class="s2">"127.0.0.1"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+
+    </span><span class="nl">"topology"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"transaction"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"A1"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span><span class="w">
+            </span><span class="nl">"B0.1"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"S1.1"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"S2.1"</span><span class="w">
+            </span><span class="p">],</span><span class="w">
+            </span><span class="nl">"B0.2"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">"S1.2"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"S2.2"</span><span class="w">
+            </span><span class="p">]</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="nl">"dispatch"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"TD"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="p">{</span><span class="w"> </span><span class="nl">"channels"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="nl">"priority"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"S1.1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"S1.2"</span><span class="w"> </span><span class="p">]</span><span class="w">
+                </span><span class="p">},</span><span class="w">
+                </span><span class="p">{</span><span class="w"> </span><span class="nl">"channels"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="nl">"priority"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"S2.1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"S2.2"</span><span class="w"> </span><span class="p">]</span><span class="w">
+                </span><span class="p">},</span><span class="w">
+                </span><span class="p">{</span><span class="w"> </span><span class="nl">"channels"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nl">"priority"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w">
+                  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="s2">"B0.1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"B0.2"</span><span class="w"> </span><span class="p">],</span><span class="w">
+                  </span><span class="nl">"primary"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
+                </span><span class="p">}</span><span class="w">
+            </span><span class="p">]</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+
+    </span><span class="nl">"graphs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"g1"</span><span class="p">]</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_python_service">4.3. Service Example Python Program</h3>
+<div class="paragraph">
+<p>The Python service implementation code below should be placed in a file named <code>exampleservice.py</code> in your demo <code>service</code> package directory.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>demo/
+├─ service/
+│  ├─ exampleservice.py</pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">service/exampleservice.py</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="kn">import</span> <span class="n">sys</span>
+<span class="kn">import</span> <span class="n">time</span>
+
+
+<span class="k">def</span> <span class="nf">LocalSamplePlugin</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span> <span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Hello world plugin
+    </span><span class="sh">"""</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">()</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Hello, the current time is: {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">time</span><span class="p">.</span><span class="nf">ctime</span><span class="p">()</span> <span class="p">)</span>
+    <span class="n">response</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="n">msg</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span>
+
+
+
+<span class="k">def</span> <span class="nf">GetPluginDefinitions</span><span class="p">():</span>
+    <span class="sh">"""</span><span class="s">
+    Service endpoint definitions
+    </span><span class="sh">"""</span>
+    <span class="k">return</span> <span class="p">[</span>
+      <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span>   <span class="p">:</span> <span class="sh">"</span><span class="s">search</span><span class="sh">"</span><span class="p">,</span>         <span class="c1"># /vgx/plugin/search
+</span>        <span class="sh">"</span><span class="s">package</span><span class="sh">"</span><span class="p">:</span> <span class="n">__package__</span><span class="p">,</span>      <span class="c1"># 'service'
+</span>        <span class="sh">"</span><span class="s">module</span><span class="sh">"</span> <span class="p">:</span> <span class="sh">"</span><span class="s">.exampleplugin</span><span class="sh">"</span><span class="p">,</span> <span class="c1"># exampleplugin.py
+</span>        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span> <span class="p">:</span> <span class="sh">"</span><span class="s">Search</span><span class="sh">"</span><span class="p">,</span>         <span class="c1"># name of plugin function
+</span>        <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span>    <span class="p">:</span> <span class="bp">None</span><span class="p">,</span>             <span class="c1"># no pre-processor
+</span>        <span class="sh">"</span><span class="s">post</span><span class="sh">"</span>   <span class="p">:</span> <span class="bp">None</span><span class="p">,</span>             <span class="c1"># no post-processor
+</span>        <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span>  <span class="p">:</span> <span class="sh">"</span><span class="s">*</span><span class="sh">"</span>               <span class="c1"># use 'g1' defined in vgx.cf
+</span>      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span>   <span class="p">:</span> <span class="sh">"</span><span class="s">add</span><span class="sh">"</span><span class="p">,</span>            <span class="c1"># /vgx/plugin/add
+</span>        <span class="sh">"</span><span class="s">package</span><span class="sh">"</span><span class="p">:</span> <span class="n">__package__</span><span class="p">,</span>      <span class="c1"># 'service'
+</span>        <span class="sh">"</span><span class="s">module</span><span class="sh">"</span> <span class="p">:</span> <span class="sh">"</span><span class="s">.exampleplugin</span><span class="sh">"</span><span class="p">,</span> <span class="c1"># exampleplugin.py
+</span>        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span> <span class="p">:</span> <span class="sh">"</span><span class="s">Add</span><span class="sh">"</span><span class="p">,</span>            <span class="c1"># name of plugin function
+</span>        <span class="sh">"</span><span class="s">pre</span><span class="sh">"</span>    <span class="p">:</span> <span class="sh">"</span><span class="s">PreAdd</span><span class="sh">"</span><span class="p">,</span>         <span class="c1"># name of pre-processor
+</span>        <span class="sh">"</span><span class="s">post</span><span class="sh">"</span>   <span class="p">:</span> <span class="bp">None</span><span class="p">,</span>             <span class="c1"># no post-processor
+</span>        <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span>  <span class="p">:</span> <span class="sh">"</span><span class="s">*</span><span class="sh">"</span>               <span class="c1"># use 'g1' defined in vgx.cf
+</span>      <span class="p">},</span>
+      <span class="p">{</span>
+        <span class="sh">"</span><span class="s">name</span><span class="sh">"</span>   <span class="p">:</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span><span class="p">,</span>          <span class="c1"># /vgx/plugin/hello
+</span>        <span class="sh">"</span><span class="s">engine</span><span class="sh">"</span> <span class="p">:</span> <span class="n">LocalSamplePlugin</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">AdminInit</span><span class="p">():</span>
+    <span class="sh">"""</span><span class="s">
+    Finalize startup of all instances
+    </span><span class="sh">"""</span>
+    <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="p">.</span><span class="nf">time</span><span class="p">()</span>
+    <span class="n">expected_ids</span> <span class="o">=</span> <span class="nf">set</span><span class="p">(</span>
+      <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Descriptor</span><span class="p">(</span> <span class="sh">"</span><span class="s">vgx.cf</span><span class="sh">"</span> <span class="p">).</span><span class="n">instances</span><span class="p">.</span><span class="nf">keys</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">while</span> <span class="n">time</span><span class="p">.</span><span class="nf">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXAdmin</span><span class="p">.</span><span class="nc">Run</span><span class="p">(</span>
+                <span class="n">arguments</span><span class="o">=</span><span class="p">[</span> <span class="sh">'</span><span class="s">--status</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">*</span><span class="sh">'</span> <span class="p">],</span>
+                <span class="n">address</span><span class="o">=</span><span class="sh">"</span><span class="s">127.0.0.1:9001</span><span class="sh">"</span><span class="p">,</span>
+                <span class="n">print_to_stdout</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">default_descriptor_filename</span><span class="o">=</span><span class="sh">"</span><span class="s">vgx.cf</span><span class="sh">"</span>
+            <span class="p">)</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="nf">set</span><span class="p">(</span> <span class="p">[</span><span class="n">x</span><span class="p">.</span><span class="nf">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="sh">'</span><span class="s">trace</span><span class="sh">'</span><span class="p">]</span>
+                        <span class="k">if</span> <span class="n">x</span><span class="p">.</span><span class="nf">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="sh">'</span><span class="s">0d</span><span class="sh">'</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">ids</span> <span class="o">==</span> <span class="n">expected_ids</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXAdmin</span><span class="p">.</span><span class="nc">Run</span><span class="p">(</span>
+                <span class="n">arguments</span><span class="o">=</span><span class="p">[</span> <span class="sh">'</span><span class="s">--attach</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">B*</span><span class="sh">'</span><span class="p">,</span>
+                            <span class="sh">'</span><span class="s">--servicein</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">S*</span><span class="sh">'</span>
+                <span class="p">],</span>
+                <span class="n">address</span><span class="o">=</span><span class="sh">"</span><span class="s">127.0.0.1:9001</span><span class="sh">"</span><span class="p">,</span>
+                <span class="n">print_to_stdout</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                <span class="n">default_descriptor_filename</span><span class="o">=</span><span class="sh">"</span><span class="s">vgx.cf</span><span class="sh">"</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">R</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">A</span> <span class="o">=</span> <span class="p">[</span><span class="sh">'</span><span class="s">attached</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">service_in</span><span class="sh">'</span><span class="p">]</span>
+                <span class="k">assert</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="sh">'</span><span class="s">action</span><span class="sh">'</span><span class="p">]</span> <span class="ow">in</span> <span class="n">A</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+
+<span class="k">def</span> <span class="nf">RunService</span><span class="p">(</span> <span class="n">instance_id</span> <span class="p">):</span>
+    <span class="sh">"""</span><span class="s">
+    Run VGX Server instance
+    </span><span class="sh">"""</span>
+    <span class="c1"># Initialize core library to enable instance startup
+</span>    <span class="n">pyvgx</span><span class="p">.</span><span class="nf">initadmin</span><span class="p">()</span>
+
+    <span class="c1"># Service endpoint definitions
+</span>    <span class="n">plugins</span> <span class="o">=</span> <span class="nc">GetPluginDefinitions</span><span class="p">()</span>
+
+    <span class="c1"># VGX System descriptor
+</span>    <span class="n">descriptor</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXInstance</span><span class="p">.</span><span class="nc">GetDescriptor</span><span class="p">(</span> <span class="sh">"</span><span class="s">vgx.cf</span><span class="sh">"</span> <span class="p">)</span>
+
+    <span class="c1"># Start VGX instance
+</span>    <span class="n">instance</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">VGXInstance</span><span class="p">.</span><span class="nc">StartInstance</span><span class="p">(</span>
+        <span class="nb">id</span>         <span class="o">=</span> <span class="n">instance_id</span><span class="p">,</span>
+        <span class="n">descriptor</span> <span class="o">=</span> <span class="n">descriptor</span><span class="p">,</span>
+        <span class="n">basedir</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">demoservice</span><span class="sh">"</span><span class="p">,</span>
+        <span class="n">plugins</span>    <span class="o">=</span> <span class="n">plugins</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Finalize startup
+</span>    <span class="k">if</span> <span class="n">instance</span><span class="p">.</span><span class="nb">type</span> <span class="o">==</span> <span class="sh">"</span><span class="s">admin</span><span class="sh">"</span><span class="p">:</span>
+        <span class="nc">AdminInit</span><span class="p">()</span>
+
+    <span class="c1"># Run until SIGINT
+</span>    <span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">RunServer</span><span class="p">(</span> <span class="n">name</span><span class="o">=</span><span class="n">instance</span><span class="p">.</span><span class="n">description</span> <span class="p">)</span>
+
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="sh">"</span><span class="s">__main__</span><span class="sh">"</span><span class="p">:</span>
+    <span class="nc">RunService</span><span class="p">(</span> <span class="n">sys</span><span class="p">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_plugin_code">4.4. Service Example Plugin Code</h3>
+<div class="paragraph">
+<p>The plugin implementation code below should be placed in a file named <code>exampleplugin.py</code> in your demo <code>service</code> package directory.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>demo/
+├─ service/
+│  ├─ exampleplugin.py</pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">service/exampleplugin.py</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">random</span>
+<span class="kn">import</span> <span class="n">time</span>
+
+
+<span class="k">def</span> <span class="nf">Search</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span>
+            <span class="n">graph</span><span class="p">:</span><span class="n">Graph</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span>
+            <span class="n">hits</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">sortby</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="sh">"</span><span class="s">val</span><span class="sh">"</span><span class="p">,</span>
+            <span class="n">sortdir</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="sh">"</span><span class="s">desc</span><span class="sh">"</span><span class="p">,</span>
+            <span class="n">fields</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="n">F_AARC</span><span class="o">|</span><span class="n">F_RANK</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginResponse</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Engine plugin example: Search
+    </span><span class="sh">"""</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">system</span><span class="p">.</span><span class="nc">Root</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">sortdir</span> <span class="o">==</span> <span class="sh">"</span><span class="s">desc</span><span class="sh">"</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">S_DESC</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">S_ASC</span>
+
+    <span class="k">if</span> <span class="n">sortby</span> <span class="o">==</span> <span class="sh">"</span><span class="s">val</span><span class="sh">"</span><span class="p">:</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">maxhits</span><span class="o">=</span><span class="n">hits</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_VAL</span><span class="o">|</span><span class="n">d</span> <span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">F_VAL</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">arc</span><span class="sh">"</span>
+        <span class="n">fn2</span> <span class="o">=</span> <span class="sh">"</span><span class="s">value</span><span class="sh">"</span>
+    <span class="k">elif</span> <span class="n">sortby</span> <span class="o">==</span> <span class="sh">"</span><span class="s">id</span><span class="sh">"</span><span class="p">:</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">maxhits</span><span class="o">=</span><span class="n">hits</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_ID</span><span class="o">|</span><span class="n">d</span> <span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">F_ID</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">id</span><span class="sh">"</span>
+    <span class="k">elif</span> <span class="n">sortby</span> <span class="o">==</span> <span class="sh">"</span><span class="s">deg</span><span class="sh">"</span><span class="p">:</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">maxhits</span><span class="o">=</span><span class="n">hits</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_DEG</span><span class="o">|</span><span class="n">d</span> <span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="n">F_DEG</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">degree</span><span class="sh">"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">maxhits</span><span class="o">=</span><span class="n">hits</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_NONE</span> <span class="p">)</span>
+        <span class="n">sf</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+            <span class="nb">id</span>      <span class="o">=</span> <span class="n">name</span><span class="p">,</span>
+            <span class="n">arc</span>     <span class="o">=</span> <span class="n">D_ANY</span><span class="p">,</span>
+            <span class="n">hits</span>    <span class="o">=</span> <span class="n">pr</span><span class="p">.</span><span class="n">maxhits</span><span class="p">,</span>
+            <span class="n">sortby</span>  <span class="o">=</span> <span class="n">pr</span><span class="p">.</span><span class="n">sortby</span><span class="p">,</span>
+            <span class="n">fields</span>  <span class="o">=</span> <span class="n">fields</span><span class="o">|</span><span class="n">sf</span><span class="p">,</span>
+            <span class="n">result</span>  <span class="o">=</span> <span class="n">R_DICT</span><span class="p">,</span>
+            <span class="n">timeout</span> <span class="o">=</span> <span class="mi">1000</span>
+        <span class="p">)</span>
+        <span class="n">pre_message</span> <span class="o">=</span> <span class="n">request</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="sh">'</span><span class="s">pre-message</span><span class="sh">'</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">r</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nf">type</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="p">.</span><span class="nf">get</span><span class="p">(</span><span class="n">fn2</span><span class="p">)</span>
+            <span class="n">r</span><span class="p">[</span><span class="sh">'</span><span class="s">pre</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pre_message</span>
+            <span class="n">r</span><span class="p">[</span><span class="sh">'</span><span class="s">this</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="n">root</span>
+            <span class="n">pr</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="n">rv</span><span class="p">,</span> <span class="n">r</span> <span class="p">)</span>
+    <span class="k">except</span> <span class="nb">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pr</span>
+    <span class="k">except</span> <span class="nb">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">pr</span><span class="p">.</span><span class="n">message</span> <span class="o">=</span> <span class="nf">repr</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="nf">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pr</span>
+
+
+
+<span class="k">def</span> <span class="nf">PreAdd</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span><span class="n">Graph</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginRequest</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Pre-processor plugin example: PreAdd
+    </span><span class="sh">"""</span>
+    <span class="c1"># Always route this request to the primary row
+</span>    <span class="n">request</span><span class="p">.</span><span class="n">primary</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">request</span>
+
+
+
+<span class="k">def</span> <span class="nf">Add</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span>
+         <span class="n">graph</span><span class="p">:</span><span class="n">Graph</span><span class="p">,</span>
+         <span class="n">N</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+         <span class="n">count</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+         <span class="n">sleep</span><span class="p">:</span><span class="nb">int</span><span class="o">=</span><span class="mi">0</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PluginResponse</span><span class="p">:</span>
+    <span class="sh">"""</span><span class="s">
+    Engine plugin example: Add
+    </span><span class="sh">"""</span>
+    <span class="c1"># Add random data
+</span>    <span class="n">response</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">graph</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="nf">str</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">graph</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="nf">str</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="p">)</span>
+                <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span>
+                  <span class="p">[</span><span class="nf">str</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nf">str</span><span class="p">(</span><span class="n">b</span><span class="p">)],</span>
+                  <span class="n">timeout</span><span class="o">=</span><span class="mi">100</span>
+                <span class="p">)</span>
+                <span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="n">r</span><span class="p">),</span> <span class="n">B</span> <span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">A</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">B</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">B</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">sleep</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="n">sleep</span><span class="o">/</span><span class="mi">1000</span> <span class="p">)</span>
+        <span class="n">response</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="sh">"</span><span class="s">Added {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="o">-</span><span class="n">count</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Order</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Order</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">GetVertexID</span><span class="p">()</span>
+            <span class="n">graph</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="n">x</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2000</span> <span class="p">)</span>
+            <span class="n">graph</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="n">x</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">2000</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="n">sleep</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="n">sleep</span><span class="o">/</span><span class="mi">1000</span> <span class="p">)</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Order</span><span class="p">()</span>
+        <span class="n">response</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="sh">"</span><span class="s">Deleted {}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">c0</span><span class="o">-</span><span class="n">c1</span> <span class="p">)</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_start_instances">4.5. Service Example Start Instances</h3>
+<div class="paragraph">
+<p>In a terminal, navigate to your demo directory and run the commands below to start all system instances.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>demo/
+├─ run.cmd
+├─ run.sh</pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Script (run.cmd) to start all instances (Windows)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell"><span class="k">for</span> %%i <span class="k">in</span> <span class="o">(</span>A1 TD B0.1 B0.2 S1.1 S1.2 S2.1 S2.2<span class="o">)</span> <span class="k">do</span> <span class="o">(</span>
+    start <span class="s2">""</span> /MIN python <span class="nt">-m</span> service.exampleservice %%i
+<span class="o">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Script (run.sh) to start all instances (Unix)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell"><span class="k">for </span>i <span class="k">in </span>A1 TD B0.1 B0.2 S1.1 S1.2 S2.1 S2.2<span class="p">;</span> <span class="k">do
+    </span>python <span class="nt">-m</span> service.exampleservice <span class="s2">"</span><span class="nv">$i</span><span class="s2">"</span> <span class="o">&gt;</span> /dev/null 2&gt;&amp;1 &amp;
+<span class="k">done</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_verify">4.6. Service Example Verify System Overview</h3>
+<div class="paragraph">
+<p>In a browser, navigate to <a href="http://127.0.0.1:9001/system" class="bare">http://127.0.0.1:9001/system</a> to make sure all instances are running properly. Look for the green <code>OK</code> in the Status column.</p>
+</div>
+<div class="paragraph">
+<p>You can also run the following command in a terminal to show status of each component:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_feed_request">4.7. Service Example Load Data</h3>
+<div class="paragraph">
+<p>The plugin endpoint <code>/vgx/plugin/add</code> can be used to populate the system with randomly generated data. Run the command below to generate a random graph. (If you don&#8217;t have curl installed, you can send the same request from a web browser.)</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Send a feed request</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl <span class="s2">"http://127.0.0.1:9990/vgx/plugin/add?N=250000&amp;count=3000000"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_search_request">4.8. Service Example Search Request</h3>
+<div class="paragraph">
+<p>The plugin endpoint <code>/vgx/plugin/search</code> can be used to query the graph. Run the command below to test the search plugin.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Send a search request</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl <span class="s2">"http://127.0.0.1:9990/vgx/plugin/search?name=12345"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_system_overview">4.9. Service Example System Overview</h3>
+<div class="paragraph">
+<p>Open <a href="http://127.0.0.1:9001/system" class="bare">http://127.0.0.1:9001/system</a> in a browser. You should see the System Overview dashboard.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_system.png" alt="ui_system">
+</div>
+<div class="title">Figure 2. <a href="http://127.0.0.1/system" class="bare">http://127.0.0.1/system</a></div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="service_example_shutdown">4.10. Service Example Shutdown</h3>
+<div class="paragraph">
+<p>Run the command below to stop all service instances.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Shutdown</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> <span class="s2">"*"</span> <span class="nt">--confirm</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="sysadmin.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="System Administration"></i></span></a>
+<a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="service.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="VGX Server"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

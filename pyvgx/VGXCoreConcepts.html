@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Core Concepts</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vgxcoreconcepts" class="article">
+<div id="header">
+<h1>VGX Core Concepts <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="realvirtualvertices">1. REAL/VIRTUAL Vertices</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A vertex that is explicitly created is REAL.</p>
+</div>
+<div class="paragraph">
+<p>When a new connection is created from a vertex to a terminal, the terminal is implicitly created as VIRTUAL if it does not exist. A REAL vertex becomes VIRTUAL if it is explicitly deleted while having inarcs from other vertices.</p>
+</div>
+<div class="paragraph">
+<p>A VIRTUAL vertex is automatically removed from the graph when its last inarc is removed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="objectsandwrapper">2. VGX Objects and pyvgx Wrapper Objects</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When using the pyvgx Python module to access the VGX graph core it is important to understand the distinction between Python objects and objects in the VGX graph core. A pyvgx object in the Python environment is only a representation of the corresponding object inside VGX. The Python object is a wrapper serving as a bridge between Python and the actual graph structure.</p>
+</div>
+<div class="sect2">
+<h3 id="vertexobjectexample">2.1. Vertex Object Example</h3>
+<div class="paragraph">
+<p>To illustrate this further, we will use <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> as an example.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s assume a vertex <em>Bob</em> exists in the VGX graph. Calling B = <a href="graph/graphVertex.html#graphopenvertex">pyvgx.Graph.OpenVertex</a>( "Bob" ) will then look up the vertex <em>Bob</em> inside VGX and try to acquire a lock. If this succeeds a new <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance is created, returned and assigned to B. Internally the Python object B contains a reference to the VGX object <em>Bob</em> and is an independent owner of vertex <em>Bob</em>. If we open the vertex again as X = <a href="graph/graphVertex.html#graphopenvertex">pyvgx.Graph.OpenVertex</a>( "Bob" ) we will get another <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance referencing <em>Bob</em> assigned to X. Then if we create a relationship <a href="graph/graphArc.html#graphconnect">pyvgx.Graph.Connect</a>( X, "knows", "Alice" ) this will result in a new connection <em>knows</em> being established in the VGX graph from <em>Bob</em> to <em>Alice</em>. Although B and X are distinct Python objects they reference the same internal vertex <em>Bob</em>. Even though object X was used to perform the operation, B now has the exact same view into <em>Bob</em> as X has. For example: <a href="graph/graphQuery.html#graphadjacent">pyvgx.Graph.Adjacent</a>( B, "knows", "Alice" ) will return True.</p>
+</div>
+<div class="paragraph">
+<p>Each call to <a href="graph/graphVertex.html#graphopenvertex">pyvgx.Graph.OpenVertex()</a> will return a new <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance with independent ownership of the internal vertex. A call to <a href="graph/graphVertex.html#graphclosevertex">pyvgx.Graph.CloseVertex()</a> will release ownership of the internal vertex for the <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> being closed. The closed Python object can no longer be used to access the internal vertex. Trying to use the closed <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance will raise <a href="exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>. As such the closed Python vertex is now a defunct wrapper that can no longer be used to bridge the gap from Python into VGX (much like a closed file or socket.) Another way to give up ownership of the VGX vertex is to delete the <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> using Python&#8217;s <strong>del</strong> operator or simply let it go out of scope.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Although the VGX vertex is automatically released when its Python wrapper is deleted it is generally better to call <a href="graph/graphVertex.html#graphclosevertex">pyvgx.Graph.CloseVertex()</a> explicitly, both for code readability and to know exactly when the release occurs. Managing vertex ownership through Python&#8217;s object lifecycle means you are at the mercy of the garbage collector, which does not necessarily call the object deallocator immediately. You may end up in a situation where you think the vertex is closed because its former owner (the <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object) is deleted or gone out of scope, but the VGX vertex reference is still active behind the scenes.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following code and diagrams illustrate how this works.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="creategraph">2.2. Create a graph with vertices</h3>
+<div class="paragraph">
+<p>We now create a new graph and add two vertices <em>Alice</em> and <em>Bob</em>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test_objects</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/vgx1.png" alt="vgx1">
+</div>
+<div class="title">Figure 1. The VGX graph contains two vertices, but no pyvgx.Vertex objects exist</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="openvertex">2.3. Open a vertex twice and create/check connection</h3>
+<div class="paragraph">
+<p>Here we open the same vertex <em>Bob</em> twice, in a writable state, owned by two separate <a href="vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> objects <strong>B</strong> and <strong>X</strong>. We then connect <em>Bob</em> (via the <strong>X</strong> reference) to <em>Alice</em>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># Python object B owns "Bob"
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># Python object X owns "Bob"
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">X</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>      <span class="c1"># (Bob)-[knows]-&gt;(Alice)
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>     <span class="c1"># True</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/vgx2.png" alt="vgx2">
+</div>
+<div class="title">Figure 2. The VGX vertices are now connected. <em>Bob</em> is locked and owned by two pyvgx.Vertex objects (in the same thread.)</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="closevertex">2.4. Close vertex using explicit call</h3>
+<div class="paragraph">
+<p>Closing object <strong>B</strong> releases vertex ownership. The Python object still remains, but in a defunct state. Trying to access <strong>B</strong> will now raise <a href="exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/vgx3.png" alt="vgx3">
+</div>
+<div class="title">Figure 3. Python object B releases ownership of <em>Bob</em>, but still remains an active Python object without a reference to the core vertex. Object B is now defunct.</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="closeautomatically">2.5. Close vertex automatically</h3>
+<div class="paragraph">
+<p>Deleting object <strong>X</strong> is a Python interpreter operation that removes <strong>X</strong> from scope. However, the object will still exist until the garbage collector deallocates it. Only then will object <strong>X</strong> fully release its ownership of <em>Bob</em>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To ensure deterministic behavior in multi-threaded applications, use <a href="graph/graphVertex.html#graphclosevertex">pyvgx.Graph.CloseVertex()</a> instead of relying on Python&#8217;s garbage collector.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">del</span> <span class="n">X</span>             <span class="c1"># X goes out of scope, but Bob may not be closed just yet (gc may not run yet)
+#... we don't know if vertex is closed yet</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/vgx4.png" alt="vgx4">
+</div>
+<div class="title">Figure 4. Python object X is deleted and no longer accessible, but may still exist within the Python interpreter. The ownership and lock state of <em>Bob</em> is unknown. <em>Bob</em> will not be accessible by other threads until Python&#8217;s garbage collector deallocates <em>X</em>.</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="reference.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="tutorial.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="pyvgx Tutorial"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="reference.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

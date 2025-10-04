@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Members</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphmembers" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Members <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphVertex.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Vertex Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#graphname">1. pyvgx.Graph.name</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute">1.1. Attribute</a></li>
+<li><a href="#_remarks">1.2. Remarks</a></li>
+<li><a href="#_example">1.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphpath">2. pyvgx.Graph.path</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_2">2.1. Attribute</a></li>
+<li><a href="#_remarks_2">2.2. Remarks</a></li>
+<li><a href="#_example_2">2.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphorder">3. pyvgx.Graph.order</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_3">3.1. Attribute</a></li>
+<li><a href="#_remarks_3">3.2. Remarks</a></li>
+<li><a href="#_example_3">3.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphsize">4. pyvgx.Graph.size</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_4">4.1. Attribute</a></li>
+<li><a href="#_remarks_4">4.2. Remarks</a></li>
+<li><a href="#_example_4">4.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphobjcnt">5. pyvgx.Graph.objcnt</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_5">5.1. Attribute</a></li>
+<li><a href="#_remarks_5">5.2. Remarks</a></li>
+<li><a href="#_example_5">5.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphts">6. pyvgx.Graph.ts</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_6">6.1. Attribute</a></li>
+<li><a href="#_remarks_6">6.2. Remarks</a></li>
+</ul>
+</li>
+<li><a href="#graphsim">7. pyvgx.Graph.sim</a>
+<ul class="sectlevel2">
+<li><a href="#_attribute_7">7.1. Attribute</a></li>
+<li><a href="#_remarks_7">7.2. Remarks</a></li>
+<li><a href="#_example_6">7.3. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Members</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphname">pyvgx.Graph.name</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphpath">pyvgx.Graph.path</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph path</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphorder">pyvgx.Graph.order</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of vertices in the graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsize">pyvgx.Graph.size</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of arcs between vertices in the graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphobjcnt">pyvgx.Graph.objcnt</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>dict</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basic object counters</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphts">pyvgx.Graph.ts</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>float</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph&#8217;s current timestamp in seconds since 1970</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsim">pyvgx.Graph.sim</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>pyvgx.Similarity</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The Graph <a href="../similarity/similarity.html#preface">Similarity</a> object for managing vector similarity configurations and comparison</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphname">1. pyvgx.Graph.name</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns the graph&#8217;s name.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute">1.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">name</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.2. Remarks</h3>
+<div class="paragraph">
+<p>The graph name is defined when the graph is first constructed. It is the <em>name</em> parameter of the graph constructor.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">the_name</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">name</span>                         <span class="c1"># -&gt; "the_name"</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphpath">2. pyvgx.Graph.path</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns graph&#8217;s full path.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_2">2.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">path</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">2.2. Remarks</h3>
+<div class="paragraph">
+<p>This function returns the full path of the graph including <em>vgxroot</em> (as initially defined with <a href="../reference.html#system_initialize_func">pyvgx.system.Initialize()</a> ) and any additional path provided in the graph constructor&#8217;s <em>path</em> parameter.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">custom/root</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">the_name</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">the/path</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">path</span>                      <span class="c1"># -&gt; "custom/root/the/path"
+</span><span class="n">g</span><span class="p">.</span><span class="n">name</span>                      <span class="c1"># -&gt; "the_name"</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphorder">3. pyvgx.Graph.order</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns the number of vertices in the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_3">3.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">order</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">3.2. Remarks</h3>
+<div class="paragraph">
+<p>The graph order is the total number of vertices in the graph. This is a readonly attribute. It is automatically updated as vertices are created or removed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Truncate</span><span class="p">()</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">order</span>                      <span class="c1"># -&gt; 0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">order</span>                      <span class="c1"># -&gt; 1
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">1000</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="nf">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">order</span>                      <span class="c1"># -&gt; 1001</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsize">4. pyvgx.Graph.size</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns the number of arcs between vertices in the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_4">4.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">size</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">4.2. Remarks</h3>
+<div class="paragraph">
+<p>The graph size is the total number of arcs (relationships) between all vertices in the graph. This is a readonly attribute. It is automatically updated as arcs are created or removed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Truncate</span><span class="p">()</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">size</span>                          <span class="c1"># -&gt; 0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">size</span>                          <span class="c1"># -&gt; 1
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">also_to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">size</span>                          <span class="c1"># -&gt; 2
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">size</span>                          <span class="c1"># -&gt; 3
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">1000</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="nf">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">size</span>                          <span class="c1"># -&gt; 1003</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphobjcnt">5. pyvgx.Graph.objcnt</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a dict of basic object counters for the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_5">5.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">objcnt</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_5">5.2. Remarks</h3>
+<div class="paragraph">
+<p>This is a convenience attribute returning the graph&#8217;s order, size, number of properties and number of vectors.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">5.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Assume graph is already populated
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">objcnt</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; {'order': 524, 'size': 2131, 'properties': 4262, 'vectors': 3771}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphts">6. pyvgx.Graph.ts</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns the Graph&#8217;s current timestamp in seconds in 1970.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_6">6.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">ts</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_6">6.2. Remarks</h3>
+<div class="paragraph">
+<p>The returned value is a &lt;float&gt;.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsim">7. pyvgx.Graph.sim</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This returns the Graph&#8217;s <a href="../similarity/similarity.html#preface">pyvgx.Similarity</a> object.</p>
+</div>
+<div class="sect2">
+<h3 id="_attribute_7">7.1. Attribute</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="n">sim</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_7">7.2. Remarks</h3>
+<div class="paragraph">
+<p>The similarity object is a special aspect of the graph that is used for configuring similarity scoring functions and managing vector creation, deletion and comparison.</p>
+</div>
+<div class="paragraph">
+<p>Some of the similarity object&#8217;s attributes can be modified to adjust the way similarity scores are computed.</p>
+</div>
+<div class="paragraph">
+<p>The similarity object also exposes methods for creating <a href="../similarity/vector.html#pyvgxvector">pyvgx.Vector</a> objects and performing manual similarity operations on them.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">7.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Print the Similarity object's configuration
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span> <span class="p">)</span>
+<span class="c1">#
+#                     { 'min_cosine': 0.0,
+#                       'max_vector_size': 48,
+#                       'sim_threshold': 1.0,
+#                       'nsign': 0,
+#                       'jaccard_exp': 0.0,
+#                       'hamming_threshold': 0,
+#                       'nsegm': 0,
+#                       'min_isect': 1,
+#                       'min_jaccard': 0.0,
+#                       'cosine_exp': 1.0
+#                      }
+</span>
+<span class="c1"># Change the configuration to compute similarity as a blend
+# of Cosine and Jaccard
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="n">jaccard_exp</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="n">cosine_exp</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+<span class="c1"># Define some items by their features
+</span><span class="n">coffee</span>    <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">roasted</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">beans</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.3</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">hot</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">brewed</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">popular</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">green_tea</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">dried</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.3</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">leaves</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">green</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">brewed</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">healthy</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.6</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">hot</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.4</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">black_tea</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">dried</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.3</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">leaves</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">brewed</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">hot</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.6</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">soda</span>      <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">sugar</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.7</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">cold</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">popular</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Compute similarity scores
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">coffee</span><span class="p">,</span> <span class="n">green_tea</span> <span class="p">)</span>      <span class="c1"># -&gt; 0.5
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">coffee</span><span class="p">,</span> <span class="n">black_tea</span> <span class="p">)</span>      <span class="c1"># -&gt; 0.63671875
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">coffee</span><span class="p">,</span> <span class="n">soda</span> <span class="p">)</span>           <span class="c1"># -&gt; 0.470703125
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">green_tea</span><span class="p">,</span> <span class="n">black_tea</span> <span class="p">)</span>   <span class="c1"># -&gt; 0.875
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">green_tea</span><span class="p">,</span> <span class="n">soda</span> <span class="p">)</span>        <span class="c1"># -&gt; 0.408203125
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">black_tea</span><span class="p">,</span> <span class="n">soda</span> <span class="p">)</span>        <span class="c1"># -&gt; 0.41015625
+</span>
+<span class="c1"># Assign vector to vertices
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">GT</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Green Tea</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">BT</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Black Tea</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Soda</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">coffee</span> <span class="p">)</span>
+<span class="n">GT</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">green_tea</span> <span class="p">)</span>
+<span class="n">BT</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">black_tea</span> <span class="p">)</span>
+<span class="n">S</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">soda</span> <span class="p">)</span>
+
+<span class="c1"># The similarity function also accepts vertex arguments
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">C</span><span class="p">,</span> <span class="n">GT</span> <span class="p">)</span>                  <span class="c1"># -&gt; 0.5</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Miscellaneous Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphVertex.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Vertex Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Sort Specification Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="sortspecification" class="article toc2 toc-left">
+<div id="header">
+<h1>Sort Specification Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="timestampConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Timestamp Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_sort_direction">1. Sort Direction</a></li>
+<li><a href="#_sort_by">2. Sort By</a></li>
+<li><a href="#S_NONE">3. pyvgx.S_NONE</a></li>
+<li><a href="#S_ASC">4. pyvgx.S_ASC</a></li>
+<li><a href="#S_DESC">5. pyvgx.S_DESC</a></li>
+<li><a href="#S_VAL">6. pyvgx.S_VAL</a></li>
+<li><a href="#S_ADDR">7. pyvgx.S_ADDR</a></li>
+<li><a href="#S_OBID">8. pyvgx.S_OBID</a></li>
+<li><a href="#S_ID">9. pyvgx.S_ID</a></li>
+<li><a href="#S_DEG">10. pyvgx.S_DEG</a></li>
+<li><a href="#S_IDEG">11. pyvgx.S_IDEG</a></li>
+<li><a href="#S_ODEG">12. pyvgx.S_ODEG</a></li>
+<li><a href="#S_SIM">13. pyvgx.S_SIM</a></li>
+<li><a href="#S_HAM">14. pyvgx.S_HAM</a></li>
+<li><a href="#S_RANK">15. pyvgx.S_RANK</a></li>
+<li><a href="#S_TMC">16. pyvgx.S_TMC</a></li>
+<li><a href="#S_TMM">17. pyvgx.S_TMM</a></li>
+<li><a href="#S_TMX">18. pyvgx.S_TMX</a></li>
+<li><a href="#S_NATIVE">19. pyvgx.S_NATIVE</a></li>
+<li><a href="#S_RANDOM">20. pyvgx.S_RANDOM</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>These constants control the ordering of results returned from the various search methods.</p>
+</div>
+<div class="paragraph">
+<p>A single sort-by constant can be combined with a direction control constant using the bitwise-OR (|) operator.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">sortby</span><span class="o">=</span><span class="n">S_</span><span class="o">*|</span><span class="n">S_ASC</span>
+<span class="n">sortby</span><span class="o">=</span><span class="n">S_</span><span class="o">*|</span><span class="n">S_DESC</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Sort-by constants cannot be combined with other sort-by constants.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sort_direction">1. Sort Direction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants control the overall direction of the sorted results.</p>
+</div>
+<table id="sortby_dir_constants" class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Sort Constant</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_ASC">pyvgx.S_ASC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort ascending, i.e. low to high</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_DESC">pyvgx.S_DESC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort descending, i.e. high to low</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sort_by">2. Sort By</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants control how results are ordered.</p>
+</div>
+<table id="sortby_type_constants" class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 9.0909%;">
+<col style="width: 27.2727%;">
+<col style="width: 27.2727%;">
+<col style="width: 18.1819%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Sort Constant</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Sort by</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Default Order</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_NONE">pyvgx.S_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Search results are ordered according to internal traversal. This is generally faster than other sorts.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">undefined</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_VAL">pyvgx.S_VAL</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em> or <em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc (predicator) value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Effective only for methods supporting <code>arc=</code> filters.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_ADDR">pyvgx.S_ADDR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory address</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by terminal vertex object&#8217;s internal memory address. This may lead to faster processing of large search results in some cases.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_OBID">pyvgx.S_OBID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex internalid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex internalid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_ID">pyvgx.S_ID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex identifier</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex identifier string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_DEG">pyvgx.S_DEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex degree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex total degree (indegree + outdegree)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_IDEG">pyvgx.S_IDEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex indegree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex indegree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_ODEG">pyvgx.S_ODEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex outdegree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex outdegree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_SIM">pyvgx.S_SIM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex vector similarity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by the similarity score computed for terminal vertex vector and probe vector supplied in the query</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_HAM">pyvgx.S_HAM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex vector fingerprint hamming distance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by the fingerprint hamming distance for terminal vertex vector and probe vector supplied in the query</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_RANK">pyvgx.S_RANK</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generic rank score</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by a rank score as computed by a rank score evaluation function (query dependent feature).</p>
+<p class="tableblock">When supported by a query method, the rank scoring specification must be provided in the <code>rank=</code> query parameter:</p>
+<p class="tableblock"><code>rank=&lt;rank_spec&gt;</code></p>
+<p class="tableblock">The <code>&lt;rank_spec&gt;</code> syntax depends on the query method.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Descending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_TMC">pyvgx.S_TMC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex created timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex creation time (1 second resolution)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_TMM">pyvgx.S_TMM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex modified timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex modification time (1 second resolution)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_TMX">pyvgx.S_TMX</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex expires timestamp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort by vertex expiration time (1 second resolution)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Ascending</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_NATIVE">pyvgx.S_NATIVE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No sorting</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Similar to <a href="#S_NONE">pyvgx.S_NONE</a> but will complete deep traversal to gather counts and other metrics</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">undefined</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#S_RANDOM">pyvgx.S_RANDOM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Random sorting</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The sort order will be randomized. Repeated searches will return a different random sort order each time.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">undefined</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_NONE">3. pyvgx.S_NONE</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_NONE = 0</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_ASC">4. pyvgx.S_ASC</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_ASC = 1</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_DESC">5. pyvgx.S_DESC</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_DESC = 2</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_VAL">6. pyvgx.S_VAL</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_VAL = 16</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_ADDR">7. pyvgx.S_ADDR</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_ADDR = 32</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_OBID">8. pyvgx.S_OBID</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_OBID = 48</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_ID">9. pyvgx.S_ID</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_ID = 64</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_DEG">10. pyvgx.S_DEG</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_DEG = 80</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_IDEG">11. pyvgx.S_IDEG</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_IDEG = 96</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_ODEG">12. pyvgx.S_ODEG</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_ODEG = 112</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_SIM">13. pyvgx.S_SIM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_SIM = 144</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_HAM">14. pyvgx.S_HAM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_HAM = 128</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_RANK">15. pyvgx.S_RANK</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_RANK = 160</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_TMC">16. pyvgx.S_TMC</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_TMC = 176</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_TMM">17. pyvgx.S_TMM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_TMM = 192</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_TMX">18. pyvgx.S_TMX</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_TMX = 208</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_NATIVE">19. pyvgx.S_NATIVE</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_NATIVE = 224</code></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="S_RANDOM">20. pyvgx.S_RANDOM</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.S_RANDOM = 240</code></p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="resultListEntryConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Result List Entry Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="timestampConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Timestamp Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

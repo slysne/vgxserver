@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Result List Entry Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="resultlistentryconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Result List Entry Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="sortSpecificationConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Sort Specification Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_summary">1. Summary</a></li>
+<li><a href="#_result_entry_format">2. Result Entry Format</a>
+<ul class="sectlevel2">
+<li><a href="#R_SIMPLE">2.1. pyvgx.R_SIMPLE</a></li>
+<li><a href="#R_STR">2.2. pyvgx.R_STR</a></li>
+<li><a href="#R_LIST">2.3. pyvgx.R_LIST</a></li>
+<li><a href="#R_DICT">2.4. pyvgx.R_DICT</a></li>
+</ul>
+</li>
+<li><a href="#resultmetas">3. Result Metas</a>
+<ul class="sectlevel2">
+<li><a href="#R_TIMING">3.1. pyvgx.R_TIMING</a></li>
+<li><a href="#R_COUNTS">3.2. pyvgx.R_COUNTS</a></li>
+<li><a href="#R_METAS">3.3. pyvgx.R_METAS</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">1. Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants control the format of result entries in the query result list returned
+by various search methods.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="o">=</span> <span class="n">R_</span><span class="o">&lt;</span><span class="n">a</span><span class="o">&gt;</span> <span class="o">|</span> <span class="n">R_</span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;</span> <span class="o">|</span> <span class="bp">...</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Some constants can be combined using the bitwise-OR operator (|).</p>
+</div>
+<div class="paragraph">
+<p>If no meta-information is requested the returned result is a list of entries.
+When meta-information is requested with <a href="#R_COUNTS">pyvgx.R_COUNTS</a> or <a href="#R_TIMING">pyvgx.R_TIMING</a> the returned result is a dictionary containing the list of results plus the requested metas.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_result_entry_format">2. Result Entry Format</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The format of each entry in the result list is controlled by these constants:</p>
+</div>
+<div class="sect2">
+<h3 id="R_SIMPLE">2.1. pyvgx.R_SIMPLE</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_SIMPLE = 0</code></p>
+</div>
+<div class="paragraph">
+<p>Result list entries are singleton objects representing the value of the earliest display order field within the specified <a href="resultFieldConstants.html#resultfieldconstants">result fields</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[   field1,
+    field1,
+    field1,
+    ...
+]</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_STR">2.2. pyvgx.R_STR</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_STR = 268435456</code></p>
+</div>
+<div class="paragraph">
+<p>Result list entries are single strings built from the selected <a href="resultFieldConstants.html#resultfieldconstants">result fields</a>. The entry format depends on the fields. The format is JSON compatible except when only fields included in <code>F_AARC</code> are requested (see below.)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[   "formatted_entry1",
+    "formatted_entry2",
+    "formatted_entry3",
+    ...
+]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When requesting a single field with a string value (such as <code>F_ID</code>) a simple string representation of the field value is returned. This is generally not JSON compatible, unless the string happens to represent a number.</p>
+</div>
+<div class="paragraph">
+<p>When requesting multiple fields within <code>F_AARC</code> (such as <code>F_ID|F_VAL</code>) the combined fields are rendered as ASCII-art to help visualize the arc. This is not JSON compatible. The result entry is then formatted as <code>( F_ANCHOR )-[ F_REL F_MOD F_VAL ]-&gt;( F_ID )</code>, rendering blank spaces for missing fields.</p>
+</div>
+<div class="paragraph">
+<p>When requesting multiple fields where at least one is not part of <code>F_AARC</code> the result is rendered as JSON name/value pairs.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_LIST">2.3. pyvgx.R_LIST</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_LIST = 536870912</code></p>
+</div>
+<div class="paragraph">
+<p>Result list entries are lists of values as specified by the result fields. The <a href="resultFieldConstants.html#resultfieldconstants_order">field order</a> is fixed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[   [ field1, field2, ... ],
+    [ field1, field2, ... ],
+    [ field1, field2, ... ],
+    ...
+]</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_DICT">2.4. pyvgx.R_DICT</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_DICT = 805306368</code></p>
+</div>
+<div class="paragraph">
+<p>Result list entries are dictionaries of name:value as specified by the <a href="resultFieldConstants.html#resultfieldconstants">result fields</a>. Generally, the entry is a subset of:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>entry_n = {
+    'anchor'            : "&lt;initial_vertex_identifier&gt;",
+    'anchor-internalid' : "&lt;initial_vertex_internalid&gt;",
+    'arc': {
+        'direction'       : "&lt;arc_direction&gt;",
+        'relationship'    : "&lt;relationship_type&gt;",
+        'modifier'        : "&lt;modifier&gt;",
+        'value'           : &lt;numeric_value&gt;
+    },
+    'id'                : "&lt;terminal_vertex_identifier&gt;",
+    'internalid'        : "&lt;terminal_vertex_internalid&gt;",
+    'type'              : "&lt;vertex_type&gt;",
+    'degree'            : &lt;degree&gt;,
+    'indegree'          : &lt;indegree&gt;,
+    'outdegree'         : &lt;outdegree&gt;,
+    'vector'            : [(&lt;"dim1"&gt;, &lt;weight&gt;), ("&lt;dim2&gt;", &lt;weight&gt;), ...],
+    'properties'        : { &lt;properties_dict&gt; },
+    'rankscore'         : &lt;dynamic_rank&gt;,
+    'similarity'        : &lt;similarity_score&gt;,
+    'hamming-distance'  : &lt;hamming_distance&gt;,
+    'created'           : &lt;TMC&gt;,
+    'modified'          : &lt;TMM&gt;,
+    'expires'           : &lt;TMX&gt;,
+    'descriptor'        : &lt;numeric_descriptor&gt;,
+    'address'           : &lt;vertex_memory_address&gt;,
+    'handle'            : &lt;vertex_allocator_handle&gt;,
+    'raw-vertex'        : "&lt;binary_dump&gt;"
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The result list is:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[   entry_1,
+    entry_2,
+    entry_3,
+    ...
+]</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="resultmetas">3. Result Metas</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When one or more of the following constants are used the result will be a dictionary containing the list of results and the selected metas:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{   '&lt;result_list_name&gt;' : [ &lt;result_entry1&gt;, &lt;result_entry2&gt;, ... ],
+    '&lt;meta_name1&gt;' : &lt;meta_value1&gt;,
+    '&lt;meta_name2&gt;' : &lt;meta_value2&gt;,
+    ...
+}</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_TIMING">3.1. pyvgx.R_TIMING</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_TIMING = 1073741824</code></p>
+</div>
+<div class="paragraph">
+<p>Query execution timing information will be included as a meta named <code>"time"</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Neighborhood query result</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    'neighborhood' : [ &lt;entry1&gt;, &lt;entry2&gt;, ... ]
+    'time' : {
+        'search' : &lt;seconds&gt;,
+        'result' : &lt;seconds&gt;,
+        'total'  : &lt;seconds&gt;
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Global query result</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    'vertices' : [ &lt;entry1&gt;, &lt;entry2&gt;, ... ]
+    'time' : {
+        'search' : &lt;seconds&gt;,
+        'result' : &lt;seconds&gt;,
+        'total'  : &lt;seconds&gt;
+    }
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_COUNTS">3.2. pyvgx.R_COUNTS</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_COUNTS = -2147483648</code></p>
+</div>
+<div class="paragraph">
+<p>Information for query result counts will be included as a meta named <code>"counts"</code>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Neighborhood query result</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    'neighborhood' : [ &lt;entry1&gt;, &lt;entry2&gt;, ... ]
+    'counts' : {
+        'neighbors' : &lt;seconds&gt;,
+        'arcs'      : &lt;seconds&gt;
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Global query result</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>{
+    'vertices' : [ &lt;entry1&gt;, &lt;entry2&gt;, ... ]
+    'time' : {
+        'search' : &lt;seconds&gt;,
+        'result' : &lt;seconds&gt;,
+        'total'  : &lt;seconds&gt;
+    }
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="R_METAS">3.3. pyvgx.R_METAS</h3>
+<div class="paragraph">
+<p><code>pyvgx.R_METAS = -1073741824</code></p>
+</div>
+<div class="paragraph">
+<p>Shorthand for <a href="#R_TIMING">pyvgx.R_TIMING</a> | <a href="#R_COUNTS">pyvgx.R_COUNTS</a></p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="resultFieldConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Result Field Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="sortSpecificationConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Sort Specification Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

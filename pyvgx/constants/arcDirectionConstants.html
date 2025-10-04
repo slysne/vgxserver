@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Arc Direction Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="arcdirectionconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Arc Direction Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="arcModifierConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Arc Modifier Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#D_ANY">1. pyvgx.D_ANY</a></li>
+<li><a href="#D_IN">2. pyvgx.D_IN</a></li>
+<li><a href="#D_OUT">3. pyvgx.D_OUT</a></li>
+<li><a href="#D_BOTH">4. pyvgx.D_BOTH</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>These constants are used to specify the search direction for neighborhood queries.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Constant</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#D_ANY">pyvgx.D_ANY</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No direction filter for arcs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Who is "x" connected to?</p>
+<p class="tableblock">Neighborhood( "x", arc=("connected", D_ANY) )</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#D_IN">pyvgx.D_IN</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Require arc to be inbound (inarc)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Who likes "x"?</p>
+<p class="tableblock">Neighborhood( "x", arc=("likes", D_IN) )</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#D_OUT">pyvgx.D_OUT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Require arc to be outbound (outarc)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">What did "x" purchase?</p>
+<p class="tableblock">Neighborhood( "x", arc=("purchase", D_OUT) )</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#D_BOTH">pyvgx.D_BOTH</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Require both inbound and outbound arcs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Who did "x" call who also called "x"?</p>
+<p class="tableblock">Neighborhood( "x", arc("called", D_BOTH) )</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="D_ANY">1. pyvgx.D_ANY</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code><strong>pyvgx.D_ANY = 0</strong></code></p>
+</div>
+<div class="paragraph">
+<p>Arc filter direction wildcard.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="D_IN">2. pyvgx.D_IN</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code><strong>pyvgx.D_IN = 1</strong></code></p>
+</div>
+<div class="paragraph">
+<p>In arc filter, require arc direction to be inbound.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="D_OUT">3. pyvgx.D_OUT</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code><strong>pyvgx.D_OUT = 2</strong></code></p>
+</div>
+<div class="paragraph">
+<p>In arc filter, require arc direction to be outbound.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="D_BOTH">4. pyvgx.D_BOTH</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code><strong>pyvgx.D_BOTH = 3</strong></code></p>
+</div>
+<div class="paragraph">
+<p>In arc filter, require the arc direction to be bi-directional, i.e. an arc matching all other filter criteria must exist in both directions between two vertices for the arc filter to match.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="opcodeConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Opcode Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="arcModifierConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Arc Modifier Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

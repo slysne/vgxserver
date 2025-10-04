@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>pyvgx Similarity Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="similaritymethods" class="article toc2 toc-left">
+<div id="header">
+<h1>pyvgx Similarity Methods <a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Similarity"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#similaritynewvector">1. pyvgx.Similarity.NewVector()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_parameters">1.2. Parameters</a></li>
+<li><a href="#_return_value">1.3. Return Value</a></li>
+<li><a href="#_remarks">1.4. Remarks</a></li>
+<li><a href="#_example_feature_vector">1.5. Example: Feature Vector</a></li>
+<li><a href="#_example_euclidean_vector">1.6. Example: Euclidean Vector</a></li>
+</ul>
+</li>
+<li><a href="#similaritynewcentroid">2. pyvgx.Similarity.NewCentroid()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_parameters_2">2.2. Parameters</a></li>
+<li><a href="#_return_value_2">2.3. Return Value</a></li>
+<li><a href="#_remarks_2">2.4. Remarks</a></li>
+<li><a href="#_example_feature_vector_2">2.5. Example: Feature Vector</a></li>
+<li><a href="#_example_euclidean_vector_2">2.6. Example: Euclidean Vector</a></li>
+</ul>
+</li>
+<li><a href="#similarityrvec">3. pyvgx.Similarity.rvec()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_parameters_3">3.2. Parameters</a></li>
+<li><a href="#_return_value_3">3.3. Return Value</a></li>
+<li><a href="#_example">3.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#similarityfingerprint">4. pyvgx.Similarity.Fingerprint()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_parameters_4">4.2. Parameters</a></li>
+<li><a href="#_return_value_4">4.3. Return Value</a></li>
+<li><a href="#_remarks_3">4.4. Remarks</a></li>
+<li><a href="#_example_2">4.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#similaritycreateprojectionsets">5. pyvgx.Similarity.CreateProjectionSets()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">5.1. Syntax</a></li>
+<li><a href="#_parameters_5">5.2. Parameters</a></li>
+<li><a href="#_return_value_5">5.3. Return Value</a></li>
+<li><a href="#_remarks_4">5.4. Remarks</a></li>
+<li><a href="#_example_3">5.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#similaritydeleteprojectionsets">6. pyvgx.Similarity.DeleteProjectionSets()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_6">6.1. Syntax</a></li>
+<li><a href="#_remarks_5">6.2. Remarks</a></li>
+<li><a href="#_example_4">6.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#similaritysimilarity">7. pyvgx.Similarity.Similarity()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_7">7.1. Syntax</a></li>
+<li><a href="#_parameters_6">7.2. Parameters</a></li>
+<li><a href="#_return_value_6">7.3. Return Value</a>
+<ul class="sectlevel3">
+<li><a href="#_feature_vectors">7.3.1. Feature Vectors</a></li>
+<li><a href="#_euclidean_vectors">7.3.2. Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#_example_5">7.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#similarityeuclideandistance">8. pyvgx.Similarity.EuclideanDistance()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_8">8.1. Syntax</a></li>
+<li><a href="#_parameters_7">8.2. Parameters</a></li>
+<li><a href="#_return_value_7">8.3. Return Value</a></li>
+<li><a href="#_example_6">8.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#similaritycosine">9. pyvgx.Similarity.Cosine()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_9">9.1. Syntax</a></li>
+<li><a href="#_parameters_8">9.2. Parameters</a></li>
+<li><a href="#_return_value_8">9.3. Return Value</a>
+<ul class="sectlevel3">
+<li><a href="#_feature_vectors_2">9.3.1. Feature Vectors</a></li>
+<li><a href="#_euclidean_vectors_2">9.3.2. Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#_example_feature_vectors">9.4. Example: Feature Vectors</a></li>
+<li><a href="#_example_euclidean_vectors">9.5. Example: Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#similarityjaccard">10. pyvgx.Similarity.Jaccard()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_10">10.1. Syntax</a></li>
+<li><a href="#_parameters_9">10.2. Parameters</a></li>
+<li><a href="#_return_value_9">10.3. Return Value</a></li>
+<li><a href="#_example_7">10.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#similarityhamming">11. pyvgx.Similarity.HammingDistance()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_11">11.1. Syntax</a></li>
+<li><a href="#_parameters_10">11.2. Parameters</a></li>
+<li><a href="#_return_value_10">11.3. Return Value</a></li>
+<li><a href="#_remarks_6">11.4. Remarks</a></li>
+<li><a href="#_example_8">11.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#similarityasdict">12. pyvgx.Similarity.AsDict()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_12">12.1. Syntax</a></li>
+<li><a href="#_return_value_11">12.2. Return Value</a></li>
+<li><a href="#_example_9">12.3. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Similarity Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritynewvector">pyvgx.Similarity.NewVector()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a new vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritynewcentroid">pyvgx.Similarity.NewCentroid()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a new centroid instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityrvec">pyvgx.Similarity.rvec()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a new, random vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityfingerprint">pyvgx.Similarity.Fingerprint()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute vector fingerprint</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritycreateprojectionsets">pyvgx.Similarity.CreateProjectionSets()</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritydeleteprojectionsets">pyvgx.Similarity.DeleteProjectionSets()</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritysimilarity">pyvgx.Similarity.Similarity()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute the similarity of two vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityeuclideandistance">pyvgx.Similarity.EuclideanDistance()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute the Euclidean distance between two vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritycosine">pyvgx.Similarity.Cosine()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute the cosine similarity of two vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityjaccard">pyvgx.Similarity.Jaccard()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute the Jaccard similarity of two vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityhamming">pyvgx.Similarity.HammingDistance()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute the number of differing bits for two vector fingerprints</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityasdict">pyvgx.Similarity.AsDict()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a dictionary representation of a similarity instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritynewvector">1. pyvgx.Similarity.NewVector()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a new <a href="vector.html">pyvgx.Vector</a> instance.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="n">elements</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>elements</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>list</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Feature Vectors</strong>: List of tuples <code>[(<em>dim</em>, <em>weight</em>), &#8230;&#8203;]</code> where <em>dim</em> is a dimension string and <em>weight</em> is a numeric weight for the dimension
+<br>
+<br>
+ <strong>Euclidean Vectors</strong>: List of numeric values <code>[c<sub>1</sub>, c<sub>2</sub>, &#8230;&#8203;, c<sub>n</sub>]</code> where <em>n</em> must be a multiple of 32. The maximum number of vector components is <a href="limits.html#limits">65472</a>. Vectors are normalized by scaling all components by a factor \( a = \displaystyle \frac{1}{| \text{c}_{max} |} \) where c<sub>max</sub> is the component with the largest absolute value.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a new <a href="vector.html">pyvgx.Vector</a> object associated with the Similarity object.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.4. Remarks</h3>
+<div class="paragraph">
+<p>Vector instances are bound to the Similarity object that spawned them. It is not possible to use a Vector created by one Similarity object with another Similarity object.</p>
+</div>
+<div class="paragraph">
+<p>Similarity objects are themselves bound to Graph instances (as the <a href="../graph/graphMembers.html#graphsim">pyvgx.Graph.sim member</a>.) In practice this means Vector objects are bound to Graph instances, and Vector objects can therefore not be shared among separate Graph instances.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use <a href="vector.html#vectorexternal"><code>pyvgx.Vector.External()</code></a> to export a Vector to Python list, which may then be used freely with any Similarity object or Graph object.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_feature_vector">1.5. Example: Feature Vector</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">,</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.6</span><span class="p">),(</span><span class="sh">"</span><span class="s">q</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.8515625</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_euclidean_vector">1.6. Example: Euclidean Vector</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.9976</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritynewcentroid">2. pyvgx.Similarity.NewCentroid()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a new <a href="vector.html">pyvgx.Vector</a> instance representing the centroid of multiple vectors.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># -&gt; pyvgx.Vector
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">NewCentroid</span><span class="p">(</span> <span class="p">[</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="p">...,</span> <span class="n">vn</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">2.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>v<sub>k</sub></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em> or <em>list</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vector instance or list of elements</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a new <a href="vector.html">pyvgx.Vector</a> object representing the centroid vector for all vectors <em>v<sub>1</sub></em> through <em>v<sub>n</sub></em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">2.4. Remarks</h3>
+<div class="paragraph">
+<p>If the input vectors are considered as points in n-dimensional space, their centroid can be thought of as the geometric center (or center of mass.)</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In <strong>Feature Vector</strong> mode, since vector objects have an upper limit for how many dimensions they can contain, it is likely for some information to be lost when generating the centroid. Less common features (or features with low weights) in the input vectors may not be included in the centroid.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_feature_vector_2">2.5. Example: Feature Vector</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Some things people may think of when they hear "pizza"
+</span><span class="n">p1</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">dough</span><span class="sh">"</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">cheese</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">tomato</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">crust</span><span class="sh">"</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">tomato</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">sausage</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">p3</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">dough</span><span class="sh">"</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">crust</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">sauce</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">p4</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">pepperoni</span><span class="sh">"</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">cheese</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">tomato</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">p5</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">dough</span><span class="sh">"</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">tomato</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">cheese</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">p6</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">cheese</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">mushroom</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">broccoli</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Compute the average impression of "pizza"
+</span><span class="n">P</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewCentroid</span><span class="p">(</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span><span class="p">,</span> <span class="n">p4</span><span class="p">,</span> <span class="n">p5</span><span class="p">,</span> <span class="n">p6</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">P</span><span class="p">.</span><span class="n">external</span> <span class="c1"># -&gt; [ ('dough', 0.875),
+#      ('cheese', 0.625),
+#      ('tomato', 0.625),
+#      ('crust', 0.46875),
+#      ('pepperoni', 0.28125),
+#      ('sausage', 0.15625),
+#      ('broccoli', 0.15625),
+#      ('mushroom', 0.15625),
+#      ('sauce', 0.15625) ]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_euclidean_vector_2">2.6. Example: Euclidean Vector</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Random Euclidean vectors
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Vectors have nothing in common
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">D</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">near_zero</span>
+
+<span class="c1"># Compute the centroid of random vectors
+</span><span class="n">X</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewCentroid</span><span class="p">(</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]</span> <span class="p">)</span>
+
+<span class="c1"># All vectors have something in common with centroid
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">X</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">some_similarity</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="n">X</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">some_similarity</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">C</span><span class="p">,</span> <span class="n">X</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">some_similarity</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">D</span><span class="p">,</span> <span class="n">X</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">some_similarity</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityrvec">3. pyvgx.Similarity.rvec()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a new, random <a href="vector.html">pyvgx.Vector</a> instance. (Euclidean mode only.)</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nf">rvec</span><span class="p">(</span> <span class="n">n</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_3">3.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>n</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of dimensions, rounded up to nearest multiple of 32.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a new randomized <a href="vector.html">pyvgx.Vector</a> object associated with the Similarity object.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">3.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">()</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nf">rvec</span><span class="p">(</span><span class="mi">768</span><span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nf">rvec</span><span class="p">(</span><span class="mi">768</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; -0.071999</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityfingerprint">4. pyvgx.Similarity.Fingerprint()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute 64-bit vector fingerprint.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="n">vector</span><span class="p">[,</span> <span class="n">seed</span><span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_4">4.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em> or <em>list</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vector instance or list of elements</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>seed</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Projection seed (default 0)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">4.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a 64-bit integer representing a projection of the n-dimensional <em>vector</em> onto 64-dimensional binary space. The optional <em>seed</em> allows alternative projections.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">4.4. Remarks</h3>
+<div class="paragraph">
+<p>A vector&#8217;s fingerprint is a locality sensitive hash and represents a mapping of a high-dimensional object onto a low-dimensional "shadow" of that object. By using different values for <em>seed</em> it is possible to create multiple fingerprints forming a set of projections which more accurately represent the original vector.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">4.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">fp0</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">fp1</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="mi">1234</span> <span class="p">)</span>
+<span class="n">fp2</span> <span class="o">=</span> <span class="n">Similarity</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="mh">0xd5c098876a90fe2c</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritycreateprojectionsets">5. pyvgx.Similarity.CreateProjectionSets()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Initialize a graph structure used for approximate nearest neighbor (ANN) vector search.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">5.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span> <span class="n">nseeds</span><span class="p">,</span> <span class="n">ksize</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_5">5.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>nseeds</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of seeds (1 - 8) to use for ANN index projections</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>ksize</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size of projection keys, must be 8, 10, or 12</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_5">5.3. Return Value</h3>
+<div class="paragraph">
+<p>This function returns a list of seed values.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">5.4. Remarks</h3>
+<div class="paragraph">
+<p>Use this function to initialize a graph structure used for approximate nearest neighbor search.</p>
+</div>
+<div class="paragraph">
+<p>The structure depends on <em>nseeds</em> and <em>ksize</em>.</p>
+</div>
+<div class="paragraph">
+<p>Projection keys are extracted from a vector&#8217;s fingerprint. The size of each key is equal to <em>ksize</em>. Keys are extracted from different bit regions of the fingerprint.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><em>ksize</em>=8</dt>
+<dd>
+<p>A total of 16 8-bit keys are extracted from the 64-bit LSH. Keys 1 - 8 are the eight 8-bit segments of the LSH, and keys 8 - 16 are the eight 8-bit segments of the LSH shifted four bits to the right (with rotation).</p>
+</dd>
+<dt class="hdlist1"><em>ksize</em>=10</dt>
+<dd>
+<p>A total of 12 10-bit keys are extracted from the 64-bit LSH. Keys 1 - 6 come from the rightmost 60 bits of the LSH, and keys 7 - 12 come from the rightmost 60 bits of the LSH shifted five bits to the right (with rotation).</p>
+</dd>
+<dt class="hdlist1"><em>ksize</em>=12</dt>
+<dd>
+<p>A total of 15 12-bit keys are extracted from the 64-bit LSH. Keys 1 - 5 come from the rightmost 60 bits of the LSH, keys 6 - 10 come from the rightmost 60 bits of the LSH shifted four bits to the right (with rotation), and keys 11 - 15 come from the rightmost 60 bits of the LSH shifted eight bits to the right (with rotation).</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Special index nodes with connections are created as shown below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>_|  -&gt;  _|000   -&gt;  _0000|000
+                    _0001|000
+                    _0002|000
+                    ...
+                    _2FFF|000
+        _|43F   -&gt;  _0000|43F
+                    _0001|43F
+                    _0002|43F
+                    ...
+        ...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The root node is <code>_|</code> connecting to <em>nseeds</em> projection sets.</p>
+</div>
+<div class="paragraph">
+<p>A projection set node <code>_|<em>set</em></code> connects to <em>n</em> projection nodes, where <em>n</em> depends on <em>ksize</em>.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><em>ksize</em>=8 &#8594; <em>n</em>=4096</dt>
+<dd>
+<p>Number of keys is 16, each key is eight bits &#8594; <em>n</em> = 16 * 2<sup>8</sup> = 4096</p>
+</dd>
+<dt class="hdlist1"><em>ksize</em>=10 &#8594; <em>n</em>=12288</dt>
+<dd>
+<p>Number of keys is 12, each key is 10 bits &#8594; <em>n</em> = 12 * 2<sup>10</sup> = 12288</p>
+</dd>
+<dt class="hdlist1"><em>ksize</em>=12 &#8594; <em>n</em>=61440</dt>
+<dd>
+<p>Number of keys is 15, each key is 12 bits &#8594; <em>n</em> = 15 * 2<sup>12</sup> = 61440</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>A projection node <code>_<em>proj</em>|<em>set</em></code> is an index anchor node that can be connected to a node representing an indexed item, when the item has a vector whose fingerprint contains a bit pattern segment mapped to by <em>proj</em>.</p>
+</div>
+<div class="paragraph">
+<p>Note that <em>set</em> will have one of eight fixed values pre-determined by the system&#8217;s seed values.</p>
+</div>
+<div class="paragraph">
+<p>Both <em>set</em> and <em>proj</em> in the vertex names are uppercase hex values.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>There is no built-in indexing algorithm. This function only creates a skeleton indexing structure for service implementations to take advantage of. Extraction of LSH keys must be performed explicitly by calling</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>System must be initialized in euclidean mode</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">5.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">ann</span><span class="sh">"</span><span class="p">,</span> <span class="n">euclidean</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">test</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="p">)</span>     <span class="c1"># -&gt; [0, 1087]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritydeleteprojectionsets">6. pyvgx.Similarity.DeleteProjectionSets()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Destroy previously created ANN index structure.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_6">6.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">DeleteProjectionSets</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_5">6.2. Remarks</h3>
+<div class="paragraph">
+<p>This removes all vertices created by a previous call to <a href="#similaritycreateprojectionsets">pyvgx.Similarity.CreateProjectionSets()</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">6.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">ann</span><span class="sh">"</span><span class="p">,</span> <span class="n">euclidean</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">test</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">my vertex</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">order</span>                                 <span class="c1"># -&gt; 1
+</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="p">)</span>     <span class="c1"># -&gt; [0, 1087]
+</span><span class="n">g</span><span class="p">.</span><span class="n">order</span>                                 <span class="c1"># -&gt; 24580
+</span><span class="n">g</span><span class="p">.</span><span class="n">size</span>                                  <span class="c1"># -&gt; 24578
+</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">DeleteProjectionSets</span><span class="p">()</span>
+<span class="n">g</span><span class="p">.</span><span class="n">order</span>                                 <span class="c1"># -&gt; 1
+</span>
+<span class="sh">"</span><span class="s">my vertex</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                        <span class="c1"># -&gt; True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritysimilarity">7. pyvgx.Similarity.Similarity()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the similarity of two vectors.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_7">7.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; float</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_6">7.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>B</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second vector instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_6">7.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a similarity score for vectors <em>A</em> and <em>B</em>.</p>
+</div>
+<div class="sect3">
+<h4 id="_feature_vectors">7.3.1. Feature Vectors</h4>
+<div class="paragraph">
+<p>The score is computed as a composite of <a href="#similaritycosine">Cosine()</a> and <a href="#similarityjaccard">Jaccard()</a> using the following formula:</p>
+</div>
+<div class="paragraph">
+<p><em>score</em> = Cosine( <em>A</em>, <em>B</em> )<sup>&#945;</sup> &#183; Jaccard( <em>A</em>, <em>B</em> )<sup>&#946;</sup>, where &#945; is the <a href="similarityMembers.html#similaritycosineexp">cosine exponent</a> and &#946; is the <a href="similarityMembers.html#similarityjaccardexp">jaccard exponent</a>.</p>
+</div>
+<div class="paragraph">
+<p>The returned value is a number between 0.0 and 1.0.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_euclidean_vectors">7.3.2. Euclidean Vectors</h4>
+<div class="paragraph">
+<p>This method is an alias for <a href="#similaritycosine">Cosine()</a>.</p>
+</div>
+<div class="paragraph">
+<p>The returned value is a number between -1.0 and 1.0.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">7.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="n">cosine_exp</span> <span class="o">=</span> <span class="mf">1.0</span>    <span class="c1"># jaccard_exp = 0.0 implied
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 1.0
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.8828125
+</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="n">cosine_exp</span> <span class="o">=</span> <span class="mf">0.5</span>    <span class="c1"># cosine_exp = 0.5 implied
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.70703125
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.71484375</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityeuclideandistance">8. pyvgx.Similarity.EuclideanDistance()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the Euclidean distance between two vectors.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_8">8.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">EuclideanDistance</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; float</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_7">8.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>B</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second vector instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_7">8.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the Euclidean distance between vectors <em>A</em> and <em>B</em> in n-dimensional space.</p>
+</div>
+<div class="paragraph">
+<p>\( dist(A,B) = \displaystyle \sqrt{\displaystyle \sum_{i=1}^n {  (A_i - B_i)^2  }} \)</p>
+</div>
+<div class="paragraph">
+<p>The returned value is a non-negative float.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">8.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">vectors</span><span class="sh">"</span><span class="p">,</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">EuclideanDistance</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 1.0957
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">EuclideanDistance</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 1.0482
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">EuclideanDistance</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 1.8721</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritycosine">9. pyvgx.Similarity.Cosine()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the cosine of the angle between two vectors.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_9">9.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; float</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_8">9.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>B</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second vector instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_8">9.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the Cosine similarity of vectors <em>A</em> and <em>B</em>, which is the cosine of the angle &#920; between the two vectors in n-dimensional space. This is computed as the dot product of the two vectors divided by the product of their magnitudes:</p>
+</div>
+<div class="paragraph">
+<p>\( cos(\theta) = \displaystyle \frac{\displaystyle \sum_{i=1}^n {A_iB_i}}{ \sqrt{\displaystyle \sum_{i=1}^n {A_i^2}} \cdot \sqrt{\displaystyle \sum_{i=1}^n {B_i^2} }} \)</p>
+</div>
+<div class="sect3">
+<h4 id="_feature_vectors_2">9.3.1. Feature Vectors</h4>
+<div class="paragraph">
+<p>The returned value is a number between 0.0 and 1.0.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_euclidean_vectors_2">9.3.2. Euclidean Vectors</h4>
+<div class="paragraph">
+<p>The returned value is a number between -1.0 and 1.0.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_feature_vectors">9.4. Example: Feature Vectors</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 1.0
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.8828125</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_euclidean_vectors">9.5. Example: Euclidean Vectors</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">28</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.8386
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.1845
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; -0.0681</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityjaccard">10. pyvgx.Similarity.Jaccard()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the Jaccard similarity coefficient of two feature vectors.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_10">10.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">Jaccard</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; float</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_9">10.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>B</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second vector instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_9">10.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the Jaccard similarity coefficient of feature vectors <em>A</em> and <em>B</em>, which can be thought of as the intersection divided by the union of the vectors (<code>A &#8745; B / A &#8746; B</code>) when the vectors are treated as sets of (weighted) dimensions:</p>
+</div>
+<div class="paragraph">
+<p><em>weighted jaccard similarity</em> = &#8721;min(A<sub>i</sub>, B<sub>i</sub>) / &#8721;max( A<sub>i</sub>, B<sub>i</sub> )</p>
+</div>
+<div class="paragraph">
+<p>The returned value is a number between 0.0 and 1.0.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Jaccard is supported for feature vectors only, not for Euclidean vectors.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_7">10.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">y</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">z</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.25</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Jaccard</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.5
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">Jaccard</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.58203125</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityhamming">11. pyvgx.Similarity.HammingDistance()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the number of differing bits in vector fingerprints.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_11">11.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">HammingDistance</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; int</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_10">11.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">First vector instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>B</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Second vector instance</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_10">11.3. Return Value</h3>
+<div class="paragraph">
+<p>This method compares the <a href="vector.html#vectorfingerprint">fingerprints</a> of two vectors <em>A</em> and <em>B</em> and returns the number of bits that are different between the two, i.e. the hamming distance between the fingerprints.</p>
+</div>
+<div class="paragraph">
+<p>Vector fingerprints are 64-bit integers derived from the weighted vector dimensions. Similar vectors have similar fingerprints, and therefore a small number of differing bit positions, i.e. a small hamming distance.</p>
+</div>
+<div class="paragraph">
+<p>The returned value is an integer between 0 and 64.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_6">11.4. Remarks</h3>
+<div class="paragraph">
+<p>It is more efficient to compare fingerprints than to compute the Cosine/Jaccard for two vectors, especially for vectors with many dimensions. At the same time, the ability of a fingerprint to accurately represent its source vector is directly affected by the number of vector dimensions. That is, the vectors that produce the highest quality fingerprints are also the ones that benefit the most (speed-wise) from fingerprint comparison.</p>
+</div>
+<div class="paragraph">
+<p>Using hamming distance as a direct measure of similarity should generally be restricted to very similar vectors (sim&gt;0.9) whose fingerprints are nearly identical (hamdist&lt;6), in applications such as duplicate detection.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Vectors with few dimensions (&lt;10) do not reliably map to fingerprints. It is better to use Cosine/Jaccard to compare short vectors.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Using fingerprint similarity as a pre-filter can significantly speed up processing of queries that include vector similarity filters. The fingerprint pre-filter should set the hamming distance threshold such that a majority of result candidates are removed before the cosine/jaccard is evaluated, without adversely impacting recall of the overall query. This strategy works best if the cosine/jaccard threshold is high.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_8">11.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">b</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">c</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">d</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">e</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">b</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">c</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">d</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">),(</span><span class="sh">"</span><span class="s">f</span><span class="sh">"</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">HammingDistance</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>  <span class="c1"># -&gt; 10</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityasdict">12. pyvgx.Similarity.AsDict()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a dictionary representing the current configuration of the Similarity instance.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_12">12.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Similarity</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span> <span class="c1"># -&gt; dict</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_11">12.2. Return Value</h3>
+<div class="paragraph">
+<p>This methods returns the Similarity object&#8217;s current configuration parameters as a Python dictionary.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_9">12.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="similarityMembers.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Similarity Members"></i></span></a>
+<a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Similarity"></i></span></a>
+<a href="vector.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="pyvgx.Vector"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX/PyVGX v3.6</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>VGX/PyVGX v3.6 <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>VGX</strong>
+Distributed engine for plugin-based graph and vector search</p>
+</div>
+<div class="paragraph">
+<p><strong>Vector Graph indeX</strong> is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. Developers can implement service logic using the <strong>PyVGX</strong> C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_getting_started">Getting Started</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>pyvgx</code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="pyvgx/tutorial.html">PyVGX Tutorial</a></dt>
+<dd>
+<p>An introduction to pyvgx, the Python module used for creating graph algorithms</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pyvgx_reference">PyVGX Reference</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="pyvgx/reference.html">Full Reference</a></dt>
+<dd>
+<p>A complete description of the VGX Python API.</p>
+</dd>
+<dt class="hdlist1"><a href="pyvgx/shortref.html">Compact Reference</a></dt>
+<dd>
+<p>A compact summary of the VGX Python API.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vgx_server">VGX Server</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create scalable, multi-node services built on pyvgx plugins</p>
+</div>
+<div class="paragraph">
+<p><strong>
+&#8230;&#8203; <a href="pyvgx/service/service.html">VGX Server</a>
+&#8230;&#8203; <a href="pyvgx/service/pluginadapter.html">Plugins</a>
+&#8230;&#8203; <a href="pyvgx/service/multinode.html">Multi-Node</a>
+&#8230;&#8203; <a href="pyvgx/service/sysadmin.html">Admin</a>
+</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_quick_links">Quick Links</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>
+&#8230;&#8203; <a href="pyvgx/graph/graph.html">Graph Objects</a>
+&#8230;&#8203; <a href="pyvgx/vertex/vertex.html#pyvgxvertex">Vertex Objects</a>
+&#8230;&#8203; <a href="pyvgx/reference.html#memoryobject">Memory Objects</a>
+&#8230;&#8203; <a href="pyvgx/similarity/vector.html#pyvgxvector">Vector Objects</a>
+</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>
+&#8230;&#8203; <a href="pyvgx/graph/graphQuery.html">Queries</a>
+&#8230;&#8203; <a href="pyvgx/vertex/vertexFilter.html#vertexfilter">Vertex Condition</a>
+&#8230;&#8203; <a href="pyvgx/constants/constants.html">Constants</a>
+&#8230;&#8203; <a href="pyvgx/limits.html">Limits</a>
+</strong></p>
+</div>
+<div class="paragraph">
+<p><strong>
+&#8230;&#8203; <a href="pyvgx/evaluator/evaluator.html">VGX Expression Language</a>
+&#8230;&#8203; <a href="pyvgx/evaluator/selectEvaluator.html">Select Statement</a>
+</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_other_useful_information">Other Useful Information</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="pyvgx/io/vgxopxfer.html#stream_building_blocks">VGX Transaction Protocol</a></dt>
+<dd>
+<p>VGX Transaction Interconnect protocol definition</p>
+</dd>
+<dt class="hdlist1"><a href="pyvgx/VGXCoreConcepts.html">VGX Core Concepts</a></dt>
+<dd>
+<p>VGX Core Concepts</p>
+</dd>
+</dl>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="#"><span class="image"><img src="pyvgx/images/pyvgx.png" alt="PYVGX" width="180" height="180"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<style>
+#footer-container {
+  margin-left: 20px;
+  margin-right: 20px;
+  clear: both;
+}
+
+#update-date {
+  float: left;
+}
+
+#legal-notices {
+  float: right;
+}
+</style>
+
+<div id=footer-container>
+  <p id="update-date">Last updated 2025-10-03 21:55:44 -0400</p>
+  <p id="legal-notices"><a href="Legal_Notices.html">Legal Notices</a></p>
+</div>
+</body>
+</html>

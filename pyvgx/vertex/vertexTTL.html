@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex TTL Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexTTL" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex TTL Methods <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Miscellaneous Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexsetexpiration">1. pyvgx.Vertex.SetExpiration()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_example">1.2. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexgetexpiration">2. pyvgx.Vertex.GetExpiration()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_example_2">2.2. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexisexpired">3. pyvgx.Vertex.IsExpired()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_example_3">3.2. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexclearexpiration">4. pyvgx.Vertex.ClearExpiration()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_example_4">4.2. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vertex TTL Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexsetexpiration">pyvgx.Vertex.SetExpiration()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex expiration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgetexpiration">pyvgx.Vertex.GetExpiration()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Get vertex expiration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexisexpired">pyvgx.Vertex.IsExpired()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if vertex expiration timestamp has passed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexclearexpiration">pyvgx.Vertex.ClearExpiration()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove vertex expiration</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexsetexpiration">1. pyvgx.Vertex.SetExpiration()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set vertex expiration.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="n">expires</span><span class="p">[,</span> <span class="n">relative</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Schedule vertex for automatic deletion at timestamp <em>expires</em>, which when <em>relative</em> is <code>False</code> is
+given in absolute seconds since 1970, or when <em>relative</em> is <code>True</code> is given in number of seconds
+into the future relative to current time.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.2. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="mi">30</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>      <span class="c1"># delete vertex after 30 seconds
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>
+<span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># True, vertex exists
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="mi">15</span> <span class="p">)</span>                 <span class="c1"># Sleep for 15 seconds
+</span><span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># True, vertex still exists
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="mi">20</span> <span class="p">)</span>                 <span class="c1"># Sleep for 20 more seconds
+</span><span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># False, vertex has expired</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgetexpiration">2. pyvgx.Vertex.GetExpiration()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Get vertex expiration.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetExpiration</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.2. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">V</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">GetExpiration</span><span class="p">()</span>            <span class="c1"># 4102444800 (T_NEVER)
+</span><span class="n">V</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="mi">60</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">GetExpiration</span><span class="p">()</span>            <span class="c1"># 1585516307</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexisexpired">3. pyvgx.Vertex.IsExpired()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check if vertex expiration timestamp has passed</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">IsExpired</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.2. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="mi">5</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>       <span class="c1"># delete vertex after 5 seconds
+</span><span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># True, vertex exists
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="mi">10</span> <span class="p">)</span>                 <span class="c1"># Sleep for 10 seconds
+</span><span class="n">V</span><span class="p">.</span><span class="nc">IsExpired</span><span class="p">()</span>                    <span class="c1"># True
+</span><span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># True, because still open
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>               <span class="c1"># give up ownership
+</span><span class="sh">"</span><span class="s">shortlived</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                <span class="c1"># False, expired vertex deleted</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexclearexpiration">4. pyvgx.Vertex.ClearExpiration()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remove vertex expiration</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">ClearExpiration</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.2. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">vertex</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>      <span class="c1"># delete vertex after 10 seconds
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>
+<span class="sh">"</span><span class="s">vertex</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                    <span class="c1"># True, vertex exists
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="mi">5</span> <span class="p">)</span>                  <span class="c1"># Sleep for 5 seconds
+</span><span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">vertex</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">ClearExpiration</span><span class="p">()</span>              <span class="c1"># cancel TTL
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>
+<span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span> <span class="mi">10</span> <span class="p">)</span>
+<span class="sh">"</span><span class="s">vertex</span><span class="sh">"</span> <span class="ow">in</span> <span class="n">g</span>                    <span class="c1"># True, vertex still exists</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexVector.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Vector Methods"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Miscellaneous Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

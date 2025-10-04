@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Query Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphquerymethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Query Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Management Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_summary">1. Summary</a></li>
+<li><a href="#graphglobal">2. Global Search</a>
+<ul class="sectlevel2">
+<li><a href="#grapharcs">2.1. pyvgx.Graph.Arcs()</a></li>
+<li><a href="#graphvertices">2.2. pyvgx.Graph.Vertices()</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax">2.2.1. Syntax</a></li>
+<li><a href="#_parameters">2.2.2. Parameters</a></li>
+<li><a href="#_return_value">2.2.3. Return Value</a></li>
+<li><a href="#_remarks">2.2.4. Remarks</a></li>
+<li><a href="#_example">2.2.5. Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#graphverticestype">3. pyvgx.Graph.VerticesType()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">3.1. Syntax</a></li>
+<li><a href="#_parameters_2">3.2. Parameters</a></li>
+<li><a href="#_return_value_2">3.3. Return Value</a></li>
+<li><a href="#_remarks_2">3.4. Remarks</a></li>
+<li><a href="#_example_2">3.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphhasvertex">4. pyvgx.Graph.HasVertex()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">4.1. Syntax</a></li>
+<li><a href="#_parameters_3">4.2. Parameters</a></li>
+<li><a href="#_return_value_3">4.3. Return Value</a></li>
+<li><a href="#_remarks_3">4.4. Remarks</a></li>
+<li><a href="#_example_3">4.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphgetvertex">5. pyvgx.Graph.GetVertex()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">5.1. Syntax</a></li>
+<li><a href="#_parameters_4">5.2. Parameters</a></li>
+<li><a href="#_return_value_4">5.3. Return Value</a></li>
+<li><a href="#_remarks_4">5.4. Remarks</a></li>
+<li><a href="#_example_4">5.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphvertexidbyaddress">6. pyvgx.Graph.VertexIdByAddress()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">6.1. Syntax</a></li>
+<li><a href="#_parameters_5">6.2. Parameters</a></li>
+<li><a href="#_return_value_5">6.3. Return Value</a></li>
+<li><a href="#_remarks_5">6.4. Remarks</a></li>
+<li><a href="#_example_5">6.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphneighborhood">7. pyvgx.Graph.Neighborhood()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_6">7.1. Syntax</a></li>
+<li><a href="#graphneighborhood_parameters">7.2. Parameters</a></li>
+<li><a href="#_return_value_6">7.3. Return Value</a></li>
+<li><a href="#_remarks_6">7.4. Remarks</a>
+<ul class="sectlevel3">
+<li><a href="#_overview">7.4.1. Overview</a></li>
+<li><a href="#neighborhood_aggregate">7.4.2. Aggregation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#graphopenneighbor">8. pyvgx.Graph.OpenNeighbor()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_7">8.1. Syntax</a></li>
+<li><a href="#_parameters_6">8.2. Parameters</a></li>
+<li><a href="#_return_value_7">8.3. Return Value</a></li>
+<li><a href="#_remarks_7">8.4. Remarks</a></li>
+<li><a href="#_example_6">8.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphadjacent">9. pyvgx.Graph.Adjacent()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_8">9.1. Syntax</a></li>
+<li><a href="#_parameters_7">9.2. Parameters</a></li>
+<li><a href="#_return_value_8">9.3. Return Value</a></li>
+<li><a href="#_remarks_8">9.4. Remarks</a></li>
+<li><a href="#_example_7">9.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphaggregate">10. pyvgx.Graph.Aggregate()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_9">10.1. Syntax</a></li>
+<li><a href="#_parameters_8">10.2. Parameters</a></li>
+<li><a href="#_return_value_9">10.3. Return Value</a></li>
+<li><a href="#_remarks_9">10.4. Remarks</a></li>
+<li><a href="#_example_8">10.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#grapharcvalue">11. pyvgx.Graph.ArcValue()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_10">11.1. Syntax</a></li>
+<li><a href="#_parameters_9">11.2. Parameters</a></li>
+<li><a href="#_return_value_10">11.3. Return Value</a></li>
+<li><a href="#_remarks_10">11.4. Remarks</a></li>
+<li><a href="#_example_9">11.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphdegree">12. pyvgx.Graph.Degree()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_11">12.1. Syntax</a></li>
+<li><a href="#_parameters_10">12.2. Parameters</a></li>
+<li><a href="#_return_value_11">12.3. Return Value</a></li>
+<li><a href="#_example_10">12.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphinarcs">13. pyvgx.Graph.Inarcs()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_12">13.1. Syntax</a></li>
+<li><a href="#_parameters_11">13.2. Parameters</a></li>
+<li><a href="#_return_value_12">13.3. Return Value</a></li>
+<li><a href="#_remarks_11">13.4. Remarks</a></li>
+<li><a href="#_example_11">13.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphoutarcs">14. pyvgx.Graph.Outarcs()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_13">14.1. Syntax</a></li>
+<li><a href="#_parameters_12">14.2. Parameters</a></li>
+<li><a href="#_return_value_13">14.3. Return Value</a></li>
+<li><a href="#_remarks_12">14.4. Remarks</a></li>
+<li><a href="#_example_12">14.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphinitials">15. pyvgx.Graph.Initials()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_14">15.1. Syntax</a></li>
+<li><a href="#_parameters_13">15.2. Parameters</a></li>
+<li><a href="#_return_value_14">15.3. Return Value</a></li>
+<li><a href="#_example_13">15.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphterminals">16. pyvgx.Graph.Terminals()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_15">16.1. Syntax</a></li>
+<li><a href="#_parameters_14">16.2. Parameters</a></li>
+<li><a href="#_return_value_15">16.3. Return Value</a></li>
+<li><a href="#_example_14">16.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphsearch">17. pyvgx.Graph.Search()</a>
+<ul class="sectlevel2">
+<li><a href="#_example_15">17.1. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">1. Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Query methods are used to perform graph searches. The available methods are listed below.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 37.5%;">
+<col style="width: 62.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Query Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphglobal">Global Search</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform a global <a href="#grapharcs">arc search</a> or <a href="#graphvertices">vertex search</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphverticestype">pyvgx.Graph.VerticesType()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a list of names of all vertices of the given type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphhasvertex">pyvgx.Graph.HasVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if a vertex exists in the graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphgetvertex">pyvgx.Graph.GetVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance for the named vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphvertexidbyaddress">pyvgx.Graph.VertexIdByAddress()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the identifier of vertex at memory address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphneighborhood">pyvgx.Graph.Neighborhood()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform a graph neighborhood search</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphopenneighbor">pyvgx.Graph.OpenNeighbor()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a neighbor of a vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphadjacent">pyvgx.Graph.Adjacent()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if vertex is adjacent to other vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphaggregate">pyvgx.Graph.Aggregate()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform aggregation of neighborhood arc values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapharcvalue">pyvgx.Graph.ArcValue()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the value of a specific arc</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdegree">pyvgx.Graph.Degree()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the vertex degree, with optional conditions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphinarcs">pyvgx.Graph.Inarcs()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the inarc of a vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphoutarcs">pyvgx.Graph.Outarcs()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the outarcs of a vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphinitials">pyvgx.Graph.Initials()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vertices for which anchor is a terminal</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphterminals">pyvgx.Graph.Terminals()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vertices for which anchor is an initial</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsearch">pyvgx.Graph.Search()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform a neighborhood search and print the result as human readable text</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphglobal">2. Global Search</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Perform a global graph search using either <a href="#grapharcs">pyvgx.Graph.Arcs()</a> or <a href="#graphvertices">pyvgx.Graph.Vertices()</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="grapharcs">2.1. pyvgx.Graph.Arcs()</h3>
+<div class="paragraph">
+<p>Perform a global arc search in the graph.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphvertices">2.2. pyvgx.Graph.Vertices()</h3>
+<div class="paragraph">
+<p>Perform a global vertex search in the graph.</p>
+</div>
+<div class="paragraph">
+<p>Both methods share a common parameter syntax.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax">2.2.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Arcs</span><span class="p">(</span> <span class="p">...</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">result_object</span>
+<span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Vertices</span><span class="p">(</span> <span class="p">...</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">result_object</span>
+
+<span class="n">parameters</span><span class="p">:</span>
+<span class="p">[</span> <span class="n">condition</span><span class="p">[,</span> <span class="n">vector</span><span class="p">[,</span> <span class="n">result</span><span class="p">[,</span> <span class="n">fields</span><span class="p">[,</span> <span class="n">select</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">offset</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Arguments can be supplied positionally or as keywords.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_parameters">2.2.2. Parameters</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>condition</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">Vertex condition</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex must meet this condition to be included in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../similarity/vector.html">&#60;vector&#62;</a> or Python list</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Probe vector to use when <em>condition</em> includes similarity criteria</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>result</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html">Result specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_STR">pyvgx.R_STR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control the overall format of the returned result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>fields</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html">Field specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html#F_ID">pyvgx.F_ID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control which fields are included in the result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>select</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/selectEvaluator.html#select">Select specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Advanced specification of returned fields</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>rank</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickrank">Rank specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define how to rank results when <em>sortby</em>=pyvgx.S_RANK</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sortby</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html">Sort specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Determine how returned results are sorted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">Memory Object</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose array of numerical elements for use by <a href="../evaluator/evaluator.html">expression evaluators</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>offset</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start result listing at this offset</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of hits to include in result. The default is -1 which returns all results.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_return_value">2.2.3. Return Value</h4>
+<div class="paragraph">
+<p>This method returns a search result object. The format of this object is either a list or a dictionary.
+The format is defined by the <em>result</em> parameter. See <a href="../constants/resultListEntryConstants.html">result specification</a>
+for details.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks">2.2.4. Remarks</h4>
+<div class="paragraph">
+<p>Arc and vertex search are global graph operations, which means they are not restricted to a particular graph neighborhood. Matching and retrieval of every arc or vertex in the graph is possible, but comes at the cost of longer execution time. These methods also block other threads from performing operations on the graph while executing, unless the graph is in <a href="../graph/graphManagement.html#graphsetgraphreadonly">readonly mode</a>.</p>
+</div>
+<div class="paragraph">
+<p>It is possible to reduce the overall system impact of global queries by restricting searches to a specific vertex type using the <code>type</code> filter within the <em>condition</em> parameter.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example">2.2.5. Example</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Return all vertices in the graph
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Vertices</span><span class="p">()</span>
+
+<span class="c1"># Return all arcs in the graph
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Arcs</span><span class="p">()</span>
+
+<span class="c1"># Return 10 products sorted by identifier
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Vertices</span><span class="p">(</span> <span class="n">hits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_ID</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">product</span><span class="sh">'</span> <span class="p">}</span> <span class="p">)</span>
+
+<span class="c1"># Return all products and include their name and
+# "color" properties in the result
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Vertices</span><span class="p">(</span> <span class="n">condition</span><span class="o">=</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">product</span><span class="sh">'</span> <span class="p">},</span> <span class="n">fields</span><span class="o">=</span><span class="n">F_ID</span><span class="o">|</span><span class="n">F_PROP</span><span class="p">,</span> <span class="n">select</span><span class="o">=</span><span class="sh">"</span><span class="s">color</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Return all relationships originating at initial
+# vertices of type "person"
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Arcs</span><span class="p">(</span> <span class="n">condition</span><span class="o">=</span><span class="p">{</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">person</span><span class="sh">'</span> <span class="p">}</span> <span class="p">)</span>
+
+<span class="c1"># Return all relationships of type "knows" involving
+# initial and/or terminal of type "person"
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Arcs</span><span class="p">(</span> <span class="n">condition</span><span class="o">=</span><span class="p">{</span> <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:(</span><span class="sh">'</span><span class="s">knows</span><span class="sh">'</span><span class="p">,</span><span class="n">D_ANY</span><span class="p">),</span> <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">person</span><span class="sh">'</span> <span class="p">}</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphverticestype">3. pyvgx.Graph.VerticesType()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Perform a global search for a specific vertex type in the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">VerticesType</span><span class="p">(</span> <span class="nb">type</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">3.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>type</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only vertices of this type are returned</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">3.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of identifier strings of all vertices in the graph
+of the specified type.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">3.4. Remarks</h3>
+<div class="paragraph">
+<p>Use <code><em>type</em>=<em>None</em></code> or <code><em>type</em>="__vertex__"</code> to return typeless vertices, i.e.
+vertices created without a specific type.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">3.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Return all person vertices in the graph
+</span><span class="n">g</span><span class="p">.</span><span class="nc">VerticesType</span><span class="p">(</span> <span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphhasvertex">4. pyvgx.Graph.HasVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check if a vertex exists in the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">HasVertex</span><span class="p">(</span> <span class="nb">id</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_3">4.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vertex identifier to look up.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">4.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns True if the vertex exists, or False if the vertex does not exist.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">4.4. Remarks</h3>
+<div class="paragraph">
+<p>It is also possible to use the built-in Python __contains__ syntax to
+perform the same operation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">name</span> <span class="ow">in</span> <span class="n">g</span>
+<span class="c1"># is equivalent to
+</span><span class="n">g</span><span class="p">.</span><span class="nc">HasVertex</span><span class="p">(</span> <span class="n">name</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">4.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                <span class="c1"># Create vertex A
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="nc">HasVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span> <span class="p">)</span>           <span class="c1"># True
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="nc">HasVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span> <span class="p">)</span>          <span class="c1"># False</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphgetvertex">5. pyvgx.Graph.GetVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object in readonly mode.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">5.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">GetVertex</span><span class="p">(</span> <span class="nb">id</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_4">5.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The identifier of the vertex to return</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">5.3. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex exists in the graph a new <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> wrapper object for the vertex is created and returned in readonly mode. If the vertex does not exist an exception is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">5.4. Remarks</h3>
+<div class="paragraph">
+<p>It is also possible to use the built-in Python __getitem__ syntax to
+perform the same operation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>V = g[ name ]
+# is equivalent to
+V = g.GetVertex( name )</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">5.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># Create but do not open A
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># Create and open B writable
+</span>
+<span class="c1"># Get the wrapper object for A but do not acquire it.
+# No guarantees for the consistency of A.
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">GetVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphvertexidbyaddress">6. pyvgx.Graph.VertexIdByAddress()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the identifier of vertex at memory address.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">6.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">VertexIdByAddress</span><span class="p">(</span> <span class="n">address</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">identifier</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_5">6.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>address</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;int&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The memory address of vertex whose identifier will be returned</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_5">6.3. Return Value</h3>
+<div class="paragraph">
+<p>If the given <em>address</em> contains a valid vertex object its identifier string is returned, otherwise KeyError is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_5">6.4. Remarks</h3>
+<div class="paragraph">
+<p>It is possible for queries to return addresses of vertices instead of identifiers. Such queries may be constructed to limit the number of locks required to render the result. This method allows a vertex name to be resolved by its address.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">6.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># X -&gt; A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># X -&gt; B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>             <span class="c1"># X -&gt; C
+</span><span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">F_ADDR</span><span class="p">,</span> <span class="n">result</span><span class="o">=</span><span class="n">R_SIMPLE</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">VertexIdByAddress</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>             <span class="c1"># 'A'
+</span><span class="n">g</span><span class="p">.</span><span class="nc">VertexIdByAddress</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">)</span>             <span class="c1"># 'B'
+</span><span class="n">g</span><span class="p">.</span><span class="nc">VertexIdByAddress</span><span class="p">(</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>             <span class="c1"># 'C'</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphneighborhood">7. pyvgx.Graph.Neighborhood()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Perform a graph neighborhood search around a specific vertex <em>id</em>.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_6">7.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">vector</span><span class="p">[,</span> <span class="n">collect</span><span class="p">[,</span> <span class="n">result</span><span class="p">[,</span> <span class="n">fields</span><span class="p">[,</span> <span class="n">select</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">aggregate</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">offset</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Arguments can be supplied positionally or as keywords.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphneighborhood_parameters">7.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Neighborhood search starts at this vertex.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(None, <a href="../constants/arcDirectionConstants.html#D_OUT">pyvgx.D_OUT</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on <em>id</em> must match this filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>pre</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will <strong>not</strong> be executed if the neighborhood is empty.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>post</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-filter executed after neighborhood traversal and only if <em>pre</em> matched. The expression return value is ignored.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&#42;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on <em>id</em> must be connected to a neighbor vertex matching this filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vector</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../similarity/vector.html">&#60;vector&#62;</a> or Python list</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">[ ]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use this probe vector for similarity matching when <em>neighbor</em> includes similarity filters.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>collect</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;bool&gt; or <a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/collectConstants.html#collectconstants">pyvgx.C_COLLECT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control how neighborhood arcs are collected and returned in the result.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>result</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#resultlistentryconstants">&#60;result_format&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_STR">pyvgx.R_STR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify the overall format of the returned result.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>fields</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html#resultfieldconstants">&#60;result_fields&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html#F_ID">pyvgx.F_ID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Simple specification of fields to be included in the returned result list.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>select</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/selectEvaluator.html#selectstatement">&#60;select_statement&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Advanced specification of fields to be included in the returned result list, allowing inclusion of vertex properties and evaluation of expressions.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>rank</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickrank">&#60;ranking_formula&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an expression to compute dynamic rank scores when
+<em>sortby</em>=<a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_RANK</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sortby</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html#sortspecification">&#60;sort_specification&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control the ordering of returned results.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>aggregate</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See <a href="#neighborhood_aggregate">Aggregation</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform value aggregation rather than returning individual arcs and values.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">&#60;memory_object&#62;</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supply a general purpose array of numeric elements for use with <a href="../evaluator/evaluator.html#evaluator">expression evaluators</a> in <em>filter</em>, <em>rank</em>, and <em>select</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>offset</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;int&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start the result listing at this offset in the returned result.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;int&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the maximum number of hits to return in the result. A negative number will return all results.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Parameters <em>arc</em>, <em>filter</em>, <em>neighbor</em> and <em>collect</em> have the same meaning as the correspondingly
+named entries within the <code>'traverse':{&#8230;&#8203;}</code> section of <a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a>.
+These four parameters define arc matching, traversal and collection in the <em>immediate neighborhood</em>.<br>
+   <br>
+    However, the default values of <em>arc</em> and <em>collect</em> for the immediate neighborhood differ from those
+    of the generic &lt;vertex_condition&gt;. The immediate neighborhood <em>arc</em> parameter defaults to <code>D_OUT</code> while the
+    <code>'arc':</code> entry in &lt;vertex_condition&gt; defaults to <code>D_ANY</code>. The immediate neighborhood <em>collect</em> parameter defaults
+    to <code>True</code> while the <code>'collect':</code> entry in &lt;vertex_condition&gt; defaults to <code>C_NONE</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+For syntax consistency between <a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a>
+and this methods&#8217;s <em>arc</em>, <em>filter</em>, <em>neighbor</em> and <em>collect</em> parameters it may be helpful to submit these
+parameters using Python **kwargs. The kwargs dictionary is then a proper subset of &lt;vertex_condition&gt;.
+   <br>
+    Example:
+   <br>
+    &gt;&gt;&gt; condition = { 'arc':D_ANY), 'filter':"next.arc.type == 'friend' &amp;&amp; next.arc.value == 100", 'neighbor':{ 'type':'person' }, 'collect':("called", D_OUT) }
+   <br>
+    &gt;&gt;&gt; g.Neighborhood( "me", hits=10, **condition )
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_6">7.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of search results or a dictionary containing a list of search results along with other meta information.
+See <a href="../constants/resultListEntryConstants.html#resultlistentryconstants">Result Format</a> for details.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_6">7.4. Remarks</h3>
+<div class="paragraph">
+<p>The Neighborhood() method is a powerful graph search tool, allowing arbitrary and practically unlimited graph traversal. For a full understanding of how to match, traverse, and collect relationships across a graph, study the descriptions of
+      <a href="../vertex/vertexFilter.html#evalorder">evaluation order</a>,
+      <a href="../vertex/vertexFilter.html#vertexfilterfilter">filter</a>,
+      <a href="../vertex/vertexFilter.html#vertexfilteradjacent">adjacent</a>,
+      <a href="../vertex/vertexFilter.html#vertexfiltertraverse">traverse</a>,
+  and <a href="../vertex/vertexFilter.html#vertexfiltertraversecollect">collect</a>.</p>
+</div>
+<div class="sect3">
+<h4 id="_overview">7.4.1. Overview</h4>
+<div class="paragraph">
+<p>A neighborhood search starts at the specified vertex <em>id</em> and processes the arcs incident on that vertex according to the query parameters. Arcs are matched against any filters supplied, and they may be traversed to reach the terminal vertices on the other side to continue processing there. Arc matching is a depth-first process. In order for an arc to match, it first has to match its own filter criteria and then any recursive criteria by traversal. Neighborhood queries may traverse arcs to other vertices and then continue traversal recursively from those vertices as specified by the query parameters.</p>
+</div>
+<div class="paragraph">
+<p>Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Recursive queries may be configured to collect at some levels of the recursion and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.</p>
+</div>
+<div class="paragraph">
+<p>Collecting an arc means to collect that arc&#8217;s attributes (i.e. relationship and value) and the arc head vertex attributes and properties. The <em>fields</em> and <em>select</em> parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a recursive query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item&#8217;s distance from the anchor vertex.</p>
+</div>
+<div class="paragraph">
+<p>Result lists can be order by any attribute or vertex property, or according to user-defined ranking formulas.</p>
+</div>
+<div class="paragraph">
+<p>A <em>timeout</em> can be specified for neighborhood queries. It represents an upper limit for how long the query is allowed to run before terminating the query and raising an exception.</p>
+</div>
+<div class="paragraph">
+<p>When <em>limexec</em> is False (the default) the timeout deadline is considered only whenever a blocking condition is encountered, i.e. when waiting to acquire a vertex. If no vertex acquisition blocks after the timeout deadline has been reached the query is allowed to run to completion. A timeout in this case raises <code>pyvgx.AccessError</code>.</p>
+</div>
+<div class="paragraph">
+<p>In contrast, when <em>limexec</em> is True the timeout deadline is continually monitored, terminating the query after the timeout deadline has been reached even if progress is being made without blocking. A timeout in this case raises <code>pyvgx.SearchError</code>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="neighborhood_aggregate">7.4.2. Aggregation</h4>
+<div class="paragraph">
+<p>It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an <em>aggregated arc</em> with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a recursive traversal scenario, so long as their heads terminate at the same vertex.</p>
+</div>
+<div class="paragraph">
+<p>To enable aggregation use the <em>aggregate</em> parameter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="p">...,</span>
+    <span class="n">aggregate</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="o">&lt;</span><span class="n">arc_postfilter</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">mode</span><span class="sh">'</span>      <span class="p">:</span> <span class="o">&lt;</span><span class="n">mode_spec</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="sh">"""</span><span class="s">
+where:
+    &lt;arc_postfilter ::= ( &lt;relationship&gt;, D_ANY, M_INTAGGR[, &lt;condition&gt;, &lt;value&gt; ] )
+    or
+    &lt;arc_postfilter&gt; ::= ( &lt;relationship&gt;, D_ANY, M_FLTAGGR[, &lt;condition&gt;, &lt;value&gt; ] )
+
+&lt;mode&gt; ::= </span><span class="sh">"</span><span class="s">first</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">max</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">min</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">average</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">count</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">sum</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">sqsum</span><span class="sh">"</span><span class="s"> | </span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span><span class="s">
+</span><span class="sh">"""</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The aggregation <code>'mode': &lt;mode&gt;</code> determines how aggregated values are computed:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 83.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>first</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only collect the <strong>first traversed arc</strong> from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>max</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Collect the <strong>maximum value arc</strong> from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>min</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Collect the <strong>minimum value arc</strong> from each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>average</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the value of aggregated arcs to the <strong>average of all values</strong> of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>count</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(<strong>DEFAULT</strong>) Set the value of the aggregated arcs to the <strong>number of arcs</strong> in each set of arcs sharing the same head vertex, regardless of value type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sum</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the value of aggregated arcs to the <strong>sum of all values</strong> of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sqsum</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the value of aggregated arcs to the <strong>square-sum of all values</strong> of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>product</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set the value of aggregated arcs to the <strong>product of all values</strong> of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The optional <code>'arc': &lt;arc_postfilter&gt;</code> operates on the aggregated value, making it possible to perform aggregation among a large set of arcs sharing value types and head vertices and only returning those aggregations that satisfy certain value cutoff criteria. The default is <code>'arc':()</code>, meaning no post filtering.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Post filters are not directional. Specify arc direction <code>D_OUT</code> for post filters.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Aggregated arc values lose the modifier types of their collected source arcs. Instead, aggregation values are separated into integer or floating point types. Arcs whose modifiers have an integer value are binned together and assigned a special <em>aggregation modifier</em> <a href="../constants/arcModifierConstants.html#M_INTAGGR">M_INTAGGR</a>. Similarly, arcs with float values are assigned the aggregation modifier <a href="../constants/arcModifierConstants.html#M_FLTAGGR">M_FLTAGGR</a>. Arc post filters must use one of the aggregation modifiers. It is not possible to use a post filter that works on integer and floating point values at the same time. Note that <code>'mode': 'count'</code> generates an integer type aggregation value.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Aggregation Modifier</th>
+<th class="tableblock halign-left valign-top">Represents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#M_INTAGGR">M_INTAGGR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">M_STAT, M_LSH, M_INT, M_UINT, M_CNT, M_TMC, M_TMM, M_TMX</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/arcModifierConstants.html#M_FLTAGGR">M_FLTAGGR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">M_SIM, M_DIST, M_FLT, M_ACC</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphopenneighbor">8. pyvgx.Graph.OpenNeighbor()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Acquire and return one of the neighbors of a given vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_7">8.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">OpenNeighbor</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">mode</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">]]]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_6">8.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the vertex whose neighbor will be returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(None, <a href="../constants/arcDirectionConstants.html#D_OUT">pyvgx.D_OUT</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The first neighbor connected to <em>id</em> with an arc matching this filter will be returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>mode</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>chr</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">'r'</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access mode is one of:</p>
+<p class="tableblock">'r' = Readonly</p>
+<p class="tableblock">'a' = Writable (do not create)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for vertex acquisition</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_7">8.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a <code>pyvgx.Vertex</code> object opened according to access <em>mode</em>. If no neighbor exists <code>KeyError</code> is raised. If acquisition of <em>id</em> or its neighbor cannot be performed within <em>timeout</em> <code>pyvgx.AccessError</code> is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_7">8.4. Remarks</h3>
+<div class="paragraph">
+<p>At most one neighbor is returned by this method, and if multiple neighbors matching <em>arc</em> filter exist the returned neighbor is generally unknown which neighbor is returned. For this reason, the primary use case of this method is when uniquely associating a vertex with a neighbor using a special relationship.</p>
+</div>
+<div class="paragraph">
+<p>Using this method to access special neighbors is more efficient than storing the identifiers of those neighbors in properties, because arcs take less space than properties and fewer Python steps are required to acquire the neighbor vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">8.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span>  <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span>  <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Dave</span><span class="sh">"</span>  <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">special_friend</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Dave</span><span class="sh">"</span>  <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Eve</span><span class="sh">"</span>  <span class="p">)</span>
+
+<span class="c1"># May return any of Alice's connections
+</span><span class="n">Anyone</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenNeighbor</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Dave
+</span><span class="n">Dave</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenNeighbor</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">special_friend</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphadjacent">9. pyvgx.Graph.Adjacent()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Test if a vertex has a neighbor, optionally matching arc and/or neighbor filters.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_8">9.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_7">9.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the vertex whose adjacency to neighbors will be tested.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(None, <a href="../constants/arcDirectionConstants.html#D_OUT">pyvgx.D_OUT</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on vertex <em>id</em> must match this filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&#42;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on vertex <em>id</em> must be connected to a neighbor vertex matching this filter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>pre</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will <strong>not</strong> be executed if the neighborhood is empty.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>post</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-filter executed after neighborhood traversal and only if <em>pre</em> matched, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">&#60;memory_object&#62;</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supply a general purpose array of numeric elements for use with <a href="../evaluator/evaluator.html#evaluator">expression evaluators</a> in <em>filter</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_8">9.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns <code>True</code> if vertex <em>id</em> has at least one neighbor reachable via <em>arc</em> and matching the <em>filter</em> and <em>neighbor</em> conditions, otherwise <code>False</code> is returned. Additionally, if <em>pre</em> and <em>post</em> filters are used, both must return positive numbers, otherwise <code>False</code> is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_8">9.4. Remarks</h3>
+<div class="paragraph">
+<p>This method ignores the use of <code>'collect'</code> filter(s) in the <em>neighbor</em> filter&#8217;s <a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a>. Since this method only tests adjacency no arcs arc collected, only tested.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_7">9.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>       <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>         <span class="c1"># False, arc direction is D_OUT by default
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_ANY</span> <span class="p">)</span>  <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>       <span class="c1"># False
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Adjacent</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphaggregate">10. pyvgx.Graph.Aggregate()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Compute the sum of all matching arc values and vertex degrees in one or more neighborhoods originating at the anchor vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_9">10.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">collect</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">result</span><span class="p">[,</span> <span class="n">fields</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_8">10.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Aggregation starts at this vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(None, <a href="../constants/arcDirectionConstants.html#D_OUT">pyvgx.D_OUT</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on vertex <em>id</em> must match this filter to contribute to aggregated
+sums (when <em>collect</em> is <code>True</code>), and to be traversed if <em>neighbor</em> extends
+aggregation into other neighborhoods.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>pre</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will <strong>not</strong> be executed if the neighborhood is empty.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>post</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-filter executed after neighborhood traversal and only if <em>pre</em> matched. The expression return value is ignored.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>collect</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/collectConstants.html#collectconstants">&#60;collect_constant&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/collectConstants.html#C_COLLECT">pyvgx.C_COLLECT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control whether arcs in the immediate neighborhood contribute to aggregated sums.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&#42;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs incident on vertex <em>id</em> must be connected to a neighbor vertex matching this filter.
+Aggregation continues in extended neighborhood if &lt;vertex_condition&gt; specifies <code>'collect': True</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>result</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#resultmetas">&#60;result_metas&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_COUNTS">pyvgx.R_COUNTS</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Control whether hit counts and/or search execution time are included in the result. The returned
+result is always a dictionary.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>fields</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html#resultfieldconstants">&#60;aggregation_fields&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultFieldConstants.html#F_NONE">pyvgx.F_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select the fields to aggregate. Fields available for aggregation are F_VAL, F_DEG, F_IDEG
+and F_ODEG. Other fields specified here will be ignored. Note that F_VAL requires the <em>arc</em>
+filter with a specific modifier.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">&#60;memory_object&#62;</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supply a general purpose array of numeric elements for use with <a href="../evaluator/evaluator.html#evaluator">expression evaluators</a> in <em>filter</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_9">10.3. Return Value</h3>
+<div class="paragraph">
+<p>This method always returns a dictionary object. Aggregated values are returned in a dictionary like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">aggregation</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">neighbors</span><span class="sh">'</span>         <span class="p">:</span> <span class="o">&lt;</span><span class="n">head_vertices</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">arcs</span><span class="sh">'</span>              <span class="p">:</span> <span class="o">&lt;</span><span class="n">traversed_arcs</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">predicator_value</span><span class="sh">'</span>  <span class="p">:</span> <span class="o">&lt;</span><span class="n">integer_sum</span><span class="o">&gt;</span> <span class="o">|</span> <span class="o">&lt;</span><span class="n">float_sum</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">degree</span><span class="sh">'</span>            <span class="p">:</span> <span class="o">&lt;</span><span class="n">head_vertices_degree_sum</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">indegree</span><span class="sh">'</span>          <span class="p">:</span> <span class="o">&lt;</span><span class="n">head_vertices_indegree_sum</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">outdegree</span><span class="sh">'</span>         <span class="p">:</span> <span class="o">&lt;</span><span class="n">head_vertices_outdegree_sum</span><span class="o">&gt;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Keys <code>'neighbors'</code> and <code>'arcs'</code> are always included. Others depend on what is selected in the <em>fields</em> parameter.</p>
+</div>
+<div class="paragraph">
+<p>If <em>result</em> contains R_TIMING &lt;aggregation&gt; is wrapped in an outer result dictionary like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">result_with_timing</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">aggregation</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">aggregation</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">time</span><span class="sh">'</span>          <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">search</span><span class="sh">'</span>        <span class="p">:</span> <span class="o">&lt;</span><span class="n">seconds</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">total</span><span class="sh">'</span>         <span class="p">:</span> <span class="o">&lt;</span><span class="n">seconds</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_9">10.4. Remarks</h3>
+<div class="paragraph">
+<p>To enable aggregation of arcs (<em>predicator values</em>) the <em>arc</em> parameter is required and the filter
+must contain a specific <a href="../constants/arcModifierConstants.html#arcmodifierconstants">modifier</a>.
+Furthermore, if extending aggregation beyond the immediate neighborhood <em>neighbor</em>(s) must include
+<code>'arc'</code> filter(s) with the same modifier as the one specified in the <em>arc</em> parameter. (If integer
+and floating point modifiers are mixed, the aggregated values are undefined.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_8">10.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">n</span><span class="o">/</span><span class="mi">10</span><span class="p">),</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="c1"># How many times did Alice call somebody?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>    <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">),</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">F_VAL</span>
+<span class="p">)</span> <span class="c1"># -&gt; {'neighbors': 100, 'predicator_value': 4950, 'arcs': 100}
+</span>
+<span class="c1"># How many total interactions with those with whom she either called
+# exactly once or twice or visited exactly once or twice?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>    <span class="o">=</span> <span class="p">(</span><span class="sh">""</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="n">V_RANGE</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)),</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">F_VAL</span>
+<span class="p">)</span> <span class="c1"># -&gt; {'neighbors': 22, 'predicator_value': 33, 'arcs': 22}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapharcvalue">11. pyvgx.Graph.ArcValue()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the value of a specific arc.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_10">11.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="n">initial</span><span class="p">,</span> <span class="n">arc</span><span class="p">,</span> <span class="n">terminal</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_9">11.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>initial</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The tail of the arc whose value is returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The returned value will match this arc filter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>terminal</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The head of the arc whose value is returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_10">11.3. Return Value</h3>
+<div class="paragraph">
+<p>The returned value is an integer, float or None depending on the modifier type of the selected arc:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 70%;">
+<col style="width: 30%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Modifier of Selected Arc</th>
+<th class="tableblock halign-left valign-top">Return Value Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">M_STAT</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">M_SIM, M_DIST, M_FLT, M_ACC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;float&gt;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">M_LSH, M_INT, M_UINT, M_CNT, M_TMC, M_TMM, M_TMX</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>If no matching arc is found <a href="../exceptions/exceptions.html#SearchError">pyvgx.SearchError</a> is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_10">11.4. Remarks</h3>
+<div class="paragraph">
+<p>This method will retrieve and return the value of the first arc found between <em>initial</em> and
+<em>terminal</em> matching the <em>arc</em> filter. If <em>initial</em> has a multiple arc to <em>terminal</em> it is
+generally undefined which of the individual arc values is returned unless <em>arc</em> specifies
+a unique relationship, direction and modifier.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_9">11.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span><span class="n">M_TMM</span><span class="p">,</span><span class="mi">1544635200</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">,</span><span class="mi">17</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span><span class="n">M_TMM</span><span class="p">,</span><span class="mi">154552331</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span><span class="n">M_TMM</span><span class="p">,</span><span class="mi">1544412231</span><span class="p">),</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># When did Alice last call Bob?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_TMM</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># How many times has Alice called Bob?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdegree">12. pyvgx.Graph.Degree()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the number of arcs incident on a vertex, optionally matching an arc filter.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_11">12.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Degree</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_10">12.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 20%;">
+<col style="width: 30%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vertex whose degree is computed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">(None, <a href="../constants/arcDirectionConstants.html#D_ANY">pyvgx.D_ANY</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs matching this filter contribute to the computed degree. The default is
+the standard definition of vertex degree, i.e. all outarcs and inarcs are counted.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter expression must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_11">12.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the number of arcs incident on vertex <em>id</em> matching <em>arc</em> and <em>filter</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_10">12.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">10</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">friend</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="c1"># How many connections does Alice have?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Degree</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">)</span> <span class="p">)</span> <span class="c1"># -&gt; 110
+</span>
+<span class="c1"># Hom many friends does Alice have?
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Degree</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">friend</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">)</span> <span class="p">)</span> <span class="c1"># -&gt; 10</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphinarcs">13. pyvgx.Graph.Inarcs()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the inbound arcs for a vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_12">13.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Inarcs</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_11">13.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 11.1111%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex whose inarcs are returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of inarcs to return. By default all inarcs are returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_12">13.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of arc tuples:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span> <span class="n">D_IN</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">anchor</span><span class="o">&gt;</span> <span class="p">),</span>
+    <span class="p">(</span> <span class="n">D_IN</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">anchor</span><span class="o">&gt;</span> <span class="p">),</span>
+    <span class="bp">...</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_11">13.4. Remarks</h3>
+<div class="paragraph">
+<p>All returned inarcs have direction D_IN and terminate at the <em>id</em> vertex.</p>
+</div>
+<div class="paragraph">
+<p>The order of returned results is not defined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_11">13.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">1000</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="sh">"</span><span class="s">friend</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Return five of Alice's friend connections
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Inarcs</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">hits</span><span class="o">=</span><span class="mi">5</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphoutarcs">14. pyvgx.Graph.Outarcs()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the outbound arcs for a vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_13">14.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Outarcs</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_12">14.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 33.3333%;">
+<col style="width: 11.1111%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex whose outarcs are returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of outarcs to return. By default all outarcs are returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_13">14.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of arc tuples:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">terminal</span><span class="o">&gt;</span> <span class="p">),</span>
+    <span class="p">(</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">relationship</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">modifier</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">value</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">terminal</span><span class="o">&gt;</span> <span class="p">),</span>
+    <span class="bp">...</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_12">14.4. Remarks</h3>
+<div class="paragraph">
+<p>All returned outarcs have direction D_OUT.</p>
+</div>
+<div class="paragraph">
+<p>The order of returned results is not defined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_12">14.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">10</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="c1"># Return five of Alice's calls to other people
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Outarcs</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">hits</span><span class="o">=</span><span class="mi">5</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphinitials">15. pyvgx.Graph.Initials()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the identifiers of vertices with arc(s) to this anchor vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_14">15.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Initials</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_13">15.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vertex whose initials are returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>pre</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will <strong>not</strong> be executed if vertex has no inarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>post</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-filter executed after neighborhood traversal and only if <em>pre</em> matched. The expression return value is ignored.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&#42;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned initials must match this vertex filter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>rank</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickrank">&#60;ranking_formula&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an expression to compute dynamic rank scores when
+<em>sortby</em>=<a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_RANK</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sortby</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html">Sort specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Determine how returned initials are sorted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">&#60;memory_object&#62;</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supply a general purpose array of numeric elements for use with <a href="../evaluator/evaluator.html#evaluator">expression evaluators</a> in <em>filter</em> and <em>rank</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum number of initials to return. By default all initials are returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_14">15.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of vertex identifiers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_1</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_2</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_3</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="bp">...</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_13">15.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">10</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Return the id of everyone who called Alice, sorted by name
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Initials</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_ID</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphterminals">16. pyvgx.Graph.Terminals()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the identifiers of this anchor&#8217;s terminal vertices.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_15">16.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Terminals</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_14">16.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;str&gt;</em> or <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> instance</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vertex whose terminals are returned</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>pre</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pre-filter executed before neighborhood traversal, and must evaluate to a positive number for the query to continue. Will <strong>not</strong> be executed if vertex has no outarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>filter</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter executed for each traversed arc in the neighborhood, and must evaluate to a positive number in order to match.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>post</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickfilter">&#60;expression&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Post-filter executed after neighborhood traversal and only if <em>pre</em> matched. The expression return value is ignored.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">&#60;vertex_condition&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>&#42;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returned terminals must match this vertex filter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>rank</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#quickrank">&#60;ranking_formula&#62;</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Specify an expression to compute dynamic rank scores when
+<em>sortby</em>=<a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_RANK</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sortby</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html">Sort specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/sortSpecificationConstants.html#S_NONE">pyvgx.S_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Determine how returned terminals are sorted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>memory</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../evaluator/evaluator.html#evaluatormemory">&#60;memory_object&#62;</a> or <em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Supply a general purpose array of numeric elements for use with <a href="../evaluator/evaluator.html#evaluator">expression evaluators</a> in <em>filter</em> and <em>rank</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>hits</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;int&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The maximum number of terminals to return. By default all terminals are returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for internal vertex acquisition where required, or upper execution time limit when <em>limexec</em> is true.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>limexec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>boolean</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When True, limits query execution time according to <em>timeout</em> even when not blocked on vertex acquisition.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_15">16.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a list of vertex identifiers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_1</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_2</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="o">&lt;</span><span class="n">vertex_identifier_3</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="bp">...</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_14">16.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">10</span> <span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="c1"># Return the name of all people Alice called, sorted by name
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Terminals</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_ID</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsearch">17. pyvgx.Graph.Search()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Simplified version of <a href="#graphneighborhood">pyvgx.Graph.Neighborhood()</a> and <a href="#graphvertices">pyvgx.Graph.Vertices()</a> that renders a human-readable result listing to the selected output stream.</p>
+</div>
+<div class="paragraph">
+<p>The same parameters are available with the exception of those controlling fields and result format.</p>
+</div>
+<div class="paragraph">
+<p>When no anchor vertex is specified the behavior is that of <a href="#graphvertices">pyvgx.Graph.Vertices()</a>.
+When anchor is specified the behavior is that of <a href="#graphneighborhood">pyvgx.Graph.Neighborhood()</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_15">17.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span> <span class="p">)</span>
+
+<span class="c1"># Equivalent to g.Vertices(), printing a human-readable result listing
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Search</span><span class="p">()</span>
+
+<span class="c1"># Equivalent to g.Neighborhood( "Alice", D_OUT, hits=5, sortby=S_ID )
+# printing a human-readable result listing
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Search</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">,</span> <span class="n">hits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_ID</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphArc.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Arc Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Management Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

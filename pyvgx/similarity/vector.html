@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>pyvgx.Vector</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxvector" class="article toc2 toc-left">
+<div id="header">
+<h1>pyvgx.Vector <a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Similarity"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_vector_objects">1. Vector Objects</a>
+<ul class="sectlevel2">
+<li><a href="#featurevector">1.1. Feature Vector</a></li>
+<li><a href="#euclideanvector">1.2. Euclidean Vector</a></li>
+<li><a href="#_example_feature_vectors">1.3. Example: Feature Vectors</a></li>
+<li><a href="#_example_euclidean_vectors">1.4. Example: Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#vectormembers">2. Vector Members</a>
+<ul class="sectlevel2">
+<li><a href="#vectorlength">2.1. pyvgx.Vector.length</a></li>
+<li><a href="#vectormagnitude">2.2. pyvgx.Vector.magnitude</a></li>
+<li><a href="#vectorfingerprint">2.3. pyvgx.Vector.fingerprint</a></li>
+<li><a href="#vectorexternal">2.4. pyvgx.Vector.external</a>
+<ul class="sectlevel3">
+<li><a href="#_feature_vectors">2.4.1. Feature Vectors</a></li>
+<li><a href="#_euclidean_vectors">2.4.2. Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#vectorinternal">2.5. pyvgx.Vector.internal</a>
+<ul class="sectlevel3">
+<li><a href="#_feature_vectors_2">2.5.1. Feature Vectors</a></li>
+<li><a href="#_euclidean_vectors_2">2.5.2. Euclidean Vectors</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#vectormethods">3. Vector Methods</a>
+<ul class="sectlevel2">
+<li><a href="#vector_fingerprint_method">3.1. pyvgx.Vector.Fingerprint()</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax">3.1.1. Syntax</a></li>
+<li><a href="#_parameters">3.1.2. Parameters</a></li>
+<li><a href="#_return_value">3.1.3. Return Value</a></li>
+<li><a href="#_remarks">3.1.4. Remarks</a></li>
+<li><a href="#_example">3.1.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#vector_asdict_method">3.2. pyvgx.Vector.AsDict()</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_2">3.2.1. Syntax</a></li>
+<li><a href="#_return_value_2">3.2.2. Return Value</a>
+<ul class="sectlevel4">
+<li><a href="#_feature_vectors_3">3.2.2.1. Feature Vectors</a></li>
+<li><a href="#_euclidean_vectors_3">3.2.2.2. Euclidean Vectors</a></li>
+</ul>
+</li>
+<li><a href="#_example_2">3.2.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vector_projections_method">3.3. pyvgx.Vector.Projections()</a>
+<ul class="sectlevel3">
+<li><a href="#_syntax_3">3.3.1. Syntax</a></li>
+<li><a href="#_parameters_2">3.3.2. Parameters</a></li>
+<li><a href="#_return_value_3">3.3.3. Return Value</a></li>
+<li><a href="#_remarks_2">3.3.4. Remarks</a></li>
+<li><a href="#_example_3">3.3.5. Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#featurevector_weights">4. Feature Vector Weight Encoding</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_vector_objects">1. Vector Objects</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vectors have two distinct representations in pyvgx: <strong>external</strong> and <strong>internal</strong>. The external vector is the original vector (with applicable normalization, truncation and quantization applied.) The internal vector is an encoded version of the external vector.</p>
+</div>
+<div class="paragraph">
+<p>Vectors can be <a href="../vertex/vertexVector.html">assigned to vertices</a> to enable similarity matching for those vertices.</p>
+</div>
+<div class="paragraph">
+<p>Vectors can also be created and used as separate objects. In this case the built-in default similarity configuration controls how vectors are compared.</p>
+</div>
+<div class="paragraph">
+<p>Two vector modes are supported:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Feature Vectors (default)</p>
+</li>
+<li>
+<p>Euclidean Vectors</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Vector mode is chosen at <a href="../reference.html#system_initialize_func">system initialization</a> and cannot be changed after initialization. The chosen vector mode applies to all graphs in the VGX instance.</p>
+</div>
+<div class="sect2">
+<h3 id="featurevector">1.1. Feature Vector</h3>
+<div class="paragraph">
+<p>Feature vectors are lists of <code>(&lt;dimension&gt;, &lt;weight&gt;)</code> key-value pairs, where <code>&lt;dimension&gt;</code> is a string and <code>&lt;weight&gt;</code> is a number. The <a href="limits.html#featurevector">maximum length</a> of <code>&lt;dimension&gt;</code> is <a href="limits.html#limits">27</a> bytes. The range of <code>&lt;weight&gt;</code> is [0.0078125, 1.875], internally quantized into 64 discrete buckets. The maximum number of vector features is <a href="limits.html#limits">48</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="euclideanvector">1.2. Euclidean Vector</h3>
+<div class="paragraph">
+<p>Euclidean vectors are lists of numeric vector components \(A = \lbrace c_1, c_2, ..., c_n \rbrace\) where  <em>n</em> is a multiple of 32 or 64. The required multiple for your system can be found by inspecting the value returned by <a href="../reference.html#avxbuild_func">pyvgx.avxbuild()</a>. If 512 is returned the multiple is 64, otherwise 32.</p>
+</div>
+<div class="paragraph">
+<p>The maximum number of vector components is <a href="limits.html#limits">65472</a>.</p>
+</div>
+<div class="paragraph">
+<p>Euclidean vectors are internally normalized by a scaling factor. This is done because the internal representation uses 8-bit integers to store each component and must ensure maximum use of the 8-bit resolution. The scaling factor \(a\) is determined from <em>|c|<sub>max</sub></em>, the component with the largest absolute value:</p>
+</div>
+<div class="paragraph">
+<p>\( a = \displaystyle \frac{1}{| \text{c}|_{max} }\)</p>
+</div>
+<div class="paragraph">
+<p>An internal (normalized) Euclidean vector \(A'\) is thus computed:</p>
+</div>
+<div class="paragraph">
+<p>\(A' = a \cdot A = \lbrace c'_1, c'_2, ..., c'_n \rbrace\), which implies \(c'_k \in \lbrack -1, 1 \rbrack\) and \(c'_\text{max} \in \lbrace -1, 1 \rbrace\).</p>
+</div>
+<div class="paragraph">
+<p>Consequently \(A'\) is distorted due to loss of resolution.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Internal Euclidean vector representation uses 8-bit integers to encode normalized values in the range \( \langle \frac{-1}{127}, 1 \rbrack \) as integers \( \lbrack 0, 127 \rbrack \), and normalized values in the range \( \lbrack -1, \frac{-1}{127} \rbrack \) as integers \( \lbrack 129, 255 \rbrack \). (Internal byte value \(128\) is reserved and not used.)
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_feature_vectors">1.3. Example: Feature Vectors</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Initialize in the default feature vectors mode
+</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">()</span>
+
+<span class="c1"># Make two feature vectors
+</span><span class="n">Coffee</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">black</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">hot</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">Soda</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">beverage</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">bubbly</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.8</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">sweet</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.8</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Compare using default similarity parameters
+</span><span class="n">DefaultSimilarity</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">Soda</span> <span class="p">)</span> <span class="c1"># -&gt; 0.7421875
+</span>
+<span class="c1"># Change similarity parameters and compare again
+</span><span class="n">DefaultSimilarity</span><span class="p">.</span><span class="n">jaccard_exp</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">DefaultSimilarity</span><span class="p">.</span><span class="nc">Similarity</span><span class="p">(</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">Soda</span> <span class="p">)</span> <span class="c1"># -&gt; 0.375</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_euclidean_vectors">1.4. Example: Euclidean Vectors</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Initialize in euclidean mode
+</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+
+<span class="c1"># Make two random Euclidean vectors with components in range [-1,1]
+</span><span class="n">A</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Cosine of angle between random vectors is close to zero
+</span><span class="n">DefaultSimilarity</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span> <span class="c1"># -&gt; near zero
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vectormembers">2. Vector Members</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vector Member</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vectorlength">pyvgx.Vector.length</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of elements in vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vectormagnitude">pyvgx.Vector.magnitude</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Euclidean length of vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vectorfingerprint">pyvgx.Vector.fingerprint</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64-bit integer representing the vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vectorexternal">pyvgx.Vector.external</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vector with original elements where terms are strings and weights are floats</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vectorinternal">pyvgx.Vector.internal</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enumerated version of vector as used internally for storage and similarity computation</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="vectorlength">2.1. pyvgx.Vector.length</h3>
+<div class="paragraph">
+<p>Return the number of elements in the vector.
+Equivalent: <code>len( pyvgx.Vector )</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vectormagnitude">2.2. pyvgx.Vector.magnitude</h3>
+<div class="paragraph">
+<p>Return the Euclidean length of the vector.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For Euclidean vectors the magnitude of the original vector is not preserved, since the vector is normalized.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vectorfingerprint">2.3. pyvgx.Vector.fingerprint</h3>
+<div class="paragraph">
+<p>Return a 64-bit integer representing the vector. This is a dimensionality-reduced (compressed) vector that can be used to speed up certain types of similarity computations. Two fingerprints are compared by counting the number of bit positions where the two differ, i.e. the <em>hamming distance</em> between the two numbers. Small hamming distance translates to high similarity.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vectorexternal">2.4. pyvgx.Vector.external</h3>
+<div class="paragraph">
+<p>Return the vector as originally defined.</p>
+</div>
+<div class="sect3">
+<h4 id="_feature_vectors">2.4.1. Feature Vectors</h4>
+<div class="paragraph">
+<p>Elements are pairs of string terms and floating point weights:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">external_vector</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">s_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">f_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">s_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">f_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">s_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">f_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="bp">...</span>
+<span class="p">]</span>
+
+<span class="n">where</span>
+    <span class="o">&lt;</span><span class="n">s_term</span><span class="o">&gt;</span>    <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">string_up_to_27_bytes</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">f_weight</span><span class="o">&gt;</span>  <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Vector terms <a href="../limits.html#limits">longer than 27 bytes</a> are truncated.</p>
+</div>
+<div class="paragraph">
+<p>Vector weights are quantized into 64 distinct buckets, and have a range [0.0078125, 1.875].</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_euclidean_vectors">2.4.2. Euclidean Vectors</h4>
+<div class="paragraph">
+<p>Elements are floating point values:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">external_vector</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span> <span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="p">...,</span> <span class="n">cn</span> <span class="p">]</span>
+
+<span class="n">where</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">multiple</span> <span class="n">of</span> <span class="mi">32</span> <span class="ow">and</span> <span class="o">|</span><span class="n">ci</span><span class="o">|</span> <span class="o">&lt;=</span> <span class="mf">1.</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vectorinternal">2.5. pyvgx.Vector.internal</h3>
+<div class="paragraph">
+<p>Return the internal representation of the vector.</p>
+</div>
+<div class="sect3">
+<h4 id="_feature_vectors_2">2.5.1. Feature Vectors</h4>
+<div class="paragraph">
+<p>Elements are pairs of enumerated terms and integer weights:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">internal_vector</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">e_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">i_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">e_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">i_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="p">(</span><span class="o">&lt;</span><span class="n">e_term</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">i_weight</span><span class="o">&gt;</span><span class="p">),</span>
+    <span class="bp">...</span>
+<span class="p">]</span>
+
+<span class="n">where</span>
+    <span class="o">&lt;</span><span class="n">e_term</span><span class="o">&gt;</span>    <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">integer_mapping_of_s_term</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">i_weight</span><span class="o">&gt;</span>  <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">encoded_f_term</span><span class="o">&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Vector terms are mapped internally to integer values for more efficient storage and matching.</p>
+</div>
+<div class="paragraph">
+<p>Internal vector weights are encoded as a small integer in the range [0, 63]</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_euclidean_vectors_2">2.5.2. Euclidean Vectors</h4>
+<div class="paragraph">
+<p>Elements are bytes, and the returned object is a bytearray:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">internal_vector</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="nf">bytearray</span><span class="p">(</span><span class="sa">b</span><span class="sh">'</span><span class="s">\xnn\xnn...\xnn</span><span class="sh">'</span><span class="p">)</span>
+
+<span class="n">where</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="nb">bytes</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">multiple</span> <span class="n">of</span> <span class="mf">32.</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Vector components are mapped internally to 8-bit integer values for more efficient storage and matching.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vectormethods">3. Vector Methods</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vector Method</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vector_fingerprint_method">pyvgx.Vector.Fingerprint()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Compute a 64-bit integer representing the vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vector_asdict_method">pyvgx.Vector.AsDict()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dictionary representation of vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vector_projections_method">pyvgx.Vector.Projections()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vector index projection information</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="vector_fingerprint_method">3.1. pyvgx.Vector.Fingerprint()</h3>
+<div class="paragraph">
+<p>Compute 64-bit vector fingerprint.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax">3.1.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="p">[</span><span class="n">seed</span><span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_parameters">3.1.2. Parameters</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>seed</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Projection seed (default 0)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_return_value">3.1.3. Return Value</h4>
+<div class="paragraph">
+<p>This method returns a 64-bit integer representing a projection of the n-dimensional <em>vector</em> onto 64-dimensional binary space. The optional <em>seed</em> allows alternative projections.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks">3.1.4. Remarks</h4>
+<div class="paragraph">
+<p>A vector&#8217;s fingerprint is a locality sensitive hash and represents a mapping of a high-dimensional object onto a low-dimensional "shadow" of that object. By using different values for <em>seed</em> it is possible to create multiple fingerprints forming a set of projections which more accurately represent the original vector.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example">3.1.5. Example</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span>
+<span class="n">V</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">fp0</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">()</span>
+<span class="n">fp1</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="mi">1234</span> <span class="p">)</span>
+<span class="n">fp2</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="mh">0xd5c098876a90fe2c</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vector_asdict_method">3.2. pyvgx.Vector.AsDict()</h3>
+<div class="paragraph">
+<p>Return the vector data as a dictionary.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_2">3.2.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_return_value_2">3.2.2. Return Value</h4>
+<div class="paragraph">
+<p>This method returns all vector attributes in a dict.</p>
+</div>
+<div class="sect4">
+<h5 id="_feature_vectors_3">3.2.2.1. Feature Vectors</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">feature_vector_dict</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">'</span><span class="s">feature</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">length</span><span class="sh">'</span>      <span class="p">:</span> <span class="o">&lt;</span><span class="n">number_of_elements</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">magnitude</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">euclidean_length</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">fingerprint</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">int64</span><span class="o">&gt;</span>
+    <span class="sh">'</span><span class="s">external</span><span class="sh">'</span>    <span class="p">:</span> <span class="p">[</span> <span class="p">(</span><span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">),</span> <span class="p">(</span><span class="o">&lt;</span><span class="nb">str</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">),</span> <span class="p">...</span> <span class="p">],</span>
+    <span class="sh">'</span><span class="s">internal</span><span class="sh">'</span>    <span class="p">:</span> <span class="p">[</span> <span class="p">(</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">),</span> <span class="p">(</span><span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">int</span><span class="o">&gt;</span><span class="p">),</span> <span class="p">...</span> <span class="p">],</span>
+    <span class="sh">'</span><span class="s">centroid</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="nb">bool</span><span class="o">&gt;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_euclidean_vectors_3">3.2.2.2. Euclidean Vectors</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="o">&lt;</span><span class="n">euclidean_vector_dict</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">'</span><span class="s">array</span><span class="sh">'</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">length</span><span class="sh">'</span>      <span class="p">:</span> <span class="o">&lt;</span><span class="n">number_of_elements</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">magnitude</span><span class="sh">'</span>   <span class="p">:</span> <span class="o">&lt;</span><span class="n">normalized_euclidean_length</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="sh">'</span><span class="s">fingerprint</span><span class="sh">'</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">int64</span><span class="o">&gt;</span>
+    <span class="sh">'</span><span class="s">external</span><span class="sh">'</span>    <span class="p">:</span> <span class="p">[</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span><span class="p">,</span> <span class="p">...</span> <span class="p">],</span>
+    <span class="sh">'</span><span class="s">internal</span><span class="sh">'</span>    <span class="p">:</span> <span class="nf">bytearray</span><span class="p">(</span><span class="sa">b</span><span class="sh">'</span><span class="s">\xnn\xnn...</span><span class="sh">'</span><span class="p">),</span>
+    <span class="sh">'</span><span class="s">centroid</span><span class="sh">'</span>    <span class="p">:</span> <span class="o">&lt;</span><span class="nb">bool</span><span class="o">&gt;</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example_2">3.2.3. Example</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="n">random</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="n">euclidean</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">base</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span>
+<span class="n">V</span> <span class="o">=</span> <span class="nc">Vector</span><span class="p">(</span> <span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="mf">0.1</span><span class="o">*</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">base</span><span class="p">]</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vector_projections_method">3.3. pyvgx.Vector.Projections()</h3>
+<div class="paragraph">
+<p>Return the vector&#8217;s LSH, "low confidence mask", and index projections for a given seed.</p>
+</div>
+<div class="sect3">
+<h4 id="_syntax_3">3.3.1. Syntax</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span><span class="p">.</span><span class="nc">Projections</span><span class="p">(</span> <span class="n">seed</span><span class="p">[,</span> <span class="n">lsh</span><span class="p">[,</span> <span class="n">lcm</span><span class="p">[,</span> <span class="nb">reduce</span><span class="p">[,</span> <span class="n">expand</span><span class="p">]]]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">lsh</span><span class="p">,</span> <span class="n">lcm</span><span class="p">,</span> <span class="p">[</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="p">...])</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_parameters_2">3.3.2. Parameters</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>seed</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Projection seed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lsh</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use this vector fingerprint instead of computing it from vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lcm</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use this "low confidence mask" for the provided <em>lsh</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>reduce</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Omit index projections for LSH segments where the corresponding <em>lcm</em> segment is non-zero</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>expand</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create two index projections for LSH segments where the corresponding <em>lcm</em> segment has exactly one bit set to 1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_return_value_3">3.3.3. Return Value</h4>
+<div class="paragraph">
+<p>For a given projection <em>seed</em>, return a 3-tuple containing the vector&#8217;s fingerprint (LSH), the "low confidence mask" associated with the LSH, and a list of projection node names that map to the vector: <code>(lsh, lcm, [p1, p2, &#8230;&#8203;])</code></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">lsh</dt>
+<dd>
+<p>The vector&#8217;s fingerprint for the given <em>seed</em></p>
+</dd>
+<dt class="hdlist1">lcm</dt>
+<dd>
+<p>Bitmask where the occurrence of a <code>1</code> indicates a low confidence bit value in the corresponding <strong>lsh</strong> position. When <strong>lcm</strong> is all zeros it means the entire <strong>lsh</strong> has high confidence bit values. Bit regions in <strong>lsh</strong> corresponding to non-zero regions in <strong>lcm</strong> are less likely to produce good projection keys.</p>
+</dd>
+<dt class="hdlist1">[p1, p2, &#8230;&#8203;]</dt>
+<dd>
+<p>Projection node name p<em>i</em> corresponding to a node in the graph structure created by <a href="similarityMethods.html#similaritycreateprojectionsets">pyvgx.Similarity.CreateProjectionSets()</a>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_remarks_2">3.3.4. Remarks</h4>
+<div class="paragraph">
+<p>Use <a href="similarityMethods.html#similaritycreateprojectionsets">pyvgx.Similarity.CreateProjectionSets()</a> to initialize a graph structure suitable for building a vector index. Given a vector <em>V</em>, use <em>V</em>.Projections() to obtain the set of anchor nodes that should be connected to the item node representing <em>V</em>.</p>
+</div>
+<div class="paragraph">
+<p>To search for probe vector <em>Q</em>, use <em>Q</em>.Projections() to obtain the set of anchor nodes for neighborhood queries that will find candidates.</p>
+</div>
+<div class="paragraph">
+<p>Implementations may want to encode the arcs from projection nodes to item nodes with a portion of the vector LSH that was not used to generate the projection key. Use <a href="../vertex/vertexVector.html#vertexarclsh">pyvgx.Vertex.ArcLSH()</a> to obtain a suitable arc value for this purpose.</p>
+</div>
+<div class="paragraph">
+<p>If <em>lsh</em> and <em>lcm</em> parameters are provided they will be used instead of computing them from the vector.</p>
+</div>
+<div class="paragraph">
+<p>If parameter <em>reduce</em> is True the returned projection nodes will only be those generated from LSH segments where the corresponding <em>lcm</em> segment is zero. The purpose of this is to prevent the use of a projection that is likely to provide poor recall, thereby saving memory that may be better spent elsewhere to improve recall.</p>
+</div>
+<div class="paragraph">
+<p>If parameter <em>expand</em> is True two projection nodes will be generated for LSH segments where the corresponding <em>lcm</em> segment has exactly one bit set to 1. The purpose of this is to increase recall by allowing more neighborhood queries to be performed.</p>
+</div>
+<div class="paragraph">
+<p>Parameters <em>reduce</em> and <em>expand</em> are mutually exclusive.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example_3">3.3.5. Example</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">vectors</span><span class="sh">"</span><span class="p">,</span> <span class="n">euclidean</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">ann</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Create a random vector
+</span><span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Compute LSH, mask, and projection node names
+</span><span class="n">lsh</span><span class="p">,</span> <span class="n">lcm</span><span class="p">,</span> <span class="n">proj</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="nc">Projections</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>
+
+<span class="c1"># Reduced number of projections
+</span><span class="nf">len</span><span class="p">(</span> <span class="n">V</span><span class="p">.</span><span class="nc">Projections</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">reduce</span><span class="o">=</span><span class="bp">True</span> <span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>   <span class="c1"># &lt;= len(proj)
+</span>
+<span class="c1"># Expanded number of projections
+</span><span class="nf">len</span><span class="p">(</span> <span class="n">V</span><span class="p">.</span><span class="nc">Projections</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="bp">True</span> <span class="p">)[</span><span class="mi">2</span><span class="p">]</span> <span class="p">)</span>   <span class="c1"># &gt;= len(proj)
+</span>
+<span class="nf">print</span><span class="p">(</span><span class="nf">hex</span><span class="p">(</span><span class="n">lsh</span><span class="p">))</span> <span class="c1"># -&gt; 0xa4b8d0ad7ae6a767
+</span><span class="nf">print</span><span class="p">(</span><span class="nf">hex</span><span class="p">(</span><span class="n">lcm</span><span class="p">))</span> <span class="c1"># -&gt; 0x0108000400810000
+</span><span class="nf">print</span><span class="p">(</span><span class="n">proj</span><span class="p">)</span>     <span class="c1"># -&gt; [b'_0367|000', b'_053B|000', b'_09A9|000',
+</span>                <span class="c1">#     b'_0DCD|000', b'_13AE|000', b'_16BD|000',
+</span>                <span class="c1">#     b'_1AB5|000', b'_1E15|000', b'_20D0|000',
+</span>                <span class="c1">#     b'_25C6|000', b'_292E|000', b'_2F49|000']
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="featurevector_weights">4. Feature Vector Weight Encoding</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Internal Encoding</th>
+<th class="tableblock halign-left valign-top">External Weight (quantized)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0078125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0087890625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.009765625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0107421875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.01171875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0126953125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.013671875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0146484375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.015625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.017578125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.01953125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.021484375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0234375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.025390625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.02734375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.029296875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.03125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.03515625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0390625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">19</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.04296875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.046875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.05078125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0546875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">23</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.05859375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0703125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">26</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.078125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">27</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0859375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">28</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.09375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">29</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1015625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.109375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">31</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1171875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">33</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.140625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">34</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.15625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">35</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.171875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">36</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.1875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">37</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.203125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.21875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.234375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">40</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.25</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">41</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.28125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.3125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">43</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.34375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">44</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">45</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.40625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">46</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.4375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">47</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.46875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">48</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">49</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.5625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">51</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.6875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">52</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.75</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">53</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.8125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">54</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.875</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">55</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.9375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">56</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">57</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.125</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">58</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.25</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">59</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.375</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">60</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">61</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.625</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">62</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.75</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">63</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.875</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="similarityMethods.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Similarity Methods"></i></span></a>
+<a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Similarity"></i></span></a>
+<a href="similarityMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Similarity Members"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

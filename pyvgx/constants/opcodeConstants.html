@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Opcode Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="opcodeconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Opcode Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="arcDirectionConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Arc Direction Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#operatoropcodes">1. Operator Opcodes</a>
+<ul class="sectlevel2">
+<li><a href="#vertexoperators">1.1. Vertex Instance Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_vxn">1.1.1. pyvgx.op.OP_vxn</a></li>
+<li><a href="#OP_vxd">1.1.2. pyvgx.op.OP_vxd</a></li>
+<li><a href="#OP_vxr">1.1.3. pyvgx.op.OP_vxr</a></li>
+<li><a href="#OP_vxt">1.1.4. pyvgx.op.OP_vxt</a></li>
+<li><a href="#OP_vxx">1.1.5. pyvgx.op.OP_vxx</a></li>
+<li><a href="#OP_vxc">1.1.6. pyvgx.op.OP_vxc</a></li>
+<li><a href="#OP_vps">1.1.7. pyvgx.op.OP_vps</a></li>
+<li><a href="#OP_vpd">1.1.8. pyvgx.op.OP_vpd</a></li>
+<li><a href="#OP_vpc">1.1.9. pyvgx.op.OP_vpc</a></li>
+<li><a href="#OP_vvs">1.1.10. pyvgx.op.OP_vvs</a></li>
+<li><a href="#OP_vvd">1.1.11. pyvgx.op.OP_vvd</a></li>
+<li><a href="#OP_vod">1.1.12. pyvgx.op.OP_vod</a></li>
+<li><a href="#OP_vid">1.1.13. pyvgx.op.OP_vid</a></li>
+<li><a href="#OP_val">1.1.14. pyvgx.op.OP_val</a></li>
+<li><a href="#OP_vrl">1.1.15. pyvgx.op.OP_vrl</a></li>
+</ul>
+</li>
+<li><a href="#arcoperators">1.2. Arc Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_arc">1.2.1. pyvgx.op.OP_arc</a></li>
+<li><a href="#OP_ard">1.2.2. pyvgx.op.OP_ard</a></li>
+</ul>
+</li>
+<li><a href="#systemoperators">1.3. System Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_nop">1.3.1. pyvgx.op.OP_nop</a></li>
+<li><a href="#OP_sya">1.3.2. pyvgx.op.OP_sya</a></li>
+<li><a href="#OP_syd">1.3.3. pyvgx.op.OP_syd</a></li>
+<li><a href="#OP_rcl">1.3.4. pyvgx.op.OP_rcl</a></li>
+<li><a href="#OP_scf">1.3.5. pyvgx.op.OP_scf</a></li>
+<li><a href="#OP_grn">1.3.6. pyvgx.op.OP_grn</a></li>
+<li><a href="#OP_grd">1.3.7. pyvgx.op.OP_grd</a></li>
+<li><a href="#OP_com">1.3.8. pyvgx.op.OP_com</a></li>
+<li><a href="#OP_dat">1.3.9. pyvgx.op.OP_dat</a></li>
+<li><a href="#OP_clg">1.3.10. pyvgx.op.OP_clg</a></li>
+</ul>
+</li>
+<li><a href="#graphoperators">1.4. Graph Instance Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_grt">1.4.1. pyvgx.op.OP_grt</a></li>
+<li><a href="#OP_grp">1.4.2. pyvgx.op.OP_grp</a></li>
+<li><a href="#OP_grs">1.4.3. pyvgx.op.OP_grs</a></li>
+<li><a href="#OP_grr">1.4.4. pyvgx.op.OP_grr</a></li>
+<li><a href="#OP_grw">1.4.5. pyvgx.op.OP_grw</a></li>
+<li><a href="#OP_gre">1.4.6. pyvgx.op.OP_gre</a></li>
+<li><a href="#OP_gri">1.4.7. pyvgx.op.OP_gri</a></li>
+</ul>
+</li>
+<li><a href="#syncoperators">1.5. Synchronization Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_tic">1.5.1. pyvgx.op.OP_tic</a></li>
+<li><a href="#OP_evx">1.5.2. pyvgx.op.OP_evx</a></li>
+</ul>
+</li>
+<li><a href="#lockoperators">1.6. Vertex Acquisition Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_lxw">1.6.1. pyvgx.op.OP_lxw</a></li>
+<li><a href="#OP_ulv">1.6.2. pyvgx.op.OP_ulv</a></li>
+<li><a href="#OP_ula">1.6.3. pyvgx.op.OP_ula</a></li>
+</ul>
+</li>
+<li><a href="#enumoperators">1.7. Enumeration Operators</a>
+<ul class="sectlevel3">
+<li><a href="#OP_vea">1.7.1. pyvgx.op.OP_vea</a></li>
+<li><a href="#OP_ved">1.7.2. pyvgx.op.OP_ved</a></li>
+<li><a href="#OP_rea">1.7.3. pyvgx.op.OP_rea</a></li>
+<li><a href="#OP_red">1.7.4. pyvgx.op.OP_red</a></li>
+<li><a href="#OP_dea">1.7.5. pyvgx.op.OP_dea</a></li>
+<li><a href="#OP_ded">1.7.6. pyvgx.op.OP_ded</a></li>
+<li><a href="#OP_kea">1.7.7. pyvgx.op.OP_kea</a></li>
+<li><a href="#OP_ked">1.7.8. pyvgx.op.OP_ked</a></li>
+<li><a href="#OP_sea">1.7.9. pyvgx.op.OP_sea</a></li>
+<li><a href="#OP_sed">1.7.10. pyvgx.op.OP_sed</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#operatorgroups">2. Operator Groups</a>
+<ul class="sectlevel2">
+<li><a href="#actiongroups">2.1. Action Groups</a>
+<ul class="sectlevel3">
+<li><a href="#OP_ACTION_assign">2.1.1. pyvgx.op.OP_ACTION_assign</a></li>
+<li><a href="#OP_ACTION_create">2.1.2. pyvgx.op.OP_ACTION_create</a></li>
+<li><a href="#OP_ACTION_delete">2.1.3. pyvgx.op.OP_ACTION_delete</a></li>
+<li><a href="#OP_ACTION_event">2.1.4. pyvgx.op.OP_ACTION_event</a></li>
+</ul>
+</li>
+<li><a href="#scopegroups">2.2. Scope Groups</a>
+<ul class="sectlevel3">
+<li><a href="#OP_SCOPE_single">2.2.1. pyvgx.op.OP_SCOPE_single</a></li>
+<li><a href="#OP_SCOPE_multiple">2.2.2. pyvgx.op.OP_SCOPE_multiple</a></li>
+</ul>
+</li>
+<li><a href="#targetgroups">2.3. Target Groups</a>
+<ul class="sectlevel3">
+<li><a href="#OP_TARGET_vertex">2.3.1. pyvgx.op.OP_TARGET_vertex</a></li>
+<li><a href="#OP_TARGET_arc">2.3.2. pyvgx.op.OP_TARGET_arc</a></li>
+<li><a href="#OP_TARGET_system">2.3.3. pyvgx.op.OP_TARGET_system</a></li>
+<li><a href="#OP_TARGET_graph">2.3.4. pyvgx.op.OP_TARGET_graph</a></li>
+<li><a href="#OP_TARGET_rw">2.3.5. pyvgx.op.OP_TARGET_rw</a></li>
+<li><a href="#OP_TARGET_evp">2.3.6. pyvgx.op.OP_TARGET_evp</a></li>
+<li><a href="#OP_TARGET_time">2.3.7. pyvgx.op.OP_TARGET_time</a></li>
+<li><a href="#OP_TARGET_exec">2.3.8. pyvgx.op.OP_TARGET_exec</a></li>
+<li><a href="#OP_TARGET_acquire">2.3.9. pyvgx.op.OP_TARGET_acquire</a></li>
+<li><a href="#OP_TARGET_enum">2.3.10. pyvgx.op.OP_TARGET_enum</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#operatorprofiles">3. Operator Profiles</a>
+<ul class="sectlevel2">
+<li><a href="#consumerprofile">3.1. Consumer Profile</a>
+<ul class="sectlevel3">
+<li><a href="#OP_PROFILE_consumer">3.1.1. pyvgx.op.OP_PROFILE_consumer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>These constants represent operator opcodes, groups of opcodes, and opcode filter profiles as related to the operation transfer protocol used for network communication between VGX instances.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Constant</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#vertexoperators">Vertex Instance Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxn">pyvgx.op.OP_vxn</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">New vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxd">pyvgx.op.OP_vxd</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxr">pyvgx.op.OP_vxr</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex rank</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxt">pyvgx.op.OP_vxt</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxx">pyvgx.op.OP_vxx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex expiration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxc">pyvgx.op.OP_vxc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Convert vertex manifestation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vps">pyvgx.op.OP_vps</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpd">pyvgx.op.OP_vpd</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete vertex property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpc">pyvgx.op.OP_vpc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clear vertex properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvs">pyvgx.op.OP_vvs</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set vertex vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvd">pyvgx.op.OP_vvd</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete vertex vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vod">pyvgx.op.OP_vod</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete vertex outarcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vid">pyvgx.op.OP_vid</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete vertex inarcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_val">pyvgx.op.OP_val</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acquire vertex write lock</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vrl">pyvgx.op.OP_vrl</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release vertex write lock</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#arcoperators">Arc Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_arc">pyvgx.op.OP_arc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create arc</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ard">pyvgx.op.OP_ard</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete arc</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#systemoperators">System Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_nop">pyvgx.op.OP_nop</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sya">pyvgx.op.OP_sya</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">System attach</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_syd">pyvgx.op.OP_syd</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">System detach</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rcl">pyvgx.op.OP_rcl</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clear registry</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_scf">pyvgx.op.OP_scf</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Configure similarity</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grn">pyvgx.op.OP_grn</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">New graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grd">pyvgx.op.OP_grd</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_com">pyvgx.op.OP_com</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Send data as comment</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dat">pyvgx.op.OP_dat</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Send raw data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_clg">pyvgx.op.OP_clg</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clone graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#graphoperators">Graph Instance Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grt">pyvgx.op.OP_grt</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Truncate graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grp">pyvgx.op.OP_grp</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Persist graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grs">pyvgx.op.OP_grs</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assert graph state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grr">pyvgx.op.OP_grr</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set graph readonly</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grw">pyvgx.op.OP_grw</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set graph writable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gre">pyvgx.op.OP_gre</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable background TTL</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gri">pyvgx.op.OP_gri</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Disable background TTL</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#syncoperators">Synchronization Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_tic">pyvgx.op.OP_tic</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Heartbeat</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_evx">pyvgx.op.OP_evx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Execute all due TTL events</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#lockoperators">Vertex Acquisition Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_lxw">pyvgx.op.OP_lxw</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acquire multiple vertex write locks atomically</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ulv">pyvgx.op.OP_ulv</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release multiple vertex write locks atomically</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ula">pyvgx.op.OP_ula</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release all vertex write locks atomically</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#enumoperators">Enumeration Operators</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vea">pyvgx.op.OP_vea</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add vertex type enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ved">pyvgx.op.OP_ved</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove vertex type enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rea">pyvgx.op.OP_rea</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add relationship enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_red">pyvgx.op.OP_red</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove relationship enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dea">pyvgx.op.OP_dea</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add vector dimension enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ded">pyvgx.op.OP_ded</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove vector dimension enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_kea">pyvgx.op.OP_kea</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add property key enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ked">pyvgx.op.OP_ked</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove property key enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sea">pyvgx.op.OP_sea</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add property string value enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sed">pyvgx.op.OP_sed</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove property string value enumeration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#anyop">[anyop]</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ANY">[OP_ANY]</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All operators</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#actiongroups">Action Groups</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ACTION_assign">pyvgx.op.OP_ACTION_assign</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators modifying existing attributes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ACTION_create">pyvgx.op.OP_ACTION_create</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators creating new objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ACTION_delete">pyvgx.op.OP_ACTION_delete</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators deleting objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ACTION_event">pyvgx.op.OP_ACTION_event</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators communicating events</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#scopegroups">Scope Groups</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_SCOPE_single">pyvgx.op.OP_SCOPE_single</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting single objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_SCOPE_multiple">pyvgx.op.OP_SCOPE_multiple</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting multiple objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#targetgroups">Target Groups</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_vertex">pyvgx.op.OP_TARGET_vertex</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting vertex objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_arc">pyvgx.op.OP_TARGET_arc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting arcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_system">pyvgx.op.OP_TARGET_system</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators with system-wide effect</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_graph">pyvgx.op.OP_TARGET_graph</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_rw">pyvgx.op.OP_TARGET_rw</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators modifying read-write state of graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_evp">pyvgx.op.OP_TARGET_evp</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators modifying the TTL event processor state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_time">pyvgx.op.OP_TARGET_time</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting heartbeat and time synchronization</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_exec">pyvgx.op.OP_TARGET_exec</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators performing mass-execution of events</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_acquire">pyvgx.op.OP_TARGET_acquire</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators modifying write-locks of multiple vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_TARGET_enum">pyvgx.op.OP_TARGET_enum</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operators affecting enumerations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#operatorprofiles">Operator Profiles</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_PROFILE_consumer">pyvgx.op.OP_PROFILE_consumer</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter profile suitable for VGX instances that do not generate their own data</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="operatoropcodes">1. Operator Opcodes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants represent individual operator opcodes and are suitable for use with <a href="../reference.html#op_allow_func"><code>pyvgx.op.Allow()</code></a> and <a href="../reference.html#op_deny_func"><code>pyvgx.op.Deny()</code></a>.</p>
+</div>
+<div class="sect2">
+<h3 id="vertexoperators">1.1. Vertex Instance Operators</h3>
+<div class="sect3">
+<h4 id="OP_vxn">1.1.1. pyvgx.op.OP_vxn</h4>
+<div class="paragraph">
+<p>Create a new vertex if it does not already exist.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxn"><code>vxn</code></a> is the equivalent of graph instance method <a href="../graph/graphVertex.html#graphcreatevertex"><code>pyvgx.Graph.CreateVertex()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vxd">1.1.2. pyvgx.op.OP_vxd</h4>
+<div class="paragraph">
+<p>Delete an existing vertex.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxd"><code>vxd</code></a> is the equivalent of graph instance method <a href="../graph/graphVertex.html#graphdeletevertex"><code>pyvgx.Graph.DeleteVertex()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vxr">1.1.3. pyvgx.op.OP_vxr</h4>
+<div class="paragraph">
+<p>Assign <a href="../vertex/vertexMembers.html#vertexrankc1">rank coefficients</a> to an existing vertex.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxr"><code>vxr</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexRank.html#vertexsetrank"><code>pyvgx.Vertex.SetRank()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vxt">1.1.4. pyvgx.op.OP_vxt</h4>
+<div class="paragraph">
+<p>Modify the type of an existing vertex.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxt"><code>vxt</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexMiscellaneous.html#vertexsettype"><code>pyvgx.Vertex.SetType()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vxx">1.1.5. pyvgx.op.OP_vxx</h4>
+<div class="paragraph">
+<p>Set the vertex expiration time.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxx"><code>vxx</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexTTL.html#vertexTTL"><code>pyvgx.Vertex.SetExpiration()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vxc">1.1.6. pyvgx.op.OP_vxc</h4>
+<div class="paragraph">
+<p>Convert vertex manifestation from VIRTUAL to REAL.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vxc"><code>vxc</code></a> is managed automatically and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vps">1.1.7. pyvgx.op.OP_vps</h4>
+<div class="paragraph">
+<p>Set vertex property.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vps"><code>vps</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexProperty.html#vertexsetproperty"><code>pyvgx.Vertex.SetProperty()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vpd">1.1.8. pyvgx.op.OP_vpd</h4>
+<div class="paragraph">
+<p>Delete vertex property.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vpd"><code>vpd</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexProperty.html#vertexremoveproperty"><code>pyvgx.Vertex.RemoveProperty()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vpc">1.1.9. pyvgx.op.OP_vpc</h4>
+<div class="paragraph">
+<p>Clear vertex properties.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vpc"><code>vpc</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexProperty.html#vertexremoveproperties"><code>pyvgx.Vertex.RemoveProperties()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vvs">1.1.10. pyvgx.op.OP_vvs</h4>
+<div class="paragraph">
+<p>Set vertex vector.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vvs"><code>vvs</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexVector.html#vertexsetvector"><code>pyvgx.Vertex.SetVector()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vvd">1.1.11. pyvgx.op.OP_vvd</h4>
+<div class="paragraph">
+<p>Delete vertex vector.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vvd"><code>vvd</code></a> is the equivalent of vertex instance method <a href="../vertex/vertexVector.html#vertexremovevector"><code>pyvgx.Vertex.RemoveVector()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vod">1.1.12. pyvgx.op.OP_vod</h4>
+<div class="paragraph">
+<p>Remove all vertex outarcs.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vod"><code>vod</code></a> has no direct API equivalent but has the same effect as calling <a href="../graph/graphArc.html#graphdisconnect"><code>graph.Disconnect( <em>vertex</em>, pyvgx.D_OUT )</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vid">1.1.13. pyvgx.op.OP_vid</h4>
+<div class="paragraph">
+<p>Remove all vertex inarcs.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vid"><code>vid</code></a> has no direct API equivalent but has the same effect as calling <a href="../graph/graphArc.html#graphdisconnect"><code>graph.Disconnect( <em>vertex</em>, pyvgx.D_IN )</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_val">1.1.14. pyvgx.op.OP_val</h4>
+<div class="paragraph">
+<p>Acquire vertex write lock.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#val"><code>val</code></a> is managed automatically and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_vrl">1.1.15. pyvgx.op.OP_vrl</h4>
+<div class="paragraph">
+<p>Release vertex lock.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vrl"><code>vrl</code></a> is managed automatically and has no direct API equivalent.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="arcoperators">1.2. Arc Operators</h3>
+<div class="sect3">
+<h4 id="OP_arc">1.2.1. pyvgx.op.OP_arc</h4>
+<div class="paragraph">
+<p>Create arc between two vertices.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#arc"><code>arc</code></a> is the equivalent of graph instance method <a href="../graph/graphArc.html#graphconnect"><code>pyvgx.Graph.Connect()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ard">1.2.2. pyvgx.op.OP_ard</h4>
+<div class="paragraph">
+<p>Delete arc(s) between two vertices.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ard"><code>ard</code></a> is the equivalent of graph instance method <a href="../graph/graphArc.html#graphdisconnect"><code>pyvgx.Graph.Disconnect()</code></a> when an exact <em>neighbor</em> vertex is specified.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="systemoperators">1.3. System Operators</h3>
+<div class="sect3">
+<h4 id="OP_nop">1.3.1. pyvgx.op.OP_nop</h4>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#nop"><code>nop</code></a> has no effect.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_sya">1.3.2. pyvgx.op.OP_sya</h4>
+<div class="paragraph">
+<p>System attach notification.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#sya"><code>sya</code></a> is generated by <a href="../reference.html#op_attach_func"><code>pyvgx.op.Attach()</code></a>. This operator has no functional significance other than indicating the time of the attach and information about the operation stream source.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_syd">1.3.3. pyvgx.op.OP_syd</h4>
+<div class="paragraph">
+<p>System detach notification.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#syd"><code>syd</code></a> is generated by <a href="../refernce.html#op_detach_func"><code>pyvgx.op.Detach()</code></a>. This operator has no functional significance other than indicating the time of the detach and information about the operation stream source.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_rcl">1.3.4. pyvgx.op.OP_rcl</h4>
+<div class="paragraph">
+<p>Clear system registry.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#rcl"><code>rcl</code></a> has no direct API equivalent but has the same effect as calling <a href="../reference.html#system_delete_graph_func"><code>system.DeleteGraph()</code></a> on all currently loaded graph instances.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_scf">1.3.5. pyvgx.op.OP_scf</h4>
+<div class="paragraph">
+<p>Configure similarity parameters.</p>
+</div>
+<div class="paragraph">
+<p>TBD.
+(Operator <a href="../io/vgxopxfer.html#scf"><code>scf</code></a>)</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grn">1.3.6. pyvgx.op.OP_grn</h4>
+<div class="paragraph">
+<p>Create new graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grn"><code>grn</code></a> is the equivalent of graph constructor <a href="../reference.html#graphobject"><code>pyvgx.Graph()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grd">1.3.7. pyvgx.op.OP_grd</h4>
+<div class="paragraph">
+<p>Delete graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grd"><code>grd</code></a> is the equivalent of system function <a href="../reference.html#system_delete_graph_func"><code>system.DeleteGraph()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_com">1.3.8. pyvgx.op.OP_com</h4>
+<div class="paragraph">
+<p>Inject a log message string into the operation stream.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#com"><code>com</code></a> is emitted by operation function <a href="../reference.html#op_produce_comment_func"><code>op.ProduceComment()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_dat">1.3.9. pyvgx.op.OP_dat</h4>
+<div class="paragraph">
+<p>Inject arbitrary data into the operation stream.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#dat"><code>dat</code></a> is emitted by operation function <a href="../reference.html#op_produce_raw_func"><code>op.ProduceRaw()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_clg">1.3.10. pyvgx.op.OP_clg</h4>
+<div class="paragraph">
+<p>Clone graph.</p>
+</div>
+<div class="paragraph">
+<p>TBD.
+(Operator <a href="../io/vgxopxfer.html#clg"><code>clg</code></a>)</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphoperators">1.4. Graph Instance Operators</h3>
+<div class="sect3">
+<h4 id="OP_grt">1.4.1. pyvgx.op.OP_grt</h4>
+<div class="paragraph">
+<p>Truncate graph.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grt"><code>grt</code></a> is the equivalent of graph instance method <a href="../graph/graphManagement.html#graphtruncate"><code>pyvgx.Graph.Truncate()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grp">1.4.2. pyvgx.op.OP_grp</h4>
+<div class="paragraph">
+<p>Persist graph.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grp"><code>grp</code></a> is the equivalent of graph instance method <a href="../graph/graphManagement.html#graphsave"><code>pyvgx.Graph.Save()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grs">1.4.3. pyvgx.op.OP_grs</h4>
+<div class="paragraph">
+<p>Graph state, with optional assert.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grs"><code>grs</code></a> is emitted with assert flag for all graphs when operation function <a href="../reference.html#op_assert_func"><code>op.Assert()</code></a> is called. Operator <code>grs</code> may also be emitted automatically by the system (without assert flag) as part of other operations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grr">1.4.4. pyvgx.op.OP_grr</h4>
+<div class="paragraph">
+<p>Set graph readonly.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grr"><code>grr</code></a> is emitted when graph instance method <a href="../graph/graphManagement.html#graphsetgraphreadonly"><code>pyvgx.Graph.SetGraphReadonly()</code></a> is called, and may also be emitted automatically by the system in other situations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_grw">1.4.5. pyvgx.op.OP_grw</h4>
+<div class="paragraph">
+<p>Set graph writable.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#grw"><code>grw</code></a> is emitted when graph instance method <a href="../graph/graphManagement.html#graphcleargraphreadonly"><code>pyvgx.Graph.ClearGraphReadonly()</code></a> is called, and may also be emitted automatically by the system in other situations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_gre">1.4.6. pyvgx.op.OP_gre</h4>
+<div class="paragraph">
+<p>Enable graph TTL events.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#gre"><code>gre</code></a> is emitted when graph instance method <a href="../graph/graphManagement.html#grapheventenable"><code>pyvgx.Graph.EventEnable()</code></a> is called, and may also be emitted automatically by the system in other situations.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_gri">1.4.7. pyvgx.op.OP_gri</h4>
+<div class="paragraph">
+<p>Disable graph TTL events.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#gri"><code>gri</code></a> is emitted when graph instance method <a href="../graph/graphManagement.html#grapheventdisable"><code>pyvgx.Graph.EventDisable()</code></a> is called, and may also be emitted automatically by the system in other situations.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="syncoperators">1.5. Synchronization Operators</h3>
+<div class="sect3">
+<h4 id="OP_tic">1.5.1. pyvgx.op.OP_tic</h4>
+<div class="paragraph">
+<p>System heartbeat.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#tic"><code>tic</code></a> is emitted automatically by the system when more than 4000 milliseconds have elapsed since the last operator.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_evx">1.5.2. pyvgx.op.OP_evx</h4>
+<div class="paragraph">
+<p>Execute all due TTL events.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#evx"><code>evx</code></a> has no direct API equivalent.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="lockoperators">1.6. Vertex Acquisition Operators</h3>
+<div class="sect3">
+<h4 id="OP_lxw">1.6.1. pyvgx.op.OP_lxw</h4>
+<div class="paragraph">
+<p>Atomic write-lock acquisition for multiple vertices.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#lxw"><code>lxw</code></a> is the equivalent of graph instance method <a href="../graph/graphVertex.html#graphopenvertices"><code>pyvgx.Graph.OpenVertices()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ulv">1.6.2. pyvgx.op.OP_ulv</h4>
+<div class="paragraph">
+<p>Atomic lock release for multiple vertices.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ulv"><code>ulv</code></a> is the equivalent of graph instance method <a href="../graph/graphVertex.html#graphclosevertices"><code>pyvgx.Graph.CloseVertices()</code></a>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ula">1.6.3. pyvgx.op.OP_ula</h4>
+<div class="paragraph">
+<p>Release all vertex locks.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ula"><code>ula</code></a> does not have a direct API equivalent.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="enumoperators">1.7. Enumeration Operators</h3>
+<div class="sect3">
+<h4 id="OP_vea">1.7.1. pyvgx.op.OP_vea</h4>
+<div class="paragraph">
+<p>Add new vertex type enumeration to graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#vea"><code>vea</code></a> is generated whenever a previously unused vertex type <em>T</em> is specified for a new vertex in a graph, i.e. the first call to <a href="../graph/graphVertex.html#graphcreatevertex"><code>pyvgx.Graph.CreateVertex()</code></a> or <a href="../graph/graphVertex.html#graphnewvertex"><code>pyvgx.Graph.NewVertex()</code></a> with <em>type</em> = <em>T</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ved">1.7.2. pyvgx.op.OP_ved</h4>
+<div class="paragraph">
+<p>Remove a vertex type enumeration from graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ved"><code>ved</code></a> is managed automatically by the system and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_rea">1.7.3. pyvgx.op.OP_rea</h4>
+<div class="paragraph">
+<p>Add new relationship type enumeration to graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#rea"><code>rea</code></a> is generated whenever an arc is created with a previously unused relationship type <em>R</em>, i.e. the first call to <a href="../graph/graphArc.html#graphconnect"><code>pyvgx.Graph.Connect()</code></a> with <em>arc</em> = ( <em>R</em>, &#8230;&#8203; ).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_red">1.7.4. pyvgx.op.OP_red</h4>
+<div class="paragraph">
+<p>Remove a relationship type enumeration from graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#red"><code>red</code></a> is managed automatically by the system and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_dea">1.7.5. pyvgx.op.OP_dea</h4>
+<div class="paragraph">
+<p>Add new vector dimension enumeration to graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#dea"><code>dea</code></a> is generated whenever a new vector is created containing a previously unused dimension <em>D</em>, i.e. the first call to <a href="../vertex/vertexVector.html#vertexsetvector"><code>pyvgx.Vertex.SetVector()</code></a> where <em>elements</em> contains an entry ( <em>D</em>, <em>weight</em> ).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ded">1.7.6. pyvgx.op.OP_ded</h4>
+<div class="paragraph">
+<p>Remove a vector dimension enumeration from graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ded"><code>ded</code></a> is managed automatically by the system and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_kea">1.7.7. pyvgx.op.OP_kea</h4>
+<div class="paragraph">
+<p>Add new property key enumeration to graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#kea"><code>kea</code></a> is generated whenever a vertex property is assigned using a previously unused key <em>K</em>, i.e. the first call to <a href="../vertex/vertexProperty.html#vertexsetproperty"><code>pyvgx.Vertex.SetProperty()</code></a> (or equivalent) where <em>name</em> = <em>K</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_ked">1.7.8. pyvgx.op.OP_ked</h4>
+<div class="paragraph">
+<p>Remove a property key enumeration from graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#ked"><code>ked</code></a> is managed automatically by the system and has no direct API equivalent.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_sea">1.7.9. pyvgx.op.OP_sea</h4>
+<div class="paragraph">
+<p>Add new property string value enumeration to graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#sea"><code>sea</code></a> is generated whenever a vertex string property is assigned with a previously unused string value <em>S</em>, i.e. the first call to <a href="../vertex/vertexProperty.html#vertexsetproperty"><code>pyvgx.Vertex.SetProperty()</code></a> (or equivalent) where <em>value</em> = <em>S</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="OP_sed">1.7.10. pyvgx.op.OP_sed</h4>
+<div class="paragraph">
+<p>Remove a property string value enumeration from graph instance.</p>
+</div>
+<div class="paragraph">
+<p>Operator <a href="../io/vgxopxfer.html#sed"><code>sed</code></a> is managed automatically by the system and has no direct API equivalent.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="operatorgroups">2. Operator Groups</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Operator groups are constants used to identify sets of operator opcodes.</p>
+</div>
+<div class="paragraph">
+<p>These constants are suitable for use with <a href="../reference.html#op_allow_func"><code>pyvgx.op.Allow()</code></a> and <a href="../reference.html#op_deny_func"><code>pyvgx.op.Deny()</code></a>.</p>
+</div>
+<div class="sect2">
+<h3 id="actiongroups">2.1. Action Groups</h3>
+<div class="sect3">
+<h4 id="OP_ACTION_assign">2.1.1. pyvgx.op.OP_ACTION_assign</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_ACTION_assign</code> covers all operators that re-assign an existing attribute.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ACTION Assign Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxr">pyvgx.op.OP_vxr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxt">pyvgx.op.OP_vxt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxx">pyvgx.op.OP_vxx</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxc">pyvgx.op.OP_vxc</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_ACTION_create">2.1.2. pyvgx.op.OP_ACTION_create</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_ACTION_create</code> covers all operators that create new objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ACTION Create Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxn">pyvgx.op.OP_vxn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vps">pyvgx.op.OP_vps</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvs">pyvgx.op.OP_vvs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_arc">pyvgx.op.OP_arc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_scf">pyvgx.op.OP_scf</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_clg">pyvgx.op.OP_clg</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grn">pyvgx.op.OP_grn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vea">pyvgx.op.OP_vea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rea">pyvgx.op.OP_rea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dea">pyvgx.op.OP_dea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_kea">pyvgx.op.OP_kea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sea">pyvgx.op.OP_sea</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_ACTION_delete">2.1.3. pyvgx.op.OP_ACTION_delete</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_ACTION_delete</code> covers all operators that delete objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ACTION Delete Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxd">pyvgx.op.OP_vxd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpd">pyvgx.op.OP_vpd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpc">pyvgx.op.OP_vpc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvd">pyvgx.op.OP_vvd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vod">pyvgx.op.OP_vod</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vid">pyvgx.op.OP_vid</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ard">pyvgx.op.OP_ard</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rcl">pyvgx.op.OP_rcl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grd">pyvgx.op.OP_grd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grt">pyvgx.op.OP_grt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ved">pyvgx.op.OP_ved</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_red">pyvgx.op.OP_red</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ded">pyvgx.op.OP_ded</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ked">pyvgx.op.OP_ked</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sed">pyvgx.op.OP_sed</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_ACTION_event">2.1.4. pyvgx.op.OP_ACTION_event</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_ACTION_event</code> covers all operators that communicate events or other actions.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">ACTION Event Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_nop">pyvgx.op.OP_nop</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_com">pyvgx.op.OP_com</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dat">pyvgx.op.OP_dat</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grp">pyvgx.op.OP_grp</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grs">pyvgx.op.OP_grs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_tic">pyvgx.op.OP_tic</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_evx">pyvgx.op.OP_evx</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scopegroups">2.2. Scope Groups</h3>
+<div class="sect3">
+<h4 id="OP_SCOPE_single">2.2.1. pyvgx.op.OP_SCOPE_single</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_SCOPE_single</code> covers all operators affecting single objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">SCOPE Single Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_nop">pyvgx.op.OP_nop</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxn">pyvgx.op.OP_vxn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxd">pyvgx.op.OP_vxd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxr">pyvgx.op.OP_vxr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxt">pyvgx.op.OP_vxt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxx">pyvgx.op.OP_vxx</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxc">pyvgx.op.OP_vxc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vps">pyvgx.op.OP_vps</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpd">pyvgx.op.OP_vpd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvs">pyvgx.op.OP_vvs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvd">pyvgx.op.OP_vvd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_val">pyvgx.op.OP_val</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vrl">pyvgx.op.OP_vrl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_arc">pyvgx.op.OP_arc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_scf">pyvgx.op.OP_scf</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grn">pyvgx.op.OP_grn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grd">pyvgx.op.OP_grd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_com">pyvgx.op.OP_com</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dat">pyvgx.op.OP_dat</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_clg">pyvgx.op.OP_clg</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grt">pyvgx.op.OP_grt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grp">pyvgx.op.OP_grp</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grs">pyvgx.op.OP_grs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grr">pyvgx.op.OP_grr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grw">pyvgx.op.OP_grw</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gre">pyvgx.op.OP_gre</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gri">pyvgx.op.OP_gri</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_tic">pyvgx.op.OP_tic</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_evx">pyvgx.op.OP_evx</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vea">pyvgx.op.OP_vea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ved">pyvgx.op.OP_ved</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rea">pyvgx.op.OP_rea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_red">pyvgx.op.OP_red</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dea">pyvgx.op.OP_dea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ded">pyvgx.op.OP_ded</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_kea">pyvgx.op.OP_kea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ked">pyvgx.op.OP_ked</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sea">pyvgx.op.OP_sea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sed">pyvgx.op.OP_sed</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_SCOPE_multiple">2.2.2. pyvgx.op.OP_SCOPE_multiple</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_SCOPE_multiple</code> covers all operators affecting multiple objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">SCOPE Multiple Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpc">pyvgx.op.OP_vpc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vod">pyvgx.op.OP_vod</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vid">pyvgx.op.OP_vid</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_val">pyvgx.op.OP_val</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ard">pyvgx.op.OP_ard</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sya">pyvgx.op.OP_sya</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_syd">pyvgx.op.OP_syd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rcl">pyvgx.op.OP_rcl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_lxw">pyvgx.op.OP_lxw</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ulv">pyvgx.op.OP_ulv</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ula">pyvgx.op.OP_ula</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="targetgroups">2.3. Target Groups</h3>
+<div class="sect3">
+<h4 id="OP_TARGET_vertex">2.3.1. pyvgx.op.OP_TARGET_vertex</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_vertex</code> covers all operators affecting vertex objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Vertex Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxn">pyvgx.op.OP_vxn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxd">pyvgx.op.OP_vxd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxr">pyvgx.op.OP_vxr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxt">pyvgx.op.OP_vxt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxx">pyvgx.op.OP_vxx</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxc">pyvgx.op.OP_vxc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vps">pyvgx.op.OP_vps</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpd">pyvgx.op.OP_vpd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpc">pyvgx.op.OP_vpc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvs">pyvgx.op.OP_vvs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvd">pyvgx.op.OP_vvd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vod">pyvgx.op.OP_vod</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vid">pyvgx.op.OP_vid</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_val">pyvgx.op.OP_val</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vrl">pyvgx.op.OP_vrl</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_arc">2.3.2. pyvgx.op.OP_TARGET_arc</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_arc</code> covers all operators affecting arcs.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Arc Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_arc">pyvgx.op.OP_arc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ard">pyvgx.op.OP_ard</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_system">2.3.3. pyvgx.op.OP_TARGET_system</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_system</code> covers all operators with system-wide effect.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET System Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sya">pyvgx.op.OP_sya</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_syd">pyvgx.op.OP_syd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rcl">pyvgx.op.OP_rcl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_scf">pyvgx.op.OP_scf</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_com">pyvgx.op.OP_com</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dat">pyvgx.op.OP_dat</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_clg">pyvgx.op.OP_clg</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_graph">2.3.4. pyvgx.op.OP_TARGET_graph</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_graph</code> covers all operators affecting graph objects.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Graph Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grn">pyvgx.op.OP_grn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grd">pyvgx.op.OP_grd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grt">pyvgx.op.OP_grt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grp">pyvgx.op.OP_grp</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grs">pyvgx.op.OP_grs</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_rw">2.3.5. pyvgx.op.OP_TARGET_rw</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_rw</code> covers operators modifying read-write state of graphs.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET RW Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grr">pyvgx.op.OP_grr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grw">pyvgx.op.OP_grw</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_evp">2.3.6. pyvgx.op.OP_TARGET_evp</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_evp</code> covers operators modifying the TTL event processor state.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET EVP Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gre">pyvgx.op.OP_gre</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gri">pyvgx.op.OP_gri</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_time">2.3.7. pyvgx.op.OP_TARGET_time</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_time</code> covers operators affecting heartbeat and time synchronization.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Time Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_tic">pyvgx.op.OP_tic</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_exec">2.3.8. pyvgx.op.OP_TARGET_exec</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_exec</code> covers operators performing mass-execution of events.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Exec Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_evx">pyvgx.op.OP_evx</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_acquire">2.3.9. pyvgx.op.OP_TARGET_acquire</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_acquire</code> covers operators that modify the write-lock state of many vertices at the same time.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Acquire Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_lxw">pyvgx.op.OP_lxw</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ulv">pyvgx.op.OP_ulv</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ula">pyvgx.op.OP_ula</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="OP_TARGET_enum">2.3.10. pyvgx.op.OP_TARGET_enum</h4>
+<div class="paragraph">
+<p><code>pyvgx.op.OP_TARGET_enum</code> covers operators that create or delete enumerations.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 33%;">
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">TARGET Enum Operator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vea">pyvgx.op.OP_vea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ved">pyvgx.op.OP_ved</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rea">pyvgx.op.OP_rea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_red">pyvgx.op.OP_red</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dea">pyvgx.op.OP_dea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ded">pyvgx.op.OP_ded</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_kea">pyvgx.op.OP_kea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ked">pyvgx.op.OP_ked</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sea">pyvgx.op.OP_sea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sed">pyvgx.op.OP_sed</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="operatorprofiles">3. Operator Profiles</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Operator profile constants represent pre-defined sets of allowed and denied operators.</p>
+</div>
+<div class="paragraph">
+<p>Operator profile constants must be applied using <a href="../reference.html#op_profile_func"><code>pyvgx.op.Profile()</code></a>.</p>
+</div>
+<div class="sect2">
+<h3 id="consumerprofile">3.1. Consumer Profile</h3>
+<div class="paragraph">
+<p>The consumer profile is suitable for VGX instances that do not generate their own data.</p>
+</div>
+<div class="sect3">
+<h4 id="OP_PROFILE_consumer">3.1.1. pyvgx.op.OP_PROFILE_consumer</h4>
+<div class="paragraph">
+<p>The profile <code>pyvgx.op.OP_PROFILE_consumer</code> prevents various system operations, mass-deletion and graph persist.</p>
+</div>
+<table class="tableblock frame-all grid-all" style="width: 50%;">
+<caption class="title">Table 1. OP_PROFILE_consumer: ALLOW the following operators</caption>
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>pyvgx.op.OP_PROFILE_consumer</code> ALLOW</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxn">pyvgx.op.OP_vxn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxd">pyvgx.op.OP_vxd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxr">pyvgx.op.OP_vxr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxt">pyvgx.op.OP_vxt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxx">pyvgx.op.OP_vxx</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vxc">pyvgx.op.OP_vxc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vps">pyvgx.op.OP_vps</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpd">pyvgx.op.OP_vpd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vpc">pyvgx.op.OP_vpc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvs">pyvgx.op.OP_vvs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vvd">pyvgx.op.OP_vvd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vod">pyvgx.op.OP_vod</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vid">pyvgx.op.OP_vid</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_val">pyvgx.op.OP_val</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vrl">pyvgx.op.OP_vrl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_arc">pyvgx.op.OP_arc</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ard">pyvgx.op.OP_ard</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_scf">pyvgx.op.OP_scf</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_com">pyvgx.op.OP_com</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dat">pyvgx.op.OP_dat</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grn">pyvgx.op.OP_grn</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_tic">pyvgx.op.OP_tic</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_lxw">pyvgx.op.OP_lxw</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ulv">pyvgx.op.OP_ulv</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ula">pyvgx.op.OP_ula</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_vea">pyvgx.op.OP_vea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ved">pyvgx.op.OP_ved</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rea">pyvgx.op.OP_rea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_red">pyvgx.op.OP_red</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_dea">pyvgx.op.OP_dea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ded">pyvgx.op.OP_ded</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_kea">pyvgx.op.OP_kea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_ked">pyvgx.op.OP_ked</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sea">pyvgx.op.OP_sea</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sed">pyvgx.op.OP_sed</a></p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all" style="width: 50%;">
+<caption class="title">Table 2. OP_PROFILE_consumer: DENY the following operators</caption>
+<colgroup>
+<col style="width: 100%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><code>pyvgx.op.OP_PROFILE_consumer</code> DENY</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_sya">pyvgx.op.OP_sya</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_syd">pyvgx.op.OP_syd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_rcl">pyvgx.op.OP_rcl</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_clg">pyvgx.op.OP_clg</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grd">pyvgx.op.OP_grd</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grt">pyvgx.op.OP_grt</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grp">pyvgx.op.OP_grp</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grs">pyvgx.op.OP_grs</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grr">pyvgx.op.OP_grr</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_grw">pyvgx.op.OP_grw</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gre">pyvgx.op.OP_gre</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_gri">pyvgx.op.OP_gri</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#OP_evx">pyvgx.op.OP_evx</a></p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="timestampConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Timestamp Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="arcDirectionConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Arc Direction Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

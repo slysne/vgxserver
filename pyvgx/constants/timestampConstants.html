@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Timestamp Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="timestampconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Timestamp Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="opcodeConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Opcode Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#T_MIN">1. pyvgx.T_MIN</a></li>
+<li><a href="#T_MAX">2. pyvgx.T_MAX</a></li>
+<li><a href="#T_NEVER">3. pyvgx.T_NEVER</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>These constants represent valid internal timestamp limits.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Constant</th>
+<th class="tableblock halign-left valign-top">Integer Value</th>
+<th class="tableblock halign-left valign-top">Time (GMT)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#T_MIN">pyvgx.T_MIN</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Thu Jan 01 00:00:01 1970</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#T_MAX">pyvgx.T_MAX</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4,102,444,799</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Thu Dec 31 23:59:59 2099</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#T_NEVER">pyvgx.T_NEVER</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4,102,444,800</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Infinity</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="T_MIN">1. pyvgx.T_MIN</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.T_MIN = 1</code></p>
+</div>
+<div class="paragraph">
+<p>Minimum timestamp, in seconds in 1970.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="T_MAX">2. pyvgx.T_MAX</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.T_MAX = 4102444799</code></p>
+</div>
+<div class="paragraph">
+<p>Maximum timestamp, in seconds in 1970.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="T_NEVER">3. pyvgx.T_NEVER</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>pyvgx.T_NEVER = 4102444800</code></p>
+</div>
+<div class="paragraph">
+<p>Infinitely far into the future.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="sortSpecificationConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Sort Specification Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="opcodeConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Opcode Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Server Plugin Adapter</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxserver_pluginadapter" class="article toc2 toc-left">
+<div id="header">
+<h1>VGX Server Plugin Adapter <a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="sysadmin.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="System Administration"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_hello_world">1. Hello World</a></li>
+<li><a href="#plugin_functions">2. Plugin Functions</a>
+<ul class="sectlevel2">
+<li><a href="#_request_flow">2.1. Request Flow</a></li>
+<li><a href="#plugin_function_arguments">2.2. Plugin Function Arguments</a></li>
+<li><a href="#plugin_signature">2.3. Plugin Function Signatures</a>
+<ul class="sectlevel3">
+<li><a href="#pre_engine_signature">2.3.1. Engine and Pre-processor Signature</a></li>
+<li><a href="#post_signature">2.3.2. Post-processor Signature</a></li>
+<li><a href="#pre_engine_reserved_args">2.3.3. Engine and Pre-processor Reserved Keyword Arguments</a></li>
+<li><a href="#post_reserved_args">2.3.4. Post Reserved Keyword Arguments</a></li>
+</ul>
+</li>
+<li><a href="#plugin_return_values">2.4. Plugin Function Return Values</a>
+<ul class="sectlevel3">
+<li><a href="#pre_return_value">2.4.1. Return value from pre-processor plugin</a></li>
+<li><a href="#engine_return_value">2.4.2. Return value from engine processor plugin</a></li>
+<li><a href="#post_return_value">2.4.3. Return value from post-processor plugin</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_pyvgx_system_plugin_management">3. pyvgx.system Plugin Management</a>
+<ul class="sectlevel2">
+<li><a href="#_addplugin">3.1. AddPlugin</a></li>
+<li><a href="#_removeplugin">3.2. RemovePlugin</a></li>
+<li><a href="#_getplugins">3.3. GetPlugins</a></li>
+<li><a href="#_getbuiltins">3.4. GetBuiltins</a></li>
+</ul>
+</li>
+<li><a href="#pyvgx_pluginrequest">4. pyvgx.PluginRequest</a>
+<ul class="sectlevel2">
+<li><a href="#_pluginrequest_class">4.1. PluginRequest Class</a></li>
+<li><a href="#_pluginrequest_methods">4.2. PluginRequest Methods</a></li>
+<li><a href="#_pluginrequest_attributes">4.3. PluginRequest Attributes</a></li>
+</ul>
+</li>
+<li><a href="#pyvgx_pluginresponse">5. pyvgx.PluginResponse</a>
+<ul class="sectlevel2">
+<li><a href="#_pluginresponse_class">5.1. PluginResponse Class</a></li>
+<li><a href="#_pluginresponse_methods">5.2. PluginResponse Methods</a></li>
+<li><a href="#_pluginresponse_attributes">5.3. PluginResponse Attributes</a></li>
+<li><a href="#pluginresponse_json_serializer">5.4. PluginResponse Serialized as JSON</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>Python plugins can be installed and invoked via HTTP requests. A plugin is a regular Python function registered via <a href="#system_addplugin_func">pyvgx.system.AddPlugin()</a>. A unique service URI is automatically created for the registered function. It is executed by sending a HTTP request to that URI.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hello_world">1. Hello World</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>It is easy to create a new service as illustrated by this minimal implementation example.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Step 1: Complete code for Hello World Service</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span><span class="p">,</span> <span class="n">http</span><span class="o">=</span><span class="mi">9000</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
+  <span class="k">return</span> <span class="sh">"</span><span class="s">Hello, you said </span><span class="sh">'</span><span class="s">{}</span><span class="sh">'"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">message</span> <span class="p">)</span>
+
+<span class="n">system</span><span class="p">.</span><span class="nc">AddPlugin</span><span class="p">(</span> <span class="n">hello</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Step 2: Test the service</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl <span class="s2">"http://127.0.0.1:9000/vgx/plugin/hello?message=hi"</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Step 3: Inspect the response</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hello, you said 'hi'"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="plugin_functions">2. Plugin Functions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Plugins are regular Python functions.  A plugin function can serve one of three roles (<a href="#pre_post_engine">Figure 1, &#8220;Plugin Functions&#8221;</a>):</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="plugin_function_pre"></a>pre</dt>
+<dd>
+<p>Request pre-processor executed in a VGX Dispatch instance before the request is forwarded to the dispatch back-end matrix</p>
+</dd>
+<dt class="hdlist1"><a id="plugin_function_post"></a>post</dt>
+<dd>
+<p>Response post-processor executed in a VGX Dispatch instance after the aggregated response has been created from dispatch back-end matrix responses</p>
+</dd>
+<dt class="hdlist1"><a id="plugin_function_engine"></a>engine</dt>
+<dd>
+<p>Main request processor executed in a VGX Engine</p>
+</dd>
+</dl>
+</div>
+<div class="sect2">
+<h3 id="_request_flow">2.1. Request Flow</h3>
+<div class="paragraph">
+<p>A request is generally processed as shown below. When a dispatcher is used both <em>pre</em> and <em>post</em>-processors are optional. Any number of dispatcher layers is allowed.</p>
+</div>
+<div id="pre_post_engine" class="imageblock">
+<div class="content">
+<img src="../images/pre_post_engine.png" alt="pre_post_engine">
+</div>
+<div class="title">Figure 1. Plugin Functions</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="plugin_function_arguments">2.2. Plugin Function Arguments</h3>
+<div class="paragraph">
+<p>HTTP request parameters with matching plugin function argument names are mapped directly to those arguments. Function arguments without default values require matching HTTP parameters to be present in the request. Function arguments with type annotation <code>param: <em>type</em></code> require compatible values to be passed in the HTTP request.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="service.html#request_parameter_annotation">Parameter Annotation</a> for supported annotation types.</p>
+</div>
+<div class="paragraph">
+<p>Any number of plugin function arguments can be declared for <strong><em>pre</em></strong> and <strong><em>engine</em></strong> plugins. Some argument names are reserved as described in <a href="#pre_engine_signature">Section 2.3.1, &#8220;Engine and Pre-processor Signature&#8221;</a>. One such argument is <a href="#pyvgx_pluginrequest"><em>request</em></a> which exposes all HTTP request parameters as dict attribute <a href="#request_attr_params"><em>request.params</em></a>.</p>
+</div>
+<div class="paragraph">
+<p>Arguments for <strong><em>post</em></strong> plugins are described in <a href="#post_signature">Section 2.3.2, &#8220;Post-processor Signature&#8221;</a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">HTTP parameters are mapped to plugin function arguments</div>
+<div class="content">
+<pre>http://127.0.0.1:9000/vgx/plugin/test?num=123&amp;txt=456&amp;extra=[7,8,9]</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Annotated arguments are converted, all arguments in request.params</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">test</span><span class="p">(</span> <span class="n">request</span><span class="p">,</span> <span class="n">num</span><span class="p">:</span><span class="nb">int</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="sh">"</span><span class="s">num</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">type:{} value:{}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="nf">type</span><span class="p">(</span><span class="n">num</span><span class="p">),</span><span class="n">num</span><span class="p">),</span>
+    <span class="sh">"</span><span class="s">txt</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">type:{} value:{}</span><span class="sh">"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span><span class="nf">type</span><span class="p">(</span><span class="n">txt</span><span class="p">),</span><span class="n">txt</span><span class="p">),</span>
+    <span class="sh">"</span><span class="s">all</span><span class="sh">"</span><span class="p">:</span> <span class="n">request</span><span class="p">.</span><span class="n">params</span>
+  <span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Non-annotated arguments are strings</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"num"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type:&lt;class 'int'&gt; value:123"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"txt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"type:&lt;class 'str'&gt; value:456"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"all"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"num"</span><span class="p">:</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"txt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"456"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"extra"</span><span class="p">:</span><span class="w"> </span><span class="s2">"[7,8,9]"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.096</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="plugin_signature">2.3. Plugin Function Signatures</h3>
+<div class="paragraph">
+<p>Plugin functions for <strong>engine</strong> and <strong>pre</strong>-processors may include any number of user defined arguments, optionally annotated, and with default values where appropriate. Some argument names are reserved for special use. Plugin functions for <strong>post</strong>-processors take one or two reserved arguments.</p>
+</div>
+<div class="sect3">
+<h4 id="pre_engine_signature">2.3.1. Engine and Pre-processor Signature</h4>
+<div class="paragraph">
+<p>Function signatures for <strong>pre</strong> and <strong>engine</strong> plugins are the same and include five reserved keyword arguments which automatically receive their values as described in <a href="#pre_engine_reserved_args">Section 2.3.3, &#8220;Engine and Pre-processor Reserved Keyword Arguments&#8221;</a>.</p>
+</div>
+<div class="listingblock">
+<div class="title">Five reserved arguments for <strong>engine</strong> and <strong>pre</strong> plugin functions, <strong><em>request</em></strong> is mandatory</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">func</span><span class="p">(</span> <span class="n">request</span><span class="p">[,</span> <span class="n">graph</span><span class="p">[,</span> <span class="n">method</span><span class="p">[,</span> <span class="n">headers</span><span class="p">[,</span> <span class="n">content</span><span class="p">,</span> <span class="p">...]]]]</span> <span class="p">):</span>
+  <span class="bp">...</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="post_signature">2.3.2. Post-processor Signature</h4>
+<div class="paragraph">
+<p>Function signatures for <strong>post</strong> plugins have two reserved keyword arguments which automatically receive their values as described in <a href="#post_reserved_args">Section 2.3.4, &#8220;Post Reserved Keyword Arguments&#8221;</a>.</p>
+</div>
+<div class="paragraph">
+<p>The function takes no user defined arguments.</p>
+</div>
+<div class="listingblock">
+<div class="title">Two reserved arguments for <strong>post</strong> plugin functions, <strong><em>response</em></strong> is mandatory</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">func</span><span class="p">(</span> <span class="n">response</span><span class="p">[,</span> <span class="n">graph</span><span class="p">]</span> <span class="p">):</span>
+  <span class="bp">...</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="pre_engine_reserved_args">2.3.3. Engine and Pre-processor Reserved Keyword Arguments</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Argument</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required?</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="pre_engine_arg_request"></a><strong>request</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="#pyvgx_pluginrequest">pyvgx.PluginRequest</a></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains all request parameters, general request information, and meta data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="pre_engine_arg_graph"></a><strong>graph</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="../reference.html#graphobject_type">pyvgx.Graph</a></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required when system.AddPlugin() is called with <em>graph</em> argument</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph instance passed to system.AddPlugin() when registering the plugin function.
+If registered without a graph this function argument is not required and can be freely used for other purposes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="pre_engine_arg_method"></a><strong>method</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"GET" or "POST"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="pre_engine_arg_headers"></a><strong>headers</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bytes</em> (default)<br>
+<em>str</em><br>
+<em>dict</em><br>
+<em>list</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP request headers are received according to declared type:</p>
+<p class="tableblock"><em>bytes</em>: Raw bytes, as received</p>
+<p class="tableblock"><em>str</em>: Raw UTF-8 header bytes, decoded to string</p>
+<p class="tableblock"><em>dict</em>: Key-value pairs as {field:value}</p>
+<p class="tableblock"><em>list</em>: Key-value pairs as [(field,value), &#8230;&#8203;]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="pre_engine_arg_content"></a><strong>content</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bytes</em> (default)<br>
+<em>str</em><br>
+<em>json</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optional</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Receives HTTP content in POST requests according to declared type:</p>
+<p class="tableblock"><em>bytes</em>: Raw bytes, as received</p>
+<p class="tableblock"><em>str</em>: Raw UTF-8 content bytes, decoded to string</p>
+<p class="tableblock"><em>json</em>: Python object decoded from raw JSON data</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="post_reserved_args">2.3.4. Post Reserved Keyword Arguments</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Argument</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required?</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="post_arg_response"></a><strong>response</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="#pyvgx_pluginresponse">pyvgx.PluginResponse</a></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always required</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains response payload, general response information and meta data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="post_arg_graph"></a><strong>graph</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="../reference.html#graphobject_type">pyvgx.Graph</a></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required when system.AddPlugin() is called with <em>graph</em> argument</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph instance passed to system.AddPlugin() when registering the plugin function.
+If registered without a graph this function argument is not used.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="plugin_return_values">2.4. Plugin Function Return Values</h3>
+<div class="paragraph">
+<p>The types of objects returned from plugin function depend on plugin type and context. Two general rules apply:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Dispatcher Forward</dt>
+<dd>
+<p>If a pre-processor request is to be forwarded to a back-end matrix the returned object type must be <strong>PluginRequest</strong></p>
+</dd>
+<dt class="hdlist1">Dispatcher Merge</dt>
+<dd>
+<p>If a response is to be merged with other responses in a higher dispatcher layer the returned object type must be <strong>PluginResponse</strong></p>
+</dd>
+</dl>
+</div>
+<div class="sect3">
+<h4 id="pre_return_value">2.4.1. Return value from pre-processor plugin</h4>
+<div class="paragraph">
+<p>Pre-processors can return a <a href="#pyvgx_pluginrequest">PluginRequest</a> object, a <a href="#pyvgx_pluginresponse">PluginResponse</a> object, or a regular Python object.
+The plugin controls dispatcher behavior by the type of object returned.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">pre: return PluginRequest</dt>
+<dd>
+<p>This can be the original object passed to the plugin function&#8217;s <em>request</em> argument or a new instance created by the function. When this object type is returned VGX Server will forward the request to the VGX Dispatch back-end matrix.</p>
+</dd>
+<dt class="hdlist1">pre: return PluginResponse</dt>
+<dd>
+<p>The plugin pre-processor may create and return a response object. This prevents the request from being dispatched to the back-end matrix, resulting in early termination of the request.</p>
+</dd>
+<dt class="hdlist1">pre: return any other Python object</dt>
+<dd>
+<p>A plugin running in a topmost VGX Dispatch instance may return any serializable Python object. This prevents the request from being dispatched to the back-end matrix, resulting in early termination of the request. Only top level dispatchers are allowed to return a regular Python object. Doing so in a lower level dispatcher will generate a partial merge error in the dispatcher above.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Return object types for <strong>pre</strong> plugin functions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">pre</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="p">...</span> <span class="p">):</span>
+  <span class="c1"># PluginRequest: Forward to back-end
+</span>  <span class="k">if</span> <span class="nf">continue_dispatch</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">request</span>
+  <span class="c1"># PluginResponse: Early termination at lower level dispatch
+</span>  <span class="k">elif</span> <span class="ow">not</span> <span class="n">request</span><span class="p">.</span><span class="n">toplevel</span><span class="p">:</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_VAL</span><span class="o">|</span><span class="n">S_ASC</span> <span class="p">)</span>
+    <span class="n">r</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">First</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">r</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="sh">"</span><span class="s">Second</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+  <span class="c1"># Any object: Early termination at top level dispatch
+</span>  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">First</span><span class="sh">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="sh">"</span><span class="s">Second</span><span class="sh">"</span><span class="p">)]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="engine_return_value">2.4.2. Return value from engine processor plugin</h4>
+<div class="paragraph">
+<p>Main request processors must return a <a href="#pyvgx_pluginresponse">PluginResponse</a> object if part of a dispatcher back-end matrix. A stand-alone engine can return any Python object.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">engine: return PluginResponse</dt>
+<dd>
+<p>The main request processor must create and return a new object of this type if a higher level dispatcher will merge this response with responses from other engine instances</p>
+</dd>
+<dt class="hdlist1">engine: return any other Python object</dt>
+<dd>
+<p>The main request processor may return any Python object if no higher level merge will take place</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Return object types for <strong>engine</strong> plugin functions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">engine</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="p">...</span> <span class="p">):</span>
+  <span class="c1"># PluginResponse: when result will be merged at higher level
+</span>  <span class="k">if</span> <span class="nf">is_part_of_backend</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nc">PluginResponse</span><span class="p">(</span> <span class="n">sortby</span><span class="o">=</span><span class="n">S_VAL</span><span class="o">|</span><span class="n">S_ASC</span> <span class="p">)</span>
+    <span class="n">r</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">First</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">r</span><span class="p">.</span><span class="nc">Append</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="sh">"</span><span class="s">Second</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+  <span class="c1"># Any object: when this engine is standalone instance
+</span>  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">First</span><span class="sh">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="sh">"</span><span class="s">Second</span><span class="sh">"</span><span class="p">)]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="post_return_value">2.4.3. Return value from post-processor plugin</h4>
+<div class="paragraph">
+<p>Post-processors can return a <a href="#pyvgx_pluginresponse">PluginResponse</a> object or a regular Python object.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">post: return PluginResponse</dt>
+<dd>
+<p>The plugin post-processor may modify the original response object or create and return a new response object.</p>
+</dd>
+<dt class="hdlist1">post: return any other Python object</dt>
+<dd>
+<p>A plugin running in a topmost VGX Dispatch instance may return any serializable Python object. Only top level dispatchers are allowed to return a regular Python object. Doing so in a lower level dispatcher will generate a partial merge error in the dispatcher above.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">Return object types for <strong>post</strong> plugin functions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">post</span><span class="p">(</span> <span class="n">response</span><span class="p">:</span><span class="n">PluginResponse</span> <span class="p">):</span>
+  <span class="c1"># PluginResponse: when result will be merged at higher level
+</span>  <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="p">.</span><span class="n">toplevel</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">response</span>
+  <span class="c1"># Any object: this is the top dispatcher
+</span>  <span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="sh">"</span><span class="s">First</span><span class="sh">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="sh">"</span><span class="s">Second</span><span class="sh">"</span><span class="p">)]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pyvgx_system_plugin_management">3. pyvgx.system Plugin Management</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_addplugin">3.1. AddPlugin</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_addplugin_func"></a><code>pyvgx.<strong>system.AddPlugin</strong>( <strong>[</strong><em>plugin</em><strong>[</strong>, <em>name</em><strong>[</strong>, <em>graph</em><strong>[</strong>, <em>engine</em><strong>[</strong>, <em>pre</em><strong>[</strong>, <em>post</em><strong>]]]]]]</strong> )</code></dt>
+<dd>
+<p><strong><em>plugin</em></strong>: Register Python function <em>plugin</em> as a new HTTP endpoint. The plugin is published at its unique service URL:</p>
+<div class="paragraph">
+<p><code>http://<em>host</em>:_port_/vgx/plugin/<strong><em>servicename</em></strong>?<em>parameters</em></code></p>
+</div>
+<div class="paragraph">
+<p>HTTP <em>parameters</em> are passed to the plugin function as described in <a href="#request_parameters">[request_parameters]</a>.</p>
+</div>
+<div class="paragraph">
+<p><strong><em>name</em></strong>: Specify <em>servicename</em> with this optional argument. By default <em>servicename</em> is the function name (i.e. <em>plugin.__name__</em>).</p>
+</div>
+<div class="paragraph">
+<p><strong><em>graph</em></strong>: A plugin may be bound to a specific graph instance by supplying it through the <em>graph</em> argument. Such plugins are required to have a <a href="#pre_engine_arg_graph"><em>graph</em> argument in their function signature</a>.</p>
+</div>
+<div class="paragraph">
+<p><strong><em>engine</em></strong>: Alias for <em>plugin</em>, useful for making plugin function role more explicit in multi-instance deployments.</p>
+</div>
+<div class="paragraph">
+<p><strong><em>pre</em></strong> and <strong><em>post</em></strong>: In <a href="service.html#dispatcher_configuration">dispatcher mode</a> create a new HTTP endpoint with Python functions <em>pre</em> and/or <em>post</em> acting as request pre-processor and response post-processor. Endpoint must be specified with <em>name</em> in this configuration, and <em>pre</em>/<em>post</em> cannot be combined with <em>plugin</em> or <em>engine</em>.</p>
+</div>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_removeplugin">3.2. RemovePlugin</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_removeplugin_func"></a><code>pyvgx.<strong>system.RemovePlugin</strong>( <em>name</em> )</code></dt>
+<dd>
+<p>Remove a <a href="#system_addplugin_func">registered plugin</a> from the system.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_getplugins">3.3. GetPlugins</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_getplugins_func"></a><code>pyvgx.<strong>system.GetPlugins</strong>()</code></dt>
+<dd>
+<p>Return a list of <a href="#system_addplugin_func">registered plugins</a>. Each entry in the list is a dictionary containing the following information:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>path</code>: http service path for invoking plugin function.</p>
+</li>
+<li>
+<p><code>description</code>: plugin function&#8217;s docstring.</p>
+</li>
+<li>
+<p><code>parameters</code>: dict mapping plugin function&#8217;s parameter names to their type annotations.</p>
+</li>
+<li>
+<p><code>bound_graph</code>: graph instance, if plugin function takes <code>graph</code> parameter.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="sh">"</span><span class="s">path</span><span class="sh">"</span><span class="p">:</span>         <span class="o">&lt;</span><span class="n">URI_path</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">description</span><span class="sh">"</span><span class="p">:</span>  <span class="o">&lt;</span><span class="n">plugin_docstring</span><span class="o">&gt;</span><span class="p">,</span>
+        <span class="sh">"</span><span class="s">parameters</span><span class="sh">"</span><span class="p">:</span>   <span class="p">{</span>
+            <span class="o">&lt;</span><span class="n">param1</span><span class="o">&gt;</span><span class="p">:</span>       <span class="o">&lt;</span><span class="n">annotation</span><span class="o">&gt;</span><span class="p">,</span>
+            <span class="o">&lt;</span><span class="n">param2</span><span class="o">&gt;</span><span class="p">:</span>       <span class="o">&lt;</span><span class="n">annotation</span><span class="o">&gt;</span><span class="p">,</span>
+            <span class="bp">...</span>
+        <span class="p">},</span>
+        <span class="sh">"</span><span class="s">bound_graph</span><span class="sh">"</span><span class="p">:</span>  <span class="o">&lt;</span><span class="n">graph_instance_repr_or_None</span><span class="o">&gt;</span>
+    <span class="p">},</span>
+    <span class="bp">...</span>
+<span class="p">]</span></code></pre>
+</div>
+</div>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_getbuiltins">3.4. GetBuiltins</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_getbuiltins_func"></a><code>pyvgx.<strong>system.GetBuiltins</strong>()</code></dt>
+<dd>
+<p>Return a list of built-in plugins. The return format is the same as for <a href="#system_getplugins_func">GetPlugins()</a>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="pyvgx_pluginrequest">4. pyvgx.PluginRequest</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>PluginRequest objects are passed in the <em>request</em> argument of <strong><em>pre</em></strong> and <strong><em>engine</em></strong> plugin functions.
+When a <strong><em>pre</em></strong> plugin returns an object of this type the request is forwarded to the VGX Dispatch instance back-end matrix.</p>
+</div>
+<div class="sect2">
+<h3 id="_pluginrequest_class">4.1. PluginRequest Class</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="pluginrequest_class"></a><code><em>class</em> <strong>pyvgx.PluginRequest</strong>( <em>plugin</em><strong>[</strong>, <em>params</em><strong>[</strong>, <em>headers</em><strong>[</strong>, <em>content</em><strong>[</strong>, <em>partial</em><strong>]]]]</strong> )</code></dt>
+<dd>
+<p>Create a new PluginRequest instance.</p>
+<div class="paragraph">
+<p>The request target path will be <code>/vgx/plugin/<em>plugin</em></code></p>
+</div>
+<div class="paragraph">
+<p>Assign request parameters and headers via dicts <em>params</em> and <em>headers</em></p>
+</div>
+<div class="paragraph">
+<p>Assign request payload data via <em>content</em> (becomes POST request)</p>
+</div>
+<div class="paragraph">
+<p>Target specific partition in back-end matrix with non-negative <em>partial</em></p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pluginrequest_methods">4.2. PluginRequest Methods</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="pluginrequest_serialize"></a><code><strong>Serialize</strong>()</code></dt>
+<dd>
+<p>Return the raw HTTP request bytes representing this request object</p>
+</dd>
+<dt class="hdlist1"><a id="pluginrequest_get"></a><code><strong>get</strong>( <em>param</em><strong>[</strong>, <em>default</em><strong>]</strong> )</code></dt>
+<dd>
+<p>Like PluginRequest.<a href="#request_attr_params">params</a>.get()</p>
+</dd>
+<dt class="hdlist1"><a id="pluginrequest_items"></a><code><strong>items</strong>()</code></dt>
+<dd>
+<p>Like PluginRequest.<a href="#request_attr_params">params</a>.items()</p>
+</dd>
+<dt class="hdlist1"><a id="pluginrequest_keys"></a><code><strong>keys</strong>()</code></dt>
+<dd>
+<p>Like PluginRequest.<a href="#request_attr_params">params</a>.keys()</p>
+</dd>
+<dt class="hdlist1"><a id="pluginrequest_values"></a><code><strong>values</strong>()</code></dt>
+<dd>
+<p>Like PluginRequest.<a href="#request_attr_params">params</a>.values()</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pluginrequest_attributes">4.3. PluginRequest Attributes</h3>
+<table id="pluginrequest_attributes" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. PluginRequest Attributes</caption>
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 9.0909%;">
+<col style="width: 54.5455%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Attribute</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Access</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_baseport"></a><code><strong>affinity</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Non-negative index of preferred replica (row) for this request when forwarded to VGX Dispatch back-end matrix. This attribute is writable and should be set in a pre-processor to specify replica affinity. The selected replica will be used regardless of its current running execution cost, but if unavailable (due to channel exhaustion or other reasons) another available replica will be used instead.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_baseport"></a><code><strong>baseport</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Server <a href="service.html#server_a_port">main port</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_channel"></a><code><strong>channel</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Channel id (0 an up) for current socket connection from parent dispatcher which issued this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_content"></a><code><strong>content</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bytes</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Raw content data as received in POST request. Type is <em>bytes</em> regardless of annotation used for <em>content</em> argument in plugin function if declared.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_depth"></a><code><strong>depth</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of channels to this VGX Server instance from parent dispatcher which issued this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_depth"></a><code><strong>executor</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identifier number 0-31 of executor assigned to handle this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_flag"></a><code><strong>flag</strong></code> (<strong>DEPRECATED</strong>, use <code>local</code> instead)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assignable string of up to eight characters (bytes) which is carried forward to <a href="#response_attr_flag"><em>response.flag</em></a> in post-processor. This allows up to 64 bits of user-defined meta data for a request to be communicated from a pre-processor to a post-processor.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_hasmatrix"></a><code><strong>hasmatrix</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return True if server request may be dispatched to a back-end matrix, False otherwise.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_headers"></a><code><strong>headers</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bytes</em><br>
+<em>str</em><br>
+<em>dict</em><br>
+<em>list</em><br></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP request headers object. Always a <em>dict</em> for POST requests. Defaults to <em>bytes</em> for GET requests. If plugin function declares a <em>headers</em> argument then for GET requests <em>headers</em> argument and <em>request.headers</em> attribute always share the same underlying object. For POST requests the underlying object is shared if annotated as <em>dict</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_height"></a><code><strong>height</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">height</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of replicas in matrix of parent dispatcher which issued this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_ident"></a><code><strong>ident</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>tuple</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matrix identity parameters for this VGX Server instance as viewed from dispatcher which issued the request:</p>
+<p class="tableblock">(<em>defined</em>, <em>width</em>, <em>height</em>, <em>depth</em>, <em>partition</em>, <em>replica</em>, <em>channel</em>, <em>primary</em>)</p>
+<p class="tableblock">The first parameter <em>defined</em> is 1 if request came from a dispatcher instance, 0 otherwise.<br>
+All other parameters <em>&lt;p&gt;</em> are the same as <em>request.&lt;p&gt;</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_local"></a><code><strong>local</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>object</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assignable object to be carried forward to <a href="#response_attr_local"><em>response.local</em></a> in post-processor. This allows any Python object created in a pre-processor to be picked up later in a post-processor for the same request.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_method"></a><code><strong>method</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"GET" or "POST"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_params"></a><code><strong>params</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>dict</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All request parameters, i.e. all key-value pairs after the first "?" in URL. The dictionary can be modified, but a new dictionary cannot be assigned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_partial"></a><code><strong>partial</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Non-negative index of target partition for this request when forwarded to VGX Dispatch back-end matrix. This attribute is writable and should be set in a pre-processor if the request is to target a specific partition in the back-end matrix.</p>
+</div>
+<div class="paragraph">
+<p>Value of HTTP header <a href="service.html#request_header_x_vgx_partial_target"><code>x-vgx-partial-target</code></a>, if present, is automatically assigned to this attribute. Attribute is cleared (and will have value None) if deleted using <code>del</code>, or assigned None or a negative integer.</p>
+</div>
+<div class="paragraph">
+<p>Effective target partition index is computed as <em>request.partial</em> MOD <em>P</em>, where <em>P</em> is the number of partitions managed by this dispatcher.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Target partition index is propagated to lower level dispatcher(s) via the <code>x-vgx-partial-target</code> header.
+Each dispatcher level is responsible for overriding or clearing this attribute as necessary.</p>
+</div>
+</td>
+</tr>
+</table>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_partition"></a><code><strong>partition</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This VGX Server instance&#8217;s partition id (0 and up) in matrix of parent dispatcher which issued this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_path"></a><code><strong>path</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">URL path for this request "/vgx/plugin/&lt;name&gt;?&lt;params&gt;"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_port"></a><code><strong>port</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Port used for this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_primary"></a><code><strong>primary</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 if this VGX Server instance is the primary replica in matrix of parent dispatcher which issued this request, or if request did not come from a dispatcher. Otherwise 0.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_replica"></a><code><strong>replica</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This VGX Server instance&#8217;s replica id (0 and up) in matrix of parent dispatcher which issued this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_signature"></a><code><strong>signature</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Digest of request parameters</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_sn"></a><code><strong>sn</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique serial number assigned to this request instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_t0"></a><code><strong>t0</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timestamp of first request byte handled by server loop, in nanoseconds since 1970, as measured by server loop thread. (Do not compare with timestamps generated by other threads.)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_toplevel"></a><code><strong>toplevel</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>True if VGX Server instance is topmost in a dispatcher matrix hierarchy, i.e. the first instance receiving a request by an external client.</p>
+</div>
+<div class="paragraph">
+<p>False if VGX Server is part of another dispatcher&#8217;s back-end matrix.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Use this to determine the object type to <a href="#pre_return_value">return in a pre-processor</a> if the request is terminated early.</p>
+</div>
+</td>
+</tr>
+</table>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="request_attr_width"></a><code><strong>width</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of partitions in matrix of parent dispatcher which issued this request</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="pyvgx_pluginresponse">5. pyvgx.PluginResponse</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>All plugin processors in VGX Server instances part of a back-end matrix must return a PluginResponse object.
+If any other object is returned the parent dispatcher will raise an exception.
+Dispatchers only know how to merge and post-process objects of type PluginResponse.</p>
+</div>
+<div class="paragraph">
+<p>Processors running in a <a href="#response_attr_toplevel">toplevel</a> VGX Server may return any Python object, as long as it is serializable according to the request&#8217;s <code>accept</code> header. PluginResponse implements a <a href="#pluginresponse_json_serializer">default JSON serializer</a>.</p>
+</div>
+<div class="paragraph">
+<p>PluginResponse is a container whose primary purposes are:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Encapsulate a list of (optionally sorted) items</p>
+</li>
+<li>
+<p>Specify sort order and key type</p>
+</li>
+<li>
+<p>Manage numeric aggregation fields</p>
+</li>
+<li>
+<p>Expose meta data</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Plugin <strong><em>pre</em></strong> processor functions may create and return a PluginResponse instance to terminate the request early.</p>
+</div>
+<div class="paragraph">
+<p>Plugin <strong><em>engine</em></strong> processor functions create and return a new PluginResponse instance.</p>
+</div>
+<div class="paragraph">
+<p>Plugin <strong><em>post</em></strong> processor functions receive a PluginResponse object in the <em>response</em> parameter. The object may be inspected and modified before it is returned. A new PluginResponse instance may also be created and returned instead, replacing the original response with a new one.</p>
+</div>
+<div class="sect2">
+<h3 id="_pluginresponse_class">5.1. PluginResponse Class</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="pluginresponse_class"></a><code><em>class</em> <strong>pyvgx.PluginResponse</strong>( <strong>[</strong><em>maxhits</em><strong>[</strong>, <em>sortby</em><strong>[</strong>, <em>keytype</em><strong>]]]</strong> )</code></dt>
+<dd>
+<p>Create a new PluginResponse instance.</p>
+<div class="paragraph">
+<p>Set <em>maxhits</em> to a positive integer to limit the number of result entries that can be added. By default <em>maxhits</em> is -1 (unlimited). It is also possible to change this value later via the <a href="#response_attr_maxhits"><em>maxhits</em> attribute</a>.</p>
+</div>
+<div class="paragraph">
+<p>Define sort order and key type using <em>sortby</em> parameter. Valid <a href="../constants/sortSpecificationConstants.html">sortby constants</a> are the same as those used in graph queries. By default <em>sortby</em> is <code>S_NONE</code>.</p>
+</div>
+<div class="paragraph">
+<p>Explicitly define the <em>keytype</em> as <em>int</em>, <em>float</em>, <em>bytes</em> or <em>str</em>. Must be comparible with <em>sortby</em> if provided.</p>
+</div>
+<div class="paragraph">
+<p>A dispatcher automatically creates its own internal PluginResponse instance for each request. Partial responses arriving from the back-end matrix carry result items along with <em>maxhits</em> and <em>sortby</em> parameters. The dispatcher response object inherits these parameters by picking the greatest <em>maxhits</em> among all partial results and <em>sortby</em> from the lowest partition&#8217;s response with non-zero hits. As a best practice, configure all PluginResponse instances with identical <em>sortby</em>, <em>keytype</em> and <em>maxhits</em> to avoid confusion.</p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pluginresponse_methods">5.2. PluginResponse Methods</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="pluginresponse_append"></a><code><strong>Append</strong>( <strong>[</strong><em>sortkey</em><strong>,]</strong> <em>item</em> )</code></dt>
+<dd>
+<p>Add a result item to the response object.</p>
+<div class="paragraph">
+<p>Optional first argument <em>sortkey</em> must be <em>int</em>, <em>float</em>, <em>str</em> or <em>bytes</em>. Any other object type will be ignored. Note that arguments are positional (not keywords). If only a single argument is given it is interpreted as <em>item</em>.</p>
+</div>
+<div class="paragraph">
+<p>Calls to <code>Append()</code> must provide a <em>sortkey</em> compatible with the response object&#8217;s <em>sortby</em> and <em>keytype</em> configuration, otherwise <code>pyvgx.ResponseError</code> is raised. A compatible <em>sortkey</em> is one with the <a href="../constants/sortSpecificationConstants.html">expected type</a> and a value consistent with <a href="../constants/sortSpecificationConstants.html">sort direction</a>.</p>
+</div>
+<div class="paragraph">
+<p>As a shorthand for adding items with a sequence number as their <em>sortkey</em> <code>Append()</code> may be called with <em>item</em> only, provided <em>sortby</em> direction is <code>S_ASC</code>. In this case every <em>n</em><sup>th</sup> call to <code>Append()</code> without <em>sortkey</em> will pass the integer <em>n</em> as <em>sortkey</em>, where <em>n</em>=1 for the first call.</p>
+</div>
+<div class="paragraph">
+<p>If the response object&#8217;s <em>sortby</em> is undefined (<code>S_NONE</code>) it is automatically determined from <em>sortkey</em> when <code>Append()</code> is <strong>first</strong> called. <em>sortby</em> is set to <code>S_VAL|S_ASC</code> when <em>sortkey</em> type is <em>int</em> or <em>float</em>, and <code>S_ID|S_ASC</code> when <em>sortkey</em> type is <em>str</em> or <em>bytes</em>.</p>
+</div>
+<div class="paragraph">
+<p>Attempting to call <code>Append()</code> more times than the response object&#8217;s <em>maxhits</em> limit will raise <code>pyvgx.ResponseError</code>. If <em>maxhits</em> is -1 (unlimited) <code>Append()</code> can be called any number of times.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="pluginresponse_deserialize"></a><code><strong>Deserialize</strong>( <em>data</em> )</code></dt>
+<dd>
+<p>Deserialize <em>data</em> bytes to a new PluginResponse object. This method is provided for internal testing and debugging.</p>
+</dd>
+<dt class="hdlist1"><a id="pluginresponse_resubmittable"></a><code><strong>Resubmittable</strong>()</code></dt>
+<dd>
+<p>Return a <a href="#pluginrequest_class">PluginRequest</a> object which, when returned from a plugin <strong><em>post</em></strong> processor function, will resubmit the request to the back-end matrix.</p>
+</dd>
+<dt class="hdlist1"><a id="pluginresponse_serialize"></a><code><strong>Serialize</strong>()</code></dt>
+<dd>
+<p>Serialize response object to bytes. This method is provided for internal testing and debugging.</p>
+</dd>
+<dt class="hdlist1"><a id="pluginresponse_tojson"></a><code><strong>ToJSON</strong>()</code></dt>
+<dd>
+<p>Serialize response object to JSON string. This method is provided for internal testing and debugging. When a <a href="#response_attr_toplevel">toplevel</a> dispatcher returns a PluginResponse object it is <a href="#pluginresponse_json_serializer">rendered</a> using this method.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pluginresponse_attributes">5.3. PluginResponse Attributes</h3>
+<table id="pluginresponse_attributes" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. PluginResponse Attributes</caption>
+<colgroup>
+<col style="width: 18.1818%;">
+<col style="width: 18.1818%;">
+<col style="width: 9.0909%;">
+<col style="width: 54.5455%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Attribute</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Access</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_baseport"></a><code><strong>baseport</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Server <a href="service.html#server_a_port">main port</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_channel"></a><code><strong>channel</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_channel">See <em>request.channel</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_depth"></a><code><strong>depth</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_depth">See <em>request.depth</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_entries"></a><code><strong>entries</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>list</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>List of tuples [(<em>sortkey</em>, <em>item</em>), &#8230;&#8203;] stored in the response object resulting from calls to <a href="#pluginresponse_append">Append()</a>.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Be careful when modifying this list. Every entry in <em>response.entries</em> must be a tuple (<em>sortkey</em>, <em>item</em>). It is best to use <a href="#pluginresponse_append">Append()</a> to add new items. Since an existing entry is a tuple it cannot be modified, but any contained <em>item</em> is safe to modify if it is a mutable object such as <em>dict</em> or <em>list</em>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_depth"></a><code><strong>executor</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identifier number 0-31 of executor assigned to process this response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_f2"></a><code><strong>f2</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose float aggregator. Partial response <em>f2</em> values are summed into dispatcher&#8217;s merged response <em>f2</em> value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_f3"></a><code><strong>f3</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose float aggregator. Partial response <em>f3</em> values are summed into dispatcher&#8217;s merged response <em>f3</em> value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_flag"></a><code><strong>flag</strong></code> (<strong>DEPRECATED</strong>, use <code>local</code> instead)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Up to 64 bits of information communicated from pre-processor&#8217;s <a href="#request_attr_flag"><em>request.flag</em></a>, in the form of a string containing up to eight characters (bytes).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_hasmatrix"></a><code><strong>hasmatrix</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_height">See <em>request.hasmatrix</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_height"></a><code><strong>height</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_height">See <em>request.height</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_hitcount"></a><code><strong>hitcount</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Freely assignable non-negative integer indicating the maximum number of result entries that could have been returned.</p>
+<p class="tableblock">By default it is set to the number of times <a href="#pluginresponse_append">Append()</a> has been called.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_i0"></a><code><strong>i0</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose integer aggregator. Partial response <em>i0</em> values are summed into dispatcher&#8217;s merged response <em>i0</em> value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_i1"></a><code><strong>i1</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose integer aggregator. Partial response <em>i1</em> values are summed into dispatcher&#8217;s merged response <em>i1</em> value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_ident"></a><code><strong>ident</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>tuple</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_ident">See <em>request.ident</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_keytype"></a><code><strong>keytype</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>type</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type of sortkey (int, float, str, bytes), or None if undefined</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_level"></a><code><strong>level</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of dispatcher levels this VGX Server instance is removed from the bottommost instance in the back-end matrix that produced a response.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_levelparts"></a><code><strong>levelparts</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of VGX Server instances at the immediate lower level in dispatcher&#8217;s back-end matrix.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_local"></a><code><strong>local</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>object</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Object carried forward from <a href="#request_attr_local"><em>request.local</em></a> in pre-processor. This allows any Python object created in a pre-processor to be picked up later in a post-processor for the same request.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_maxhits"></a><code><strong>maxhits</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of entries that can be added to a response. Default is -1 (unlimited).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_message"></a><code><strong>message</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>For internal use and debugging purposes. Can be used in a top level dispatcher to render a message string in the final response.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Message strings set in matrix back-end responses are discarded when those responses are merged in a dispatcher.</p>
+</div>
+</td>
+</tr>
+</table>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_partials"></a><code><strong>partials</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of VGX Server instances in the dispatcher back-end matrix that contributed to this response. For multi-level dispatch hierarchies this is the deep aggregation of all leaf instances reached.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_partition"></a><code><strong>partition</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_partition">See <em>request.partition</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_port"></a><code><strong>port</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Port used for this request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_replica"></a><code><strong>replica</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_replica">See <em>request.replica</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_requestmethod"></a><code><strong>requestmethod</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">"GET" or "POST"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_requestpath"></a><code><strong>requestpath</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_path">See <em>request.path</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_resubmits"></a><code><strong>resubmits</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of times request was resubmitted to backend matrix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_signature"></a><code><strong>signature</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_signature">See <em>request.signature</em></a>. The value of <em>response.signature</em> equals <em>request.signature</em> as it was at completion of pre-processor. This value is None if there is no pre-processor, or <em>request.signature</em> was not accessed (or deleted after access) in the pre-processor.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_sn"></a><code><strong>sn</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_sn">See <em>request.sn</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_sortby"></a><code><strong>sortby</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sort order and key type in effect for this response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_t0"></a><code><strong>t0</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_t0">See <em>request.t0</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_texec"></a><code><strong>texec</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Execution time in seconds elapsed since start of request until all response(s) received from back-end matrix. (Does not include time spent merging results or any time spent in a post-processor.)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_toplevel"></a><code><strong>toplevel</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p><a href="#request_attr_toplevel">See <em>request.toplevel</em></a></p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Use this to determine the object type to <a href="#post_return_value">return in a post-processor</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_width"></a><code><strong>width</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#request_attr_width">See <em>request.width</em></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="pluginresponse_json_serializer">5.4. PluginResponse Serialized as JSON</h3>
+<div class="paragraph">
+<p>A topmost dispatcher or engine returning a PluginResponse object will automatically render the object as JSON by default.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="JSON">{
+  "status": "OK",
+  "response": {
+    "level": 0,
+    "levelparts": 1,
+    "partials": 1,
+    "hitcount": 3,
+    "aggregator": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "entries": [
+      [
+        1,
+        "First"
+      ],
+      [
+        2,
+        "Second"
+      ],
+      [
+        3,
+        "Third"
+      ]
+    ]
+  },
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 0.241
+}</code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="service.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="VGX Server"></i></span></a>
+<a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="sysadmin.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="System Administration"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

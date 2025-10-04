@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Vertex Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphvertexmethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Vertex Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphArc.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Arc Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#graphcreatevertex">1. pyvgx.Graph.CreateVertex()</a></li>
+<li><a href="#graphnewvertex">2. pyvgx.Graph.NewVertex()</a></li>
+<li><a href="#graphdeletevertex">3. pyvgx.Graph.DeleteVertex()</a></li>
+<li><a href="#graphopenvertex">4. pyvgx.Graph.OpenVertex()</a></li>
+<li><a href="#graphopenvertices">5. pyvgx.Graph.OpenVertices()</a></li>
+<li><a href="#graphclosevertex">6. pyvgx.Graph.CloseVertex()</a></li>
+<li><a href="#graphclosevertices">7. pyvgx.Graph.CloseVertices()</a></li>
+<li><a href="#graphcloseall">8. pyvgx.Graph.CloseAll()</a></li>
+<li><a href="#graphcommitall">9. pyvgx.Graph.CommitAll()</a></li>
+<li><a href="#graphescalatevertex">10. pyvgx.Graph.EscalateVertex()</a></li>
+<li><a href="#graphrelaxvertex">11. pyvgx.Graph.RelaxVertex()</a></li>
+<li><a href="#showopenvertices">12. pyvgx.Graph.ShowOpenVertices()</a></li>
+<li><a href="#getopenvertices">13. pyvgx.Graph.GetOpenVertices()</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Vertex Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphcreatevertex">pyvgx.Graph.CreateVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Creates a new vertex in the graph.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphnewvertex">pyvgx.Graph.NewVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a new vertex in the graph if it does not already exist, then acquire write access and return the vertex object.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdeletevertex">pyvgx.Graph.DeleteVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete a vertex from the graph.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphopenvertex">pyvgx.Graph.OpenVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> object with the requested access mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphopenvertices">pyvgx.Graph.OpenVertices()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acquire multiple vertices and return a list of <a href="../vertex/vertex.html#preface">pyvgx.Vertex</a> objects with the requested access mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphclosevertex">pyvgx.Graph.CloseVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release access lock and commit any vertex changes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphclosevertices">pyvgx.Graph.CloseVertices()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release multiple vertices.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphcloseall">pyvgx.Graph.CloseAll()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Close all vertices opened by current thread.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphcommitall">pyvgx.Graph.CommitAll()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commit all write-locked vertices opened by current thread.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphescalatevertex">pyvgx.Graph.EscalateVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Promote vertex access from readonly to writable.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphrelaxvertex">pyvgx.Graph.RelaxVertex()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relax a writable vertex to readonly access.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#showopenvertices">pyvgx.Graph.ShowOpenVertices()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Print open vertices to stdout.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#getopenvertices">pyvgx.Graph.GetOpenVertices()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a list of open vertices.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphcreatevertex">1. pyvgx.Graph.CreateVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Creates a new vertex in the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="nb">type</span><span class="p">[,</span> <span class="n">lifespan</span><span class="p">[,</span> <span class="n">properties</span> <span class="p">]]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <em>bytes</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string for the vertex to be created</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>type</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <em>bytes</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type name of the vertex to be created or None</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lifespan</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1 (infinite)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum age of vertex before automatic deletion</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>properties</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>dict</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">{}</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pairs of { <code>str</code> : <code>object</code> } to initialize/update vertex properties</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.3. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex is successfully created, this method returns 1. If the vertex already exists, 0 is returned. If the vertex cannot be created, an exception is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.4. Remarks</h3>
+<div class="paragraph">
+<p>This method creates a new vertex in the graph if it does not already exist. The created vertex is not acquired. To gain read or write access to the created vertex it is necessary to call <a href="#graphopenvertex">pyvgx.Graph.OpenVertex()</a> or <a href="#graphnewvertex">pyvgx.Graph.NewVertex()</a>.</p>
+</div>
+<div class="paragraph">
+<p>The vertex can be assigned an optional type name. By default the vertex will be typeless (None). If the vertex already exists and a type argument is supplied which is different from the existing vertex&#8217;s type <a href="../exceptions/exceptions.html#VertexError">pyvgx.VertexError</a> is raised. If too many unique vertex types have been used in the graph <a href="../exceptions/exceptions.html#EnumerationError">pyvgx.EnumerationError</a> is raised.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>lifespan</em> parameter specifies the maximum vertex age <em>A</em> (in seconds) at which the vertex will be automatically deleted from the graph. Vertices have infinite lifespan by default. This is equivalent to calling <a href="vertex/vertexTTL.html#vertexsetexpiration"><code>pyvgx.Vertex.SetExpiration( <em>expires</em>=<em>A</em>, relative=True )</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>properties</em> parameter can be used to assign initial properties to the vertex at creation time. Property keys must be <code>str</code> and property values may be any object supported by <a href="vertex/vertexProperty.html#vertexsetproperty"><code>pyvgx.Vertex.SetProperty()</code></a>. If the vertex already exists its properties will be updated.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="c1"># -&gt; 1 Create vertex A, typeless
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 1 Create vertex B, typed
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">thing</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 0 Vertex B already exists, no action
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 0 Vertex B already exists, no action
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">thing</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Exception, type differs from existing vertex type
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">other</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open A, readonly
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open B, writable
+#
+# Do things with A and B
+#
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>                    <span class="c1"># Close vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>                    <span class="c1"># Close vertex B
+</span>
+<span class="c1"># Vertex C will expire after one hour
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="n">lifespan</span><span class="o">=</span><span class="mi">3600</span> <span class="p">)</span>
+
+<span class="c1"># Vertex D has initial properties x and y
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">{</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="sh">'</span><span class="s">y</span><span class="sh">'</span><span class="p">:</span><span class="mi">2</span><span class="p">}</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphnewvertex">2. pyvgx.Graph.NewVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This creates a new vertex in the graph if it does not already exist, then acquires write access and returns the vertex object.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="nb">type</span><span class="p">[,</span> <span class="n">lifespan</span><span class="p">[,</span> <span class="n">properties</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">2.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string for the vertex to be created, or opened (in write mode) if it does not already exist.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>type</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type name of the vertex to be created, or None to create a typeless vertex.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lifespan</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1 (infinite)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum age of vertex before automatic deletion</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>properties</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>dict</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">{}</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pairs of { <code>str</code> : <code>object</code> } to initialize/update vertex properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a> for acquiring writable access to the vertex.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.3. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex is successfully created and/or opened, a <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object is returned. If the vertex could not be created or opened, an exception is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">2.4. Remarks</h3>
+<div class="paragraph">
+<p>The vertex is returned in a writeable state. The current thread owns full read/write access to the vertex. No other threads can read or modify the vertex until released by the current thread.</p>
+</div>
+<div class="paragraph">
+<p>When write access is no longer needed, the vertex should either be completely released using <a href="#graphclosevertex">pyvgx.Graph.CloseVertex()</a> or relaxed to readonly access using <a href="#graphrelaxvertex">pyvgx.Graph.RelaxVertex()</a>. If the Python vertex object goes out of scope it is automatically released.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex does not already exist, it is created and committed.</p>
+</div>
+<div class="paragraph">
+<p>The vertex can be assigned an optional type name. By default the vertex will be typeless (None). If the vertex already exists and a type argument is supplied which is different from the existing type <a href="../exceptions/exceptions.html#VertexError">pyvgx.VertexError</a> is raised. If too many unique vertex types have been used in the graph <a href="../exceptions/exceptions.html#EnumerationError">pyvgx.EnumerationError</a> is raised.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>lifespan</em> parameter specifies the maximum vertex age <em>A</em> (in seconds) at which the vertex will be automatically deleted from the graph. Vertices have infinite lifespan by default. This is equivalent to calling <a href="vertex/vertexTTL.html#vertexsetexpiration"><code>pyvgx.Vertex.SetExpiration( <em>expires</em>=<em>A</em>, relative=True )</code></a>. Note that when <em>lifespan</em> is specified any previously assigned expiration time is updated.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>properties</em> parameter can be used to assign initial properties to the vertex when it is created or update existing properties. Property keys must be <code>str</code> and property values may be any object supported by <a href="vertex/vertexProperty.html#vertexsetproperty"><code>pyvgx.Vertex.SetProperty()</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Open vertex, writable, create new if necessary, typeless
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Open vertex, writeable, create new if necessary, typed
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">thing</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1">#
+# Do things with A and B
+#
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>                    <span class="c1"># Close vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>                    <span class="c1"># Close vertex B
+</span>
+<span class="c1"># New vertex C will expire after one hour
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="n">lifespan</span><span class="o">=</span><span class="mi">3600</span> <span class="p">)</span>
+
+<span class="c1"># New vertex D has initial properties
+</span><span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="p">{</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="sh">'</span><span class="s">y</span><span class="sh">'</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdeletevertex">3. pyvgx.Graph.DeleteVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Delete a vertex from the graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_3">3.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string of the vertex to be deleted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a> for acquiring writable access to the vertex.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.3. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex is successfully deleted, this method returns 1. If the vertex does not exist, 0 is returned. If the vertex could not be deleted, an exception is raised. The exception will indicate whether a timeout or some other error occurred.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">3.4. Remarks</h3>
+<div class="paragraph">
+<p>This method removes a vertex from the graph. If write access cannot be obtained by the current thread the method will block in accordance with the timeout specified.</p>
+</div>
+<div class="paragraph">
+<p>If the deleted vertex contains properties, vectors, or outbound relationships (outarcs) to other vertices these will all be removed as well. Inbound relationships (inarcs) will be left intact. If any inarcs exist the vertex will become a <a href="../VGXCoreConcepts.html#vgxcoreconcepts">VIRTUAL vertex</a> and continue to exist in the graph. If no inarcs exist the vertex will be completely removed from the graph.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex cannot be acquired within the timeout <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a> is raised.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex has outarcs and the terminals of those arcs cannot be acquired within the timeout <a href="../exceptions/exceptions.html#ArcError">pyvgx.ArcError</a> is raised. The vertex is automatically scheduled for deletion in the background as soon as possible.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex is already open and writable by the current thread then the delete operation will be allowed to proceed. However, on completion a reference to the internal vertex is still held by the Python <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object and the vertex will therefore still exist in the graph but as a <a href="../VGXCoreConcepts.html#vgxcoreconcepts">VIRTUAL vertex</a>. Once the <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object is deleted or goes out of scope the vertex will be removed completely from the graph.</p>
+</div>
+<div class="paragraph">
+<p>If the current thread owns a readonly lock on the vertex to be deleted then the operation will fail and raise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_note_about_readonly_locks">3.5. Note About Readonly Locks</h3>
+<div class="paragraph">
+<p>In general, if the current thread holds readonly locks for any vertices then the current thread is prevented from deleting any vertices, even ones that are not yet acquired. This is to prevent a deadlock scenario where the vertex to be deleted has a connection to one of the readonly vertices which would require modification of the arc structure of a readonly vertex. This can never complete, hence the restriction. To perform deletion of a vertex without giving up readonly locks, the readonly locked vertices may be temporarily promoted to writable using <a href="#graphescalatevertex">pyvgx.Graph.EscalateVertex()</a>, then deleted, and then relaxed back to readonly using <a href="#graphrelaxvertex">pyvgx.Graph.RelaxVertex()</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.6. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Create and delete
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1 Create vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1 Delete vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 0 No effect, vertex A does not exist
+</span>
+<span class="c1"># Create, delete while holding reference
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>       <span class="c1"># Create and open vertex B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1
+</span>
+<span class="c1"># Vertex B is now virtual because Python reference still exists
+</span><span class="k">del</span> <span class="n">B</span>
+
+<span class="c1"># Python reference now out of scope, vertex B is deleted from graph
+</span>
+<span class="c1"># Delete when readonly vertex is held
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1 Create vertex C
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1 Create vertex D
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open vertex C READONLY
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># Raises pyvgx.AccessError
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span>        <span class="c1"># Promote C to writeable
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1 Delete vertex D
+</span><span class="n">g</span><span class="p">.</span><span class="nc">RelaxVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span>           <span class="c1"># Relax C back to readonly
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># Raises pyvgx.AccessError
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span>        <span class="c1"># Promote C to writable
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># -&gt; 1
+</span>
+<span class="c1"># Vertex C is now virtual because Python reference still exists
+</span><span class="k">del</span> <span class="n">C</span>
+
+<span class="c1"># Python reference now out of scope, vertex C is deleted from graph</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphopenvertex">4. pyvgx.Graph.OpenVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object with the requested access mode.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">mode</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_4">4.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or a memory address for the vertex to be opened</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>mode</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>chr</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">'a'</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access mode is one of:</p>
+<p class="tableblock">'r'=Readonly</p>
+<p class="tableblock">'w'=Writable (and create typeless)</p>
+<p class="tableblock">'a'=Writable (do not create)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a> for acquiring the requested access to the vertex.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">4.3. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex is successfully acquired a <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> object is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">4.4. Remarks</h3>
+<div class="paragraph">
+<p>This method will acquire a lock on the vertex and return it. If a lock cannot be acquired within the timeout <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a> is raised. Successive calls to this method will lock the vertex recursively. It is necessary to call <a href="#graphclosevertex">pyvgx.Graph.CloseVertex()</a> exactly once for each recursive call to <a href="#graphopenvertex">pyvgx.Graph.OpenVertex()</a> in order to release the acquired vertex.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex is opened in readonly mode it cannot be recursively opened in writable mode. To promote a readonly vertex (that has not yet been recursively acquired) to writable use <a href="#graphescalatevertex">pyvgx.Graph.EscalateVertex()</a>.</p>
+</div>
+<div class="paragraph">
+<p>Recursive acquisition has a limit of 112 levels. Attempting to recursively open a vertex beyond the limit will raise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following acquisition modes are supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>'r' = Readonly</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Open and return the vertex in readonly mode. The vertex is guaranteed to be consistent and unchanged for as long as the current thread holds this lock. Other threads may acquire the same vertex in readonly mode, but will not be able to acquire write access.</p>
+</div>
+<div class="paragraph">
+<p>The vertex <em>id</em> may be supplied as string or integer for this mode. If an integer is supplied it is assumed to be the raw memory address of the vertex to be opened.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>'w' = Writable</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Open and return the vertex with full write and read access. If the vertex does not exist it is created. Note that the vertex will be typeless if created this way. If your application requires vertex types other than the default, this access mode should be avoided unless <a href="#graphcreatevertex">pyvgx.Graph.CreateVertex()</a> or <a href="#graphnewvertex">pyvgx.Graph.NewVertex()</a> was used earlier to create the vertex. The current thread will not be able to obtain a writable lock as long as any lock (read or write) is held by another thread.</p>
+</div>
+<div class="paragraph">
+<p>The vertex <em>id</em> must be string for this mode.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>'a' = Writable (do not create)</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Open and return the vertex with full write and read access. If the vertex does not exist <a href="https://docs.python.org/3/library/exceptions.html#exceptions.KeyError">KeyError</a> is raised. The current thread will not be able to obtain a writable lock as long as any lock (read or write) is held by another thread.</p>
+</div>
+<div class="paragraph">
+<p>The vertex <em>id</em> may be supplied as string or integer for this mode. If an integer is supplied it is assumed to be the raw memory address of the vertex to be opened.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                <span class="c1"># Create vertex A
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open A in readonly mode
+</span><span class="n">addrA</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">address</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>                <span class="c1"># Create vertex B
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open B in writable mode
+</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Create and open vertex C
+</span>
+<span class="c1"># Raises KeyError since vertex D does not exist
+</span><span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Raises KeyError since vertex E does not exist
+</span><span class="n">E</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>                   <span class="c1"># Close vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>                   <span class="c1"># Close vertex B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span>                   <span class="c1"># Close vertex C
+</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="n">addrA</span> <span class="p">)</span>            <span class="c1"># Re-open A by its address
+</span>
+<span class="c1"># Raises KeyError since address is invalid
+</span><span class="n">F</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="n">addr</span> <span class="o">+</span> <span class="mi">7</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphopenvertices">5. pyvgx.Graph.OpenVertices()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Acquire multiple vertices as an atomic operation and return a list of <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> objects with the requested access mode.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">5.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="n">idlist</span><span class="p">[,</span> <span class="n">mode</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">vertex_list</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_5">5.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>idlist</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of unique ID strings for vertices to be opened</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>mode</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>chr</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">'a'</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Access mode is one of:</p>
+<p class="tableblock">'r'=Readonly</p>
+<p class="tableblock">'a'=Writable (do not create)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a> for acquiring the requested access to all vertices.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_5">5.3. Return Value</h3>
+<div class="paragraph">
+<p>If all vertices are successfully acquired within the specified timeout a list of <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> objects is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_5">5.4. Remarks</h3>
+<div class="paragraph">
+<p>This method will acquire a lock on each vertex in <em>idlist</em>. If any vertex is already locked (by the current thread) one additional lock will be acquired, i.e. lock recursion is supported. Acquisition timeout applies to the operation as a whole. All vertices must be successfully acquired within the timeout, otherwise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a> is raised and no vertices are acquired.</p>
+</div>
+<div class="paragraph">
+<p>Non-existent vertices are not implicitly created. If one or more vertex in <em>idlist</em> does not exist KeyError is raised.</p>
+</div>
+<div class="paragraph">
+<p>Vertices already opened in readonly cannot be recursively opened in writable mode.</p>
+</div>
+<div class="paragraph">
+<p>Recursive acquisition has a limit of 112 levels. Attempting to recursively open a vertex beyond the limit will raise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following acquisition modes are supported:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>'r' = Readonly</strong></dt>
+<dd>
+<p>Open and return vertices in readonly mode. Readonly vertices are guaranteed to be consistent and unchanged for as long as the current thread holds the acquired locks. Other threads may acquire one or more of the same vertices in readonly mode, but will not be able to acquire write access.</p>
+</dd>
+<dt class="hdlist1"><strong>'a' = Writable (do not create)</strong></dt>
+<dd>
+<p>Open and return existing vertices with full write and read access. If any vertex does not exist <a href="https://docs.python.org/3/library/exceptions.html#exceptions.KeyError">KeyError</a> is raised. The current thread will not be able to obtain a writable lock on any vertex as long as it is locked (readonly or writable) by another thread.</p>
+<div class="paragraph">
+<p>When VGX is <a href="../reference.html#op_attach_func">attached to an output stream</a> all output is halted while one or more vertices are acquired writable via this method. All graph operations performed while at least one writable acquisition by this method is in effect will be queued internally and emitted in bulk <em>as a single transaction</em> once all such acquired vertices have been released.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>Consider using <a href="graphManagement.html#graphlock">pyvgx.Graph.Lock()</a> if the only purpose is to confine a set op graph operations to a single transaction.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">5.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex C
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex D
+</span>
+<span class="c1"># Open many vertices at once in 'a' mode (writable)
+</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="p">[</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">]</span> <span class="p">)</span>     <span class="c1"># Open A, B and C
+</span>
+<span class="c1"># Verify open and writable
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                                    <span class="c1"># -&gt; True
+</span><span class="n">B</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                                    <span class="c1"># -&gt; True
+</span><span class="n">C</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                                    <span class="c1"># -&gt; True
+</span>
+<span class="c1"># Get another lock for C and open D
+</span><span class="n">C2</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="p">[</span><span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">]</span> <span class="p">)</span>            <span class="c1"># C (recursive) and D
+</span>
+<span class="c1"># Try (and fail) to open D and non-existent E
+</span><span class="n">D2</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="p">[</span><span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span><span class="p">]</span> <span class="p">)</span>            <span class="c1"># KeyError for E
+</span>
+<span class="c1"># Close many vertices
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertices</span><span class="p">(</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]</span> <span class="p">)</span>                 <span class="c1"># Close A, B, C, D
+</span>
+<span class="c1"># Still one lock for C
+</span><span class="n">C2</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                                   <span class="c1"># -&gt; True
+</span>
+<span class="c1"># Close C
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">C2</span> <span class="p">)</span>                             <span class="c1"># Close C</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphclosevertex">6. pyvgx.Graph.CloseVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Release access lock and commit any vertex changes.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_6">6.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">vertex_object</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_6">6.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vertex_object</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object to close</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_6">6.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns True if the vertex was released. It returns False if there is no ownership to release.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_6">6.4. Remarks</h3>
+<div class="paragraph">
+<p>This method releases one ownership reference for a vertex and commits any changes made to the vertex if no other owners exist. The closed <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance can no longer access the vertex.</p>
+</div>
+<div class="paragraph">
+<p>Several <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> objects may reference the same graph vertex object. Each wrapper object owns one reference to the graph vertex. When the wrapper object is deleted it will implicitly call pyvgx.Graph.CloseVertex() when it is garbage collected. If the vertex is closed with an explicit call to pyvgx.Graph.CloseVertex() the wrapper object is still a valid Python object but it has lost its reference to the graph vertex and can no longer be used.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">6.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                <span class="c1"># Create vertex A
+</span><span class="n">v1</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># A opened writable, one owner
+</span><span class="n">v2</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># A opened writable, two owners
+</span><span class="n">v3</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># A opened writable, three owners
+</span><span class="n">v4</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># A opened writable, four owners
+</span>
+<span class="c1"># Release one ownership, three owners left
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">v1</span> <span class="p">)</span>
+
+<span class="c1"># Release one ownership, two owners left
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">v2</span> <span class="p">)</span>
+
+<span class="c1"># Implicitly release one ownership, one owner left
+</span><span class="k">del</span> <span class="n">v3</span>
+
+<span class="c1"># Release one ownership, no owners
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">v4</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphclosevertices">7. pyvgx.Graph.CloseVertices()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Release access locks for multiple vertices at once and commit any vertex changes.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_7">7.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">CloseVertices</span><span class="p">(</span> <span class="n">vertex_objects</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">count</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_7">7.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>vertex_objects</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">list of <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> objects</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List of one or more vertex objects to close</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_7">7.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the number of vertices released. If one or more vertices have already been released the returned value is less than the length of <em>vertex_objects</em>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_7">7.4. Remarks</h3>
+<div class="paragraph">
+<p>This method releases one ownership reference for each vertex in <em>vertex_objects</em> and commits any changes made to vertices if no other owners exist.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_7">7.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex A
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex C
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>                           <span class="c1"># Create vertex D
+</span>
+<span class="c1"># Open many vertices at once
+</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="p">[</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">]</span> <span class="p">)</span>     <span class="c1"># Open A, B and C
+</span>
+<span class="c1"># Open C (again) and
+</span><span class="n">C2</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertices</span><span class="p">(</span> <span class="p">[</span><span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">]</span> <span class="p">)</span>            <span class="c1"># Open C and D
+</span>
+<span class="c1"># Close all four
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertices</span><span class="p">(</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]</span> <span class="p">)</span>                 <span class="c1"># -&gt; 4
+</span>
+<span class="c1"># Try to close all four again (no action)
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertices</span><span class="p">(</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span><span class="p">]</span> <span class="p">)</span>                 <span class="c1"># -&gt; 0
+</span>
+<span class="c1"># Only C2 is still open and will be closed
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertices</span><span class="p">(</span> <span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C2</span><span class="p">,</span> <span class="n">D</span><span class="p">]</span> <span class="p">)</span>                <span class="c1"># -&gt; 1
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphcloseall">8. pyvgx.Graph.CloseAll()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Close all vertices opened by current thread.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_8">8.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">CloseAll</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">count</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_8">8.2. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the number of vertices closed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_8">8.3. Remarks</h3>
+<div class="paragraph">
+<p>Use this method as a convenience to close all vertices owned by the current thread.
+Vertices opened by other threads are not affected by this call.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_8">8.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex A
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex B
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex C
+</span>
+<span class="c1"># Do something
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">B</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">C</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseAll</span><span class="p">()</span>              <span class="c1"># Close A, B and C
+</span>
+<span class="c1"># Vertices are closed
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; False
+</span><span class="n">B</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; False
+</span><span class="n">C</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; False
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphcommitall">9. pyvgx.Graph.CommitAll()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Commit all write-locked vertices opened by current thread.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_9">9.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">CommitAll</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">n_writable</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_9">9.2. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the number of write-locked vertices opened by current thread.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_9">9.3. Remarks</h3>
+<div class="paragraph">
+<p>Use this method as a convenience to commit all write-locked vertices owned by the current thread. Vertices opened by other threads are not affected by this call.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_9">9.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex A
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex B
+</span><span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open new vertex C
+</span>
+<span class="c1"># Do something
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">B</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CommitAll</span><span class="p">()</span>             <span class="c1"># Commit changes to A, B
+</span>
+<span class="c1"># Vertices are still open
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; True
+</span><span class="n">B</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; True
+</span><span class="n">C</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>              <span class="c1"># -&gt; True
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphescalatevertex">10. pyvgx.Graph.EscalateVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Promote vertex access from readonly to writable.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_10">10.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">readonly_vertex_object</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_8">10.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>readonly_vertex_object</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex instance whose access is readonly and should be promoted to writable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acquisition timeout (in milliseconds)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_10">10.3. Return Value</h3>
+<div class="paragraph">
+<p>If vertex readonly access is successfully promoted to writable the method will return None. Otherwise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a> is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_10">10.4. Remarks</h3>
+<div class="paragraph">
+<p>This method will attempt to change the readonly access of the supplied <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instance to writable access. This can be accomplished if no other threads hold readonly locks to the vertex and the current thread has acquired the vertex readonly exactly once. If other threads hold readonly locks to the vertex the escalation operation will block in accordance with the timeout specified and raise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a> if a timeout occurs.</p>
+</div>
+<div class="paragraph">
+<p>If the current thread holds more than one readonly lock on the vertex (e.g. opened the same vertex twice for two separate <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> instances) the operation can never complete. For this reason infinite timeout is disallowed.</p>
+</div>
+<div class="paragraph">
+<p>In more concise terms, the only scenario where vertex escalation can (and will) succeed is when there exists exactly one read lock on the vertex and that lock is owned by the current thread attempting the escalation.</p>
+</div>
+<div class="paragraph">
+<p>Attempting to escalate a writable vertex will raise <a href="../exceptions/exceptions.html#AccessError">pyvgx.AccessError</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_10">10.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Create, open readable, then escalate
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>                <span class="c1"># Create vertex A
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open A in readonly mode
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>                <span class="c1"># Promote A to writable
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                         <span class="c1"># -&gt; 1
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+
+<span class="c1"># Can't escalate if multiple readonly locks
+</span><span class="n">A1</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># Open A readonly
+</span><span class="n">A2</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># Open A readonly again
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">A1</span> <span class="p">)</span>               <span class="c1"># raise pyvgx.AccessError
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A1</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A2</span> <span class="p">)</span>
+
+<span class="c1"># Can't escalate already writable
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Open A writable
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>                <span class="c1"># raise pyvgx.AccessError</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphrelaxvertex">11. pyvgx.Graph.RelaxVertex()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Relax a writable vertex to readonly access.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_11">11.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">RelaxVertex</span><span class="p">(</span> <span class="n">writable_vertex_object</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_9">11.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>writable_vertex_object</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex instance whose access is writable and should be relaxed to readonly</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_11">11.3. Return Value</h3>
+<div class="paragraph">
+<p>If vertex write lock is successfully released this method will return True. If vertex is still write-locked False is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_11">11.4. Remarks</h3>
+<div class="paragraph">
+<p>This method will make an attempt to change the access mode of the supplied <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a> to readonly.</p>
+</div>
+<div class="paragraph">
+<p>The action taken depends on the existing access of the vertex:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>If the vertex was acquired writable exactly once, then the vertex is committed and access changed to readonly.</p>
+</li>
+<li>
+<p>If the vertex was acquired writable recursively, then one level of write recursion is released (same behavior as <a href="#graphclosevertex">pyvgx.Graph.CloseVertex()</a>).</p>
+</li>
+<li>
+<p>If the vertex was acquired readonly, then no action is performed.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It does not matter how vertex writable access was obtained previously. Relaxing access to readonly is valid for any writable vertex whether it was previously escalated to writable, opened as writable, or just created.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Certain graph operations are not allowed to be performed by the current thread if the current thread holds any readonly vertices. To proceed with such graph operations without giving up access to any acquired readonly vertices (ensuring consistency) the readonly vertices may be temporarily escalated to writable, then relaxed back to readonly once the graph operation is complete. Note that some graph operations are disallowed even though they operate on vertices other than the ones acquired readonly by the current thread. This is a safety measure to eliminate accidental edge cases that would result in a deadlock.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_11">11.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Create vertex, do something to it, then relax to readonly
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>          <span class="c1"># Create vertex A
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">value</span><span class="sh">"</span><span class="p">,</span> <span class="mi">123</span> <span class="p">)</span>   <span class="c1"># Set a property
+</span><span class="n">g</span><span class="p">.</span><span class="nc">RelaxVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>              <span class="c1"># A is readonly, other threads may access
+</span>
+<span class="c1"># Perform a graph operation that does not permit readonly vertices
+# in the current thread
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span> <span class="p">)</span>     <span class="c1"># raise pyvgx.AccessError
+</span><span class="n">g</span><span class="p">.</span><span class="nc">EscalateVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>           <span class="c1"># Make A writable to allow Connect()
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span> <span class="p">)</span>     <span class="c1"># -&gt; 1 created (X)-[to]-&gt;(Y)
+</span><span class="n">g</span><span class="p">.</span><span class="nc">RelaxVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>              <span class="c1"># Relax A back to readonly</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="showopenvertices">12. pyvgx.Graph.ShowOpenVertices()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Print a summary of all vertices in graph that have been acquired.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_12">12.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ShowOpenVertices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="bp">None</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_12">12.2. Remarks</h3>
+<div class="paragraph">
+<p>This method will print a summary of all acquired vertices. The summary includes
+information about how each vertex is acquired and by which thread.</p>
+</div>
+<div class="paragraph">
+<p>Useful for debugging.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_12">12.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">ShowOpenVertices</span><span class="p">()</span>
+
+<span class="c1">#---------------------------------
+#------- Readonly vertices -------
+#---------------------------------
+#THREAD: 13296
+#RO=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - READONLY LOCKED]] [[- -] [- -] [-] [0]] [0]  A
+#
+#---------------------------------
+#------- Writable vertices -------
+#---------------------------------
+#THREAD: 13296
+#WL=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [13296]  C
+#WL=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [13296]  D</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="getopenvertices">13. pyvgx.Graph.GetOpenVertices()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a list of open vertices in this graph.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_13">13.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">GetOpenVertices</span><span class="p">(</span> <span class="p">[</span> <span class="n">threadid</span> <span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_10">13.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>threadid</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When &gt;0, return vertices currently owned by this thread</p>
+<p class="tableblock">The default is 0, which returns open vertices for all threads</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_remarks_13">13.3. Remarks</h3>
+<div class="paragraph">
+<p>This method returns a list of all of this graph’s vertices currently acquired
+by all threads (the default), or by a single thread specified by threadid.</p>
+</div>
+<div class="paragraph">
+<p>The returned list includes a 3-tuple for each open vertex:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[ ("&lt;vertex_id&gt;", threadid, "&lt;mode&gt;"), ... ]
+
+where &lt;mode&gt; is RO or WL.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Useful for debugging.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_13">13.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">ShowOpenVertices</span><span class="p">()</span>
+
+<span class="c1"># V = [('A', 13296, 'RO'), ('C', 13296, 'WL'), ('D', 13296, 'WL')]</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphMembers.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Members"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphArc.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Arc Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

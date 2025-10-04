@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Similarity Members</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="similaritymembers" class="article toc2 toc-left">
+<div id="header">
+<h1>Similarity Members <a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Similarity"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#similarityhamming">1. pyvgx.Similarity.hamming_threshold</a></li>
+<li><a href="#similaritysim">2. pyvgx.Similarity.sim_threshold</a></li>
+<li><a href="#similaritycosineexp">3. pyvgx.Similarity.cosine_exp</a></li>
+<li><a href="#similarityjaccardexp">4. pyvgx.Similarity.jaccard_exp</a></li>
+<li><a href="#similaritymincosine">5. pyvgx.Similarity.min_cosine</a></li>
+<li><a href="#similarityminjaccard">6. pyvgx.Similarity.min_jaccard</a></li>
+<li><a href="#similarityminisect">7. pyvgx.Similarity.min_isect</a></li>
+<li><a href="#similaritymaxvector">8. pyvgx.Similarity.max_vector_size</a></li>
+<li><a href="#similarityseeds">9. pyvgx.Similarity.seeds</a></li>
+<li><a href="#similaritynsegm">10. pyvgx.Similarity.nsegm</a></li>
+<li><a href="#similaritynsign">11. pyvgx.Similarity.nsign</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Similarity Members</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityhamming">pyvgx.Similarity.hamming_threshold</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum hamming distance allowed between vector fingerprints to be declared "similar"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritysim">pyvgx.Similarity.sim_threshold</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum similarity score allowed between vectors to be declared "similar"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritycosineexp">pyvgx.Similarity.cosine_exp</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relative importance of Cosine() in Similarity() score computation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityjaccardexp">pyvgx.Similarity.jaccard_exp</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relative importance of Jaccard() in Similarity() score computation (<strong>Feature Vector</strong> only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritymincosine">pyvgx.Similarity.min_cosine</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum Cosine() allowed between vectors to be declared "similar"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityminjaccard">pyvgx.Similarity.min_jaccard</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum Jaccard() allowed between vectors to be declared "similar" (<strong>Feature Vector</strong> only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityminisect">pyvgx.Similarity.min_isect</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Minimum overlapping dimensions allowed between vectors to be declared "similar" (<strong>Feature Vector</strong> only)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritymaxvector">pyvgx.Similarity.max_vector_size</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of elements in vectors</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similarityseeds">pyvgx.Similarity.seeds</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set of pre-defined ANN seeds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritynsegm">pyvgx.Similarity.nsegm</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Future.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#similaritynsign">pyvgx.Similarity.nsign</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Future.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityhamming">1. pyvgx.Similarity.hamming_threshold</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Maximum hamming distance allowed between vector fingerprints to be declared "similar"</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritysim">2. pyvgx.Similarity.sim_threshold</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Minimum similarity score allowed between vectors to be declared "similar"</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritycosineexp">3. pyvgx.Similarity.cosine_exp</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Relative importance of Cosine() in Similarity() score computation</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityjaccardexp">4. pyvgx.Similarity.jaccard_exp</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Relative importance of Jaccard() in Similarity() score computation in <strong>Feature Vector</strong> mode.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Must be 0.0 in <strong>Euclidean Vector</strong> mode
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritymincosine">5. pyvgx.Similarity.min_cosine</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Minimum Cosine() allowed between vectors to be declared "similar"</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityminjaccard">6. pyvgx.Similarity.min_jaccard</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Minimum Jaccard() allowed between vectors to be declared "similar" in <strong>Feature Vector</strong> mode.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Ignored in <strong>Euclidean Vector</strong> mode
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityminisect">7. pyvgx.Similarity.min_isect</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Minimum overlapping dimensions allowed between vectors to be declared "similar" in <strong>Feature Vector</strong> mode.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Must be 1 in <strong>Euclidean Vector</strong> mode
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritymaxvector">8. pyvgx.Similarity.max_vector_size</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Maximum number of elements in vectors</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similarityseeds">9. pyvgx.Similarity.seeds</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Internal set of pre-defined seeds for use with ANN search functionality.
+This is a special case internal implementation which is subject to change, and is thus intentionally undocumented.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritynsegm">10. pyvgx.Similarity.nsegm</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Future.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="similaritynsign">11. pyvgx.Similarity.nsign</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Future.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vector.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="pyvgx.Vector"></i></span></a>
+<a href="similarity.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Similarity"></i></span></a>
+<a href="similarityMethods.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Similarity Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

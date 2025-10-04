@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Server</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxserver" class="article toc2 toc-left">
+<div id="header">
+<h1>VGX Server <a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="pluginadapter.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Plugin Adapter"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_component_overview">1. Component Overview</a></li>
+<li><a href="#socketserver">2. Socket Server</a>
+<ul class="sectlevel2">
+<li><a href="#vgx_server_dispatcher">2.1. VGX Dispatch Matrix</a></li>
+<li><a href="#server_a_and_server_b">2.2. Server Ports</a>
+<ul class="sectlevel3">
+<li><a href="#server_a_port">2.2.1. Main Server A (<em>port</em>)</a></li>
+<li><a href="#server_b_port">2.2.2. Admin Server B (<em>port</em>+1)</a></li>
+</ul>
+</li>
+<li><a href="#dispatcher_configuration">2.3. Dispatcher Configuration</a>
+<ul class="sectlevel3">
+<li><a href="#config_partitions">2.3.1. <em>partitions</em></a></li>
+<li><a href="#config_replicas">2.3.2. <em>replicas</em></a></li>
+<li><a href="#config_options">2.3.3. <em>options</em></a></li>
+</ul>
+</li>
+<li><a href="#_pyvgx_system_socket_server_management">2.4. pyvgx.system Socket Server Management</a>
+<ul class="sectlevel3">
+<li><a href="#_starthttp">2.4.1. StartHTTP</a></li>
+<li><a href="#_stophttp">2.4.2. StopHTTP</a></li>
+<li><a href="#_restarthttp">2.4.3. RestartHTTP</a></li>
+<li><a href="#_dispatcherconfig">2.4.4. DispatcherConfig</a></li>
+<li><a href="#_serviceinhttp">2.4.5. ServiceInHTTP</a></li>
+<li><a href="#_servermetrics">2.4.6. ServerMetrics</a></li>
+<li><a href="#_serverports">2.4.7. ServerPorts</a></li>
+<li><a href="#_serverhost">2.4.8. ServerHost</a></li>
+<li><a href="#_serverprefix">2.4.9. ServerPrefix</a></li>
+<li><a href="#_serveradminip">2.4.10. ServerAdminIP</a></li>
+<li><a href="#_requestrate">2.4.11. RequestRate</a></li>
+<li><a href="#_resetmetrics">2.4.12. ResetMetrics</a></li>
+</ul>
+</li>
+<li><a href="#socket_server_limits">2.5. Socket Server Limits</a></li>
+</ul>
+</li>
+<li><a href="#request_and_response">3. Request and Response</a>
+<ul class="sectlevel2">
+<li><a href="#http_request">3.1. HTTP Request</a>
+<ul class="sectlevel3">
+<li><a href="#_http_methods">3.1.1. HTTP Methods</a>
+<ul class="sectlevel4">
+<li><a href="#_http_get">3.1.1.1. HTTP GET</a></li>
+<li><a href="#_http_post">3.1.1.2. HTTP POST</a></li>
+<li><a href="#_http_head">3.1.1.3. HTTP HEAD</a></li>
+<li><a href="#_http_options">3.1.1.4. HTTP OPTIONS</a></li>
+</ul>
+</li>
+<li><a href="#request_headers">3.1.2. Recognized HTTP Request Headers</a>
+<ul class="sectlevel4">
+<li><a href="#request_header_accept">3.1.2.1. Accept</a></li>
+<li><a href="#request_header_content_type">3.1.2.2. Content-Type</a></li>
+<li><a href="#request_header_content_length">3.1.2.3. Content-Length</a></li>
+<li><a href="#request_header_x_vgx_partial_target">3.1.2.4. X-VGX-Partial-Target</a></li>
+<li><a href="#request_header_x_vgx_builtin_min_executor">3.1.2.5. X-VGX-Builtin-Min-Executor</a></li>
+<li><a href="#request_header_x_vgx_bypass_sout">3.1.2.6. X-VGX-Bypass-SOUT</a></li>
+</ul>
+</li>
+<li><a href="#plugin_execution_request">3.1.3. Plugin Execution Request</a>
+<ul class="sectlevel4">
+<li><a href="#request_character_encoding">3.1.3.1. Request Character Encoding</a></li>
+<li><a href="#request_parameters">3.1.3.2. Plugin Request Parameters</a></li>
+<li><a href="#request_parameter_annotation">3.1.3.3. Parameter Annotation</a></li>
+<li><a href="#request_parameter_explicit_cast">3.1.3.4. Explicit Parameter Conversion</a></li>
+<li><a href="#request_execution_threads">3.1.3.5. Request Execution Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#http_response">3.2. HTTP Response</a>
+<ul class="sectlevel3">
+<li><a href="#response_headers">3.2.1. HTTP Response Headers</a>
+<ul class="sectlevel4">
+<li><a href="#response_header_allowed">3.2.1.1. Allowed</a></li>
+<li><a href="#response_header_server">3.2.1.2. Server</a></li>
+<li><a href="#response_header_connection">3.2.1.3. Connection</a></li>
+<li><a href="#response_header_content_type">3.2.1.4. Content-Type</a></li>
+<li><a href="#response_header_content_length">3.2.1.5. Content-Length</a></li>
+</ul>
+</li>
+<li><a href="#response_status_codes">3.2.2. HTTP Status Codes</a></li>
+<li><a href="#service_response_format">3.2.3. Service Response Format</a>
+<ul class="sectlevel4">
+<li><a href="#service_error_message_format">3.2.3.1. Service Error Message Format</a>
+<ul class="sectlevel5">
+<li><a href="#_system">3.2.3.1.1. system</a></li>
+<li><a href="#_vgx">3.2.3.1.2. vgx</a></li>
+<li><a href="#_plugin">3.2.3.1.3. plugin</a></li>
+<li><a href="#_back_end_matrix">3.2.3.1.4. back-end matrix</a></li>
+<li><a href="#_other">3.2.3.1.5. other</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#service_response_examples">3.2.4. Service Response Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#builtin_services">4. Built-in Services</a>
+<ul class="sectlevel2">
+<li><a href="#_status_and_metrics">4.1. Status and Metrics</a></li>
+<li><a href="#_plugin_information">4.2. Plugin Information</a></li>
+<li><a href="#_builtin_plugins">4.3. Builtin Plugins</a>
+<ul class="sectlevel3">
+<li><a href="#_graph_status_and_queries">4.3.1. Graph Status and Queries</a></li>
+<li><a href="#_graph_modification">4.3.2. Graph Modification</a></li>
+<li><a href="#_vgx_server_status_and_metrics">4.3.3. VGX Server Status and Metrics</a></li>
+<li><a href="#_additional_dispatcher_matrix_information">4.3.4. Additional Dispatcher Matrix Information</a></li>
+<li><a href="#_multi_node_system_monitoring">4.3.5. Multi-Node System Monitoring</a></li>
+</ul>
+</li>
+<li><a href="#_user_defined_files">4.4. User Defined Files</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>VGX Server is a self-contained platform for building plugin-based PyVGX services exposed via HTTP endpoints. Everything is implemented in C except for service bootstrap and plugin code which execute in the Python interpreter. Multiple VGX Server instances may be connected to form a scalable system.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_component_overview">1. Component Overview</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="#socketserver">Socket Server</a></dt>
+<dd>
+<p><em>Socket Server</em> is a fully asynchronous, multithreaded socket server built directly on the operating system&#8217;s standard socket API.
+It currently supports the HTTP protocol, accepting methods <code>GET</code>, <code>POST</code> and <code>HEAD</code>.</p>
+</dd>
+<dt class="hdlist1"><a href="pluginadapter.html">Plugin Adapter</a></dt>
+<dd>
+<p><em>Plugin Adapter</em> allows custom Python code to be installed as plugins which can be invoked via HTTP requests.</p>
+<div class="paragraph">
+<p>Socket Server must be running before plugin requests can be made. Use <a href="#system_starthttp_func">pyvgx.StartHTTP()</a> or <a href="../reference.html#system_initialize_func">pyvgx.Initialize()</a> to start the socket server.</p>
+</div>
+<div class="paragraph">
+<p>Plugins are added using <a href="pluginadapter.html#system_addplugin_func">pyvgx.system.AddPlugin()</a>, which associates a unique service URI with a Python function. Any number of services may be defined, creating a unique service URI for each plugin function added.</p>
+</div>
+</dd>
+<dt class="hdlist1">Graph Engine</dt>
+<dd>
+<p><em>Graph Engine</em> stores graph data and executes queries.</p>
+</dd>
+<dt class="hdlist1"><a href="../io/vgxopxfer.html">Transaction Interconnect</a></dt>
+<dd>
+<p><em>Transaction Interconnect</em> is responsible for sending and receiving graph data to and from other VGX Server instances, enabling durable data replication.</p>
+</dd>
+</dl>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/vgxserver.png" alt="vgxserver">
+</div>
+<div class="title">Figure 1. VGX Server</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="socketserver">2. Socket Server</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Socket Server runs in one of three modes:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="vgx_server_mode_engine"></a>VGX Engine</dt>
+<dd>
+<p>Socket Server receives, executes, and responds to requests by invoking Python functions registered via the <strong><em>engine</em></strong> argument to <a href="pluginadapter.html#system_addplugin_func">pyvgx.system.AddPlugin()</a>.</p>
+<div class="paragraph">
+<p>Socket Server runs in this mode by default when <a href="#system_starthttp_func">pyvgx.system.StartHTTP()</a> is called (without the <strong><em>dispatcher</em></strong> argument.)</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="vgx_server_mode_dispatch"></a>VGX Dispatch</dt>
+<dd>
+<p>Socket Server forwards requests to one or more Socket Servers whose individual responses are combined into an aggregate response. Requests may be pre-processed before they are dispatched to other Socket Servers, and the aggregate response may be post-processed. Pre and post processors are optionally registered via the <strong><em>pre</em></strong> and <strong><em>post</em></strong> arguments to <a href="pluginadapter.html#system_addplugin_func">pyvgx.system.AddPlugin()</a>.</p>
+<div class="paragraph">
+<p>Socket Server runs in this mode when <a href="#system_starthttp_func">pyvgx.system.StartHTTP()</a> receives a matrix configuration in the <strong><em>dispatcher</em></strong> argument.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="vgx_server_mode_proxy"></a>Reverse Proxy</dt>
+<dd>
+<p>This is a special case dispatch mode where the dispatcher matrix contains a single instance and no pre or post processors are used. A request is simply forwarded to the single instance whose unmodified response is used as the proxy response.</p>
+</dd>
+</dl>
+</div>
+<div class="sect2">
+<h3 id="vgx_server_dispatcher">2.1. VGX Dispatch Matrix</h3>
+<div class="paragraph">
+<p>Multiple VGX Server instances can be deployed to form a dispatch matrix. A <em>VGX Dispatch</em> instance acts as the front-end to a set of back-end instances arranged in a rectangular <em>M</em> x <em>N</em> matrix, where <em>M</em> is the number of rows (replicas) and <em>N</em> is the number of columns (partitions). A back-end instance may be another <em>VGX Dispatch</em> instance, or a bottom layer <em>VGX Engine</em> instance.</p>
+</div>
+<div class="paragraph">
+<p>A request sent to VGX Dispatch is forwarded to exactly one back-end instances per partition. The replica chosen for a given partition depends on the replica priority and the amount of work currently being performed by all replicas in the partition. The selected back-end instances return their individual responses to VGX Dispatch where they are merged.</p>
+</div>
+<div class="paragraph">
+<p>By default all partitions are included when executing a request. This is the desired behavior for queries that must aggregate responses from all partitions. A specific partition may be targeted when so instructed via plugin code or HTTP headers, which is required when feeding data to a system. In this case the selected replica must be the primary instance within a set of replicas, i.e. the graph provider.</p>
+</div>
+<div class="paragraph">
+<p><a href="#basicmatrix">Figure 2, &#8220;Basic 2x3 Matrix&#8221;</a> shows a simple 2-row, 3-partition matrix served by a single dispatcher.</p>
+</div>
+<div id="basicmatrix" class="imageblock">
+<div class="content">
+<img src="../images/basicmatrix.png" alt="basicmatrix">
+</div>
+<div class="title">Figure 2. Basic 2x3 Matrix</div>
+</div>
+<div class="paragraph">
+<p>Any topology is possible, as illustrated in <a href="#complexmatrix">Figure 3, &#8220;Complex Matrix&#8221;</a>. The only constraint is for any given VGX Dispatch instance its matrix of back-ends must be rectangular.</p>
+</div>
+<div id="complexmatrix" class="imageblock">
+<div class="content">
+<img src="../images/anymatrix.png" alt="anymatrix">
+</div>
+<div class="title">Figure 3. Complex Matrix</div>
+</div>
+<div class="paragraph">
+<p>It is also possible to arrange instances in a ring topology as shown in <a href="#ringmatrix">Figure 4, &#8220;Ring Matrix&#8221;</a>. Such a system allows a request to be sent to any instance, which forwards the request around the ring until the last instance is reached. Responses are aggregated serially and finally returned to the client. Appropriate plugin code must be in place to make sure request propagation terminates at the top-most VGX Dispatch instance.</p>
+</div>
+<div id="ringmatrix" class="imageblock">
+<div class="content">
+<img src="../images/cyclematrix.png" alt="cyclematrix">
+</div>
+<div class="title">Figure 4. Ring Matrix</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="server_a_and_server_b">2.2. Server Ports</h3>
+<div class="paragraph">
+<p>VGX Server runs two independent Socket Server loops; Server A and Server B. Server A runs on the <a href="#system_starthttp_func">port</a> specified with <a href="../reference.html#system_initialize_func">Initialize()</a> or <a href="#system_starthttp_func">StartHTTP()</a>. Server B runs on port+1.</p>
+</div>
+<div class="sect3">
+<h4 id="server_a_port">2.2.1. Main Server A (<em>port</em>)</h4>
+<div class="paragraph">
+<p>Server A is the main server used for executing plugin requests.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="server_b_port">2.2.2. Admin Server B (<em>port</em>+1)</h4>
+<div class="paragraph">
+<p>Server B is used for monitoring and administrative requests.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="dispatcher_configuration">2.3. Dispatcher Configuration</h3>
+<div class="paragraph">
+<p>Socket Server is started in VGX Dispatch mode by passing the <em>dispatcher</em> parameter to <a href="#system_starthttp_func">StartHTTP()</a>, which is a dict describing the back-end matrix:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Dispatcher configuration
+</span><span class="n">cfg</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="sh">'</span><span class="s">partitions</span><span class="sh">'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="c1"># Partition 1
+</span>        <span class="p">[</span>   <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_1</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_1</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_2</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_2</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">...,</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_M</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_M</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">}</span>
+        <span class="p">],</span>
+        <span class="c1"># Partition 2
+</span>        <span class="p">[</span>   <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_1</span><span class="p">.</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_1</span><span class="p">.</span><span class="mi">1</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_2</span><span class="p">.</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_2</span><span class="p">.</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">...,</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_M</span><span class="p">.</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_M</span><span class="p">.</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">}</span>
+        <span class="p">],</span>
+        <span class="p">...,</span>
+        <span class="c1"># Partition N
+</span>        <span class="p">[</span>   <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_1</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_1</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_2</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_2</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">},</span>
+            <span class="p">...,</span>
+            <span class="p">{</span><span class="sh">'</span><span class="s">host</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">h_M</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">port</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">p_M</span><span class="p">.</span><span class="n">N</span><span class="o">&gt;</span><span class="p">}</span>
+        <span class="p">]</span>
+    <span class="p">],</span>
+    <span class="sh">'</span><span class="s">replicas</span><span class="sh">'</span><span class="p">:</span> <span class="p">[</span>
+        <span class="c1"># Row 1
+</span>        <span class="p">{</span><span class="sh">'</span><span class="s">channels</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">ch_1</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">priority</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">pr_1</span><span class="o">&gt;</span><span class="p">},</span>
+        <span class="c1"># Row 2
+</span>        <span class="p">{</span><span class="sh">'</span><span class="s">channels</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">ch_2</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">priority</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">pr_2</span><span class="o">&gt;</span><span class="p">},</span>
+        <span class="p">...,</span>
+        <span class="c1"># Row M
+</span>        <span class="p">{</span><span class="sh">'</span><span class="s">channels</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">ch_M</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">priority</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">pr_M</span><span class="o">&gt;</span><span class="p">,</span> <span class="sh">'</span><span class="s">primary</span><span class="sh">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="sh">'</span><span class="s">options</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">allow-incomplete</span><span class="sh">'</span><span class="p">:</span> <span class="o">&lt;</span><span class="nb">bool</span><span class="o">&gt;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># Start server in dispatcher mode
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">StartHTTP</span><span class="p">(</span> <span class="o">&lt;</span><span class="n">port</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">dispatcher</span><span class="o">=</span><span class="n">cfg</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="config_partitions">2.3.1. <em>partitions</em></h4>
+<div class="paragraph">
+<p>This defines a <em>M</em> x <em>N</em> matrix of back-end server instances to which we will dispatch requests. The value is a list of lists of dicts, where the outer list represents partitions 1 &minus; <em>N</em> and the inner lists represent replicas 1 &minus; <em>M</em>. Each inner list must contain exactly <em>M</em> dicts identifying the back-end servers in their corresponding matrix positions.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="config_partitions_host"></a><em>host</em></dt>
+<dd>
+<p>Host name or IP address</p>
+</dd>
+<dt class="hdlist1"><a id="config_partitions_port"></a><em>port</em></dt>
+<dd>
+<p>Main server port (<a href="#server_a_port">Server A</a>)</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="config_replicas">2.3.2. <em>replicas</em></h4>
+<div class="paragraph">
+<p>These are row parameters, expressed as a list of <em>M</em> dicts whose positions correspond to the inner list dicts of <em>partitions</em>. Row parameters are common to all servers within the same row.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="config_replicas_channels"></a><em>channels</em> (1-127)</dt>
+<dd>
+<p><em>Default: 32</em></p>
+<div class="paragraph">
+<p>Sets an upper limit for the number of socket connections between dispatcher and back-end servers. This setting controls the maximum number of concurrent requests a given row will handle for this dispatcher.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="config_replicas_priority"></a><em>priority</em> (0-127)</dt>
+<dd>
+<p><em>Default: 2</em></p>
+<div class="paragraph">
+<p>Assigns the <em>Base Reference Cost</em> for back-end servers in a given row. Lower values encourage higher utilization of the row. Every request executing inside a back-end server contributes to the server&#8217;s <em>Running Execution Cost</em>, which at any point in time equals its Base Reference Cost multiplied by the number of concurrent requests from this dispatcher.</p>
+</div>
+<div class="paragraph">
+<p>A new request will always be dispatched to the back-end in a replica stack with the lowest Running Execution Cost, and if equal the back-end at the lowest row index <em>m</em> is preferred. A row with priority=0 will never accumulate Running Execution Cost and will continue to receive requests until <em>channel</em> capacity is exhausted.</p>
+</div>
+<div class="paragraph">
+<p>Running Execution Cost is maintained per back-end, which means a request may be dispatched to different rows for each partition.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Requirement: \( \displaystyle channels \cdot priority &lt;= 127 \)
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="config_replicas_primary"></a><em>primary</em> (0 or 1)</dt>
+<dd>
+<p><em>Default: 1 for first replica, 0 for all others</em></p>
+<div class="paragraph">
+<p>When 1, designates the (at most one) row where primary requests are sent. Primary requests are those which must be executed on <em>provider</em> VGX Server instances such as data insertion requests, source-of-truth data counter requests, etc.</p>
+</div>
+<div class="paragraph">
+<p>Primary requests must be made explicitly by setting <code>pyvgx.PluginRequest</code> attributes in a pre-processor plugin or via HTTP header <code>x-vgx-partial-target</code>.</p>
+</div>
+<div class="paragraph">
+<p>Partition-specific requests (such as data insertion) are made by setting <code>pyvgx.PluginRequest.partial</code> or <code>x-vgx-partial-target</code> to a non-negative value. (Target partition numbers start at 0.)</p>
+</div>
+<div class="paragraph">
+<p>All-partitions requests to the primary row are made by setting <code>pyvgx.PluginRequest.primary</code> to 1.</p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="config_options">2.3.3. <em>options</em></h4>
+<div class="paragraph">
+<p>General dispatcher settings are specified here.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="config_options_allow_incomplete"></a><em>allow-incomplete</em> (True or False)</dt>
+<dd>
+<p><em>Default: False</em></p>
+<div class="paragraph">
+<p><code>False</code>: All partitions must have at least one replica available to serve requests. If one or more partitions are unavailable the dispatcher will respond with error <code>503 Partition(s) down</code>.</p>
+</div>
+<div class="paragraph">
+<p><code>True</code>: Requests are allowed to complete when at least one partition is available. Responses from the available partitions will be aggregated and returned on a best-effort basis. If no partitions are available the dispatcher will respond with error <code>503 All partitions down</code>.</p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_pyvgx_system_socket_server_management">2.4. pyvgx.system Socket Server Management</h3>
+<div class="sect3">
+<h4 id="_starthttp">2.4.1. StartHTTP</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_starthttp_func"></a><code>pyvgx.<strong>system.StartHTTP</strong>( <em>port</em><strong>[</strong>, <em>ip</em><strong>[</strong>, <em>prefix</em><strong>[</strong>, <em>servicein</em><strong>[</strong>, <em>dispatcher</em><strong>]]]]</strong> )</code></dt>
+<dd>
+<p>Start VGX Server HTTP service.</p>
+<div class="paragraph">
+<p><strong>port</strong>: <a href="#server_a_and_server_b">Two independent socket servers</a> are started on <em>port</em> and <em>port</em>+1, enabling plugin execution and remote system monitoring. <a href="#plugin_execution_request">Plugin execution requests</a> should be made on <em>port</em>, and <a href="#builtin_services">all other requests</a> should be made on <em>port</em>+1.</p>
+</div>
+<div class="paragraph">
+<p><strong>ip</strong>: Optionally identify the server&#8217;s ip address</p>
+</div>
+<div class="paragraph">
+<p><a id="system_starthttp_func__prefix"></a><strong>prefix</strong>: An optional service <em>prefix</em> may be specified, which creates URI aliases for plugins, files placed under <code><a href="../reference.html#system_initialize_func"><strong><em>vgxroot</em></strong></a>/WEB-ROOT</code>, and certain built-in artifacts:</p>
+</div>
+<div class="paragraph">
+<p><code>http://<strong><em>host</em></strong>:<strong><em>port</em></strong>/<strong><em>prefix</em></strong>/plugin/<strong><em>servicename</em></strong>?<strong><em>parameters</em></strong></code></p>
+</div>
+<div class="paragraph">
+<p><code>http://<strong><em>host</em></strong>:<strong><em>port</em></strong>/<strong><em>prefix</em></strong>/<strong><em>file-under-WEB-ROOT</em></strong></code></p>
+</div>
+<div class="paragraph">
+<p><code>http://<strong><em>host</em></strong>:<strong><em>port</em></strong>/<strong><em>prefix</em></strong>/jquery.js</code></p>
+</div>
+<div class="paragraph">
+<p><strong>servicein</strong>: The server may optionally be started Service-OUT by passing <em>servicein</em>=<code>False</code>. (Default is <code>True</code>.) Plugin requests will return HTTP code <code>503</code> while in Service-OUT mode. Use <a href="#system_serviceinhttp_func"><code>pyvgx.system.ServiceInHTTP()</code></a> later to enable plugin execution.</p>
+</div>
+<div class="paragraph">
+<p><strong>dispatcher</strong>: The server may be configured as a dispatcher by passing a non-empty <a href="#dispatcher_configuration">configuration dict</a> in this parameter.</p>
+</div>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_stophttp">2.4.2. StopHTTP</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_stophttp_func"></a><code>pyvgx.<strong>system.StopHTTP</strong>()</code></dt>
+<dd>
+<p>Stop a running HTTP service.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_restarthttp">2.4.3. RestartHTTP</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_restarthttp_func"></a><code>pyvgx.<strong>system.RestartHTTP</strong>()</code></dt>
+<dd>
+<p>Restart a running HTTP service.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Server will be restarted Service-OUT.</p>
+</div>
+<div class="paragraph">
+<p>To Service-IN after restart, call <code>system.ServiceInHTTP()</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_dispatcherconfig">2.4.4. DispatcherConfig</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_dispatcherconfig_func"></a><code>pyvgx.<strong>system.DispatcherConfig</strong>()</code></dt>
+<dd>
+<p>Return the effective dispatcher configuration (dict) as provided to <code>StartHTTP()</code>, or None if the server is not running in dispatcher mode.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_serviceinhttp">2.4.5. ServiceInHTTP</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_serviceinhttp_func"></a><code>pyvgx.<strong>system.ServiceInHTTP</strong>( <strong>[</strong>service_in<strong>]</strong> )</code></dt>
+<dd>
+<p>Service-IN or Service-OUT a running HTTP service. If <em>service_in</em> is <code>False</code> or <code>0</code> the running HTTP service will be made unavailable for <a href="pluginadapter.html#system_addplugin_func">plugin execution</a>. Plugin execution is enabled when <em>service_in</em> is <code>True</code> or non-zero (the default.)</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_servermetrics">2.4.6. ServerMetrics</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_servermetrics_func"></a><code>pyvgx.<strong>system.ServerMetrics</strong>( <em>percentiles</em> )</code></dt>
+<dd>
+<p>Return a dict of HTTP Server performance metrics. The <em>percentiles</em> argument must be a list of one or more latency buckets representing a latency percentile as a float greater than 0.0 and less than 100.0.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_serverports">2.4.7. ServerPorts</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_serverports_func"></a><code>pyvgx.<strong>system.ServerPorts</strong>()</code></dt>
+<dd>
+<p>Return dict <code>{'base': <em>port</em>, 'admin': <em>port</em>+1}</code></p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_serverhost">2.4.8. ServerHost</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_serverhost_func"></a><code>pyvgx.<strong>system.ServerHost</strong>()</code></dt>
+<dd>
+<p>Return dict <code>{'host': "<em>name</em>"&gt;, 'ip': "<em>x.x.x.x</em>"}</code></p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_serverprefix">2.4.9. ServerPrefix</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_serverprefix_func"></a><code>pyvgx.<strong>system.ServerPrefix</strong>()</code></dt>
+<dd>
+<p>Return the <a href="#system_starthttp_func__prefix">service prefix</a> specified to <code>StartHTTP()</code>, or None if no prefix is used.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_serveradminip">2.4.10. ServerAdminIP</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_serveradminip_func"></a><code>pyvgx.<strong>system.ServerAdminIP</strong>()</code></dt>
+<dd>
+<p>Return the server&#8217;s IP address as internally known by the server.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_requestrate">2.4.11. RequestRate</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_requestrate_func"></a><code>pyvgx.<strong>system.RequestRate</strong>()</code></dt>
+<dd>
+<p>Return the current request rate for <a href="#server_a_and_server_b">HTTP Server A</a> running on base <em>port</em>.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_resetmetrics">2.4.12. ResetMetrics</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_resetmetrics_func"></a><code>pyvgx.<strong>system.ResetMetrics</strong>()</code></dt>
+<dd>
+<p>Reset all HTTP Server performance metrics to their initial state.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect2">
+<h3 id="socket_server_limits">2.5. Socket Server Limits</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 41.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 41.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Resource/Attribute</th>
+<th class="tableblock halign-left valign-top">Limit</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_server_a_threads"></a>Executor thread pool size (Server A)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used for serving plugin requests</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_server_b_threads"></a>Executor thread pool size (Server B)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Used for monitoring and administration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_clients"></a>Max simultaneous requests (socket connections) per server port</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1021</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP error <code>429 Too Many Requests</code> is returned if limit exceeded</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_request_line"></a>HTTP request line size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8191</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use <code>POST</code> method for requests with large data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_header_line"></a>HTTP header line size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8191</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Limit applies to individual headers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_partitions"></a>Max number of partitions per dispatcher</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">127</p></td>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock">The dispatch matrix shape is limited by the maximum number of simultaneous file descriptors (sockets) <em>FD<sub>max</sub></em> supported by the operating system such that:
+\( \displaystyle partitions \cdot replicas \cdot channels &lt;= FD_{max} \)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_replicas"></a>Max number of replicas per dispatcher</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">127</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="limit_channels"></a>Max number of channels from dispatcher to any back-end instance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">127</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="request_and_response">3. Request and Response</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="http_request">3.1. HTTP Request</h3>
+<div class="paragraph">
+<p>Socket Server accepts standard HTTP 1.1 requests.</p>
+</div>
+<div class="sect3">
+<h4 id="_http_methods">3.1.1. HTTP Methods</h4>
+<div class="paragraph">
+<p>Supported methods are <code>GET</code>, <code>POST</code>, <code>HEAD</code>, and <code>OPTIONS</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_http_get">3.1.1.1. HTTP GET</h5>
+<div class="paragraph">
+<p>Supported for all request types.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="err">GET /path HTTP/1.1\r\n
+Header1: Field1\r\n
+Header2: Field2\r\n
+\r\n</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_http_post">3.1.1.2. HTTP POST</h5>
+<div class="paragraph">
+<p>Supported for plugin requests.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="err">POST /path HTTP/1.1\r\n
+Header1: Field1\r\n
+Header2: Field2\r\n
+Content-Length: 14\r\n
+\r\n
+Sample content</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_http_head">3.1.1.3. HTTP HEAD</h5>
+<div class="paragraph">
+<p>Supported for file resource and builtin artifact request.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="err">HEAD /path HTTP/1.1\r\n
+\r\n</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_http_options">3.1.1.4. HTTP OPTIONS</h5>
+<div class="paragraph">
+<p>Supported for all request types.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="err">OPTIONS /path HTTP/1.1\r\n
+\r\n</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="request_headers">3.1.2. Recognized HTTP Request Headers</h4>
+<div class="paragraph">
+<p>The following HTTP headers are recognized and acted upon by the HTTP Server.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Accept</code></p>
+</li>
+<li>
+<p><code>Content-Type</code></p>
+</li>
+<li>
+<p><code>Content-Length</code></p>
+</li>
+<li>
+<p><code>X-VGX-Partial-Target</code></p>
+</li>
+<li>
+<p><code>X-VGX-Builtin-Min-Executor</code></p>
+</li>
+<li>
+<p><code>X-VGX-Bypass-SOUT</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Other headers may be sent and acted upon by custom plugins. (See optional <a href="pluginadapter.html#pre_engine_arg_headers">headers argument</a> passed to plugin functions.)</p>
+</div>
+<div class="sect4">
+<h5 id="request_header_accept">3.1.2.1. Accept</h5>
+<div class="paragraph">
+<p><code>Accept: <em>mediatype</em></code></p>
+</div>
+<div class="paragraph">
+<p>Specify <em>mediatype</em> of <a href="pluginadapter.html#pyvgx_pluginresponse">response returned from plugin</a> request. Three mediatypes are currently supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>application/json</code> (default)<br>
+Render plugin response object as JSON</p>
+</li>
+<li>
+<p><code>text/plain</code><br>
+Render plugin response as <code>repr( object )</code></p>
+</li>
+<li>
+<p><code>application/x-vgx-partial</code><br>
+Internal format used between dispatcher and back-end matrix</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_header_content_type">3.1.2.2. Content-Type</h5>
+<div class="paragraph">
+<p><code>Content-Type: <em>mediatype</em></code></p>
+</div>
+<div class="paragraph">
+<p>Specify <em>mediatype</em> of <code>content</code> in <code>POST</code> requests</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_header_content_length">3.1.2.3. Content-Length</h5>
+<div class="paragraph">
+<p><code>Content-Length: <em>length</em></code></p>
+</div>
+<div class="paragraph">
+<p>Specify <em>length</em> in bytes of <code>content</code> in <code>POST</code> requests</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_header_x_vgx_partial_target">3.1.2.4. X-VGX-Partial-Target</h5>
+<div class="paragraph">
+<p><code>X-VGX-Partial-Target: <em>partition</em></code></p>
+</div>
+<div class="paragraph">
+<p>Target <em>partition</em> for this request when forwarded to VGX Dispatch back-end matrix. See <a href="pluginadapter.html#request_attr_partial"><em>request.partial</em></a>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_header_x_vgx_builtin_min_executor">3.1.2.5. X-VGX-Builtin-Min-Executor</h5>
+<div class="paragraph">
+<p><code>X-VGX-Builtin-Min-Executor: <em>queueN</em></code></p>
+</div>
+<div class="paragraph">
+<p>For internal use. Specify <em>queueN</em> (max 3) of the lowest internal dispatch queue to use for the request, limiting which executor threads are allowed to handle the request.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_header_x_vgx_bypass_sout">3.1.2.6. X-VGX-Bypass-SOUT</h5>
+<div class="paragraph">
+<p><code>X-VGX-Bypass-SOUT: <em>bypass</em></code></p>
+</div>
+<div class="paragraph">
+<p>Override service S-OUT when <em>bypass</em> is <code>1</code>. Requests with this header will be executed regardless of service S-IN/S-OUT state.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="plugin_execution_request">3.1.3. Plugin Execution Request</h4>
+<div class="paragraph">
+<p>The Python plugin function to execute and its parameters are determined by the service URL path.
+To execute <em>servicename</em>, use HTTP request path <code>/vgx/plugin/<strong><em>servicename</em></strong>?<strong><em>parameters</em></strong></code>.</p>
+</div>
+<div class="paragraph">
+<p>If an <em>engine</em> or <em>pre</em>-processor named <em>servicename</em> has been added with <a href="pluginadapter.html#system_addplugin_func">system.AddPlugin()</a> its registered function is called. In <a href="#vgx_server_mode_engine">Engine</a> mode the registered <em>engine</em> function is called. In <a href="#vgx_server_mode_dispatch">Dispatch</a> mode the registered <em>pre</em> function is called.</p>
+</div>
+<div class="paragraph">
+<p>In Engine mode there must be an <em>engine</em> matching <em>servicename</em>, otherwise the request will fail.</p>
+</div>
+<div class="paragraph">
+<p>In Dispatch mode both <em>pre</em> and <em>post</em>-processors are optional. If <em>pre</em> is defined for <em>servicename</em> it is called before the request is forwarded to the back-end matrix. If <em>post</em> is defined for <em>servicename</em> it is called after a merged response has been generated from back-end matrix partial results.</p>
+</div>
+<div class="sect4">
+<h5 id="request_character_encoding">3.1.3.1. Request Character Encoding</h5>
+<div class="paragraph">
+<p>The only supported character encoding is UTF-8.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_parameters">3.1.3.2. Plugin Request Parameters</h5>
+<div class="paragraph">
+<p>URL query <em>parameters</em> are generally of the form <code>p1=x&amp;p2=y&amp;&#8230;&#8203;</code> and are passed to the <em>engine</em> or <em>pre</em> function. Query parameters whose names match function arguments in the <a href="pluginadapter.html#pre_engine_signature">plugin signature</a> are passed to the function as arguments <em>func</em>( <em>p1</em>=<em>x</em>, <em>p2</em>=<em>y</em>, &#8230;&#8203; ).</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_parameter_annotation">3.1.3.3. Parameter Annotation</h5>
+<div class="paragraph">
+<p>Python function argument annotation <code><em>arg</em>: <em>type</em></code> enables automatic type conversion of HTTP request parameters. If a function argument <em>arg</em> is annotated as <code>def <em>func</em>( <em>arg</em>: <em>type</em> ): &#8230;&#8203;</code> then HTTP request parameter <code>arg=<em>x</em></code> will be passed to <em>func</em>() as keyword argument <em>arg</em> with a value converted according to <em>type</em>.</p>
+</div>
+<div class="paragraph">
+<p>The following annotation types are supported:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>int</em></p>
+</li>
+<li>
+<p><em>float</em></p>
+</li>
+<li>
+<p><em>str</em></p>
+</li>
+<li>
+<p><em>bytes</em></p>
+</li>
+<li>
+<p><em>json</em></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Type <em>json</em> produces value <code>json.loads(x)</code>, type <em>bytes</em> produces value <code>x.decode()</code>, and the others produce value <code><em>type</em>(x)</code>.</p>
+</div>
+<div class="paragraph">
+<p>Non-annotated arguments are passed as strings.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_parameter_explicit_cast">3.1.3.4. Explicit Parameter Conversion</h5>
+<div class="paragraph">
+<p>Parameter type can be specified directly in the query for <em>int</em> and <em>float</em> types:</p>
+</div>
+<div class="paragraph">
+<p><code>p1=(int)x&amp;p2=(float)y</code> will convert <em>x</em> to <em>int</em> and <em>y</em> to <em>float</em> before passing arguments <em>p1</em> and <em>p2</em> to the plugin function.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="request_execution_threads">3.1.3.5. Request Execution Details</h5>
+<div class="paragraph">
+<p>A new plugin request is made by creating a new (or reusing an existing) socket connection to the <a href="#server_a_port">main server port</a>. The connection is assigned from a pool of <a href="#limit_clients">1021 client handlers</a>, and will remain uniquely allocated to the connected client for as long as the connection persists.</p>
+</div>
+<div class="paragraph">
+<p>Once a request has been fully received and parsed the server assigns an executor thread to process the request. The thread is selected from a <a href="#limit_server_a_threads">pool of 16</a>.</p>
+</div>
+<div class="paragraph">
+<p>The executor thread acquires the GIL and calls the Python plugin function identified by the URL. Upon return from the Python plugin function the GIL is released. During the course of execution the function may release and re-acquire the GIL many times depending on the work being performed.</p>
+</div>
+<div class="paragraph">
+<p>Once processing is completed the executor thread returns to the pool, ready to serve another request.</p>
+</div>
+<div class="paragraph">
+<p>Note that <em>pre</em> and <em>post</em>-processors for the same request are generally executed in different threads. The executor thread is returned to the pool as soon as <em>pre</em> function completes, and is free to execute other requests while the first one is being processed in the back-end matrix. Another executor thread is allocated to handle merging of response partials, and optionally to execute the <em>post</em> function if defined.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+Executor threads are uniquely allocated to <em>engine</em>, <em>pre</em>, or <em>post</em> functions from start to finish. A Python plugin function must therefore be thought of as a real-time processor <code>IN&#8594;(process)&#8594;OUT</code> where <em>process</em> must perform its task as quickly as possible with minimal blocking on shared resources and never put the thread to sleep.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="http_response">3.2. HTTP Response</h3>
+<div class="paragraph">
+<p>Socket Server returns standard HTTP 1.1 responses.</p>
+</div>
+<div class="listingblock">
+<div class="title">HTTP Response</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="err">HTTP/1.1 &lt;statuscode&gt; &lt;statustext&gt;\r\n
+Allowed: &lt;methods&gt;\r\n
+Server: VGX/3\r\n
+Connection: keep-Alive\r\n
+Content-Type: &lt;mediatype&gt;; charset=UTF-8\r\n
+Content-Length: &lt;length&gt;\r\n
+\r\n
+&lt;content&gt;</span></code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="response_headers">3.2.1. HTTP Response Headers</h4>
+<div class="paragraph">
+<p>Some or all of the following HTTP headers may be returned in the response:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>Allowed</code></p>
+</li>
+<li>
+<p><code>Server</code></p>
+</li>
+<li>
+<p><code>Connection</code></p>
+</li>
+<li>
+<p><code>Content-Type</code></p>
+</li>
+<li>
+<p><code>Content-Length</code></p>
+</li>
+</ul>
+</div>
+<div class="sect4">
+<h5 id="response_header_allowed">3.2.1.1. Allowed</h5>
+<div class="paragraph">
+<p><code>Allowed: <em>methods</em></code></p>
+</div>
+<div class="paragraph">
+<p>Included if HTTP method is <code>OPTIONS</code>, value <em>methods</em> is comma-separated list of supported HTTP methods for the requested resource</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="response_header_server">3.2.1.2. Server</h5>
+<div class="paragraph">
+<p>Always <code>Server: VGX/3</code></p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="response_header_connection">3.2.1.3. Connection</h5>
+<div class="paragraph">
+<p>Always <code>Connection: keep-Alive</code></p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="response_header_content_type">3.2.1.4. Content-Type</h5>
+<div class="paragraph">
+<p><code>Content-Type: <em>mediatype</em>; charset-UTF-8</code></p>
+</div>
+<div class="paragraph">
+<p>Included if Content-Length is non-zero, value <em>mediatype</em> depends on request header <a href="#request_header_accept">Accept</a> for plugin requests, or as defined per <a href="#builtin_services">builtin service</a> endpoint</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="response_header_content_length">3.2.1.5. Content-Length</h5>
+<div class="paragraph">
+<p><code>Content-Length: <em>length</em></code></p>
+</div>
+<div class="paragraph">
+<p>Included if non-zero, value <em>length</em> represents number of bytes in HTTP <code>&lt;content&gt;</code></p>
+</div>
+<div class="listingblock">
+<div class="title">Sample response without content</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK\r\n</span>
+<span class="na">Server</span><span class="p">:</span> <span class="s">VGX/3\r\n</span>
+<span class="na">Connection</span><span class="p">:</span> <span class="s">keep-Alive\r\n</span>
+<span class="s">\r\n</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Sample response with content</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="http"><span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span> <span class="m">200</span> <span class="ne">OK\r\n</span>
+<span class="na">Server</span><span class="p">:</span> <span class="s">VGX/3\r\n</span>
+<span class="na">Connection</span><span class="p">:</span> <span class="s">keep-Alive\r\n</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/json; charset=UTF-8\r\n</span>
+<span class="na">Content-Length</span><span class="p">:</span> <span class="s">123\r\n</span>
+<span class="s">\r\n</span>
+<span class="na">{"status"</span><span class="p">:</span> <span class="s">"OK", "response": [5, 25, 2.23606797749979, 2.23606797749979], "level": 0, "partitions": null, "exec_ms": 0.222}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="response_status_codes">3.2.2. HTTP Status Codes</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Status</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Response Content Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>2xx</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>200 OK</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request successful</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>4xx</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>400 Bad Request</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Invalid HTTP request syntax or header, malformed or incompatible plugin parameter value. Error details must be extracted from response content.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See <a href="#service_error_message_format">Section 3.2.3.1, &#8220;Service Error Message Format&#8221;</a> for details</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>403 Forbidden</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attempted to access a file outside server&#8217;s <em>vgxroot</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>404 Not Found</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A non-existing plugin or file was requested</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>405 Method Not Allowed</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The HTTP method is not allowed for the requested resource</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>413 Payload Too Large</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request content could not be processed because internal buffer ran out of memory</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>414 URI Too Long</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request line <a href="#limit_request_line">exceeded 8191</a> bytes, or a response line from back-end matrix was too long due to an internal error</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock"><code>429 Too Many Requests</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_429_cannot_accept"></a>The request could not be processed because the number of simultaneous socket connections <a href="#limit_clients">exceeded 1021</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>429 Cannot accept new connection at this time</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_429_backlog_full"></a>Dispatcher back-end matrix busy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>429 Client backlog full</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_429_backlog_full_after_redispatch"></a>Dispatcher back-end matrix busy on internal retry</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>429 Client backlog full after re-dispatch attempt</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>5xx</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>500 Internal Server Error</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">General purpose error code covering both plugin exceptions and various internal execution errors. Error details must be extracted from response content.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">See <a href="#service_error_message_format">Section 3.2.3.1, &#8220;Service Error Message Format&#8221;</a> for details</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>501 Not Implemented</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A valid, but unimplemented, resource was requested</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock"><code>503 Service Unavailable</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_503_service_out"></a>Server is currently <a href="#system_serviceinhttp_func">Service-OUT</a>, plugins cannot be executed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>503 Service Out</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_503_cannot_accept"></a>Server is shutting down</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>503 Cannot accept new connection at this time</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_503_partitions_down"></a>At least one dispatcher partition has no available replica, and dispatcher configuration option <a href="#config_options_allow_incomplete">allow-incomplete</a> is False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>503 Partition(s) down</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="status_503_all_partitions_down"></a>Entire dispatcher back-end matrix is unavailable</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>503 All partitions down</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>505 HTTP Version Not Supported</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP/1.1 is required</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="service_response_format">3.2.3. Service Response Format</h4>
+<div class="paragraph">
+<p>Services returning JSON responses (plugins and builtin services) use a common JSON format in their responses. Certain fields may be omitted, depending on the type of response.</p>
+</div>
+<div class="listingblock">
+<div class="title">General JSON response format</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;status&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;json&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;json&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="err">&lt;port&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="err">&lt;offset&gt;</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"exec_id"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;int&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;int&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;list_or_</span><span class="kc">null</span><span class="err">&gt;</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;float&gt;</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="response_json_field_status"></a>status</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;status&gt;</strong> is <code>"OK"</code> for successful requests</p>
+</li>
+<li>
+<p><strong>&lt;status&gt;</strong> is <code>"ERROR"</code> for failed requests</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_message"></a>message</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;json&gt;</strong> is error message as JSON object, format varies depending on error type</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_response"></a>response</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;json&gt;</strong> is Successful response payload as JSON object, format varies depending on service type and plugin implementation</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_port"></a>port (<em>not always present</em>)</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;port&gt;</strong> is the request port number</p>
+</li>
+<li>
+<p><strong>&lt;offset&gt;</strong> is <code>0</code> for main port, <code>1</code> for admin port</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_exec_id"></a>exec_id (<em>not always present</em>)</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;int&gt;</strong> is a number 0 or higher identifying the executor thread generating the response</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_level"></a>level</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;int&gt;</strong> is a number 0 or higher identifying the server&#8217;s position in a dispatcher hierarchy</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_partitions"></a>partitions</dt>
+<dd>
+<p>&lt;list_or_null&gt; is <code>null</code> for responses generated without a dispatcher back-end matrix, or a list <code>[parts, incomplete, deep]</code> for dispatched requests, where:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><em>parts</em></strong> is the number of partitions in the immediate lower level of dispatcher&#8217;s back-end matrix</p>
+</li>
+<li>
+<p><strong><em>incomplete</em></strong> is the number of partitions that did not respond, normally 0</p>
+</li>
+<li>
+<p><strong><em>deep</em></strong> is the total number of VGX Server instances in the dispatcher back-end matrix that contributed to this response</p>
+</li>
+</ul>
+</div>
+</dd>
+<dt class="hdlist1"><a id="response_json_field_exec_ms"></a>exec_ms</dt>
+<dd>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>&lt;float&gt;</strong> is the request execution time, in milliseconds</p>
+</li>
+</ul>
+</div>
+</dd>
+</dl>
+</div>
+<div class="sect4">
+<h5 id="service_error_message_format">3.2.3.1. Service Error Message Format</h5>
+<div class="paragraph">
+<p>A failed request may include the <code>"message"</code> field in the response when the returned HTTP status is <code>400 Bad Request</code> or <code>500 Internal Server Error</code>. When the <code>"message"</code> field is included it may be formatted in various ways depending on the type of error. These are described by way of examples below.</p>
+</div>
+<div class="sect5">
+<h6 id="_system">3.2.3.1.1. system</h6>
+<div class="paragraph">
+<p>These error messages represent internal errors.</p>
+</div>
+<div class="listingblock">
+<div class="title">system error message example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"system"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"exception"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;class 'ValueError'&gt;"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PyCapsule_New called with null pointer"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_vgx">3.2.3.1.2. vgx</h6>
+<div class="paragraph">
+<p>These error messages are caused by unsuccessful parameter processing or result rendering.</p>
+</div>
+<div class="listingblock">
+<div class="title">vgx error message example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"vgx"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"exception"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;class 'TypeError'&gt;"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"x=sdd (an integer is required)"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_plugin">3.2.3.1.3. plugin</h6>
+<div class="paragraph">
+<p>These error messages are generated by exceptions raised in plugin code</p>
+</div>
+<div class="listingblock">
+<div class="title">plugin error message example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+  </span><span class="nl">"plugin"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"exception"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;class 'ZeroDivisionError'&gt;"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"division by zero"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"traceback"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"  File </span><span class="se">\"</span><span class="s2">&lt;stdin&gt;</span><span class="se">\"</span><span class="s2">, line 1, in engine</span><span class="se">\n</span><span class="s2">"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_back_end_matrix">3.2.3.1.4. back-end matrix</h6>
+<div class="paragraph">
+<p>Errors generated in a dispatcher back-end matrix will be relayed as a string with partition and error code information for each dispatcher level:</p>
+</div>
+<div class="paragraph">
+<p><code>&lt;partial: <em>p</em> width: <em>w</em>&gt; | <em>code</em> | <em>message</em></code></p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><em>p</em></dt>
+<dd>
+<p>Dispatcher&#8217;s partition number</p>
+</dd>
+<dt class="hdlist1"><em>w</em></dt>
+<dd>
+<p>Number of dispatcher partitions</p>
+</dd>
+<dt class="hdlist1"><em>code</em></dt>
+<dd>
+<p>Response error code</p>
+</dd>
+<dt class="hdlist1"><em>message</em></dt>
+<dd>
+<p>Response error message, which may be recursive</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock">
+<div class="title">dispatcher back-end matrix error example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;partial: 0 width: 2&gt; | 500 Internal Server Error | &lt;partial: 0 width: 3&gt; | 500 Internal Server Error | {'plugin': {'exception':  &lt;class 'Exception'&gt; , 'value': 'deep problems', 'traceback': ['  File  &lt;stdin&gt; , line 2, in engine</span><span class="se">\n</span><span class="s2">']}}&gt;&gt;"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect5">
+<h6 id="_other">3.2.3.1.5. other</h6>
+<div class="paragraph">
+<p>Other error messages are reported as plain strings</p>
+</div>
+<div class="listingblock">
+<div class="title">other error message example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown internal error"</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="service_response_examples">3.2.4. Service Response Examples</h4>
+<div class="listingblock">
+<div class="title">Plugin Success Example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+    </span><span class="p">[</span><span class="w"> </span><span class="mf">0.2661956764021819</span><span class="p">,</span><span class="w"> </span><span class="s2">"This"</span><span class="w"> </span><span class="p">],</span><span class="w">
+    </span><span class="p">[</span><span class="w"> </span><span class="mf">0.3168133587680386</span><span class="p">,</span><span class="w"> </span><span class="s2">"That"</span><span class="w"> </span><span class="p">],</span><span class="w">
+    </span><span class="p">[</span><span class="w"> </span><span class="mf">0.8208368275190551</span><span class="p">,</span><span class="w"> </span><span class="s2">"The other"</span><span class="w"> </span><span class="p">]</span><span class="w">
+  </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.58</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Builtin Service Success Example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"sysroot"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/data/testsystem"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"exec_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.162</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Plugin Error Response Example</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ERROR"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"plugin"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"exception"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;class 'ZeroDivisionError'&gt;"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"division by zero"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"traceback"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"  File </span><span class="se">\"</span><span class="s2">&lt;stdin&gt;</span><span class="se">\"</span><span class="s2">, line 1, in engine</span><span class="se">\n</span><span class="s2">"</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="mi">9000</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">],</span><span class="w">
+  </span><span class="nl">"exec_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">3691.37</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="builtin_services">4. Built-in Services</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VGX Server includes service endpoints for getting system information and metrics, inspecting graph data, and performing administrative tasks.</p>
+</div>
+<div class="sect2">
+<h3 id="_status_and_metrics">4.1. Status and Metrics</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 33.3333%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Response MimeType</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/hc</code></p>
+<p class="tableblock"><code>/&lt;prefix&gt;/vgx/hc</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>text/plain</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return health-check response string <code>VGX/3</code>. HTTP status <code>200</code> for OK service, <code>503</code> for unavailable service.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/ping</code></p>
+<p class="tableblock"><code>&lt;prefix&gt;/vgx/ping</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basic information about VGX Server host.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/time</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uptime, start time and current time of VGX Server.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/storage</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local data storage location</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/graphsum</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Summary of basic graph object counters, aggregated for all loaded graphs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/objcnt</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basic object counters</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Metrics for VGX Server request rate, latency, errors, and other I/O information.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/txstat</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VGX transaction I/O metrics.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/peerstat</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VGX provider/subscriber status and upstream/downstream peer information.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/meminfo</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Basic memory consumption information.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/nodestat</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Summary of the most essential configuration, counters, and status</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/matrix</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Back-end matrix (for VGX Server running in Dispatch mode)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/dispatch</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Executor thread statistics and back-end matrix information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/inspect</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Socket server connection details. Use parameter <code>level=n</code> (0-3) to control amount of detail.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/randstr</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>text/plain</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A long string of random hex digits</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/randint</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>text/plain</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A short string of random hex digits</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_plugin_information">4.2. Plugin Information</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 33.3333%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Response MimeType</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/plugins</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User-defined plugins, as returned by <a href="pluginadapter.html#system_getplugins_func">system.GetPlugins()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtins</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Builtin plugins, as returned by <a href="pluginadapter.html#system_getbuiltins_func">system.GetBuiltins()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/matrixplugins</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deep listing of user-defined plugins at all dispatch layers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/argspec</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>application/json</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return interface specification for plugin <em>name</em> given by parameter <code>plugin=<em>name</em></code>, e.g.<br>
+<code>/vgx/builtin/argspec?plugin=neighbor</code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_builtin_plugins">4.3. Builtin Plugins</h3>
+<div class="sect3">
+<h4 id="_graph_status_and_queries">4.3.1. Graph Status and Queries</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/arcs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global graph <a href="../graph/graphQuery.html#grapharcs">pyvgx.Graph.Arcs()</a> query</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/evaluate</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VGX expression evaluator, i.e. <a href="../reference.html#evaluate_func">pyvgx.Graph.Evaluate()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/eventbacklog</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TTL event processor backlog, i.e. <a href="../reference.html#eventbacklog_func">pyvgx.Graph.EventBacklog()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/graphinfo</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detailed graph status information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/memory</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detailed graph memory usage information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/neighbor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph <a href="../graph/graphQuery.html#graphneighborhood">pyvgx.Graph.Neighborhood()</a> query</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/properties</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the system graph properties, i.e. <a href="../reference.html#system_get_properties_func">pyvgx.system.GetProperties()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/vertex</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return detailed information about a specific vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/vertices</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global graph <a href="../graph/graphQuery.html#graphvertices">pyvgx.Graph.Vertices()</a> query</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_graph_modification">4.3.2. Graph Modification</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/connect</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create arc from initial to terminal, i.e. <a href="../reference.html#connect_func">pyvgx.Graph.Connect()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/createvertex</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create a new vertex, i.e. <a href="../reference.html#createvertex_func">pyvgx.Graph.CreateVertex()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/deletevertex</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete a vertex, i.e. <a href="../reference.html#deletevertex_func">pyvgx.Graph.DeleteVertex()</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/disconnect</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove arc, i.e. <a href="../reference.html#disconnect_func">pyvgx.Graph.Disconnect()</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_vgx_server_status_and_metrics">4.3.3. VGX Server Status and Metrics</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/echo</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">VGX Server echo</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/metrics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detailed VGX Server request rate, latency, and I/O information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ping</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A no-op plugin returning <code>true</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detailed status information for all graphs, or optionally limit to graph <em>g</em> with parameter <code>graph=<em>g</em></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_additional_dispatcher_matrix_information">4.3.4. Additional Dispatcher Matrix Information</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/Identify</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Execute a dummy request and return a JSON structure identifying all involved dispatcher and engine instances</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/MatrixObjects</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return accumulated graph object counts across all partitions</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_multi_node_system_monitoring">4.3.5. Multi-Node System Monitoring</h4>
+<div class="paragraph">
+<p>These requests can be sent to any instance part of a multi-node system, as described in <a href="multinode.html#system_descriptor">System Descriptor</a>. Some requests require return information for all instances, others require parameter <code>idlist=id1,id2,&#8230;&#8203;</code> where id<em>n</em> is an <a href="multinode.html#descriptor_instances">instance identifier</a>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/system_counts</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Requires parameter <code>idlist=id1,id2,&#8230;&#8203;</code>. Returns object counts, serial number and basic host information for each specified instance identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/system_descriptor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returns the <a href="multinode.html#system_descriptor">system descriptor</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/system_overview</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returns a comprehensive set of information for all instances in the system</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/system_rates</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Requires parameter <code>idlist=id1,id2,&#8230;&#8203;</code>. Returns request rate, latency and basic host information for each specified instance identifier</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_user_defined_files">4.4. User Defined Files</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 33.3333%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Response MimeType</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/&lt;path&gt;</code></p>
+<p class="tableblock"> <code>/&lt;prefix&gt;/&lt;path&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">*</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the contents of file <code>&lt;path&gt;</code> resolved relative to <code><a href="../reference.html#system_root_func">&lt;vgxroot</a>&gt;/WEB-ROOT/</code> as long as <code>&lt;path&gt;</code> does not start with <code>/vgx/</code> and does not match any other built-in URI path.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="mf">1.4142135623730951</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.283</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="multinode.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Multi-Node Setup"></i></span></a>
+<a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="pluginadapter.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Plugin Adapter"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

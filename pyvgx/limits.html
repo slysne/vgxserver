@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Limits</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="vgxlimits" class="article toc2 toc-left">
+<div id="header">
+<h1>VGX Limits <a href="tutorial.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Tutorial"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#limits">1. Limits, Sizes and Special Numbers</a></li>
+<li><a href="#vertices">2. Vertices</a>
+<ul class="sectlevel2">
+<li><a href="#vertexproperties">2.1. Properties</a></li>
+<li><a href="#vertexarcs">2.2. Arcs</a></li>
+<li><a href="#vertexvector">2.3. Vectors</a>
+<ul class="sectlevel3">
+<li><a href="#featurevector">2.3.1. Feature Vector</a></li>
+<li><a href="#_euclidean_vector">2.3.2. Euclidean Vector</a></li>
+</ul>
+</li>
+<li><a href="#_long_identifier">2.4. Long Identifier</a></li>
+</ul>
+</li>
+<li><a href="#arcs">3. Arcs</a>
+<ul class="sectlevel2">
+<li><a href="#_simple_arc">3.1. Simple Arc</a></li>
+<li><a href="#_multiple_arc">3.2. Multiple Arc</a></li>
+<li><a href="#_arcvectors_size_increments">3.3. Arcvectors Size Increments</a>
+<ul class="sectlevel3">
+<li><a href="#_embedded_arcvector_0_bytes">3.3.1. Embedded arcvector (0 bytes)</a></li>
+<li><a href="#_minimal_arcvector_object_64_bytes">3.3.2. Minimal arcvector object (64 bytes)</a></li>
+<li><a href="#_arcvector_with_6_cells_128_bytes">3.3.3. Arcvector with 6 cells (128 bytes)</a></li>
+<li><a href="#_arcvector_with_14_cells_256_bytes">3.3.4. Arcvector with 14 cells (256 bytes)</a></li>
+<li><a href="#_arcvector_with_28_cells_512_bytes">3.3.5. Arcvector with 28 cells (512 bytes)</a></li>
+<li><a href="#_arcvector_with_60_252_cells_1024_4096_bytes">3.3.6. Arcvector with 60 - 252 cells (1024 - 4096 bytes)</a></li>
+<li><a href="#_arcvector_radix_structure">3.3.7. Arcvector Radix Structure</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="limits">1. Limits, Sizes and Special Numbers</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Item</th>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Relationships</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15,616</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship types are enumerated. This is the maximum number of unique relationship types that can exist within a graph instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Vertex Types</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">208</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex types are enumerated. This is the maximum number of unique vertex types that can exist within a graph instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Feature Vector Dimensions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22,366,890</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Feature vector dimensions are enumerated. This is the maximum number of unique vector dimension strings that can exist within a graph instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Feature Vector Dimension Length</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">27</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A feature vector dimension string can be no longer than 27 bytes (utf-8 encoded string.)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Feature Vector Components</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A feature vector may contain up to 42 enumerated dimensions.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Euclidean Vector Components</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65,472</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A euclidean vector may contain up to 65,472 components, and the number of components must be a multiple of 32.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc Memory</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32 bytes
+<br>
+<br>
+ (16 bytes with M_FWDONLY)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One arc consumes 16 bytes of memory, but since every arc has an implicit reverse arc 32 bytes are used. Note that additional overhead for maintaining internal mapping structures should be expected. See <a href="#arcs">Arcs</a> for details.
+<br>
+<br>
+ Note the special case of arcs created with <a href="constants/arcModifierConstants.html#M_FWDONLY">M_FWDONLY</a> consume only 16 bytes.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs per vertex (hard limit)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25,165,824,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For perspective this is about 500 GiB of memory.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex Memory</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">192 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A vertex with an identifier shorter than 40 bytes, and without properties and no more than one inarc and one outarc takes 192 bytes of memory. See <a href="#vertices">Vertices</a> for details.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Short Vertex ID</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 - 39 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A vertex identifier shorter than 40 bytes is embedded in the basic vertex object. If the vertex identifier is 40 bytes or more an additional string object is allocated and linked with the vertex object. Note that this limit applies to the utf-8 encoded string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Recursive Vertex Acquisition Limit</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">112</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A vertex may be acquired recursively no more than 112 times.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Property Memory</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16+ bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A vertex property occupies a 16-byte slot in the vertex property map, which is established only when the first property is set for a vertex. There is additional overhead in managing the map itself, which manifests in quantized increments as the map structure is expanded (or first established.) Property key and value strings have an additional one-time storage cost per unique string for a graph instance, equal to the size of the string.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max String Length</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">131,000 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the largest string size (in bytes, after utf-8 encoding) that is allowed for vertex names and types, property keys, and relationship types. It is also the maximum length of evaluator expressions.
+<br>
+<br>
+Property string values may exceed this limit because long value strings are compressed. However, if the number of bytes in the compressed data is too large the value cannot be stored. Since the compression ratio depends on the actual string data it is not possible to define a specific upper bound for the raw string length.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Numeric Array Property Length</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16,375</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the largest numeric array that can be assigned to a vertex property.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Max Keyval Mapping Property Length</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5,406</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">This is the maximum number of items in a hash map that can be assigned to a vertex property.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertices">2. Vertices</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex objects are fixed-size structures of 192 bytes, with optional references to additional members such as properties, arcs, feature vector and (long) ID string. If a vertex has no properties, no feature vector, a short identifier (less than 40 bytes) and at most 1 inarc and outarc it is completely contained in the 192-byte vertex structure.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/vertex.png" alt="vertex">
+</div>
+<div class="title">Figure 1. Vertex</div>
+</div>
+<div class="sect2">
+<h3 id="vertexproperties">2.1. Properties</h3>
+<div class="paragraph">
+<p>Vertex <a href="vertex/vertexProperty.html">properties</a> are key-value pairs stored in a map object. When the first property is added to a vertex a new map object is created and associated with the vertex. The minimum map size is 64 bytes and can hold up to two properties. The next map size is 128 bytes and can hold up to six properties. (The property map structure is similar to that used for arcs, see <a href="#arcvectorcapacities">capacity chart</a> for more details.)</p>
+</div>
+<div class="paragraph">
+<p>In addition to the property map structure a global map (per graph instance) maintains a mapping of unique property key strings and value strings. Repeated use of the same property key and value strings for multiple vertices does not require additional storage for the strings. Vertex property maps only store integer enumerations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexarcs">2.2. Arcs</h3>
+<div class="paragraph">
+<p>When a vertex is connected to other vertices the arcs are stored in separate <em>arcvector</em> objects associated with the vertex. A vertex is capable of storing one outarc and one inarc without the need for separate arcvector objects. See <a href="#arcs">Arcs</a> for more details.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vertexvector">2.3. Vectors</h3>
+<div class="paragraph">
+<p>System wide vector mode is selected at <a href="reference.html#system_initialize_func">initialization</a>. The default is feature vector mode. Alternatively euclidean vector mode can be selected by setting <em>euclidean</em>=<code>True</code>.</p>
+</div>
+<div class="sect3">
+<h4 id="featurevector">2.3.1. Feature Vector</h4>
+<div class="paragraph">
+<p>A <a href="vertex/vertexVector.html">feature vector</a> is a <a href="similarity/vector.html">vector object</a> uniquely associated with a vertex. The feature vector object size depends on the number of vector features, as summarized in the table below.</p>
+</div>
+<div class="paragraph">
+<p>In addition to the vector object a global map (per graph instance) maintains a mapping of unique feature strings. Repeated use of the same feature for multiple vectors does not require additional storage for the feature strings. Vectors only store integer enumerations. (Feature enumerations are 32-bit hashes of the feature strings, with collision protection provided by the global map.)</p>
+</div>
+<table id="featurevectorsizes" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Feature Vector Sizes</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature Vector Length</th>
+<th class="tableblock halign-left valign-top">Memory Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 - 16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17 - 32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">192 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">33 - 48 (max)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256 bytes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_euclidean_vector">2.3.2. Euclidean Vector</h4>
+<div class="paragraph">
+<p>A <a href="vertex/vertexVector.html">Euclidean vector</a> is a <a href="similarity/vector.html">vector object</a> uniquely associated with a vertex. The vector object size depends on the number of vector components. The number of components must be a multiple of 32. Euclidean vector object sizes are summarized in the table below.</p>
+</div>
+<table id="euclideanvectorsizes" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. Euclidean Vector Sizes</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Euclidean Vector Length</th>
+<th class="tableblock halign-left valign-top">Memory Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32 and 64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">96 and 128</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">192 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">160 and 192</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">224 and 256</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">320 bytes</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65,440 and 65,472 (max)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65,536 bytes</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_long_identifier">2.4. Long Identifier</h3>
+<div class="paragraph">
+<p>Vertex identifiers require additional storage when their utf-8 encoding exceeds 39 bytes. A separate string object holding the full identifier is associated with the vertex in this case. The 39-byte identifier prefix is always stored in the vertex structure.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="arcs">3. Arcs</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Arcs are stored in <em>arcvectors</em> representing the outarcs and inarcs of a vertex. When a new arc is created from initial A to terminal B, another entry is added to A&#8217;s outarcs arcvector (A pointing to B) and also to B&#8217;s inarcs arcvector (B pointing back to A.) Each arcvector entry is 16 bytes and therefore the arc from A to B consumes 32 bytes.</p>
+</div>
+<div class="paragraph">
+<p>Implicit addition of a reverse arc from B back to A can be prevented with the <a href="constants/arcModifierConstants.html#M_FWDONLY">M_FWDONLY modifier bitmask</a>. This reduces overall memory consumption by up to 50%, but makes reverse graph traversal impossible.</p>
+</div>
+<div class="paragraph">
+<p>The size of an arcvector object is always a power of two, determined by the number of arcs as shown in the table below. When arcs are added beyond the capacity of an existing arcvector the arcvector is expanded to the next higher size. When arcs are removed the size of the arcvector is adjusted to the next lower size as needed to minimize unused space. Note that system memory usage will appear to change in steps as a result of how memory pools are managed internally.</p>
+</div>
+<div class="paragraph">
+<p>When an arcvector grows larger than what can be held in a 4KiB array, it is split into pieces that are chained together in a radix structure. When leaf nodes in the structure grow too large they are again split and new levels are created.</p>
+</div>
+<table id="arcvectorcapacities" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Arcvector Capacities</caption>
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Arcvector Size</th>
+<th class="tableblock halign-left valign-top">Min Capacity*</th>
+<th class="tableblock halign-left valign-top">Max Capacity</th>
+<th class="tableblock halign-left valign-top">Typical Capacity</th>
+<th class="tableblock halign-left valign-top">Typical Arc Count Range</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 - 1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc is embedded in vertex object</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Always holds exactly two arcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">128 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 - 6</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7 - 12</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">512 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">28</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13 -24</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1024 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">60</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">52</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25 - 52</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2048 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">124</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">108</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">53 - 108</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4096 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">252</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">220</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">109 - 220</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4352 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">220+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">109 - 220+</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initial radix structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4416 - 537,961,697,280 bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">26</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25,165,824,000</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">221 - 25,165,824,000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Radix structure</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+*) The minimum capacity is a theoretical minimum and is listed for completeness only. The actual capacity of an arcvector is a function of the hash of the memory locations of vertices it references. On average the actual capacity is close the the maximum capacity. The low end capacity is extremely unlikely to occur.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_simple_arc">3.1. Simple Arc</h3>
+<div class="paragraph">
+<p>A simple arc is represented in the arcvector as a cell consisting of a <em>predicator</em> and a pointer to a vertex. For outarcs the pointer points to the head vertex. For inarcs the pointer points to the tail vertex. The predicator stores information about the arc, including the relationship type and its value. Relationships are stored as integers representing strings. The strings themselves are stored in a separate enumeration map.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector.png" alt="arcvector">
+</div>
+<div class="title">Figure 2. Arcvector</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multiple_arc">3.2. Multiple Arc</h3>
+<div class="paragraph">
+<p>A multiple arc (i.e. more than one arc pointing to the same vertex) adds a <em>predicator map</em> layer to represent individual arcs terminating at the same vertex. The growth and capacity characteristics for the predicator map are exactly the same as for the main arcvector.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_multi.png" alt="arcvector_multi">
+</div>
+<div class="title">Figure 3. Arcvector Multi</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_arcvectors_size_increments">3.3. Arcvectors Size Increments</h3>
+<div class="paragraph">
+<p>Arcvector arrays come in eight sizes, from 0 to 4096 bytes. When a vertex has only one simple arc there is no arcvector array (i.e. size=0) and the arc is embedded in the vertex structure. Two or more arcs require arcvector arrays ranging from 64 to 4096 bytes. If the arcs cannot fit in the largest arcvector array a radix structure containing multiple linked arrays is created.</p>
+</div>
+<div class="sect3">
+<h4 id="_embedded_arcvector_0_bytes">3.3.1. Embedded arcvector (0 bytes)</h4>
+<div class="paragraph">
+<p>The first arc added to a vertex has no memory overhead as it is embedded in the basic vertex object.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_embed.png" alt="arcvector_embed">
+</div>
+<div class="title">Figure 4. Embedded arcvector can store a simple arc</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_minimal_arcvector_object_64_bytes">3.3.2. Minimal arcvector object (64 bytes)</h4>
+<div class="paragraph">
+<p>The second arc added to a vertex establishes a new arcvector array object separate from the vertex object. This is a 64-byte structure now holding two arcs plus 32 bytes of management overhead.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_0.png" alt="arcvector_0">
+</div>
+<div class="title">Figure 5. Minimal arcvector object holds two arcs</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_arcvector_with_6_cells_128_bytes">3.3.3. Arcvector with 6 cells (128 bytes)</h4>
+<div class="paragraph">
+<p>The third arc added to an arcvector expands the 64-byte structure to 128 bytes now holding three arcs. The fourth, fifth and sixth arcs added will also fit in this 128-byte structure.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_1.png" alt="arcvector_1">
+</div>
+<div class="title">Figure 6. Arcvector with 6 cells</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_arcvector_with_14_cells_256_bytes">3.3.4. Arcvector with 14 cells (256 bytes)</h4>
+<div class="paragraph">
+<p>The seventh arc added to an arcvector expands the 128-byte structure to 256 bytes now holding seven arcs. The 256-byte structure has a maximum capacity of 14 arcs, but due to probabilistic effects it may reach a full state after 10 arcs.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_2.png" alt="arcvector_2">
+</div>
+<div class="title">Figure 7. Arcvector with 14 cells</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_arcvector_with_28_cells_512_bytes">3.3.5. Arcvector with 28 cells (512 bytes)</h4>
+<div class="paragraph">
+<p>The next size up is 512 bytes with a capacity of at least 12 and at most 28 arcs. It is highly unlikely for the low end of the capacity range to apply. In fact, it is quite likely that most arcvectors will have an actual capacity close to the upper limit.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_3.png" alt="arcvector_3">
+</div>
+<div class="title">Figure 8. Arcvector with 28 cells</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_arcvector_with_60_252_cells_1024_4096_bytes">3.3.6. Arcvector with 60 - 252 cells (1024 - 4096 bytes)</h4>
+<div class="paragraph">
+<p>As arcs are added the arcvector structure keeps expanding until it reaches 4096 bytes. After this, expansion continues by breaking the array into pieces that are linked together in a radix structure.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_4.png" alt="arcvector_4">
+</div>
+<div class="title">Figure 9. Arcvector with 60 cells</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_5.png" alt="arcvector_5">
+</div>
+<div class="title">Figure 10. Arcvector with 124 cells</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_6.png" alt="arcvector_6">
+</div>
+<div class="title">Figure 11. Arcvector with 252 cells</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_arcvector_radix_structure">3.3.7. Arcvector Radix Structure</h4>
+<div class="paragraph">
+<p>Expansion beyond what fits in the largest arcvector array requires a radix structure where the top array links to sub-arrays. When the sub-arrays grow too large, they link to sub-sub-arrays, and so on, until four layers of arrays have been created. When the fourth layer has reached its maximum size, a simpler chain of smaller blocks is used to continue the expansion. The small blocks at the deeper levels each holds 6 arcs. There is a maximum of 255 layers, including the upper four array layers.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 4. Arcvector Radix Layers</caption>
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Layer</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Capacity</th>
+<th class="tableblock halign-left valign-top">Chains to next</th>
+<th class="tableblock halign-left valign-top">First chain at size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">252</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~220</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">252</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~15,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">252</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~1,000,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">252</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~60,000,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~80,000,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~150,000,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">254</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">~25,000,000,000</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">255</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Block</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A (end)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="images/arcvector_radix.png" alt="arcvector_radix">
+</div>
+<div class="title">Figure 12. Arcvector radix structure</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="reference.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="tutorial.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Tutorial"></i></span></a>
+<a href="tutorial.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="pyvgx Tutorial"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="reference.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

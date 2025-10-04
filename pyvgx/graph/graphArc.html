@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Arc Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="grapharcmethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Arc Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphQuery.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Query Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#graphconnect">1. pyvgx.Graph.Connect()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_parameters">1.2. Parameters</a></li>
+<li><a href="#_return_value">1.3. Return Value</a></li>
+<li><a href="#_remarks">1.4. Remarks</a>
+<ul class="sectlevel3">
+<li><a href="#arc_components">1.4.1. Arc Elements</a></li>
+<li><a href="#multiple_arc">1.4.2. Multiple Arc</a></li>
+<li><a href="#arc_timestamps">1.4.3. Arc Timestamps</a></li>
+<li><a href="#arc_conditional_connect">1.4.4. Conditional Connect</a></li>
+<li><a href="#connect_timeout">1.4.5. Connect Timeout</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#graphdisconnect">2. pyvgx.Graph.Disconnect()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_parameters_2">2.2. Parameters</a></li>
+<li><a href="#_return_value_2">2.3. Return Value</a></li>
+<li><a href="#_remarks_2">2.4. Remarks</a></li>
+<li><a href="#_example">2.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#graphcount">3. pyvgx.Graph.Count()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_parameters_3">3.2. Parameters</a></li>
+<li><a href="#_return_value_3">3.3. Return Value</a></li>
+<li><a href="#_remarks_3">3.4. Remarks</a></li>
+<li><a href="#_examples">3.5. Examples</a></li>
+</ul>
+</li>
+<li><a href="#graphaccumulate">4. pyvgx.Graph.Accumulate()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_parameters_4">4.2. Parameters</a></li>
+<li><a href="#_return_value_4">4.3. Return Value</a></li>
+<li><a href="#_remarks_4">4.4. Remarks</a></li>
+<li><a href="#_example_2">4.5. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Arc Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphconnect">pyvgx.Graph.Connect()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Establish a relationship between two vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdisconnect">pyvgx.Graph.Disconnect()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove one or more arcs incident on a specified vertex.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphcount">pyvgx.Graph.Count()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-increment relationship value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphaccumulate">pyvgx.Graph.Accumulate()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-accumulate a floating point relationship value</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphconnect">1. pyvgx.Graph.Connect()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Establish explicit connection(s) between vertices by inserting one or more directed edges (<em>arcs</em>) from the initial vertex to one or more terminal vertices.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">initial</span><span class="p">,</span> <span class="n">arc</span><span class="p">,</span> <span class="n">terminals</span><span class="p">[,</span> <span class="n">lifespan</span><span class="p">[,</span> <span class="n">condition</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">number</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>initial</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or vertex instance opened for writable access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcinsertionsyntax">Relationship specifier</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc specification for the connection from initial to a terminal</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>terminals</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>term<sub>1</sub></em> or [<em>term<sub>1</sub></em>, &#8230;&#8203;, <em>term<sub>n</sub></em>]</p>
+<p class="tableblock">where <em>term<sub>i</sub></em> is <em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string(s) or vertex instance(s) opened for writable access, supplied as list or singleton</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>lifespan</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1 (infinite)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of seconds arc will exist until it automatically expires</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>condition</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcfiltersyntax">Arc Filter</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform the connect operation only when this condition is met</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns a positive integer indicating the number of arcs created. Only new arcs contribute to the returned count. Updating the value of an existing arc is not considered a new arc.</p>
+</div>
+<div class="paragraph">
+<p>The return value may be greater than the number of terminals if the operation implicitly creates multiple arcs, which occurs when <em>lifespan</em> is specified and/or <a href="../reference.html#AutoArcTimestamps_func"><code>AutoArcTimestamps( True )</code></a> has been called. (See <a href="#arc_timestamps">Arc Timestamps</a>.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.4. Remarks</h3>
+<div class="paragraph">
+<p>An arc is a directed edge starting at the <em>initial</em> vertex and ending at the <em>terminal</em> vertex, and represents an explicit connection between the two vertices.</p>
+</div>
+<div class="paragraph">
+<p>When connecting two vertices the <em>arc</em> parameter can take one of several forms depending on the type of connection to establish. In the graph structure an arc always has three elements. The <em>arc</em> parameter may specify all, some, or none of these elements according to the <a href="../specification/arcSpecificationSyntax.html#arcinsertionsyntax">arc insertion syntax</a> specification. Unspecified arc elements receive default values.</p>
+</div>
+<div class="sect3">
+<h4 id="arc_components">1.4.1. Arc Elements</h4>
+<div class="paragraph">
+<p>The <em>arc</em> parameter is specified as one of these tuples:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>()</code></p>
+</li>
+<li>
+<p><code>( relationship )</code></p>
+</li>
+<li>
+<p><code>( relationship, modifier )</code></p>
+</li>
+<li>
+<p><code>( relationship, modifier, value )</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The three arc elements are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><em>relationship</em></strong>: User-defined string value indicating the nature of the connection, such as "likes", "clicked", "purchased", "visited", "has", "is_a", etc. There is an <a href="../limits.html#limits">upper limit</a> to the number of unique relationship types supported per graph instance. (Currently this limit is 15,616.) Default <em>relationship</em> is <code>"__related__"</code>.</p>
+</li>
+<li>
+<p><strong><em>modifier</em></strong>: One of several <a href="../constants/arcModifierConstants.html#armodifierconstants">integer constants</a> defining the type of the value associated with the arc. <a href="../constants/arcModifierConstants.html#arcmodifierconstants">Some modifiers</a> also define additional arc behavior, such as automatic value increment and automatic arc deletion at a future expiration time.  Default <em>modifier</em> is <code>M_STAT</code>.</p>
+</li>
+<li>
+<p><strong><em>value</em></strong>: Integer or floating point value associated with the arc. Valid numeric range <a href="../constants/arcModifierConstants.html#arcmodifierconstants">depends on the modifier</a>. The default modifier <a href="../constants/arcModifierConstants.html#M_STAT">M_STAT</a> implies value=1 and does not allow a value to be set. Default values for all other modifiers vary depending on the modifier.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We sometimes use the notation</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>(A)-[rel,mod,val]-&gt;(B)</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>to describe the connection shown:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/graphconnect.png" alt="graphconnect">
+</div>
+</div>
+<div class="paragraph">
+<p>This depicts an arc from vertex A to vertex B with relationship <em>rel</em>, modifier <em>mod</em>, and value <em>val</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Creating an arc from initial A to terminal B also creates a hidden, implicit reverse arc from B to A. This makes it possible to traverse the graph in any direction. If only forward traversal is ever needed by queries the <a href="../constants/arcModifierConstants.html#M_FWDONLY">M_FWDONLY modifier bitmask</a> may be used to suppress creation of the implicit reverse arc, which may save memory.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_arc_elements_example">1.4.1.1. Arc Elements Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># A has unspecified relation to B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(),</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># equivalent notation
+</span>
+<span class="c1"># C -[to]-&gt; D
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">),</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># equivalent notation
+</span>
+<span class="c1"># E -[freq, M_CNT]-&gt; F
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">freq</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_CNT</span><span class="p">),</span> <span class="sh">"</span><span class="s">F</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># G -[score, M_FLT, 4.56]-&gt; H
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">G</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">score</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="mf">4.56</span><span class="p">),</span> <span class="sh">"</span><span class="s">H</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="multiple_arc">1.4.2. Multiple Arc</h4>
+<div class="paragraph">
+<p>When more than one arc connects two vertices we call it a <em>multiple arc</em> (as opposed to <em>simple arc</em> for a single connection.) A multiple arc can contain any number of individual arcs, but any combination of relationship type and modifier can only occur once. Adding another arc with the same relationship and modifier as an existing arc will overwrite the existing arc.</p>
+</div>
+<div class="paragraph">
+<p>We sometimes refer to a multiple arc with <em>n</em> individual arcs as a <em>n-multiple</em>.</p>
+</div>
+<div class="paragraph">
+<p>For instance, to represent that person <em>P</em> has <strong>visited</strong> country <em>C</em> <strong>four times</strong> in their life, the <strong>first time in 1965</strong>, and spent a <strong>total of 45 days</strong> there, we need a 3-multiple arc from <em>P</em> to <em>C</em>. We can define out data model such that <code>M_CNT</code> represents "number of times", <code>M_INT</code> represents "first year", and <code>M_FLT</code> represents "total duration", like this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>(P)-[ visited, M_CNT, 4 ]-&gt;(C)</code></p>
+</li>
+<li>
+<p><code>(P)-[ visited, M_INT, 1965 ]-&gt;(C)</code></p>
+</li>
+<li>
+<p><code>(P)-[ visited, M_FLT, 45.0 ]-&gt;(C)</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Alternatively, if we want all values to be of type <code>M_INT</code> we could use different relationship types, like this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>(P)-[ visited_num, M_INT, 4 ]-&gt;(C)</code></p>
+</li>
+<li>
+<p><code>(P)-[ visited_first, M_INT, 1965 ]-&gt;(C)</code></p>
+</li>
+<li>
+<p><code>(P)-[ visited_total_days, M_INT, 45 ]-&gt;(C)</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The choice of relationship type and modifier is arbitrary and application defined, and does not matter as long as the modifier is suitable for the value type and the number of unique relationships does not exceed the maximum limit (15,616) per graph.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Multiple arcs have additional overhead in terms of memory usage and internal structure, which can have impact on query performance. This is due to the <a href="../limits.html#arcs">data structures used to implement arcs</a>.</p>
+</div>
+<div class="paragraph">
+<p><strong>Bottom line</strong>: Be aware of the impact of introducing multiple arcs in your data model, and benchmark to arrive at an optimal design.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_multiple_arc_example">1.4.2.1. Multiple Arc Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Alice likes Colombia. She has visited 4 times, the first time
+# was in 1965, and she has spent a total of 45 days there.
+# She knows 7 people who live there.
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">),</span> <span class="sh">"</span><span class="s">Colombia</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="sh">"</span><span class="s">Colombia</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="mi">1965</span><span class="p">),</span> <span class="sh">"</span><span class="s">Colombia</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">45.0</span><span class="p">),</span> <span class="sh">"</span><span class="s">Colombia</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="mi">7</span><span class="p">),</span> <span class="sh">"</span><span class="s">Colombia</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_multiple_arc_memory_overhead">1.4.2.2. Multiple Arc Memory Overhead</h5>
+<div class="paragraph">
+<p>The memory cost of moving from simple to multiple arc is non-linear. In practice you can expect the following memory increase for a <em>n</em>-multiple arc compared to the simple arc baseline:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><em>n</em></th>
+<th class="tableblock halign-left valign-top">Raw memory usage compared to simple arc</th>
+<th class="tableblock halign-left valign-top">Memory cost multiplier per arc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x (baseline)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0 (baseline)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 - 6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.0 - 2.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7 - 12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.6 - 1.5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13 - 24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">30x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.3 - 1.25</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; N</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; Nx</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; 1.0</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>As can be seen above the relative memory cost is high for a low-<em>n</em> multiple, and then moves lower back towards 1.0 in the limit as <em>n</em> grows.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_multiple_arc_query_performance_overhead">1.4.2.3. Multiple Arc Query Performance Overhead</h5>
+<div class="paragraph">
+<p>The impact on query performance when moving from simple to multiple arc is non-linear. In practice you can expect the following increase in execution time when traversing  <em>n</em>-multiple arcs compared to a simple arc baseline:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><em>n</em></th>
+<th class="tableblock halign-left valign-top">Query execution time compared to simple arc</th>
+<th class="tableblock halign-left valign-top">Execution cost multiplier per arc</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x (baseline)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0 (baseline)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.0</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 - 6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.7 - 2.2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7 - 12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17x &plus;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.4 - 1.6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13 - 24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22x &plus;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.5 &minus;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; N</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; Nx</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8594; 1.0</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>As can be seen above the relative query execution cost per arc is very high for a low-<em>n</em> multiple, and then moves lower back towards 1.0 in the limit as <em>n</em> grows.</p>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="arc_timestamps">1.4.3. Arc Timestamps</h4>
+<div class="paragraph">
+<p>Arcs may be encoded with up to three timestamps, representing the number of seconds since 1970, using the following modifiers:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../constants/arcModifierConstants.html#M_TMC">Creation time: <code>M_TMC</code></a></p>
+</li>
+<li>
+<p><a href="../constants/arcModifierConstants.html#M_TMM">Modification time: <code>M_TMM</code></a></p>
+</li>
+<li>
+<p><a href="../constants/arcModifierConstants.html#M_TMX">Expiration time: <code>M_TMX</code></a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Arcs with these modifiers may be created explicitly by specifying the desired timestamp <em>modifier</em> in the <em>arc</em> parameter. Timestamped arcs may also be created automatically using the <em>lifespan</em> parameter to specify the number of seconds the arc should exist before automatic deletion. Arcs created with <em>lifespan</em> receive all three timestamps in addition to the specified modifier, and therefore become 4-multiples.</p>
+</div>
+<div class="paragraph">
+<p>Explicit use of timestamp modifiers is not allowed when <em>lifespan</em> is specified.</p>
+</div>
+<div class="paragraph">
+<p>Automatic assignment of creation and modification time is also possible without using the <em>lifespan</em> parameter by including the <a href="../constants/arcModifierConstants.html#M_AUTOTM">M_AUTOTM bitmask</a> when creating the arc, or when globally configured with <a href="../reference.html#AutoArcTimestamps_func"><code>pyvgx.AutoArcTimestamps( True )</code></a> prior to calling <code>Connect()</code>. After so configured <code>Connect()</code> will always produce 3-multiples including the <code>M_TMC</code>, <code>M_TMM</code> and specified modifier.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Arc modification time <code>M_TMM</code> is only automatically updated when <code>AutoArcTimestamps( True )</code> is in effect. Otherwise the modification time must be explicitly updated, even after the arc was originally created with <em>lifespan</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Being multiple arcs, timestamped arcs have a cost both in terms of memory usage and query efficiency. Be sure to understand the overall system impact before designing a model using timestamped arcs.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect4">
+<h5 id="_arc_timestamps_example">1.4.3.1. Arc Timestamps Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">time</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="nc">AutoArcTimestamps</span><span class="p">(</span> <span class="bp">True</span> <span class="p">)</span>
+
+<span class="c1"># Alice calls Bob. This also records the creation time of the
+# "calls" relationship, which is also the modification time.
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">calls</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># -&gt; 3
+</span>
+<span class="c1"># Wait a bit
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Alice calls Bob again. The modification time is updated
+# but the creation time is unchanged.
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">calls</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># -&gt; 0
+</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">F_AARC</span> <span class="p">)</span>
+<span class="c1"># -&gt; ['( Alice )-[ calls &lt;M_TMC&gt; 1680122000 ]-&gt;( Bob )',
+#     '( Alice )-[ calls &lt;M_TMM&gt; 1680122005 ]-&gt;( Bob )',
+#     '( Alice )-[ calls &lt;M_CNT&gt; 2 ]-&gt;( Bob )'
+#    ]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect4">
+<h5 id="arc_expiration">1.4.3.2. Arc Expiration</h5>
+<div class="paragraph">
+<p>Setting arc expiration, either explicitly via modifier <code>M_TMX</code> or implicitly via the <em>lifespan</em> parameter, results in automatic arc deletion at the specified future time. Deletion affects the entire subset of the multiple arc sharing the same <em>relationship</em> type.</p>
+</div>
+<div class="paragraph">
+<p>Arc expiration occurs automatically in the background, provided that 1) the system <a href="../reference.html#system_initialize_func">was initialized with <code>events=True</code></a> (the default); 2) the TTL processor has <a href="../reference.html#eventdisable_func">not been disabled</a>; and 3) the graph has <a href="../reference.html#setgraphreadonly_func">not been set readonly</a>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_arc_expiration_example">1.4.3.3. Arc Expiration Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># A temporary boost from a Query to an Item, which is
+# automatically removed after the expiration period.
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">QryA</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">boost</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mi">100</span><span class="p">),</span> <span class="sh">"</span><span class="s">Item1</span><span class="sh">"</span><span class="p">,</span> <span class="n">lifespan</span><span class="o">=</span><span class="mi">3600</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="arc_conditional_connect">1.4.4. Conditional Connect</h4>
+<div class="paragraph">
+<p>When the <em>condition</em> parameter is specified <code>Connect()</code> will create or update the arc only when the condition is met. The condition is expressed using <a href="../specification/arcSpecificationSyntax.html#arcfiltersyntax">arc filter syntax</a>. The arc filter is applied to existing arc(s) between <em>initial</em> and <em>term<sub>i</sub></em> (in <em>terminals</em>.)</p>
+</div>
+<div class="sect4">
+<h5 id="_conditional_connect_example">1.4.4.1. Conditional Connect Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># A-[score,3.5]-&gt;B
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">score</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">3.5</span><span class="p">),</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># -&gt; 1
+</span>
+<span class="c1"># Condition not true
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">initial</span><span class="o">=</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span>
+           <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">count</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span>
+           <span class="n">terminal</span><span class="o">=</span><span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span>
+           <span class="n">condition</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">score</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="n">V_LT</span><span class="p">,</span><span class="mf">2.0</span><span class="p">)</span>
+         <span class="p">)</span> <span class="c1"># -&gt; 0
+</span>
+<span class="c1"># Condition true
+# A-[count,1]-&gt;
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">initial</span><span class="o">=</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span>
+           <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">count</span><span class="sh">"</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span>
+           <span class="n">terminal</span><span class="o">=</span><span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span>
+           <span class="n">condition</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">score</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="n">V_GT</span><span class="p">,</span><span class="mf">2.0</span><span class="p">)</span>
+         <span class="p">)</span> <span class="c1"># -&gt; 1
+</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="connect_timeout">1.4.5. Connect Timeout</h4>
+<div class="paragraph">
+<p>When connecting two vertices (<em>initial</em> and <em>term<sub>1</sub></em>) specified by their identifiers and those vertices are not already write-locked by the current thread, the <em>timeout</em> parameter may be specified to allow <code>Connect()</code> to block a <a href="../specification/timeout.html#pyvgxtimeout">maximum number of milliseconds</a> while waiting to acquire both vertices.</p>
+</div>
+<div class="sect4">
+<h5 id="_connect_timeout_example">1.4.5.1. Connect Timeout Example</h5>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Try connect X-[to]-&gt;Y without blocking
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Try connect X-[to]-&gt;Y, block for up to 1.0 second
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">1000</span> <span class="p">)</span>
+
+<span class="c1"># Try connect X-[to]-&gt;Y, block indefinitely
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">X</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Y</span><span class="sh">"</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=-</span><span class="mi">1</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphdisconnect">2. pyvgx.Graph.Disconnect()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remove one or more arcs incident on a specified vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">number_of_removed_arcs</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">2.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>id</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or vertex instance opened for writable access.
+This is the vertex whose inarcs and/or outarcs (or subset thereof) should be removed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>arc</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../specification/arcSpecificationSyntax.html#arcspecificationsyntax">Relationship specifier</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc specification for arcs to be removed. By default all arcs are removed.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>neighbor</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../vertex/vertexFilter.html#vertexfilter">Vertex condition</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Condition for terminal vertex for arcs to be removed. No condition by default.</p>
+<p class="tableblock">NOTE: Exact ID match is currently the only supported vertex condition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for acquiring writable access to anchor vertex, and optionally
+for the neighbor vertex if vertex condition is specified.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the number of arcs removed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">2.4. Remarks</h3>
+<div class="paragraph">
+<p>One or more arcs incident on the specified vertex are removed according to the specified <a href="../specification/arcSpecificationSyntax.html#arcspecificationsyntax">arc condition</a> and <a href="../vertex/vertexFilter.html#vertexfilter">vertex condition</a>. This method can be used to remove both outarcs and inarcs. The direction is specified as part of the arc condition.</p>
+</div>
+<div class="paragraph">
+<p>The default behavior if no conditions are specified is to remove all arcs, making the vertex an isolated vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">2.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span>   <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span>     <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span>     <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span>     <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>     <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span>  <span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">,</span>                 <span class="sh">"</span><span class="s">Beverage</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span>   <span class="p">(</span><span class="sh">"</span><span class="s">sold_by</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">1.89</span><span class="p">),</span> <span class="sh">"</span><span class="s">ShopX</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span>  <span class="p">(</span><span class="sh">"</span><span class="s">sold_by</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">2.29</span><span class="p">),</span> <span class="sh">"</span><span class="s">ShopY</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 0, no arcs removed
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">roasted_by</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 1, removes Coffee-[sold_by,M_FLT,1.89]-&gt;ShopX
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">ShopX</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 1, removes Alice-[likes,M_INT,10]-&gt;Coffee
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">,</span><span class="n">M_INT</span><span class="p">,</span><span class="n">V_LT</span><span class="p">,</span><span class="mi">15</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 4, removes all other arcs incident on Coffee
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Disconnect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphcount">3. pyvgx.Graph.Count()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Auto-increment relationship value with type <a href="../constants/arcModifierConstants.html#M_CNT">M_CNT</a> of arc going from initial to terminal vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">initial</span><span class="p">,</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">terminal</span><span class="p">[,</span> <span class="n">delta</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">count</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_3">3.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>initial</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or instance opened for writable access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>relationship</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship of arc whose value will be incremented</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>terminal</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or instance opened for writable access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>delta</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Increment the arc value by this amount. If the arc does not exist it is created and initialized to the specified value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the updated count value after the increment has been applied.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">3.4. Remarks</h3>
+<div class="paragraph">
+<p>Perform a counting operation on the arc using the <a href="../constants/arcModifierConstants.html#M_CNT">M_CNT</a> modifier to automatically increment the arc value by a specified amount. The delta parameter allows increments other than 1. Negative delta values will decrement the arc value.</p>
+</div>
+<div class="paragraph">
+<p>If the relationship does not already exist it is created and initialized with a value equal to the specified delta amount.</p>
+</div>
+<div class="paragraph">
+<p>If either vertex does not already exist it is created as a typeless vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_examples">3.5. Examples</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+
+<span class="c1"># -&gt; 1, creates both Alice and Bob and the new
+# arc Alice-[called,M_CNT,1]-&gt;Bob
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 2, increments and returns updated arc value
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 7, increments by 5
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 7, no increment, just return current arc value
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="mi">0</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; 0, decrements by 7, resetting counter to 0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span> <span class="p">)</span>
+
+<span class="c1"># -&gt; -5, decrements by 5
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">called</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphaccumulate">4. pyvgx.Graph.Accumulate()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Auto-accumulate a floating point relationship value with type <a href="../constants/arcModifierConstants.html#M_ACC">M_ACC</a> of arc going from initial to terminal vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Accumulate</span><span class="p">(</span> <span class="n">initial</span><span class="p">,</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">terminal</span><span class="p">[,</span> <span class="n">delta</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">accumulation</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_4">4.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>initial</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or instance opened for writable access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>relationship</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship of arc whose value will be accumulated</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>terminal</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <a href="../vertex/vertex.html#pyvgxvertex">pyvgx.Vertex</a></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique ID string or instance opened for writable access</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>delta</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>float</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Add this amount to the arc value. If the arc does not exist it is created and initialized to the specified value.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p>
+<p class="tableblock"><a href="../specification/timeout.html#pyvgxtimeout">Timeout specification</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">4.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the updated accumulator value after the addition of delta amount has been applied.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">4.4. Remarks</h3>
+<div class="paragraph">
+<p>Perform an accumulating operation on the arc value using the floating point <a href="../constants/arcModifierConstants.html#M_ACC">M_ACC</a> modifier to automatically add a specified delta amount to the arc value. Negative delta values will subtract from the arc value.</p>
+</div>
+<div class="paragraph">
+<p>If the relationship does not already exist it is created and initialized with a value equal to the specified delta amount.</p>
+</div>
+<div class="paragraph">
+<p>If either vertex does not already exist it is created as a typeless vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">4.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Alice's bank account:
+# -&gt; 100.0, creates both Alice and USD and the new
+# arc Alice-[has,M_ACC,100.0]-&gt;USD
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Accumulate</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">has</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">USD</span><span class="sh">"</span><span class="p">,</span> <span class="mf">100.0</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Accumulate</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">has</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">USD</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># -&gt; 101.0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Accumulate</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">has</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">USD</span><span class="sh">"</span><span class="p">,</span> <span class="mf">41.99</span> <span class="p">)</span>     <span class="c1"># -&gt; 142.99
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Accumulate</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">has</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">USD</span><span class="sh">"</span><span class="p">,</span> <span class="o">-</span><span class="mi">200</span> <span class="p">)</span>      <span class="c1"># -&gt; -57.01</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphVertex.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Vertex Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphQuery.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Query Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

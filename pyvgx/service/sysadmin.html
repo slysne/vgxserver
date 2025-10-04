@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>VGX Server System Administration</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxserver_sysadmin" class="article toc2 toc-left">
+<div id="header">
+<h1>VGX Server System Administration <a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="multinode.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Multi-Node Setup"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#admin_ui">1. Admin Pages</a>
+<ul class="sectlevel2">
+<li><a href="#admin_ui_top">1.1. Top Menu <code>/</code></a></li>
+<li><a href="#admin_ui_admin">1.2. Admin <code>/admin</code></a>
+<ul class="sectlevel3">
+<li><a href="#_display_readout">1.2.1. Display Readout</a></li>
+<li><a href="#_action_buttons">1.2.2. Action Buttons</a></li>
+</ul>
+</li>
+<li><a href="#admin_ui_status">1.3. Status <code>/status</code></a></li>
+<li><a href="#admin_ui_console">1.4. Console <code>/console</code></a></li>
+<li><a href="#admin_ui_search">1.5. General Search <code>/search</code></a></li>
+<li><a href="#admin_ui_plugin">1.6. User Plugins and Builtin Plugins <code>/plugin</code></a></li>
+<li><a href="#admin_ui_system">1.7. Multi-Node System Dashboard <code>/system</code></a>
+<ul class="sectlevel3">
+<li><a href="#admin_ui_system_columns">1.7.1. System Dashboard Description</a></li>
+<li><a href="#admin_ui_system_action">1.7.2. System Dashboard Actions</a>
+<ul class="sectlevel4">
+<li><a href="#_dialog_bypass">1.7.2.1. Dialog Bypass</a></li>
+<li><a href="#_links">1.7.2.2. Links</a></li>
+<li><a href="#_action_description">1.7.2.3. Action Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#admin_service_endpoints">2. Administrative Service Endpoints</a>
+<ul class="sectlevel2">
+<li><a href="#admin_service_authtoken">2.1. authtoken</a>
+<ul class="sectlevel3">
+<li><a href="#_authtoken_example">2.1.1. authtoken Example</a></li>
+</ul>
+</li>
+<li><a href="#admin_service_plugins">2.2. ADMIN Plugins</a>
+<ul class="sectlevel3">
+<li><a href="#_admin_plugin_parameters">2.2.1. ADMIN Plugin Parameters</a></li>
+<li><a href="#_general">2.2.2. General</a></li>
+<li><a href="#_plugin_management">2.2.3. Plugin Management</a></li>
+<li><a href="#_data_management">2.2.4. Data Management</a></li>
+<li><a href="#_graph_state">2.2.5. Graph State</a></li>
+<li><a href="#_socket_server">2.2.6. Socket Server</a></li>
+<li><a href="#_transaction_flow_management">2.2.7. Transaction Flow Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#vgxadmin_tool">3. <em>vgxadmin</em> Command Line Tool</a>
+<ul class="sectlevel2">
+<li><a href="#_vgxadmin_options">3.1. <em>vgxadmin</em> Options</a>
+<ul class="sectlevel3">
+<li><a href="#vgxadmin_option_attach">3.1.1. <code>--attach &lt;id&gt;</code> (<code>-a</code>)</a></li>
+<li><a href="#vgxadmin_option_bind">3.1.2. <code>--bind &lt;id&gt;</code> (<code>-B</code>)</a></li>
+<li><a href="#vgxadmin_option_confirm">3.1.3. <code>--confirm</code> (<code>-c</code>)</a></li>
+<li><a href="#vgxadmin_option_command">3.1.4. <code>--command &lt;id&gt;,&lt;gr&gt;,&lt;cmd&gt;</code> (<code>-C</code>)</a></li>
+<li><a href="#vgxadmin_option_detach">3.1.5. <code>--detach &lt;id&gt;</code> (<code>-d</code>)</a></li>
+<li><a href="#vgxadmin_option_restarthttp">3.1.6. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</a></li>
+<li><a href="#vgxadmin_option_endpoint">3.1.7. <code>--endpoint &lt;path&gt;</code> (<code>-E</code>)</a></li>
+<li><a href="#vgxadmin_option_cf">3.1.8. <code>--cf &lt;file&gt;</code> (<code>-f</code>)</a></li>
+<li><a href="#vgxadmin_option_readonly">3.1.9. <code>--readonly &lt;id&gt;</code> (<code>-g</code>)</a></li>
+<li><a href="#vgxadmin_option_writable">3.1.10. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</a></li>
+<li><a href="#vgxadmin_option_serviceout">3.1.11. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</a></li>
+<li><a href="#vgxadmin_option_servicein">3.1.12. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</a></li>
+<li><a href="#vgxadmin_option_show">3.1.13. <code>--show</code> (<code>-J</code>)</a></li>
+<li><a href="#vgxadmin_option_cancelsync">3.1.14. <code>--cancelsync &lt;id&gt;</code> (<code>-k</code>)</a></li>
+<li><a href="#vgxadmin_option_forcecopy">3.1.15. <code>--forcecopy &lt;src&gt;,&lt;dst&gt;</code> (<code>-K</code>)</a></li>
+<li><a href="#vgxadmin_option_rollingupdate">3.1.16. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</a></li>
+<li><a href="#vgxadmin_option_resetmetrics">3.1.17. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</a></li>
+<li><a href="#vgxadmin_option_opdump">3.1.18. <code>--opdump &lt;id&gt;</code> (<code>-M</code>)</a></li>
+<li><a href="#vgxadmin_option_nodestat">3.1.19. <code>--nodestat &lt;id&gt;[,&lt;key&gt;]</code> (<code>-n</code>)</a></li>
+<li><a href="#vgxadmin_option_reloadplugins">3.1.20. <code>--reloadplugins &lt;id&gt;[,&lt;pd&gt;]</code> (<code>-N</code>)</a>
+<ul class="sectlevel4">
+<li><a href="#_example_add_square_root_capabilities_to_running_system">3.1.20.1. Example: Add square root capabilities to running system</a></li>
+</ul>
+</li>
+<li><a href="#vgxadmin_option_pausein">3.1.21. <code>--pausein &lt;id&gt;</code> (<code>-p</code>)</a></li>
+<li><a href="#vgxadmin_option_pauseout">3.1.22. <code>--pauseout &lt;id&gt;</code> (<code>-P</code>)</a></li>
+<li><a href="#vgxadmin_option_instancecfg">3.1.23. <code>--instancecfg &lt;id&gt;</code> (<code>-Q</code>)</a></li>
+<li><a href="#vgxadmin_option_resumein">3.1.24. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</a></li>
+<li><a href="#vgxadmin_option_resumeout">3.1.25. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</a></li>
+<li><a href="#vgxadmin_option_start">3.1.26. <code>--start &lt;id&gt;</code> (<code>-s</code>)</a></li>
+<li><a href="#vgxadmin_option_status">3.1.27. <code>--status &lt;id&gt;</code> (<code>-S</code>)</a></li>
+<li><a href="#vgxadmin_option_pausettl">3.1.28. <code>--pausettl &lt;id&gt;</code> (<code>-t</code>)</a></li>
+<li><a href="#vgxadmin_option_resumettl">3.1.29. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</a></li>
+<li><a href="#vgxadmin_option_unsubscribe">3.1.30. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</a></li>
+<li><a href="#vgxadmin_option_unbind">3.1.31. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</a></li>
+<li><a href="#vgxadmin_option_throttle">3.1.32. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</a></li>
+<li><a href="#vgxadmin_option_waitforidle">3.1.33. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</a></li>
+<li><a href="#vgxadmin_option_persist">3.1.34. <code>--persist &lt;id&gt;</code> (<code>-W</code>)</a></li>
+<li><a href="#vgxadmin_option_stop">3.1.35. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</a></li>
+<li><a href="#vgxadmin_option_truncate">3.1.36. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</a></li>
+<li><a href="#vgxadmin_option_sync">3.1.37. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</a></li>
+<li><a href="#vgxadmin_option_reversesync">3.1.38. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</a></li>
+<li><a href="#vgxadmin_option_descriptor">3.1.39. <code>--descriptor &lt;id&gt;</code> (<code>-Z</code>)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>System administration can be performed in three ways:<br>
+<a href="#admin_ui">Section 1, &#8220;Admin Pages&#8221;</a><br>
+<a href="#admin_service_endpoints">Section 2, &#8220;Administrative Service Endpoints&#8221;</a><br>
+<a href="#vgxadmin_tool">Section 3, &#8220;<em>vgxadmin</em> Command Line Tool&#8221;</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="admin_ui">1. Admin Pages</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#admin_ui_top">Section 1.1, &#8220;Top Menu <code>/</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_admin">Section 1.2, &#8220;Admin <code>/admin</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_status">Section 1.3, &#8220;Status <code>/status</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_console">Section 1.4, &#8220;Console <code>/console</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_search">Section 1.5, &#8220;General Search <code>/search</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_plugin">Section 1.6, &#8220;User Plugins and Builtin Plugins <code>/plugin</code>&#8221;</a></p>
+</li>
+<li>
+<p><a href="#admin_ui_system">Section 1.7, &#8220;Multi-Node System Dashboard <code>/system</code>&#8221;</a></p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_top">1.1. Top Menu <code>/</code></h3>
+<div class="paragraph">
+<p>Click on a grey box to open its page.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_index.png" alt="ui_index">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_admin">1.2. Admin <code>/admin</code></h3>
+<div class="paragraph">
+<p>Use this page for basic administration of a singe VGX Server instance.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Click the lock icon in the middle of the page to enable/disable the various action buttons.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_admin.png" alt="ui_admin">
+</div>
+</div>
+<div class="sect3">
+<h4 id="_display_readout">1.2.1. Display Readout</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Group</th>
+<th class="tableblock halign-left valign-top">Box</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock"><strong>Service</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of service, as provided to <a href="../reference.html#system_runserver_func">system.RunServer()</a> <em>name</em> argument, or <code>?</code> if running interactively.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Running</code> or <code>Interactive</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Uptime</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>days:hours:minutes:seconds</code> since VGX Server started</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock"><strong>Order / Size</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Order</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of vertices in all loaded graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of arcs in all loaded graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory Usage</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by this VGX Instance (% of physical memory on host)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock"><strong>Request</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current requests per second reaching this VGX Server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Latency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Average / 99th Percentile request latency in milliseconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock"><strong>Durability</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Persistence</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Durable</code> VGX Transaction Service has been started in durable mode with <a href="../reference.html#op_bind_func">op.Bind()</a></p>
+<p class="tableblock"><code>Volatile</code> Persist before shutdown required to retain data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Streaming</code> Received graph data continuously persisted to transaction log</p>
+<p class="tableblock"><code>In-Memory</code> Data exists in memory only</p>
+<p class="tableblock"><code>Sync</code> Transaction data is being synchronized from this VGX Server instance to all its subscribers</p>
+<p class="tableblock"><code>Writing</code> All data in memory is being written to disk snapshot</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock"><strong>Mutability</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Execution Mode</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Local</code> Graph modification logic is executing in local VGX Server instance</p>
+<p class="tableblock"><code>Bound: <em>txport</em></code> VGX Transaction Service is running on <em>txport</em>, but no provider has attached</p>
+<p class="tableblock"><code>Suspended</code> VGX Transaction Service has temporarily suspended input processing</p>
+<p class="tableblock"><code>Streaming</code> A real-time transaction stream is established from an attached provider to this VGX Server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Mutable Mode</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Readonly</code> VGX Server instance data is currently not modifiable</p>
+<p class="tableblock"><code>TTL Active</code> Automatic expiration is running</p>
+<p class="tableblock"><code>TTL Frozen</code> Expiration events are currently suspended</p>
+<p class="tableblock"><code>TTL Passive</code> Expiration via VGX Transaction Service input only</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock"><strong>TX I/O kiB/s</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Transaction Input Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current data received from subscriber</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Transaction Output Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current data sent to subscriber(s)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock"><strong>Local</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Idle</code></p>
+<p class="tableblock"><code>Active</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identicon representing current local state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serial Number</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Transaction sequence number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock"><strong>Provider</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Idle</code> Attached provider is currently not sending data</p>
+<p class="tableblock"><code>Stream</code> Attached provider is currently sending data</p>
+<p class="tableblock"><code>Delta</code> Data is not in sync between provider and this VGX Server instance</p>
+<p class="tableblock"><code>Paused</code> VGX Transaction Service has temporarily suspended input processing</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identicon representing provider&#8217;s current state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provider&#8217;s hostname or IP address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hport</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provider&#8217;s HTTP server admin port (visible only when initiating subscription)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock"><strong>Subscriber</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Idle</code> Currently not sending data to attached subscriber</p>
+<p class="tableblock"><code>Stream</code> Currently sending data to attached subscriber</p>
+<p class="tableblock"><code>Delta</code> Data is not in sync between this VGX Server instance and the subscriber</p>
+<p class="tableblock"><code>Paused</code> Output transactions are temporarily suspended</p>
+<p class="tableblock"><code>Sync</code> Data is being synchronized from this VGX Server instance to the subscriber</p>
+<p class="tableblock"><code>Down</code> Attached subscriber is currently unreachable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Digest</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identicon representing subscriber&#8217;s current state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscriber&#8217;s hostname or IP address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Tport</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscriber&#8217;s input <em>txport</em></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_action_buttons">1.2.2. Action Buttons</h4>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Some actions are available only in certain modes. A button is not shown if its associated action is not applicable to this VGX Server instance.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Action</th>
+<th class="tableblock halign-left valign-top">Opposite Action</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Shutdown</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop VGX Server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Service Out</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Service In</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle S-OUT/S-IN mode for HTTP server plugin execution</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Reset</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reset all HTTP Server performance metrics to their initial state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Snapshot</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Persist all in-memory data to disk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Sync</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initiate bulk synchronization of all data from this VGX Server instance to all attached subscribers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Truncate</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove all data from memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Bind</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Unbind</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start or stop VGX Transaction Service</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Freeze TTL</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Thaw TTL</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause or resume automatic expiration events for all graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Readonly</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Mutable</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle readonly state for all graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Pause I</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Resume I</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause or resume transaction input stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Pause O</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Resume O</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause or resume transaction output stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Detach All</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detach all subscribers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Subscribe</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request to become a subscriber of the specified provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Detach</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provider row: Detach from provider</p>
+<p class="tableblock">Subscriber row(s): Detach from subscriber</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Attach</strong></code></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Become a provider for the specified subscriber</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_status">1.3. Status <code>/status</code></h3>
+<div class="paragraph">
+<p>This is a readonly summary page showing various metrics and counters.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Service</dt>
+<dd>
+<p>HTTP Socket Server metrics</p>
+</dd>
+<dt class="hdlist1">Transaction</dt>
+<dd>
+<p>VGX Transaction Service metrics</p>
+</dd>
+<dt class="hdlist1">Graph</dt>
+<dd>
+<p>Total graph object summary</p>
+</dd>
+<dt class="hdlist1">Memory</dt>
+<dd>
+<p>Memory usage information</p>
+</dd>
+</dl>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_status.png" alt="ui_status">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_console">1.4. Console <code>/console</code></h3>
+<div class="paragraph">
+<p>This page is a general purpose command interface for detailed manipulation and investigation of a running system, useful for troubleshooting and repair.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>dir();</code> shows available commands</p>
+</div>
+<div class="paragraph">
+<p><code>python: &lt;expression&gt;;</code> evaluates expression</p>
+</div>
+<div class="paragraph">
+<p>API command arguments are supplied as dict:<br>
+e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_console.png" alt="ui_console">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_search">1.5. General Search <code>/search</code></h3>
+<div class="paragraph">
+<p>This page provides a general search interface.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Neighborhood</dt>
+<dd>
+<p>Maps to <a href="../graph/graphQuery.html#graphneighborhood">pyvgx.Graph.Neighborhood()</a></p>
+</dd>
+<dt class="hdlist1">Vertices</dt>
+<dd>
+<p>Maps to <a href="../graph/graphQuery.html#graphvertices">pyvgx.Graph.Vertices()</a></p>
+</dd>
+<dt class="hdlist1">Arcs</dt>
+<dd>
+<p>Maps to <a href="graph/graphQuery.html#grapharcs">pyvgx.Graph.Arcs()</a></p>
+</dd>
+<dt class="hdlist1">Vertex</dt>
+<dd>
+<p>Display all vertex attributes and properties</p>
+</dd>
+<dt class="hdlist1">Expression</dt>
+<dd>
+<p>Maps to <a href="../evaluator/evaluator.html#evaluate">Evaluate()</a></p>
+</dd>
+</dl>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_search.png" alt="ui_search">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_plugin">1.6. User Plugins and Builtin Plugins <code>/plugin</code></h3>
+<div class="paragraph">
+<p>This page allows plugins to be tested.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Normally all admin UI pages should be accessed on the <a href="service.html#server_b_port">admin port</a>. However, this page must be loaded on the <a href="service.html#server_a_port">main port</a> when the plugin is a dispatcher pre-processor. If not, an error <code>Preprocessor plugin only allowed in dispatcher context</code> will be returned.</p>
+</div>
+<div class="paragraph">
+<p>Page header is shaded in light red when accessed on the main port as a warning, because admin tasks can lock executor threads for an extended period of time, which could lead to problems in a live system. Click the bar counter <code>||||||||||</code> next to <code>Port</code> before it goes to zero to remain on the main port. The page will otherwise reload on the admin port.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_plugin.png" alt="ui_plugin">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_ui_system">1.7. Multi-Node System Dashboard <code>/system</code></h3>
+<div class="paragraph">
+<p>Multiple VGX Server instances can be deployed together as a system. This page shows a summary of all nodes in the system and their roles.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For this page to work the <a href="multinode.html#system_descriptor"><strong>SYSTEM_Descriptor</strong></a> property has to be defined. This is a property of the <a href="../reference.html#system_system_func">system graph</a> describing all nodes and their roles.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Consider a system with eight VGX Server instances deployed as show below:</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="../images/exampleservice.png" alt="exampleservice" width="480" height="480">
+</div>
+</div>
+<div class="paragraph">
+<p>The System Overview dashboard for this example system will look like this:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/ui_system.png" alt="ui_system">
+</div>
+</div>
+<div class="sect3">
+<h4 id="admin_ui_system_columns">1.7.1. System Dashboard Description</h4>
+<div class="paragraph">
+<p>The dashboard&#8217;s upper segment shows a summary of information aggregated across all instances in the system. The <a href="multinode.html#descriptor_name"><strong>System Name</strong></a> is the name defined in the system descriptor.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Top level summary</caption>
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Column</th>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock"><strong>Status</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>OK</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All components are running normally</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Check <em>n</em> warnings</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">One or more components requires attention</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Instances</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>i</em> (<em>h</em> hosts)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of instances <em>i</em> running on <em>h</em> separate hosts</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Partitions</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>p</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of partitions (Builder instances)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Vertices</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>order</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of vertices across all partitions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Arcs</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>size</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of arcs across all partitions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Properties</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>nprop</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of properties across all partitions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Vectors</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>nvec</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of vectors across all partitions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>CPU</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>model</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CPU <em>model</em> brand string installed on server(s)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Memory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>used</em> (<em>hostmem</em>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total <em>used</em> memory for all instances in system, out of the total <em>hostmem</em> memory available on all hosts</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The dashboard&#8217;s lower segment shows details for each system instance.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. System instances</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Column</th>
+<th class="tableblock halign-left valign-top">Value</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Instance]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="multinode.html#descriptor_instance_id"><strong>Id</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance Label</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique instance identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="6"><p class="tableblock"><a href="multinode.html#descriptor_instance_type"><strong>Type</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Admin</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Holds system configuration master and orchestrates multi-node admin operations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Dispatch</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request dispatcher responsible for distributing requests to back-end matrix, merging results, and executing any pre or post processing plugins</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Builder</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Responsible for generating graph data which is distributed to Search nodes, and plugin engine execution</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Search</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Responsible for plugin engine execution against graph data received from Builder node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>TXProxy</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Intermediary whose main purpose is to receive transaction data from Builder and forward to Search nodes, while optionally providing streaming persistence (durability)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Generic</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Default, unspecified node type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="17"><p class="tableblock"><strong>Status</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>OK</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance is running normally</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Busy</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Transaction input processing is lagging more than 30 seconds behind provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>S/N</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serial number difference between this instance and its provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>No Input</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance with VGX Transaction Service running (bound txport) has no provider attached</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>S-OUT</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service Out: HTTP Server plugin execution is paused</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Sync</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance is synchronizing its data to attached subscriber(s)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Snapshot</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance is persisting data to disk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Down</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance does not respond to status requests and is either not running or not reachable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Partial</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix is incomplete due to one or more partitions without any replicas</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>OK/Delta</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is our of sync with its provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Degraded</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more unavailable replicas (reduced capacity)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Memory</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory warning, instance&#8217;s physical host memory usage is 80% - 83%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Mem <em>x</em>%</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory warning, instance&#8217;s physical host memory usage is 83% - 93%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>! MEM <em>x</em>%</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory critical, instance&#8217;s physical host memory usage is above 93%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Readonly</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance is in readonly mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Init&#8230;&#8203;</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance is initializing after startup</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>---</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State unknown due to incomplete status information</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Uptime</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>D:H:M:S</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time since instance was started</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="multinode.html#descriptor_instance_host"><strong>Address</strong></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>host:port</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname/IP and admin port of instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Server Load]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock"><strong>Matrix</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>S-IN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service In: Back end engine instance operating normally</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>S-OUT</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Service Out: Back end or dispatcher instance not accepting plugin requests</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>m</em></strong>R x <strong><em>n</em></strong>P</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix dimensions (<em>m</em> replicas, <em>n</em> partitions)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>In</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sockets</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of connected clients</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Out</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Sockets</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of channels connected to backend matrix</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Bal</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Load Balance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relative request rate in group</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>RPS</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP Server requests per second</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>95th ms</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request Latency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP Server 95th percentile request latency in milliseconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Memory]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Instance/Host</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance/Total</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used (in GiB) by instance / Physical host total memory usage</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Graph]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Order</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertices</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of vertices in all graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Size</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arcs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of arcs in all graphs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Interconnect]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Subs</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscribers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Currently attached subscribers</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Out</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Out Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provider transaction data output rate</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>In</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data In Rate</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscriber transaction data input rate</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Lag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data In Lag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Subscriber transaction input lag</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Transaction]</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Digest</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State identicon</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Representing current state of instance data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>S/N</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serial Number</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Most recent transaction serial number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>TX Log</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TX Log Size</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In durable mode, transaction log grows until max size triggers batch persist, which clears the log and starts filling it again</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="admin_ui_system_action">1.7.2. System Dashboard Actions</h4>
+<div class="paragraph">
+<p>Many of the UI elements can be clicked to perform an action. Some elements open another page. Some elements perform an administrative action. When clicking an element that performs an action a dialog appears. The instance identifier for the clicked instance is pre-populated in the dialog. It is possible to edit the instance identifier, e.g. to perform the action on multiple instances by using the <code>*</code> wildcard symbol. For example, if clicking <code>S-IN</code> in the Matrix column for instance <code>S1.1</code> you can edit the instance to <code>S*</code> in the pup-up dialog. This will perform the action on all instances whose identifier starts with <code>S</code>.</p>
+</div>
+<div class="sect4">
+<h5 id="_dialog_bypass">1.7.2.1. Dialog Bypass</h5>
+<div class="paragraph">
+<p>Hold down the <code>Shift</code> key to reveal action buttons describing the actions associated with elements.</p>
+</div>
+<div class="paragraph">
+<p>To bypass the dialog hold down <code>Shift-Alt</code> (Windows) / <code>Shift-Opt</code> (MacOS) while clicking an action button.</p>
+</div>
+<div class="paragraph">
+<p>To bypass the dialog for potentially destructive actions you have to click the action button three times while holding down <code>Shift-Alt</code>/<code>Shift-Opt</code>.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_links">1.7.2.2. Links</h5>
+<div class="paragraph">
+<p>Elements that open another page when clicked will open the link in a new window by default.</p>
+</div>
+<div class="paragraph">
+<p>Hold down the <code>Shift</code> key to open the link in the current window.</p>
+</div>
+<div class="paragraph">
+<p>Hold down <code>Shift-Ctrl</code> (Windows) / <code>Shift-Cmd</code> (MacOS) to open the link in a new tab.</p>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_action_description">1.7.2.3. Action Description</h5>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Actions</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Column Element</th>
+<th class="tableblock halign-left valign-top">Action When Clicked</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Id</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open instance <code>/console</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Type</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open instance <code>/admin</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Status</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open instance <code>/status</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Uptime</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform instance <code>/vgx/ping</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Address</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Open instance <code>/index</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Matrix</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle instance S-IN/S-OUT state. The performed action depends on the current service state of the clicked instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>RPS</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Restart the instance HTTP server. This does not restart the VGX Server instance, only the HTTP server.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>95th ms</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Memory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Persist instance to disk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Order</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform reverse synchronization of data. This only applies to provider instances already attached to one or more subscribers.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Size</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform forward synchronization of data. This only applies to provider instances already attached to one or more subscribers.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Subs</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle attach/detach of provider instance. Applies to provider instances only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Out</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle pause/resume of provider instance transaction output. Applies to attached provider instances only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>In</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Toggle pause/resume of subscriber instance transaction input. Applies to attached subscriber instances only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Lag</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unsubscribe from provider. Applies to attached subscriber instances only.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Digest</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Attempt to repair/synchronize instances that are configured as subscribers of the clicked provider instance.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>S/N</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Perform a rolling update / synchronization of the provider instance&#8217;s attached subscriber instances. At least two subscribers are required for this operation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>TX Log</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="admin_service_endpoints">2. Administrative Service Endpoints</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>All administrative tasks can be performed using the service endpoints described in this section.</p>
+</div>
+<div class="sect2">
+<h3 id="admin_service_authtoken">2.1. authtoken</h3>
+<div class="paragraph">
+<p>All administrative plugins require parameter <code>authtoken</code>, which helps prevent accidental execution of administrative tasks. Before calling any of these plugins, first retrieve a new token via <code>/vgx/builtin/ADMIN_GetAuthToken</code>, then pass the returned token as <code>authtoken</code> parameter for the administrative plugin.</p>
+</div>
+<div class="paragraph">
+<p>The authtoken retrieved by <code>/vgx/builtin/ADMIN_GetAuthToken</code> can only be used once and expires 100 seconds after its was retrieved.</p>
+</div>
+<div class="sect3">
+<h4 id="_authtoken_example">2.1.1. authtoken Example</h4>
+<div class="listingblock">
+<div class="title">Request</div>
+<div class="content">
+<pre>http://127.0.0.1:9000/vgx/builtin/ADMIN_GetAuthToken</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Response</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+        </span><span class="nl">"authtoken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3c8b886d2ef4565378339d580b689ef7fff8bf0ce55da1bbc5f6c1a140f1cf71"</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"t0"</span><span class="p">:</span><span class="w"> </span><span class="mf">1715134438.5777998</span><span class="p">,</span><span class="w">
+        </span><span class="nl">"tx"</span><span class="p">:</span><span class="w"> </span><span class="mf">1715134738.5777998</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.142</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="admin_service_plugins">2.2. ADMIN Plugins</h3>
+<div class="paragraph">
+<p>Call these endpoints to perform administrative tasks. Obtain a unique <a href="#admin_service_authtoken"><em>authtoken</em></a> for each new request.</p>
+</div>
+<div class="sect3">
+<h4 id="_admin_plugin_parameters">2.2.1. ADMIN Plugin Parameters</h4>
+<div class="paragraph">
+<p>Use endpoint <code>/vgx/builtin/argspec?plugin=<strong><em>name</em></strong></code> to see a description of parameters for each service.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre>http://127.0.0.1:9000/vgx/builtin/argspec?plugin=ADMIN_Throttle</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nl">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/vgx/builtin/ADMIN_Throttle"</span><span class="p">,</span><span class="w">
+            </span><span class="nl">"description"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                </span><span class="s2">""</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"ADMIN: Throttle TX input"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"rate : Limit TX input processing to units per second"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"unit : bytes, opcodes, operations, transactions"</span><span class="p">,</span><span class="w">
+                </span><span class="s2">"    "</span><span class="w">
+            </span><span class="p">],</span><span class="w">
+            </span><span class="nl">"parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+                </span><span class="nl">"request"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;class 'pyvgx.PluginRequest'&gt;"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"headers"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dict"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"authtoken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"str"</span><span class="p">,</span><span class="w">
+                </span><span class="nl">"rate"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                    </span><span class="s2">"float"</span><span class="p">,</span><span class="w">
+                    </span><span class="mi">-1</span><span class="w">
+                </span><span class="p">],</span><span class="w">
+                </span><span class="nl">"unit"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+                    </span><span class="s2">"str"</span><span class="p">,</span><span class="w">
+                    </span><span class="s2">"bytes"</span><span class="w">
+                </span><span class="p">]</span><span class="w">
+            </span><span class="p">},</span><span class="w">
+            </span><span class="nl">"bound_graph"</span><span class="p">:</span><span class="w"> </span><span class="s2">"None"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.182</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_general">2.2.2. General</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Console</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">View or edit graph information, as in <a href="#admin_ui_console">Section 1.4, &#8220;Console <code>/console</code>&#8221;</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Shutdown</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initiate instance shutdown. This requires two authtokens. Obtain the first token and pass in <code>authshutdown</code> parameter. Then obtain the second token and pass in <code>authtoken</code> parameter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SystemDescriptor</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update the <a href="multinode.html#system_descriptor">system descriptor</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_plugin_management">2.2.3. Plugin Management</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="vgx_builtin_ADMIN_ReloadPlugins"></a><code>/vgx/builtin/ADMIN_ReloadPlugins</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reload all plugins initially loaded with <a href="multinode.html#pyvgx_vgxinstance_startinstance_func">pyvgx.VGXInstance.StartInstance()</a>, whose
+<a href="multinode.html#vgxinstance_plugin_definitions">definitions</a> are located in dynamically re-loadable modules (i.e. reference functions in <em>package</em>/<em>module</em>.)</p>
+<p class="tableblock">New plugins can be dynamically added by POSTing plugin definition JSON. The plugin module file containing functions referenced in the definition must already exist on the server&#8217;s filesystem.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_data_management">2.2.4. Data Management</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_CancelSync</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop synchronization of subscribers (<a href="../reference.html#system_cancelsync_func">pyvgx.system.CacnelSync()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Persist</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Create snapshot on disk for all loaded graphs (<a href="../reference.html#system_persist_func">pyvgx.system.Persist()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Sync</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Synchronize all subscribers (<a href="../reference.html#system_sync_func">pyvgx.system.Sync()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Truncate</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Delete all graph data (<a href="../reference.html#truncate_func">pyvgx.Graph.Truncate()</a>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_graph_state">2.2.5. Graph State</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ClearReadonly</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Make all graphs writable (<a href="../reference.html#system_clear_readonly_func">pyvgx.system.ClearReadonly()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ResumeEvents</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resume TTL process for all graphs (<a href="../reference.html#system_resume_events_func">pyvgx.system.ResumeEvents()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SetReadonly</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Make all graphs readonly (<a href="../reference.html#system_set_readonly_func">pyvgx.system.SetReadonly()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SuspendEvents</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Suspend TTL process for all graphs (<a href="../reference.html#system_suspend_events_func">pyvgx.system.SuspendEvents()</a>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_socket_server">2.2.6. Socket Server</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ResetMetrics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reset VGX Server metrics (<a href="service.html#system_resetmetrics_func">pyvgx.system.ResetMetrics()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ServiceIn</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable VGX Server plugin execution (<a href="service.html#system_serviceinhttp_func">pyvgx.system.ServiceInHTTP(True)</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ServiceOut</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Disable VGX Server plugin execution (<a href="service.html#system_serviceinhttp_func">pyvgx.system.ServiceInHTTP(False)</a>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_transaction_flow_management">2.2.7. Transaction Flow Management</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">URI Path</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Attach</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Become a provider for the attached subscriber (<a href="../reference.html#op_attach_func">pyvgx.op.Attach()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Bind</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start VGX Transaction service on this VGX instance (<a href="../reference.html#op_bind_func">pyvgx.op.Bind()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Detach</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detach subscriber (<a href="../reference.html#op_detach_func">pyvgx.op.Detach()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_DetachAll</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Detach all subscribers (<a href="../reference.html#op_detach_func">pyvgx.op.Detach()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ResumeTxInput</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resume processing of input transactions (<a href="../reference.html#op_resumetxinput_func">pyvgx.op.ResumeTxInput()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_ResumeTxOutput</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Resume output of transaction data (<a href="../reference.html#op_resumetxoutput_func">pyvgx.op.ResumeTxOutput()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Subscribe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Request to become a subscriber of the specified provider instance (<a href="../reference.html#op_subscribe_func">pyvgx.op.Subscribe()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SuspendTxInput</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause processing of input transactions (<a href="../reference.html#op_suspendtxinput_func">pyvgx.op.SuspendTxInput()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SuspendTxOutput</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pause output of transaction data (<a href="../reference.html#op_suspendtxoutput_func">pyvgx.op.SuspendTxOutput()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Throttle</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Limit consumption rate of inbound transaction data (<a href="../reference.html#op_throttle_func">pyvgx.op.Throttle()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Unbind</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Stop VGX Transaction service on this VGX instance (<a href="../reference.html#op_unbind_func">pyvgx.op.Unbind()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Unsubscribe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unsubscribe from provider (<a href="../reference.html#op_unsubscribe_func">pyvgx.op.Unsubscribe()</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_UpdateSubscribers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Effectuate a provider&#8217;s subscriber state according to a specified goal.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vgxadmin_tool">3. <em>vgxadmin</em> Command Line Tool</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Command line tool <code>vgxadmin</code> offers a convenient way to manage and monitor a multi-node system.</p>
+</div>
+<div class="paragraph">
+<p>A <a href="multinode.html#system_descriptor">system descriptor</a> is required for this tool to work. By default a file named <code>vgx.cf</code> in the current working directory is expected. An alternative file can be specified with option <code>--cf</code>. An optional <code>&lt;address&gt;</code> (<code>host:port</code>) can be specified to point the tool directly at a running VGX Server instance, using that instance&#8217;s system descriptor instead of a local file.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell"><span class="nv">$ </span>vgxadmin <span class="nt">--help</span>
+
+usage: vgxadmin <span class="o">[</span>&lt;address&gt;] &lt;options&gt;
+<span class="nt">-a</span>, <span class="nt">--attach</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;sub&gt;[,...]] Attach instance to subscribers
+<span class="nt">-B</span>, <span class="nt">--bind</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>                 Bind transaction input port
+<span class="nt">-c</span>, <span class="nt">--confirm</span>                   Confirm operation <span class="o">(</span>skip y/n prompt<span class="o">)</span>
+<span class="nt">-C</span>, <span class="nt">--command</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>,&lt;gr&gt;,&lt;cmd&gt;   Send console <span class="nb">command</span> &lt;cmd&gt; to graph &lt;gr&gt;
+<span class="nt">-d</span>, <span class="nt">--detach</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>               Detach instance from subscribers
+<span class="nt">-D</span>, <span class="nt">--restarthttp</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Restart HTTP server with refreshed config
+<span class="nt">-E</span>, <span class="nt">--endpoint</span> &lt;path&gt;           Send request to &lt;address&gt;
+<span class="nt">-f</span>, <span class="nt">--cf</span> &lt;file&gt;                 Use this <span class="nb">local </span>system descriptor file
+<span class="nt">-g</span>, <span class="nt">--readonly</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Make graph<span class="o">(</span>s<span class="o">)</span> <span class="nb">readonly</span>
+<span class="nt">-G</span>, <span class="nt">--writable</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Make graph<span class="o">(</span>s<span class="o">)</span> writable
+<span class="nt">-i</span>, <span class="nt">--serviceout</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>           Service out
+<span class="nt">-I</span>, <span class="nt">--servicein</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>            Service <span class="k">in</span>
+<span class="nt">-J</span>, <span class="nt">--show</span>                      Show effective system descriptor
+<span class="nt">-k</span>, <span class="nt">--cancelsync</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>           Terminate <span class="nb">sync </span><span class="k">in </span>progress
+<span class="nt">-K</span>, <span class="nt">--forcecopy</span> &lt;src&gt;,&lt;dst&gt;     Force hard <span class="nb">sync </span>from &lt;src&gt; to &lt;dst&gt;
+<span class="nt">-L</span>, <span class="nt">--rollingupdate</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>        Forward <span class="nb">sync </span>subscribers one at a <span class="nb">time </span><span class="k">in </span>S-OUT
+<span class="nt">-m</span>, <span class="nt">--resetmetrics</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>         Clear performance and error counters
+<span class="nt">-M</span>, <span class="nt">--opdump</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>               Dump instance data to output file
+<span class="nt">-n</span>, <span class="nt">--nodestat</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;key&gt;]     Nodestat
+<span class="nt">-N</span>, <span class="nt">--reloadplugins</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;pd&gt;] Reload or add plugins <span class="k">in</span> &lt;pd&gt; json file
+<span class="nt">-p</span>, <span class="nt">--pausein</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>              Pause transaction input
+<span class="nt">-P</span>, <span class="nt">--pauseout</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Pause transaction output
+<span class="nt">-Q</span>, <span class="nt">--instancecfg</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Show instance configuration
+<span class="nt">-r</span>, <span class="nt">--resumein</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Resume transaction input
+<span class="nt">-R</span>, <span class="nt">--resumeout</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>            Resume transaction output
+<span class="nt">-s</span>, <span class="nt">--start</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>                Start instance on the <span class="nb">local </span>host
+<span class="nt">-S</span>, <span class="nt">--status</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>               System summary
+<span class="nt">-t</span>, <span class="nt">--pausettl</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Pause TTL event processor
+<span class="nt">-T</span>, <span class="nt">--resumettl</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>            Resume TTL event processor <span class="o">(</span><span class="k">if </span>enabled<span class="o">)</span>
+<span class="nt">-u</span>, <span class="nt">--unsubscribe</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Detach instance from provider
+<span class="nt">-U</span>, <span class="nt">--unbind</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>               Unbind transaction input port
+<span class="nt">-V</span>, <span class="nt">--throttle</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;r&gt;,&lt;u&gt;]   Throttle TX input rate &lt;r&gt;, unit &lt;u&gt;
+<span class="nt">-w</span>, <span class="nt">--waitforidle</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Wait <span class="k">until </span>instance input is idle
+<span class="nt">-W</span>, <span class="nt">--persist</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>              Write instance data to disk
+<span class="nt">-x</span>, <span class="nt">--stop</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>                 Stop instance
+<span class="nt">-X</span>, <span class="nt">--truncate</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Erase instance data
+<span class="nt">-y</span>, <span class="nt">--sync</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;mode&gt;]        Sync instance data to attached subscribers
+                                &lt;mode&gt;: <span class="o">[</span>repair|hard|soft]
+<span class="nt">-Y</span>, <span class="nt">--reversesync</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Reverse <span class="nb">sync </span>instance data from subscriber
+<span class="nt">-Z</span>, <span class="nt">--descriptor</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>           Update instance system descriptor</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_vgxadmin_options">3.1. <em>vgxadmin</em> Options</h3>
+<div class="paragraph">
+<p>Many options require an argument <code>&lt;id&gt;</code>, which is a reference to <a href="multinode.html#descriptor_instance_id">instance identifiers</a> in the system descriptor. <code>&lt;id&gt;</code> can be a single instance identifier, multiple identifiers separated by commas, or a wildcard pattern using <code>*</code>. (Some options do not accept multiple identifiers.)</p>
+</div>
+<div class="paragraph">
+<p>The same option can occur multiple times. Actions are performed sequentially, i.e. one action has to complete before the next action starts.</p>
+</div>
+<div class="paragraph">
+<p>If <code>&lt;address&gt;</code> is specified, it can either be a valid instance identifier or the <code>&lt;host&gt;:&lt;port&gt;</code> of a running VGX Server instance. In this case the <code>&lt;id&gt;</code> argument for all specified options defaults to that instance&#8217;s identifier and can be omitted.</p>
+</div>
+<div class="paragraph">
+<p>When only <code>&lt;address&gt;</code> is provided (no other options specified) a summary of the running VGX Server instance is printed.</p>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_attach">3.1.1. <code>--attach &lt;id&gt;</code> (<code>-a</code>)</h4>
+<div class="paragraph">
+<p>Attach provider instance(s) to subscribers in accordance with the <a href="multinode.html#descriptor_topology_transaction">transaction topology</a> definition.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Attach instances "B0.1" and "B0.2" to their configured subscribers</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--attach</span> <span class="s2">"B0.1, B0.2"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_bind">3.1.2. <code>--bind &lt;id&gt;</code> (<code>-B</code>)</h4>
+<div class="paragraph">
+<p>Start the transaction input service on the <a href="multinode.html#descriptor_instance_tport">tport</a> defined for this instance.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Start transaction input service on instance "S1.1"</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--bind</span> S1.1</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_confirm">3.1.3. <code>--confirm</code> (<code>-c</code>)</h4>
+<div class="paragraph">
+<p>Bypass y/n prompts for options that require confirmation.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Remove all data from instance "S1.1" without prompting for confirmation</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--confirm</span> <span class="nt">--truncate</span> S1.1</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_command">3.1.4. <code>--command &lt;id&gt;,&lt;gr&gt;,&lt;cmd&gt;</code> (<code>-C</code>)</h4>
+<div class="paragraph">
+<p>Send console command <code>&lt;cmd&gt;</code> for graph <code>&lt;gr&gt;</code>. The <code>&lt;cmd&gt;</code> syntax is the same used on the <a href="#admin_ui_console"><code>/console</code> page</a>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Execute a remote pyvgx command on instance "S1.1"</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--command</span> S1.1,g1,<span class="s2">"Graph.Vertices: {'hits':5, 'sortby':S_IDEG}"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_detach">3.1.5. <code>--detach &lt;id&gt;</code> (<code>-d</code>)</h4>
+<div class="paragraph">
+<p>Detach provider instance(s) for all attached subscribers.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Detach all instances with "B" prefix from their subscribers</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--detach</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_restarthttp">3.1.6. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</h4>
+<div class="paragraph">
+<p>Restart HTTP server(s) with refreshed config. This is useful for dispatcher instances after making changes to the <a href="multinode.html#descriptor_topology_dispatch">dispatch topology</a>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Restart the HTTP server on instance "TD"</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--restarthttp</span> TD</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_endpoint">3.1.7. <code>--endpoint &lt;path&gt;</code> (<code>-E</code>)</h4>
+<div class="paragraph">
+<p>Send HTTP request <code>&lt;path&gt;</code> to instance specified in <code>&lt;address&gt;</code>, which is required for this option.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Send request for metrics to instance running locally on port 9990</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin 127.0.0.1:9990 <span class="nt">--endpoint</span> <span class="s2">"/vgx/builtin/metrics"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_cf">3.1.8. <code>--cf &lt;file&gt;</code> (<code>-f</code>)</h4>
+<div class="paragraph">
+<p>Use this local system descriptor file instead of the default <code>vgx.cf</code>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Print status of all instances defined in system descriptor <code>another.cf</code></div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--cf</span> another.cf <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_readonly">3.1.9. <code>--readonly &lt;id&gt;</code> (<code>-g</code>)</h4>
+<div class="paragraph">
+<p>Make all graph(s) in instance(s) readonly.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Set all instances with identifier prefix "S" to readonly</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--readonly</span> <span class="s2">"S*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_writable">3.1.10. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</h4>
+<div class="paragraph">
+<p>Make all graph(s) in instance(s) writable.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Set instance "S1.1" writable</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--writable</span> S1.1</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_serviceout">3.1.11. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</h4>
+<div class="paragraph">
+<p>Set instance(s) HTTP server to the S-OUT state. Plugin requests on the <a href="service.html#server_a_and_server_b">main port</a> will return HTTP code <a href="service.html#status_503_service_out">"503 Service out"</a>. If a dispatcher is used, any S-OUT instances in its backend matrix will be ignored.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: S-OUT the second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--serviceout</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_servicein">3.1.12. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</h4>
+<div class="paragraph">
+<p>Set instance(s) HTTP server to the S-IN state. Plugin requests on the <a href="service.html#server_a_and_server_b">main port</a> will execute normally.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: S-IN the second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--servicein</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_show">3.1.13. <code>--show</code> (<code>-J</code>)</h4>
+<div class="paragraph">
+<p>Show effective system descriptor.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Retrieve and print system descriptor used by local instance on port 9111</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin 127.0.0.1:9111 <span class="nt">--show</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_cancelsync">3.1.14. <code>--cancelsync &lt;id&gt;</code> (<code>-k</code>)</h4>
+<div class="paragraph">
+<p>Terminate any data synchronization currently in progress.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Stop sync from instances with prefix "B" to their subscribers</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--cancelsync</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_forcecopy">3.1.15. <code>--forcecopy &lt;src&gt;,&lt;dst&gt;</code> (<code>-K</code>)</h4>
+<div class="paragraph">
+<p>Force <a href="#vgxadmin_option_sync">hard sync</a> from <code>&lt;src&gt;</code> instance to <code>&lt;dst&gt;</code> instance. This allows data to be copied between any nodes within a system, bypassing the configured <a href="multinode.html#descriptor_topology_transaction">transaction topology</a>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>By creating a temporary system descriptor referencing instances in both system A and B it is possible to copy data between any nodes in both systems.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Copy data from one partition builder to another</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--forcecopy</span> <span class="s2">"B0.2, B0.1"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_rollingupdate">3.1.16. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</h4>
+<div class="paragraph">
+<p>Synchronize data from provider instance to all its subscribers, one at a time, with each destination subscriber in S-OUT state while being updated. Since each destination is hard-sync&#8217;ed (destructive truncation followed by rebuild) the S-OUT state is required to avoid live traffic reaching the updated instance.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>At least two destination subscribers must be actively serving in S-IN mode for rolling update to be performed.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Perform rolling update of two partitions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--rollingupdate</span> B0.1 <span class="nt">--rollingupdate</span> B0.2</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_resetmetrics">3.1.17. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</h4>
+<div class="paragraph">
+<p>Clear errors and performance counters for instance(s).</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Reset counters and errors for all search instances with prefix "S"</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--resetmetrics</span> <span class="s2">"S*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_opdump">3.1.18. <code>--opdump &lt;id&gt;</code> (<code>-M</code>)</h4>
+<div class="paragraph">
+<p>Dump all graph data to an output file on the instance&#8217;s local file system. The file will be named <code>opdump_&lt;timestamp&gt;.tx</code> located directly under the instance <em>vgxroot</em> directory. Output data is written as <a href="../io/vgxopxfer.html#stream_building_blocks">VGX transactions</a> and can be used to populate other instances.</p>
+</div>
+<div class="paragraph">
+<p>To allow an instance to restore data from a local file, the service implementation can use <a href="reference.html#<em>consume">pyvgx.op.Consume()</a>. Data can be read line by line from <code>opdump</em>&lt;timestamp&gt;.tx</code> and submitted to <code>pyvgx.op.Consume()</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The instance being dumped must not be attached to any subscribers and must not have the transaction input service running. Use <code>--detach</code>, <code>--unsubscribe</code> and <code>--unbind</code> as appropriate before performing <code>--opdump</code>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Dump instance B0.1 data to output file as VGX transactions</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--opdump</span> B0.1
+
+<span class="c"># Output written to builder_B0.1/opdump_1731703450.tx</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_nodestat">3.1.19. <code>--nodestat &lt;id&gt;[,&lt;key&gt;]</code> (<code>-n</code>)</h4>
+<div class="paragraph">
+<p>Retrieve <code>/vgx/nodestat</code> from instance(s) and print result, optionally filtered to only show attribute <code>&lt;key&gt;</code>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Show memory consumed by all builder instances</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--nodestat</span> <span class="s2">"B*"</span>,memory-process</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_reloadplugins">3.1.20. <code>--reloadplugins &lt;id&gt;[,&lt;pd&gt;]</code> (<code>-N</code>)</h4>
+<div class="paragraph">
+<p>Reload already registered plugins, or add plugins in <code>&lt;pd&gt;</code> json file. If adding new plugins the <code>&lt;pd&gt;</code> file format is the JSON equivalent of the Python <a href="multinode.html#vgxinstance_plugin_definitions">plugin definition list</a> used with <a href="multinode.html#pyvgx_vgxinstance_startinstance_func">pyvgx.VGXInstance.StartInstance()</a>.</p>
+</div>
+<div class="paragraph">
+<p>The plugin implementation Python code must already exist on the filesystem of the instance being updated, and the plugin definition list must correctly specify the plugin package(s) and function(s).</p>
+</div>
+<div class="sect4">
+<h5 id="_example_add_square_root_capabilities_to_running_system">3.1.20.1. Example: Add square root capabilities to running system</h5>
+<div class="paragraph">
+<p>Assuming the running service implementation exists in a package called <code>service</code>, add a new file <code>extras.py</code> to the package containing the following Python code:</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The plugin implementation Python code must be placed on disk on every host for which we intend to execute the update.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock copyable">
+<div class="title">service/extras.py</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="k">def</span> <span class="nf">SquareRoot</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span><span class="n">Graph</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span><span class="nb">float</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">**</span> <span class="mf">0.5</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On the local machine (where vgxadmin is to be executed) place a new file <code>sqrt.json</code> in the current directory with the following content:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">sqrt.json</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"name"</span><span class="p">:</span><span class="w">    </span><span class="s2">"sqrt"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"package"</span><span class="p">:</span><span class="w"> </span><span class="s2">"service"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"module"</span><span class="p">:</span><span class="w">  </span><span class="s2">".extras"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"engine"</span><span class="p">:</span><span class="w">  </span><span class="s2">"SquareRoot"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"pre"</span><span class="p">:</span><span class="w">     </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"post"</span><span class="p">:</span><span class="w">    </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"graph"</span><span class="p">:</span><span class="w">   </span><span class="s2">"*"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Execute the reload command:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Add new endpoint /vgx/plugin/sqrt to TD instance</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--reloadplugins</span> TD,sqrt.json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, assuming TD runs locally on port 9990, we can make requests to compute square roots:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Compute square root of 123</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">curl http://127.0.0.1:9990/vgx/plugin/sqrt?x<span class="o">=</span>123</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Square root result</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell"><span class="o">{</span>
+    <span class="s2">"status"</span>: <span class="s2">"OK"</span>,
+    <span class="s2">"response"</span>: 11.090536506409418,
+    <span class="s2">"level"</span>: 0,
+    <span class="s2">"partitions"</span>: null,
+    <span class="s2">"exec_ms"</span>: 0.072
+<span class="o">}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_pausein">3.1.21. <code>--pausein &lt;id&gt;</code> (<code>-p</code>)</h4>
+<div class="paragraph">
+<p>Pause transaction input service on subscriber instance(s). Transaction data is received and queued, but not applied while in the paused state.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Pause transaction input on the second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--pausein</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_pauseout">3.1.22. <code>--pauseout &lt;id&gt;</code> (<code>-P</code>)</h4>
+<div class="paragraph">
+<p>Pause transaction output emitter on provider instance(s). Transaction data is produced and queued, but not sent to subscribers while in the paused state.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Pause transaction output on the builders</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--pauseout</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_instancecfg">3.1.23. <code>--instancecfg &lt;id&gt;</code> (<code>-Q</code>)</h4>
+<div class="paragraph">
+<p>Show effective instance configuration parameters as determined by system descriptor.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Print the top dispatcher&#8217;s configuration</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--instancecfg</span> TD</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_resumein">3.1.24. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</h4>
+<div class="paragraph">
+<p>Resume transaction input service on subscriber instance(s). Transactions previously received and queued while in the paused state are immediately applied,  followed by normal streaming operation.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Resume transaction input on the second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--resumein</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_resumeout">3.1.25. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</h4>
+<div class="paragraph">
+<p>Resume transaction output
+Resume transaction output emitter on provider instance(s). Transactions previously produced and queued while in the paused state are immediately sent to subscribers, followed by normal streaming operation.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Resume transaction output on the builders</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--resumeout</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_start">3.1.26. <code>--start &lt;id&gt;</code> (<code>-s</code>)</h4>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For internal development. Do not use.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_status">3.1.27. <code>--status &lt;id&gt;</code> (<code>-S</code>)</h4>
+<div class="paragraph">
+<p>Print status summary for instance(s).</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Print status for all instances in system</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_pausettl">3.1.28. <code>--pausettl &lt;id&gt;</code> (<code>-t</code>)</h4>
+<div class="paragraph">
+<p>Pause TTL event processor. Objects with expiration time set will not be deleted while in the paused state.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Prevent deletion of expired objects on builder row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--pausettl</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_resumettl">3.1.29. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</h4>
+<div class="paragraph">
+<p>Resume TTL event processor, if globally enabled. Expired objects will be deleted immediately.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Resume deletion of expired objects on builder row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--resumettl</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_unsubscribe">3.1.30. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</h4>
+<div class="paragraph">
+<p>Detach subscriber instance(s) from provider(s).</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Detach second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--unsubscribe</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_unbind">3.1.31. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</h4>
+<div class="paragraph">
+<p>Stop the transaction input service on instance.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Stop transaction input service on second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--unbind</span> S2.1 <span class="nt">--unbind</span> S2.2</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_throttle">3.1.32. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</h4>
+<div class="paragraph">
+<p>Get or set data consumption rate limits for the transaction input service. When no rate <code>&lt;r&gt;</code> and unit <code>&lt;u&gt;</code> are specified the configured throttle parameters are returned. When supplied, update consumption rate <code>&lt;r&gt;</code> for consumption unit <code>&lt;u&gt;</code>. Allowed values for <code>&lt;u&gt;</code> are: <code>bytes</code>, <code>opcodes</code>, <code>operations</code>, <code>transactions</code>. Rate <code>&lt;r&gt;</code> is specified as units per second. Remove all limits using rate 0 and unit <code>all_unlimited</code>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: On search nodes, limit input data consumption to 1,000 transactions/sec and 50,000 opcodes/sec</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--throttle</span> <span class="s2">"S*"</span>,1000,transactions <span class="nt">--throttle</span> <span class="s2">"S*"</span>,50000,opcodes</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_waitforidle">3.1.33. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</h4>
+<div class="paragraph">
+<p>Wait until instance transaction input has not been processing data for at least 5 seconds. This is useful when stringing several actions together in the same command and subsequent actions depend on previous actions to be fully completed.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Synchronize data from builders to search rows, then S-IN search rows</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--sync</span> <span class="s2">"B*"</span> <span class="nt">--waitforidle</span> <span class="s2">"S*"</span> <span class="nt">--servicein</span> <span class="s2">"S*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_persist">3.1.34. <code>--persist &lt;id&gt;</code> (<code>-W</code>)</h4>
+<div class="paragraph">
+<p>Write instance data to disk.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Save builder snapshots to disk</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--persist</span> <span class="s2">"B*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_stop">3.1.35. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</h4>
+<div class="paragraph">
+<p>Shut down instance(s).</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Shut down the second search row</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> <span class="s2">"S2*"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_truncate">3.1.36. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</h4>
+<div class="paragraph">
+<p>Erase instance data.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Delete all builder data (propagated to any attached subscribers)</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--truncate</span> B0.1 <span class="nt">--truncate</span> B0.2</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_sync">3.1.37. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</h4>
+<div class="paragraph">
+<p>Synchronize data from provider instance(s) to their attached subscriber(s). Synchronization is performed according to the specified <code>&lt;mode&gt;</code>, which must be one of <code>hard</code>, <code>soft</code>, or <code>repair</code>.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>hard</code></dt>
+<dd>
+<p>Truncate all attached subscribers, then send all data</p>
+</dd>
+<dt class="hdlist1"><code>soft</code></dt>
+<dd>
+<p>Send all data to attached subscribers without truncating first</p>
+</dd>
+<dt class="hdlist1"><code>repair</code> (default)</dt>
+<dd>
+<p>Perform hard sync of subscribers that require it, i.e. subscribers with data different from their respective providers. Subscribers that are in sync with their providers are unaffected. Affected subscribers must be set to S-OUT for this operation to proceed.</p>
+</dd>
+</dl>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Copy data from all builders to their subscribers</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--sync</span> <span class="s2">"B*"</span>,hard</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_reversesync">3.1.38. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</h4>
+<div class="paragraph">
+<p>Perform reverse synchronization of provider instance data from its subscriber with the highest master serial number.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Restore builder B0.1 with data from one of its configured subscribers</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--reversesync</span> B0.1</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_descriptor">3.1.39. <code>--descriptor &lt;id&gt;</code> (<code>-Z</code>)</h4>
+<div class="paragraph">
+<p>Update system descriptor on instance(s) with the effective system descriptor.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example: Send the local <code>vgx.cf</code> to all defined instances</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--descriptor</span> <span class="s2">"*"</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="pluginadapter.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Plugin Adapter"></i></span></a>
+<a href="../../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="multinode.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Multi-Node Setup"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

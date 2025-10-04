@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Enumeration Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphenummethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Enumeration Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphEvent.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Event Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#relationships">1. Relationships</a>
+<ul class="sectlevel2">
+<li><a href="#graphenumrelationship">1.1. pyvgx.Graph.EnumRelationship()</a></li>
+<li><a href="#graphrelationship">1.2. pyvgx.Graph.Relationship()</a></li>
+<li><a href="#graphrelationships">1.3. pyvgx.Graph.Relationships()</a></li>
+</ul>
+</li>
+<li><a href="#vertextypes">2. Vertex Types</a>
+<ul class="sectlevel2">
+<li><a href="#graphenumvertextype">2.1. pyvgx.Graph.EnumVertexType()</a></li>
+<li><a href="#graphvertextype">2.2. pyvgx.Graph.VertexType()</a></li>
+<li><a href="#graphvertextypes">2.3. pyvgx.Graph.VertexTypes()</a></li>
+</ul>
+</li>
+<li><a href="#dimensions">3. Vector Dimensions</a>
+<ul class="sectlevel2">
+<li><a href="#graphenumdimension">3.1. pyvgx.Graph.EnumDimension()</a></li>
+<li><a href="#graphdimension">3.2. pyvgx.Graph.Dimension()</a></li>
+</ul>
+</li>
+<li><a href="#keys">4. Property Keys</a>
+<ul class="sectlevel2">
+<li><a href="#graphenumkey">4.1. pyvgx.Graph.EnumKey()</a></li>
+<li><a href="#graphkey">4.2. pyvgx.Graph.Key()</a></li>
+<li><a href="#graphpropertykeys">4.3. pyvgx.Graph.PropertyKeys()</a></li>
+</ul>
+</li>
+<li><a href="#values">5. Property String Values</a>
+<ul class="sectlevel2">
+<li><a href="#graphenumvalue">5.1. pyvgx.Graph.EnumValue()</a></li>
+<li><a href="#graphvalue">5.2. pyvgx.Graph.Value()</a></li>
+<li><a href="#graphpropertyvalues">5.3. pyvgx.Graph.PropertyStringValues()</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Enumeration Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#relationships">Relationships</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphenumrelationship">pyvgx.Graph.EnumRelationship()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define relationship type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphrelationship">pyvgx.Graph.Relationship()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return relationship type by enum</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphrelationships">pyvgx.Graph.Relationships()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return defined relationship types</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#vertextypes">Vertex Types</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphenumvertextype">pyvgx.Graph.EnumVertexType()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define vertex type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphvertextype">pyvgx.Graph.VertexType()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vertex type by enum</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphvertextypes">pyvgx.Graph.VertexTypes()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return defined vertex types</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#dimensions">Vector Dimensions</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphenumdimension">pyvgx.Graph.EnumDimension()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define vector dimension</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphdimension">pyvgx.Graph.Dimension()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return vector dimension by enum</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#keys">Property Keys</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphenumkey">pyvgx.Graph.EnumKey()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define property key</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphkey">pyvgx.Graph.Key()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return property key by enum</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphpropertykeys">pyvgx.Graph.PropertyKeys()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return defined property keys</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="2"><p class="tableblock"><strong><a href="#values">Property String Values</a></strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphenumvalue">pyvgx.Graph.EnumValue()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Define property string value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphvalue">pyvgx.Graph.Value()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return property string value by enum</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphpropertyvalues">pyvgx.Graph.PropertyStringValues()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return defined property string values</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="relationships">1. Relationships</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="graphenumrelationship">1.1. pyvgx.Graph.EnumRelationship()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EnumRelationship</span><span class="p">(</span> <span class="n">relationship_name</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return enumeration code for <em>relationship_name</em>. New enumeration mapping is created if <em>relationship_name</em> is previously undefined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphrelationship">1.2. pyvgx.Graph.Relationship()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Relationship</span><span class="p">(</span> <span class="n">code</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the relationship name associated with enumeration <em>code</em> if it exists, otherwise raise <a href="../reference.html#EnumerationError_exc"><code>pyvgx.EnumerationError</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphrelationships">1.3. pyvgx.Graph.Relationships()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Relationships</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return a dictionary of all existing { <em>relationship_name</em> : <em>code</em> } mappings.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertextypes">2. Vertex Types</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="graphenumvertextype">2.1. pyvgx.Graph.EnumVertexType()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EnumVertexType</span><span class="p">(</span> <span class="n">vertex_type</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return enumeration code for <em>vertex_type</em>. New enumeration mapping is created if <em>vertex_type</em> is previously undefined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphvertextype">2.2. pyvgx.Graph.VertexType()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">VertexType</span><span class="p">(</span> <span class="n">code</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the vertex type name associated with enumeration <em>code</em> if it exists, otherwise raise <a href="../reference.html#EnumerationError_exc"><code>pyvgx.EnumerationError</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphvertextypes">2.3. pyvgx.Graph.VertexTypes()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">VertexTypes</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return a dictionary of all existing { <em>vertex_type</em> : <em>code</em> } mappings.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="dimensions">3. Vector Dimensions</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="graphenumdimension">3.1. pyvgx.Graph.EnumDimension()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EnumDimension</span><span class="p">(</span> <span class="n">dimension</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return enumeration code for <em>dimension</em>. New enumeration mapping is created if <em>dimension</em> is previously undefined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphdimension">3.2. pyvgx.Graph.Dimension()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Dimension</span><span class="p">(</span> <span class="n">code</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the dimension associated with enumeration <em>code</em> if it exists, otherwise raise <a href="../reference.html#EnumerationError_exc"><code>pyvgx.EnumerationError</code></a>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="keys">4. Property Keys</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="graphenumkey">4.1. pyvgx.Graph.EnumKey()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EnumKey</span><span class="p">(</span> <span class="n">key</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return enumeration code for property <em>key</em>. New enumeration mapping is created if <em>key</em> is previously undefined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphkey">4.2. pyvgx.Graph.Key()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Key</span><span class="p">(</span> <span class="n">code</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the property key associated with enumeration <em>code</em> if it exists, otherwise raise <a href="../reference.html#EnumerationError_exc"><code>pyvgx.EnumerationError</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphpropertykeys">4.3. pyvgx.Graph.PropertyKeys()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">PropertyKeys</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return a dictionary of all existing { <em>key</em> : <em>code</em> } mappings.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="values">5. Property String Values</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="graphenumvalue">5.1. pyvgx.Graph.EnumValue()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EnumValue</span><span class="p">(</span> <span class="n">string</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return enumeration code for property <em>string</em> value. New enumeration mapping is created if <em>string</em> is previously undefined.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphvalue">5.2. pyvgx.Graph.Value()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Value</span><span class="p">(</span> <span class="n">code</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the property string value associated with enumeration <em>code</em> if it exists, otherwise raise <a href="../reference.html#EnumerationError_exc"><code>pyvgx.EnumerationError</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graphpropertyvalues">5.3. pyvgx.Graph.PropertyStringValues()</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">PropertyStringValues</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return a dictionary of all existing { <em>string</em> : <em>code</em> } mappings.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Management Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphEvent.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Event Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

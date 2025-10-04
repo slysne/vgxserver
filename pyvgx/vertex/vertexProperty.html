@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Property Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexproperty" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Property Methods <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexRank.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Rank Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexsetproperty">1. pyvgx.Vertex.SetProperty()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_parameters">1.2. Parameters</a></li>
+<li><a href="#_remarks">1.3. Remarks</a></li>
+<li><a href="#_example">1.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexincproperty">2. pyvgx.Vertex.IncProperty()</a></li>
+<li><a href="#vertexhasproperty">3. pyvgx.Vertex.HasProperty()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">3.1. Syntax</a></li>
+<li><a href="#_parameters_2">3.2. Parameters</a></li>
+<li><a href="#_return_value">3.3. Return Value</a></li>
+<li><a href="#_example_2">3.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexgetproperty">4. pyvgx.Vertex.GetProperty()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">4.1. Syntax</a></li>
+<li><a href="#_parameters_3">4.2. Parameters</a></li>
+<li><a href="#_return_value_2">4.3. Return Value</a></li>
+<li><a href="#_remarks_2">4.4. Remarks</a></li>
+<li><a href="#_example_3">4.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexremoveproperty">5. pyvgx.Vertex.RemoveProperty()</a></li>
+<li><a href="#vertexsetproperties">6. pyvgx.Vertex.SetProperties()</a></li>
+<li><a href="#vertexhasproperties">7. pyvgx.Vertex.HasProperties()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">7.1. Syntax</a></li>
+<li><a href="#_return_value_3">7.2. Return Value</a></li>
+<li><a href="#_example_4">7.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexnumproperties">8. pyvgx.Vertex.NumProperties()</a></li>
+<li><a href="#vertexgetproperties">9. pyvgx.Vertex.GetProperties()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">9.1. Syntax</a></li>
+<li><a href="#_return_value_4">9.2. Return Value</a></li>
+<li><a href="#_example_5">9.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexremoveproperties">10. pyvgx.Vertex.RemoveProperties()</a></li>
+<li><a href="#vertexitems">11. pyvgx.Vertex.items()</a></li>
+<li><a href="#vertexkeys">12. pyvgx.Vertex.keys()</a></li>
+<li><a href="#vertexvalues">13. pyvgx.Vertex.values()</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vertex Access Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexsetproperty">pyvgx.Vertex.SetProperty()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set or update a named property in the vertex.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexincproperty">pyvgx.Vertex.IncProperty()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Increment a property value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexhasproperty">pyvgx.Vertex.HasProperty()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check whether the vertex contains the named property, with optional value condition.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgetproperty">pyvgx.Vertex.GetProperty()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a vertex property.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexremoveproperty">pyvgx.Vertex.RemoveProperty()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove a property</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexsetproperties">pyvgx.Vertex.SetProperties()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set many properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexhasproperties">pyvgx.Vertex.HasProperties()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check whether the vertex has any properties.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexnumproperties">pyvgx.Vertex.NumProperties()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the number of properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgetproperties">pyvgx.Vertex.GetProperties()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return all vertex properties as a dictionary of name → value mappings.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexremoveproperties">pyvgx.Vertex.RemoveProperties()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove all properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexitems">pyvgx.Vertex.items()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return name/value pairs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexkeys">pyvgx.Vertex.keys()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return property names</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexvalues">pyvgx.Vertex.values()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return property values</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexsetproperty">1. pyvgx.Vertex.SetProperty()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set or update a named property in the vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="n">name</span> <span class="p">[,</span> <span class="n">value</span><span class="p">[,</span> <span class="n">virtual</span><span class="p">]]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code><em>name</em></code></dt>
+<dd>
+<p>The property name must be a string.</p>
+</dd>
+<dt class="hdlist1"><code><em>value</em></code></dt>
+<dd>
+<p>The property value may be a number, string, list of numeric values, dict of {int:float} items, function, or any other Python object supporting the Pickle protocol.</p>
+</dd>
+<dt class="hdlist1"><code><em>virtual</em></code></dt>
+<dd>
+<p>When True store the property value on disk instead of memory. Default is False.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.3. Remarks</h3>
+<div class="paragraph">
+<p>Supported value types and ranges are summarized below. Note that the primitive numeric types are limited to a 56-bit internal representation.</p>
+</div>
+<table id="vertex_property_types" class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Vertex Property Types</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 12.5%;">
+<col style="width: 37.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Python Type Inserted</th>
+<th class="tableblock halign-left valign-top">Stored in Vertex</th>
+<th class="tableblock halign-left valign-top">Python Type Retrieved</th>
+<th class="tableblock halign-left valign-top">Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None <a id="vertex_property_type_none"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A property value can be explicitly set to None or automatically set to None when no property value is specified.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool <a id="vertex_property_type_bool"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">56-bit signed integer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bool objects are interpreted as integer type, i.e. False becomes 0, True becomes 1.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int <a id="vertex_property_type_int"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">56-bit signed integer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A Python integer object in the range is [-2<sup>55</sup>, 2<sup>55</sup>-1]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float <a id="vertex_property_type_float"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">56-bit floating point</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Truncation of the mantissa will lead to slight loss of precision, e.g. 3.14 → 3.1399999999999864</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">str <a id="vertex_property_type_str"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Byte array representing string data</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">str</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Strings must be UTF-8 encoded. The upper limit for string length is not defined, but is <a href="../limits.html#limits">at least 65464 octets</a>. Longer strings are compressed internally. As long as the size of compressed data does not exceed 65465 bytes the string can be stored. Non-compressed strings are readable by evaluator expressions.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bytearray <a id="vertex_property_type_bytearray"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Byte array representing raw unsigned bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bytearray</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of 8-bit unsigned integers stored as a native array, which can be accessed by evaluator expressions. The <a href="../limits.html#limits">maximum array length is 65464 bytes</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bytes <a id="vertex_property_type_bytes"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String of raw bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bytes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of 8-bit unsigned integers stored as a native array, which can be accessed by evaluator expressions. The <a href="../limits.html#limits">maximum array length is 65464 bytes</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">list <a id="vertex_property_type_list"></a>
+<br>
+ (all int, or all float)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Byte array representing multiple 64-bit integers or double precision floats</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">list</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of only integers or only floats stored as a native array, which can be accessed by evaluator expressions. The <a href="../limits.html#limits">maximum array length is 8183 items</a>.
+<br>
+<br>
+ <strong>NOTE</strong>: If types are mixed (integers and floats), or if any other type appears in the list the property value will be stored as &lt;any_other_object&gt; described below without warning!</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">dict <a id="vertex_property_type_dict"></a>
+<br>
+ (integer keys, float values)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Byte array representing a mapping of 32-bit integer keys to single precision float values</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">dict</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A mapping of 32-bit signed integer keys to 32-bit single precision floating point values stored as a native hash table, which can be accessed by evaluator expressions. The <a href="../limits.html#limits">maximum map size is 2703 items</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">function <a id="vertex_property_type_function"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serialized Python byte code, optionally compressed if large</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">function</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arbitrary code, executable by the Python interpreter.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;any_other_object&gt; <a id="vertex_property_type_other"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serialized Python object, optionally compressed if large</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">object</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Any other Python object will be stored as the string produced by the objects repr() method. The size limit of the string representation is 65464 bytes (after internal compression when applicable.)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use a serialization protocol such as JSON or Python&#8217;s own Pickle module to store complex objects.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Data types with special restrictions (such as numeric lists or integer-to-float maps) will only be stored as expected when those restrictions are met. In the case of numeric lists, non-conforming values are silently stored as serialized Python objects rather than native arrays. Dictionary properties require integer keys and numeric values, and will raise an exception if other types are used.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">cPickle</span>
+<span class="kn">import</span> <span class="n">pprint</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="c1">#
+# Set some properties
+#
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">flagX</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># None
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">beware</span><span class="sh">"</span><span class="p">,</span> <span class="bp">None</span> <span class="p">)</span>     <span class="c1"># None
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">boolA</span><span class="sh">"</span><span class="p">,</span> <span class="bp">True</span> <span class="p">)</span>      <span class="c1"># 1
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">boolB</span><span class="sh">"</span><span class="p">,</span> <span class="bp">False</span> <span class="p">)</span>     <span class="c1"># 0
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">integer</span><span class="sh">"</span><span class="p">,</span> <span class="o">-</span><span class="mi">123</span> <span class="p">)</span>    <span class="c1"># -123
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">big</span><span class="sh">"</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">50</span> <span class="p">)</span>       <span class="c1"># 1125899906842624
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">pi</span><span class="sh">"</span><span class="p">,</span> <span class="mf">3.14</span> <span class="p">)</span>         <span class="c1"># 3.1399999999999864
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">message</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># "hello"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">array</span><span class="sh">"</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="p">)</span>   <span class="c1"># [1, 2, 3]
+</span>
+<span class="c1"># Virtual property string value stored on disk
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">ondisk</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">this_is_on_disk</span><span class="sh">"</span><span class="p">,</span> <span class="n">virtual</span><span class="o">=</span><span class="bp">True</span> <span class="p">)</span>
+
+<span class="c1"># str  : "&lt;PyVGX_Graph: name=graph order=1 size=0&gt;"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">the_graph</span><span class="sh">"</span><span class="p">,</span> <span class="n">g</span> <span class="p">)</span>
+
+<span class="c1"># str  : "[1, 2, {'x': 'y'}]"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">objstr</span><span class="sh">"</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,{</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">y</span><span class="sh">'</span><span class="p">}]</span> <span class="p">)</span>
+
+<span class="c1"># str  : "(lp1\nI1\naI2\na(dp2\nS'x'\nS'y'\nsa."
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">obj</span><span class="sh">"</span><span class="p">,</span> <span class="n">cPickle</span><span class="p">.</span><span class="nf">dumps</span><span class="p">(</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,{</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">y</span><span class="sh">'</span><span class="p">}]</span> <span class="p">)</span> <span class="p">)</span>
+
+<span class="c1">#
+# Get the properties
+#
+</span><span class="n">pprint</span><span class="p">.</span><span class="nf">pprint</span><span class="p">(</span> <span class="n">A</span><span class="p">.</span><span class="nc">GetProperties</span><span class="p">()</span> <span class="p">)</span>
+<span class="c1"># { 'beware': None,
+#   'big': 1125899906842624,
+#   'boolA': 1,
+#   'boolB': 0,
+#   'flagX': None,
+#   'integer': -123,
+#   'message': 'hello',
+#   'objstr': "[1, 2, {'x': 'y'}]",
+#   'obj': "(lp1\nI1\naI2\na(dp2\nS'x'\nS'y'\nsa.",
+#   'pi': 3.1399999999999864,
+#   'array': [1, 2, 3],
+#   'the_graph': '&lt;PyVGX_Graph: name=1 order=1 size=0&gt;' }
+</span><span class="n">cPickle</span><span class="p">.</span><span class="nf">loads</span><span class="p">(</span> <span class="n">A</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">obj</span><span class="sh">"</span> <span class="p">)</span> <span class="p">)</span>      <span class="c1"># [1, 2, {'x': 'y'}]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexincproperty">2. pyvgx.Vertex.IncProperty()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Increment property value.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexhasproperty">3. pyvgx.Vertex.HasProperty()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check whether the vertex contains the named property, with optional value condition.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">HasProperty</span><span class="p">(</span> <span class="n">name</span> <span class="p">[,</span> <span class="n">value_condition</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">3.2. Parameters</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code><em>name</em></code></dt>
+<dd>
+<p>The property name to check. Must be string.</p>
+</dd>
+<dt class="hdlist1"><code><em>value_condition</em></code></dt>
+<dd>
+<p>Optional condition to apply to property value. The condition is NONE</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value">3.3. Return Value</h3>
+<div class="paragraph">
+<p>True: The vertex contains the named property.</p>
+</div>
+<div class="paragraph">
+<p>False: The vertex does not contain the named property.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">3.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">HasProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span> <span class="p">)</span>          <span class="c1"># -&gt; False
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">red</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1">#
+</span><span class="n">A</span><span class="p">.</span><span class="nc">HasProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span> <span class="p">)</span>          <span class="c1"># -&gt; True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgetproperty">4. pyvgx.Vertex.GetProperty()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a vertex property.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_3">4.2. Parameters</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code><em>name</em></code></dt>
+<dd>
+<p>The named property whose value is to be returned.</p>
+</dd>
+<dt class="hdlist1"><code><em>default</em></code></dt>
+<dd>
+<p>Default value to return if the vertex does not contain the named property.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">4.3. Return Value</h3>
+<div class="paragraph">
+<p>This method returns the value of the named vertex property, or a default value if the named property does not exist in the vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">4.4. Remarks</h3>
+<div class="paragraph">
+<p>Property values are stored as integer, floating point, or string type. Python objects other than these will be cast to a string representation.</p>
+</div>
+<div class="paragraph">
+<p>Note that integers and floating point values are restricted to a 56-bit internal representation. See <a href="#vertexsetproperty">pyvgx.Vertex.SetProperty()</a> for details.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">4.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># -&gt; None
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">red</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># -&gt; "red"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">size</span><span class="sh">"</span><span class="p">,</span> <span class="mi">100</span> <span class="p">)</span>        <span class="c1"># -&gt; 100
+</span><span class="n">A</span><span class="p">.</span><span class="nc">GetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">brand</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">generic</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># -&gt; "generic"</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexremoveproperty">5. pyvgx.Vertex.RemoveProperty()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remove a property.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexsetproperties">6. pyvgx.Vertex.SetProperties()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set many properties from dictionary.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexhasproperties">7. pyvgx.Vertex.HasProperties()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check whether the vertex has any properties.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">7.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">HasProperties</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">7.2. Return Value</h3>
+<div class="paragraph">
+<p>True: The vertex contains at least one named property.</p>
+</div>
+<div class="paragraph">
+<p>False: The vertex does not contain any named properties.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">7.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">HasProperties</span><span class="p">()</span>                  <span class="c1"># -&gt; False
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">red</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1">#
+</span><span class="n">A</span><span class="p">.</span><span class="nc">HasProperties</span><span class="p">()</span>                  <span class="c1"># -&gt; True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexnumproperties">8. pyvgx.Vertex.NumProperties()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the number of properties.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgetproperties">9. pyvgx.Vertex.GetProperties()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return all vertex properties as a dictionary of name → value mappings.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">9.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetProperties</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">9.2. Return Value</h3>
+<div class="paragraph">
+<p>A Python dictionary is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">9.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">GetProperties</span><span class="p">()</span>                  <span class="c1"># -&gt; {}
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">color</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">red</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1">#
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">size</span><span class="sh">"</span><span class="p">,</span> <span class="mi">5</span> <span class="p">)</span>         <span class="c1">#
+</span><span class="n">A</span><span class="p">.</span><span class="nc">GetProperties</span><span class="p">()</span>                  <span class="c1"># -&gt; {'color': 'red', 'size': 5}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexremoveproperties">10. pyvgx.Vertex.RemoveProperties()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Remove all properties.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexitems">11. pyvgx.Vertex.items()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return name/value pairs.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexkeys">12. pyvgx.Vertex.keys()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return property names.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexvalues">13. pyvgx.Vertex.values()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return property values.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexAccess.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Access Methods"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexRank.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Rank Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

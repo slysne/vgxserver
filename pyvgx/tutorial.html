@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>PyVGX 3.6 Tutorial</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxtutorial" class="article toc2 toc-left">
+<div id="header">
+<h1>PyVGX 3.6 Tutorial <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#install">1. Setup</a></li>
+<li><a href="#_introduction">2. Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#_hello_world_service">2.1. Hello World Service</a></li>
+<li><a href="#_quick_note_about_multithreading">2.2. Quick Note about Multithreading</a></li>
+</ul>
+</li>
+<li><a href="#gettingstarted">3. Getting Started</a>
+<ul class="sectlevel2">
+<li><a href="#makenewgraph">3.1. Import, Initialize and Make a New Graph</a></li>
+<li><a href="#makeconnection">3.2. Make a Connection</a></li>
+<li><a href="#initialterminal">3.3. Initial and Terminal Vertices</a></li>
+<li><a href="#arcsdegree">3.4. Arcs and Degree</a></li>
+<li><a href="#virtualreal">3.5. Virtual and Real Vertices</a></li>
+<li><a href="#simplequery">3.6. Run a Simple Query</a></li>
+</ul>
+</li>
+<li><a href="#morecomplex">4. A More Complex Graph</a>
+<ul class="sectlevel2">
+<li><a href="#_create_the_graph">4.1. Create the Graph</a></li>
+<li><a href="#_run_some_queries">4.2. Run Some Queries</a>
+<ul class="sectlevel3">
+<li><a href="#_query_1_who_purchased_the_most_coffee">4.2.1. Query 1: Who purchased the most Coffee?</a></li>
+<li><a href="#_query_2_how_much_do_companies_spend_on_tea">4.2.2. Query 2: How much do Companies spend on Tea?</a></li>
+<li><a href="#_query_3_how_many_people_purchased_at_least_20_coffees_and_20_teas">4.2.3. Query 3: How Many People Purchased at Least 20 Coffees and 20 Teas?</a></li>
+<li><a href="#_query_4_who_purchased_more_than_30_coffees_but_no_tea">4.2.4. Query 4: Who Purchased More than 30 Coffees, But No Tea?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_another_complex_graph">5. Another Complex Graph</a>
+<ul class="sectlevel2">
+<li><a href="#_query_5_which_of_my_friends_purchased_an_apple_device_in_the_last_30_days">5.1. Query 5: Which of My Friends Purchased an Apple Device in the Last 30 Days?</a></li>
+</ul>
+</li>
+<li><a href="#_summary_and_next_steps">6. Summary and Next Steps</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="imageblock text-left">
+<div class="content">
+<img src="images/pyvgx.png" alt="PYVGX" width="220" height="220">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="install">1. Setup</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>pyvgx</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to install the Docker Image instead, or use a different package repository than PyPI, see <a href="install.html">how to install</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">2. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This tutorial describes <strong>pyvgx</strong>, a Python module for building and querying graph structures, like this:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Create some nodes and run a query</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+
+<span class="c1"># Make some friends
+</span><span class="n">graph</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">friends</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Diane</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Which of Alice's friends likes coffee?
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>      <span class="o">=</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hello_world_service">2.1. Hello World Service</h3>
+<div class="paragraph">
+<p>To create a useful service you must write at least one plugin to perform the required graph operations.</p>
+</div>
+<div class="paragraph">
+<p>Here is a complete implementation of a basic hello world service.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Step 1: Complete code for Hello World Service</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span><span class="p">,</span> <span class="n">http</span><span class="o">=</span><span class="mi">9000</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
+  <span class="k">return</span> <span class="sh">"</span><span class="s">Hello, you said </span><span class="sh">'</span><span class="s">{}</span><span class="sh">'"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">message</span> <span class="p">)</span>
+
+<span class="n">system</span><span class="p">.</span><span class="nc">AddPlugin</span><span class="p">(</span> <span class="n">hello</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Step 2: Test the service</div>
+<div class="content">
+<pre>http://127.0.0.1:9000/vgx/plugin/hello?message=hi</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Step 3: Inspect the response</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
+    </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hello, you said 'hi'"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.061</span><span class="w">
+</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_quick_note_about_multithreading">2.2. Quick Note about Multithreading</h3>
+<div class="paragraph">
+<p>Don&#8217;t worry about the Python GIL.</p>
+</div>
+<div class="paragraph">
+<p>PyVGX is a wrapper around a lower-level library called <strong>vgx</strong> written in C.
+All features of the C library are exposed to Python via pyvgx. When you call API methods like
+<code>Connect()</code> and <code>Neighborhood()</code> in the example above, the calling thread leaves the Python
+interpreter and continues execution within the <strong>vgx</strong> core until the operation completes.
+This means multiple threads can execute simultaneously, even when those threads originate
+in the Python interpreter as part of your Python code.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Try to minimize the amount of pure Python you write to implement algorithms, especially
+loops and time consuming operations on Python objects such as lists and dictionaries. Instead,
+<a href="reference.html">learn the pyvgx API</a> and see if you can find ways to construct queries
+to perform all the work for you. Pyvgx includes an
+<a href="evaluator/evaluator.html#evaluatoroverview">expression language</a> for use in graph queries
+and gives access to platform native <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a>
+which let you write efficient algorithms that bypass the Python interpreter.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="gettingstarted">3. Getting Started</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>At this point you should have Python and pyvgx <a href="install.html">installed on your system</a>,
+either running in a Docker image or installed directly on your system.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s start the Python interpreter and make a graph.</p>
+</div>
+<div class="sect2">
+<h3 id="makenewgraph">3.1. Import, Initialize and Make a New Graph</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Import the contents of pyvgx
+</span><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1"># Initialize pyvgx by declaring a home directory for data
+</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span><span class="sh">"</span><span class="s">data/graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Create a new graph (or restore from disk if it already exists)
+</span><span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">testgraph</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After running these statements we have a graph object <code><strong>g</strong></code> to play with.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s insert two persons, <code><strong>Alice</strong></code> and <code><strong>Bob</strong></code>, using the <a href="graph/graphVertex.html#graphcreatevertex"><code>CreateVertex()</code></a> method:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="makeconnection">3.2. Make a Connection</h3>
+<div class="paragraph">
+<p>Next, we connect the two persons with a <code>likes</code> relationship using the <a href="graph/graphArc.html#graphconnect"><code>Connect()</code></a> method:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial1.png" alt="tutorial1">
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This inserts a directed edge of type <em>likes</em> from <em>Alice</em> to <em>Bob</em>. In pyvgx all edges are directed.
+A directed edge is commonly referred to as <strong><em>arc</em></strong>.</p>
+</div>
+<div class="paragraph">
+<p>The arc created above has no attributes aside from its type name (<em>likes</em>). It is possible for an arc to
+also have a value and sometimes automatic behaviors. We will see examples later.</p>
+</div>
+<div class="paragraph">
+<p>You will see this notation used to express a relationship: <em>Alice&#8594;[likes]&#8594;Bob</em></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="initialterminal">3.3. Initial and Terminal Vertices</h3>
+<div class="paragraph">
+<p>We will use the terms <strong><em>vertex</em></strong> and <strong><em>node</em></strong> interchangeably. They mean the same thing. When talking about connected nodes in a directed graph we refer to the start node as the <strong><em>initial</em></strong> (or <strong><em>tail vertex</em></strong>) and the end node as the <strong><em>terminal</em></strong> (or <strong><em>head vertex</em></strong>).</p>
+</div>
+<div class="paragraph">
+<p>Above, <em>Alice</em> is the initial/tail and <em>Bob</em> is the terminal/head for the <em>likes</em> arc. If <em>Bob</em> also likes <em>Alice</em> we could insert another arc going the opposite direction. This would reverse the initial/terminal vertex roles for that arc. We only refer to initials and terminals in relation to the arc that connects them.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Be aware that inserting an arc implicitly creates another <em>hidden reverse arc</em>. This is necessary to allow reverse relationship lookup in queries. You should NOT create the reverse arc yourself, that would be a waste of system memory. It is not necessary to explicitly create the reverse arc in order to traverse in reverse. (If you did there would be <strong>four</strong> arcs between the nodes!)</p>
+</div>
+<div class="paragraph">
+<p>It is possible to suppress creation of the implicit reverse arc via the <a href="constants/arcModifierConstants.html#M_FWDONLY">constants/arcModifierConstants.html</a> modifier bitmask.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial2.png" alt="tutorial2">
+</div>
+<div class="title">Figure 1. Implicit reverse arc</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="arcsdegree">3.4. Arcs and Degree</h3>
+<div class="paragraph">
+<p>Vertices are connected by arcs. The arcs originating at a vertex are called <strong><em>outarcs</em></strong>. The arcs arriving at a vertex from somewhere else are called <strong><em>inarcs</em></strong>. The number of outarcs leaving a vertex is the vertex <strong><em>outdegree</em></strong>. The number of inarcs entering a vertex is the vertex <strong><em>indegree</em></strong>. The total number of arcs of any direction incident on a vertex is the vertex <strong><em>degree</em></strong>.</p>
+</div>
+<div class="paragraph">
+<p>For example, vertex <code><strong>B</strong></code> below has three outarcs and two inarcs, and therefore outdegree=3, indegree=2 and degree=5.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial3.png" alt="tutorial3" width="500" height="500">
+</div>
+<div class="title">Figure 2. Outarcs, inarcs, and degree</div>
+</div>
+<div class="paragraph">
+<p>When an initial vertex is connected to a terminal with exactly one arc we call this arc a <strong><em>simple arc</em></strong>. An initial vertex can also be connected by more than one arc to the same terminal. We call this a <strong><em>multiple arc</em></strong>. The degree accounts for all individual arcs, including each member of a multiple arc. For example, <code><strong>A</strong></code> above has a multiple arc to <code><strong>C</strong></code>.</p>
+</div>
+<div class="paragraph">
+<p>Vertices are sometimes classified according to their inarcs and outarcs. A vertex with one or more outarcs but no inarcs is called a <strong><em>source</em></strong>. In the figure above <code><strong>A</strong></code> is the only source. A vertex with one or more inarcs but no outarcs is called a <strong><em>sink</em></strong>. In the figure above <code><strong>C</strong></code> and <code><strong>D</strong></code> are sinks. A vertex with both inarcs and outarcs is called <strong><em>internal</em></strong>. In the figure above <code><strong>B</strong></code> and <code><strong>E</strong></code> are internal. A vertex with no arcs is called <strong><em>isolated</em></strong>. In the figure above <code><strong>F</strong></code> is the only isolated vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="virtualreal">3.5. Virtual and Real Vertices</h3>
+<div class="paragraph">
+<p>In pyvgx vertices are either <a href="VGXCoreConcepts.html#realvirtualvertices"><strong><em>real</em></strong> or <strong><em>virtual</em></strong></a>. A vertex created explicitly with <a href="graph/graphVertex.html#graphcreatevertex"><code>CreateVertex()</code></a> or <a href="graph/graphVertex.html#graphnewvertex"><code>NewVertex()</code></a> is a <strong><em>real vertex</em></strong>. However, it is possible to create a new node in the graph implicitly by connecting an arc from an existing node to another node that does not already exist. I.e. when <a href="graph/graphArc.html#graphconnect"><code>Connect()</code></a> specifies a non-existent terminal, the terminal will be <em>implicitly created</em> as a <strong><em>virtual vertex</em></strong>. The terminal is created only to serve as a destination for the arc.</p>
+</div>
+<div class="paragraph">
+<p>If the initial vertex does not exist (or exists as a virtual vertex) <code>Connect()</code> will implicitly create a real vertex (or convert the virtual to real.) In this case the vertex will have no type, just as if <code>CreateVertex()</code> were called prior to <code>Connect()</code> without a type parameter.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># "Alice" and "Bob" already exist and are connected
+</span>
+<span class="c1"># Implicitly create "Charlie" as VIRTUAL
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">visits</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># "Charlie" becomes REAL, "coffee" is new VIRTUAL
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Our graph now looks like this:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial4.png" alt="tutorial4" width="400" height="400">
+</div>
+<div class="title">Figure 3. REAL and VIRTUAL vertices</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>A virtual vertex automatically disappears from the graph when it no longer has any inarcs. If <em>Charlie</em> no longer drinks <em>coffee</em> then once the <em>drinks</em> arc is disconnected <em>coffee</em> is automatically deleted. However, if <em>Alice</em> no longer <em>visits</em> <em>Charlie</em> then once the <em>visits</em> arc is disconnected <em>Charlie</em> will still continue to exist.</p>
+</div>
+<div class="paragraph">
+<p>Another scenario arises if <em>Charlie</em> is explicitly removed. When <em>Charlie</em> is deleted all of <em>Charlie</em>'s outarcs are also removed, which means <em>coffee</em> will be deleted too. However, since <em>Charlie</em> has inarcs it will continue to exist in the graph to serve as destination for <em>Alice</em>'s <em>visits</em>. <em>Charlie</em> is therefore converted to virtual. In other words, deleting a node from the graph will remove the node&#8217;s outarcs but will not remove the node&#8217;s inarcs. If the deleted node has inarcs then the node will remain in the graph as a virtual node.</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Charlie is converted to virtual
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial5.png" alt="tutorial5" width="250" height="250">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="simplequery">3.6. Run a Simple Query</h3>
+<div class="paragraph">
+<p>Let&#8217;s see how <em>Alice</em> is connected:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This query returns all of <em>Alice</em>'s outarcs. The result of the query looks like this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="p">[</span> <span class="sh">'</span><span class="s">Bob</span><span class="sh">'</span><span class="p">,</span> <span class="sh">'</span><span class="s">Charlie</span><span class="sh">'</span> <span class="p">]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="morecomplex">4. A More Complex Graph</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We will now create the graph shown below and run some queries.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial6.png" alt="tutorial6">
+</div>
+</div>
+<div class="sect2">
+<h3 id="_create_the_graph">4.1. Create the Graph</h3>
+<div class="paragraph">
+<p>The following code will generate the graph shown in the picture above (with some random elements.) Notice how most <em>Persons</em> and <em>Companies</em> will be connected to <em>Coffee</em> or <em>Tea</em> through <em>drinks</em> and <em>purchased</em> relationships.</p>
+</div>
+<div class="paragraph">
+<p>(You should be able to copy-paste this entire code snippet and run it.)</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># ======== Let's create all the vertices first ========
+</span>
+<span class="c1"># Person P0-P99999
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100000</span> <span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">P%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># Company C0-C99
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">company</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="n">Alice</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">Bob</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Alice</span><span class="p">,</span> <span class="sh">"</span><span class="s">visits</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">Charlie</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Charlie</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">Coffee</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">Tea</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">Joes</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Joe</span><span class="sh">'</span><span class="s">s</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">shop</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="c1"># ======== Hook up everything as shown in the diagram above ========
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Alice</span><span class="p">,</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">Bob</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Bob</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Bob</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Bob</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Bob</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Charlie</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Charlie</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span><span class="p">,</span> <span class="mi">17</span> <span class="p">)</span>
+
+<span class="c1"># Some random behaviors
+</span><span class="kn">import</span> <span class="n">random</span>
+<span class="n">random</span><span class="p">.</span><span class="nf">seed</span><span class="p">(</span> <span class="mi">1234</span> <span class="p">)</span>
+<span class="c1"># Person P0-P99999 behavior
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100000</span> <span class="p">):</span>
+    <span class="n">Pn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="k">if</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Pn</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+        <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">))</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Pn</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">how_many</span> <span class="p">)</span>
+    <span class="k">if</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.3</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Pn</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span> <span class="p">)</span>
+        <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">))</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Pn</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span><span class="p">,</span> <span class="n">how_many</span>  <span class="p">)</span>
+
+<span class="c1"># Company C0-C99 behavior
+</span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
+    <span class="n">Cn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">C%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mf">0.3</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Cn</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">how_many</span> <span class="p">)</span>
+    <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mf">0.2</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Cn</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span><span class="p">,</span> <span class="n">how_many</span>  <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Joes</span><span class="p">,</span> <span class="sh">"</span><span class="s">sells</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">initial</span><span class="o">=</span><span class="n">Joes</span><span class="p">,</span> <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">2.99</span><span class="p">),</span> <span class="n">terminal</span><span class="o">=</span><span class="n">Coffee</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Joes</span><span class="p">,</span> <span class="sh">"</span><span class="s">sells</span><span class="sh">"</span><span class="p">,</span> <span class="n">Tea</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Joes</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span><span class="n">M_FLT</span><span class="p">,</span><span class="mf">1.79</span><span class="p">),</span> <span class="n">Tea</span> <span class="p">)</span>
+
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseAll</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This example uses <a href="graph/graphVertex.html#graphnewvertex"><code>NewVertex()</code></a> and <a href="graph/graphVertex.html#graphopenvertex"><code>OpenVertex()</code></a> to acquire the vertices and return vertex objects that can later be used with other graph methods. Most graph methods that take an identifier string as argument can also take a <a href="vertex/vertex.html#pyvgxvertex">Python Vertex</a> object in its place. Not only is this more efficient for repeated uses of the vertex but it also ensures the operations will succeed (and not time out) since the vertices are already acquired by the current thread. When all operations have completed we use <a href="graph/graphVertex.html#graphcloseall"><code>CloseAll()</code></a> to release (and commit) all open vertices. This makes the vertices available for other threads.</p>
+</div>
+<div class="paragraph">
+<p>The example also illustrates how to <a href="specification/arcSpecificationSyntax.html#arcspecificationsyntax">create arcs with values</a> using the general syntax:</p>
+</div>
+<div class="paragraph">
+<p><code>arc = ( [ &lt;relationship&gt; [ , &lt;modifier&gt; [ , &lt;value&gt; ] ] ] )</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_run_some_queries">4.2. Run Some Queries</h3>
+<div class="paragraph">
+<p>We are now ready to run a few search queries on the graph. Some commonly used query methods are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="graph/graphQuery.html#graphneighborhood"><code>Neighborhood()</code></a>: Search the vertices adjacent to an anchor vertex.</p>
+</li>
+<li>
+<p><a href="graph/graphQuery.html#graphaggregate"><code>Vertices()</code></a>: Search all vertices in a graph.</p>
+</li>
+<li>
+<p><a href="graph/graphQuery.html#graphaggregate"><code>Aggregate()</code></a>: Count the number of adjacent vertices and the total sum of numeric properties of the neighborhood such as relationship values and vertex degree.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>A complete description of all query methods can be found in the <a href="graph/graphQuery.html#graphquerymethods">query methods reference</a>.</p>
+</div>
+<div class="sect3">
+<h4 id="_query_1_who_purchased_the_most_coffee">4.2.1. Query 1: Who purchased the most Coffee?</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">top5_coffee</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span>       <span class="o">=</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>      <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_IN</span><span class="p">,</span> <span class="n">M_CNT</span><span class="p">),</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span><span class="sh">'</span><span class="s">type</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">},</span>
+    <span class="n">result</span>   <span class="o">=</span> <span class="n">R_DICT</span><span class="o">|</span><span class="n">R_METAS</span><span class="p">,</span>
+    <span class="n">fields</span>   <span class="o">=</span> <span class="n">F_ID</span><span class="o">|</span><span class="n">F_VAL</span><span class="p">,</span>
+    <span class="n">hits</span>     <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">sortby</span>   <span class="o">=</span> <span class="n">S_VAL</span><span class="o">|</span><span class="n">S_DESC</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This query performs a neighborhood search around <em>Coffee</em> looking for all inbound (D_IN) <em>purchased</em> relationships with the <strong>counter modifier</strong> (M_CNT) originating at a vertex of type <em>person</em>, and returns those with the highest value for the <em>purchased</em> counter.</p>
+</div>
+<div class="paragraph">
+<p>The result is a sorted list (S_VAL) of dictionaries (R_DICT), each containing the vertex id (F_ID) and the <em>purchased</em> counter value (F_VAL).</p>
+</div>
+<div class="paragraph">
+<p>Several pre-defined <a href="constants/constants.html#pyvgxconstants">pyvgx constants</a>, such as <a href="constants/arcDirectionConstants.html#D_IN">D_IN</a>, <a href="constants/arcModifierConstants.html#M_CNT">M_CNT</a>, and <a href="constants/sortSpecificationConstants.html#S_VAL">S_VAL</a>, are used in the query. D_IN stands for "direction = inbound", M_CNT stands for "value modifier = counter", and S_VAL stands for "sort by relationship predicator value."</p>
+</div>
+<div class="paragraph">
+<p><strong><em>Predicator</em></strong> is sometimes used to describe the whole of the <strong><em>relationship type</em></strong> (e.g. "purchased") along with its <strong><em>modifier</em></strong> (e.g. M_CNT) and its <strong><em>value</em></strong> (e.g. 20).</p>
+</div>
+<div class="paragraph">
+<p>The <a href="constants/arcModifierConstants.html#M_CNT">M_CNT</a> modifier has automatic behavior in that <a href="graph/graphArc.html#graphconnect"><code>Connect()</code></a> <em>increments</em> the arc value by a specified amount, whereas M_INT or M_FLT <em>assign</em> a value. Other modifiers with automatic behavior include <a href="constants/arcModifierConstants.html#M_ACC">M_ACC</a> and <a href="constants/arcModifierConstants.html#M_TMX">M_TMX</a>. The latter is used to expire a relationship at a future point in time.</p>
+</div>
+<div class="paragraph">
+<p>The <code>arc=</code> parameter takes a predicator. Not all parts of the predicator have to be supplied. We will see a few variants in the next queries below.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_2_how_much_do_companies_spend_on_tea">4.2.2. Query 2: How much do Companies spend on Tea?</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1">#
+</span><span class="n">tea_price</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">),</span> <span class="sh">""</span> <span class="p">)</span>
+<span class="n">tea_purchases</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>      <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span><span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">company</span><span class="sh">'</span><span class="p">}</span>
+<span class="p">)[</span><span class="sh">'</span><span class="s">predicator_value</span><span class="sh">'</span><span class="p">]</span>
+<span class="n">total</span> <span class="o">=</span> <span class="n">tea_price</span> <span class="o">*</span> <span class="n">tea_purchases</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here we use two queries to gather the information needed to answer the question.</p>
+</div>
+<div class="paragraph">
+<p>First, we get the price of Tea as sold by Joe&#8217;s shop using the <a href="graph/graphQuery.html#grapharcvalue"><code>ArcValue()</code></a> method.</p>
+</div>
+<div class="paragraph">
+<p>Second, we get the total number of tea purchases made by companies using <a href="graph/graphQuery.html#graphaggregate"><code>Aggregate()</code></a> to compute the sum of all predicator values in those arcs matching the full set of filter conditions.</p>
+</div>
+<div class="paragraph">
+<p>Finally, we multiply the two results to get the total cost of tea purchased by companies.</p>
+</div>
+<div class="paragraph">
+<p>It is also possible to compute the same result in a single query:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">total</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span>        <span class="o">=</span> <span class="sh">"</span><span class="s">Joe</span><span class="sh">'</span><span class="s">s</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>       <span class="o">=</span> <span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span>
+    <span class="nb">filter</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">do( store(R1,next.arc.value), store(R2,0) )</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">neighbor</span>  <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">id</span><span class="sh">'</span>        <span class="p">:</span> <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span>   <span class="p">:</span> <span class="n">C_SCAN</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">company</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="sh">"</span><span class="s">add( R2, prev.arc.value*load(R1) )</span><span class="sh">"</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="n">select</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">sum=load(R2)</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">result</span>    <span class="o">=</span> <span class="n">R_SIMPLE</span>
+<span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Although for this example the single query is more complex than the first example running two queries, it illustrates how the <a href="evaluator/evaluator.html#evaluator">expression language</a> and <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a> can be used to construct powerful search queries.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_3_how_many_people_purchased_at_least_20_coffees_and_20_teas">4.2.3. Query 3: How Many People Purchased at Least 20 Coffees and 20 Teas?</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span>
+    <span class="nb">id</span>        <span class="o">=</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">arc</span>       <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">,</span><span class="n">V_GTE</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">neighbor</span>  <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">'</span><span class="s">person</span><span class="sh">'</span><span class="p">,</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>       <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">,</span><span class="n">V_GTE</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span>  <span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">Tea</span><span class="sh">'</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Persons who purchased both coffee and tea at least 20 times
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">aggregation</span><span class="sh">'</span><span class="p">][</span><span class="sh">'</span><span class="s">neighbors</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span>
+
+<span class="c1"># Total number of coffees purchased by these persons
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">aggregation</span><span class="sh">'</span><span class="p">][</span><span class="sh">'</span><span class="s">predicator_value</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This query uses nested neighborhood conditions. For example, you can filter on a neighbor&#8217;s relationship to other neighbors. You may nest up to 15 neighbor conditions.</p>
+</div>
+<div class="paragraph">
+<p>For example, you could ask "Show me all of my friends who purchased a device made by Apple in the last 30 days." In fact, we&#8217;ll do just that in another example below after we construct a different graph.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_query_4_who_purchased_more_than_30_coffees_but_no_tea">4.2.4. Query 4: Who Purchased More than 30 Coffees, But No Tea?</h4>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">only_coffee_drinkers</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span>        <span class="o">=</span> <span class="sh">"</span><span class="s">Coffee</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">result</span>    <span class="o">=</span> <span class="n">R_DICT</span><span class="p">,</span>
+    <span class="n">fields</span>    <span class="o">=</span> <span class="n">F_ID</span><span class="p">,</span>
+    <span class="n">arc</span>       <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">,</span><span class="n">V_GT</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>
+    <span class="nb">filter</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">next.type == </span><span class="sh">'</span><span class="s">person</span><span class="sh">'"</span><span class="p">,</span>
+    <span class="n">neighbor</span>  <span class="o">=</span> <span class="p">(</span><span class="bp">False</span><span class="p">,{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">'</span><span class="s">Tea</span><span class="sh">'</span>
+    <span class="p">})</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This query shows how to specify a negative condition. It starts traversal at <em>Coffee</em> and requires a <em>purchased</em> value &gt; 30 coming from a <em>person</em>, and that <em>person</em> must not have a <em>purchased</em> arc going to <em>Tea</em>. The <code>neighbor=</code> condition is a tuple <code>(False, {&#8230;&#8203;})</code> to indicate the negative condition.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_another_complex_graph">5. Another Complex Graph</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s construct a graph with people, products and manufacturers:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/tutorial7.png" alt="tutorial7">
+</div>
+</div>
+<div class="paragraph">
+<p>Here we have a mix of various products and their manufacturers, along with a population of people, some of whom are friends of the "Me" person.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s create a population of 1,000,000 people who have made purchases at some point in the last year. The "Me" person knows 500 of these people.</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">friends</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="n">DEVICES</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">iPhone</span><span class="sh">"</span><span class="p">,</span>  <span class="sh">"</span><span class="s">Apple</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">iPad</span><span class="sh">"</span><span class="p">,</span>    <span class="sh">"</span><span class="s">Apple</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Galaxy</span><span class="sh">"</span><span class="p">,</span>  <span class="sh">"</span><span class="s">Samsung</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Xperia</span><span class="sh">"</span><span class="p">,</span>  <span class="sh">"</span><span class="s">Sony</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Nexus</span><span class="sh">"</span><span class="p">,</span>   <span class="sh">"</span><span class="s">Google</span><span class="sh">"</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="n">FOODS</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Twinkies</span><span class="sh">"</span><span class="p">,</span>  <span class="sh">"</span><span class="s">Hostess</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Peanuts</span><span class="sh">"</span><span class="p">,</span>   <span class="sh">"</span><span class="s">Planters</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Soup</span><span class="sh">"</span><span class="p">,</span>      <span class="sh">"</span><span class="s">Campbell</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Soup</span><span class="sh">"</span><span class="p">,</span>      <span class="sh">"</span><span class="s">Progresso</span><span class="sh">"</span><span class="p">),</span>
+  <span class="p">(</span><span class="sh">"</span><span class="s">Stew</span><span class="sh">"</span><span class="p">,</span>      <span class="sh">"</span><span class="s">Progresso</span><span class="sh">"</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">make_people</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">employ_people</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+    <span class="n">companies</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="nf">set</span><span class="p">([</span> <span class="n">mfg</span> <span class="k">for</span> <span class="n">thing</span><span class="p">,</span><span class="n">mfg</span> <span class="ow">in</span> <span class="n">DEVICES</span><span class="o">+</span><span class="n">FOODS</span> <span class="p">]))</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+        <span class="n">company</span> <span class="o">=</span> <span class="n">companies</span><span class="p">[</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nf">len</span><span class="p">(</span><span class="n">companies</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="sh">"</span><span class="s">works_at</span><span class="sh">"</span><span class="p">,</span> <span class="n">company</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_devices</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">device</span><span class="p">,</span> <span class="n">manuf</span> <span class="ow">in</span> <span class="n">DEVICES</span><span class="p">:</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">device</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">device</span><span class="sh">"</span> <span class="p">)</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P_%s</span><span class="sh">"</span> <span class="o">%</span> <span class="n">device</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">product</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">D</span><span class="p">,</span> <span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">manuf</span><span class="p">,</span> <span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_foods</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">food</span><span class="p">,</span> <span class="n">manuf</span> <span class="ow">in</span> <span class="n">FOODS</span><span class="p">:</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">food</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">food</span><span class="sh">"</span> <span class="p">)</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P_%s</span><span class="sh">"</span> <span class="o">%</span> <span class="n">food</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">product</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">F</span><span class="p">,</span> <span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">manuf</span><span class="p">,</span> <span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_friends</span><span class="p">(</span> <span class="n">how_many</span><span class="p">,</span> <span class="n">pick_from</span> <span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pick_from</span><span class="o">-</span><span class="mi">1</span> <span class="p">)</span>
+        <span class="n">friend</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">pn</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Me</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="n">friend</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">pick_a_device_maybe</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.33</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DEVICES</span><span class="p">[</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nf">len</span><span class="p">(</span><span class="n">DEVICES</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="p">)</span> <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<span class="k">def</span> <span class="nf">pick_a_food_maybe</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.33</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FOODS</span><span class="p">[</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nf">len</span><span class="p">(</span><span class="n">FOODS</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span> <span class="p">)</span> <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<span class="k">def</span> <span class="nf">run_shopping</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">):</span>
+        <span class="n">person</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="nf">pick_a_device_maybe</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
+            <span class="n">when</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">365</span> <span class="p">)</span> <span class="c1"># days since purchase
+</span>            <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">person</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">M_TMC</span><span class="p">,</span><span class="n">when</span><span class="p">),</span> <span class="n">device</span> <span class="p">)</span>
+        <span class="n">food</span> <span class="o">=</span> <span class="nf">pick_a_food_maybe</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">food</span><span class="p">:</span>
+            <span class="n">when</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">365</span> <span class="p">)</span> <span class="c1"># days since purchase
+</span>            <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">person</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">M_TMC</span><span class="p">,</span><span class="n">when</span><span class="p">),</span> <span class="n">food</span> <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">setup</span><span class="p">(</span> <span class="n">how_many_people</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span> <span class="n">how_many_friends</span><span class="o">=</span><span class="mi">500</span> <span class="p">):</span>
+    <span class="nf">make_people</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">)</span>
+    <span class="nf">employ_people</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="nf">make_devices</span><span class="p">()</span>
+    <span class="nf">make_foods</span><span class="p">()</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Me</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="nf">make_friends</span><span class="p">(</span> <span class="n">how_many_friends</span><span class="p">,</span> <span class="n">how_many_people</span> <span class="p">)</span>
+    <span class="nf">run_shopping</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">)</span>
+
+<span class="nf">setup</span><span class="p">(</span> <span class="mi">1000000</span><span class="p">,</span> <span class="mi">500</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>There are about 1 million vertices and about 1.8 million arcs is this graph. Now let&#8217;s run some queries against it.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+But before we do, notice how we created the seemingly unnecessary via-vertices between manufacturers and the devices and foods they make. This is to illustrate a trick which has a huge performance benefit. When running queries it is much faster to filter on arcs when there are few other arcs of the same direction incident on the vertex. Filtering on a vertex' inarcs is faster when the vertex has few inarcs, while the number of outarcs doesn&#8217;t matter. Conversely, filtering on a vertex' outarcs is faster when the vertex has few outarcs, while the number of inarcs doesn&#8217;t matter. We&#8217;ll see the effect of this in the next query.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_query_5_which_of_my_friends_purchased_an_apple_device_in_the_last_30_days">5.1. Query 5: Which of My Friends Purchased an Apple Device in the Last 30 Days?</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">apple_friends</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span>       <span class="o">=</span> <span class="sh">"</span><span class="s">Me</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">result</span>   <span class="o">=</span> <span class="n">R_DICT</span><span class="o">|</span><span class="n">R_METAS</span><span class="p">,</span>
+    <span class="n">fields</span>   <span class="o">=</span> <span class="n">F_ID</span><span class="p">,</span>
+    <span class="n">arc</span>      <span class="o">=</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">,</span><span class="n">M_TMC</span><span class="p">,</span><span class="n">V_LT</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span>
+        <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:{</span>
+            <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>    <span class="p">:</span><span class="sh">'</span><span class="s">device</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:(</span><span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">),</span>
+            <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:{</span>
+                <span class="sh">'</span><span class="s">type</span><span class="sh">'</span>    <span class="p">:</span><span class="sh">'</span><span class="s">product</span><span class="sh">'</span><span class="p">,</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>     <span class="p">:(</span><span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:{</span>
+                    <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span><span class="sh">'</span><span class="s">Apple</span><span class="sh">'</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary_and_next_steps">6. Summary and Next Steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>At this point we have covered some of the things you can do with pyvgx and graphs. We have created vertices and arcs,
+and performed several types of queries. As you have seen, graphs can be as simple or complex as you need them to be.
+Graph queries can be simple or recursive, with arbitrarily complex filters.</p>
+</div>
+<div class="paragraph">
+<p>Some of the features we have not touched on in this tutorial are <a href="vertex/vertexProperty.html#vertexproperty">vertex properties</a>,
+<a href="evaluator/selectEvaluator.html#select">field select statement</a>, <a href="evaluator/evaluator.html#quickrank">ranking functions</a>,
+<a href="vertex/vertexTTL.html#vertexTTL">automatic vertex expiration</a>, <a href="reference.html#graphobject_managementmethods">graph management</a>,
+and many other functions related to the lifecycle of objects in the graph.</p>
+</div>
+<div class="paragraph">
+<p>For a complete description of the pyvgx API the <a href="reference.html#preface">pyvgx Reference</a> will teach you everything
+you need to know.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="VGXCoreConcepts.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="VGX Core Concepts"></i></span></a>
+<a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="shortref.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Compact pyvgx Reference"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="reference.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

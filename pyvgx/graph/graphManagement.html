@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Management Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="graphmanagementmethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Management Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphEnum.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Enumeration Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#graphorder">1. pyvgx.Graph.Order()</a></li>
+<li><a href="#graphsize">2. pyvgx.Graph.Size()</a></li>
+<li><a href="#graphsave">3. pyvgx.Graph.Save()</a></li>
+<li><a href="#graphsync">4. pyvgx.Graph.Sync()</a></li>
+<li><a href="#graphtruncate">5. pyvgx.Graph.Truncate()</a></li>
+<li><a href="#graphlock">6. pyvgx.Graph.Lock()</a></li>
+<li><a href="#graphsynchronized">7. pyvgx.Graph.Synchronized()</a></li>
+<li><a href="#graphclose">8. pyvgx.Graph.Close()</a></li>
+<li><a href="#grapherase">9. pyvgx.Graph.Erase()</a></li>
+<li><a href="#graphresetserial">10. pyvgx.Graph.ResetSerial()</a></li>
+<li><a href="#graphsetgraphreadonly">11. pyvgx.Graph.SetGraphReadonly()</a></li>
+<li><a href="#graphisgraphreadonly">12. pyvgx.Graph.IsGraphReadonly()</a></li>
+<li><a href="#graphcleargraphreadonly">13. pyvgx.Graph.ClearGraphReadonly()</a></li>
+<li><a href="#graphstatus">14. pyvgx.Graph.Status()</a></li>
+<li><a href="#graphresetcounters">15. pyvgx.Graph.ResetCounters()</a></li>
+<li><a href="#graphgetmemoryusage">16. pyvgx.Graph.GetMemoryUsage()</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Management Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphorder">pyvgx.Graph.Order()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of vertices in graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsize">pyvgx.Graph.Size()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of arcs in graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsave">pyvgx.Graph.Save()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Persist graph to disk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsync">pyvgx.Graph.Sync()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Send all VGX source data to attached destination(s)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphtruncate">pyvgx.Graph.Truncate()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphlock">pyvgx.Graph.Lock()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acquire and return a graph lock object</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsynchronized">pyvgx.Graph.Synchronized()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Call a function while synchronized on a mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphclose">pyvgx.Graph.Close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Close graph instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapherase">pyvgx.Graph.Erase()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Erase graph from memory and disk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphresetserial">pyvgx.Graph.ResetSerial()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Change graph serial number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphsetgraphreadonly">pyvgx.Graph.SetGraphReadonly()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Make the graph readonly</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphisgraphreadonly">pyvgx.Graph.IsGraphReadonly()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if graph is readonly</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphcleargraphreadonly">pyvgx.Graph.ClearGraphReadonly()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Make graph writable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphstatus">pyvgx.Graph.Status()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Misc. information, counters, resource usage</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphresetcounters">pyvgx.Graph.ResetCounters()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reset query counters to zero</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#graphgetmemoryusage">pyvgx.Graph.GetMemoryUsage()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph memory usage information</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphorder">1. pyvgx.Graph.Order()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Order</span><span class="p">(</span> <span class="p">[</span> <span class="nb">type</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the number of vertices in the graph, optionally restricted to vertices of the specified <em>type</em>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsize">2. pyvgx.Graph.Size()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Size</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the number of explicit connections in the graph.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsave">3. pyvgx.Graph.Save()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Save</span><span class="p">(</span> <span class="p">[</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">force</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Persist the graph to disk. An optional <em>timeout</em> (in milliseconds) allows blocking while waiting for the entire graph to become idle in order for the operation to proceed. The default is nonblocking. Data is normally saved incrementally, i.e. only modified structures are written to disk. To perform a complete serialization set <em>force</em> to <code>True</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsync">4. pyvgx.Graph.Sync()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Sync</span><span class="p">(</span> <span class="p">[</span> <span class="n">hard</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Update data on all attached destinations to match this VGX source instance. When the optional parameter <em>hard</em> (bool) is True the destination VGX instances are truncated before they are re-populated with data from the source. The default is <em>hard</em>=False, which means the destinations are not truncated prior to receiving the source data.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphtruncate">5. pyvgx.Graph.Truncate()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Truncate</span><span class="p">(</span> <span class="p">[</span> <span class="nb">type</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Remove all vertices in graph, or if <em>type</em> is specified remove all vertices of that type. All arcs incident on the removed vertices will also be removed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphlock">6. pyvgx.Graph.Lock()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Lock</span><span class="p">(</span> <span class="p">[</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">linger</span><span class="p">[,</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Acquire and return a mutex lock object with an optional <em>id</em> string. The lock object is a special vertex instance of type <code>_lock</code> and with a namespaced identifier <code>lock&#95;::&lt;graphname&gt;::&lt;id&gt;</code>.</p>
+</div>
+<div class="paragraph">
+<p>In addition to providing standard mutex functionality a graph lock is useful for preventing graph operations from being emitted to an <a href="../reference.html#op_attach_func">attached operation stream</a> while the lock is acquired. Graph operations performed after lock acquisition are queued up and emitted in bulk <em>as a single transaction</em> once the lock is released. A lock is released when the lock object goes out of scope, or by invoking <a href="../reference.html#vertex_close_func">pyvgx.Vertex.Close()</a> on the lock object.</p>
+</div>
+<div class="paragraph">
+<p>Locks without <em>id</em> are anonymous and will always be acquired without blocking.</p>
+</div>
+<div class="paragraph">
+<p>When lock <em>id</em> is given the acquisition and release operations are transferred to remote subscriber destinations in the order applied. This allows plugins running on remote destinations to synchronize on the same lock <em>id</em> in situations where plugin queries and graph updates cannot be allowed to run concurrently.</p>
+</div>
+<div class="paragraph">
+<p>The optional <em>linger</em> (in seconds) value specifies how long the lock object should continue to exist after the lock is released. By default <em>linger</em> is 0, causing the lock to be destroyed immediately after release. Set <em>linger</em> to -1 to disable deletion, or to any positive integer to delay deletion by that number of seconds.</p>
+</div>
+<div class="paragraph">
+<p>An optional <em>timeout</em> (in milliseconds) may be specified to wait for lock access. The default timeout is 0 (nonblocking).</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If a large number of graph operations are performed while a lock is held the system will consume more memory. It is possible to run out of memory once the lock is released due to internal activities resuming and now being faced with a large backlog of operations that all need to be fitted into a single transaction.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Manually controlling the contents of a transaction is useful when manipulating several parts of a graph that all need to be in a consistent state for queries to return correct results. This is an important consideration when using a source VGX instance to build a graph to be consumed by destination VGX instances. The time delay between separate transactions arriving at a destination is unspecified. A set of graph updates which must occur atomically (to ensure consistent query results) therefore needs to be confined to a single transaction.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsynchronized">7. pyvgx.Graph.Synchronized()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Synchronized</span><span class="p">(</span> <span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Call <em>function</em>( *<em>args</em>, **<em>kwds</em> ) in a synchronized context and return its returned value. Only one thread of execution will be allowed to perform a synchronized call at a time, even if the called functions are different.</p>
+</div>
+<div class="paragraph">
+<p>This is a shorthand for:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">Synchronized</span><span class="p">(</span> <span class="n">graph</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span> <span class="p">):</span>
+    <span class="n">mutex</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Lock</span><span class="p">(</span> <span class="sh">"</span><span class="s">_SYN</span><span class="sh">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5000</span> <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nf">function</span><span class="p">(</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwds</span> <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">mutex</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphclose">8. pyvgx.Graph.Close()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Close the graph instance. This has the same effect as using the Python <code>del</code> operator on the graph instance. Attempting to use a closed graph will raise <code>pyvgx.AccessError</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapherase">9. pyvgx.Graph.Erase()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Erase</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Erase the graph instance from memory and remove its data from disk. This has the same effect as <a href="#graphtruncate">pyvgx.Graph.Truncate()</a> followed by <a href="#graphsave">pyvgx.Graph.Save()</a> followed by <a href="../reference.html#system_delete_graph_func">system.DeleteGraph()</a>. The graph instance is also closed after this call resulting in <code>pyvgx.AccessError</code> if used.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+All vertices (and therefore arcs and properties) will be lost forever after erasing the graph. Only a basic file structure for the graph will remain on disk.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphresetserial">10. pyvgx.Graph.ResetSerial()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ResetSerial</span><span class="p">(</span> <span class="p">[</span> <span class="n">sn</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Force the graph <em>input serial number</em> to 0, or to <em>sn</em> if provided. This allows already consumed operation data to be re-submitted.</p>
+</div>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+This should only be performed as part of testing and debugging, and never in a live production system unless part of a carefully designed recovery procedure.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphsetgraphreadonly">11. pyvgx.Graph.SetGraphReadonly()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">SetGraphReadonly</span><span class="p">(</span> <span class="p">[</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Make the graph readonly. An optional <em>timeout</em> (in milliseconds) allows blocking while waiting for graph to become idle. The default is nonblocking. No vertices can be acquired writable when a graph is readonly. However, queries are still allowed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphisgraphreadonly">12. pyvgx.Graph.IsGraphReadonly()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">IsGraphReadonly</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return <code>True</code> if the graph is currently readonly, otherwise <code>False</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphcleargraphreadonly">13. pyvgx.Graph.ClearGraphReadonly()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ClearGraphReadonly</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Make a readonly graph writable.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphstatus">14. pyvgx.Graph.Status()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Status</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return a dictionary of various information, counters, and resource usage for the graph.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphresetcounters">15. pyvgx.Graph.ResetCounters()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">ResetCounters</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Reset all query counters to zero.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="graphgetmemoryusage">16. pyvgx.Graph.GetMemoryUsage()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">GetMemoryUsage</span><span class="p">(</span> <span class="p">[</span> <span class="n">metric</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return memory usage information. By default return a dictionary of memory usage details.
+If <em>metric</em> is specified, return an integer value. All memory values are in bytes.</p>
+</div>
+<div class="paragraph">
+<p>The table below show available <em>metric</em> keys.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Memory usage metrics</caption>
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Metric</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vertex.object</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object allocator memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vertex.arcvector</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Arc object allocator memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vertex.property</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Allocator memory pool for vertex properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal string data memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.index.global</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global vertex index memory usage</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.index.type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex type index memory usage</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.codec.vertextype</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by vertex type enumerator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.codec.relationship</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by relationship type enumerator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.codec.vertexprop</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by vertex property enumerator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.codec.dimension</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by vector dimension enumerator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vector.internal</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal vector allocator memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vector.external</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">External vector allocator memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.vector.dimension</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vector dimension allocator memory pool</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.event.schedule</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used for storing object expiration schedules</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.ephemeral.string</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Various non-persistable string objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.ephemeral.vector</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Various non-persistable vector objects</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.ephemeral.vertexmap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used for tracking vertex acquisition status</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">vgx.runtime</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All other runtime memory used (including other graph objects)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">system.process</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory used by current process</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">system.available</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Available physical memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">system.global</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total physical memory installed on machine</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphQuery.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Query Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphEnum.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Enumeration Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

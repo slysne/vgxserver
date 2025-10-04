@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Event Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="grapheventmethods" class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Event Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Miscellaneous Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#grapheventenable">1. pyvgx.Graph.EventEnable()</a></li>
+<li><a href="#grapheventdisable">2. pyvgx.Graph.EventDisable()</a></li>
+<li><a href="#grapheventflush">3. pyvgx.Graph.EventFlush()</a></li>
+<li><a href="#grapheventbacklog">4. pyvgx.Graph.EventBacklog()</a></li>
+<li><a href="#grapheventparam">5. pyvgx.Graph.EventParam()</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph Event Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapheventenable">pyvgx.Graph.EventEnable()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start event processor</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapheventdisable">pyvgx.Graph.EventDisable()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Suspend event processor</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapheventflush">pyvgx.Graph.EventFlush()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Flush TTL events</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapheventbacklog">pyvgx.Graph.EventBacklog()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return event processor state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#grapheventparam">pyvgx.Graph.EventParam()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return event processor parameters</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapheventenable">1. pyvgx.Graph.EventEnable()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EventEnable</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Start the internal event processor responsible for executing scheduled event, such as vertex and arc expiration (TTL).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapheventdisable">2. pyvgx.Graph.EventDisable()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EventDisable</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Stop the internal event processor. Vertices and arcs with expiration times will never be deleted while the event processor is stopped.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapheventflush">3. pyvgx.Graph.EventFlush()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EventFlush</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Manually propagate internal events from queues to schedules. Provided for debugging purposes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapheventbacklog">4. pyvgx.Graph.EventBacklog()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EventBacklog</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return the current state of the internal event processor.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="grapheventparam">5. pyvgx.Graph.EventParam()</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">EvenParam</span><span class="p">()</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Return all parameters currently in effect for the event processor.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphEnum.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Enumeration Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Miscellaneous Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

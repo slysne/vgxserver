@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Vector Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexvector" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Vector Methods <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexTTL.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex TTL Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexsetvector">1. pyvgx.Vertex.SetVector()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_parameters">1.2. Parameters</a></li>
+<li><a href="#_return_value">1.3. Return Value</a></li>
+<li><a href="#_remarks">1.4. Remarks</a></li>
+<li><a href="#_example">1.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexhasvector">2. pyvgx.Vertex.HasVector()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_return_value_2">2.2. Return Value</a></li>
+</ul>
+</li>
+<li><a href="#vertexgetvector">3. pyvgx.Vertex.GetVector()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_return_value_3">3.2. Return Value</a></li>
+<li><a href="#_example_2">3.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexremovevector">4. pyvgx.Vertex.RemoveVector()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_remarks_2">4.2. Remarks</a></li>
+</ul>
+</li>
+<li><a href="#vertexarclsh">5. pyvgx.Vertex.ArcLSH()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">5.1. Syntax</a></li>
+<li><a href="#_parameters_2">5.2. Parameters</a></li>
+<li><a href="#_return_value_4">5.3. Return Value</a></li>
+<li><a href="#_remarks_3">5.4. Remarks</a></li>
+<li><a href="#_example_3">5.5. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vertex Vector Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexsetvector">pyvgx.Vertex.SetVector()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Assign a feature vector to the vertex.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexhasvector">pyvgx.Vertex.HasVector()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>True</code> if vertex has a vector, otherwise <code>False</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgetvector">pyvgx.Vertex.GetVector()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the vertex vector.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexremovevector">pyvgx.Vertex.RemoveVector()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Remove the vertex vector.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexarclsh">pyvgx.Vertex.ArcLSH()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 32-bit lsh region not overlapping with lsh segment used for projection key</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexsetvector">1. pyvgx.Vertex.SetVector()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Assign a feature vector to the vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">elements</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<div class="paragraph">
+<p><code><em>elements</em></code>: List of 2-tuples [ (feature, weight), (feature, weight), &#8230;&#8203; ]</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>feature</em> is a string of <a href="../limits.html#limits">no more than 27 characters</a> (silent truncation will occur)</p>
+</li>
+<li>
+<p><em>weight</em> is a number constrained to the range [0.0078125 – 1.875] (silent capping at either end will occur)</p>
+</li>
+<li>
+<p>The <a href="../limits.html#limits">maximum length</a> of a vector is 48 features.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.3. Return Value</h3>
+<div class="paragraph">
+<p>A new <a href="../similarity/vector.html#pyvgxvector">pyvgx.Vector</a>  object instance representing the vertex feature vector will be returned. The returned object does not wrap the vertex vector, i.e. there is no way to modify a vector once set. To change the vertex vector one must call <a href="#vertexsetvector">pyvgx.Vertex.SetVector()</a> again with a different element list.</p>
+</div>
+<div class="paragraph">
+<p>The returned vector is useful for inspection and comparison processing.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.4. Remarks</h3>
+<div class="paragraph">
+<p>Setting the vertex vector enables similarity matching for the vertex.</p>
+</div>
+<div class="paragraph">
+<p>Being enabled for similarity matching means the vertex may be a candidate for retrieval (or positive filter match) for a query that includes a similarity threshold condition.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The vector is subject to truncation and quantization. Vector feature strings will be truncated beyond the 27th character and weights will be constrained to the interval [0.0078125 – 1.875] and quantized according to a set of pre-defined values. (Please see <a href="../similarity/vector.html#pyvgxvector">pyvgx.Vector</a> for technical details.)
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If feature strings are utf-8 encoded it is possible for truncation to occur in the middle of a utf-8 byte sequence resulting in invalid string data if you try to print the string after retrieving it from a vertex. (Internal processing and comparison will continue work without issue.) For this reason, if you plan to insert vectors with utf-8 encoded features make sure the encoded byte-sequence is shorter than 27 bytes or pre-truncate to avoid cutting off a utf-8 encoded unicode character in the middle.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">g</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span><span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">vA</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">this</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.3</span><span class="p">),(</span><span class="sh">"</span><span class="s">is</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.1</span><span class="p">),(</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),(</span><span class="sh">"</span><span class="s">vector</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">vB</span> <span class="o">=</span> <span class="n">B</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">this</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.7</span><span class="p">),(</span><span class="sh">"</span><span class="s">is</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.2</span><span class="p">),(</span><span class="sh">"</span><span class="s">another</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),(</span><span class="sh">"</span><span class="s">vector</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Inspect
+</span><span class="n">vA</span><span class="p">.</span><span class="nc">Magnitude</span><span class="p">()</span>       <span class="c1"># 1.95
+</span><span class="n">vB</span><span class="p">.</span><span class="nc">Magnitude</span><span class="p">()</span>       <span class="c1"># 2.22
+</span>
+<span class="c1"># -&gt; [('this', 1.25), ('is', 1.0), ('a', 0.875), ('vector', 0.6875)]
+</span><span class="n">vA</span><span class="p">.</span><span class="nc">External</span><span class="p">()</span>
+
+<span class="c1"># -&gt; [(27871805, 61), (43031197, 57), (37390563, 54), (51389292, 48)]
+</span><span class="n">vB</span><span class="p">.</span><span class="nc">Internal</span><span class="p">()</span>
+
+<span class="c1"># Compare
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Cosine</span><span class="p">(</span> <span class="n">vA</span><span class="p">,</span> <span class="n">vB</span> <span class="p">)</span>   <span class="c1"># 0.80859375
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Jaccard</span><span class="p">(</span> <span class="n">vA</span><span class="p">,</span> <span class="n">vB</span> <span class="p">)</span>  <span class="c1"># 0.52734375</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexhasvector">2. pyvgx.Vertex.HasVector()</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">HasVector</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.2. Return Value</h3>
+<div class="paragraph">
+<p>Returns <code>True</code> if the vertex has a similarity vector, otherwise <code>False</code>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgetvector">3. pyvgx.Vertex.GetVector()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the vertex vector.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetVector</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Vector</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.2. Return Value</h3>
+<div class="paragraph">
+<p>If the vertex has a vector a new <a href="../similarity/vector.html#pyvgxvector">pyvgx.Vector</a> object representing that vector is returned. The returned object does not wrap the vertex vector, i.e. there is no way to modify a vector once set. To change the vertex vector one must call <a href="#vertexsetvector">pyvgx.Vertex.SetVector()</a> with a different element list.</p>
+</div>
+<div class="paragraph">
+<p>If the vertex does not have a vector a new <a href="../similarity/vector.html#pyvgxvector">pyvgx.Vector</a> object representing the null-vector is returned.</p>
+</div>
+<div class="paragraph">
+<p>The returned vector is useful for inspection and comparison processing.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">3.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">g</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">this</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.3</span><span class="p">),(</span><span class="sh">"</span><span class="s">is</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.1</span><span class="p">),(</span><span class="sh">"</span><span class="s">a</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),(</span><span class="sh">"</span><span class="s">vector</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="nc">GetVector</span><span class="p">()</span>
+
+<span class="c1"># -&gt; &lt;PyVGX_Vector: len=4 mag=1.9486 fp=0xDEF40C4CB2D466A1
+#    elem=[('this', 1.25), ('is', 1.0), ('a', 0.875),
+#          ('vector', 0.6875)]&gt;
+</span><span class="n">V</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexremovevector">4. pyvgx.Vertex.RemoveVector()</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">RemoveVector</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">4.2. Remarks</h3>
+<div class="paragraph">
+<p>Removes the vector from the vertex.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexarclsh">5. pyvgx.Vertex.ArcLSH()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return 32 lsh bits from a region of the 64-bit LSH not overlapping with LSH segment used to generate a projection key.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">5.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">ArcLSH</span><span class="p">(</span> <span class="n">lsh64</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lsh32</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters_2">5.2. Parameters</h3>
+<div class="paragraph">
+<p><em>lsh64</em> is the 64-bit LSH from which we will extract 32 bits to return. The vertex must have been created by <a href="similarityMethods.html#similaritycreateprojectionsets">pyvgx.Similarity.CreateProjectionSets()</a> for this to have the desired effect.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">5.3. Return Value</h3>
+<div class="paragraph">
+<p>A 32-bit segment extracted from <em>lsh64</em> is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">5.4. Remarks</h3>
+<div class="paragraph">
+<p>Call this method to obtain a 32-bit integer suitable for use with arc modifier <a href="../constants/arcModifierConstants.html#M_LSH">pyvgx.MLSH</a>.</p>
+</div>
+<div class="paragraph">
+<p>Vector index implementations may want to set this value on arcs from projection nodes to items holding vectors to make neighborhood queries more efficient. Such queries may want to use a hamming distance filter before traversing the arc to the target item node, thereby reducing expensive memory access and vector similarity computations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">5.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">vectors</span><span class="sh">"</span><span class="p">,</span> <span class="n">euclidean</span><span class="o">=</span><span class="mi">1</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">ann</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="c1"># Initialize index structure
+</span><span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Create a random vector
+</span><span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">NewVector</span><span class="p">(</span> <span class="p">[</span><span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">768</span><span class="p">)]</span> <span class="p">)</span>
+
+<span class="c1"># Get LSH for seed 0
+</span><span class="n">lsh</span> <span class="o">=</span> <span class="n">V</span><span class="p">.</span><span class="nc">Fingerprint</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>
+
+<span class="c1"># Extract 32 bits from lsh not overlapping with the segment
+# of lsh used for projection 0x1234
+</span><span class="n">g</span><span class="p">[</span><span class="sh">"</span><span class="s">_1234|000</span><span class="sh">"</span><span class="p">].</span><span class="nc">ArcLSH</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>   <span class="c1"># -&gt; 32 bit integer</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexRank.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Rank Methods"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexTTL.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex TTL Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

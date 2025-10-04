@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Select Evaluator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="select" class="article toc2 toc-left">
+<div id="header">
+<h1>Select Evaluator <a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Reference"></i></span></a> <a href="evaluator.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="VGX Expression Language"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#selectstatement">1. Select Statement</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a>
+<ul class="sectlevel3">
+<li><a href="#selectproperty">1.1.1. Vertex Property</a></li>
+<li><a href="#selectattribute">1.1.2. Attribute</a></li>
+<li><a href="#selectlabel">1.1.3. Labeled Expression</a></li>
+<li><a href="#selectmixed">1.1.4. Mixed Select Items</a></li>
+</ul>
+</li>
+<li><a href="#selectresult">1.2. Result Format</a></li>
+<li><a href="#selectremarks">1.3. Remarks</a></li>
+<li><a href="#selectexample">1.4. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="selectstatement">1. Select Statement</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Some query methods have a <code>select=</code> parameter that allows result fields to be specified.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">select</span><span class="o">=</span><span class="sh">"</span><span class="s">&lt;sel_1&gt;; &lt;sel_2&gt;; ...</span><span class="sh">"</span>
+
+<span class="n">where</span> <span class="o">&lt;</span><span class="n">sel_n</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">vertex_property</span><span class="o">&gt;</span>
+                  <span class="o">|</span>
+                  <span class="o">&lt;</span><span class="n">vertex_property</span><span class="o">&gt;</span> <span class="err">?</span> <span class="o">&lt;</span><span class="n">default</span><span class="o">&gt;</span>
+                  <span class="o">|</span>
+                  <span class="p">.</span><span class="o">&lt;</span><span class="n">attribute</span><span class="o">&gt;</span>
+                  <span class="o">|</span>
+                  <span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Fields to be included in the result are specified as a semi-colon <code>;</code> separated list of <em>select items</em> <code>&lt;sel_n&gt;</code>. A select item is either a vertex property, an attribute, or a labeled expression.</p>
+</div>
+<div class="paragraph">
+<p>Fields will appear as key-value pairs in the result according to the specified <a href="../constants/resultListEntryConstants.html#resultlistentryconstants">result format</a>.</p>
+</div>
+<div class="sect3">
+<h4 id="selectproperty">1.1.1. Vertex Property</h4>
+<div class="paragraph">
+<p>When the select item is the name of a vertex property the result field key is the property name and the result field value is the property value. A default property value may be specified by adding <code>?</code> followed by the default value.</p>
+</div>
+<div class="paragraph">
+<p>For example, <code>select="color; score ? 5.0; size"</code> will include fields 'color', 'score' and 'size' whose values are retrieved from the head vertex properties. The returned value for 'score' will be 5.0 if the property does not exist. The returned values for 'color' and 'size' will be <code>None</code> or <code>'null'</code> if they do not exist.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="selectattribute">1.1.2. Attribute</h4>
+<div class="paragraph">
+<p>When the select item is a vertex attribute or arc attribute (starting with period <code>.</code>) the result field key is the attribute name (including the initial period) and the result field value is the attribute value.</p>
+</div>
+<div class="paragraph">
+<p>For example, <code>select=".id; .arc.value"</code> will include fields '.id' and '.arc.value' whose values are the head vertex identifier and next arc value, respectively.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The select item is interpreted as an attribute reference only if it stars with a period <code>.</code>, otherwise it is interpreted as a vertex property. For instance, <code>select="next.id"</code> refers to a vertex head property named <code>next.id</code>, NOT the vertex identifier!
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="selectlabel">1.1.3. Labeled Expression</h4>
+<div class="paragraph">
+<p>When the select item is a labeled expression the result field key is the label and the result field value is the value produced by evaluating the expression.</p>
+</div>
+<div class="paragraph">
+<p>For example, <code>select="score : next['score'] / next.arc.value; name : next.id"</code> will include fields 'score' and 'name' whose values will be set to the results of their respective expressions.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+When the select item is a labeled expression the "normal" syntax applies, e.g. <code>select="name=next.id"</code> references the head vertex identifier.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="selectmixed">1.1.4. Mixed Select Items</h4>
+<div class="paragraph">
+<p>Any number of select items may be specified and their types can be mixed.</p>
+</div>
+<div class="paragraph">
+<p>For example, <code>select=".arc.value; score : next['score']/2; color; .id"</code> will include four fields in the result: 1) arc attribute '.arc.value', 2) labeled expression 'score', 3) head vertex property 'color', and 4) head vertex attribute '.id'. For ordered result formats (i.e. other than <code>R_DICT</code>) the field order of the select specification is preserved. The same field name may be specified multiple times and thus included multiple times in the result.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="selectresult">1.2. Result Format</h3>
+<div class="paragraph">
+<p>Selected fields are included in the result according to the result format as summarized below. For each result format there are two possible ways to render the results, depending on whether the overall <a href="../constants/resultFieldConstants.html#resultfieldconstants">field specification</a> includes only <a href="../constants/resultFieldConstants.html#F_PROP">pyvgx.F_PROP</a> or more.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Result field rendering depends on result format and field specification</caption>
+<colgroup>
+<col style="width: 18.75%;">
+<col style="width: 37.5%;">
+<col style="width: 43.75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Result Format</th>
+<th class="tableblock halign-left valign-top"><code><strong>fields = F_PROP</strong></code></th>
+<th class="tableblock halign-left valign-top"><code><strong>fields = &#8230;&#8203; | F_PROP | &#8230;&#8203;</strong></code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_SIMPLE">pyvgx.R_SIMPLE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{key:value,&#8230;&#8203;}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_STR">pyvgx.R_STR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'{ key:value, &#8230;&#8203; }'</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>'&#8230;&#8203;, "properties": { key:value, &#8230;&#8203; }, &#8230;&#8203;'</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_LIST">pyvgx.R_LIST</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>([(key, value), &#8230;&#8203;],)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>(&#8230;&#8203;, [(key, value), &#8230;&#8203;], &#8230;&#8203;)</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/resultListEntryConstants.html#R_DICT">pyvgx.R_DICT</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{'properties': {key:value, &#8230;&#8203;}}</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{&#8230;&#8203;, 'properties': {key:value, &#8230;&#8203;}, &#8230;&#8203;}</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If <code>select=</code> is used without specifying a result field, <a href="../constants/resultFieldConstants.html#F_PROP"><code>fields=F_PROP</code></a> is automatically assumed. If other result fields are explicitly specified, <code>F_PROP</code> will be automatically added if missing.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="selectremarks">1.3. Remarks</h3>
+<div class="paragraph">
+<p>Using <code>select=</code> offers a comprehensive way of returning information from search results, beyond what is possible using <code>fields=</code> alone. Select is the only way to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>include vertex properties in the result</p>
+</li>
+<li>
+<p>accompany values with their names</p>
+</li>
+<li>
+<p>specify field order in the result</p>
+</li>
+<li>
+<p>post-process or combine value(s) using formulas</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>However, <code>select=</code> adds a small computational overhead compared to <code>fields=F_&#8230;&#8203;</code>. If query latency is a concern it is recommended to use only <code>fields=</code> whenever possible.</p>
+</div>
+<div class="paragraph">
+<p>If a vertex property does not exist and a default value is not provided its value will be <code>None</code> or <code>'null'</code> in the result. Result format <code>R_STR</code> uses the JSON compatible <code>'null'</code>, the other formats use <code>None</code>.</p>
+</div>
+<div class="paragraph">
+<p>For <code>pyvgx.Graph.Neighborhood()</code> and <code>pyvgx.Graph.Arcs()</code> it is possible to reference all elements of the collected arcs, i.e. tail vertex, relationship, and head vertex. Note that the <code>prev*</code> references are not valid in the context of <code>select=</code> and if used will fall back to <code>vertex*</code> for vertex elements and <code>next*</code> for arc elements.</p>
+</div>
+<div class="paragraph">
+<p>For <code>pyvgx.Graph.Vertices()</code> only vertices are collected. Vertex references <code>vertex*</code>, <code>next*</code>, and <code>prev*</code> are equivalent and all refer to the collected vertex. Arc references such as <code>next.arc.type</code>  or  <code>prev.arc.value</code> are not valid in the context of a global vertex query.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="selectexample">1.4. Example</h3>
+<div class="listingblock">
+<div class="title">Include selected and computed properties in result</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">select</span> <span class="o">=</span> <span class="sh">"</span><span class="s">age; address; SCORE1 : .arc.value / (1 + log( next.odeg / next.ideg )); LABEL1 : hash( next.id )</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">R_DICT</span>
+<span class="p">)</span>
+
+<span class="c1"># result =
+#
+#  [ { 'properties': { 'LABEL1'  : 372502444862628893,
+#                      'SCORE1'  : -0.13440860215053763,
+#                      'address' : '123 Main St.',
+#                      'age'     : 33 } },
+#    { 'properties': { 'LABEL1'  : 372502444862621213,
+#                      'SCORE1'  : -0.09408602150537634,
+#                      'address' : '45 Summer St.',
+#                      'age'     : 28 } },
+#    { 'properties': { 'LABEL1'  : 372502444862626333,
+#                      'SCORE1'  : -0.12096774193548387,
+#                      'address' : '67 Winter St.',
+#                      'age'     : 29 } } ]</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="evaluator.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="VGX Expression Language"></i></span></a>
+<a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="evaluator.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="VGX Expression Language"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

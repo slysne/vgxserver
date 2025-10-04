@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Miscellaneous Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexmiscellaneous" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Miscellaneous Methods <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexFilter.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Condition Syntax"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexsettype">1. pyvgx.Vertex.SetType()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_parameters">1.2. Parameters</a></li>
+<li><a href="#_remarks">1.3. Remarks</a></li>
+<li><a href="#_return_value">1.4. Return Value</a></li>
+<li><a href="#_example">1.5. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexgettype">2. pyvgx.Vertex.GetType()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_return_value_2">2.2. Return Value</a></li>
+<li><a href="#_example_2">2.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexgettypeenum">3. pyvgx.Vertex.GetTypeEnum()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_return_value_3">3.2. Return Value</a></li>
+<li><a href="#_example_3">3.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexcommit">4. pyvgx.Vertex.Commit()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_return_value_4">4.2. Return Value</a></li>
+<li><a href="#_example_4">4.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexisvirtual">5. pyvgx.Vertex.IsVirtual()</a></li>
+<li><a href="#vertexasdict">6. pyvgx.Vertex.AsDict()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">6.1. Syntax</a></li>
+<li><a href="#_return_value_5">6.2. Return Value</a></li>
+<li><a href="#_example_5">6.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexdescriptor">7. pyvgx.Vertex.Descriptor()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_6">7.1. Syntax</a></li>
+<li><a href="#_return_value_6">7.2. Return Value</a></li>
+<li><a href="#_example_6">7.3. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vertex Miscellaneous Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexsettype">pyvgx.Vertex.SetType()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set or change the vertex type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgettype">pyvgx.Vertex.GetType()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Get the vertex type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexgettypeenum">pyvgx.Vertex.GetTypeEnum()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Get the vertex type enumeration code</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexcommit">pyvgx.Vertex.Commit()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Commit all vertex modifications</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexisvirtual">pyvgx.Vertex.IsVirtual()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if vertex is virtual</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexasdict">pyvgx.Vertex.AsDict()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a dictionary representation of the vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexdescriptor">pyvgx.Vertex.Descriptor()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a human readable formatted string representing the pyvgx.Vertex.descriptor</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexsettype">1. pyvgx.Vertex.SetType()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set or change the vertex type.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">SetType</span><span class="p">(</span> <span class="nb">type</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">1.2. Parameters</h3>
+<div class="paragraph">
+<p><code><em>type</em></code>: Vertex type (str) or None</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.3. Remarks</h3>
+<div class="paragraph">
+<p>This method changes the vertex type. If <em>type</em> is None or empty string the vertex becomes typeless.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.4. Return Value</h3>
+<div class="paragraph">
+<p>None</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.5. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># A is typeless
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># B type = "node"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetType</span><span class="p">(</span> <span class="sh">"</span><span class="s">thing</span><span class="sh">"</span> <span class="p">)</span>              <span class="c1"># A type now = "thing"
+</span><span class="n">B</span><span class="p">.</span><span class="nc">SetType</span><span class="p">(</span> <span class="bp">None</span> <span class="p">)</span>                 <span class="c1"># B now typeless</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgettype">2. pyvgx.Vertex.GetType()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the vertex type.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetType</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.2. Return Value</h3>
+<div class="paragraph">
+<p>Return the type name set at vertex creation or the most recent call to <a href="#vertexsettype"><code>SetType()</code></a>. The reserved type name <code>"<em>vertex</em>"</code> is returned for typeless vertices.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># A is typeless
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># B type = "node"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">GetType</span><span class="p">()</span>                       <span class="c1"># -&gt; "__vertex__"
+</span><span class="n">B</span><span class="p">.</span><span class="nc">GetType</span><span class="p">()</span>                       <span class="c1"># -&gt; "node"</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexgettypeenum">3. pyvgx.Vertex.GetTypeEnum()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return the vertex type enumeration code.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">GetTypeEnum</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.2. Return Value</h3>
+<div class="paragraph">
+<p>Return the type enumeration (int) code representing the vertex type.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>            <span class="c1"># A is typeless
+</span><span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># B type = "node"
+</span><span class="n">A</span><span class="p">.</span><span class="nc">GetTypeEnum</span><span class="p">()</span>                   <span class="c1"># -&gt; 17
+</span><span class="n">B</span><span class="p">.</span><span class="nc">GetTypeEnum</span><span class="p">()</span>                   <span class="c1"># -&gt; 132</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexcommit">4. pyvgx.Vertex.Commit()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Commit all vertex modifications and mark vertex object as dirty. This has the same effect as <a href="../graph/graphVertex.html#graphclosevertex">CloseVertex()</a> but without releasing the lock. Returns the graph operation id.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Commit</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">4.2. Return Value</h3>
+<div class="paragraph">
+<p>Graph operation id.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">g1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Commit</span><span class="p">()</span>          <span class="c1"># -&gt; 10000000000000002
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>        <span class="c1"># True
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Commit</span><span class="p">()</span>          <span class="c1"># -&gt; 10000000000000003
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>  <span class="c1"># True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexisvirtual">5. pyvgx.Vertex.IsVirtual()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return <code>True</code> if vertex is virtual, otherwise <code>False</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexasdict">6. pyvgx.Vertex.AsDict()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a dictionary representation of the vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">6.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_5">6.2. Return Value</h3>
+<div class="paragraph">
+<p>A Python dictionary of the vertex attributes, flags and states.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">6.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">pprint</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">[</span><span class="sh">"</span><span class="s">occupation</span><span class="sh">"</span><span class="p">]</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Software Engineer</span><span class="sh">"</span>
+<span class="n">A</span><span class="p">[</span><span class="sh">"</span><span class="s">age</span><span class="sh">"</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">java</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.2</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">c++</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.89</span><span class="p">),</span> <span class="p">(</span><span class="sh">"</span><span class="s">python</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.73</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">pprint</span><span class="p">.</span><span class="nf">pprint</span><span class="p">(</span> <span class="n">A</span><span class="p">.</span><span class="nc">AsDict</span><span class="p">()</span> <span class="p">)</span>
+<span class="c1"># Prints:
+# {'allocator': {'aidx': 2,
+#                'bidx': 0,
+#                'flags.invl': 0,
+#                'flags.ovsz': 0,
+#                'offset': 0,
+#                'refc': 4,
+#                'size': 1},
+#  'created-time': 1504225659,
+#  'degree': 1,
+#  'descriptor': 122513461082088878,
+#  'expires-time': 4294967295,
+#  'id': 'Alice',
+#  'indegree': 0,
+#  'internalid': '10384b2187cd857b78e02fdc859c4864',
+#  'man': 'REAL',
+#  'modified-time': 1504225659,
+#  'outdegree': 1,
+#  'properties': {'age': 29, 'occupation': 'Software Engineer'},
+#  'type': 'person',
+#  'vector': [('java', 1.125), ('c++', 0.875), ('python', 0.6875)]}
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexdescriptor">7. pyvgx.Vertex.Descriptor()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Return a human readable formatted string representing the <a href="vertexMembers.html#vertexdescriptor">pyvgx.Vertex.descriptor</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_6">7.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Descriptor</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_6">7.2. Return Value</h3>
+<div class="paragraph">
+<p>The descriptor is returned as a string:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[semaphore.count]   [type]   [ [&lt;MAN&gt; &lt;PRE&gt;]  [&lt;YIB&gt; &lt;INY&gt; &lt;WRQ&gt; &lt;RWL&gt; &lt;LCK&gt;] ]   [ [&lt;IN&gt; &lt;OUT&gt;] [&lt;CTR&gt; &lt;VEC&gt;] [&lt;FLD&gt;] [0] ]   [writer.threadid]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Please see <a href="vertexMembers.html#vertexdescriptor">pyvgx.Vertex.descriptor</a> for a detailed explanation of the different values.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">7.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">V</span><span class="p">.</span><span class="nc">Descriptor</span><span class="p">()</span> <span class="c1"># '[1] [node] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [2356]'
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexTTL.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex TTL Methods"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexFilter.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Condition Syntax"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Result Field Constants</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="resultfieldconstants" class="article toc2 toc-left">
+<div id="header">
+<h1>Result Field Constants <a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Constants"></i></span></a> <a href="resultListEntryConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Result List Entry Constants"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_summary">1. Summary</a></li>
+<li><a href="#_field_codes">2. Field Codes</a>
+<ul class="sectlevel2">
+<li><a href="#F_ANCHOR">2.1. pyvgx.F_ANCHOR</a></li>
+<li><a href="#F_ANCHOR_OBID">2.2. pyvgx.F_ANCHOR_OBID</a></li>
+<li><a href="#F_ARCDIR">2.3. pyvgx.F_ARCDIR</a></li>
+<li><a href="#F_REL">2.4. pyvgx.F_REL</a></li>
+<li><a href="#F_MOD">2.5. pyvgx.F_MOD</a></li>
+<li><a href="#F_VAL">2.6. pyvgx.F_VAL</a></li>
+<li><a href="#F_ID">2.7. pyvgx.F_ID</a></li>
+<li><a href="#F_OBID">2.8. pyvgx.F_OBID</a></li>
+<li><a href="#F_TYPE">2.9. pyvgx.F_TYPE</a></li>
+<li><a href="#F_DEG">2.10. pyvgx.F_DEG</a></li>
+<li><a href="#F_IDEG">2.11. pyvgx.F_IDEG</a></li>
+<li><a href="#F_ODEG">2.12. pyvgx.F_ODEG</a></li>
+<li><a href="#F_VEC">2.13. pyvgx.F_VEC</a></li>
+<li><a href="#F_PROP">2.14. pyvgx.F_PROP</a></li>
+<li><a href="#F_RANK">2.15. pyvgx.F_RANK</a></li>
+<li><a href="#F_SIM">2.16. pyvgx.F_SIM</a></li>
+<li><a href="#F_HAM">2.17. pyvgx.F_HAM</a></li>
+<li><a href="#F_TMC">2.18. pyvgx.F_TMC</a></li>
+<li><a href="#F_TMM">2.19. pyvgx.F_TMM</a></li>
+<li><a href="#F_TMX">2.20. pyvgx.F_TMX</a></li>
+<li><a href="#F_DESCR">2.21. pyvgx.F_DESCR</a></li>
+<li><a href="#F_ADDR">2.22. pyvgx.F_ADDR</a></li>
+<li><a href="#F_HANDLE">2.23. pyvgx.F_HANDLE</a></li>
+<li><a href="#F_RAW">2.24. pyvgx.F_RAW</a></li>
+<li><a href="#F_NAMES">2.25. pyvgx.F_NAMES</a></li>
+<li><a href="#F_PRED">2.26. pyvgx.F_PRED</a></li>
+<li><a href="#F_ARC">2.27. pyvgx.F_ARC</a></li>
+<li><a href="#F_AARC">2.28. pyvgx.F_AARC</a></li>
+<li><a href="#F_DEGREES">2.29. pyvgx.F_DEGREES</a></li>
+<li><a href="#F_PROPS">2.30. pyvgx.F_PROPS</a></li>
+<li><a href="#F_RLV">2.31. pyvgx.F_RLV</a></li>
+<li><a href="#F_TSTAMP">2.32. pyvgx.F_TSTAMP</a></li>
+<li><a href="#F_DETAILS">2.33. pyvgx.F_DETAILS</a></li>
+<li><a href="#F_ALL">2.34. pyvgx.F_ALL</a></li>
+<li><a href="#F_NONE">2.35. pyvgx.F_NONE</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_summary">1. Summary</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These constants are used with the <code>fields=</code> parameter to control which fields are included in search results.</p>
+</div>
+<div class="paragraph">
+<p>Multiple fields can be specified by combining the constants with the bitwise-OR operator (|).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">fields</span> <span class="o">=</span> <span class="n">F_</span><span class="o">&lt;</span><span class="n">a</span><span class="o">&gt;</span> <span class="o">|</span> <span class="n">F_</span><span class="o">&lt;</span><span class="n">b</span><span class="o">&gt;</span> <span class="o">|</span> <span class="bp">...</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since multiple fields are specified as a single integer is it not possible to control the
+order of fields returned. The order of fields returned is fixed according to Display Order in the table below
+when using <a href="resultListEntryConstants.html#resultlistentryconstants">result entry formats</a> <code>R_STR</code> or
+<code>R_LIST</code>. (Format <code>R_DICT</code> returns an unordered dictionary.)</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+As an alternative to <code>fields=</code>, some methods offer a <a href="../evaluator/selectEvaluator.html#select"><code>select=</code> parameter</a> which makes it possible
+to specify fields to be returned as <em>properties</em>. Returned fields will then appear in the specified
+order when using <code>R_STR</code> or <code>R_LIST</code> result entry formats.
+</td>
+</tr>
+</table>
+</div>
+<table id="resultfieldconstants_order" class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Constant</th>
+<th class="tableblock halign-left valign-top">Display Order</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ANCHOR">pyvgx.F_ANCHOR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identifier of the initial vertex in a neighborhood traversal</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ANCHOR_OBID">pyvgx.F_ANCHOR_OBID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal object identifier of the initial vertex in a neighborhood traversal</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ARCDIR">pyvgx.F_ARCDIR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Direction of the arc between two neighbor vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_REL">pyvgx.F_REL</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship type for the arc between two neighbor vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_MOD">pyvgx.F_MOD</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship modifier for the arc between two neighbor vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_VAL">pyvgx.F_VAL</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relationship value of the arc between two neighbor vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ID">pyvgx.F_ID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_OBID">pyvgx.F_OBID</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internal object identifier of vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_TYPE">pyvgx.F_TYPE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_DEG">pyvgx.F_DEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex degree</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_IDEG">pyvgx.F_IDEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">11</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex indegree</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ODEG">pyvgx.F_ODEG</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex outdegree</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_VEC">pyvgx.F_VEC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex <a href="../vertex/vertexMembers.html#vertexvector">vector</a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_PROP">pyvgx.F_PROP</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex properties</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_RANK">pyvgx.F_RANK</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex <a href="../evaluator/evaluator.html#quickrank">rank score</a> as computed by dynamic ranking formula</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_SIM">pyvgx.F_SIM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">16</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex <a href="../vertex/vertexMembers.html#vertexvector">vector</a> similarity to the probe vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_HAM">pyvgx.F_HAM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex <a href="../vertex/vertexMembers.html#vertexvector">vector</a> fingerprint hamming distance the the probe vector fingerprint</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_TMC">pyvgx.F_TMC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex creation timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_TMM">pyvgx.F_TMM</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">19</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex modification timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_TMX">pyvgx.F_TMX</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex expiration timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_DESCR">pyvgx.F_DESCR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex <a href="../vertex/vertexMembers.html#vertexdescriptor">descriptor</a> (for debugging)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ADDR">pyvgx.F_ADDR</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex memory address (for debugging)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_HANDLE">pyvgx.F_HANDLE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">23</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex memory allocator handle (for debugging)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_RAW">pyvgx.F_RAW</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Binary dump of internal vertex data structure (for debugging)</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Shorthands for common combinations are also defined.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Combined Constant</th>
+<th class="tableblock halign-left valign-top">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_NAMES">pyvgx.F_NAMES</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_ANCHOR + F_ANCHOR_OBID + F_ID + F_OBID + F_TYPE</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_PRED">pyvgx.F_PRED</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_ARCDIR + F_REL + F_MOD + F_VAL</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ARC">pyvgx.F_ARC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_PRED + F_ID</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_AARC">pyvgx.F_AARC</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_ANCHOR + F_ARC</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_DEGREES">pyvgx.F_DEGREES</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_DEG + F_IDEG + F_ODEG</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_PROPS">pyvgx.F_PROPS</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_VEC + F_PROP</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_RLV">pyvgx.F_RLV</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_RANK + F_SIM + F_HAM</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_TSTAMP">pyvgx.F_TSTAMP</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_TMC + F_TMM + F_TMX</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_DETAILS">pyvgx.F_DETAILS</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_DESCR + F_ADDR + F_HANDLE + F_RAW</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_ALL">pyvgx.F_ALL</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>F_NAMES + F_PRED + F_DEGREES + F_PROPS + F_RLV + F_TSTAMP + F_DETAILS</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#F_NONE">pyvgx.F_NONE</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>0</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_field_codes">2. Field Codes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="F_ANCHOR">2.1. pyvgx.F_ANCHOR</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ANCHOR = 1</code></p>
+</div>
+<div class="paragraph">
+<p>Identifier string of the initial vertex in a neighborhood traversal.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ANCHOR_OBID">2.2. pyvgx.F_ANCHOR_OBID</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ANCHOR_OBID = 2</code></p>
+</div>
+<div class="paragraph">
+<p>Internal object identifier of the initial vertex in a neighborhood traversal.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ARCDIR">2.3. pyvgx.F_ARCDIR</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ARCDIR = 256</code></p>
+</div>
+<div class="paragraph">
+<p>Direction of the arc between two neighbor vertices.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_REL">2.4. pyvgx.F_REL</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_REL = 512</code></p>
+</div>
+<div class="paragraph">
+<p>Relationship type for the arc between two neighbor vertices.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_MOD">2.5. pyvgx.F_MOD</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_MOD = 1024</code></p>
+</div>
+<div class="paragraph">
+<p>Relationship modifier for the arc between two neighbor vertices.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_VAL">2.6. pyvgx.F_VAL</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_VAL = 2048</code></p>
+</div>
+<div class="paragraph">
+<p>Relationship value of the arc between two neighbor vertices.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ID">2.7. pyvgx.F_ID</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ID = 4</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex identifier string.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_OBID">2.8. pyvgx.F_OBID</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_OBID = 8</code></p>
+</div>
+<div class="paragraph">
+<p>Internal object identifier of vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_TYPE">2.9. pyvgx.F_TYPE</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_TYPE = 16</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex type string.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_DEG">2.10. pyvgx.F_DEG</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_DEG = 32</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex degree.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_IDEG">2.11. pyvgx.F_IDEG</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_IDEG = 64</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex indegree.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ODEG">2.12. pyvgx.F_ODEG</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ODEG = 128</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex outdegree.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_VEC">2.13. pyvgx.F_VEC</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_VEC = 4096</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex <a href="../vertex/vertexMembers.html#vertexvector">vector</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_PROP">2.14. pyvgx.F_PROP</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_PROP = 8192</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex properties.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_RANK">2.15. pyvgx.F_RANK</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_RANK = 65536</code></p>
+</div>
+<div class="paragraph">
+<p>Dynamic <a href="../evaluator/evaluator.html#quickrank">rank score</a> computed according to formula given in <code>rank=</code> parameter.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_SIM">2.16. pyvgx.F_SIM</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_SIM = 131072</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex vector similarity to the probe vector</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_HAM">2.17. pyvgx.F_HAM</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_HAM = 262144</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex vector fingerprint hamming distance the the probe vector fingerprint.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_TMC">2.18. pyvgx.F_TMC</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_TMC = 1048576</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex creation timestamp.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_TMM">2.19. pyvgx.F_TMM</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_TMM = 2097152</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex modification timestamp.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_TMX">2.20. pyvgx.F_TMX</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_TMX = 4194304</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex expiration timestamp.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_DESCR">2.21. pyvgx.F_DESCR</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_DESCR = 16777216</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex descriptor.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ADDR">2.22. pyvgx.F_ADDR</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ADDR = 33554432</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex memory address.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_HANDLE">2.23. pyvgx.F_HANDLE</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_HANDLE = 67108864</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex memory allocator handle.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_RAW">2.24. pyvgx.F_RAW</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_RAW = 134217728</code></p>
+</div>
+<div class="paragraph">
+<p>Binary dump of internal vertex data.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_NAMES">2.25. pyvgx.F_NAMES</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_NAMES = F_ANCHOR + F_ANCHOR_OBID + F_ID + F_OBID + F_TYPE = 31</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex identifiers and type.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_PRED">2.26. pyvgx.F_PRED</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_PRED = F_ARCDIR + F_REL + F_MOD + F_VAL = 3840</code></p>
+</div>
+<div class="paragraph">
+<p>Arc fields.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ARC">2.27. pyvgx.F_ARC</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ARC = F_PRED + F_ID = 3844</code></p>
+</div>
+<div class="paragraph">
+<p>Arc fields plus terminal vertex identifier.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_AARC">2.28. pyvgx.F_AARC</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_AARC = F_ANCHOR + F_ARC = 3845</code></p>
+</div>
+<div class="paragraph">
+<p>Arc fields plus initial and terminal identifiers.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_DEGREES">2.29. pyvgx.F_DEGREES</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_DEGREES = F_DEG + F_IDEG + F_ODEG = 224</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex degrees.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_PROPS">2.30. pyvgx.F_PROPS</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_PROPS = F_VEC + F_PROP = 12288</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex properties and vector.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_RLV">2.31. pyvgx.F_RLV</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_RLV = F_SIM + F_HAM = 393216</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex similarity measures.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_TSTAMP">2.32. pyvgx.F_TSTAMP</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_TSTAMP = F_TMC + F_TMM + F_TMX = 7340032</code></p>
+</div>
+<div class="paragraph">
+<p>Vertex timestamps.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_DETAILS">2.33. pyvgx.F_DETAILS</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_DETAILS = F_DESCR + F_ADDR + F_HANDLE + F_RAW = 251658240</code></p>
+</div>
+<div class="paragraph">
+<p>Internal vertex details.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_ALL">2.34. pyvgx.F_ALL</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_ALL = F_NAMES + F_PRED + F_DEGREES + F_PROPS + F_RLV + F_TSTAMP + F_DETAILS = 259407871</code></p>
+</div>
+<div class="paragraph">
+<p>All fields.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="F_NONE">2.35. pyvgx.F_NONE</h3>
+<div class="paragraph">
+<p><code>pyvgx.F_NONE = 0</code></p>
+</div>
+<div class="paragraph">
+<p>No fields.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="collectConstants.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Collect Constants"></i></span></a>
+<a href="constants.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Constants"></i></span></a>
+<a href="resultListEntryConstants.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Result List Entry Constants"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

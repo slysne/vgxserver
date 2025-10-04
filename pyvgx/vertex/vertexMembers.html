@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Members</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexmembers" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Members <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexAccess.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Access Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexidentifier">1. pyvgx.Vertex.id</a></li>
+<li><a href="#vertexinternalid">2. pyvgx.Vertex.internalid</a></li>
+<li><a href="#vertextype">3. pyvgx.Vertex.type</a></li>
+<li><a href="#vertexisolated">4. pyvgx.Vertex.isolated</a></li>
+<li><a href="#vertexdegree">5. pyvgx.Vertex.deg</a></li>
+<li><a href="#vertexindegree">6. pyvgx.Vertex.ideg</a></li>
+<li><a href="#vertexoutdegree">7. pyvgx.Vertex.odeg</a></li>
+<li><a href="#vertexvector">8. pyvgx.Vertex.vector</a></li>
+<li><a href="#vertexproperties">9. pyvgx.Vertex.properties</a></li>
+<li><a href="#vertexTMC">10. pyvgx.Vertex.tmc</a></li>
+<li><a href="#vertexTMM">11. pyvgx.Vertex.tmm</a></li>
+<li><a href="#vertexTMX">12. pyvgx.Vertex.tmx</a></li>
+<li><a href="#vertexRTX">13. pyvgx.Vertex.rtx</a></li>
+<li><a href="#vertexrankc1">14. pyvgx.Vertex.c1</a></li>
+<li><a href="#vertexrankc0">15. pyvgx.Vertex.c0</a></li>
+<li><a href="#vertexrankb1">16. pyvgx.Vertex.b1</a></li>
+<li><a href="#vertexrankb0">17. pyvgx.Vertex.b0</a></li>
+<li><a href="#vertexvirtual">18. pyvgx.Vertex.virtual</a></li>
+<li><a href="#vertexaddress">19. pyvgx.Vertex.address</a></li>
+<li><a href="#vertexindex">20. pyvgx.Vertex.index</a></li>
+<li><a href="#vertexbitindex">21. pyvgx.Vertex.bitindex</a></li>
+<li><a href="#vertexbitvector">22. pyvgx.Vertex.bitvector</a></li>
+<li><a href="#vertexop">23. pyvgx.Vertex.op</a></li>
+<li><a href="#vertexrefc">24. pyvgx.Vertex.refc</a></li>
+<li><a href="#vertexbidx">25. pyvgx.Vertex.bidx</a></li>
+<li><a href="#vertexoidx">26. pyvgx.Vertex.oidx</a></li>
+<li><a href="#vertexhandle">27. pyvgx.Vertex.handle</a></li>
+<li><a href="#vertexenum">28. pyvgx.Vertex.enum</a></li>
+<li><a href="#vertexdescriptor">29. pyvgx.Vertex.descriptor</a></li>
+<li><a href="#vertexreaders">30. pyvgx.Vertex.readers</a></li>
+<li><a href="#vertexowner">31. pyvgx.Vertex.owner</a></li>
+<li><a href="#vertexxrecursion">32. pyvgx.Vertex.xrecursion</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 30%;">
+<col style="width: 70%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Attribute</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexidentifier">pyvgx.Vertex.id</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex unique identifier string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexinternalid">pyvgx.Vertex.internalid</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A digest of the identifier string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertextype">pyvgx.Vertex.type</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex type name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexisolated">pyvgx.Vertex.isolated</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">True when degree is zero</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexdegree">pyvgx.Vertex.deg</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Total number of arcs incident on vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexindegree">pyvgx.Vertex.ideg</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of vertex inarcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexoutdegree">pyvgx.Vertex.odeg</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of vertex outarcs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexvector">pyvgx.Vertex.vector</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex vector represented as a Python list of 2-tuples</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexproperties">pyvgx.Vertex.properties</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A new dictionary representing the stored properties of a vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexTMC">pyvgx.Vertex.tmc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex creation timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexTMM">pyvgx.Vertex.tmm</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex modification timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexTMX">pyvgx.Vertex.tmx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex expiration timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexRTX">pyvgx.Vertex.rtx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex remaining time until expiration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrankc1">pyvgx.Vertex.c1</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic rank 1<sup>st</sup> order coefficient (writable)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrankc0">pyvgx.Vertex.c0</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dynamic rank 0<sup>th</sup> order coefficient (writable)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrankb1">pyvgx.Vertex.b1</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Special internal: ANN seed number (readonly)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrankb0">pyvgx.Vertex.b0</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Special internal: ANN arc LSH rotate (readonly)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexvirtual">pyvgx.Vertex.virtual</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex is VIRTUAL if True, REAL if False</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexaddress">pyvgx.Vertex.address</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex memory address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexindex">pyvgx.Vertex.index</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object location index based on its memory address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexbitindex">pyvgx.Vertex.bitindex</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex bitvector quadword offset</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexbitvector">pyvgx.Vertex.bitvector</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex bitvector quadword</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexop">pyvgx.Vertex.op</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Operation ID of the most recent graph operation modifying this vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrefc">pyvgx.Vertex.refc</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object reference count</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexbidx">pyvgx.Vertex.bidx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object allocator block index</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexoidx">pyvgx.Vertex.oidx</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object allocator block offset</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexhandle">pyvgx.Vertex.handle</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object allocator handle (long)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexenum">pyvgx.Vertex.enum</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertex object enumeration (int)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexdescriptor">pyvgx.Vertex.descriptor</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integer value representing internal state of vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexreaders">pyvgx.Vertex.readers</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of readonly acquisitions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexowner">pyvgx.Vertex.owner</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ID of thread holding one or more write-locks for this vertex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexxrecursion">pyvgx.Vertex.xrecursion</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of write-locks held by vertex owner.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexidentifier">1. pyvgx.Vertex.id</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex unique identifier string.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="paragraph">
+<p>Alias: <code>pyvgx.Vertex.identifier</code></p>
+</div>
+<div class="sect2">
+<h3 id="_example">1.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nb">id</span>             <span class="c1"># "A"
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexinternalid">2. pyvgx.Vertex.internalid</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex internal id is a digest of the identifier string.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nb">id</span>             <span class="c1"># 'A'
+</span><span class="n">A</span><span class="p">.</span><span class="n">internalid</span>     <span class="c1"># '7fc56270e7a70fa81a5935b72eacbe29'
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertextype">3. pyvgx.Vertex.type</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex type name.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">thing</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nb">type</span>                       <span class="c1"># '&lt;vertex&gt;' (typeless)
+</span><span class="n">B</span><span class="p">.</span><span class="nb">type</span>                       <span class="c1"># 'thing'
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexisolated">4. pyvgx.Vertex.isolated</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>True when no arcs incident on vertex, False otherwise.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">isolated</span>  <span class="c1"># -&gt; True
+</span><span class="n">B</span><span class="p">.</span><span class="n">isolated</span>  <span class="c1"># -&gt; False
+</span><span class="n">C</span><span class="p">.</span><span class="n">isolated</span>  <span class="c1"># -&gt; False</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexdegree">5. pyvgx.Vertex.deg</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Total number of arcs incident on vertex.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_5">5.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">deg</span>                    <span class="c1"># -&gt; 1
+</span><span class="n">B</span><span class="p">.</span><span class="n">deg</span>                    <span class="c1"># -&gt; 2
+</span><span class="n">C</span><span class="p">.</span><span class="n">deg</span>                    <span class="c1"># -&gt; 1
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexindegree">6. pyvgx.Vertex.ideg</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Number of vertex inarcs.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_6">6.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">ideg</span>                   <span class="c1"># -&gt; 0
+</span><span class="n">B</span><span class="p">.</span><span class="n">ideg</span>                   <span class="c1"># -&gt; 1
+</span><span class="n">C</span><span class="p">.</span><span class="n">ideg</span>                   <span class="c1"># -&gt; 1
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexoutdegree">7. pyvgx.Vertex.odeg</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Number of vertex outarcs.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_7">7.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">C</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">B</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">C</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">odeg</span>                   <span class="c1"># -&gt; 1
+</span><span class="n">B</span><span class="p">.</span><span class="n">odeg</span>                   <span class="c1"># -&gt; 1
+</span><span class="n">C</span><span class="p">.</span><span class="n">odeg</span>                   <span class="c1"># -&gt; 0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">B</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">C</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexvector">8. pyvgx.Vertex.vector</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex vector represented as a Python list of 2-tuples.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The list produced by reading this attribute is a new, independent Python object, disassociated from the actual vertex object. Modifying the list has no effect on the vertex vector.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To modify a vertex vector, use <a href="vertexVector.html#vertexsetvector">pyvgx.Vertex.SetVector()</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_8">8.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="p">[(</span><span class="sh">"</span><span class="s">this</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.5</span><span class="p">),(</span><span class="sh">"</span><span class="s">is</span><span class="sh">"</span><span class="p">,</span><span class="mf">1.1</span><span class="p">),(</span><span class="sh">"</span><span class="s">our</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.9</span><span class="p">),(</span><span class="sh">"</span><span class="s">vector</span><span class="sh">"</span><span class="p">,</span><span class="mf">0.7</span><span class="p">)]</span> <span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">vector</span>
+<span class="nf">print</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>         <span class="c1"># [('this', 1.5), ('is', 1.0), ('our', 0.875), ('vector', 0.6875)]
+# NOTE: Modifying the list returned by SetVector is allowed but has no effect on the vertex!
+</span><span class="n">V</span><span class="p">.</span><span class="nf">append</span><span class="p">(</span> <span class="sh">"</span><span class="s">zzz</span><span class="sh">"</span> <span class="p">)</span>  <span class="c1"># modifying the
+</span><span class="k">del</span> <span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>           <span class="c1">#   list has no effect
+</span><span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>         <span class="c1">#      on the vertex vector
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">V</span> <span class="p">)</span>         <span class="c1"># [123, ('our', 0.875), ('vector', 0.6875), 'zzz']
+# Vector in vertex has not changed
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">A</span><span class="p">.</span><span class="n">vector</span> <span class="p">)</span>  <span class="c1"># [('this', 1.5), ('is', 1.0), ('our', 0.875), ('vector', 0.6875)]</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexproperties">9. pyvgx.Vertex.properties</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A new dictionary representing the stored properties of a vertex.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Modifying the returned dictionary has no effect on the vertex stored properties.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_9">9.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">name</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">something</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">value</span><span class="sh">"</span><span class="p">,</span> <span class="mi">123</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">properties</span>              <span class="c1"># {'name': 'something', 'value': 123}
+</span><span class="n">A</span><span class="p">.</span><span class="nc">RemoveProperties</span><span class="p">()</span>
+<span class="n">A</span><span class="p">.</span><span class="n">properties</span>              <span class="c1"># {}
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexTMC">10. pyvgx.Vertex.tmc</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex creation timestamp (seconds since 1/1/1970 UTC).</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_10">10.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">tmc</span>              <span class="c1"># 1504631589
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexTMM">11. pyvgx.Vertex.tmm</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex modification timestamp (seconds since 1/1/1970 UTC).</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The vertex modification timestamp is updated when the vertex is committed using <a href="../graph/graphVertex.html#graphclosevertex">pyvgx.Graph.CloseVertex()</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_example_11">11.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">time</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">tmc</span>                      <span class="c1"># 1504631589
+</span><span class="n">A</span><span class="p">.</span><span class="n">tmm</span>                      <span class="c1"># 1504631589
+# Wait a little bit then perform some modifying operations
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">SetProperty</span><span class="p">(</span> <span class="sh">"</span><span class="s">x</span><span class="sh">"</span><span class="p">,</span> <span class="mi">123</span> <span class="p">)</span>  <span class="c1"># Setting a property modifies the vertex
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>  <span class="c1"># Creating a connection modifies the vertex
+</span><span class="n">A</span><span class="p">.</span><span class="n">tmm</span>                      <span class="c1"># 1504631589, not updated yet since we have not committed
+# Commit the vertex and check the tmm
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>         <span class="c1"># Commit A
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># Reopen A
+</span><span class="n">A</span><span class="p">.</span><span class="n">tmm</span>                      <span class="c1"># 1504631594, now updated
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexTMX">12. pyvgx.Vertex.tmx</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex expiration timestamp (seconds since 1/1/1970 UTC).</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="paragraph">
+<p>A vertex is guaranteed to exist and be valid (unless explicitly deleted) until the expiration timestamp passes. Once a vertex expires it may be deleted from the graph at any time.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The expiration timestamp does not guarantee deletion at any particular time. It only guarantees the vertex will exist before this timestamp is reached (i.e. there may be a delay in removing the vertex after it expires). This delay is system dependent and has no absolute definition.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The maximum value for tmx is 4102444800 (Fri Jan 01 00:00:00 2100 UTC) representing no expiration time.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_example_12">12.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">time</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">tmx</span>                         <span class="c1"># 4102444800, never expires by default
+</span><span class="n">now</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span> <span class="n">time</span><span class="p">.</span><span class="nf">time</span><span class="p">()</span> <span class="p">)</span>      <span class="c1"># Get current time
+</span><span class="n">A</span><span class="p">.</span><span class="nc">SetExpiration</span><span class="p">(</span> <span class="n">now</span> <span class="o">+</span> <span class="mi">3600</span> <span class="p">)</span> <span class="c1"># Set "A" to expire one hour from now
+</span><span class="n">A</span><span class="p">.</span><span class="n">tmx</span>                         <span class="c1"># 1504639328
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexRTX">13. pyvgx.Vertex.rtx</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex remaining seconds until expiration.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_13">13.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="n">time</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">lifespan</span><span class="o">=</span><span class="mi">60</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">rtx</span>                         <span class="c1"># 60
+</span><span class="n">time</span><span class="p">.</span><span class="nf">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">rtx</span>                         <span class="c1"># 50</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrankc1">14. pyvgx.Vertex.c1</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Dynamic rank coefficient for use with <a href="../evaluator/evaluator.html#simplerankingfunctions"><code>rank()</code> and <code>georank()</code></a> in evaluator expressions.
+This vertex attribute is writable.</p>
+</div>
+<div class="paragraph">
+<p>Default value: <code>c1 = 1.0</code></p>
+</div>
+<div class="paragraph">
+<p>When used with <code>rank()</code> it represents the <em>1<sup>st</sup> order coefficient</em> in the equation <code>y = c1&#183;X + c0</code>.</p>
+</div>
+<div class="paragraph">
+<p>When used with <code>georank()</code> it represents <em>geographic latitude</em> in degrees.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is possible to use <code>c1</code> as a general purpose numeric property (single precision float),
+which is faster and more memory efficient than regular vertex properties
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_example_14">14.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">c1</span> <span class="o">=</span> <span class="mf">5.0</span>
+<span class="n">A</span><span class="p">.</span><span class="n">c0</span> <span class="o">=</span> <span class="mf">1000.0</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Evaluate</span><span class="p">(</span> <span class="sh">"</span><span class="s">rank(1)</span><span class="sh">"</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="n">A</span> <span class="p">)</span>      <span class="c1"># -&gt; 1005.0
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Evaluate</span><span class="p">(</span> <span class="sh">"</span><span class="s">rank(100,10)</span><span class="sh">"</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="n">A</span> <span class="p">)</span> <span class="c1"># -&gt; 1550.0</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrankc0">15. pyvgx.Vertex.c0</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Dynamic rank coefficient for use with <a href="../evaluator/evaluator.html#simplerankingfunctions"><code>rank()</code> and <code>georank()</code></a> in evaluator expressions.
+This vertex attribute is writable.</p>
+</div>
+<div class="paragraph">
+<p>Default value: <code>c0 = 0.0</code></p>
+</div>
+<div class="paragraph">
+<p>When used with <code>rank()</code> it represents the <em>0<sup>th</sup> order coefficient</em> in the equation <code>y = c1&#183;X + c0</code>.</p>
+</div>
+<div class="paragraph">
+<p>When used with <code>georank()</code> it represents <em>geographic longitude</em> in degrees.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is possible to use <code>c0</code> as a general purpose numeric property (single precision float),
+which is faster and more memory efficient than regular vertex properties
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_example_15">15.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Boston</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span><span class="p">.</span><span class="nc">SetRank</span><span class="p">(</span> <span class="mf">42.3601</span><span class="p">,</span> <span class="o">-</span><span class="mf">71.0589</span> <span class="p">)</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Tokyo</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">T</span><span class="p">.</span><span class="nc">SetRank</span><span class="p">(</span> <span class="mf">35.6762</span><span class="p">,</span> <span class="mf">139.6503</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Evaluate</span><span class="p">(</span> <span class="sh">"</span><span class="s">georank( vertex )</span><span class="sh">"</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="n">B</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="n">T</span> <span class="p">)</span>  <span class="c1"># -&gt; 0.46071
+#
+# NOTE: georank = (20015090 - geodist) / 20015090
+#       where 20015090 is the max distance between two points on Earth</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrankb1">16. pyvgx.Vertex.b1</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For special internal use with ANN search. This is the ANN seed number.</p>
+</div>
+<div class="paragraph">
+<p>Internal details subject to change and are thus intentionally undocumented.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_16">16.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">g1</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="p">)</span> <span class="c1"># -&gt; [0, 1087]
+# Projections from the first and second seeds
+</span><span class="n">g</span><span class="p">[</span><span class="sh">"</span><span class="s">_1FFF|000</span><span class="sh">"</span><span class="p">].</span><span class="n">b1</span>  <span class="c1"># -&gt; 0
+</span><span class="n">g</span><span class="p">[</span><span class="sh">"</span><span class="s">_1234|43F</span><span class="sh">"</span><span class="p">].</span><span class="n">b1</span>  <span class="c1"># -&gt; 1</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrankb0">17. pyvgx.Vertex.b0</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>For special internal use with ANN search. This is the ANN arc LSH rotation amount.</p>
+</div>
+<div class="paragraph">
+<p>Internal details subject to change and are thus intentionally undocumented.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_17">17.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">g1</span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nc">CreateProjectionSets</span><span class="p">(</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10</span> <span class="p">)</span> <span class="c1"># -&gt; [0, 1087]
+# Projections from the first and second seeds
+</span><span class="n">g</span><span class="p">[</span><span class="sh">"</span><span class="s">_1FFF|000</span><span class="sh">"</span><span class="p">].</span><span class="n">b0</span>  <span class="c1"># -&gt; 45
+</span><span class="n">g</span><span class="p">[</span><span class="sh">"</span><span class="s">_1234|43F</span><span class="sh">"</span><span class="p">].</span><span class="n">b0</span>  <span class="c1"># -&gt; 30</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexvirtual">18. pyvgx.Vertex.virtual</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex VIRTUAL flag.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="paragraph">
+<p>The manifestation of a vertex is either REAL or VIRTUAL.</p>
+</div>
+<div class="paragraph">
+<p>A vertex that is created explicitly is REAL.</p>
+</div>
+<div class="paragraph">
+<p>A vertex that is created implicitly as a terminal for a relationship is VIRTUAL.</p>
+</div>
+<div class="paragraph">
+<p>If a REAL vertex is deleted it will be converted to VIRTUAL if its indegree is greater than zero.</p>
+</div>
+<div class="paragraph">
+<p>A VIRTUAL vertex whose indegree goes to zero as a result of a graph operation will be deleted.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_18">18.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># "A" is created explicitly as a REAL vertex
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span> <span class="c1"># "B" is created implicitly and becomes VIRTUAL
+</span><span class="n">A</span><span class="p">.</span><span class="n">virtual</span>                 <span class="c1"># False
+</span><span class="n">g</span><span class="p">[</span><span class="sh">'</span><span class="s">B</span><span class="sh">'</span><span class="p">].</span><span class="n">virtual</span>            <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="n">A</span> <span class="p">)</span> <span class="c1"># "A" becomes a terminal and has indegree=1
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>     <span class="c1"># "A" is converted to VIRTUAL
+</span><span class="n">g</span><span class="p">[</span><span class="sh">'</span><span class="s">A</span><span class="sh">'</span><span class="p">].</span><span class="n">virtual</span>            <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">DeleteVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>     <span class="c1"># When "C" is deleted "A" is automatically deleted
+</span><span class="n">g</span><span class="p">.</span><span class="nc">HasVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>        <span class="c1"># False</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexaddress">19. pyvgx.Vertex.address</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Memory address of the vertex object.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_19">19.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">address</span>              <span class="c1"># -&gt; 902775776</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexindex">20. pyvgx.Vertex.index</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object location index based on its memory address.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_20">20.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">index</span>                 <span class="c1"># -&gt; 4701957</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexbitindex">21. pyvgx.Vertex.bitindex</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex bitvector quadword offset, i.e. the n<sup>th</sup> quadword in an array of quadwords containing bitmask for vertex memory location.</p>
+</div>
+<div class="paragraph">
+<p>This can be used together with <code>pyvgx.Vertex.bitvector</code> to construct vertex set bitmaps.</p>
+</div>
+<div class="paragraph">
+<p>If <code>array[ bitindex ] &amp; bitvector == 1</code> then the vertex is present in the array.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_21">21.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">bitindex</span>              <span class="c1"># -&gt; 73468</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexbitvector">22. pyvgx.Vertex.bitvector</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex bitvector quadword. This is a 64-bit number with one bit set.</p>
+</div>
+<div class="paragraph">
+<p>See <a href="#vertexbitindex">pyvgx.Vertex.bitindex</a> for more information.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_22">22.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">bitvector</span>             <span class="c1"># -&gt; 32</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexop">23. pyvgx.Vertex.op</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Operation ID of the most recent graph operation modifying this vertex.</p>
+</div>
+<div class="paragraph">
+<p>The operation ID is a built-in graph property that is incremented each
+time an object is modified. When modifying a vertex the operation ID
+is captured and stored in the vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_23">23.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">op</span>                   <span class="c1"># -&gt; 10000000015013808
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">score</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Commit</span><span class="p">()</span>
+<span class="n">A</span><span class="p">.</span><span class="n">op</span>                   <span class="c1"># -&gt; 10000000015013809</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrefc">24. pyvgx.Vertex.refc</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object reference counter. This is an internal attribute which may
+be useful for diagnostics and debugging.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_24">24.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">refc</span>                  <span class="c1"># -&gt; 4</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexbidx">25. pyvgx.Vertex.bidx</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object allocator block index. This is an internal attribute which may
+be useful for diagnostics and debugging.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_25">25.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">bidx</span>                  <span class="c1"># -&gt; 0</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexoidx">26. pyvgx.Vertex.oidx</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object allocator block offset. This is an internal attribute which may
+be useful for diagnostics and debugging.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_26">26.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">oidx</span>                  <span class="c1"># -&gt; 476229</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexhandle">27. pyvgx.Vertex.handle</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object allocator handle. This is a <strong>long</strong> type (42 significant bits) which
+uniquely identifies a vertex independent of the current process, as opposed to
+the vertex address which will generally differ between processes.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_27">27.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">handle</span>               <span class="c1"># -&gt; 2199023256641</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexenum">28. pyvgx.Vertex.enum</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Vertex object enumeration. This is an <strong>int</strong> type (31 significant bits) which uniquely
+identifies a vertex independent of the current process, as opposed to the vertex
+address which will generally differ between processes. In large graphs
+(with &gt; 2 billion vertices), this may return -1. If so, use <a href="#vertexhandle">pyvgx.Vertex.handle</a> instead.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_28">28.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">enum</span>                  <span class="c1"># -&gt; 1089</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexdescriptor">29. pyvgx.Vertex.descriptor</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Integer value representing internal flags and codes describing current state of vertex.</p>
+</div>
+<div class="paragraph">
+<p>This is a read-only attribute.</p>
+</div>
+<div class="paragraph">
+<p>The vertex descriptor may be useful for analyzing problems related to concurrency (threading) or other issues where visibility into the vertex internal state is required.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_29">29.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">A</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">descriptor</span>                    <span class="c1"># 109286233120702464
+</span><span class="n">g</span><span class="p">[</span><span class="sh">'</span><span class="s">B</span><span class="sh">'</span><span class="p">].</span><span class="n">descriptor</span>               <span class="c1"># 76987254421061632
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_format">29.2. Format</h3>
+<div class="paragraph">
+<p>A vertex descriptor is a 64-bit value of flags and state information.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 27.7777%;">
+<col style="width: 11.1111%;">
+<col style="width: 5.5555%;">
+<col style="width: 22.2222%;">
+<col style="width: 33.3335%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Field</th>
+<th class="tableblock halign-left valign-top">Bit Range</th>
+<th class="tableblock halign-left valign-top">Bits</th>
+<th class="tableblock halign-left valign-top">Value Range</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ZERO</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">63</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">always 0</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">semaphore.count</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">62-56</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0-127</p>
+<p class="tableblock">0-63 (usable)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reentrancy count for vertex lock. Counts the total lock acquisition for either multiple simultaneous readers or a single writer. Total reentrancy cannot exceed 63.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">type.enumeration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">55-48</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0-255</p>
+<p class="tableblock">17, 32-239 (usable)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Internally assigned code representing the vertex type mapping. This value defaults to 17 (11h) for typeless vertices and will otherwise be in the range 32 - 239 (20h - EFh) for vertices with an assigned type. This limits the vertex type-space to <a href="../limits.html#limits">208 distinct mappings</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.context.manifestation (MAN)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">47-46</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = NULL</p>
+<p class="tableblock">1 = REAL</p>
+<p class="tableblock">2 = VIRTUAL</p>
+<p class="tableblock">3 = ANY</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vertices always be either REAL (1) or VIRTUAL (2). The two other codes NULL (0) and ANY (3) are sometimes used internally but will never appear in the vertex descriptor.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.context.pre_active (PRE)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">45</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = normal, 1 = pre-active</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will always be 0 for vertices that have been fully constructed and gone through initial commit. The only time PRE=1 is prior to the initial commit, which occurs at the time the vertex construction completes and the write lock is released for the first time.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.lock.yielded_inarcs_busy (YIB)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">44</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = idle, 1 = busy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be set to 1 only when a thread has locked the vertex writable but has yielded its inarcs (INY=1) due to the thread expecting to become blocked, and those yielded inarcs have been acquired by another thread which is about to create an arc inbound on the vertex which requires modification of the vertex inarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.lock.inarcs_yielded (INY)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">43</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = normal, 1 = yielded</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be set to 1 when a thread has locked the vertex writable and the thread is about to become blocked. This signals availability of the vertex&#8217;s inarcs for other thread that may need to modify the vertex inarcs while the actual owner of the vertex write lock is blocked.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.lock.write_requested (WRQ)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = none, 1 = write requested</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be set to 1 by the first thread that fails to acquire a write lock on the vertex because the vertex is currently locked readonly by one or more other threads.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.lock.read_write (RWL)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">41</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = writable, 1 = readonly</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Only has meaning when LCK = 1, and in that case RWL = 0 means writable and RWL = 1 means readonly.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state.lock.locked (LCK)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">40</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = open, 1 = locked</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When 0 the vertex is not locked and should not be accessed. A thread needs to lock the vertex before it can safely access members and call methods. For non-modifying access a readonly lock should be acquired. For modifying access a writable lock should be acquired. In both cases LCK = 1 after the lock as been acquired, and RWL will indicate the type of lock.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.degree.has_inarcs (IN)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">39</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = no inarcs, 1 = has inarcs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be 1 if the vertex has one or more inarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.degree.has_outarcs (OUT)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">38</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = no outarcs, 1 = has outarcs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be 1 if the vertex has one or more outarcs.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.vector.is_centroid (CTR)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">37</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = standard, 1 = centroid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be 1 if the vertex has a vector and that vector is a centroid.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.vector.has_vector (VEC)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">36</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = no vector, 1 = has vector</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be 1 if the vertex has a vector.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.fields.has_fields (FLD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">35</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 = no fields, 1 = has fields</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be 1 if the vertex has one or more properties set.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">property.reserved.rsv</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">34-32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>reserved</strong></p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">writer.threadid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">31-0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 - 4294967295</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Will be set to the operating system&#8217;s numeric ID assigned to the thread currently holding a write lock on the vertex, or has requested write access while one or more readers threads hold the readonly lock.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexreaders">30. pyvgx.Vertex.readers</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The number of readonly acquisitions (by all threads) for this vertex.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_30">30.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">readers</span>                       <span class="c1"># -&gt; 1
+</span><span class="n">x</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">readers</span>                       <span class="c1"># -&gt; 2</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexowner">31. pyvgx.Vertex.owner</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Thread ID of thread owning one or more write-locks for this vertex. Thread ID is a positive integer when vertex is write-locked, or 0 when vertex is not write-locked.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_31">31.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">B</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">owner</span>                     <span class="c1"># -&gt; current thread ID
+</span><span class="n">A</span><span class="p">.</span><span class="n">owner</span> <span class="o">==</span> <span class="nf">threadid</span><span class="p">()</span>       <span class="c1"># -&gt; True
+</span><span class="n">B</span><span class="p">.</span><span class="n">owner</span>                     <span class="c1"># -&gt; 0</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexxrecursion">32. pyvgx.Vertex.xrecursion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Number of write-locks held by vertex owner thread.</p>
+</div>
+<div class="sect2">
+<h3 id="_example_32">32.1. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">test </span><span class="sh">"</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">xrecursion</span>                <span class="c1"># -&gt; 1
+</span><span class="n">A2</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="n">xrecursion</span>                <span class="c1"># -&gt; 2
+</span><span class="n">A2</span><span class="p">.</span><span class="n">xrecursion</span>               <span class="c1"># -&gt; 2
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">A2</span><span class="p">.</span><span class="n">xrecursion</span>               <span class="c1"># -&gt; 1
+</span><span class="n">A</span><span class="p">.</span><span class="n">xrecursion</span>                <span class="c1"># AccessError</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexFilter.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Condition Syntax"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexAccess.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Access Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

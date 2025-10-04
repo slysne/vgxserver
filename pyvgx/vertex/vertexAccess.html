@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Vertex Access Methods</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="vertexaccess" class="article toc2 toc-left">
+<div id="header">
+<h1>Vertex Access Methods <a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Vertex"></i></span></a> <a href="vertexProperty.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Vertex Property Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#vertexwritable">1. pyvgx.Vertex.Writable()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax">1.1. Syntax</a></li>
+<li><a href="#_return_value">1.2. Return Value</a></li>
+<li><a href="#_remarks">1.3. Remarks</a></li>
+<li><a href="#_example">1.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexreadonly">2. pyvgx.Vertex.Readonly()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_2">2.1. Syntax</a></li>
+<li><a href="#_return_value_2">2.2. Return Value</a></li>
+<li><a href="#_example_2">2.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexreadable">3. pyvgx.Vertex.Readable()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_3">3.1. Syntax</a></li>
+<li><a href="#_return_value_3">3.2. Return Value</a></li>
+<li><a href="#_example_3">3.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexclose">4. pyvgx.Vertex.Close()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_4">4.1. Syntax</a></li>
+<li><a href="#_remarks_2">4.2. Remarks</a></li>
+<li><a href="#_example_4">4.3. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexescalate">5. pyvgx.Vertex.Escalate()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_5">5.1. Syntax</a></li>
+<li><a href="#_parameters">5.2. Parameters</a></li>
+<li><a href="#_remarks_3">5.3. Remarks</a></li>
+<li><a href="#_example_5">5.4. Example</a></li>
+</ul>
+</li>
+<li><a href="#vertexrelax">6. pyvgx.Vertex.Relax()</a>
+<ul class="sectlevel2">
+<li><a href="#_syntax_6">6.1. Syntax</a></li>
+<li><a href="#_return_value_4">6.2. Return Value</a></li>
+<li><a href="#_remarks_4">6.3. Remarks</a></li>
+<li><a href="#_example_6">6.4. Example</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx Vertex Access Methods</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexwritable">pyvgx.Vertex.Writable()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if a vertex is open in a writable state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexreadonly">pyvgx.Vertex.Readonly()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if a vertex is open in readonly mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexreadable">pyvgx.Vertex.Readable()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Check if a vertex is accessible</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexclose">pyvgx.Vertex.Close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release vertex access lock</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexescalate">pyvgx.Vertex.Escalate()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Promote vertex access from readonly to writable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#vertexrelax">pyvgx.Vertex.Relax()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relax vertex access from writable to readonly</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexwritable">1. pyvgx.Vertex.Writable()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check if a vertex is open in a writable state.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax">1.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value">1.2. Return Value</h3>
+<div class="paragraph">
+<p>This method returns True if the vertex is currently open and writable by the calling thread, otherwise False is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks">1.3. Remarks</h3>
+<div class="paragraph">
+<p>The vertex must be writable by the calling thread for this method to return True. If the vertex was formerly held in a writable state by the current thread, then closed, then opened writable by another thread, this method will return False when called on the (still valid) Python object in the current thread.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">1.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>           <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>           <span class="c1"># False
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>           <span class="c1"># False
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>           <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexreadonly">2. pyvgx.Vertex.Readonly()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check if a vertex is open in readonly mode.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_2">2.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Readonly</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_2">2.2. Return Value</h3>
+<div class="paragraph">
+<p>This method returns True if the vertex is currently open in readonly mode by the calling thread, otherwise False is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_2">2.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Readonly</span><span class="p">()</span>           <span class="c1"># False
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Readonly</span><span class="p">()</span>           <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexreadable">3. pyvgx.Vertex.Readable()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Check if a vertex is accessible.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_3">3.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Readable</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_3">3.2. Return Value</h3>
+<div class="paragraph">
+<p>This method returns True if the vertex is accessible, either writable or readonly, otherwise False is returned.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_3">3.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Readable</span><span class="p">()</span>           <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Readable</span><span class="p">()</span>           <span class="c1"># False
+</span><span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span><span class="p">.</span><span class="nc">Readable</span><span class="p">()</span>           <span class="c1"># True
+</span><span class="n">g</span><span class="p">.</span><span class="nc">CloseVertex</span><span class="p">(</span> <span class="n">A</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexclose">4. pyvgx.Vertex.Close()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Release vertex lock.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_4">4.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="bp">None</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_2">4.2. Remarks</h3>
+<div class="paragraph">
+<p>This method releases the vertex and commits any changes if no other pyvgx.Vertex object(s) reference the same vertex in the graph.</p>
+</div>
+<div class="paragraph">
+<p>The closed pyvgx.Vertex instance can no longer access the vertex.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_4">4.3. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># open
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">x</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">123</span>                    <span class="c1"># modify
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span>                       <span class="c1"># close (and commit)
+</span><span class="n">A</span><span class="p">[</span><span class="sh">'</span><span class="s">y</span><span class="sh">'</span><span class="p">]</span> <span class="o">=</span> <span class="mi">456</span>                    <span class="c1"># AccessError</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexescalate">5. pyvgx.Vertex.Escalate()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Promote vertex acquisition status from readonly to writable.</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_5">5.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Escalate</span><span class="p">(</span> <span class="p">[</span> <span class="n">timeout</span> <span class="p">]</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_parameters">5.2. Parameters</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 22.2222%;">
+<col style="width: 44.4445%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum milliseconds to wait for write-lock</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_remarks_3">5.3. Remarks</h3>
+<div class="paragraph">
+<p>Promote vertex acquisition status from readonly to writable. An optional <em>timeout</em> (in milliseconds) allows blocking while waiting for writable access to be obtained. The default is nonblocking. If the vertex is already writable or the readonly vertex cannot be acquired writable <a href="../reference.html#AccessError_exc">AccessError</a> is raised.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_5">5.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># readonly
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                    <span class="c1"># -&gt; False
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Escalate</span><span class="p">()</span>                    <span class="c1"># become writable
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                    <span class="c1"># -&gt; True</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="vertexrelax">6. pyvgx.Vertex.Relax()</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Relax vertex acquisition status from writable to readonly</p>
+</div>
+<div class="sect2">
+<h3 id="_syntax_6">6.1. Syntax</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Vertex</span><span class="p">.</span><span class="nc">Relax</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_return_value_4">6.2. Return Value</h3>
+<div class="paragraph">
+<p>Return True if vertex is readonly.
+Return False if vertex is still writable.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_remarks_4">6.3. Remarks</h3>
+<div class="paragraph">
+<p>Calling this method on a vertex that is already readonly has no effect and will return True.</p>
+</div>
+<div class="paragraph">
+<p>Calling this method on a recursively write-locked vertex <em>V</em> (i.e. <code><em>V</em>.xrecursion &gt; 1</code>) has the same effect as releasing one level of write recursion and the vertex will still be writable. The return value is False in this case.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_6">6.4. Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">g</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">OpenVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">w</span><span class="sh">"</span> <span class="p">)</span>    <span class="c1"># writable
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                    <span class="c1"># -&gt; True
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Relax</span><span class="p">()</span>                       <span class="c1"># -&gt; True
+</span><span class="n">A</span><span class="p">.</span><span class="nc">Writable</span><span class="p">()</span>                    <span class="c1"># -&gt; False</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="vertexMembers.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Vertex Members"></i></span></a>
+<a href="vertex.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx.Vertex"></i></span></a>
+<a href="vertexProperty.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Vertex Property Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

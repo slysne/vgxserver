@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Graph Objects</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Graph Objects <a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Reference"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#class">pyvgx.Graph</a>
+<ul class="sectlevel2">
+<li><a href="#_remarks">Remarks</a></li>
+<li><a href="#_example">Example</a></li>
+</ul>
+</li>
+<li><a href="#extend">Extending pyvgx.Graph</a></li>
+<li><a href="#api">pyvgx.Graph API</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="class">pyvgx.Graph</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code><em>class</em> pyvgx.<strong>Graph</strong>( <em>name</em><strong>[</strong>, <em>path</em><strong>[</strong>, <em>local</em><strong>[</strong>, <em>timeout</em><strong> ]]]</strong> )</code></dt>
+<dd>
+<p>The <code>pyvgx.Graph</code> type represents the Python layer&#8217;s view of VGX graph objects. Objects of this class are wrappers that enable Python code to access core VGX graphs.</p>
+<div class="paragraph">
+<p><strong>Parameters</strong></p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>name</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em></p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unique graph ID</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>path</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>str</em> or <em>bytes</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>name</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Directory storage path relative to <a href="../reference.html#system_initialize_func"><em>vgxroot</em></a></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>local</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>bool</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Set local=True to prevent graph operations from being broadcast to <a href="../reference.html#op_attach_func">remote instances when attached</a>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>timeout</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Time (in milliseconds) to block while waiting for access to VGX graph</p></td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+</div>
+<div class="sect2">
+<h3 id="_remarks">Remarks</h3>
+<div class="paragraph">
+<p>The pyvgx.Graph type represents VGX core graph objects. The returned Python object is a wrapper around the internal VGX graph object.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">name</dt>
+<dd>
+<p>This constructor creates a new VGX graph or opens an existing VGX graph with the specified <em>name</em>. A reference to the graph is entered into the <strong>graph registry</strong> both in memory and on disk.</p>
+</dd>
+<dt class="hdlist1">path</dt>
+<dd>
+<p>If <em>path</em> is not specified graph data is stored in a subdirectory called <em>name</em> relative to <a href="../reference.html#system_initialize_func"><em>vgxroot</em></a>. If the system has not yet been initialized, it is implicitly initialized with <em>vgxroot</em> set to the current working directory.</p>
+<div class="paragraph">
+<p>If <em>path</em> is specified it is used instead of <em>name</em> as the subdirectory on disk. Custom paths must be relative, otherwise an exception is raised.</p>
+</div>
+</dd>
+<dt class="hdlist1">local</dt>
+<dd>
+<p>If <em>local</em> is not specified (or set to False) the graph will broadcast operations performed on it when the system is <a href="../reference.html#op_attach_func">attached to a remote destination</a>. To keep the graph private to the local VGX instance even when the system is attached to a remote destination the graph can be instantiated with <em>local</em> = True.</p>
+</dd>
+<dt class="hdlist1">timeout</dt>
+<dd>
+<p>The core VGX graph object is owned by the thread calling the constructor. Ownership is in effect for as long as the pyvgx.Graph object is in scope. If another thread already owns the VGX graph an exception is raised. Use the <em>timeout</em> parameter (in milliseconds) to block while waiting for access. The default timeout is 0, i.e. nonblocking. Pass -1 to block indefinitely.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+It is possible (and safe) for a thread to share access to a pyvgx.Graph it owns with other threads. Sharing a graph object reference across multiple threads enables concurrent work to be performed on the same graph by many threads.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example">Example</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">home</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span> <span class="o">=</span> <span class="n">pyvgx</span><span class="p">.</span><span class="nc">Graph</span><span class="p">(</span> <span class="sh">"</span><span class="s">graph1</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="n">name</span>                      <span class="c1"># "graph1"
+</span><span class="n">g</span><span class="p">.</span><span class="n">path</span>                      <span class="c1"># "home/graph1"
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">Registry</span><span class="p">()</span>     <span class="c1"># {'graph1': (0, 0)}</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="extend">Extending pyvgx.Graph</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>It is possible to extend <code>pyvgx.Graph</code> to provide specialized functionality:</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
+<span class="kn">import</span> <span class="n">random</span>
+
+<span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">RandomGraph</span><span class="p">(</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span> <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">populate</span><span class="p">(</span> <span class="n">self</span><span class="p">,</span> <span class="n">N</span> <span class="p">):</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">N</span> <span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="nf">str</span><span class="p">(</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">self</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="nf">str</span><span class="p">(</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="p">)</span> <span class="p">)</span>
+            <span class="n">self</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">n</span><span class="sh">"</span><span class="p">,</span> <span class="n">pyvgx</span><span class="p">.</span><span class="n">M_INT</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">b</span> <span class="p">)</span>
+
+
+<span class="n">r</span> <span class="o">=</span> <span class="nc">RandomGraph</span><span class="p">(</span> <span class="sh">"</span><span class="s">r</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">r</span><span class="p">.</span><span class="nf">populate</span><span class="p">(</span> <span class="mi">10000</span> <span class="p">)</span>
+<span class="n">r</span><span class="p">.</span><span class="n">size</span>                  <span class="c1"># -&gt; 10000
+</span><span class="n">r</span><span class="p">.</span><span class="n">order</span>                 <span class="c1"># -&gt; 20000</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="api">pyvgx.Graph API</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">pyvgx.Graph API Section</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphMembers.html#graphmembers">Graph Members</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Graph object members</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphVertex.html#graphvertexmethods">Graph Vertex Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for creating, deleting and acquiring vertices</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphArc.html#grapharcmethods">Graph Arc Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for creating and removing relationships</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphQuery.html#graphquerymethods">Graph Query Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for searching and retrieving information from the graph</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphManagement.html#graphmanagementmethods">Graph Management Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for performing global graph operations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphEnum.html#graphenummethods">Graph Enumeration Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for managing enumerations</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphEvent.html#grapheventmethods">Graph Event Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for managing the TTL event processor</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="graphMiscellaneous.html#graphmiscellaneousmethods">Graph Miscellaneous Methods</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Methods for debugging and showing various information</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphMiscellaneous.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Miscellaneous Methods"></i></span></a>
+<a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Reference"></i></span></a>
+<a href="graphMembers.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Members"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>

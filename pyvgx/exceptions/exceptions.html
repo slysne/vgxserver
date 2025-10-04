@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Exceptions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body id="exceptions" class="article toc2 toc-left">
+<div id="header">
+<h1>Exceptions <a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx Reference"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#AccessError">1. pyvgx.AccessError</a></li>
+<li><a href="#ArcError">2. pyvgx.ArcError</a></li>
+<li><a href="#EnumerationError">3. pyvgx.EnumerationError</a></li>
+<li><a href="#InternalError">4. pyvgx.InternalError</a></li>
+<li><a href="#QueryError">5. pyvgx.QueryError</a></li>
+<li><a href="#ResultError">6. pyvgx.ResultError</a></li>
+<li><a href="#SearchError">7. pyvgx.SearchError</a></li>
+<li><a href="#VertexError">8. pyvgx.VertexError</a></li>
+<li><a href="#OperationTimeout">9. pyvgx.OperationTimeout</a></li>
+<li><a href="#DataError">10. pyvgx.DataError</a></li>
+<li><a href="#PluginError">11. pyvgx.PluginError</a></li>
+<li><a href="#RequestError">12. pyvgx.RequestError</a></li>
+<li><a href="#ResponseError">13. pyvgx.ResponseError</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="AccessError">1. pyvgx.AccessError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when sufficient access to a vertex cannot be obtained by a graph operation.</p>
+</div>
+<div class="paragraph">
+<p>Possible scenarios include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The vertex is already locked by another thread</p>
+</li>
+<li>
+<p>The vertex is already locked by the current thread and an invalid access mode switch is attempted</p>
+</li>
+<li>
+<p>Readonly vertices held by a thread attempting a delete operation</p>
+</li>
+<li>
+<p>Repeated locking for the same vertex has reached the recursion limit</p>
+</li>
+<li>
+<p>Vertex has been closed and the Python vertex object is no longer valid</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Other scenarios are possible. The exception message will provide more details as appropriate.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="ArcError">2. pyvgx.ArcError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised if an invalid arc specification was used, or if an arc could not be deleted due to acquisition timeout.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="EnumerationError">3. pyvgx.EnumerationError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when the core system is unable to perform an enumeration mapping between an external string and the internal integer representation of that string.</p>
+</div>
+<div class="paragraph">
+<p>Typically, this occurs when the enumeration space becomes exhausted due to too many unique vertex type names or relationship names. Each new unique name string is automatically mapped to a unique integer value for internal use. There is a hard <a href="../limits.html#vgxlimits">limit</a> for the number of unique values that can be mapped per graph. The limits are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="../limits.html#limits"><strong>208</strong></a> unique <em>vertex type</em> enumerations</p>
+</li>
+<li>
+<p><a href="../limits.html#limits"><strong>15616</strong></a> unique <em>relationship</em> enumerations</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When either of these limits is reached, trying to create a new vertex or relationship using a new unique name will raise the exception.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+These limits apply per graph. Each graph has its own enumeration space.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="InternalError">4. pyvgx.InternalError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when an unknown internal error is detected.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="QueryError">5. pyvgx.QueryError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when a graph query cannot be completed.</p>
+</div>
+<div class="paragraph">
+<p>In most cases this is caused by incorrect query parameters.</p>
+</div>
+<div class="paragraph">
+<p>The exception message will include more details as appropriate.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="ResultError">6. pyvgx.ResultError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when a graph query fails to generate a result object. This is typically an internal error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="SearchError">7. pyvgx.SearchError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised if the execution of a graph query fails due to an internal error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="VertexError">8. pyvgx.VertexError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when trying to assign an invalid name, type, or other attribute to a vertex.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="OperationTimeout">9. pyvgx.OperationTimeout</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when a system management operation cannot be completed within a user-specified timeout, or within a system-defined timeout.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="DataError">10. pyvgx.DataError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when internal configuration or initialization fails, or when other data corruption is detected.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="PluginError">11. pyvgx.PluginError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when execution of an installed plugin could not be performed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="RequestError">12. pyvgx.RequestError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when invalid parameters or data are encountered when processing a PluginRequest instance.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="ResponseError">13. pyvgx.ResponseError</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This exception is raised when invalid parameters or data are encountered when processing a PluginResponse instance.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="../reference.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Reference"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-03 17:15:55 -0400
+</div>
+</div>
+</body>
+</html>
