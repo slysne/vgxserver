@@ -9,8 +9,18 @@ VERSION=${1:-0.0}
 OUT_DIR=${2:-build}
 
 # Clean build directory
-rm -rf "$OUT_DIR"
+if [ -e "$OUT_DIR/.build_output_dir" ]; then
+    rm -rf "$OUT_DIR"
+fi
 mkdir -p "$OUT_DIR"
+touch "$OUT_DIR/.build_output_dir"
+
+
+SRC_DIR="./src"
+
+# Resolve full paths
+SRC_DIR_ABS="$(realpath "$SRC_DIR")"
+OUT_DIR_ABS="$(realpath "$OUT_DIR")"
 
 # Copy image files
 find ./src -type d -name "images" | while read -r IMG_DIR; do
@@ -21,12 +31,15 @@ find ./src -type d -name "images" | while read -r IMG_DIR; do
     cp -R "$IMG_DIR/" "$DEST_IMG_DIR/"
 done
 
+# Enter output directory
+pushd "$OUT_DIR" > /dev/null
+
 # Convert .adoc files and preserve structure
-find ./src -type f -name "*.adoc" | while read -r SRC_FILE; do
-    REL_PATH="${SRC_FILE#./src/}"
+find "$SRC_DIR_ABS" -type f -name "*.adoc" | while read -r SRC_FILE; do
+    REL_PATH="${SRC_FILE#$SRC_DIR_ABS/}"
     OUT_FILE="${REL_PATH%.adoc}.html"
-    OUT_PATH="$OUT_DIR/$OUT_FILE"
-    mkdir -p "$(dirname "$OUT_PATH")"
+    OUT_PATH="$OUT_DIR_ABS/$OUT_FILE"
+    mkdir -p "$OUT_DIR_ABS"
     echo "Converting: $SRC_FILE -> $OUT_PATH"
     asciidoctor \
         -a source-highlighter=rouge \
@@ -38,6 +51,9 @@ find ./src -type f -name "*.adoc" | while read -r SRC_FILE; do
         -o "$OUT_PATH" "$SRC_FILE"
 done
 
-echo "✅ Conversion complete. Output is in '$OUT_DIR'"
+# Return to original dir
+popd > /dev/null
+
+echo "✅ Conversion complete. Output is in '$OUT_DIR_ABS'"
 
 
