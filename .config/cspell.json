@@ -1,0 +1,64 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "adoc",
+    "AsciiDoc",
+    "bitvector",
+    "bitvectors",
+    "bytearray",
+    "CLI",
+    "codepoint",
+    "codepoints",
+    "config",
+    "docs",
+    "GitHub",
+    "highlightjs",
+    "inarcs",
+    "indegree",
+    "internalid",
+    "jaccard",
+    "kwds",
+    "logpath",
+    "markdown",
+    "multinode",
+    "nonblocking",
+    "outarcs",
+    "outdegree",
+    "parameterless",
+    "preprocess",
+    "pyvgx",
+    "quadword",
+    "README",
+    "repo",
+    "selftest",
+    "URL",
+    "yaml"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "build/**",
+    "dist/**",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.svg",
+    "**/*.pdf"
+  ],
+  "ignoreRegExpList": [
+    "\\[\\[.*?\\]\\]", // ignore [[anchor]]
+    "<<.*?>>", // ignore <<reference>>
+    "/`[^`]*`/", // ignore inline code
+    "/```[\\s\\S]*?```/", // ignore fenced code blocks
+    "/:.*?:/", // ignore AsciiDoc attributes like :toc:
+    "/\\{.*?\\}/", // ignore {variables}
+    "\\[source,.*?\\][\\s]*----[\\s\\S]*?----", // fenced source blocks
+    "----[\\s\\S]*?----" // fallback for any fenced block
+  ],
+  "enableFiletypes": [
+    "asciidoc",
+    "adoc"
+  ],
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
+  "useGitignore": true
+}

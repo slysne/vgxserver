@@ -439,6 +439,7 @@ g.Neighborhood(
 |<<reference.adoc#compress_func, compress()>>
 |Return a compressed, serialized object
 
+// cspell:ignore cpuid
 |{counter:p}
 |<<reference.adoc#cpuid_func, cpuid()>>
 |Run x86-64 cpuid instruction
@@ -3039,11 +3040,13 @@ g.Neighborhood(
 |[TRAVERSE]SYMBOLIC
 |(attribute) .arc.dist
 
+// cspell:ignore isfwd
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextarcisfwd, `.arc.isfwd`>>
 |[TRAVERSE]SYMBOLIC
 |(attribute) .arc.isfwd
 
+// cspell:ignore issyn
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextarcissyn, `.arc.issyn`>>
 |[TRAVERSE]SYMBOLIC
@@ -3064,11 +3067,13 @@ g.Neighborhood(
 |[TRAVERSE]SYMBOLIC
 |(attribute) .arc.value
 
+// cspell:ignore bidx
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextbidx, `.bidx`>>
 |[DEREF TRAVERSE]SYMBOLIC
 |(attribute) .bidx
 
+// cspell:ignore bitindex
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextbitindex, `.bitindex`>>
 |[TRAVERSE]SYMBOLIC
@@ -3109,6 +3114,7 @@ g.Neighborhood(
 |[DEREF TRAVERSE]OBJECT
 |.id
 
+// cspell:ignore ideg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextideg, `.ideg`>>
 |[DEREF TRAVERSE]SYMBOLIC
@@ -3129,11 +3135,13 @@ g.Neighborhood(
 |[TRAVERSE]SYMBOLIC
 |(attribute) .locked
 
+// cspell:ignore odeg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextodeg, `.odeg`>>
 |[DEREF TRAVERSE]SYMBOLIC
 |(attribute) .odeg
 
+// cspell:ignore oidx
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextoidx, `.oidx`>>
 |[DEREF TRAVERSE]SYMBOLIC
@@ -3144,6 +3152,7 @@ g.Neighborhood(
 |[DEREF TRAVERSE]SYMBOLIC
 |(attribute) .op
 
+// cspell:ignore propcount
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextpropcount, `.propcount`>>
 |[DEREF TRAVERSE]SYMBOLIC
@@ -3159,6 +3168,7 @@ g.Neighborhood(
 |SYMBOLIC
 |(real) .rank
 
+// cspell:ignore refc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_nextrefc, `.refc`>>
 |[DEREF TRAVERSE]SYMBOLIC
@@ -3234,6 +3244,7 @@ g.Neighborhood(
 |FUNCTION
 |DEBUG.PRINT( a )
 
+// cspell:ignore printif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#, `DEBUG.PRINTIF`>>
 |FUNCTION
@@ -3384,6 +3395,7 @@ g.Neighborhood(
 |FUNCTION
 |acos( a )
 
+// cspell:ignore acosh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_acosh, `acosh`>>
 |FUNCTION
@@ -3394,11 +3406,13 @@ g.Neighborhood(
 |FUNCTION
 |add( a, b )
 
+// cspell:ignore addif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_addif, `addif`>>
 |FUNCTION
 |addif( a, b, c )
 
+// cspell:ignore allnan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_allnan, `allnan`>>
 |FUNCTION
@@ -3409,16 +3423,19 @@ g.Neighborhood(
 |FUNCTION
 |and( a, b )
 
+// cspell:ignore andif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_andif, `andif`>>
 |FUNCTION
 |andif( a, b, c )
 
+// cspell:ignore anynan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_anynan, `anynan`>>
 |FUNCTION
 |anynan( [...]  )
 
+// cspell:ignore asbits
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_asbits, `asbits`>>
 |FUNCTION
@@ -3429,16 +3446,19 @@ g.Neighborhood(
 |FUNCTION
 |asin( a )
 
+// cspell:ignore asinh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_asinh, `asinh`>>
 |FUNCTION
 |asinh( a )
 
+// cspell:ignore asint
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_asint, `asint`>>
 |FUNCTION
 |asint( a )
 
+// cspell:ignore asreal
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_asreal, `asreal`>>
 |FUNCTION
@@ -3454,6 +3474,7 @@ g.Neighborhood(
 |FUNCTION
 |atan2( a, b )
 
+// cspell:ignore atanh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_atanh, `atanh`>>
 |FUNCTION
@@ -3489,6 +3510,7 @@ g.Neighborhood(
 |SYMBOLIC
 |(int) collectable.real
 
+// cspell:ignore collectif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_collectif, `collectif`>>
 |[COLLECT]FUNCTION
@@ -3504,6 +3526,7 @@ g.Neighborhood(
 |FUNCTION
 |commit([ a] )
 
+// cspell:ignore commitif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_commitif, `commitif`>>
 |FUNCTION
@@ -3519,6 +3542,7 @@ g.Neighborhood(
 |FUNCTION
 |continue()
 
+// cspell:ignore continueif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_continueif, `continueif`>>
 |FUNCTION
@@ -3564,11 +3588,13 @@ g.Neighborhood(
 |FUNCTION
 |count( [...]  )
 
+// cspell:ignore countif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_countif, `countif`>>
 |FUNCTION
 |countif( [...]  )
 
+// cspell:ignore cpukill
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_cpukill, `cpukill`>>
 |FUNCTION
@@ -3579,6 +3605,7 @@ g.Neighborhood(
 |FUNCTION
 |dec( a )
 
+// cspell:ignore decif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_decif, `decif`>>
 |FUNCTION
@@ -3589,6 +3616,7 @@ g.Neighborhood(
 |FUNCTION
 |deg( a )
 
+// cspell:ignore dirtostr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_dirtostr, `dirtostr`>>
 |FUNCTION
@@ -3599,6 +3627,7 @@ g.Neighborhood(
 |FUNCTION
 |div( a, b )
 
+// cspell:ignore divif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_divif, `divif`>>
 |FUNCTION
@@ -3639,6 +3668,7 @@ g.Neighborhood(
 |SYMBOLIC
 |(real) e
 
+// cspell:ignore endswith
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_endswith, `endswith`>>
 |FUNCTION
@@ -3664,6 +3694,7 @@ g.Neighborhood(
 |SYMBOLIC
 |(integer) false
 
+// cspell:ignore firstval
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_firstval, `firstval`>>
 |FUNCTION
@@ -3674,21 +3705,25 @@ g.Neighborhood(
 |FUNCTION
 |floor( a )
 
+// cspell:ignore geodist
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_geodist, `geodist`>>
 |FUNCTION
 |geodist( a, b, c, d )
 
+// cspell:ignore geomean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_geomean, `geomean`>>
 |FUNCTION
 |geomean( [...]  )
 
+// cspell:ignore geoprox
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_geoprox, `geoprox`>>
 |FUNCTION
 |geoprox( a, b, c, d )
 
+// cspell:ignore georank
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_georank, `georank`>>
 |[DEREF TRAVERSE]FUNCTION
@@ -3749,6 +3784,7 @@ g.Neighborhood(
 |FUNCTION
 |ham_pi8( a, b )
 
+// cspell:ignore hamdist
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_hamdist, `hamdist`>>
 |FUNCTION
@@ -3764,11 +3800,13 @@ g.Neighborhood(
 |FUNCTION
 |halted()
 
+// cspell:ignore haltif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_haltif, `haltif`>>
 |FUNCTION
 |haltif( a )
 
+// cspell:ignore harmmean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_harmmean, `harmmean`>>
 |FUNCTION
@@ -3794,6 +3832,7 @@ g.Neighborhood(
 |FUNCTION
 |inc( a )
 
+// cspell:ignore incif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_incif, `incif`>>
 |FUNCTION
@@ -3829,6 +3868,7 @@ g.Neighborhood(
 |FUNCTION
 |inv( a )
 
+// cspell:ignore invsum
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_invsum, `invsum`>>
 |FUNCTION
@@ -3839,21 +3879,25 @@ g.Neighborhood(
 |FUNCTION
 |isarray( a )
 
+// cspell:ignore isbitvector
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isbitvector, `isbitvector`>>
 |FUNCTION
 |isbitvector( a )
 
+// cspell:ignore isbytearray
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isbytearray, `isbytearray`>>
 |FUNCTION
 |isbytearray( a )
 
+// cspell:ignore isbytes
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isbytes, `isbytes`>>
 |FUNCTION
 |isbytes( a )
 
+// cspell:ignore iset
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isetadd, `iset.add`>>
 |[MAPPING]FUNCTION
@@ -3879,31 +3923,37 @@ g.Neighborhood(
 |[MAPPING]FUNCTION
 |iset.clr( a )
 
+// cspell:ignore isinf
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isinf, `isinf`>>
 |FUNCTION
 |isinf( a )
 
+// cspell:ignore isint
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isint, `isint`>>
 |FUNCTION
 |isint( a )
 
+// cspell:ignore iskeyval
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_iskeyval, `iskeyval`>>
 |FUNCTION
 |iskeyval( a )
 
+// cspell:ignore ismap
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_ismap, `ismap`>>
 |FUNCTION
 |ismap( a )
 
+// cspell:ignore isnan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isnan, `isnan`>>
 |FUNCTION
 |isnan( a )
 
+// cspell:ignore isreal
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isreal, `isreal`>>
 |FUNCTION
@@ -3914,11 +3964,13 @@ g.Neighborhood(
 |FUNCTION
 |isstr( a )
 
+// cspell:ignore isutf
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isutf8, `isutf8`>>
 |FUNCTION
 |isutf8( a )
 
+// cspell:ignore isvector
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_isvector, `isvector`>>
 |FUNCTION
@@ -3934,11 +3986,13 @@ g.Neighborhood(
 |FUNCTION
 |join( [...]  )
 
+// cspell:ignore keyval
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_keyval, `keyval`>>
 |FUNCTION
 |keyval( a, b )
 
+// cspell:ignore lastval
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_lastval, `lastval`>>
 |FUNCTION
@@ -3979,6 +4033,7 @@ g.Neighborhood(
 |FUNCTION
 |lte( a, b )
 
+// cspell:ignore mabs
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mabs, `mabs`>>
 |FUNCTION
@@ -3989,36 +4044,43 @@ g.Neighborhood(
 |FUNCTION
 |macos( a, b )
 
+// cspell:ignore macosh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_macosh, `macosh`>>
 |FUNCTION
 |macosh( a, b )
 
+// cspell:ignore madd
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_madd, `madd`>>
 |FUNCTION
 |madd( a, b, c )
 
+// cspell:ignore mand
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mand, `mand`>>
 |FUNCTION
 |mand( a, b, c )
 
+// cspell:ignore masin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_masin, `masin`>>
 |FUNCTION
 |masin( a, b )
 
+// cspell:ignore masinh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_masinh, `masinh`>>
 |FUNCTION
 |masinh( a, b )
 
+// cspell:ignore matan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_matan, `matan`>>
 |FUNCTION
 |matan( a, b )
 
+// cspell:ignore matanh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_matanh, `matanh`>>
 |FUNCTION
@@ -4029,76 +4091,91 @@ g.Neighborhood(
 |FUNCTION
 |max( a, b )
 
+// cspell:ignore mbits
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mbits, `mbits`>>
 |FUNCTION
 |mbits( a, b )
 
+// cspell:ignore mceil
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mceil, `mceil`>>
 |FUNCTION
 |mceil( a, b )
 
+// cspell:ignore mcmp
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcmp, `mcmp`>>
 |FUNCTION
 |mcmp( a, b, c )
 
+// cspell:ignore mcmpa
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcmpa, `mcmpa`>>
 |FUNCTION
 |mcmpa( a, b, c )
 
+// cspell:ignore mcontains
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcontains, `mcontains`>>
 |FUNCTION
 |mcontains( a, b, c )
 
+// cspell:ignore mcopy
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcopy, `mcopy`>>
 |FUNCTION
 |mcopy( a, b, c )
 
+// cspell:ignore mcopyobj
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcopyobj, `mcopyobj`>>
 |FUNCTION
 |mcopyobj( a, b )
 
+// cspell:ignore mcos
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcos, `mcos`>>
 |FUNCTION
 |mcos( a, b )
 
+// cspell:ignore mcosh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcosh, `mcosh`>>
 |FUNCTION
 |mcosh( a, b )
 
+// cspell:ignore mcount
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcount, `mcount`>>
 |FUNCTION
 |mcount( a, b, c )
 
+// cspell:ignore mcull
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcull, `mcull`>>
 |[CULL]FUNCTION
 |mcull( a, b )
 
+// cspell:ignore mcullif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mcullif, `mcullif`>>
 |[CULL]FUNCTION
 |mcullif( a, b )
 
+// cspell:ignore mdec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mdec, `mdec`>>
 |FUNCTION
 |mdec( a, b )
 
+// cspell:ignore mdeg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mdeg, `mdeg`>>
 |FUNCTION
 |mdeg( a, b )
 
+// cspell:ignore mdiv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mdiv, `mdiv`>>
 |FUNCTION
@@ -4109,11 +4186,13 @@ g.Neighborhood(
 |FUNCTION
 |mean( [...]  )
 
+// cspell:ignore memkill
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_memkill, `memkill`>>
 |FUNCTION
 |memkill( a )
 
+// cspell:ignore mexp
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mexp, `mexp`>>
 |FUNCTION
@@ -4129,101 +4208,121 @@ g.Neighborhood(
 |FUNCTION
 |mexp2( a, b )
 
+// cspell:ignore mfloor
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mfloor, `mfloor`>>
 |FUNCTION
 |mfloor( a, b )
 
+// cspell:ignore mgeomean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mgeomean, `mgeomean`>>
 |FUNCTION
 |mgeomean( a, b, c )
 
+// cspell:ignore mgeostdev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mgeostdev, `mgeostdev`>>
 |FUNCTION
 |mgeostdev( a, b, c )
 
+// cspell:ignore mharmmean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mharmmean, `mharmmean`>>
 |FUNCTION
 |mharmmean( a, b, c )
 
+// cspell:ignore mhash
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mhash, `mhash`>>
 |FUNCTION
 |mhash( a, b )
 
+// cspell:ignore mheapifymax
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapifymax, `mheapifymax`>>
 |FUNCTION
 |mheapifymax( a, b )
 
+// cspell:ignore mheapifymin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapifymin, `mheapifymin`>>
 |FUNCTION
 |mheapifymin( a, b )
 
+// cspell:ignore mheapinit
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapinit, `mheapinit`>>
 |FUNCTION
 |mheapinit( a, b )
 
+// cspell:ignore mheappushmax
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheappushmax, `mheappushmax`>>
 |FUNCTION
 |mheappushmax( a, b, c )
 
+// cspell:ignore mheappushmin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheappushmin, `mheappushmin`>>
 |FUNCTION
 |mheappushmin( a, b, c )
 
+// cspell:ignore mheapsiftmax
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapsiftmax, `mheapsiftmax`>>
 |FUNCTION
 |mheapsiftmax( a, b, c, d )
 
+// cspell:ignore mheapsiftmin    
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapsiftmin, `mheapsiftmin`>>
 |FUNCTION
 |mheapsiftmin( a, b, c, d )
 
+// cspell:ignore mheapwritemax
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapwritemax, `mheapwritemax`>>
 |FUNCTION
 |mheapwritemax( [...]  )
 
+// cspell:ignore mheapwritemin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mheapwritemin, `mheapwritemin`>>
 |FUNCTION
 |mheapwritemin( [...]  )
 
+// cspell:ignore miadd
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_miadd, `miadd`>>
 |FUNCTION
 |miadd( a, b, c )
 
+// cspell:ignore midec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_midec, `midec`>>
 |FUNCTION
 |midec( a, b )
 
+// cspell:ignore midiv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_midiv, `midiv`>>
 |FUNCTION
 |midiv( a, b, c )
 
+// cspell:ignore miinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_miinc, `miinc`>>
 |FUNCTION
 |miinc( a, b )
 
+// cspell:ignore mimod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mimod, `mimod`>>
 |FUNCTION
 |mimod( a, b, c )
 
+// cspell:ignore mimul
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mimul, `mimul`>>
 |FUNCTION
@@ -4234,11 +4333,13 @@ g.Neighborhood(
 |FUNCTION
 |min( a, b )
 
+// cspell:ignore minc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_minc, `minc`>>
 |FUNCTION
 |minc( a, b )
 
+// cspell:ignore mindex
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mindex, `mindex`>>
 |FUNCTION
@@ -4249,31 +4350,37 @@ g.Neighborhood(
 |FUNCTION
 |mint( a, b )
 
+// cspell:ignore mintr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mintr, `mintr`>>
 |FUNCTION
 |mintr( a, b )
 
+// cspell:ignore minv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_minv, `minv`>>
 |FUNCTION
 |minv( a, b )
 
+// cspell:ignore minvsum
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_minvsum, `minvsum`>>
 |FUNCTION
 |minvsum( a, b, c )
 
+// cspell:ignore misub
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_misub, `misub`>>
 |FUNCTION
 |misub( a, b, c )
 
+// cspell:ignore mlen
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mlen, `mlen`>>
 |FUNCTION
 |mlen( a )
 
+// cspell:ignore mlog
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mlog, `mlog`>>
 |FUNCTION
@@ -4289,26 +4396,31 @@ g.Neighborhood(
 |FUNCTION
 |mlog2( a, b )
 
+// cspell:ignore mmax
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mmax, `mmax`>>
 |FUNCTION
 |mmax( a, b, c )
 
+// cspell:ignore mmean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mmean, `mmean`>>
 |FUNCTION
 |mmean( a, b, c )
 
+// cspell:ignore mmin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mmin, `mmin`>>
 |FUNCTION
 |mmin( a, b, c )
 
+// cspell:ignore mmod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mmod, `mmod`>>
 |FUNCTION
 |mmod( a, b, c )
 
+// cspell:ignore mmul
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mmul, `mmul`>>
 |FUNCTION
@@ -4319,16 +4431,19 @@ g.Neighborhood(
 |FUNCTION
 |mod( a, b )
 
+// cspell:ignore modif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_modif, `modif`>>
 |FUNCTION
 |modif( a, b, c )
 
+// cspell:ignore modindex
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_modindex, `modindex`>>
 |FUNCTION
 |modindex( a, b, c )
 
+// cspell:ignore modtostr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_modtostr, `modtostr`>>
 |FUNCTION
@@ -4344,131 +4459,157 @@ g.Neighborhood(
 |FUNCTION
 |mov( a, b )
 
+// cspell:ignore movif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_movif, `movif`>>
 |FUNCTION
 |movif( a, b, c )
 
+// cspell:ignore mpopcnt
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mpopcnt, `mpopcnt`>>
 |FUNCTION
 |mpopcnt( a, b )
 
+// cspell:ignore mpow
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mpow, `mpow`>>
 |FUNCTION
 |mpow( a, b, c )
 
+// cspell:ignore mprod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mprod, `mprod`>>
 |FUNCTION
 |mprod( a, b, c )
 
+// cspell:ignore mpwrite
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mpwrite, `mpwrite`>>
 |FUNCTION
 |mpwrite( a, b, c )
 
+// cspell:ignore mrabs
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrabs, `mrabs`>>
 |FUNCTION
 |mrabs( a, b )
 
+// cspell:ignore mracos
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mracos, `mracos`>>
 |FUNCTION
 |mracos( a, b )
 
+// cspell:ignore mracosh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mracosh, `mracosh`>>
 |FUNCTION
 |mracosh( a, b )
 
+// cspell:ignore mrad
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrad, `mrad`>>
 |FUNCTION
 |mrad( a, b )
 
+// cspell:ignore mradd
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mradd, `mradd`>>
 |FUNCTION
 |mradd( a, b, c )
 
+// cspell:ignore mrandbits
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrandbits, `mrandbits`>>
 |FUNCTION
 |mrandbits( a, b )
 
+// cspell:ignore mrandomize
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrandomize, `mrandomize`>>
 |FUNCTION
 |mrandomize( a, b )
 
+// cspell:ignore mrasin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrasin, `mrasin`>>
 |FUNCTION
 |mrasin( a, b )
 
+// cspell:ignore mrasinh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrasinh, `mrasinh`>>
 |FUNCTION
 |mrasinh( a, b )
 
+// cspell:ignore mratan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mratan, `mratan`>>
 |FUNCTION
 |mratan( a, b )
 
+// cspell:ignore mratanh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mratanh, `mratanh`>>
 |FUNCTION
 |mratanh( a, b )
 
+// cspell:ignore mrceil
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrceil, `mrceil`>>
 |FUNCTION
 |mrceil( a, b )
 
+// cspell:ignore mrcos
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrcos, `mrcos`>>
 |FUNCTION
 |mrcos( a, b )
 
+// cspell:ignore mrcosh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrcosh, `mrcosh`>>
 |FUNCTION
 |mrcosh( a, b )
 
+// cspell:ignore mrdec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrdec, `mrdec`>>
 |FUNCTION
 |mrdec( a, b )
 
+// cspell:ignore mrdeg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrdeg, `mrdeg`>>
 |FUNCTION
 |mrdeg( a, b )
 
+// cspell:ignore mrdiv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrdiv, `mrdiv`>>
 |FUNCTION
 |mrdiv( a, b, c )
 
+// cspell:ignore mreal
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mreal, `mreal`>>
 |FUNCTION
 |mreal( a, b )
 
+// cspell:ignore mreset
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mreset, `mreset`>>
 |FUNCTION
 |mreset()
 
+// cspell:ignore mreverse
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mreverse, `mreverse`>>
 |FUNCTION
 |mreverse( a, b )
 
+// cspell:ignore mrexp
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrexp, `mrexp`>>
 |FUNCTION
@@ -4484,41 +4625,49 @@ g.Neighborhood(
 |FUNCTION
 |mrexp2( a, b )
 
+// cspell:ignore mrfloor
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrfloor, `mrfloor`>>
 |FUNCTION
 |mrfloor( a, b )
 
+// cspell:ignore mrgeomean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrgeomean, `mrgeomean`>>
 |FUNCTION
 |mrgeomean( a, b, c )
 
+// cspell:ignore mrgeostdev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrgeostdev, `mrgeostdev`>>
 |FUNCTION
 |mrgeostdev( a, b, c )
 
+// cspell:ignore mrharmmean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrharmmean, `mrharmmean`>>
 |FUNCTION
 |mrharmmean( a, b, c )
 
+// cspell:ignore mrinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrinc, `mrinc`>>
 |FUNCTION
 |mrinc( a, b )
 
+// cspell:ignore mrinv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrinv, `mrinv`>>
 |FUNCTION
 |mrinv( a, b )
 
+// cspell:ignore mrinvsum
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrinvsum, `mrinvsum`>>
 |FUNCTION
 |mrinvsum( a, b, c )
 
+// cspell:ignore mrlog
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrlog, `mrlog`>>
 |FUNCTION
@@ -4534,156 +4683,187 @@ g.Neighborhood(
 |FUNCTION
 |mrlog2( a, b )
 
+// cspell:ignore mrmean
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrmean, `mrmean`>>
 |FUNCTION
 |mrmean( a, b, c )
 
+// cspell:ignore mrmod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrmod, `mrmod`>>
 |FUNCTION
 |mrmod( a, b, c )
 
+// cspell:ignore mrmul
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrmul, `mrmul`>>
 |FUNCTION
 |mrmul( a, b, c )
 
+// cspell:ignore mround
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mround, `mround`>>
 |FUNCTION
 |mround( a, b )
 
+// cspell:ignore mrpow
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrpow, `mrpow`>>
 |FUNCTION
 |mrpow( a, b, c )
 
+// cspell:ignore mrprod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrprod, `mrprod`>>
 |FUNCTION
 |mrprod( a, b, c )
 
+// cspell:ignore mrrad
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrrad, `mrrad`>>
 |FUNCTION
 |mrrad( a, b )
 
+// cspell:ignore mrround
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrround, `mrround`>>
 |FUNCTION
 |mrround( a, b )
 
+// cspell:ignore mrsign
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsign, `mrsign`>>
 |FUNCTION
 |mrsign( a, b )
 
+// cspell:ignore mrsin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsin, `mrsin`>>
 |FUNCTION
 |mrsin( a, b )
 
+// cspell:ignore mrsinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsinc, `mrsinc`>>
 |FUNCTION
 |mrsinc( a, b )
 
+// cspell:ignore mrsinh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsinh, `mrsinh`>>
 |FUNCTION
 |mrsinh( a, b )
 
+// cspell:ignore mrsort
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsort, `mrsort`>>
 |FUNCTION
 |mrsort( a, b )
 
+// cspell:ignore mrsortrev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsortrev, `mrsortrev`>>
 |FUNCTION
 |mrsortrev( a, b )
 
+// cspell:ignore mrsq
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsq, `mrsq`>>
 |FUNCTION
 |mrsq( a, b )
 
+// cspell:ignore mrsqrt
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsqrt, `mrsqrt`>>
 |FUNCTION
 |mrsqrt( a, b )
 
+// cspell:ignore mrstdev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrstdev, `mrstdev`>>
 |FUNCTION
 |mrstdev( a, b, c )
 
+// cspell:ignore mrsub
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsub, `mrsub`>>
 |FUNCTION
 |mrsub( a, b, c )
 
+// cspell:ignore mrsum
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsum, `mrsum`>>
 |FUNCTION
 |mrsum( a, b, c )
 
+// cspell:ignore mrsumsqr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrsumsqr, `mrsumsqr`>>
 |FUNCTION
 |mrsumsqr( a, b, c )
 
+// cspell:ignore mrtan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrtan, `mrtan`>>
 |FUNCTION
 |mrtan( a, b )
 
+// cspell:ignore mrtanh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mrtanh, `mrtanh`>>
 |FUNCTION
 |mrtanh( a, b )
 
+// cspell:ignore mset
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mset, `mset`>>
 |FUNCTION
 |mset( a, b, c )
 
+// cspell:ignore mshl
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mshl, `mshl`>>
 |FUNCTION
 |mshl( a, b, c )
 
+// cspell:ignore mshr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mshr, `mshr`>>
 |FUNCTION
 |mshr( a, b, c )
 
+// cspell:ignore msign
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msign, `msign`>>
 |FUNCTION
 |msign( a, b )
 
+// cspell:ignore msin
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msin, `msin`>>
 |FUNCTION
 |msin( a, b )
 
+// cspell:ignore msinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msinc, `msinc`>>
 |FUNCTION
 |msinc( a, b )
 
+// cspell:ignore msinh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msinh, `msinh`>>
 |FUNCTION
 |msinh( a, b )
 
+// cspell:ignore msort
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msort, `msort`>>
 |FUNCTION
 |msort( a, b )
 
+// cspell:ignore msortrev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msortrev, `msortrev`>>
 |FUNCTION
@@ -4699,6 +4879,7 @@ g.Neighborhood(
 |FUNCTION
 |msqrt( a, b )
 
+// cspell:ignore mstdev
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mstdev, `mstdev`>>
 |FUNCTION
@@ -4709,41 +4890,49 @@ g.Neighborhood(
 |FUNCTION
 |msub( a, b, c )
 
+// cspell:ignore msubset
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msubset, `msubset`>>
 |FUNCTION
 |msubset( a, b, c, d )
 
+// cspell:ignore msubsetobj
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msubsetobj, `msubsetobj`>>
 |FUNCTION
 |msubsetobj( a, b, c )
 
+// cspell:ignore msum
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msum, `msum`>>
 |FUNCTION
 |msum( a, b, c )
 
+// cspell:ignore msumprodobj
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msumprodobj, `msumprodobj`>>
 |FUNCTION
 |msumprodobj( a, b, c )
 
+// cspell:ignore msumsqr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_msumsqr, `msumsqr`>>
 |FUNCTION
 |msumsqr( a, b, c )
 
+// cspell:ignore mtan
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mtan, `mtan`>>
 |FUNCTION
 |mtan( a, b )
 
+// cspell:ignore mtanh
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mtanh, `mtanh`>>
 |FUNCTION
 |mtanh( a, b )
 
+// cspell:ignore mterm
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mterm, `mterm`>>
 |FUNCTION
@@ -4754,61 +4943,73 @@ g.Neighborhood(
 |FUNCTION
 |mul( a, b )
 
+// cspell:ignore mulif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mulif, `mulif`>>
 |FUNCTION
 |mulif( a, b, c )
 
+// cspell:ignore mvadd
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvadd, `mvadd`>>
 |FUNCTION
 |mvadd( a, b, c )
 
+// cspell:ignore mvand
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvand, `mvand`>>
 |FUNCTION
 |mvand( a, b, c )
 
+// cspell:ignore mvdiv
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvdiv, `mvdiv`>>
 |FUNCTION
 |mvdiv( a, b, c )
 
+// cspell:ignore mvmod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvmod, `mvmod`>>
 |FUNCTION
 |mvmod( a, b, c )
 
+// cspell:ignore mvmul
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvmul, `mvmul`>>
 |FUNCTION
 |mvmul( a, b, c )
 
+// cspell:ignore mvor
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvor, `mvor`>>
 |FUNCTION
 |mvor( a, b, c )
 
+// cspell:ignore mvshl
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvshl, `mvshl`>>
 |FUNCTION
 |mvshl( a, b, c )
 
+// cspell:ignore mvshr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvshr, `mvshr`>>
 |FUNCTION
 |mvshr( a, b, c )
 
+// cspell:ignore mvsub
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvsub, `mvsub`>>
 |FUNCTION
 |mvsub( a, b, c )
 
+// cspell:ignore mvxor
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mvxor, `mvxor`>>
 |FUNCTION
 |mvxor( a, b, c )
 
+// cspell:ignore mxor
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_mxor, `mxor`>>
 |FUNCTION
@@ -5024,6 +5225,7 @@ g.Neighborhood(
 |FUNCTION
 |or( a, b )
 
+// cspell:ignore orif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_orif, `orif`>>
 |FUNCTION
@@ -5044,16 +5246,19 @@ g.Neighborhood(
 |FUNCTION
 |pop()
 
+// cspell:ignore popcnt
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_popcnt, `popcnt`>>
 |FUNCTION
 |popcnt( a )
 
+// cspell:ignore popif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_popif, `popif`>>
 |FUNCTION
 |popif( a )
 
+// cspell:ignore LOOKBACK
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_prev, `prev`>>
 |[LOOKBACK]OBJECT
@@ -5229,16 +5434,19 @@ g.Neighborhood(
 |[LOOKBACK]SYMBOLIC
 |(attribute) prev.virtual
 
+// cspell:ignore probealtarray
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_probealtarray, `probealtarray`>>
 |FUNCTION
 |probealtarray( a, b, c, d, e )
 
+// cspell:ignore probearray
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_probearray, `probearray`>>
 |FUNCTION
 |probearray( a, b, c, d )
 
+// cspell:ignore probesuperarray
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_probesuperarray, `probesuperarray`>>
 |FUNCTION
@@ -5259,6 +5467,7 @@ g.Neighborhood(
 |FUNCTION
 |push( a )
 
+// cspell:ignore pushif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_pushif, `pushif`>>
 |FUNCTION
@@ -5269,11 +5478,13 @@ g.Neighborhood(
 |FUNCTION
 |rad( a )
 
+// cspell:ignore randbits
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_randbits, `randbits`>>
 |FUNCTION
 |randbits()
 
+// cspell:ignore randint
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_randint, `randint`>>
 |FUNCTION
@@ -5294,11 +5505,13 @@ g.Neighborhood(
 |[DEREF TRAVERSE]FUNCTION
 |rank( [...]  )
 
+// cspell:ignore rdec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rdec, `rdec`>>
 |FUNCTION
 |rdec( a )
 
+// cspell:ignore rdecif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rdecif, `rdecif`>>
 |FUNCTION
@@ -5314,11 +5527,13 @@ g.Neighborhood(
 |SUBSCRIPT
 |rel
 
+// cspell:ignore reldec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_reldec, `reldec`>>
 |FUNCTION
 |reldec( a )
 
+// cspell:ignore relenc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_relenc, `relenc`>>
 |FUNCTION
@@ -5329,6 +5544,7 @@ g.Neighborhood(
 |FUNCTION
 |replace( a, b, c )
 
+// cspell:ignore requ
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_requ, `requ`>>
 |FUNCTION
@@ -5344,6 +5560,7 @@ g.Neighborhood(
 |FUNCTION
 |return( a )
 
+// cspell:ignore returnif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_returnif, `returnif`>>
 |FUNCTION
@@ -5359,21 +5576,25 @@ g.Neighborhood(
 |FUNCTION
 |rgt( a, b )
 
+// cspell:ignore rgte
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rgte, `rgte`>>
 |FUNCTION
 |rgte( a, b )
 
+// cspell:ignore rinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rinc, `rinc`>>
 |FUNCTION
 |rinc( a )
 
+// cspell:ignore rincif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rincif, `rincif`>>
 |FUNCTION
 |rincif( a, b )
 
+// cspell:ignore rload
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rload, `rload`>>
 |FUNCTION
@@ -5384,21 +5605,25 @@ g.Neighborhood(
 |FUNCTION
 |rlt( a, b )
 
+// cspell:ignore rlte
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rlte, `rlte`>>
 |FUNCTION
 |rlte( a, b )
 
+// cspell:ignore rmov
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rmov, `rmov`>>
 |FUNCTION
 |rmov( a, b )
 
+// cspell:ignore rmovif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rmovif, `rmovif`>>
 |FUNCTION
 |rmovif( a, b, c )
 
+// cspell:ignore rneq
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rneq, `rneq`>>
 |FUNCTION
@@ -5424,31 +5649,37 @@ g.Neighborhood(
 |FUNCTION
 |round( a )
 
+// cspell:ignore rstore
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rstore, `rstore`>>
 |FUNCTION
 |rstore( a, b )
 
+// cspell:ignore rstoreif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rstoreif, `rstoreif`>>
 |FUNCTION
 |rstoreif( a, b, c )
 
+// cspell:ignore rwrite
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rwrite, `rwrite`>>
 |FUNCTION
 |rwrite( [...]  )
 
+// cspell:ignore rwriteif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rwriteif, `rwriteif`>>
 |FUNCTION
 |rwriteif( [...]  )
 
+// cspell:ignore rxchg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rxchg, `rxchg`>>
 |FUNCTION
 |rxchg( a, b )
 
+// cspell:ignore rxchgif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_rxchgif, `rxchgif`>>
 |FUNCTION
@@ -5459,6 +5690,7 @@ g.Neighborhood(
 |FUNCTION
 |shl( a, b )
 
+// cspell:ignore shlif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_shlif, `shlif`>>
 |FUNCTION
@@ -5469,6 +5701,7 @@ g.Neighborhood(
 |FUNCTION
 |shr( a, b )
 
+// cspell:ignore shrif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_shrif, `shrif`>>
 |FUNCTION
@@ -5489,6 +5722,7 @@ g.Neighborhood(
 |FUNCTION
 |sin( a )
 
+// cspell:ignore sinc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_sinc, `sinc`>>
 |FUNCTION
@@ -5519,11 +5753,13 @@ g.Neighborhood(
 |[COLLECT]FUNCTION
 |stage([ a[, b]] )
 
+// cspell:ignore stageif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_stageif, `stageif`>>
 |[COLLECT]FUNCTION
 |stageif( a[, b[, c]] )
 
+// cspell:ignore startswith
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_startswith, `startswith`>>
 |FUNCTION
@@ -5534,6 +5770,7 @@ g.Neighborhood(
 |FUNCTION
 |store( a, b )
 
+// cspell:ignore storeif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_storeif, `storeif`>>
 |FUNCTION
@@ -5544,11 +5781,13 @@ g.Neighborhood(
 |FUNCTION
 |str( a )
 
+// cspell:ignore strcasecmp
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_strcasecmp, `strcasecmp`>>
 |FUNCTION
 |strcasecmp( a, b )
 
+// cspell:ignore strcmp
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_strcmp, `strcmp`>>
 |FUNCTION
@@ -5564,6 +5803,7 @@ g.Neighborhood(
 |FUNCTION
 |sub( a, b )
 
+// cspell:ignore subif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_subif, `subif`>>
 |FUNCTION
@@ -5574,26 +5814,31 @@ g.Neighborhood(
 |FUNCTION
 |sum( [...]  )
 
+// cspell:ignore sumsqr
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_sumsqr, `sumsqr`>>
 |FUNCTION
 |sumsqr( [...]  )
 
+// cspell:ignore synarc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_synarcdecay, `synarc.decay`>>
 |FUNCTION
 |synarc.decay( a[, b] )
 
+// cspell:ignore hasmod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_synarchasmod, `synarc.hasmod`>>
 |FUNCTION
 |synarc.hasmod( [...]  )
 
+// cspell:ignore hasrel
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_synarchasrel, `synarc.hasrel`>>
 |FUNCTION
 |synarc.hasrel( [...]  )
 
+// cspell:ignore hasrelmod
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_synarchasrelmod, `synarc.hasrelmod`>>
 |FUNCTION
@@ -5604,6 +5849,7 @@ g.Neighborhood(
 |FUNCTION
 |synarc.value( a, b )
 
+// cspell:ignore xdecay
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_synarcxdecay, `synarc.xdecay`>>
 |FUNCTION
@@ -5639,11 +5885,13 @@ g.Neighborhood(
 |SUBSCRIPT
 |type
 
+// cspell:ignore typedec
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_typedec, `typedec`>>
 |FUNCTION
 |typedec( a )
 
+// cspell:ignore typeenc
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_typeenc, `typeenc`>>
 |FUNCTION
@@ -5659,6 +5907,7 @@ g.Neighborhood(
 |FUNCTION
 |unstage([ a] )
 
+// cspell:ignore unstageif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_unstageif, `unstageif`>>
 |FUNCTION
@@ -5809,6 +6058,7 @@ g.Neighborhood(
 |FUNCTION
 |void( [...]  )
 
+// cspell:ignore vset
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_vsetadd, `vset.add`>>
 |[MAPPING]FUNCTION
@@ -5839,16 +6089,19 @@ g.Neighborhood(
 |FUNCTION
 |write( [...]  )
 
+// cspell:ignore writeif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_writeif, `writeif`>>
 |FUNCTION
 |writeif( [...]  )
 
+// cspell:ignore xchg
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_xchg, `xchg`>>
 |FUNCTION
 |xchg( a, b )
 
+// cspell:ignore xchgif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_xchgif, `xchgif`>>
 |FUNCTION
@@ -5859,6 +6112,7 @@ g.Neighborhood(
 |FUNCTION
 |xor( a, b )
 
+// cspell:ignore xorif
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_xorif, `xorif`>>
 |FUNCTION
@@ -5930,7 +6184,7 @@ ___
 <<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 //icon:arrow-circle-right[size=2x, link=VGXCoreConcepts.adoc#, title="VGX Core Concepts"]
 <<reference.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Reference"]>>
-
+// cspell:ignore backtotop
 include::common/_backtotop.adoc[]
 --
 

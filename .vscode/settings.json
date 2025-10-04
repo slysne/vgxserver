@@ -20,5 +20,6 @@
         "stdlib.h": "c",
         "memory.h": "c",
         "_vxhtml.h": "c"
-    }
+    },
+    "cSpell.configFile": "./.config/cspell.json"
 }

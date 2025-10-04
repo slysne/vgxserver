@@ -304,6 +304,7 @@ Return `True` if system property _key_ exists, otherwise return `False`. Raise <
 
 ___
 
+// cspell:ignore vgxroot
 ===== Initialize
 
 [[system_initialize_func]]`pyvgx.*system.Initialize*( **[**_vgxroot_**[**, _http_**[**, _attach_**[**, _bind_**[**, _durable_**[**, _events_**[**, _idle_**[**, _readonly_**[**, _euclidean_** ]]]]]]]]]** )`::
@@ -837,6 +838,7 @@ If a transaction's serial number is greater than the previous serial number plus
 
 ___
 
+// cspell:ignore hardsync selftest
 ===== Subscribe
 
 [[op_subscribe_func]]`pyvgx.*op.Subscribe*( _address_**[**, _hardsync_**[**, _timeout_**]]** )`::
@@ -948,6 +950,7 @@ Return bytes representing a compressed, serialized Python object _obj_.
 
 ___
 
+// cspell:ignore cpuid avxbuild subleaf
 ===== cpuid
 
 [[cpuid_func]]`pyvgx.*cpuid*( _leaf_**[**, _subleaf_**[**, _obj_ **]]** )`::
@@ -996,7 +999,7 @@ ___
 Encode _string_ to utf8 bytes.
 
 ___
-
+// cspell:ignore ihash
 ===== ihash128
 
 [[ihash128_func]]`pyvgx.*ihash128*( _x_ )`::
@@ -1010,7 +1013,7 @@ ___
 Return a 64-bit integer hash of integer _x_.
 
 ___
-
+// cspell:ignore initadmin
 ===== initadmin
 
 [[initadmin_func]]`pyvgx.*initadmin*()`::
@@ -1092,7 +1095,7 @@ Enable asynchronous log output to _filepath_. Use <<LogTimestamp_func, LogTimest
 Passing _filepath_=None closes the file and disables further logging.
 
 ___
-
+// cspell:ignore popcnt
 ===== popcnt
 
 [[popcnt_func]]`pyvgx.*popcnt*( _x_ )`::
@@ -1106,14 +1109,14 @@ ___
 Execute a basic system performance benchmark and print results to stdout.
 
 ___
-
+// cspell:ignore rstr
 ===== rstr
 
 [[rstr_func]]`pyvgx.*rstr*( _n_ )`::
 Return a random string value with _n_ characters [a-z]
 
 ___
-
+// cspell:ignore testroot
 ===== selftest
 
 [[selftest_func]]`pyvgx.*selftest*( _testroot_**[**, _library_**[**, _names_**[**, _force_**]]]** )`::
@@ -1147,28 +1150,28 @@ ___
 Compute sha256 of string _x_ and return the result as a string of 64 hex digits.
 
 ___
-
+// cspell:ignore strhash
 ===== strhash64
 
 [[strhash64_func]]`pyvgx.*strhash64*( _x_ )`::
 Return a 64-bit integer hash of string _x_.
 
 ___
-
+// cspell:ignore threadid
 ===== threadid
 
 [[threadid_func]]`pyvgx.*threadid*()`::
 Return the integer ID of the current thread.
 
 ___
-
+// cspell:ignore threadinit
 ===== threadinit
 
 [[threadinit_func]]`pyvgx.*threadinit*( **[**_seed_**]** )`::
 Seed the internal random generators with unique starting points for the current thread.
 
 ___
-
+// cspell:ignore threadlabel
 ===== threadlabel
 
 [[threadlabel_func]]`pyvgx.*threadlabel*( _label_ )`::
@@ -1203,7 +1206,7 @@ ___
 Return a string containing version information for various system components. Pass an integer to the optional _verbosity_ parameter. Higher _verbosity_ produces more version information.
 
 ___
-
+// cspell:ignore vgxrpndefs
 ===== vgxrpndefs
 
 [[vgxrpndefs_func]]`pyvgx.*vgxrpndefs*()`::
@@ -1376,7 +1379,7 @@ ___
 The graph _order_ is the number of vertices in the graph.
 
 ___
-
+// cspell:ignore objcnt
 [[objcnt_attr]]`<<graph/graphMembers.adoc#graphobjcnt, *objcnt*>>`::
 The graph _objcnt_ is a dict of object counters: +
 `{'order': _o_, 'size': _s_, 'properties': _p_, 'vectors': _v_}`
@@ -1402,7 +1405,7 @@ ___
 Accumulate the floating point value for <<constants/arcModifierConstants.adoc#M_ACC, M_ACC>> arc of type _relationship_ from _initial_ to _terminal_ (names or writable vertex objects.) The accumulation value is specified by _delta_ parameter, which defaults to 1.0. Negative _delta_ is allowed. If the arc does not exist it is created with a value equal to _delta_. An optional _timeout_ (in milliseconds) allows blocking while waiting for vertex access. The default is nonblocking. Returns the new floating point value of the arc after accumulation has been applied.
 
 ___
-
+// cspell:ignore limexec
 ==== Adjacent
 
 [[adjacent_func]]`<<graph/graphQuery.adoc#graphadjacent, *Adjacent*>>( _id_**[**, _arc_**[**, _neighbor_**[**, _filter_**[**, _memory_**[**, _timeout_**[**, _limexec_ **]]]]]]**)`::
@@ -1484,7 +1487,7 @@ ___
 Commit modifications to all write-locked vertices owned by the current thread, and keep vertices open. Return the number of write-locked vertices.
 
 ___
-
+// cspell:ignore bitmask
 ==== Connect
 
 [[connect_func]]`<<graph/graphArc.adoc#graphconnect, *Connect*>>( _initial_, _arc_, _terminals_**[**, _lifespan_**[**, _condition_**[**, _timeout_ **]]]** )`::
@@ -1626,7 +1629,7 @@ ___
 Return enumeration code for property _key_ after defining mapping if it does not already exist.
 
 ___
-
+// cspell:ignore vtype
 ==== EnumVertexType
 
 [[enumvertextype_func]]`<<graph/graphEnum.adoc#graphenumvertextype, *EnumVertexType*>>( _vtype_ )`::
@@ -1851,7 +1854,7 @@ ___
 Acquire and return a <<vertexobject, pyvgx.Vertex>> object identified by _id_, which may be a string or a memory address. Use the optional _mode_ parameter to control how the vertex is acquired. Acquisition is recursive. Mode `'w'` acquires the vertex writable after implicitly creating and committing the vertex if it does not already exist. Mode `'r'` acquires an already existing vertex readonly. Mode `'a'` (the default) acquires the vertex writable without creating. Supplying an integer _id_ (memory address) is only supported for modes `'r'` and `'a'`.
 
 ___
-
+// cspell:ignore idlist
 ==== OpenVertices
 
 [[openvertices_func]]`<<graph/graphVertex.adoc#graphopenvertices, *OpenVertices*>>( _idlist_**[**, _mode_**[**, _timeout_ **]]** )`::
@@ -2762,7 +2765,7 @@ Return the cosine similarity of two vectors _v1_ and _v2_.
 *Euclidean vectors*: The cosine similarity of two euclidean vectors equals cos( &theta; ) where &theta; is the angle between the vectors, and ranges from -1 to 1 since vector components may be negative or positive.
 
 ___
-
+// cspell:ignore nseeds ksize
 ==== CreateProjectionSets
 
 [[similarity_createprojectionsets]]`<<similarity/similarityMethods.adoc#similaritycreateprojectionsets, *CreateProjectionSets*>>( _nseeds_, _ksize_ )`::
@@ -2835,7 +2838,7 @@ ___
 Return list of projection names [`b'_xxxx|xxx'`, ...].
 
 ___
-
+// cspell:ignore rvec
 ==== rvec
 
 [[similarity_rvec]]`<<similarity/similarityMethods.adoc#similarityrvec, *rvec*>>( _n_ )`::
@@ -2925,7 +2928,7 @@ _cache_ : (bool) When `True`, enable returning of previous result set (without i
 
 
 ___
-
+// cspell:ignore backtotop
 [.float-group]
 --
 [.left]
