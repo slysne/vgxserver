@@ -1,0 +1,70 @@
+[[pyvgxbuild]]
+= PyVGX {project-version} Build Instructions <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: images/
+:linkattrs:
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+
+== Prerequisites
+
+TODO
+
+.Download
+[.copyable]
+[source, bash]
+----
+git clone https://github.com/slysne/vgxserver.git
+----
+
+
+.Linux and MacOS
+[.copyable]
+[source, bash]
+----
+./build-unix.sh 
+----
+
+.Windows
+[.copyable]
+[source, bat]
+----
+build-win64.cmd
+----
+
+=== Required Python Version
+
+* Python 3.12 or later
+
+
+=== Supported Platforms
+
+[IMPORTANT]
+====
+Currently the x86-64 architecture is supported.
+
+Support for Mac OS / Apple Silicon is planned for late 2025.
+====
+
+Linux:: Minimum Requirement: glibc 2.17 (Run `ldd --version` to verify)
+
+Windows:: Minimum Requirement: Windows 10
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>

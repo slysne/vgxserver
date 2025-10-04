@@ -1,0 +1,114 @@
+[[exceptions]]
+= Exceptions <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[AccessError]]
+== pyvgx.AccessError
+
+This exception is raised when sufficient access to a vertex cannot be obtained by a graph operation.
+
+Possible scenarios include:
+
+* The vertex is already locked by another thread
+* The vertex is already locked by the current thread and an invalid access mode switch is attempted
+* Readonly vertices held by a thread attempting a delete operation
+* Repeated locking for the same vertex has reached the recursion limit
+* Vertex has been closed and the Python vertex object is no longer valid
+
+Other scenarios are possible. The exception message will provide more details as appropriate.
+
+[[ArcError]]
+== pyvgx.ArcError
+
+This exception is raised if an invalid arc specification was used, or if an arc could not be deleted due to acquisition timeout.
+
+[[EnumerationError]]
+== pyvgx.EnumerationError
+
+This exception is raised when the core system is unable to perform an enumeration mapping between an external string and the internal integer representation of that string.
+
+Typically, this occurs when the enumeration space becomes exhausted due to too many unique vertex type names or relationship names. Each new unique name string is automatically mapped to a unique integer value for internal use. There is a hard <<../limits.adoc#vgxlimits, limit>> for the number of unique values that can be mapped per graph. The limits are:
+
+* <<../limits.adoc#limits, *208*>> unique _vertex type_ enumerations
+* <<../limits.adoc#limits, *15616*>> unique _relationship_ enumerations
+
+When either of these limits is reached, trying to create a new vertex or relationship using a new unique name will raise the exception.
+
+NOTE: These limits apply per graph. Each graph has its own enumeration space.
+
+[[InternalError]]
+== pyvgx.InternalError
+
+This exception is raised when an unknown internal error is detected.
+
+[[QueryError]]
+== pyvgx.QueryError
+
+This exception is raised when a graph query cannot be completed.
+
+In most cases this is caused by incorrect query parameters.
+
+The exception message will include more details as appropriate.
+
+[[ResultError]]
+== pyvgx.ResultError
+
+This exception is raised when a graph query fails to generate a result object. This is typically an internal error.
+
+[[SearchError]]
+== pyvgx.SearchError
+
+This exception is raised if the execution of a graph query fails due to an internal error.
+
+[[VertexError]]
+== pyvgx.VertexError
+
+This exception is raised when trying to assign an invalid name, type, or other attribute to a vertex.
+
+[[OperationTimeout]]
+== pyvgx.OperationTimeout
+
+This exception is raised when a system management operation cannot be completed within a user-specified timeout, or within a system-defined timeout.
+
+[[DataError]]
+== pyvgx.DataError
+
+This exception is raised when internal configuration or initialization fails, or when other data corruption is detected.
+
+[[PluginError]]
+== pyvgx.PluginError
+
+This exception is raised when execution of an installed plugin could not be performed.
+
+[[RequestError]]
+== pyvgx.RequestError
+
+This exception is raised when invalid parameters or data are encountered when processing a PluginRequest instance.
+
+[[ResponseError]]
+== pyvgx.ResponseError
+
+This exception is raised when invalid parameters or data are encountered when processing a PluginResponse instance.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

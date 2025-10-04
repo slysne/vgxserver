@@ -1,0 +1,984 @@
+[[vertexmembers]]
+= Vertex Members <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexAccess.adoc#, icon:arrow-circle-right[title="Vertex Access Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 1
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[cols="3,7"]
+|===
+|Attribute |Description
+
+|<<vertexidentifier>>
+|Vertex unique identifier string
+
+|<<vertexinternalid>>
+|A digest of the identifier string
+
+|<<vertextype>>
+|Vertex type name
+
+|<<vertexisolated>>
+|True when degree is zero
+
+|<<vertexdegree>>
+|Total number of arcs incident on vertex
+
+|<<vertexindegree>>
+|Number of vertex inarcs
+
+|<<vertexoutdegree>>
+|Number of vertex outarcs
+
+|<<vertexvector>>
+|Vertex vector represented as a Python list of 2-tuples
+
+|<<vertexproperties>>
+|A new dictionary representing the stored properties of a vertex
+
+|<<vertexTMC>>
+|Vertex creation timestamp
+
+|<<vertexTMM>>
+|Vertex modification timestamp
+
+|<<vertexTMX>>
+|Vertex expiration timestamp
+
+|<<vertexRTX>>
+|Vertex remaining time until expiration
+
+|<<vertexrankc1>>
+|Dynamic rank 1^st^ order coefficient (writable)
+
+|<<vertexrankc0>>
+|Dynamic rank 0^th^ order coefficient (writable)
+
+|<<vertexrankb1>>
+|Special internal: ANN seed number (readonly)
+
+|<<vertexrankb0>>
+|Special internal: ANN arc LSH rotate (readonly)
+
+|<<vertexvirtual>>
+|Vertex is VIRTUAL if True, REAL if False
+
+|<<vertexaddress>>
+|Vertex memory address
+
+|<<vertexindex>>
+|Vertex object location index based on its memory address
+
+|<<vertexbitindex>>
+|Vertex bitvector quadword offset
+
+|<<vertexbitvector>>
+|Vertex bitvector quadword
+
+|<<vertexop>>
+|Operation ID of the most recent graph operation modifying this vertex
+
+|<<vertexrefc>>
+|Vertex object reference count
+
+|<<vertexbidx>>
+|Vertex object allocator block index
+
+|<<vertexoidx>>
+|Vertex object allocator block offset
+
+|<<vertexhandle>>
+|Vertex object allocator handle (long)
+
+|<<vertexenum>>
+|Vertex object enumeration (int)
+
+|<<vertexdescriptor>>
+|Integer value representing internal state of vertex
+
+|<<vertexreaders>>
+|Number of readonly acquisitions
+
+|<<vertexowner>>
+|ID of thread holding one or more write-locks for this vertex
+
+|<<vertexxrecursion>>
+|Number of write-locks held by vertex owner.
+
+|===
+
+[[vertexidentifier]]
+== pyvgx.Vertex.id
+
+Vertex unique identifier string.
+
+This is a read-only attribute.
+
+Alias: `pyvgx.Vertex.identifier`
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.id             # "A"
+g.CloseVertex( A )
+----
+
+[[vertexinternalid]]
+== pyvgx.Vertex.internalid
+
+Vertex internal id is a digest of the identifier string.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.id             # 'A'
+A.internalid     # '7fc56270e7a70fa81a5935b72eacbe29'
+g.CloseVertex( A )
+----
+
+[[vertextype]]
+== pyvgx.Vertex.type
+
+Vertex type name.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+B = g.NewVertex( "B", type="thing" )
+A.type                       # '<vertex>' (typeless)
+B.type                       # 'thing'
+g.CloseVertex( A )
+g.CloseVertex( B )
+----
+
+[[vertexisolated]]
+== pyvgx.Vertex.isolated
+
+True when no arcs incident on vertex, False otherwise.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+B = g.NewVertex( "B" )
+C = g.NewVertex( "C" )
+g.Connect( B, "to", C)
+A.isolated  # -> True
+B.isolated  # -> False
+C.isolated  # -> False
+----
+
+[[vertexdegree]]
+== pyvgx.Vertex.deg
+
+Total number of arcs incident on vertex.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+B = g.NewVertex( "B" )
+C = g.NewVertex( "C" )
+g.Connect( A, None, B )
+g.Connect( B, None, C )
+A.deg                    # -> 1
+B.deg                    # -> 2
+C.deg                    # -> 1
+g.CloseVertex( A )
+g.CloseVertex( B )
+g.CloseVertex( C )
+----
+
+[[vertexindegree]]
+== pyvgx.Vertex.ideg
+
+Number of vertex inarcs.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+B = g.NewVertex( "B" )
+C = g.NewVertex( "C" )
+g.Connect( A, None, B )
+g.Connect( B, None, C )
+A.ideg                   # -> 0
+B.ideg                   # -> 1
+C.ideg                   # -> 1
+g.CloseVertex( A )
+g.CloseVertex( B )
+g.CloseVertex( C )
+----
+
+[[vertexoutdegree]]
+== pyvgx.Vertex.odeg
+
+Number of vertex outarcs.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+B = g.NewVertex( "B" )
+C = g.NewVertex( "C" )
+g.Connect( A, None, B )
+g.Connect( B, None, C )
+A.odeg                   # -> 1
+B.odeg                   # -> 1
+C.odeg                   # -> 0
+g.CloseVertex( A )
+g.CloseVertex( B )
+g.CloseVertex( C )
+----
+
+[[vertexvector]]
+== pyvgx.Vertex.vector
+
+Vertex vector represented as a Python list of 2-tuples.
+
+This is a read-only attribute.
+
+NOTE: The list produced by reading this attribute is a new, independent Python object, disassociated from the actual vertex object. Modifying the list has no effect on the vertex vector.
+
+To modify a vertex vector, use <<vertexVector.adoc#vertexsetvector, pyvgx.Vertex.SetVector()>>.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.SetVector( [("this",1.5),("is",1.1),("our",0.9),("vector",0.7)] )
+V = A.vector
+print( V )         # [('this', 1.5), ('is', 1.0), ('our', 0.875), ('vector', 0.6875)]
+# NOTE: Modifying the list returned by SetVector is allowed but has no effect on the vertex!
+V.append( "zzz" )  # modifying the
+del V[0]           #   list has no effect
+V[0] = 123         #      on the vertex vector
+print( V )         # [123, ('our', 0.875), ('vector', 0.6875), 'zzz']
+# Vector in vertex has not changed
+print( A.vector )  # [('this', 1.5), ('is', 1.0), ('our', 0.875), ('vector', 0.6875)]
+----
+
+[[vertexproperties]]
+== pyvgx.Vertex.properties
+
+A new dictionary representing the stored properties of a vertex.
+
+NOTE: Modifying the returned dictionary has no effect on the vertex stored properties.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A", type="node" )
+A.SetProperty( "name", "something" )
+A.SetProperty( "value", 123 )
+A.properties              # {'name': 'something', 'value': 123}
+A.RemoveProperties()
+A.properties              # {}
+g.CloseVertex( A )
+----
+
+[[vertexTMC]]
+== pyvgx.Vertex.tmc
+
+Vertex creation timestamp (seconds since 1/1/1970 UTC).
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.tmc              # 1504631589
+g.CloseVertex( A )
+----
+
+[[vertexTMM]]
+== pyvgx.Vertex.tmm
+
+Vertex modification timestamp (seconds since 1/1/1970 UTC).
+
+This is a read-only attribute.
+
+NOTE: The vertex modification timestamp is updated when the vertex is committed using <<../graph/graphVertex.adoc#graphclosevertex, pyvgx.Graph.CloseVertex()>>.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import time
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.tmc                      # 1504631589
+A.tmm                      # 1504631589
+# Wait a little bit then perform some modifying operations
+time.sleep(5)
+A.SetProperty( "x", 123 )  # Setting a property modifies the vertex
+g.Connect( A, "to", "B" )  # Creating a connection modifies the vertex
+A.tmm                      # 1504631589, not updated yet since we have not committed
+# Commit the vertex and check the tmm
+g.CloseVertex( A )         # Commit A
+A = g.OpenVertex( "A" )    # Reopen A
+A.tmm                      # 1504631594, now updated
+g.CloseVertex( A )
+----
+
+[[vertexTMX]]
+== pyvgx.Vertex.tmx
+
+Vertex expiration timestamp (seconds since 1/1/1970 UTC).
+
+This is a read-only attribute.
+
+A vertex is guaranteed to exist and be valid (unless explicitly deleted) until the expiration timestamp passes. Once a vertex expires it may be deleted from the graph at any time.
+
+NOTE: The expiration timestamp does not guarantee deletion at any particular time. It only guarantees the vertex will exist before this timestamp is reached (i.e. there may be a delay in removing the vertex after it expires). This delay is system dependent and has no absolute definition.
+
+NOTE: The maximum value for tmx is 4102444800 (Fri Jan 01 00:00:00 2100 UTC) representing no expiration time.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import time
+g = Graph( "test" )
+A = g.NewVertex( "A" )
+A.tmx                         # 4102444800, never expires by default
+now = int( time.time() )      # Get current time
+A.SetExpiration( now + 3600 ) # Set "A" to expire one hour from now
+A.tmx                         # 1504639328
+g.CloseVertex( A )
+----
+
+[[vertexRTX]]
+== pyvgx.Vertex.rtx
+
+Vertex remaining seconds until expiration.
+
+This is a read-only attribute.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import time
+g = Graph( "test" )
+A = g.NewVertex( "A", lifespan=60 )
+A.rtx                         # 60
+time.sleep(10)
+A.rtx                         # 50
+----
+
+[[vertexrankc1]]
+== pyvgx.Vertex.c1
+
+Dynamic rank coefficient for use with <<../evaluator/evaluator.adoc#simplerankingfunctions, `rank()` and `georank()`>> in evaluator expressions.
+This vertex attribute is writable.
+
+Default value: `c1 = 1.0`
+
+When used with `rank()` it represents the _1^st^ order coefficient_ in the equation `y = c1&#183;X + c0`.
+
+When used with `georank()` it represents _geographic latitude_ in degrees.
+
+TIP: It is possible to use `c1` as a general purpose numeric property (single precision float),
+which is faster and more memory efficient than regular vertex properties
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.c1 = 5.0
+A.c0 = 1000.0
+g.Evaluate( "rank(1)", head=A )      # -> 1005.0
+g.Evaluate( "rank(100,10)", head=A ) # -> 1550.0
+----
+
+[[vertexrankc0]]
+== pyvgx.Vertex.c0
+
+Dynamic rank coefficient for use with <<../evaluator/evaluator.adoc#simplerankingfunctions, `rank()` and `georank()`>> in evaluator expressions.
+This vertex attribute is writable.
+
+Default value: `c0 = 0.0`
+
+When used with `rank()` it represents the _0^th^ order coefficient_ in the equation `y = c1&#183;X + c0`.
+
+When used with `georank()` it represents _geographic longitude_ in degrees.
+
+TIP: It is possible to use `c0` as a general purpose numeric property (single precision float),
+which is faster and more memory efficient than regular vertex properties
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+B = g.NewVertex( "Boston" )
+B.SetRank( 42.3601, -71.0589 )
+T = g.NewVertex( "Tokyo" )
+T.SetRank( 35.6762, 139.6503 )
+g.Evaluate( "georank( vertex )", tail=B, head=T )  # -> 0.46071
+#
+# NOTE: georank = (20015090 - geodist) / 20015090
+#       where 20015090 is the max distance between two points on Earth
+----
+
+[[vertexrankb1]]
+== pyvgx.Vertex.b1
+
+For special internal use with ANN search. This is the ANN seed number.
+
+Internal details subject to change and are thus intentionally undocumented.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("g1")
+g.sim.CreateProjectionSets( 2, 10 ) # -> [0, 1087]
+# Projections from the first and second seeds
+g["_1FFF|000"].b1  # -> 0
+g["_1234|43F"].b1  # -> 1
+----
+
+[[vertexrankb0]]
+== pyvgx.Vertex.b0
+
+For special internal use with ANN search. This is the ANN arc LSH rotation amount.
+
+Internal details subject to change and are thus intentionally undocumented.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("g1")
+g.sim.CreateProjectionSets( 2, 10 ) # -> [0, 1087]
+# Projections from the first and second seeds
+g["_1FFF|000"].b0  # -> 45
+g["_1234|43F"].b0  # -> 30
+----
+
+[[vertexvirtual]]
+== pyvgx.Vertex.virtual
+
+Vertex VIRTUAL flag.
+
+This is a read-only attribute.
+
+The manifestation of a vertex is either REAL or VIRTUAL.
+
+A vertex that is created explicitly is REAL.
+
+A vertex that is created implicitly as a terminal for a relationship is VIRTUAL.
+
+If a REAL vertex is deleted it will be converted to VIRTUAL if its indegree is greater than zero.
+
+A VIRTUAL vertex whose indegree goes to zero as a result of a graph operation will be deleted.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A" )    # "A" is created explicitly as a REAL vertex
+g.Connect( A, "to", "B" ) # "B" is created implicitly and becomes VIRTUAL
+A.virtual                 # False
+g['B'].virtual            # True
+g.Connect( "C", "to", A ) # "A" becomes a terminal and has indegree=1
+g.DeleteVertex( "A" )     # "A" is converted to VIRTUAL
+g['A'].virtual            # True
+g.DeleteVertex( "C" )     # When "C" is deleted "A" is automatically deleted
+g.HasVertex( "A" )        # False
+----
+
+[[vertexaddress]]
+== pyvgx.Vertex.address
+
+Memory address of the vertex object.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.address              # -> 902775776
+----
+
+[[vertexindex]]
+== pyvgx.Vertex.index
+
+Vertex object location index based on its memory address.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.index                 # -> 4701957
+----
+
+[[vertexbitindex]]
+== pyvgx.Vertex.bitindex
+
+Vertex bitvector quadword offset, i.e. the n^th^ quadword in an array of quadwords containing bitmask for vertex memory location.
+
+This can be used together with `pyvgx.Vertex.bitvector` to construct vertex set bitmaps.
+
+If `array[ bitindex ] & bitvector == 1` then the vertex is present in the array.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.bitindex              # -> 73468
+----
+
+[[vertexbitvector]]
+== pyvgx.Vertex.bitvector
+
+Vertex bitvector quadword. This is a 64-bit number with one bit set.
+
+See <<vertexbitindex>> for more information.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.bitvector             # -> 32
+----
+
+[[vertexop]]
+== pyvgx.Vertex.op
+
+Operation ID of the most recent graph operation modifying this vertex.
+
+The operation ID is a built-in graph property that is incremented each
+time an object is modified. When modifying a vertex the operation ID
+is captured and stored in the vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.op                   # -> 10000000015013808
+A['score'] = 100
+A.Commit()
+A.op                   # -> 10000000015013809
+----
+
+[[vertexrefc]]
+== pyvgx.Vertex.refc
+
+Vertex object reference counter. This is an internal attribute which may
+be useful for diagnostics and debugging.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.refc                  # -> 4
+----
+
+[[vertexbidx]]
+== pyvgx.Vertex.bidx
+
+Vertex object allocator block index. This is an internal attribute which may
+be useful for diagnostics and debugging.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.bidx                  # -> 0
+----
+
+[[vertexoidx]]
+== pyvgx.Vertex.oidx
+
+Vertex object allocator block offset. This is an internal attribute which may
+be useful for diagnostics and debugging.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.oidx                  # -> 476229
+----
+
+[[vertexhandle]]
+== pyvgx.Vertex.handle
+
+Vertex object allocator handle. This is a *long* type (42 significant bits) which
+uniquely identifies a vertex independent of the current process, as opposed to
+the vertex address which will generally differ between processes.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.handle               # -> 2199023256641
+----
+
+[[vertexenum]]
+== pyvgx.Vertex.enum
+
+Vertex object enumeration. This is an *int* type (31 significant bits) which uniquely
+identifies a vertex independent of the current process, as opposed to the vertex
+address which will generally differ between processes. In large graphs
+(with > 2 billion vertices), this may return -1. If so, use <<vertexhandle>> instead.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+A = g.NewVertex( "A" )
+A.enum                  # -> 1089
+----
+
+[[vertexdescriptor]]
+== pyvgx.Vertex.descriptor
+
+Integer value representing internal flags and codes describing current state of vertex.
+
+This is a read-only attribute.
+
+The vertex descriptor may be useful for analyzing problems related to concurrency (threading) or other issues where visibility into the vertex internal state is required.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test" )
+A = g.NewVertex( "A", type="node" )
+g.Connect( A, None, "B" )
+A.descriptor                    # 109286233120702464
+g['B'].descriptor               # 76987254421061632
+g.CloseVertex( A )
+----
+
+=== Format
+
+A vertex descriptor is a 64-bit value of flags and state information.
+
+
+[cols="5,2,1,4,6",options="header"]
+|===
+|Field |Bit Range |Bits |Value Range |Description
+
+|ZERO
+|63
+|1
+|always 0
+|
+
+|semaphore.count
+|62-56
+|7
+|0-127
+
+0-63 (usable)
+|Reentrancy count for vertex lock. Counts the total lock acquisition for either multiple simultaneous readers or a single writer. Total reentrancy cannot exceed 63.
+
+|type.enumeration
+|55-48
+|8
+|0-255
+
+17, 32-239 (usable)
+|Internally assigned code representing the vertex type mapping. This value defaults to 17 (11h) for typeless vertices and will otherwise be in the range 32 - 239 (20h - EFh) for vertices with an assigned type. This limits the vertex type-space to <<../limits.adoc#limits, 208 distinct mappings>>.
+
+|state.context.manifestation (MAN)
+|47-46
+|2
+|0 = NULL
+
+1 = REAL
+
+2 = VIRTUAL
+
+3 = ANY
+|Vertices always be either REAL (1) or VIRTUAL (2). The two other codes NULL (0) and ANY (3) are sometimes used internally but will never appear in the vertex descriptor.
+
+|state.context.pre_active (PRE)
+|45
+|1
+|0 = normal, 1 = pre-active
+|Will always be 0 for vertices that have been fully constructed and gone through initial commit. The only time PRE=1 is prior to the initial commit, which occurs at the time the vertex construction completes and the write lock is released for the first time.
+
+|state.lock.yielded_inarcs_busy (YIB)
+|44
+|1
+|0 = idle, 1 = busy
+|Will be set to 1 only when a thread has locked the vertex writable but has yielded its inarcs (INY=1) due to the thread expecting to become blocked, and those yielded inarcs have been acquired by another thread which is about to create an arc inbound on the vertex which requires modification of the vertex inarcs.
+
+|state.lock.inarcs_yielded (INY)
+|43
+|1
+|0 = normal, 1 = yielded
+|Will be set to 1 when a thread has locked the vertex writable and the thread is about to become blocked. This signals availability of the vertex's inarcs for other thread that may need to modify the vertex inarcs while the actual owner of the vertex write lock is blocked.
+
+|state.lock.write_requested (WRQ)
+|42
+|1
+|0 = none, 1 = write requested
+|Will be set to 1 by the first thread that fails to acquire a write lock on the vertex because the vertex is currently locked readonly by one or more other threads.
+
+|state.lock.read_write (RWL)
+|41
+|1
+|0 = writable, 1 = readonly
+|Only has meaning when LCK = 1, and in that case RWL = 0 means writable and RWL = 1 means readonly.
+
+|state.lock.locked (LCK)
+|40
+|1
+|0 = open, 1 = locked
+|When 0 the vertex is not locked and should not be accessed. A thread needs to lock the vertex before it can safely access members and call methods. For non-modifying access a readonly lock should be acquired. For modifying access a writable lock should be acquired. In both cases LCK = 1 after the lock as been acquired, and RWL will indicate the type of lock.
+
+|property.degree.has_inarcs (IN)
+|39
+|1
+|0 = no inarcs, 1 = has inarcs
+|Will be 1 if the vertex has one or more inarcs.
+
+|property.degree.has_outarcs (OUT)
+|38
+|1
+|0 = no outarcs, 1 = has outarcs
+|Will be 1 if the vertex has one or more outarcs.
+
+|property.vector.is_centroid (CTR)
+|37
+|1
+|0 = standard, 1 = centroid
+|Will be 1 if the vertex has a vector and that vector is a centroid.
+
+|property.vector.has_vector (VEC)
+|36
+|1
+|0 = no vector, 1 = has vector
+|Will be 1 if the vertex has a vector.
+
+|property.fields.has_fields (FLD)
+|35
+|1
+|0 = no fields, 1 = has fields
+|Will be 1 if the vertex has one or more properties set.
+
+|property.reserved.rsv
+|34-32
+|3
+|*reserved*
+|
+
+|writer.threadid
+|31-0
+|32
+|0 - 4294967295
+|Will be set to the operating system's numeric ID assigned to the thread currently holding a write lock on the vertex, or has requested write access while one or more readers threads hold the readonly lock.
+
+|===
+
+[[vertexreaders]]
+== pyvgx.Vertex.readers
+
+The number of readonly acquisitions (by all threads) for this vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+g.CreateVertex( "A" )
+A = g.OpenVertex( "A", "r" )
+A.readers                       # -> 1
+x = g.OpenVertex( "A", "r" )
+A.readers                       # -> 2
+----
+
+[[vertexowner]]
+== pyvgx.Vertex.owner
+
+Thread ID of thread owning one or more write-locks for this vertex. Thread ID is a positive integer when vertex is write-locked, or 0 when vertex is not write-locked. 
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+g.CreateVertex( "A" )
+g.CreateVertex( "B" )
+A = g.OpenVertex( "A", "w" )
+B = g.OpenVertex( "B", "r" )
+A.owner                     # -> current thread ID
+A.owner == threadid()       # -> True
+B.owner                     # -> 0
+----
+
+[[vertexxrecursion]]
+== pyvgx.Vertex.xrecursion
+
+Number of write-locks held by vertex owner thread.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test ")
+g.CreateVertex( "A" )
+A = g.OpenVertex( "A" )
+A.xrecursion                # -> 1
+A2 = g.OpenVertex( "A" )
+A.xrecursion                # -> 2
+A2.xrecursion               # -> 2
+g.CloseVertex( A )
+A2.xrecursion               # -> 1
+A.xrecursion                # AccessError
+----
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexFilter.adoc#, title="Vertex Condition Syntax"]
+<<vertexFilter.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Condition Syntax"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexAccess.adoc#, title="Vertex Access Methods"]
+<<vertexAccess.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Access Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

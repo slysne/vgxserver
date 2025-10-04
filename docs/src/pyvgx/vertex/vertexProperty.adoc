@@ -1,0 +1,414 @@
+[[vertexproperty]]
+= Vertex Property Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexRank.adoc#, icon:arrow-circle-right[title="Vertex Rank Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex Access Methods |Description
+
+|<<vertexsetproperty>>
+|Set or update a named property in the vertex.
+
+|<<vertexincproperty>>
+|Increment a property value
+
+|<<vertexhasproperty>>
+|Check whether the vertex contains the named property, with optional value condition.
+
+|<<vertexgetproperty>>
+|Return a vertex property.
+
+|<<vertexremoveproperty>>
+|Remove a property
+
+|<<vertexsetproperties>>
+|Set many properties
+
+|<<vertexhasproperties>>
+|Check whether the vertex has any properties.
+
+|<<vertexnumproperties>>
+|Return the number of properties
+
+|<<vertexgetproperties>>
+|Return all vertex properties as a dictionary of name → value mappings.
+
+|<<vertexremoveproperties>>
+|Remove all properties
+
+|<<vertexitems>>
+|Return name/value pairs
+
+|<<vertexkeys>>
+|Return property names
+
+|<<vertexvalues>>
+|Return property values
+
+|===
+
+[[vertexsetproperty]]
+== pyvgx.Vertex.SetProperty()
+
+Set or update a named property in the vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.SetProperty( name [, value[, virtual]] )
+----
+
+=== Parameters
+
+`_name_`::
+The property name must be a string.
+
+`_value_`::
+The property value may be a number, string, list of numeric values, dict of {int:float} items, function, or any other Python object supporting the Pickle protocol. 
+
+`_virtual_`::
+When True store the property value on disk instead of memory. Default is False.
+
+=== Remarks
+
+Supported value types and ranges are summarized below. Note that the primitive numeric types are limited to a 56-bit internal representation.
+
+[[vertex_property_types]]
+.Vertex Property Types
+[cols="2,2,1,3"]
+|===
+|Python Type Inserted |Stored in Vertex |Python Type Retrieved |Comment
+
+|None [[vertex_property_type_none]]
+|None
+|None
+|A property value can be explicitly set to None or automatically set to None when no property value is specified.
+
+|bool [[vertex_property_type_bool]]
+|56-bit signed integer
+|int
+|Bool objects are interpreted as integer type, i.e. False becomes 0, True becomes 1.
+
+|int [[vertex_property_type_int]]
+|56-bit signed integer
+|int
+|A Python integer object in the range is [-2^55^, 2^55^-1]
+
+|float [[vertex_property_type_float]]
+|56-bit floating point
+|float
+|Truncation of the mantissa will lead to slight loss of precision, e.g. 3.14 → 3.1399999999999864
+
+|str [[vertex_property_type_str]]
+|Byte array representing string data
+|str
+|Strings must be UTF-8 encoded. The upper limit for string length is not defined, but is <<../limits.adoc#limits, at least 65464 octets>>. Longer strings are compressed internally. As long as the size of compressed data does not exceed 65465 bytes the string can be stored. Non-compressed strings are readable by evaluator expressions.
+
+|bytearray [[vertex_property_type_bytearray]]
+|Byte array representing raw unsigned bytes
+|bytearray
+|A list of 8-bit unsigned integers stored as a native array, which can be accessed by evaluator expressions. The <<../limits.adoc#limits, maximum array length is 65464 bytes>>.
+
+|bytes [[vertex_property_type_bytes]]
+|String of raw bytes
+|bytes
+|A list of 8-bit unsigned integers stored as a native array, which can be accessed by evaluator expressions. The <<../limits.adoc#limits, maximum array length is 65464 bytes>>.
+
+|list [[vertex_property_type_list]]
+ +
+ (all int, or all float)
+|Byte array representing multiple 64-bit integers or double precision floats
+|list
+|A list of only integers or only floats stored as a native array, which can be accessed by evaluator expressions. The <<../limits.adoc#limits, maximum array length is 8183 items>>.
+ +
+ +
+ *NOTE*: If types are mixed (integers and floats), or if any other type appears in the list the property value will be stored as <any_other_object> described below without warning!
+
+|dict [[vertex_property_type_dict]]
+ +
+ (integer keys, float values)
+|Byte array representing a mapping of 32-bit integer keys to single precision float values
+|dict
+|A mapping of 32-bit signed integer keys to 32-bit single precision floating point values stored as a native hash table, which can be accessed by evaluator expressions. The <<../limits.adoc#limits, maximum map size is 2703 items>>.
+
+|function [[vertex_property_type_function]]
+|Serialized Python byte code, optionally compressed if large
+|function
+|Arbitrary code, executable by the Python interpreter. 
+
+|<any_other_object> [[vertex_property_type_other]]
+|Serialized Python object, optionally compressed if large
+|object
+|Any other Python object will be stored as the string produced by the objects repr() method. The size limit of the string representation is 65464 bytes (after internal compression when applicable.)
+
+|===
+
+TIP: Use a serialization protocol such as JSON or Python's own Pickle module to store complex objects.
+
+WARNING: Data types with special restrictions (such as numeric lists or integer-to-float maps) will only be stored as expected when those restrictions are met. In the case of numeric lists, non-conforming values are silently stored as serialized Python objects rather than native arrays. Dictionary properties require integer keys and numeric values, and will raise an exception if other types are used.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import cPickle
+import pprint
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+#
+# Set some properties
+#
+A.SetProperty( "flagX" )            # None
+A.SetProperty( "beware", None )     # None
+A.SetProperty( "boolA", True )      # 1
+A.SetProperty( "boolB", False )     # 0
+A.SetProperty( "integer", -123 )    # -123
+A.SetProperty( "big", 2**50 )       # 1125899906842624
+A.SetProperty( "pi", 3.14 )         # 3.1399999999999864
+A.SetProperty( "message", "hello" ) # "hello"
+A.SetProperty( "array", [1,2,3] )   # [1, 2, 3]
+
+# Virtual property string value stored on disk
+A.SetProperty( "ondisk", "this_is_on_disk", virtual=True )
+
+# str  : "<PyVGX_Graph: name=graph order=1 size=0>"
+A.SetProperty( "the_graph", g )
+
+# str  : "[1, 2, {'x': 'y'}]"
+A.SetProperty( "objstr", [1,2,{'x':'y'}] )
+
+# str  : "(lp1\nI1\naI2\na(dp2\nS'x'\nS'y'\nsa."
+A.SetProperty( "obj", cPickle.dumps( [1,2,{'x':'y'}] ) )
+
+#
+# Get the properties
+#
+pprint.pprint( A.GetProperties() )
+# { 'beware': None,
+#   'big': 1125899906842624,
+#   'boolA': 1,
+#   'boolB': 0,
+#   'flagX': None,
+#   'integer': -123,
+#   'message': 'hello',
+#   'objstr': "[1, 2, {'x': 'y'}]",
+#   'obj': "(lp1\nI1\naI2\na(dp2\nS'x'\nS'y'\nsa.",
+#   'pi': 3.1399999999999864,
+#   'array': [1, 2, 3],
+#   'the_graph': '<PyVGX_Graph: name=1 order=1 size=0>' }
+cPickle.loads( A.GetProperty( "obj" ) )      # [1, 2, {'x': 'y'}]
+----
+
+[[vertexincproperty]]
+== pyvgx.Vertex.IncProperty()
+
+Increment property value.
+
+[[vertexhasproperty]]
+== pyvgx.Vertex.HasProperty()
+
+Check whether the vertex contains the named property, with optional value condition.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.HasProperty( name [, value_condition] )
+----
+
+=== Parameters
+
+`_name_`::
+The property name to check. Must be string.
+
+`_value_condition_`::
+Optional condition to apply to property value. The condition is NONE
+
+=== Return Value
+
+True: The vertex contains the named property.
+
+False: The vertex does not contain the named property.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.HasProperty( "color" )          # -> False
+A.SetProperty( "color", "red" )   #
+A.HasProperty( "color" )          # -> True
+----
+
+[[vertexgetproperty]]
+== pyvgx.Vertex.GetProperty()
+
+Return a vertex property.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetProperty( name, default=None )
+----
+
+=== Parameters
+
+`_name_`::
+The named property whose value is to be returned.
+
+`_default_`::
+Default value to return if the vertex does not contain the named property.
+
+=== Return Value
+
+This method returns the value of the named vertex property, or a default value if the named property does not exist in the vertex.
+
+=== Remarks
+
+Property values are stored as integer, floating point, or string type. Python objects other than these will be cast to a string representation.
+
+Note that integers and floating point values are restricted to a 56-bit internal representation. See <<vertexsetproperty>> for details.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.GetProperty( "color" )            # -> None
+A.SetProperty( "color", "red" )
+A.GetProperty( "color" )            # -> "red"
+A.GetProperty( "size", 100 )        # -> 100
+A.GetProperty( "brand", "generic" ) # -> "generic"
+----
+
+[[vertexremoveproperty]]
+== pyvgx.Vertex.RemoveProperty()
+
+Remove a property.
+
+[[vertexsetproperties]]
+== pyvgx.Vertex.SetProperties()
+
+Set many properties from dictionary.
+
+[[vertexhasproperties]]
+== pyvgx.Vertex.HasProperties()
+
+Check whether the vertex has any properties.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.HasProperties()
+----
+
+=== Return Value
+
+True: The vertex contains at least one named property.
+
+False: The vertex does not contain any named properties.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.HasProperties()                  # -> False
+A.SetProperty( "color", "red" )    #
+A.HasProperties()                  # -> True
+----
+
+[[vertexnumproperties]]
+== pyvgx.Vertex.NumProperties()
+
+Return the number of properties.
+
+[[vertexgetproperties]]
+== pyvgx.Vertex.GetProperties()
+
+Return all vertex properties as a dictionary of name → value mappings.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetProperties()
+----
+
+=== Return Value
+
+A Python dictionary is returned.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.GetProperties()                  # -> {}
+A.SetProperty( "color", "red" )    #
+A.SetProperty( "size", 5 )         #
+A.GetProperties()                  # -> {'color': 'red', 'size': 5}
+----
+
+[[vertexremoveproperties]]
+== pyvgx.Vertex.RemoveProperties()
+
+Remove all properties.
+
+[[vertexitems]]
+== pyvgx.Vertex.items()
+
+Return name/value pairs.
+
+[[vertexkeys]]
+== pyvgx.Vertex.keys()
+
+Return property names.
+
+[[vertexvalues]]
+== pyvgx.Vertex.values()
+
+Return property values.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexAccess.adoc#, title="Vertex Access Methods"]
+<<vertexAccess.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Access Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexRank.adoc#, title="Vertex Rank Methods"]
+<<vertexRank.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Rank Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

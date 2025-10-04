@@ -1,0 +1,1107 @@
+[[vertexfilter]]
+= Vertex Condition Syntax <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexMembers.adoc#, icon:arrow-circle-right[title="Vertex Members"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Summary
+A `vertex condition` is a set of one or more constraints applied to vertices when evaluating graph queries, expressed as key/value pairs within a dictionary.
+
+[[generalsyntax]]
+=== Syntax
+
+The general syntax of <vertex_condition> is a Python dictionary:
+
+.General Syntax
+[source, python]
+----
+<vertex_condition> ::= {
+    <constraint_1>,
+    <constraint_2>,
+    ...
+}
+
+where <constraint_n>  ::= <constraint_name> : <constraint_value>
+----
+
+As a shorthand, when the only constraint is vertex name <vertex_condition> may be a string:
+
+.Vertex Name Shorthand
+[source, python]
+----
+<vertex_condition> :: = "<str>" | "<prefix>*"
+----
+
+[[constraints]]
+=== Constraints
+
+The following constraints are available for use in a `vertex condition`. Multiple constraints are evaluated using AND-logic, i.e. all must evaluate to True for `vertex condition` to match.
+
+[cols="1,7,4"]
+|===
+|Name |Syntax |Description
+
+|<<vertexfiltervirtual, virtual>>
+|`'virtual': <bool>`
+|Controls whether to restrict vertex matching to vertices of a particular <<../VGXCoreConcepts.adoc#vgxcoreconcepts, manifestation>>.
+
+|<<vertexfiltertype, type>>
+|`'type': <str>`
+|Restrict vertex matches to those of the specified type.
+
+|<<vertexfilterdegree, degree>>
+|`'degree': <value condition>`
+ +
+ or
+ +
+`'degree': (<arc_filter>, <value_condition>)`
+|Vertices must have a certain number of incident arcs.
+
+|<<vertexfilterindegree, indegree>>
+|`'indegree': <value condition>`
+ +
+ or
+ +
+`'indegree': (<arc_filter>, <value_condition>)`
+|Vertices must have a certain number of inarcs.
+
+|<<vertexfilteroutdegree, outdegree>>
+|`'outdegree': <value condition>`
+ +
+ or
+ +
+`'outdegree': (<arc_filter>, <value_condition>)`
+|Vertices must have a certain number of outarcs.
+
+|<<vertexfilterid, id>>
+|`'id': <str>`
+ +
+ or
+ +
+`'id': <vertex_instance>`
+ +
+ or
+ +
+`'id': [<id1>, <id2>, ...]`
+|Restrict on vertex identifier. When a string is used it may contain a wildcard '*' at the end to specify prefix match. A list can also be used to specify individual ids (as vertex instances or non-wildcard strings.)
+
+|<<vertexfilterabstime, abstime>>
+|`'abstime': { '<ts_name>' : <value_condition> }`
+ +
+ where
+ +
+`<ts_name> ::= created &#124; modified &#124; expires`
+|Match vertex timestamps relative to an absolute time constraint.
+
+|<<vertexfilterreltime, reltime>>
+|`'reltime': { '<ts_name>' : <value_condition> }`
+ +
+ where
+ +
+`<ts_name> ::= created &#124; modified &#124; expires`
+|Match vertex timestamps relative to the current time.
+
+|<<vertexfiltersimilarity, similarity>>
+|`'similarity': {`
+
+`'vector' : <probe_vector>,`
+
+`'score'  : <value_condition>,`
+
+`'hamdist': <value_condition>`
+
+`}`
+|Restrict vertex matches to those vertices with a vector similar to a probe vector.
+
+|<<vertexfilterproperty, property>>
+|`'property': { <prop> : <value_condition>, ... }`
+|Restrict vertex matches to those vertices containing the specified property or properties.
+
+|<<vertexfilterfilter, filter>>
+|`'filter': <expression>`
+|Restrict vertex matches to those for which <<../evaluator/evaluator.adoc#, <expression>>> evaluates to a positive numeric value. The expression is evaluated _before_ `'adjacent'` or `'traverse'` and must be a _local evaluator_, i.e. it cannot reference any `next*` attributes/properties or perform any `stage*()` or `collect*()` operations.
+
+|<<vertexfilteradjacent, adjacent>>
+|`'adjacent': {`
+
+`'arc'     : <arc_condition>,`
+
+`'filter'  : <expression>,`
+
+`'neighbor': <vertex_condition>` (<- recursive)
+
+`}`
+ +
+ +
+ or
+ +
+ +
+ `'adjacent': <arc_condition>`
+ +
+ +
+ or
+ +
+ +
+ `'adjacent': <identifier>`
+ +
+ +
+ or
+ +
+ +
+ `'adjacent': [<id1>, <id2>, ...]`
+|Restrict vertex matches to those vertices which have at least one neighbor matching the `'arc'`, `'filter'` and recursive `'neighbor'` conditions.
+ +
+ +
+ Traversal (which  may be recursive) is terminated on the first match. The `'adjacent'` constraint is evaluated before `'traverse'` and is completely independent of any subsequent traversal that may occur in `'traverse'`.
+ +
+ +
+ The short form `'adjacent': <arc_condition>` is equivalent to `'adjacent':{ 'arc':<arc_condition> }` (`<arc_condition>` is a tuple.)
+ +
+ +
+ The short form `'adjacent': <identifier>` is equivalent to `'adjacent':{ 'neighbor':<identifier> }` (`<identifier>` is a string or vertex instance.)
+ +
+ +
+ The short form `'adjacent': [<id1>, <id2>, ...]` is equivalent to `'adjacent':{ 'neighbor':[<id1>, <id2>, ...] }`
+
+|<<vertexfiltertraverse, traverse>>
+|`'traverse': {`
+
+`'arc'     : <arc_condition>,`
+
+`'filter'  : <expression>,`
+
+`'neighbor': <vertex_condition>,` (<- recursive)
+
+`'collect': C_COLLECT &#124; C_SCAN &#124; C_NONE &#124; <arc_condition>`
+
+`}`
+ +
+ +
+ or
+ +
+ +
+ `'traverse': <arc_condition>`
+ +
+ +
+ or
+ +
+ +
+ `'traverse': <identifier>`
+ +
+ +
+ or
+ +
+ +
+ `'traverse': [<id1>, <id2>, ...]`
+|Same behavior as `'adjacent'` when `'collect'` is not specified. Otherwise behavior depends on `'collect'` as follows:
+ +
+ +
+ `'collect':C_COLLECT`: Evaluate the current neighborhood exhaustively and collect into the result set every arc for which all constraints are met.
+ +
+ +
+ `'collect':C_SCAN`: Evaluate the current neighborhood exhaustively but do not collect anything.
+ +
+ +
+ `'collect':<arc_condition>`: Evaluate the current neighborhood exhaustively and collect into the result set every arc for which all constraints are met AND the traversed arc also matches the additional collect `'<arc_condition>'`.
+ +
+ +
+ `'collect':C_NONE`: Same behavior as `'adjacent'`.
+
+|<<vertexfilterpost, post>>
+|`'post': <expression>`
+|Restrict vertex matches to those for which <<../evaluator/evaluator.adoc#, <expression>>> evaluates to a positive numeric value. The expression is evaluated _after_ `'adjacent'` or `'traverse'` and must be a _local evaluator_, i.e. it cannot reference any `next*` attributes/properties or perform any `stage*()` or `collect*()` operations.
+
+|===
+
+
+[[evalorder]]
+== Evaluation Order
+Constraints are evaluated in the following order.
+
+Order matters for execution performance because evaluation is terminated (producing a vertex condition miss) as soon as a non-matching constraint is encountered. Writing smart vertex conditions that eliminate as many matches as possible as early as possible will result in more efficient algorithms.
+
+====
+. <<vertexfiltervirtual, `virtual`>>
+. <<vertexfiltertype, `type`>>
+. <<vertexfilterdegree, `degree`>> (when value condition is simple numeric)
+. <<vertexfilterid, `id`>>
+. <<vertexfilterdegree, `degree`>> (when degree condition is a value range or includes arc filter)
+. <<vertexfilterabstime, `abstime`>> and <<vertexfilterabstime, `reltime`>> (abstime and reltime conditions are merged)
+. <<vertexfiltersimilarity, `similarity : hamdist`>> (hamming distance)
+. <<vertexfiltersimilarity, `similarity : score`>> (cosine / jaccard)
+. <<vertexfilterproperty, `property`>>
+. <<vertexfilterfilter, `filter`>>
+. <<vertexfilteradjacent, `adjacent : neighbor`>> (exact ID check if included in neighbor constraint)
+. <<vertexfilteradjacentarc, `adjacent : arc`>>
+. <<vertexfilteradjacentfilter, `adjacent : filter`>>
+. <<vertexfilteradjacentneighbor, `adjacent : neighbor`>> (may be recursive)
+. <<vertexfilteradjacentassert, `adjacent : assert`>>
+. <<vertexfiltertraverse, `traverse : neighbor`>> (exact ID check if include in neighbor constraint)
+. <<vertexfiltertraversearc, `traverse : arc`>>
+. <<vertexfiltertraversefilter, `traverse : filter`>>
+. <<vertexfiltertraverseneighbor, `traverse : neighbor`>> (may be recursive)
+. <<vertexfiltertraversecollect, `traverse : collect`>>
+. <<vertexfiltertraverseassert, `traverse : assert`>>
+. <<vertexfilterpost, `post`>>
+====
+
+[[vertexfilters]]
+== Vertex Filters
+
+[[vertexfiltervirtual]]
+=== `*virtual*` - Vertex Manifestation Constraint
+
+The `virtual` constraint controls whether to restrict vertex matching to vertices of a particular <<../VGXCoreConcepts.adoc#vgxcoreconcepts, manifestation>>.
+
+[source, python]
+----
+{ 'virtual' : <boolean_condition> }
+----
+
+==== Remarks
+
+If <boolean_condition> is False only REAL vertices will be matched.
+
+If <boolean_condition> is True only VIRTUAL vertices will be matched.
+
+If the `virtual` constraint is not included in a vertex condition both VIRTUAL and REAL vertices will be matched.
+
+[[vertexfiltertype]]
+=== `*type*` - Vertex Type Name
+
+The `type` constraint will restrict vertex matches to those of the specified type.
+
+==== Syntax
+
+[source, python]
+----
+{ 'type' : <type_name> }
+----
+
+==== Remarks
+
+The `type` constraint can be used to restrict matches to vertices of the specified type. When <type_name> is a string, this must match the vertex type exactly. Wildcards are not supported for type matching, with the exception of full wildcard `&#42;` which will match any vertex type. When <type_name> is None, only <<../graph/graphVertex.adoc#graphopenvertex, typeless vertices>> are matched.
+
+==== Examples
+
+[source, python]
+----
+# Match only vertices of type "person"
+{ 'type' : "person" }     
+
+# Match all vertices (same as not specifying type filter)
+{ 'type' : "*" }          
+
+# Special case, match only typeless vertices
+{ 'type' : None }         
+----
+
+[[vertexfilterdegree]]
+=== `*degree*` - Number of Vertex Arcs
+
+The `degree` constraint will match vertices with a certain number of incident arcs, optionally restricted by arc direction or by other arc conditions.
+
+A shorthand for restricting arc direction is provided by the `indegree` and `outdegree` constraints.
+
+==== Syntax
+
+[source, python]
+----
+{ 'degree'    : <degree_condition> }
+{ 'indegree'  : <degree_condition> }             # D_IN implied
+{ 'outdegree' : <degree_condition> }             # D_OUT implied
+----
+
+The <degree_condition> is one of:
+
+----
+# Apply <value_condition> to a vertex degree attribute
+# (degree, indegree, or outdegree)
+<value_condition>
+
+# Apply <value_condition> to the number of arcs incident
+# on vertex matching <arc_filter>
+( <arc_filter>, <value_condition> )
+----
+
+==== Remarks
+
+When <degree_condition> is a <<../constants/valueConditionConstants.adoc#valueconditionconstants, &#60;value condition&#62;>> it is applied directly to the vertex degree attribute. When <degree_condition> is ( <arc_condition>, <value_condition> ) the value condition is applied to the count obtained by evaluating the <<../specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, &#60;arc_condition&#62;>> for all arcs incident on the vertex.
+
+The simple value condition is faster to evaluate because the value to compare is readily available as a vertex attribute.
+
+The arc-conditional evaluation requires recursive processing at each vertex to compute the number of arcs matching the arc condition.
+
+==== Examples
+
+.Regular Degree Conditions
+----
+# Vertex degree must be exactly 10
+neighbor = { 'degree'   : 10 }                     
+
+# Vertex degree must be > 10
+neighbor = { 'degree'   : (V_GT,10) }              
+
+# Vertex indegree must be between 5 and 15
+neighbor = { 'indegree' : (V_RANGE, (5,15)) }      
+----
+
+.Arc-conditional Degree Conditions
+----
+# Vertex must have exactly 20 inarcs with the "likes" relationship
+neighbor = { 'indegree' : ( "likes", 20 ) }
+
+# Vertex must have exactly 20 inarcs with the "likes" relationship
+# having a counter value greater than 5.
+neighbor = { 'degree'   : ( ("likes",D_IN,M_CNT,V_GT,5), 20 ) }
+
+# Vertex must have < 20 inarcs with the "likes" relationship
+# having a counter value greater than 5.
+neighbor = { 'degree'   : ( ("likes",D_IN,M_CNT,V_GT,5), (V_LT,20) ) }
+
+# Vertex must have between 15 and 25 inarcs with the "likes"
+# relationship having a counter value between 3 and 7.
+neighbor = {
+    'degree'   : (
+        ( "likes", D_IN, M_CNT, V_RANGE, (3,7) ),
+        (V_RANGE, (15,25))
+    )
+}
+----
+
+[[vertexfilterindegree]]
+=== `*indegree*` - Number of Vertex Inarcs
+
+See <<vertexfilterdegree>>
+
+[[vertexfilteroutdegree]]
+=== `*outdegree*` - Number of Vertex Outarcs
+
+See <<vertexfilterdegree>>
+
+[[vertexfilterid]]
+=== `*id*` - Vertex Identifier Name
+
+The  `id` constraint will restrict vertex matches to those with specific identifier(s).
+
+==== Syntax
+
+[source, python]
+----
+{ 'id' : <exact> }
+{ 'id' : <prefix> }
+{ 'id' : <instance> }
+{ 'id' : [<exact1>, <exact2>, ...] }
+----
+
+==== Remarks
+
+The `id` constraint can be used to restrict matches to vertices with specific name(s). Four types of constraint values are supported:
+
+. `<exact>` (string) : A vertex with this exact name will match
+. `<prefix>` (string ending with `&#42;`) : Vertices with names starting with this prefix will match
+. `<instance>` (pyvgx.Vertex) : Only this exact vertex instance will match
+. `[<exact1>, <exact2>, ...]` : Vertices with any of these exact names will match
+
+==== Examples
+
+[source, python]
+----
+# Match only the vertex "Alice"
+{ 'id' : "Alice" } 
+
+# Match vertices starting with "Ali", including "Ali", "Alice", "Alien"
+{ 'id' : "Ali*" }
+
+# No id constraint
+{ 'id' : "*" }
+
+# Assuming A=graph.OpenVertex( "Alice" ), this will match "Alice"
+{ 'id' : A } 
+
+# Match vertices "Alice", "Bob" or "Charlie"
+{ 'id' : ["Alice", "Bob", "Charlie"] }
+----
+
+[[vertexfilterabstime]]
+=== `*abstime*` - Absolute Vertex Timestamps
+
+This constraint specifies timestamp conditions that are evaluated relative to the absolute timestamp, i.e. seconds since 1970.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'abstime' : {
+        'created'   : <value_condition>,
+        'modified'  : <value_condition>,
+        'expires'   : <value_condition>
+    }
+}
+----
+
+==== Remarks
+
+The timestamp conditions _'created'_, _'modified'_ and _'expires'_ are all optional and may be specified at the same time.
+When more than one of these are specified they must all match, i.e. AND logic applies.
+
+A timestamp <<../constants/valueConditionConstants.adoc#valueconditionconstants, &#60;value_condition&#62;>> is specified as absolute time, i.e. seconds since 1970.
+
+[[vertexfilterreltime]]
+=== `*reltime*` - Relative Vertex Timestamps
+
+This constraint specifies timestamp conditions that are evaluated relative to the current time.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'reltime' : {
+        'created'   : <value_condition>,
+        'modified'  : <value_condition>,
+        'expires'   : <value_condition>
+    }
+}
+----
+
+==== Remarks
+
+The timestamp conditions _'created'_, _'modified'_ and _'expires'_ are all optional and may be specified at the same time.
+When more than one of these are specified they must all match, i.e. AND logic applies.
+
+A timestamp <<../constants/valueConditionConstants.adoc#valueconditionconstants, &#60;value_condition&#62;>> is specified relative to the current time. Positive values indicate the number of seconds into the future relative to current time. Negative values indicate a number of seconds in the past relative to current time.
+
+[[vertexfiltersimilarity]]
+=== `*similarity*` - Vertex Vector Similarity
+
+The `similarity` constraint is used to restrict vertex matches to those vertices with a vector similar to a probe vector.
+
+Similarity of two vectors can be expressed using the similarity _score_ or the _hamming distance_ of the vectors' fingerprints.
+
+==== Syntax
+
+[source, python]
+----
+# Similarity score, e.g. Cosine or Jaccard
+{
+    'similarity': {
+        'vector' : <probe_vector>,
+        'score'  : <value_condition>
+    }
+}
+
+# Hamming distance
+{
+    'similarity': {
+        'vector'  : <probe_vector>,
+        'hamdist' : <value_condition>
+    }
+}
+
+# Cosine/Jaccard AND Hamming distance
+{
+    'similarity': {
+        'vector'  : <probe_vector>,
+        'score'   : <value_condition>,
+        'hamdist' : <value_condition>
+    }
+}
+----
+
+==== Probe Vector Syntax
+
+There are four ways to express the <<../similarity/vector.adoc#pyvgxvector, &#60;probe_vector&#62;>>:
+
+====
+. A <<vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance:
++
+[source, python]
+----
+{ 'vector' : <pyvgx.Vertex> }
+----
++
+. A Python list:
++
+[source, python]
+----
+{ 'vector' : [ ( <term1> , <weight1> ), ( <term2> , <weight2> ), ... ] }
+----
++
+. A <<vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance:
++
+[source, python]
+----
+# use the vector of this vertex instance
+{ 'vector' : <pyvgx.Vertex> }
+----
++
+. The literal string `"tail"` (applicable for neighborhood queries):
++
+[source, python]
+----
+# use the vector of the anchor vertex
+{ 'vector' : "tail" }
+----
++
+====
+
+==== Similarity Measures
+
+When _'score'_ is used, a similarity score from 0.0 - 1.0 is computed using the currently active similarity parameters for the graph, typically a combination of Cosine and Jaccard computed between the vertex vector and the <probe_vector>. The <value_condition> must express matching for a value in the appropriate 0.0 - 1.0 range.
+
+When _'hamdist'_ is used, the hamming distance of the fingerprints for the vertex vector and the <probe_vector> is computed. Fingerprints are 64-bit integers. The <value_condition> must express matching for a value in the range 0 - 64.
+
+[[vertexfilterproperty]]
+=== `*property*` - Vertex Property Constraint
+
+This constraint is used to match vertices based their property names and property values.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'property' : {
+        <prop1> : <value_condition>,
+        <prop2> : <value_condition>,
+        ...
+    }
+}
+----
+
+==== Remarks
+
+The `property` constraint may contain any number of conditions. When multiple <prop> : <<../constants/valueConditionConstants.adoc#valueconditionconstants, &#60;value_condition&#62;>> entries are given they must all match, i.e. AND logic applies.
+
+To test for the existence of a property regardless of its value specify `None` for the <value_condition>.
+
+Property values can be numeric (integer or float) or strings. Prefix matching on strings is supported, i.e. a wildcard `&#42;` is permitted at the end of the string condition.
+
+==== Examples
+
+[source, python]
+----
+
+# Only match vertices that:
+#   have a numeric property 'price' with value less than 100.0
+#     AND
+#   have a string property 'color' with value equal to 'black'
+#     AND
+#   have a string property 'manufacturer' with a value starting
+#   with 'Mic'
+#     AND
+#   have a property called 'screen_size' regardless of
+#   value / value type
+
+{
+    'property' : {
+        'price'         : (V_LT, 100.0),
+        'color'         : 'black'
+        'manufacturer'  : 'Mic*',
+        'screen_size'   : None
+    }
+}
+----
+
+[[vertexfilterfilter]]
+=== `*filter*` - General Filter Expression
+
+This constraint uses the general <<../evaluator/evaluator.adoc#quickfilter, VGX Expression Language>> to express arbitrarily complex filters.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'filter' : <expression>
+}
+----
+
+==== Remarks
+
+This constraint is a match if <<../evaluator/evaluator.adoc#quickfilter, _<expression>_>> evaluates to a positive numeric value, or produces a string, vertex, or other non-NULL object.
+
+The expression must be a *_local evaluator_*, i.e. it cannot reference any of the `next*` arc attributes or head vertex attributes/properties, or perform any `stage*()` or `collect*()` operations. (Use `adjacent` or `traverse` filters for non-local evaluators.)
+
+TIP: Due to the <<../evaluator/evaluator.adoc#noshortcircuiting, no short-circuiting policy>> in the expression language it is important to take advantage of the overall vertex condition's other constraints that can be <<evalorder, applied before>> the filter expression is evaluated. Although it may be tempting to pack all constraints into a single evaluator expression this is usually not the most efficient way to write vertex conditions.
+
+==== Examples
+
+.Vertex matches if it contains a 'score' property with value within a specific range and its identifier ends with 's'.
+[source, python]
+----
+{
+  'filter' : "vertex['score'] in range( 2.5, 7.5 ) && .id == '*s'"
+}
+----
+
+[[vertexfilteradjacent]]
+=== `*adjacent*` - Neighborhood Adjacency Constraint
+
+This constraint requires a vertex to be adjacent to at least one other vertex in the graph according to a set of criteria, all of which are optional.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'adjacent' : {
+        'arc'       : <arc_condition>,
+        'filter'    : <expression>,
+        'neighbor'  : <vertex_condition>,
+        'assert'    : <bool>
+    }
+}
+----
+
+[[vertexfilteradjacentarc]]
+==== `*adjacent : arc*`
+
+The <<../specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, &#60;arc condition&#62;>> matches arcs between a vertex and its neighbors. The default arc condition is to accept all arcs in any direction, i.e. ("*", pyvgx.D_ANY). This condition is evaluated first.
+
+[[vertexfilteradjacentfilter]]
+==== `*adjacent : filter*`
+
+The filter expression is evaluated for each matching arc. It must evaluate to a positive numeric value in order to match, which is the default.
+
+[[vertexfilteradjacentneighbor]]
+==== `*adjacent : neighbor*`
+
+Each matching `arc` which also passes the `filter` test is traversed to the neighbor vertex, where a new vertex condition is evaluated recursively. The default vertex condition is `*` which means no traversal occurs. If this condition is a match the overall `adjacency` constraint is a match.
+
+[[vertexfilteradjacentassert]]
+==== `*adjacent : assert*`
+
+The adjacent constraint evaluates to True or False depending on whether all specified criteria are met. However, by setting `'assert' : True` or `'assert' : False` it is possible to explicitly control the effect the adjacent constraint has on the containing vertex condition. It may be desirable to continue the query even if the adjacent constraint is not met, which, for instance, would be the case when using adjacent to modify a running score.
+
+==== Remarks
+
+The `adjacent` constraint is non-greedy. It will traverse arcs and recursively evaluate neighbor vertex conditions only until the first match is found. This means not all arcs are necessarily traversed, thus speeding up execution in cases where a match is found.
+
+Remember that a vertex can be connected to another vertex via a _multiple arc_, i.e. several individual arcs with different relationship types and/or modifiers. In this case traversal will potentially occur multiple times from a vertex to its head vertex. Every arc, including each individual arc within a multiple arc, is evaluated and traversed independently.
+
+The neighbor <<vertexfilter, &#60;vertex condition&#62;>> is applied recursively. This enables powerful, complex graph traversal specifications to be expressed in a single statement.
+
+CAUTION: It should be noted that nesting `neighbor` conditions will increase query execution time due to the
+recursive traversal patterns that must be followed during evaluation. Query execution time can range from microseconds
+to years depending on the graph structure and the amount of neighbor recursion used.
+
+==== Examples
+
+.Vertex matches if it 'likes' one of its neighbors with a floating point score greater than 2.5
+[source, python]
+----
+{
+    'adjacent' : {
+        'arc' : ('likes', D_OUT, M_FLT, V_GT, 2.5)
+    }
+}
+----
+
+.Vertex matches if it is a person who knows someone who is exactly 80, 90 or 100 years of age. However, this vertex condition is inefficient. See next example for an improved version.
+[source, python]
+----
+{
+    'adjacent'  : {
+        'arc'    : ('knows', D_OUT),
+        'filter' : "vertex.type == 'person' && next['age'] in {80,90,100}"
+    }
+}
+----
+
+.Improved version of the above example. This is faster because the vertex type filter is applied before any (needless) arc traversal and head property lookup take place.
+[source, python]
+----
+{
+    'type'   : 'person',
+    'adjacent'  : {
+        'arc'    : ('knows', D_OUT),
+        'filter' : "next['age'] in {80,90,100}"
+    }
+}
+----
+
+.Vertex matches if it is a person, and register R1 is multiplied by 100 if they also know Bob. If they don't know Bob the person is still a match but no multiplication of R1 occurs.
+[source, python]
+----
+{
+    'type'   : 'person',
+    'adjacent'  : {
+        'arc'      : ('knows', D_OUT),
+        'neighbor' : "Bob",
+        'filter'   : "mul( R1, 100 )",
+        'assert'   : True
+    }
+}
+----
+
+
+.Vertex matches if it 'likes' one of its neighbors with a floating point score greater than 2.5 and the neighbor 'knows' 'Bob'.
+[source, python]
+----
+{
+    'adjacent'  : {
+        'arc'     : ('likes', D_OUT, M_FLT, V_GT, 2.5),
+        'neighbor': {
+            'adjacent'  : { 
+                'arc'     : ('knows', D_OUT),
+                'neighbor': {
+                    'id' : 'Bob'
+                }
+            }
+        }
+    }
+}
+----
+
+.Vertex matches if it is a person who was called by another person named Bob who purchased a product made by a company called ACME.
+[source, python]
+----
+{
+    'type'      : 'person'
+    'adjacent'  : {
+        'arc'       : ("called", D_IN)
+        'neighbor'  : {
+            'type'      : 'person',
+            'id'        : 'Bob',
+            'adjacent'  : {
+                'arc'       : ("purchased", D_OUT),
+                'neighbor'  : {
+                    'type'      : 'product'
+                    'adjacent'  : {
+                        'arc'       : ("makes", D_IN)
+                        'neighbor'  : {
+                            'type'        : 'company',
+                            'id'          : 'ACME'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+.Match vertex only if it has at least one neighbor vertex of type 'person'
+[source, python]
+----
+{
+    'adjacent'  : {
+        'neighbor': {
+            'type' : 'person'
+        }
+    }
+}
+----
+
+.Match vertex only if it has at least one neighbor vertex of type 'person' who has 'visited' the country 'Italy'
+[source, python]
+----
+{
+    'adjacent'  : {
+        'neighbor': {
+            'type'      : 'person',
+            'adjacent'  : {
+                'arc'      : ("visited", D_OUT),
+                'neighbor' : {
+                    'type'     : 'country',
+                    'id'       : 'Italy'
+                }
+            }
+        }
+    }
+}
+----
+
+.Match vertex only if it is a 'person' with a 'friend' who is a 'person' who 'purchased' a 'product' with a 'price' higher than 1000.0 that has been 'viewed' by 'Bob'
+[source, python]
+----
+{
+    'type'      : 'person',
+    'adjacent'  : {
+        'arc'     : ('friend', D_OUT),
+        'neighbor': {
+            'type'      : 'person',
+            'adjacent'  : {
+                'arc'     : ('purchased', D_OUT),
+                'neighbor': {
+                    'type'      : 'product',
+                    'price'     : (V_GT, 1000.0),
+                    'adjacent'  : {
+                        'arc'     : ('viewed', D_IN)
+                        'neighbor': {
+                            'id'      : 'Bob'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+----
+
+[[vertexfiltertraverse]]
+=== `*traverse*` - Neighborhood Adjacency Constraint with Arc Collection
+
+This constraint requires a vertex to be adjacent to at least one other vertex in the graph according to a set of criteria, all of which are optional. Matched arcs can be collected into the query result set. If no collection is specified `traverse` and `adjacent` have equivalent behavior.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'traverse' : {
+        'arc'       : <arc_condition>,
+        'filter'    : <expression>,
+        'neighbor'  : <vertex_condition>,
+        'assert'    : <bool>,
+        'collect'   : C_NONE | C_COLLECT | C_SCAN | <arc_condition>
+    }
+}
+----
+
+[[vertexfiltertraversearc]]
+==== `*traverse : arc*`
+
+The <<../specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, &#60;arc condition&#62;>> matches arcs between a vertex and its neighbors. The default arc condition is to accept all arcs in any direction, i.e. ("*", pyvgx.D_ANY). This condition is evaluated first.
+
+[[vertexfiltertraversefilter]]
+==== `*traverse : filter*`
+
+The filter expression is evaluated for each matching arc. It must evaluate to a positive numeric value in order to match, which is the default.
+
+[[vertexfiltertraverseneighbor]]
+==== `*traverse : neighbor*`
+
+Each matching `arc` which also passes the `filter` test is traversed to the neighbor vertex, where a new vertex condition is evaluated recursively. The default vertex condition is `*` which means no traversal occurs. If this condition is a match the overall `traverse` constraint is a match.
+
+[[vertexfiltertraverseassert]]
+==== `*adjacent : assert*`
+
+The traverse constraint evaluates to True or False depending on whether all specified criteria are met. However, by setting `'assert' : True` or `'assert' : False` it is possible to explicitly control the effect the traverse constraint has on the containing vertex condition. It may be desirable to continue the query even if the traverse constraint results in no traversal, which, for instance, would be the case when using traverse to modify a running score.
+
+[[vertexfiltertraversecollect]]
+==== `*traverse : collect*`
+
+Arcs which satisfy all of `arc`, `filter` and `neighbor` can be collected into the result set. Possible settings for `collect` are:
+
+[cols="2,7"]
+|===
+|Collect Value |Description
+
+|`C_COLLECT`
+|All matching arcs are collected into the result set.
+
+|`<arc_condition>`
+|Individual arcs of a multiple arc that has at least one match can be collected using a separate arc condition. `C_COLLECT` can be thought of as the special case where
+ +
+`collect: <arc_condition>` and `arc: <arc_condition>` are the same.
+ +
+ +
+*NOTE*: `collect: <arc_condition>` and `arc: <arc_condition>` must have the same direction.
+
+|`C_SCAN`
+|This turns `traverse` into a greedy version of `adjacent`, exhaustively traversing all arcs in the neighborhood. Nothing is collected.
+
+|`C_NONE`
+|This is the default when `collect` is not specified. Nothing is collected and `traverse` is equivalent to `adjacent`.
+
+|===
+
+==== Remarks
+
+When no `collect` clause is given `traverse` and `adjacent` have the same behavior. When a `collect` clause other than `C_NONE` is specified `traverse` becomes a greedy version of `adjacent`. The overall match outcome of a `traverse` constraint is independent of the `collect` clause.
+
+Both `adjacent` and `traverse` can be used at the same time in a vertex condition. This allows a fork to be created, enabling completely independent neighborhood constraints to be specified. However, `adjacent` must produce a match in order for `traverse` to be evaluated.
+
+If `adjacent` includes a recursive vertex condition it is possible to include both `adjacent` and `traverse` in the nested vertex condition. A recursive bifurcating query structure can thus be created, like this:
+
+[source, python]
+----
+{
+    'adjacent' : {
+        'arc'       : ...
+        'filter'    : ...
+        'neighbor'  : {
+            'adjacent' : {
+                'neighbor'  : {
+                    'adjacent' : ...
+                    'traverse' : ...
+                }
+            },
+            'traverse' : {
+                'neighbor'  : {
+                    'adjacent' : ...
+                    'traverse' : ...
+                },
+                'collect'   : ...
+            }
+        }
+    },
+    'traverse' : {
+        'arc'       : ...
+        'filter'    : ...
+        'neighbor'  : {
+            'adjacent' : {
+                'neighbor'  : {
+                    'adjacent' : ...
+                    'traverse' : ...
+                }
+            },
+            'traverse' : {
+                'neighbor'  : {
+                    'adjacent' : ...
+                    'traverse' : ...
+                },
+                'collect'   : ...
+            }
+        },
+        'collect'   : ...
+    }
+}
+----
+
+==== Examples
+
+.Match the vertex if it has at least one outbound relationship "called" and collect all such arcs from the vertex neighborhood into the result set.
+[source, python]
+----
+{
+    'traverse'  : {
+        'arc'     : ("called", D_OUT),
+        'collect' : C_COLLECT
+    }
+}
+----
+
+.Match a person if it has at least one friend, and collect all their friends whom they visited at least twice.
+[source, python]
+----
+{
+    'type'      : 'person',
+    'traverse'  : {
+        'arc'     : ("friend", D_OUT),
+        'collect' : ("visited", D_OUT, M_CNT, V_GTE, 2),
+        'neighbor': {
+            'type' : 'person'
+        }
+    }
+}
+----
+
+.Collect people's visits to countries provided they have a friend who visited Japan.
+[source, python]
+----
+{
+    'type'      : 'person',
+    'adjacent'  : {
+        'arc'       : ("friend", D_OUT),
+        'neighbor'  : {
+            'type'      : 'person',
+            'adjacent'  : {
+                'arc'       : ("visited", D_OUT),
+                'neighbor'  : {
+                    'type'      : 'country',
+                    'id'        : 'Japan'
+                }
+            }
+        }
+    },
+    'traverse'  : {
+        'arc'       : ("visited", D_OUT),
+        'collect'   : C_COLLECT,
+        'neighbor'  : {
+            'type'      : 'country'
+        }
+    }
+}
+----
+
+[[vertexfilterpost]]
+=== `*post*` - General Filter Expression - Post Traversal
+
+This constraint uses the general <<../evaluator/evaluator.adoc#quickfilter, VGX Expression Language>> to express arbitrarily complex filters applied after any adjacency/traversal constraints.
+
+==== Syntax
+
+[source, python]
+----
+{
+    'post' : <expression>
+}
+----
+
+==== Remarks
+
+This constraint is a match if <<../evaluator/evaluator.adoc#quickfilter, _<expression>_>> evaluates to a positive numeric value, or produces a string, vertex, or other non-NULL object.
+
+[IMPORTANT]
+====
+The `post` filter will be evaluated even if `adjacent` or `traverse` produces a miss. I.e., once the vertex condition has made it past `filter` then `post` will be evaluated. However, even if `post` produces a hit it will not override a miss produced by `adjacent` or `traverse`. If `post` produces a miss the vertex condition is a miss in any case.
+====
+
+The expression must be a *_local evaluator_*, i.e. it cannot reference any of the `next*` arc attributes or head vertex attributes/properties, or perform any `stage*()` or `collect*()` operations.
+
+==== Examples
+
+.Collect neighbor's neighbor arc with the highest value and return the top 10 of those arcs
+[.copyable]
+[source, python]
+----
+graph.Neighborhood( 
+  "A",
+  hits     = 10,
+  neighbor = {
+    'filter'   : "do( store( R1, 0 ) )",
+    'adjacent' : {
+      'arc'      : ( "to", D_OUT ),
+      'filter'   : """
+                   void( 
+                       storeif(
+                           stageif( next.arc.value > load( R1 ) ),
+                           R1,
+                           next.arc.value
+                       )
+                   )
+                   """
+    },
+    'post'     : "commit()"
+  },
+  sortby   = S_VAL
+)
+----
+
+This query uses the <<../evaluator/evaluator.adoc#collectorstagingfunctions, stage/commit>> technique to pick a single arc from the second level neighborhood. We use `'filter'` to reset a threshold level to zero before each inner traversal. Then we use `'adjacent'` to iterate over all second level neighbors. The use of `void(...)` ensures exhaustive scan since it produces a miss for each arc traversed. When an arc with a larger value than the current threshold is encountered it is staged and the threshold is updated with the new value. (Staging a new arc will replace any previously staged arc.)
+
+At the end of each inner traversal (when `'adjacent'` completes) the `'post'` expression is evaluated. Here we commit the staged arc, which collects it into the result set. 
+
+Note that `'post'` is executed even through `'adjacent'` always returns False (due to `void()` in its filter. Also note that no first-level arcs are collected since the neighbor={...} condition is always False (again due to `void()` in the inner filter.)
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexMiscellaneous.adoc#, title="Vertex Miscellaneous Methods"]
+<<vertexMiscellaneous.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Miscellaneous Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexMembers.adoc#, title="Vertex Members"]
+<<vertexMembers.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Members"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

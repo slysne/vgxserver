@@ -1,0 +1,4 @@
+ifndef::pdf-theme[]
+[.right]
+<<#, icon:chevron-circle-up[size=2x, title="Top of page"]>>
+endif::[]

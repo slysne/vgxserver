@@ -1,0 +1,5941 @@
+[[pyvgxshortreference]]
+= Compact PyVGX {project-version} Reference <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 2
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+This is a compact _pyvgx_ reference. A <<reference.adoc#pyvgxreference, complete reference>> is also available.
+
+== Basics
+
+=== <<tutorial.adoc#pyvgxtutorial, Tutorial >>
+
+[cols="1,4,6"]
+|===
+|N |Topic |Description
+
+|{counter:ctut}
+|<<tutorial.adoc#getdockerimages, Install pyvgx>>
+|How to download and install the software
+
+|{counter:ctut}
+|<<tutorial.adoc#makenewgraph, Make a new graph>>
+|How to initialize and create a new graph
+
+|{counter:ctut}
+|<<tutorial.adoc#makeconnection, Create connections>>
+|How to create arcs between vertices
+
+|{counter:ctut}
+|<<tutorial.adoc#initialterminal, About initials and terminals>>
+|What are initial and terminal vertices?
+
+|{counter:ctut}
+|<<tutorial.adoc#arcsdegree, About arcs and degree>>
+|What are arcs?
+
+|{counter:ctut}
+|<<tutorial.adoc#virtualreal, About virtual and real vertices>>
+|What are virtual and real vertices?
+
+|{counter:ctut}
+|<<tutorial.adoc#simplequery, Run a simple query>>
+|Perform a simple neighborhood query
+
+|{counter:ctut}
+|<<tutorial.adoc#morecomplex, A more complex example>>
+|Build a more complex graph and run queries
+
+|===
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+# Create a new graph
+from pyvgx import *
+g = Graph( "test" )
+
+# Create vertices
+g.CreateVertex( "Alice",   type="person" )
+g.CreateVertex( "Bob",     type="person" )
+g.CreateVertex( "Charlie", type="person" )
+g.CreateVertex( "apples",  type="fruit" )
+g.CreateVertex( "oranges", type="fruit" )
+
+# Make connections
+g.Connect( "Alice", "knows", "Bob" )
+g.Connect( "Alice", "knows", "Charlie" )
+g.Connect( "Alice", "likes", "apples" )
+g.Connect( "Bob",   "likes", "oranges" )
+
+# Does Alice know anyone who likes oranges?
+g.Neighborhood( 
+    id       = "Alice",
+    arc      = ("knows", D_OUT),
+    neighbor = {
+        'adjacent' : {
+            'arc'      : ("likes", D_OUT),
+            'neighbor' : "oranges"
+        }
+    }
+) # -> ['Bob']
+
+----
+
+== <<reference.adoc#pyvgxmodule, pyvgx>>
+
+=== <<reference.adoc#pyvgxfunctions, pyvgx Functions>>
+
+[cols="1,4,6"]
+|===
+|N |Function |Description
+
+3+|<<reference.adoc#system_namespace, *pyvgx.system*>>
+
+|{counter:ps}
+|<<service/pluginadapter.adoc#system_addplugin_func, AddPlugin()>>
+|Register a plugin function that may be called via HTTP
+
+|{counter:ps}
+|<<reference.adoc#system_cancelsync_func, CancelSync()>>
+|Stop any ongoing synchronization activity
+
+|{counter:ps}
+|<<reference.adoc#system_clear_readonly_func, ClearReadonly()>>
+|Make all graphs writable
+
+|{counter:ps}
+|<<reference.adoc#system_count_readonly_func, CountReadonly()>>
+|Return the number of readonly graphs
+
+|{counter:ps}
+|<<reference.adoc#system_delete_graph_func, DeleteGraph()>>
+|Remove a graph from memory
+
+|{counter:ps}
+|<<service/service.adoc#system_dispatcherconfig_func, DispatcherConfig()>>
+|Return HTTP server dispatcher config dict
+
+|{counter:ps}
+|<<reference.adoc#system_durabilitypoint_func, DurabilityPoint()>>
+|Return the most recent durable transaction
+
+|{counter:ps}
+|<<reference.adoc#system_events_resumable_func, EventsResumable()>>
+|Check if one or more graphs have TTL suspended
+
+|{counter:ps}
+|<<reference.adoc#system_fingerprint_func, Fingerprint()>>
+|Return a digest string representing the state of all loaded graph data
+
+|{counter:ps}
+|<<service/pluginadapter.adoc#system_getbuiltins_func, GetBuiltins()>>
+|Return builtin plugin functions
+
+|{counter:ps}
+|<<reference.adoc#system_getgraph_func, GetGraph()>>
+|Return a graph instance without taking ownership
+
+|{counter:ps}
+|<<service/pluginadapter.adoc#system_getplugins_func, GetPlugins()>>
+|Return user defined plugin functions
+
+|{counter:ps}
+|<<reference.adoc#system_get_properties_func, GetProperties()>>
+|Return a dict of all system properties
+
+|{counter:ps}
+|<<reference.adoc#system_get_property_func, GetProperty()>>
+|Get a system property
+
+|{counter:ps}
+|<<reference.adoc#system_has_property_func, HasProperty()>>
+|Check if a system property exists
+
+|{counter:ps}
+|<<reference.adoc#system_initialize_func, Initialize()>>
+|Initialize library
+
+|{counter:ps}
+|<<reference.adoc#system_isinitialized_func, IsInitialized()>>
+|Check if library is initialized
+
+|{counter:ps}
+|<<reference.adoc#system_meminfo_func, Meminfo()>>
+|Return memory information
+
+|{counter:ps}
+|<<reference.adoc#system_num_properties_func, NumProperties()>>
+|Return the number of system properties
+
+|{counter:ps}
+|<<reference.adoc#system_persist_func, Persist()>>
+|Persist all loaded graphs to disk
+
+|{counter:ps}
+|<<reference.adoc#system_registry_func, Registry()>>
+|All graphs loaded in memory
+
+|{counter:ps}
+|<<service/pluginadapter.adoc#system_removeplugin_func, RemovePlugin()>>
+|Remove a user defined plugin function
+
+|{counter:ps}
+|<<reference.adoc#system_remove_properties_func, RemoveProperties()>>
+|Remove all system properties
+
+|{counter:ps}
+|<<reference.adoc#system_remove_property_func, RemoveProperty()>>
+|Remove a system property
+
+|{counter:ps}
+|<<reference.adoc#system_requesthttp_func, RequestHTTP()>>
+|Send HTTP request a remote service
+
+|{counter:ps}
+|<<service/service.adoc#system_requestrate_func, RequestRate()>>
+|Return requests per second for HTTP Server A (main)
+
+|{counter:ps}
+|<<service/service.adoc#system_resetmetrics_func, ResetMetrics()>>
+|Reset HTTP server metrics to their initial state
+
+|{counter:ps}
+|<<service/service.adoc#system_restarthttp_func, RestartHTTP()>>
+|Restart already running HTTP server
+
+|{counter:ps}
+|<<reference.adoc#system_resume_events_func, ResumeEvents()>>
+|Resume TTL for all graphs
+
+|{counter:ps}
+|<<reference.adoc#system_root_func, Root()>>
+|Graph root directory
+
+|{counter:ps}
+|<<reference.adoc#system_runserver_func, RunServer()>>
+|Enter infinite loop until SIGINT
+
+|{counter:ps}
+|<<service/service.adoc#system_serveradminip_func, ServerAdminIP()>>
+|Return HTTP server ip address
+
+|{counter:ps}
+|<<service/service.adoc#system_serverhost_func, ServerHost()>>
+|Return HTTP server host
+
+|{counter:ps}
+|<<service/service.adoc#system_servermetrics_func, ServerMetrics()>>
+|Return HTTP server metrics
+
+|{counter:ps}
+|<<service/service.adoc#system_serverports_func, ServerPorts()>>
+|Return HTTP server ports
+
+|{counter:ps}
+|<<service/service.adoc#system_serverprefix_func, ServerPrefix()>>
+|Return HTTP server prefix
+
+|{counter:ps}
+|<<service/service.adoc#system_serviceinhttp_func, ServiceInHTTP()>>
+|Service-in (or out) HTTP server plugin execution
+
+|{counter:ps}
+|<<reference.adoc#system_set_properties_func, SetProperties()>>
+|Set multiple system properties
+
+|{counter:ps}
+|<<reference.adoc#system_set_property_func, SetProperty()>>
+|Set a system property
+
+|{counter:ps}
+|<<reference.adoc#system_set_readonly_func, SetReadonly()>>
+|Make all graphs readonly
+
+|{counter:ps}
+|<<service/service.adoc#system_starthttp_func, StartHTTP()>>
+|Start the VGX HTTP Service
+
+|{counter:ps}
+|<<reference.adoc#system_status_func, Status()>>
+|Return dict with various system status information
+
+|{counter:ps}
+|<<service/service.adoc#system_stophttp_func, StopHTTP()>>
+|Stop the VGX HTTP Service
+
+|{counter:ps}
+|<<reference.adoc#system_suspend_events_func, SuspendEvents()>>
+|Stop TTL for all graphs
+
+|{counter:ps}
+|<<reference.adoc#system_sync_func, Sync()>>
+|Send all graph data to attached subscribers
+
+|{counter:ps}
+|<<reference.adoc#system_system_func, System()>>
+|Return the system graph
+
+|{counter:ps}
+|<<reference.adoc#system_unload_func, Unload()>>
+|Reset system to uninitialized state
+
+|{counter:ps}
+|<<reference.adoc#system_writablevertices_func, WritableVertices()>>
+|Return the total number of writable vertices in all loaded graphs
+
+3+|<<reference.adoc#op_namespace, *pyvgx.op*>>
+
+|{counter:po}
+|<<reference.adoc#op_allow_func, Allow()>>
+|Allow execution of opcode(s)
+
+|{counter:po}
+|<<reference.adoc#op_assert_func, Assert()>>
+|Transmit state-assert operation
+
+|{counter:po}
+|<<reference.adoc#op_attach_func, Attach()>>
+|Establish connection to remote subscriber(s)
+
+|{counter:po}
+|<<reference.adoc#op_attached_func, Attached()>>
+|Return list of subscriber(s)
+
+|{counter:po}
+|<<reference.adoc#op_bind_func, Bind()>>
+|Start VGX Transaction Service
+
+|{counter:po}
+|<<reference.adoc#op_bound_func, Bound()>>
+|Return VGX Transaction Service run state
+
+|{counter:po}
+|<<reference.adoc#op_consume_func, Consume()>>
+|Submit operation data for execution
+
+|{counter:po}
+|<<reference.adoc#op_counters_func, Counters()>>
+|Return dict of operation I/O counters
+
+|{counter:po}
+|<<reference.adoc#op_datacrc32c_func, DataCRC32c()>>
+|Return CRC32-c checksum of tokenized operation data
+
+|{counter:po}
+|<<reference.adoc#op_deny_func, Deny()>>
+|Prevent execution of opcode(s)
+
+|{counter:po}
+|<<reference.adoc#op_detach_func, Detach()>>
+|Disconnect attached connections
+
+|{counter:po}
+|<<reference.adoc#op_fence_func, Fence()>>
+|Flush pending transactions to output stream and confirm
+
+|{counter:po}
+|<<reference.adoc#op_get_default_uris_func, GetDefaultURIs()>>
+|Return default URI(s)
+
+|{counter:po}
+|<<reference.adoc#op_heartbeat_func, Heartbeat()>>
+|Enable or disable transmission of tic opcode
+
+|{counter:po}
+|<<reference.adoc#op_pending_func, Pending()>>
+|Return number of bytes not yet processed by op parser
+
+|{counter:po}
+|<<reference.adoc#op_produce_comment_func, ProduceComment()>>
+|Inject message string into operation output stream
+
+|{counter:po}
+|<<reference.adoc#op_produce_raw_func, ProduceRaw()>>
+|Inject arbitrary data into operation output stream
+
+|{counter:po}
+|<<reference.adoc#op_profile_func, Profile()>>
+|Apply opcode execution profile
+
+|{counter:po}
+|<<reference.adoc#op_reset_func, Reset()>>
+|Reset operation parser and transaction serial number counter
+
+|{counter:po}
+|<<reference.adoc#op_resume_func, Resume()>>
+|Resume production of operation transaction data
+
+|{counter:po}
+|<<reference.adoc#op_resumetxinput_func, ResumeTxInput()>>
+|Resume modification of subscriber state via incoming transactions
+
+|{counter:po}
+|<<reference.adoc#op_resumetxoutput_func, ResumeTxOutput()>>
+|Resume transaction output from provider to attached subscribers
+
+|{counter:po}
+|<<reference.adoc#op_set_default_uris_func, SetDefaultURIs()>>
+|Register default URI(s)
+
+|{counter:po}
+|<<reference.adoc#op_strictserial_func, StrictSerial()>>
+|Enable or disable strictly increasing S/N in op parser
+
+|{counter:po}
+|<<reference.adoc#op_subscribe_func, Subscribe()>>
+|Send request to become a VGX subscriber (destination)
+
+|{counter:po}
+|<<reference.adoc#op_suspend_func, Suspend()>>
+|Suspend production of operation transaction data
+
+|{counter:po}
+|<<reference.adoc#op_suspendtxinput_func, SuspendTxInput()>>
+|Pause modification of subscriber state caused by incoming transactions
+
+|{counter:po}
+|<<reference.adoc#op_suspendtxoutput_func, SuspendTxOutput()>>
+|Pause transaction output from provider to attached subscribers
+
+|{counter:po}
+|<<reference.adoc#op_throttle_func, Throttle()>>
+|Limit processing rate of data submitted with `Consume()`
+
+|{counter:po}
+|<<reference.adoc#op_uri_func, URI()>>
+|Return supplied URI as a tuple of parsed URI elements
+
+|{counter:po}
+|<<reference.adoc#op_unbind_func, Unbind()>>
+|Stop VGX Transaction Service
+
+|{counter:po}
+|<<reference.adoc#op_unsubscribe_func, Unsubscribe()>>
+|Detach from VGX provider
+
+|{counter:po}
+|<<reference.adoc#op_verifycrc_func, VerifyCRC()>>
+|Enable or disable CRC validation in op parser
+
+3+|<<reference.adoc#pyvgx_namespace, *pyvgx*>>
+
+|{counter:p}
+|<<reference.adoc#AutoArcTimestamps_func, AutoArcTimestamps()>>
+|Enable automatic timestamps for arcs
+
+|{counter:p}
+|<<reference.adoc#avxbuild_func, avxbuild()>>
+|Return AVX version used when creating pyvgx libraries
+
+|{counter:p}
+|<<reference.adoc#compress_func, compress()>>
+|Return a compressed, serialized object
+
+|{counter:p}
+|<<reference.adoc#cpuid_func, cpuid()>>
+|Run x86-64 cpuid instruction
+
+|{counter:p}
+|<<reference.adoc#crc32c_func, crc32c()>>
+|CRC32-c checksum of string
+
+|{counter:p}
+|<<reference.adoc#decodeutf8_func, decode_utf8()>>
+|Return string from utf8 bytes
+
+|{counter:p}
+|<<reference.adoc#decompress_func, decompress()>>
+|Return an object from compressed data
+
+|{counter:p}
+|<<reference.adoc#deserialize_func, deserialize()>>
+|Return an object from serialized data
+
+|{counter:p}
+|<<reference.adoc#enable_selftest_func, enable_selftest()>>
+|Allow selftest functions to run
+
+|{counter:p}
+|<<reference.adoc#encodeutf8_func, encode_utf8()>>
+|Return utf8 bytes from string
+
+|{counter:p}
+|<<reference.adoc#ihash128_func, ihash128()>>
+|128-bit hash of integer
+
+|{counter:p}
+|<<reference.adoc#ihash64_func, ihash64()>>
+|64-bit hash of integer
+
+|{counter:p}
+|<<reference.adoc#initadmin_func, initadmin()>>
+|Initialize basic internal plugins
+
+|{counter:p}
+|<<reference.adoc#LogDebug_func, LogDebug()>>
+|Output DEBUG log message
+
+|{counter:p}
+|<<reference.adoc#LogError_func, LogError()>>
+|Output ERROR log message
+
+|{counter:p}
+|<<reference.adoc#LogInfo_func, LogInfo()>>
+|Output INFO log message
+
+|{counter:p}
+|<<reference.adoc#LogTimestamp_func, LogTimestamp()>>
+|Output a timestamped message
+
+|{counter:p}
+|<<reference.adoc#LogWarning_func, LogWarning()>>
+|Output WARNING log message
+
+|{counter:p}
+|<<reference.adoc#md5_func, md5()>>
+|MD5 of string
+
+|{counter:p}
+|<<reference.adoc#meminfo_func, meminfo()>>
+|Return basic system memory information
+
+|{counter:p}
+|<<reference.adoc#popcnt_func, popcnt()>>
+|Number of bits set to 1 in an integer
+
+|{counter:p}
+|<<reference.adoc#profile_func, profile()>>
+|Execute basic system performance benchmark
+
+|{counter:p}
+|<<reference.adoc#rstr_func, rstr()>>
+|Return a random string
+
+|{counter:p}
+|<<reference.adoc#selftest_func, selftest()>>
+|Run internal self test
+
+|{counter:p}
+|<<reference.adoc#selftest_all_func, selftest_all()>>
+|Run all internal self tests
+
+|{counter:p}
+|<<reference.adoc#serialize_func, serialize()>>
+|Return a serialized object
+
+|{counter:p}
+|<<reference.adoc#SetOutputStream_func, SetOutputStream()>>
+|Redirect log output to file
+
+|{counter:p}
+|<<reference.adoc#sha256_func, sha256()>>
+|sha256 of string
+
+|{counter:p}
+|<<reference.adoc#strhash64_func, strhash64()>>
+|64-bit hash of string
+
+|{counter:p}
+|<<reference.adoc#threadid_func, threadid()>>
+|Thread ID of current thread
+
+|{counter:p}
+|<<reference.adoc#threadinit_func, threadinit()>>
+|Initialize current thread's random generators with unique seeds
+
+|{counter:p}
+|<<reference.adoc#threadlabel_func, threadlabel()>>
+|Assign label to current thread
+
+|{counter:p}
+|<<reference.adoc#timestamp_func, timestamp()>>
+|Number of seconds since system start
+
+|{counter:p}
+|<<reference.adoc#tokenize_func, tokenize()>>
+|Tokenize text
+
+|{counter:p}
+|<<reference.adoc#tokenize_min_func, tokenize_min()>>
+|Tokenize and normalize text
+
+|{counter:p}
+|<<reference.adoc#version_func, version()>>
+|Library version
+
+|{counter:p}
+|<<reference.adoc#vgxrpndefs_func, vgxrpndefs()>>
+|Return VGX Expression Language functions and constants
+
+|===
+
+=== <<reference.adoc#pyvgxobjects, pyvgx Objects>>
+
+[cols="4,6"]
+|===
+|Constant |Description
+
+|<<reference.adoc#DefaultSim_obj, pyvgx.DefaultSimilarity>>
+|Built-in Similarity object for use with vectors not associated with a graph
+
+|===
+
+=== <<constants/constants.adoc#pyvgxconstants, pyvgx Constants>>
+
+[cols="1,4,6"]
+|===
+|N |Constant |Description
+
+3+|<<constants/arcDirectionConstants.adoc#, *Arc Direction*>>
+
+|{counter:cd}
+|<<constants/arcDirectionConstants.adoc#D_ANY, D_ANY>>
+|Any direction
+
+|{counter:cd}
+|<<constants/arcDirectionConstants.adoc#D_BOTH, D_BOTH>>
+|Both
+
+|{counter:cd}
+|<<constants/arcDirectionConstants.adoc#D_IN, D_IN>>
+|In
+
+|{counter:cd}
+|<<constants/arcDirectionConstants.adoc#D_OUT, D_OUT>>
+|Out
+
+3+|<<constants/arcModifierConstants.adoc#, *Arc Modifier*>>
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_ACC, M_ACC>>
+|Accumulator
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_ANY, M_ANY>>
+|Any modifier
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_CNT, M_CNT>>
+|Counter
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_DIST, M_DIST>>
+|Distance
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_FLT, M_FLT>>
+|Single precision float
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_FLTAGGR, M_FLTAGGR>>
+|Float aggregation
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_INT, M_INT>>
+|Signed 32-bit integer
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_INTAGGR, M_INTAGGR>>
+|Integer aggregation
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_LSH, M_LSH>>
+|Bit pattern for hamming distance matching
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_SIM, M_SIM>>
+|Similarity
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_STAT, M_STAT>>
+|Static
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_TMC, M_TMC>>
+|Creation time
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_TMM, M_TMM>>
+|Modification time
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_TMX, M_TMX>>
+|Expiration time
+
+|{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_UINT, M_UINT>>
+|Unsigned 32-bit integer
+
+3+|<<constants/valueConditionConstants.adoc#, *Value Condition*>>
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_ANY, V_ANY>>
+|Any value
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_DELTA, V_DYN_DELTA>>
+|Dynamic within additive value deviation
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_EQ, V_DYN_EQ>>
+|Dynamic equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_GT, V_DYN_GT>>
+|Dynamic greater than
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_GTE, V_DYN_GTE>>
+|Dynamic greater than or equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_LT, V_DYN_LT>>
+|Dynamic less than
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_LTE, V_DYN_LTE>>
+|Dynamic less than or equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_NEQ, V_DYN_NEQ>>
+|Dynamic not equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_DYN_RATIO, V_DYN_RATIO>>
+|Dynamic within multiplicative value deviation
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_EQ, V_EQ>>
+|Equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_GT, V_GT>>
+|Greater than
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_GTE, V_GTE>>
+|Greater than or equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_LT, V_LT>>
+|Less than
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_LTE, V_LTE>>
+|Less than or equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_NEQ, V_NEQ>>
+|Not equal
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_NRANGE, V_NRANGE>>
+|Value outside range
+
+|{counter:cv}
+|<<constants/valueConditionConstants.adoc#V_RANGE, V_RANGE>>
+|Value within range
+
+3+|<<constants/collectConstants.adoc#, *Collect*>>
+
+|{counter:cc}
+|<<constants/collectConstants.adoc#C_COLLECT, C_COLLECT>>
+|Collect arcs
+
+|{counter:cc}
+|<<constants/collectConstants.adoc#C_NONE, C_NONE>>
+|No collect
+
+|{counter:cc}
+|<<constants/collectConstants.adoc#C_SCAN, C_SCAN>>
+|No collect, continue after first match
+
+3+|<<constants/resultFieldConstants.adoc#, *Result Field*>>
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_AARC, F_AARC>>
+|Arc fields plus tail and head identifiers
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ADDR, F_ADDR>>
+|Memory address
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ALL, F_ALL>>
+|All fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ANCHOR, F_ANCHOR>>
+|Tail identifier
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ANCHOR_OBID, F_ANCHOR_OBID>>
+|Tail internalid
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ARC, F_ARC>>
+|Arc fields plus head identifier
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ARCDIR, F_ARCDIR>>
+|Arc direction
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DEFAULT, F_DEFAULT>>
+|Default fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DEG, F_DEG>>
+|Degree
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DEGREES, F_DEGREES>>
+|All degree fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DESCR, F_DESCR>>
+|Descriptor
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DETAILS, F_DETAILS>>
+|Internal details
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_HAM, F_HAM>>
+|Hamming distance
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_HANDLE, F_HANDLE>>
+|Object handle
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ID, F_ID>>
+|Identifier
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_IDEG, F_IDEG>>
+|Indegree
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_MOD, F_MOD>>
+|Arc modifier
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_NAMES, F_NAMES>>
+|All identifiers and types
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_NONE, F_NONE>>
+|No fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_OBID, F_OBID>>
+|Internalid
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_ODEG, F_ODEG>>
+|Outdegree
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_PRED, F_PRED>>
+|All arc fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_PROP, F_PROP>>
+|Properties
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_PROPS, F_PROPS>>
+|Properties and vector
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_RANK, F_RANK>>
+|Rank score
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_RAW, F_RAW>>
+|Raw bytes
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_REL, F_REL>>
+|Arc relationship type
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_RLV, F_RLV>>
+|Similarity and hamming distance
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_SIM, F_SIM>>
+|Similarity score
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_TMC, F_TMC>>
+|Creation time
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_TMM, F_TMM>>
+|Modification time
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_TMX, F_TMX>>
+|Expiration time
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_TSTAMP, F_TSTAMP>>
+|All timestamps
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_TYPE, F_TYPE>>
+|Type
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_VAL, F_VAL>>
+|Arc value
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_VEC, F_VEC>>
+|Vector
+
+3+|<<constants/resultListEntryConstants.adoc#, *Result List Entry*>>
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_COUNTS, R_COUNTS>>
+|Include hit counts in result
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_DEFAULT, R_DEFAULT>>
+|Default result format
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_DICT, R_DICT>>
+|Dictionary with all selected fields
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_LIST, R_LIST>>
+|List of all selected fields
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_METAS, R_METAS>>
+|Include timing and hit counts in result
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_SIMPLE, R_SIMPLE>>
+|Simple representation of a single field (earliest display order)
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_STR, R_STR>>
+|Single string entry representing all selected fields
+
+|{counter:cr}
+|<<constants/resultListEntryConstants.adoc#R_TIMING, R_TIMING>>
+|Include timing details in result
+
+3+|<<constants/sortSpecificationConstants.adoc#, *Sort*>>
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_ADDR, S_ADDR>>
+|Sort by vertex memory address
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_AMCHOR, S_ANCHOR>>
+|Sort by anchor vertex identifier string
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_AMCHOR_OBID, S_ANCHOR_OBID>>
+|Sort by anchor vertex internalid
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_ASC, S_ASC>>
+|Sort ascending
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_DEG, S_DEG>>
+|Sort by vertex degree
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_DESC, S_DESC>>
+|Sort descending
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_HAM, S_HAM>>
+|Sort by hamming distance
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_ID, S_ID>>
+|Sort by vertex identifier string
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_IDEG, S_IDEG>>
+|Sort by vertex indegree
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_NATIVE, S_NATIVE>>
+|No sorting (but traverse all to compute counts)
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_NONE, S_NONE>>
+|No sorting
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_OBID, S_OBID>>
+|Sort by vertex internalid
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_ODEG, S_ODEG>>
+|Sort by vertex outdegree
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_RANDOM, S_RANDOM>>
+|Sort in random order
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_RANK, S_RANK>>
+|Sort by rank score
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_SIM, S_SIM>>
+|Sort by similarity score
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_TMC, S_TMC>>
+|Sort by vertex creation time
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_TMM, S_TMM>>
+|Sort by vertex modification time
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_TMX, S_TMX>>
+|Sort by vertex expiration time
+
+|{counter:cs}
+|<<constants/sortSpecificationConstants.adoc#S_VAL, S_VAL>>
+|Sort by arc value
+
+3+|<<constants/timestampConstants.adoc#, *Timestamp*>>
+
+|{counter:ct}
+|<<constants/timestampConstants.adoc#T_MAX, T_MAX>>
+|Largest timestamp (Thu Dec 31 23:59:59 2099)
+
+|{counter:ct}
+|<<constants/timestampConstants.adoc#T_MIN, T_MIN>>
+|Smallest timestamp (Thu Jan 01 00:00:01 1970)
+
+|{counter:ct}
+|<<constants/timestampConstants.adoc#T_NEVER, T_NEVER>>
+|Infinite future
+
+3+|<<evaluator/evaluator.adoc#evaluatormemoryregisters, *Memory Register Indices*>>
+
+|{counter:crg}
+|<<reference.adoc#Rn_const, R1>>
+|-1
+
+|{counter:crg}
+|<<reference.adoc#Rn_const, R2>>
+|-2
+
+|{counter:crg}
+|<<reference.adoc#Rn_const, R3>>
+|-3
+
+|{counter:crg}
+|<<reference.adoc#Rn_const, R4>>
+|-4
+
+3+|<<constants/opcodeConstants.adoc#, *Operation Opcode Filters and Profiles*>>
+
+3+|<<constants/opcodeConstants.adoc#operatoropcodes, *_opcode_*>>
+
+[[_OP_nop]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_nop, op.OP_nop>>
+|No operation
+
+[[_OP_vxn]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxn, op.OP_vxn>>
+|New vertex
+
+[[_OP_vxd]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxd, op.OP_vxd>>
+|Delete vertex
+
+[[_OP_vxr]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxr, op.OP_vxr>>
+|Set vertex rank
+
+[[_OP_vxt]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxt, op.OP_vxt>>
+|Set vertex type
+
+[[_OP_vxx]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxx, op.OP_vxx>>
+|Set vertex expiration
+
+[[_OP_vxc]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vxc, op.OP_vxc>>
+|Convert vertex manifestation
+
+[[_OP_vps]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vps, op.OP_vps>>
+|Set vertex property
+
+[[_OP_vpd]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vpd, op.OP_vpd>>
+|Delete vertex property
+
+[[_OP_vpc]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vpc, op.OP_vpc>>
+|Clear vertex properties
+
+[[_OP_vvs]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vvs, op.OP_vvs>>
+|Set vertex vector
+
+[[_OP_vvd]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vvd, op.OP_vvd>>
+|Delete vertex vector
+
+[[_OP_vod]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vod, op.OP_vod>>
+|Delete vertex outarcs
+
+[[_OP_vid]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vid, op.OP_vid>>
+|Delete vertex inarcs
+
+[[_OP_val]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_val, op.OP_val>>
+|Acquire vertex write lock
+
+[[_OP_vrl]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vrl, op.OP_vrl>>
+|Release vertex write lock
+
+[[_OP_arc]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_arc, op.OP_arc>>
+|Create arc
+
+[[_OP_ard]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ard, op.OP_ard>>
+|Delete arc
+
+[[_OP_sya]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_sya, op.OP_sya>>
+|System attach
+
+[[_OP_syd]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_syd, op.OP_syd>>
+|System detach
+
+[[_OP_rcl]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_rcl, op.OP_rcl>>
+|Clear registry
+
+[[_OP_scf]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_scf, op.OP_scf>>
+|Configure similarity
+
+[[_OP_grn]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grn, op.OP_grn>>
+|New graph
+
+[[_OP_grd]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grd, op.OP_grd>>
+|Delete graph
+
+[[_OP_com]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_com, op.OP_com>>
+|Send data as comment
+
+[[_OP_dat]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_dat, op.OP_dat>>
+|Send raw data
+
+[[_OP_clg]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_clg, op.OP_clg>>
+|Clone graph
+
+[[_OP_grt]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grt, op.OP_grt>>
+|Truncate graph
+
+[[_OP_grp]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grp, op.OP_grp>>
+|Persist graph
+
+[[_OP_grs]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grs, op.OP_grs>>
+|Assert graph state
+
+[[_OP_grr]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grr, op.OP_grr>>
+|Set graph readonly
+
+[[_OP_grw]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_grw, op.OP_grw>>
+|Set graph writable
+
+[[_OP_gre]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_gre, op.OP_gre>>
+|Enable background TTL
+
+[[_OP_gri]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_gri, op.OP_gri>>
+|Disable background TTL
+
+[[_OP_tic]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_tic, op.OP_tic>>
+|Heartbeat
+
+[[_OP_evx]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_evx, op.OP_evx>>
+|Execute all due TTL events
+
+[[_OP_lxw]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_lxw, op.OP_lxw>>
+|Acquire multiple vertex write locks atomically
+
+[[_OP_ulv]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ulv, op.OP_ulv>>
+|Release multiple vertex write locks atomically
+
+[[_OP_ula]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ula, op.OP_ula>>
+|Release all vertex write locks atomically
+
+[[_OP_vea]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_vea, op.OP_vea>>
+|Add vertex type enumeration
+
+[[_OP_ved]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ved, op.OP_ved>>
+|Remove vertex type enumeration
+
+[[_OP_rea]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_rea, op.OP_rea>>
+|Add relationship enumeration
+
+[[_OP_red]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_red, op.OP_red>>
+|Remove relationship enumeration
+
+[[_OP_dea]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_dea, op.OP_dea>>
+|Add vector dimension enumeration
+
+[[_OP_ded]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ded, op.OP_ded>>
+|Remove vector dimension enumeration
+
+[[_OP_kea]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_kea, op.OP_kea>>
+|Add property key enumeration
+
+[[_OP_ked]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_ked, op.OP_ked>>
+|Remove property key enumeration
+
+[[_OP_sea]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_sea, op.OP_sea>>
+|Add property string value enumeration
+
+[[_OP_sed]]
+|{counter:cop}
+|<<constants/opcodeConstants.adoc#OP_sed, op.OP_sed>>
+|Remove property string value enumeration
+
+3+|<<constants/opcodeConstants.adoc#actiongroups, *_action group_*>>
+
+|{counter:cag}
+|<<constants/opcodeConstants.adoc#OP_ACTION_assign, op.OP_ACTION_assign>>
+|All opcodes modifying an existing object value: <<_OP_vxr, vxr>>, <<_OP_vxt, vxt>>, <<_OP_vxx, vxx>>, <<_OP_vxc, vxc>>.
+
+|{counter:cag}
+|<<constants/opcodeConstants.adoc#OP_ACTION_create, op.OP_ACTION_create>>
+|All opcodes creating a new object: <<_OP_vxn, vxn>>, <<_OP_vps, vps>>, <<_OP_vvs, vvs>>, <<_OP_arc, arc>>, <<_OP_scf, scf>>, <<_OP_clg, clg>>, <<_OP_grn, grn>>, <<_OP_vea, vea>>, <<_OP_rea, rea>>, <<_OP_dea, dea>>, <<_OP_kea, kea>>, <<_OP_sea, sea>>.
+
+|{counter:cag}
+|<<constants/opcodeConstants.adoc#OP_ACTION_delete, op.OP_ACTION_delete>>
+|All opcodes deleting an object: <<_OP_vxd, vxd>>, <<_OP_vpd, vpd>>, <<_OP_vpc, vpc>>, <<_OP_vvd, vvd>>, <<_OP_vod, vod>>, <<_OP_vid, vid>>, <<_OP_ard, ard>>, <<_OP_rcl, rcl>>, <<_OP_grd, grd>>, <<_OP_grt, grt>>, <<_OP_ved, ved>>, <<_OP_red, red>>, <<_OP_ded, ded>>, <<_OP_ked, ked>>, <<_OP_sed, sed>>.
+
+|{counter:cag}
+|<<constants/opcodeConstants.adoc#OP_ACTION_event, op.OP_ACTION_event>>
+|Opcodes that communicate various actions: <<_OP_nop, nop>>, <<_OP_com, com>>, <<_OP_dat, dat>>, <<_OP_grp, grp>>, <<_OP_grs, grs>>, <<_OP_tic, tic>>, <<_OP_evx, evx>>.
+
+3+|<<constants/opcodeConstants.adoc#scopegroups, *_scope group_*>>
+
+|{counter:csg}
+|<<constants/opcodeConstants.adoc#OP_SCOPE_single, op.OP_SCOPE_single>>
+|Opcodes that affect a single object: <<_OP_nop, nop>>, <<_OP_vxn, vxn>>, <<_OP_vxd, vxd>>,<<_OP_vxr, vxr>>, <<_OP_vxt, vxt>>, <<_OP_vxx, vxx>>, <<_OP_vxc, vxc>>, <<_OP_vps, vps>>, <<_OP_vpd, vpd>>, <<_OP_vvs, vvs>>, <<_OP_vvd, vvd>>, <<_OP_val, val>>, <<_OP_vrl, vrl>>, <<_OP_arc, arc>>, <<_OP_scf, scf>>, <<_OP_grn, grn>>, <<_OP_grd, grd>>, <<_OP_com, com>>, <<_OP_dat, dat>>, <<_OP_clg, clg>>, <<_OP_grt, grt>>, <<_OP_grp, grp>>, <<_OP_grs, grs>>, <<_OP_grr, grr>>, <<_OP_grw, grw>>, <<_OP_gre, gre>>, <<_OP_gri, gri>>, <<_OP_tic, tic>>, <<_OP_evx, evx>>, <<_OP_vea, vea>>, <<_OP_ved, ved>>, <<_OP_rea, rea>>, <<_OP_red, red>>, <<_OP_dea, dea>>, <<_OP_ded, ded>>, <<_OP_kea, kea>>, <<_OP_ked, ked>>, <<_OP_sea, sea>>, <<_OP_sed, sed>>.
+
+|{counter:csg}
+|<<constants/opcodeConstants.adoc#OP_SCOPE_multiple, op.OP_SCOPE_multiple>>
+|Opcodes that affect multiple objects: <<_OP_vpc, vpc>>, <<_OP_vod, vod>>, <<_OP_vid, vid>>, <<_OP_val, val>>, <<_OP_ard, ard>>, <<_OP_sya, sya>>, <<_OP_syd, syd>>, <<_OP_rcl, rcl>>, <<_OP_lxw, lxw>>, <<_OP_ulv, ulv>>, <<_OP_ula, ula>>.
+
+3+|<<constants/opcodeConstants.adoc#targetgroups, *_target group_*>>
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_vertex, op.OP_TARGET_vertex>>
+|Opcodes that target vertex objects: <<_OP_vxn, vxn>>, <<_OP_vxd, vxd>>, <<_OP_vxr, vxr>>, <<_OP_vxt, vxt>>, <<_OP_vxx, vxx>>, <<_OP_vxc, vxc>>, <<_OP_vps, vps>>, <<_OP_vpd, vpd>>, <<_OP_vpc, vpc>>, <<_OP_vvs, vvs>>, <<_OP_vvd, vvd>>, <<_OP_vod, vod>>, <<_OP_vid, vid>>, <<_OP_val, val>>, <<_OP_vrl, vrl>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_arc, op.OP_TARGET_arc>>
+|Opcodes that target arcs: <<_OP_arc, arc>>, <<_OP_ard, ard>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_system, op.OP_TARGET_system>>
+|Opcodes that target the system: <<_OP_sya, sya>>, <<_OP_syd, syd>>, <<_OP_rcl, rcl>>, <<_OP_scf, scf>>, <<_OP_com, com>>, <<_OP_dat, dat>>, <<_OP_clg, clg>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_graph, op.OP_TARGET_graph>>
+|Opcodes that target graph objects: <<_OP_grn, grn>>, <<_OP_grd, grd>>, <<_OP_grt, grt>>, <<_OP_grp, grp>>, <<_OP_grs, grs>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_rw, op.OP_TARGET_rw>>
+|Opcodes that target graph readonly state: <<_OP_grr, grr>>, <<_OP_grw, grw>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_evp, op.OP_TARGET_evp>>
+|Opcodes that target graph background TTL: <<_OP_gre, gre>>, <<_OP_gri, gri>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_time, op.OP_TARGET_time>>
+|Opcodes that target graph timer: <<_OP_tic, tic>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_exec, op.OP_TARGET_exec>>
+|Opcodes that target mass-execution: <<_OP_evx, evx>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_acquire, op.OP_TARGET_acquire>>
+|Opcodes that change the write lock state of vertices: <<_OP_lxw, lxw>>, <<_OP_ulv, ulv>>, <<_OP_ula, ula>>.
+
+|{counter:cot}
+|<<constants/opcodeConstants.adoc#OP_TARGET_enum, op.OP_TARGET_enum>>
+|Opcodes that target enumerations: <<_OP_vea, vea>>, <<_OP_ved, ved>>, <<_OP_rea, rea>>, <<_OP_red, red>>, <<_OP_dea, dea>>, <<_OP_ded, ded>>, <<_OP_kea, kea>>, <<_OP_ked, ked>>, <<_OP_sea, sea>>, <<_OP_sed, sed>>.
+
+3+|<<constants/opcodeConstants.adoc#anyop, *_any_*>>
+
+|{counter:coany}
+|<<constants/opcodeConstants.adoc#OP_ANY, op.OP_ANY>>
+|All opcodes
+
+3+|<<constants/opcodeConstants.adoc#operatorprofiles, *_profile_*>>
+
+|{counter:copp}
+|<<constants/opcodeConstants.adoc#OP_PROFILE_consumer, op.OP_PROFILE_consumer>>
+|Filter profile suitable for a vgx consumer instance: <<_OP_vxn, vxn>>, <<_OP_vxd, vxd>>, <<_OP_vxr, vxr>>, <<_OP_vxt, vxt>>, <<_OP_vxx, vxx>>, <<_OP_vxc, vxc>>, <<_OP_vps, vps>>, <<_OP_vpd, vpd>>, <<_OP_vpc, vpc>>, <<_OP_vvs, vvs>>, <<_OP_vvd, vvd>>, <<_OP_vod, vod>>, <<_OP_vid, vid>>, <<_OP_val, val>>, <<_OP_vrl, vrl>>, <<_OP_arc, arc>>, <<_OP_ard, ard>>, <<_OP_scf, scf>>, <<_OP_com, com>>, <<_OP_dat, dat>>, <<_OP_grn, grn>>, <<_OP_tic, tic>>, <<_OP_lxw, lxw>>, <<_OP_ulv, ulv>>, <<_OP_ula, ula>>, <<_OP_vea, vea>>, <<_OP_ved, ved>>, <<_OP_rea, rea>>, <<_OP_red, red>>, <<_OP_dea, dea>>, <<_OP_ded, ded>>, <<_OP_kea, kea>>, <<_OP_ked, ked>>, <<_OP_sea, sea>>, <<_OP_sed, sed>>.
+ +
+ (The following operations are ignored after applying this profile: <<_OP_sya, sya>>, <<_OP_syd, syd>>, <<_OP_rcl, rcl>>, <<_OP_clg, clg>>, <<_OP_grd, grd>>, <<_OP_grt, grt>>, <<_OP_grp, grp>>, <<_OP_grs, grs>>, <<_OP_grr, grr>>, <<_OP_grw, grw>>, <<_OP_gre, gre>>, <<_OP_gri, gri>>, <<_OP_evx, evx>>.)
+
+|===
+
+=== <<exceptions/exceptions.adoc#exceptions, pyvgx Exceptions>>
+
+[cols="1,4,6"]
+|===
+|N |Exception |Description
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#AccessError, AccessError>>
+|Vertex cannot be accessed
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#ArcError, ArcError>>
+|Arc specification is invalid or arc cannot be deleted
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#DataError, DataError>>
+|Bad configuration or corrupted data found.
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#EnumerationError, EnumerationError>>
+|Error when mapping between external and internal data representation
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#InternalError, InternalError>>
+|Unknown internal error
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#OperationTimeout, OperationTimeout>>
+|System management operation cannot be completed
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#PluginError, PluginError>>
+|Plugin execution error
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#QueryError, QueryError>>
+|Query cannot be completed
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#RequestError, RequestError>>
+|PluginRequest object error
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#ResponseError, ResponseError>>
+|PluginResponse object error
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#ResultError, ResultError>>
+|Query result cannot be generated
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#SearchError, SearchError>>
+|Internal search error
+
+|{counter:cex}
+|<<exceptions/exceptions.adoc#VertexError, VertexError>>
+|Invalid vertex attribute assignment
+
+|===
+
+== <<graph/graph.adoc#preface, pyvgx.Graph>>
+
+[cols="4,6"]
+|===
+|Graph Constructor |Description
+
+|<<graph/graph.adoc#, pyvgx.Graph()>>
+|Create a new graph
+
+|===
+
+=== <<graph/graphMembers.adoc#graphmembers, Graph Members>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Member |Description
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphname, __g__.name>>
+|Name of graph
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphobjcnt, __g__.objcnt>>
+|Object counters
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphorder, __g__.order>>
+|Number of vertices in graph
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphpsth, __g__.path>>
+|Graph path
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphsim, __g__.sim>>
+|Graph similarity object
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphsize, __g__.size>>
+|Number of arcs in graph
+
+|{counter:cgm}
+|<<graph/graphMembers.adoc#graphts, __g__.ts>>
+|Current graph timestamp
+
+|===
+
+=== <<graph/graphVertex.adoc#graphvertexmethods, Graph Vertex Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Vertex Method |Description
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphcloseall, __g__.CloseAll()>>
+|Close all vertices opened by current thread
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphclosevertex, __g__.CloseVertex()>>
+|Close vertex
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphclosevertices, __g__.CloseVertices()>>
+|Close multiple vertices
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphcommitall, __g__.CommitAll()>>
+|Commit all write-locked vertices opened by current thread
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphcreatevertex, __g__.CreateVertex()>>
+|Create a new vertex
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphdeletevertex, __g__.DeleteVertex()>>
+|Delete a vertex from graph
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphescalatevertex, __g__.EscalateVertex()>>
+|Promote readonly vertex to writable
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#getopenvertices, __g__.GetOpenVertices()>>
+|Return a list of open vertices and their threads
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphnewvertex, __g__.NewVertex()>>
+|Return a vertex object, create vertex if necessary
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphopenvertex, __g__.OpenVertex()>>
+|Return a vertex object in specified access mode
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphopenvertices, __g__.OpenVertices()>>
+|Return a list of multiple vertex objects in specified access mode
+
+|{counter:cgvx}
+|<<graph/graphVertex.adoc#graphrelaxvertex, __g__.RelaxVertex()>>
+|Demote writable vertex to readonly
+
+|===
+
+=== <<graph/graphArc.adoc#grapharcmethods, Graph Arc Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Arc Method |Description
+
+|{counter:cga}
+|<<graph/graphArc.adoc#graphaccumulate, __g__.Accumulate()>>
+|Accumulate float value for arc between two vertices
+
+|{counter:cga}
+|<<graph/graphArc.adoc#graphconnect, __g__.Connect()>>
+|Create arcs between vertices
+
+|{counter:cga}
+|<<graph/graphArc.adoc#graphcount, __g__.Count()>>
+|Increment integer value for arc between two vertices
+
+|{counter:cga}
+|<<graph/graphArc.adoc#graphdisconnect, __g__.Disconnect()>>
+|Remove arc(s) between two vertices
+
+|===
+
+=== <<graph/graphQuery.adoc#graphquerymethods, Graph Query Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Query Method |Description
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphadjacent, __g__.Adjacent()>>
+|Check if a vertex is adjacent to other vertices
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphaggregate, __g__.Aggregate()>>
+|Perform aggregation of arc values in neighborhood
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#grapharcvalue, __g__.ArcValue()>>
+|Return value of specific arc
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#grapharcs, __g__.Arcs()>>
+|Global search returning arcs in graph
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphdegree, __g__.Degree()>>
+|Return total number of arcs for a vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphgetvertex, __g__.GetVertex()>>
+|Return vertex in readonly mode
+
+|{counter:cgq}
+|<<reference.adoc#getvertexid_func, __g__.GetVertexID()>>
+|Return identifier for specific vertex or random vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphhasvertex, __g__.HasVertex()>>
+|Check if graph has vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphinarcs, __g__.Inarcs()>>
+|Return number of vertex inarcs
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphinitials, __g__.Initials()>>
+|Return the list of vertices with outarcs to specified vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphneighborhood, __g__.Neighborhood()>>
+|Execute a vertex neighborhood query
+
+|{counter:cgvx}
+|<<graph/graphQuery.adoc#graphopenneighbor, __g__.OpenNeighbor()>>
+|Return one neighbor of vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphoutarcs, __g__.Outarcs()>>
+|Return number of vertex outarcs
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphsearch, __g__.Search()>>
+|Execute a graph search and return result in human readable format
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphterminals, __g__.Terminals()>>
+|Return the list of vertices with inarcs from specified vertex
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphvertexidbyaddress, __g__.VertexIdByAddress()>>
+|Retrieve vertex identifier by vertex memory address
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphvertices, __g__.Vertices()>>
+|Global search returning vertices in graph
+
+|{counter:cgq}
+|<<graph/graphQuery.adoc#graphverticestype, __g__.VerticesType()>>
+|Global graph search returning vertices of specified type
+
+|===
+
+=== <<reference.adoc#graphobject_queryobjectmethods, Graph Query Object Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Query Object Method |Description
+
+|{counter:cgqo}
+|<<reference.adoc#newadjacencyquery_func, __g__.NewAdjacencyQuery()>>
+|Return new pyvgx.AdjacencyQuery object for graph adjacency test
+
+|{counter:cgqo}
+|<<reference.adoc#newaggregatorquery_func, __g__.NewAggregatorQuery()>>
+|Return new pyvgx.AggregatorQuery object for graph aggregation
+
+|{counter:cgqo}
+|<<reference.adoc#newarcsquery_func, __g__.NewArcsQuery()>>
+|Return new pyvgx.GlobalQuery object for global arc search
+
+|{counter:cgqo}
+|<<reference.adoc#newneighborhoodquery_func, __g__.NewNeighborhoodQuery()>>
+|Return new pyvgx.NeighborhoodQuery object for graph search
+
+|{counter:cgqo}
+|<<reference.adoc#newverticesquery_func, __g__.NewVerticesQuery()>>
+|Return new pyvgx.GlobalQuery object for global vertex search
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatorreference, Graph Evaluator Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Evaluator Method |Description
+
+|{counter:cgev}
+|<<evaluator/evaluator.adoc#evaluatordefine, __g__.Define()>>
+|Define and store an evaluator expression to be invoked later
+
+|{counter:cgev}
+|<<evaluator/evaluator.adoc#evaluate, __g__.Evaluate()>>
+|Evaluate an expression
+
+|{counter:cgev}
+|<<referece.adoc#getdefinition_func, __g__.GetDefinition()>>
+|Return previously defined evaluator expression
+
+|{counter:cgev}
+|<<referece.adoc#getdefinitions_func, __g__.GetDefinitions()>>
+|Return all previously defined evaluator expressions
+
+|{counter:cgev}
+|<<reference.adoc#memory_func, __g__.Memory()>>
+|Return new memory object
+
+|===
+
+=== <<graph/graphManagement.adoc#graphobject_managementmethods, Graph Management Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Management Method |Description
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphcleargraphreadonly, __g__.ClearGraphReadonly()>>
+|Make graph writable
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphclose, __g__.Close()>>
+|Close graph instance
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#grapherase, __g__.Erase()>>
+|Remove graph data from memory and disk
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphgetmemoryusage, __g__.GetMemoryUsage()>>
+|Return graph memory usage information
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphisgraphreadonly, __g__.IsGraphReadonly()>>
+|Check if graph is readonly
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphlock, __g__.Lock()>>
+|Acquire and return a lock object
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphsynchronized, __g__.Synchronized()>>
+|Call any function in a synchronized context
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphorder, __g__.Order()>>
+|Return number of vertices in graph
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphstatus, __g__.ResetCounters()>>
+|Reset query counters to zero
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphresetserial, __g__.ResetSerial()>>
+|Modify graph serial number
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphsave, __g__.Save()>>
+|Persist graph to disk
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphsetgraphreadonly, __g__.SetGraphReadonly()>>
+|Make graph readonly
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphsize, __g__.Size()>>
+|Return number of arcs in graph
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphstatus, __g__.Status()>>
+|Return graph status information
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphsync, __g__.Sync()>>
+|Send all VGX source data to attached destination(s)
+
+|{counter:cgmgm}
+|<<graph/graphManagement.adoc#graphtruncate, __g__.Truncate()>>
+|Delete all graph data
+
+|===
+
+=== <<graph/graphEnum.adoc#graphobject_enummethods, Graph Enumeration Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Enumeration Method |Description
+
+3+|<<graph/graphEnum.adoc#relationships, *Relationship*>>
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphenumrelationship, __g__.EnumRelationship()>>
+|Define relationship enumeration and return code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphrelationship, __g__.Relationship()>>
+|Return relationship by enumeration code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphrelationships, __g__.Relationships()>>
+|Return dict of all mapped relationships
+
+3+|<<graph/graphEnum.adoc#vertextypes, *Vertex Type*>>
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphenumvertextype, __g__.EnumVertexType()>>
+|Define vertex type enumeration and return code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphvertextype, __g__.VertexType()>>
+|Return vertex type by enumeration code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphvertextypes, __g__.VertexTypes()>>
+|Return dict of all mapped vertex types
+
+3+|<<graph/graphEnum.adoc#dimensions, *Vector Dimension*>>
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphdimension, __g__.Dimension()>>
+|Return vector dimension by enumeration code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphenumdimension, __g__.EnumDimension()>>
+|Define vector dimension enumeration and return code
+
+3+|<<graph/graphEnum.adoc#keys, *Property Key*>>
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphenumkey, __g__.EnumKey()>>
+|Define property key enumeration and return code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphkey, __g__.Key()>>
+|Return property key by enumeration code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphpropertykeys, __g__.PropertyKeys()>>
+|Return dict of all mapped property keys
+
+3+|<<graph/graphEnum.adoc#values, *Property String Value*>>
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphenumvalue, __g__.EnumValue()>>
+|Define property string value enumeration and return code
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphpropertyvalues, __g__.PropertyStringValues()>>
+|Return dict of all mapped property string values
+
+|{counter:cgenum}
+|<<graph/graphEnum.adoc#graphvalue, __g__.Value()>>
+|Return property string value by enumeration code
+
+|===
+
+=== <<graph/graphEvent.adoc#graphobject_eventmethods, Graph Event Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Event Method |Description
+
+|{counter:cgevnt}
+|<<graph/graphEvent.adoc#grapheventbacklog, __g__.EventBacklog()>>
+|Return current state of TTL processor
+
+|{counter:cgevnt}
+|<<graph/graphEvent.adoc#grapheventdisable, __g__.EventDisable()>>
+|Stop internal TTL processing
+
+|{counter:cgevnt}
+|<<graph/graphEvent.adoc#grapheventenable, __g__.EventEnable()>>
+|Resume internal TTL processing (if stopped)
+
+|{counter:cgevnt}
+|<<graph/graphEvent.adoc#grapheventflush, __g__.EventFlush()>>
+|Flush event queues to schedules (for debugging.)
+
+|{counter:cgevnt}
+|<<graph/graphEvent.adoc#grapheventparam, __g__.EventParam()>>
+|Return parameters currently in effect for TTL processor
+
+|===
+
+=== <<graph/graphMiscellaneous.adoc#graphmiscellaneousmethods, Graph Miscellaneous Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Graph Miscellaneous Method |Description
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphdebugcheckallocators, __g__.DebugCheckAllocators()>>
+|Run internal allocator diagnostic routines (for debugging)
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphdebugdumpgraph, __g__.DebugDumpGraph()>>
+|Print internal graph information
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphdebugfindobjectbyidentifier, __g__.DebugFindObjectByIdentifier()>>
+|Return a representation of the object with the given identifier (for debugging)
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphdebuggetobjectbyaddress, __g__.DebugGetObjectByAddress()>>
+|Return a representation of the object at given address (for debugging)
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphdebugprintallocators, __g__.DebugPrintAllocators()>>
+|Print internal allocator information (for debugging)
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphshowopenvertices, __g__.ShowOpenVertices()>>
+|Print a list of open vertices and the threads owning them
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphshowvertex, __g__.ShowVertex()>>
+|Print internal representation of vertex
+
+|{counter:cgmisc}
+|<<graph/graphMiscellaneous.adoc#graphvertexdescriptor, __g__.VertexDescriptor()>>
+|Return a string representing internal descriptor data for vertex
+
+|===
+
+== <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+
+[cols="4,6"]
+|===
+|Vertex Constructor |Description
+
+|<<vertex/vertex.adoc#constructor, pyvgx.Vertex()>>
+|Explicit vertex constructor
+
+|===
+
+=== <<vertex/vertexMembers.adoc#vertexmembers, Vertex Members>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Member |Description
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexaddress, __v__.address>>
+|Memory address of vertex
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexrankb0, __v__.b0>>
+|Special internal: ANN seed number
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexrankb1, __v__.b1>>
+|Special internal: ANN arc LSH rotate
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexbidx, __v__.bidx>>
+|Allocator block number for vertex object (for debugging)
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexbitindex, __v__.bitindex>>
+|Vertex object bitvector offset
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexbitvector, __v__.bitvector>>
+|Vertex bitvector quadword
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexrankc0, __v__.c0>>
+|Dynamic rank 0~th~ order coefficient
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexrankc1, __v__.c1>>
+|Dynamic rank 1~st~ order coefficient
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexdegree, __v__.deg>>
+|Vertex degree
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexdescriptor, __v__.descriptor>>
+|Numeric representation of vertex descriptor
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexenum, __v__.enum>>
+|Process independent numeric (int) vertex identifier
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexhandle, __v__.handle>>
+|Process independent numeric (long) vertex identifier
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexidentifier, __v__.id>>
+|Identifier
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexindegree, __v__.ideg>>
+|Vertex indegree
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexindex, __v__.index>>
+|Vertex object offset in memory
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexinternalid, __v__.internalid>>
+|Internal identifier (md5)
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexisolated, __v__.isolated>>
+|True when vertex degree is zero
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexoutdegree, __v__.odeg>>
+|Vertex outdegree
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexoidx, __v__.oidx>>
+|Allocator block offset for vertex object (for debugging)
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexop, __v__.op>>
+|Operation id of last modifying graph operation for this vertex
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexowner, __v__.owner>>
+|ID of thread holding one or more write-locks for this vertex
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexproperties, __v__.properties>>
+|Vertex properties as dictionary
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexreaders, __v__.readers>>
+|Number of readonly acquisitions for this vertex
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexrefc, __v__.refc>>
+|Vertex object reference count (for debugging)
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexRTX, __v__.rtx>>
+|Vertex remaining TTL
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexTMC, __v__.tmc>>
+|Vertex creation time
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexTMM, __v__.tmm>>
+|Vertex modification time
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexTMX, __v__.tmx>>
+|Vertex expiration time
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertextype, __v__.type>>
+|Vertex type
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexvector, __v__.vector>>
+|Vertex vector as a list of components
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexvirtual, __v__.virtual>>
+|`True` if vertex exists only to serve as terminal for other vertices
+
+|{counter:cvm}
+|<<vertex/vertexMembers.adoc#vertexxrecursion, __v__.xrecursion>>
+|Number of write-locks held by vertex owner.
+
+|===
+
+=== <<vertex/vertexAccess.adoc#vertexaccess, Vertex Access Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Access Method |Description
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexclose, __v__.Close()>>
+|Release vertex access lock
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexescalate, __v__.Escalate()>>
+|Promote vertex access from readonly to writable
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexreadable, __v__.Readable()>>
+|`True` if vertex information can be read
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexreadonly, __v__.Readonly()>>
+|`True` if vertex is readonly
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexrelax, __v__.Relax()>>
+|Relax vertex access from writable to readonly
+
+|{counter:cva}
+|<<vertex/vertexAccess.adoc#vertexwritable, __v__.Writable()>>
+|`True` if vertex is writable
+
+|===
+
+=== <<vertex/vertexRank.adoc#vertexrank, Vertex Rank Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Rank Method |Description
+
+|{counter:cvr}
+|<<vertex/vertexRank.adoc#vertexgetrank, __v__.GetRank()>>
+|Return dynamic rank coefficients 
+
+|{counter:cvr}
+|<<vertex/vertexRank.adoc#vertexsetrank, __v__.SetRank()>>
+|Assign dynamic rank coefficients
+
+|===
+
+=== <<vertex/vertexProperty.adoc#vertexproperty, Vertex Property Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Property Method |Description
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexgetproperties, __v__.GetProperties()>>
+|Return all vertex properties as a dictionary
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexgetproperty, __v__.GetProperty()>>
+|Retrieve a vertex property
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexhasproperties, __v__.HasProperties()>>
+|Check if a vertex has any properties
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexhasproperty, __v__.HasProperty()>>
+|Check if a vertex property exists
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexincproperty, __v__.IncProperty()>>
+|Increment a numeric vertex property
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexnumproperties, __v__.NumProperties()>>
+|Return the number of properties assigned to a vertex
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexremoveproperties, __v__.RemoveProperties()>>
+|Delete all vertex properties
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexremoveproperty, __v__.RemoveProperty()>>
+|Delete a vertex property
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexsetproperties, __v__.SetProperties()>>
+|Assign multiple vertex properties from a dictionary
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexsetproperty, __v__.SetProperty()>>
+|Assign a vertex property
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexitems, __v__.items()>>
+|Return a list of all vertex property key-value pairs
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexkeys, __v__.keys()>>
+|Return a list of all vertex property keys
+
+|{counter:cvp}
+|<<vertex/vertexProperty.adoc#vertexvalues, __v__.values()>>
+|Return a list of all vertex property values
+
+|===
+
+=== <<vertex/vertexVector.adoc#vertexvector, Vertex Vector Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Vector Method |Description
+
+|{counter:cvv}
+|<<vertex/vertexVector.adoc#vertexarclsh, __v__.ArcLSH()>>
+|32-bit segment extracted from 64-bit LSH
+
+|{counter:cvv}
+|<<vertex/vertexVector.adoc#vertexgetvector, __v__.GetVector()>>
+|Return the vertex vector
+
+|{counter:cvv}
+|<<vertex/vertexVector.adoc#vertexhasvector, __v__.HasVector()>>
+|Check if vertex has a vector
+
+|{counter:cvv}
+|<<vertex/vertexVector.adoc#vertexremovevector, __v__.RemoveVector()>>
+|Delete vector from vertex
+
+|{counter:cvv}
+|<<vertex/vertexVector.adoc#vertexsetvector, __v__.SetVector()>>
+|Assign a new vector to vertex
+
+|===
+
+=== <<vertex/vertexTTL.adoc#vertexTTL, Vertex TTL Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex TTL Method |Description
+
+|{counter:cvt}
+|<<vertex/vertexTTL.adoc#vertexclearexpiration, __v__.ClearExpiration()>>
+|Remove expiration time from vertex
+
+|{counter:cvt}
+|<<vertex/vertexTTL.adoc#vertexgetexpiration, __v__.GetExpirataion()>>
+|Return vertex expiration time
+
+|{counter:cvt}
+|<<vertex/vertexTTL.adoc#vertexisexpired, __v__.IsExpired()>>
+|Check if vertex expiration time has passed
+
+|{counter:cvt}
+|<<vertex/vertexTTL.adoc#vertexsetexpiration, __v__.SetExpiration()>>
+|Schedule vertex to be automatically deleted at a specific time in the future
+
+|===
+
+=== <<vertex/vertexMiscellaneous.adoc#vertexmiscellaneous, Vertex Miscellaneous Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Miscellaneous Method |Description
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexasdict, __v__.AsDict()>>
+|Return a dictionary representation of vertex
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexcommit, __v__.Commit()>>
+|Commit all vertex modifications without closing vertex
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexdescriptor, __v__.Descriptor()>>
+|Return a string representing the vertex descriptor
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexgettype, __v__.GetType()>>
+|Return vertex type
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexgettypeenum, __v__.GetTypeEnum()>>
+|Return vertex type enumeration code
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexisvirtual, __v__.IsVirtual()>>
+|`True` if vertex exists only to serve as terminal for other vertices
+
+|{counter:cvmisc}
+|<<vertex/vertexMiscellaneous.adoc#vertexsettype, __v__.SetType()>>
+|Set or change vertex type
+
+|===
+
+=== <<reference.adoc#vertexobject_querymethods, Vertex Query Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Query Method |Description
+
+|{counter:cvq}
+|<<reference.adoc#vertex_adjacent_func, __v__.Adjacent()>>
+|Check if a vertex is adjacent to other vertices
+
+|{counter:cvq}
+|<<reference.adoc#vertex_aggregate_func, __v__.Aggregate()>>
+|Perform aggregation of arc values in vertex neighborhood
+
+|{counter:cvq}
+|<<reference.adoc#vertex_arcvalue_func, __v__.ArcValue()>>
+|Return value of specific arc
+
+|{counter:cvq}
+|<<reference.adoc#vertex_degree_func, __v__.Degree()>>
+|Return total number of arcs for vertex
+
+|{counter:cvq}
+|<<reference.adoc#vertex_inarcs_func, __v__.Inarcs()>>
+|Return number of vertex inarcs
+
+|{counter:cvq}
+|<<reference.adoc#vertex_initials_func, __v__.Initials()>>
+|Return the list of vertices with outarcs to this vertex
+
+|{counter:cvq}
+|<<reference.adoc#vertex_neighborhood_func, __v__.Neighborhood()>>
+|Execute a vertex neighborhood query
+
+|{counter:cvq}
+|<<reference.adoc#vertex_neighbors_func, __v__.Neighbors()>>
+|Return the list of vertices connected to this vertex
+
+|{counter:cvq}
+|<<reference.adoc#vertex_outarcs_func, __v__.Outarcs()>>
+|Return number of vertex outarcs
+
+|{counter:cvq}
+|<<reference.adoc#vertex_terminals_func, __v__.Terminals()>>
+|Return the list of vertices with inarcs from this vertex
+
+|===
+
+
+== <<reference.adoc#memoryobject, pyvgx.Memory>>
+
+[cols="4,6"]
+|===
+|Memory Constructor |Description
+
+|<<reference.adoc#memoryobject, pyvgx.Memory()>>
+|Create a new memory object
+
+|===
+
+=== <<reference.adoc#memoryobject, Memory Object Attributes>>
+
+[cols="1,4,6"]
+|===
+|N |Memory Attribute |Description
+
+|{counter:cma}
+|<<reference.adoc#memory_R1_attr, pyvgx.Memory.R1>>
+|Memory register R1
+
+|{counter:cma}
+|<<reference.adoc#memory_R2_attr, pyvgx.Memory.R2>>
+|Memory register R2
+
+|{counter:cma}
+|<<reference.adoc#memory_R3_attr, pyvgx.Memory.R3>>
+|Memory register R3
+
+|{counter:cma}
+|<<reference.adoc#memory_R4_attr, pyvgx.Memory.R4>>
+|Memory register R4
+
+|{counter:cma}
+|<<reference.adoc#memory_order_attr, pyvgx.Memory.order>>
+|Log~2~ of memory size
+
+|===
+
+=== <<reference.adoc#memoryobject, Memory Object Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Memory Method |Description
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_aslist, pyvgx.Memory.AsList()>>
+|Return a list representing memory object data
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_dualint, pyvgx.Memory.DualInt()>>
+|Convert between packed and unpacked integer tuple 
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_reset, pyvgx.Memory.Reset()>>
+|Initialize memory elements and discard string data
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_sort, pyvgx.Memory.Sort()>>
+|Sort memory elements (in-place)
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_stack, pyvgx.Memory.Stack()>>
+|Return a list of values currently pushed on memory stack
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatormemorypython, Memory Object Access>>
+
+[cols="1,4,6"]
+|===
+|N |Section |Description
+
+|{counter:cmacc}
+|<<evaluator/evaluator.adoc#evaluatormemoryinit, pyvgx.Memory Initialization>>
+|`pyvgx.Memory` object initialization
+
+|{counter:cmacc}
+|<<evaluator/evaluator.adoc#evaluatormemoryslice, pyvgx.Memory Slice>>
+|`pyvgx.Memory` object slice syntax, i.e. `memobj[ _a:b_]`
+
+|{counter:cmacc}
+|<<evaluator/evaluator.adoc#evaluatormemorysubscript, pyvgx.Memory Subscript>>
+|`pyvgx.Memory` object subscript syntax, i.e. `memobj[ _n_ ]`
+
+|{counter:cmacc}
+|<<evaluator/evaluator.adoc#evaluatormemoryvaluetypes, pyvgx.Memory Value Types>>
+|`pyvgx.Memory` supported values types are integer, floats and bitvectors
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatormemory, Memory Objects in Evaluator Expressions>>
+
+[cols="1,4,6"]
+|===
+|N |Section |Description
+
+|{counter:cmee}
+|<<evaluator/evaluator.adoc#evaluatormemoryindexing, Memory Indexing>>
+|How memory indexing works
+
+|{counter:cmee}
+|<<evaluator/evaluator.adoc#evaluatormemory, Overview>>
+|Memory array objects in evaluator expressions
+
+|{counter:cmee}
+|<<evaluator/evaluator.adoc#evaluatormemoryreference, Operation Reference>>
+|Complete list of memory operations available in expressions
+
+|{counter:cmee}
+|<<evaluator/evaluator.adoc#evaluatormemoryregisters, Memory Registers>>
+|Memory registers
+
+|{counter:cmee}
+|<<evaluator/evaluator.adoc#evaluatormemorystack, Memory Stack>>
+|Memory stack
+
+|===
+
+== <<similarity/similarity.adoc#preface, pyvgx.Vector and pyvgx.Similarity>>
+
+=== <<similarity/vector.adoc#vectormembers, pyvgx.Vector Members>>
+
+[cols="1,4,6"]
+|===
+|N |Vector Member |Description
+
+|{counter:cvecm}
+|<<similarity/vector.adoc#vectorexternal, pyvgx.Vector.external>>
+|List of components originally used to define the vector
+
+|{counter:cvecm}
+|<<similarity/vector.adoc#vectorfingerprint, pyvgx.Vector.fingerprint>>
+|64-bit integer representing vector (locality sensitive hash)
+
+|{counter:cvecm}
+|<<similarity/vector.adoc#vectorinternal, pyvgx.Vector.internal>>
+|List of encoded elements used to represent the vector internally
+
+|{counter:cvecm}
+|<<similarity/vector.adoc#vectorlength, pyvgx.Vector.length>>
+|Number of vector dimensions
+
+|{counter:cvecm}
+|<<similarity/vector.adoc#vectormagnitude, pyvgx.Vector.magnitude>>
+|Euclidean length of vector
+
+|===
+
+=== <<similarity/vector.adoc#vectormethods, pyvgx.Vector Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Vector Method |Description
+
+|{counter:cvecmeth}
+|<<similarity/vector.adoc#vector_asdict_method, pyvgx.Vector.AsDict()>>
+|Return a dictionary representation of vector
+
+|{counter:cvecmeth}
+|<<similarity/vector.adoc#vector_fingerprint_method, pyvgx.Vector.Fingerprint()>>
+|Return seed-based 64-bit vector projection
+
+|{counter:cvecmeth}
+|<<similarity/vector.adoc#vector_projections_method, pyvgx.Vector.Projections()>>
+|Return vector index projection information
+
+|===
+
+=== <<similarity/similarityMembers.adoc#similaritymembers, pyvgx Similarity Members>>
+
+[cols="1,4,6"]
+|===
+|N |Similarity Member |Description
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritycosineexp, pyvgx.Similarity.cosine_exp>>
+|Relative importance of Cosine() in Similarity() score computation
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similarityhamming, pyvgx.Similarity.hamming_threshold>>
+|Maximum number of differing bits allowed in two fingerprints to be declared similar
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similarityjaccardexp, pyvgx.Similarity.jaccard_exp>>
+|Relative importance of Jaccard() in Similarity() score computation
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritymincosine, pyvgx.Similarity.min_cosine>>
+|Minimum Cosine() required between two vectors to be declared similar
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similarityminisect, pyvgx.Similarity.min_isect>>
+|Minimum number of overlapping dimensions required between two vectors to be declared similar
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similarityminjaccard, pyvgx.Similarity.min_jaccard>>
+|Minimum Jaccard() required between two vectors to be declared similar
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritymaxvector, pyvgx.Similarity.max_vector_size>>
+|Maximum number of vector elements allowed
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritynsegm, pyvgx.Similarity.nsegm>>
+|Number of LSH index segments (future)
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritynsign, pyvgx.Similarity.nsign>>
+|Number of significant LSH segments (future)
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similarityseeds, pyvgx.Similarity.seeds>>
+|Special internal: ANN projection seeds
+
+|{counter:csimm}
+|<<similarity/similarityMembers.adoc#similaritysim, pyvgx.Similarity.sim_threshold>>
+|Minimum similarity score between two vectors to be declared similar
+
+|===
+
+=== <<similarity/similarityMethods.adoc#similaritymethods, pyvgx Similarity Methods>>
+
+[cols="1,4,6"]
+|===
+|N |Similarity Method |Description
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similarityasdict, pyvgx.Similarity.AsDict()>>
+|Return a dictionary representation of the similarity object
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritycosine, pyvgx.Similarity.Cosine()>>
+|Compute cosine similarity between two vectors
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritycreateprojectionsets, pyvgx.Similarity.CreateProjectionSets()>>
+|Initialize ANN vector index structure
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritydeleteprojectionsets, pyvgx.Similarity.DeleteProjectionSets()>>
+|Destroy ANN vector index structure
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similarityeuclideandistance, pyvgx.Similarity.EuclideanDistance()>>
+|Compute Euclidean distance between two vectors
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similarityhamming, pyvgx.Similarity.HammingDistance()>>
+|Compute the number or differing bits in two vector fingerprints
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similarityjaccard, pyvgx.Similarity.Jaccard()>>
+|Compute jaccard similarity between two vectors
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritynewcentroid, pyvgx.Similarity.NewCentroid()>>
+|Create a new centroid instance
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritynewvector, pyvgx.Similarity.NewVector()>>
+|Create a new vector instance
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similarityrvec, pyvgx.Similarity.rvec()>>
+|Return a random vector
+
+|{counter:csimmeth}
+|<<similarity/similarityMethods.adoc#similaritysimilarity, pyvgx.Similarity.Similarity()>>
+|Compute similarity score for two vectors
+
+|===
+
+== <<specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, Arc Syntax>>
+
+[cols="1,4,6"]
+|===
+|N |Arc Specification |Description
+
+|{counter:casyn}
+|<<specification/arcSpecificationSyntax.adoc#arcfilter, Arc Filter>>
+|Syntax used for arc filters in queries
+
+|{counter:casyn}
+|<<specification/arcSpecificationSyntax.adoc#arcinsertion, Arc Insertion>>
+|Syntax used when creating arcs
+
+|===
+
+== <<vertex/vertexFilter.adoc#vertexfilter, Vertex Condition Syntax>>
+
+[cols="1,4,6"]
+|===
+|N |Vertex Constraint |Description
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterabstime, `abstime`>>
+|Restrict vertex matches by absolute timestamps
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilteradjacent, `adjacent`>>
+|Restrict vertex matches by their adjacency to other vertices
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterdegree, `degree`>>
+|Restrict vertex matches by their total degree
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterfilter, `filter`>>
+|Restrict vertex matches by evaluating a generic expression pre-traversal
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterid, `id`>>
+|Restrict vertex matches by identifier(s)
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterindegree, `indegree`>>
+|Restrict vertex matches by their indegree
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilteroutdegree, `outdegree`>>
+|Restrict vertex matches by their outdegree
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterpost, `post`>>
+|Restrict vertex matches by evaluating a generic expression post-traversal
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterproperty, `property`>>
+|Restrict vertex matches by properties
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfilterreltime, `reltime`>>
+|Restrict vertex matches by timestamps relative to current time
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfiltersimilarity, `similarity`>>
+|Restrict vertex matches by vector similarity
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfiltertraverse, `traverse`>>
+|Restrict vertex matches by the result of traversing their neighborhoods
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfiltertype, `type`>>
+|Restrict vertex matches by their type
+
+|{counter:cvcsyn}
+|<<vertex/vertexFilter.adoc#vertexfiltervirtual, `virtual`>>
+|Restrict vertex matches to only VIRTUAL or REAL
+
+|===
+
+== <<evaluator/evaluator.adoc#evaluator, Expression Evaluator>>
+
+[cols="1,4,6"]
+|===
+|N |Section |Description
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorattrprop, Attributes and Properties>>
+|Referencing object attributes and properties in expressions
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorconstants, Constants>>
+|Various constants available in expressions
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorenvironment, Environment>>
+|Expression environment variables
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatormemoryreference, Evaluator Memory Reference>>
+|List of all functions operating on memory objects
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorsyntax, Expression Syntax>>
+|General expression syntax
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorfunctions, Functions>>
+|Functions available for use in expressions
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatormemory, Memory>>
+|Using memory objects in expressions
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatoroverview, Overview>>
+|Overview of how expressions are evaluated
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatorquickstart, Quick Start>>
+|Brief introduction to expressions
+
+|{counter:ceval}
+|<<evaluator/selectEvaluator.adoc#selectstatement, Select Statement>>
+|Select statement syntax for including information in query results
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluatordefine, pyvgx.Graph.Define()>>
+|Method for defining expressions that can be called later
+
+|{counter:ceval}
+|<<evaluator/evaluator.adoc#evaluate, pyvgx.Graph.Evaluate()>>
+|Evaluate an expression
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatormemorysingle, Functions>>
+
+[cols="1,4,6"]
+|===
+|N |Function Type |Description
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#collectorstagingfunctions, Collector Staging Functions>>
+|Arc collection (`stageif()`, `commit()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#controlfunctions, Control Functions>>
+|Control functions (`firstval()`, `do()`, `returnif()` etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#enumfunctions, Enumeration>>
+|Translate type encodings (`relenc()`, `typedec()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#mathfunctions, Mathematical Functions>>
+|Standard math functions (`sqrt()`, `log()`, `sin()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#proplookupfunctions, Property Lookup>>
+|Retrieve tail vertex properties (`property()`, `propertyif()`)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#similarityfunctions, Similarity>>
+|Operations on similarity vectors (`sim()`, `cosine()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#simplerankingfunctions, Simple Ranking Functions>>
+|Scoring and geo distance (`rank()`, `geoprox()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#castandcheckfunctions, Type Cast and Checks>>
+|Modify and check value types (`int()`, `isstr()`, etc.)
+
+|{counter:cevalfunc}
+|<<evaluator/evaluator.adoc#variadicaggregatorfunctions, Variadic Aggregator Functions>>
+|Variable argument aggregation (`mean()`, `sumsqr()`, etc.)
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatormemorysingle, Operations on Specific Memory Locations>>
+
+[cols="1,4,6"]
+|===
+|N |Operation Type |Description
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemoryarithmetic, Arithmetic>>
+|Basic arithmetic operations (`add()`, `mul()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemorybitwise, Bitwise Operations>>
+|Shift and bitwise logic (`shr()`, `and()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemorycomparator, Comparator>>
+|Compare memory locations (`equ()`, `rlte()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemoryincdec, Increment and Decrement>>
+|Increment/decrement memory locations (`inc()`, `dec()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemoryindexingop, Indexing>>
+|Special indexing operations (`modindex()`, `index()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemorymovingdata, Moving Data>>
+|Copy and move memory elements (`mov()`, `xchg()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemorystackops, Stack>>
+|Memory stack operations (`push()`, `pop()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemorystoreload, Storing and Loading>>
+|Write and read memory locations (`store()`, `load()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemoryvarious, Various Functions>>
+|Other functions (`smooth()`, `count()`, etc.)
+
+|{counter:cevalsml}
+|<<evaluator/evaluator.adoc#evaluatormemoryvector, Vector Arithmetic>>
+|Operations on packed data types (`dp_pi8()`, `cos_pi8()`, etc.)
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluatormemory_multiple, Operations on Multiple Memory Locations>>
+
+[cols="1,4,6"]
+|===
+|N |Operation Type |Description
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arrayaggregate, Array Aggregation>>
+|Aggregate across many locations (`msum()`, `mmean()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraybitwise, Array Bitwise>>
+|Bitwise operations on many locations (`mshr()`, `mand()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arrayhash, Array Hashing>>
+|Perform hash operations on many locations (`mhash()`)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arrayincdec, Array Increment and Decrement>>
+|Inc/dec many locations at once (`minc()`, `mdec()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraylogexp, Array Logarithm and Exponential>>
+|Logarithm and exponential operations on many locations (`mlog2()`, `mexp()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraynumeric, Array Numeric>>
+|Numeric operations on many locations (`mabs()`, `mround()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arrayprobe, Array Probing>>
+|Search a memory range (`mmax()`, `mcontains()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraysetcopy, Array Set and Copy>>
+|Set or copy many locations at once (`mset()`, `mcopy()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraytrighyp, Array Trigonometric and Hyperbolic>>
+|Trigonometric and hyperbolic operations on many locations (`msin()`, `matan()`, `cosh()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraycast, Array Type Cast>>
+|Cast many locations at once (`mint()`, `mreal()`.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arrayheap, Heap>>
+|Memory heap operations (`mheapifymin()`, `mheappushmax()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_scalararrayarithmetic, Scalar Array Arithmetic>>
+|Perform arithmetic on many locations (`madd()`, `mmul()`, etc.)
+
+|{counter:cevalmml}
+|<<evaluator/evaluator.adoc#evaluatormemory_arraysort, Sort>>
+|Memory sorting operations (`msort()`, `mreverse()`, etc.)
+
+|===
+
+=== <<evaluator/evaluator.adoc#evaluator_specialpurpose, Special Purpose Operations>>
+
+[cols="1,4,6"]
+|===
+|N |Operation Type |Description
+
+|{counter:cevalspo}
+|<<evaluator/evaluator.adoc#evaluator_arcdecay, arcdecay() and arcxdecay()>>
+|Time-dependent arc value
+
+|{counter:cevalspo}
+|<<evaluator/evaluator.adoc#evaluator_probealtarray, probealtarray()>>
+|Position and match-type dependent search function
+
+|===
+
+=== Full VGX Expression Language Operation Reference
+
+[cols="1,2,4,4"]
+|===
+|N |Operator / Function |Syntax |Description
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_addition, `+` >>
+|INFIX
+|(binary) &plus;
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_subtraction, `-` >>
+|INFIX
+|(binary) &minus;
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_multiplication, `*` >>
+|INFIX
+|(binary) *
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_division, `/` >>
+|INFIX
+|(binary) /
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_modulo, `%` >>
+|INFIX
+|(binary) %
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_exponentiation, `**` >>
+|INFIX
+|(binary) **
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `==` >>
+|INFIX
+|(binary comparison) ==
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `>` >>
+|INFIX
+|(binary comparison) >
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `>=` >>
+|INFIX
+|(binary comparison) >=
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `<` >>
+|INFIX
+|(binary comparison) <
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `&lt;=` >>
+|INFIX
+|(binary comparison) <=
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_comparison, `!=` >>
+|INFIX
+|(binary comparison) !=
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwisenot, `~` >>
+|PREFIX
+|~
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_logicalnot, `!` >>
+|PREFIX
+|!
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_ternaryconditional, `?` >>
+|INFIX
+|(ternary conditional) ?
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_ternaryconditional, `:` >>
+|INFIX
+|(ternary colon) :
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwiselogic, `&` >>
+|INFIX
+|(bitwise) &
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwiselogic, `\|` >>
+|INFIX
+|(bitwise) \|
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwiselogic, `^`>>
+|INFIX
+|(bitwise) ^
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_logicalcondition, `&&` >>
+|INFIX
+|(binary) &&
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_logicalcondition, `\|\|` >>
+|INFIX
+|(binary) \|\|
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwiseshift, `&#x226A;` >>
+|INFIX
+|(bitwise) <<
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_bitwiseshift, `&#x226B;` >>
+|INFIX
+|(bitwise) &gt;&gt;
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_define, `:=` >>
+|ASSIGNMENT
+|:=
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#syn_subexpr, `=` >>
+|ASSIGNMENT
+|=
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextaddress, `.address`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .address
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcdir, `.arc.dir`>>
+|[TRAVERSE]SYMBOLIC
+|(direction) .arc.dir
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcdist, `.arc.dist`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.dist
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcisfwd, `.arc.isfwd`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.isfwd
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcissyn, `.arc.issyn`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.issyn
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcmod, `.arc.mod`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.mod
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarctype, `.arc.type`>>
+|[TRAVERSE]SYMBOLIC
+|(relationship) .arc.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarcvalue, `.arc.value`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .arc.value
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbidx, `.bidx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .bidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbitindex, `.bitindex`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .bitindex
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbitvector, `.bitvector`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .bitvector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextc0, `.c0`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .c0
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextc1, `.c1`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .c1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextdeg, `.deg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .deg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextenum, `.enum`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .enum
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexthandle, `.handle`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .handle
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextid, `.id`>>
+|[DEREF TRAVERSE]OBJECT
+|.id
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextideg, `.ideg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .ideg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextindex, `.index`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .index
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextinternalid, `.internalid`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .internalid
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextlocked, `.locked`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) .locked
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextodeg, `.odeg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .odeg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextoidx, `.oidx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .oidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextop, `.op`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .op
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextpropcount, `.propcount`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .propcount
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextproperty, `.property`>>
+|[DEREF TRAVERSE]FUNCTION
+|.property( a[, b[, c]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextrank, `.rank`>>
+|SYMBOLIC
+|(real) .rank
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextrefc, `.refc`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .refc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmc, `.tmc`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .tmc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmm, `.tmm`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .tmm
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmx, `.tmx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .tmx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttype, `.type`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(type) .type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextvector, `.vector`>>
+|[DEREF TRAVERSE]OBJECT
+|.vector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextvirtual, `.virtual`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) .virtual
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_c1, `C1`>>
+|SYMBOLIC
+|(integer) C1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_c2, `C2`>>
+|SYMBOLIC
+|(integer) C2
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_c3, `C3`>>
+|SYMBOLIC
+|(integer) C3
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_c4, `C4`>>
+|SYMBOLIC
+|(integer) C4
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.ARC`>>
+|DEBUG
+|DEBUG.ARC
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.EVAL`>>
+|DEBUG
+|DEBUG.EVAL
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.MEM`>>
+|DEBUG
+|DEBUG.MEM
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.PRINT`>>
+|FUNCTION
+|DEBUG.PRINT( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.PRINTIF`>>
+|FUNCTION
+|DEBUG.PRINTIF( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.RPN`>>
+|DEBUG
+|DEBUG.RPN
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.STACK`>>
+|DEBUG
+|DEBUG.STACK
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#, `DEBUG.TOK`>>
+|DEBUG
+|DEBUG.TOK
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_d_any, `D_ANY`>>
+|SYMBOLIC
+|(enum) D_ANY
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_d_both, `D_BOTH`>>
+|SYMBOLIC
+|(enum) D_BOTH
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_d_in, `D_IN`>>
+|SYMBOLIC
+|(enum) D_IN
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_d_out, `D_OUT`>>
+|SYMBOLIC
+|(enum) D_OUT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_acc, `M_ACC`>>
+|SYMBOLIC
+|(enum) M_ACC
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_any, `M_ANY`>>
+|SYMBOLIC
+|(enum) M_ANY
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_cnt, `M_CNT`>>
+|SYMBOLIC
+|(enum) M_CNT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_lsh, `M_LSH`>>
+|SYMBOLIC
+|(enum) M_LSH
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_dist, `M_DIST`>>
+|SYMBOLIC
+|(enum) M_DIST
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_flt, `M_FLT`>>
+|SYMBOLIC
+|(enum) M_FLT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_int, `M_INT`>>
+|SYMBOLIC
+|(enum) M_INT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_sim, `M_SIM`>>
+|SYMBOLIC
+|(enum) M_SIM
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_stat, `M_STAT`>>
+|SYMBOLIC
+|(enum) M_STAT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_tmc, `M_TMC`>>
+|SYMBOLIC
+|(enum) M_TMC
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_tmm, `M_TMM`>>
+|SYMBOLIC
+|(enum) M_TMM
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_tmx, `M_TMX`>>
+|SYMBOLIC
+|(enum) M_TMX
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_m_uint, `M_UINT`>>
+|SYMBOLIC
+|(enum) M_UINT
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_r1, `R1`>>
+|SYMBOLIC
+|(integer) R1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_r2, `R2`>>
+|SYMBOLIC
+|(integer) R2
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_r3, `R3`>>
+|SYMBOLIC
+|(integer) R3
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_r4, `R4`>>
+|SYMBOLIC
+|(integer) R4
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_t_max, `T_MAX`>>
+|SYMBOLIC
+|(integer) T_MAX
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_t_min, `T_MIN`>>
+|SYMBOLIC
+|(integer) T_MIN
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_t_never, `T_NEVER`>>
+|SYMBOLIC
+|(integer) T_NEVER
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_abs, `abs`>>
+|FUNCTION
+|abs( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_acos, `acos`>>
+|FUNCTION
+|acos( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_acosh, `acosh`>>
+|FUNCTION
+|acosh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_add, `add`>>
+|FUNCTION
+|add( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_addif, `addif`>>
+|FUNCTION
+|addif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_allnan, `allnan`>>
+|FUNCTION
+|allnan( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_and, `and`>>
+|FUNCTION
+|and( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_andif, `andif`>>
+|FUNCTION
+|andif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_anynan, `anynan`>>
+|FUNCTION
+|anynan( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_asbits, `asbits`>>
+|FUNCTION
+|asbits( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_asin, `asin`>>
+|FUNCTION
+|asin( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_asinh, `asinh`>>
+|FUNCTION
+|asinh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_asint, `asint`>>
+|FUNCTION
+|asint( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_asreal, `asreal`>>
+|FUNCTION
+|asreal( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_atan, `atan`>>
+|FUNCTION
+|atan( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_atan2, `atan2`>>
+|FUNCTION
+|atan2( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_atanh, `atanh`>>
+|FUNCTION
+|atanh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_bitvector, `bitvector`>>
+|FUNCTION
+|bitvector( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_bytes, `bytes`>>
+|FUNCTION
+|bytes( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_ceil, `ceil`>>
+|FUNCTION
+|ceil( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_collect, `collect`>>
+|[COLLECT]FUNCTION
+|collect([ a] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_collectable_int, `collectable.int`>>
+|SYMBOLIC
+|(int) collectable.int
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_collectable_real, `collectable.real`>>
+|SYMBOLIC
+|(int) collectable.real
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_collectif, `collectif`>>
+|[COLLECT]FUNCTION
+|collectif( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_comb, `comb`>>
+|FUNCTION
+|comb( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_commit, `commit`>>
+|FUNCTION
+|commit([ a] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_commitif, `commitif`>>
+|FUNCTION
+|commitif( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_context_rank, `context.rank`>>
+|SYMBOLIC
+|(real) context.rank
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_continue, `continue`>>
+|FUNCTION
+|continue()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_continueif, `continueif`>>
+|FUNCTION
+|continueif( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cos, `cos`>>
+|FUNCTION
+|cos( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cos_pi8, `cos_pi8`>>
+|FUNCTION
+|cos_pi8( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cos_pi8, `cos_pi8_128`>>
+|FUNCTION
+|cos_pi8_128( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cos_pi8, `cos_pi8_256`>>
+|FUNCTION
+|cos_pi8_256( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cos_pi8, `cos_pi8_512`>>
+|FUNCTION
+|cos_pi8_512( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cosh, `cosh`>>
+|FUNCTION
+|cosh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cosine, `cosine`>>
+|FUNCTION
+|cosine( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_count, `count`>>
+|FUNCTION
+|count( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_countif, `countif`>>
+|FUNCTION
+|countif( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_cpukill, `cpukill`>>
+|FUNCTION
+|cpukill( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dec, `dec`>>
+|FUNCTION
+|dec( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_decif, `decif`>>
+|FUNCTION
+|decif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_deg, `deg`>>
+|FUNCTION
+|deg( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dirtostr, `dirtostr`>>
+|FUNCTION
+|dirtostr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_div, `div`>>
+|FUNCTION
+|div( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_divif, `divif`>>
+|FUNCTION
+|divif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_do, `do`>>
+|FUNCTION
+|do( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dp_pi8, `dp_pi8`>>
+|FUNCTION
+|dp_pi8( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dp_pi8, `dp_pi8_128`>>
+|FUNCTION
+|dp_pi8_128( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dp_pi8, `dp_pi8_256`>>
+|FUNCTION
+|dp_pi8_256( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dp_pi8, `dp_pi8_512`>>
+|FUNCTION
+|dp_pi8_512( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_dp_pi8, `dp_pi8_nta`>>
+|FUNCTION
+|dp_pi8_nta( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_e, `e`>>
+|SYMBOLIC
+|(real) e
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_endswith, `endswith`>>
+|FUNCTION
+|endswith( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_equ, `equ`>>
+|FUNCTION
+|equ( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_exp, `exp`>>
+|FUNCTION
+|exp( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_fac, `fac`>>
+|FUNCTION
+|fac( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_false, `false`>>
+|SYMBOLIC
+|(integer) false
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_firstval, `firstval`>>
+|FUNCTION
+|firstval( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_floor, `floor`>>
+|FUNCTION
+|floor( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_geodist, `geodist`>>
+|FUNCTION
+|geodist( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_geomean, `geomean`>>
+|FUNCTION
+|geomean( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_geoprox, `geoprox`>>
+|FUNCTION
+|geoprox( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_georank, `georank`>>
+|[DEREF TRAVERSE]FUNCTION
+|georank( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_get, `get`>>
+|FUNCTION
+|get()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_googol, `googol`>>
+|SYMBOLIC
+|(real) googol
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_graphage, `graph.age`>>
+|SYMBOLIC
+|(real) graph.age
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_graphop, `graph.op`>>
+|SYMBOLIC
+|(integer) graph.op
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_graphorder, `graph.order`>>
+|SYMBOLIC
+|(integer) graph.order
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_graphsize, `graph.size`>>
+|SYMBOLIC
+|(integer) graph.size
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_grapht0, `graph.t0`>>
+|SYMBOLIC
+|(real) graph.t0
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_graphts, `graph.ts`>>
+|SYMBOLIC
+|(real) graph.ts
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_gt, `gt`>>
+|FUNCTION
+|gt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_gte, `gte`>>
+|FUNCTION
+|gte( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_ham_pi8, `ham_pi8`>>
+|FUNCTION
+|ham_pi8( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_hamdist, `hamdist`>>
+|FUNCTION
+|hamdist( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_halt, `halt`>>
+|FUNCTION
+|halt()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_halted, `halted`>>
+|FUNCTION
+|halted()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_haltif, `haltif`>>
+|FUNCTION
+|haltif( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_harmmean, `harmmean`>>
+|FUNCTION
+|harmmean( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_hash, `hash`>>
+|FUNCTION
+|hash( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_idx, `idx`>>
+|FUNCTION
+|idx( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_in, `in`>>
+|INFIX
+|(binary) in
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_inc, `inc`>>
+|FUNCTION
+|inc( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_incif, `incif`>>
+|FUNCTION
+|incif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_index, `index`>>
+|FUNCTION
+|index( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_indexed, `indexed`>>
+|FUNCTION
+|indexed( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_inf, `inf`>>
+|LITERAL
+|(none) inf
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_int, `int`>>
+|FUNCTION
+|int( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_intr, `intr`>>
+|FUNCTION
+|intr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_inv, `inv`>>
+|FUNCTION
+|inv( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_invsum, `invsum`>>
+|FUNCTION
+|invsum( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isarray, `isarray`>>
+|FUNCTION
+|isarray( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isbitvector, `isbitvector`>>
+|FUNCTION
+|isbitvector( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isbytearray, `isbytearray`>>
+|FUNCTION
+|isbytearray( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isbytes, `isbytes`>>
+|FUNCTION
+|isbytes( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isetadd, `iset.add`>>
+|[MAPPING]FUNCTION
+|iset.add( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isetdel, `iset.del`>>
+|[MAPPING]FUNCTION
+|iset.del( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isethas, `iset.has`>>
+|[MAPPING]FUNCTION
+|iset.has( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isetlen, `iset.len`>>
+|[MAPPING]FUNCTION
+|iset.len()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isetclr, `iset.clr`>>
+|[MAPPING]FUNCTION
+|iset.clr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isinf, `isinf`>>
+|FUNCTION
+|isinf( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isint, `isint`>>
+|FUNCTION
+|isint( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_iskeyval, `iskeyval`>>
+|FUNCTION
+|iskeyval( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_ismap, `ismap`>>
+|FUNCTION
+|ismap( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isnan, `isnan`>>
+|FUNCTION
+|isnan( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isreal, `isreal`>>
+|FUNCTION
+|isreal( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isstr, `isstr`>>
+|FUNCTION
+|isstr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isutf8, `isutf8`>>
+|FUNCTION
+|isutf8( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_isvector, `isvector`>>
+|FUNCTION
+|isvector( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_jaccard, `jaccard`>>
+|FUNCTION
+|jaccard( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_join, `join`>>
+|FUNCTION
+|join( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_keyval, `keyval`>>
+|FUNCTION
+|keyval( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_lastval, `lastval`>>
+|FUNCTION
+|lastval( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_len, `len`>>
+|FUNCTION
+|len( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_load, `load`>>
+|FUNCTION
+|load( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_log, `log`>>
+|FUNCTION
+|log( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_log10, `log10`>>
+|FUNCTION
+|log10( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_log2, `log2`>>
+|FUNCTION
+|log2( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_lt, `lt`>>
+|FUNCTION
+|lt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_lte, `lte`>>
+|FUNCTION
+|lte( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mabs, `mabs`>>
+|FUNCTION
+|mabs( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_macos, `macos`>>
+|FUNCTION
+|macos( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_macosh, `macosh`>>
+|FUNCTION
+|macosh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_madd, `madd`>>
+|FUNCTION
+|madd( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mand, `mand`>>
+|FUNCTION
+|mand( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_masin, `masin`>>
+|FUNCTION
+|masin( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_masinh, `masinh`>>
+|FUNCTION
+|masinh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_matan, `matan`>>
+|FUNCTION
+|matan( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_matanh, `matanh`>>
+|FUNCTION
+|matanh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_max, `max`>>
+|FUNCTION
+|max( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mbits, `mbits`>>
+|FUNCTION
+|mbits( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mceil, `mceil`>>
+|FUNCTION
+|mceil( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcmp, `mcmp`>>
+|FUNCTION
+|mcmp( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcmpa, `mcmpa`>>
+|FUNCTION
+|mcmpa( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcontains, `mcontains`>>
+|FUNCTION
+|mcontains( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcopy, `mcopy`>>
+|FUNCTION
+|mcopy( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcopyobj, `mcopyobj`>>
+|FUNCTION
+|mcopyobj( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcos, `mcos`>>
+|FUNCTION
+|mcos( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcosh, `mcosh`>>
+|FUNCTION
+|mcosh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcount, `mcount`>>
+|FUNCTION
+|mcount( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcull, `mcull`>>
+|[CULL]FUNCTION
+|mcull( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mcullif, `mcullif`>>
+|[CULL]FUNCTION
+|mcullif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mdec, `mdec`>>
+|FUNCTION
+|mdec( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mdeg, `mdeg`>>
+|FUNCTION
+|mdeg( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mdiv, `mdiv`>>
+|FUNCTION
+|mdiv( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mean, `mean`>>
+|FUNCTION
+|mean( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_memkill, `memkill`>>
+|FUNCTION
+|memkill( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mexp, `mexp`>>
+|FUNCTION
+|mexp( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mexp10, `mexp10`>>
+|FUNCTION
+|mexp10( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mexp2, `mexp2`>>
+|FUNCTION
+|mexp2( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mfloor, `mfloor`>>
+|FUNCTION
+|mfloor( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mgeomean, `mgeomean`>>
+|FUNCTION
+|mgeomean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mgeostdev, `mgeostdev`>>
+|FUNCTION
+|mgeostdev( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mharmmean, `mharmmean`>>
+|FUNCTION
+|mharmmean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mhash, `mhash`>>
+|FUNCTION
+|mhash( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapifymax, `mheapifymax`>>
+|FUNCTION
+|mheapifymax( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapifymin, `mheapifymin`>>
+|FUNCTION
+|mheapifymin( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapinit, `mheapinit`>>
+|FUNCTION
+|mheapinit( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheappushmax, `mheappushmax`>>
+|FUNCTION
+|mheappushmax( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheappushmin, `mheappushmin`>>
+|FUNCTION
+|mheappushmin( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapsiftmax, `mheapsiftmax`>>
+|FUNCTION
+|mheapsiftmax( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapsiftmin, `mheapsiftmin`>>
+|FUNCTION
+|mheapsiftmin( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapwritemax, `mheapwritemax`>>
+|FUNCTION
+|mheapwritemax( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mheapwritemin, `mheapwritemin`>>
+|FUNCTION
+|mheapwritemin( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_miadd, `miadd`>>
+|FUNCTION
+|miadd( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_midec, `midec`>>
+|FUNCTION
+|midec( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_midiv, `midiv`>>
+|FUNCTION
+|midiv( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_miinc, `miinc`>>
+|FUNCTION
+|miinc( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mimod, `mimod`>>
+|FUNCTION
+|mimod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mimul, `mimul`>>
+|FUNCTION
+|mimul( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_min, `min`>>
+|FUNCTION
+|min( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_minc, `minc`>>
+|FUNCTION
+|minc( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mindex, `mindex`>>
+|FUNCTION
+|mindex( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mint, `mint`>>
+|FUNCTION
+|mint( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mintr, `mintr`>>
+|FUNCTION
+|mintr( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_minv, `minv`>>
+|FUNCTION
+|minv( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_minvsum, `minvsum`>>
+|FUNCTION
+|minvsum( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_misub, `misub`>>
+|FUNCTION
+|misub( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mlen, `mlen`>>
+|FUNCTION
+|mlen( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mlog, `mlog`>>
+|FUNCTION
+|mlog( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mlog10, `mlog10`>>
+|FUNCTION
+|mlog10( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mlog2, `mlog2`>>
+|FUNCTION
+|mlog2( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mmax, `mmax`>>
+|FUNCTION
+|mmax( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mmean, `mmean`>>
+|FUNCTION
+|mmean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mmin, `mmin`>>
+|FUNCTION
+|mmin( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mmod, `mmod`>>
+|FUNCTION
+|mmod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mmul, `mmul`>>
+|FUNCTION
+|mmul( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mod, `mod`>>
+|FUNCTION
+|mod( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_modif, `modif`>>
+|FUNCTION
+|modif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_modindex, `modindex`>>
+|FUNCTION
+|modindex( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_modtostr, `modtostr`>>
+|FUNCTION
+|modtostr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mor, `mor`>>
+|FUNCTION
+|mor( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mov, `mov`>>
+|FUNCTION
+|mov( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_movif, `movif`>>
+|FUNCTION
+|movif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mpopcnt, `mpopcnt`>>
+|FUNCTION
+|mpopcnt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mpow, `mpow`>>
+|FUNCTION
+|mpow( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mprod, `mprod`>>
+|FUNCTION
+|mprod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mpwrite, `mpwrite`>>
+|FUNCTION
+|mpwrite( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrabs, `mrabs`>>
+|FUNCTION
+|mrabs( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mracos, `mracos`>>
+|FUNCTION
+|mracos( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mracosh, `mracosh`>>
+|FUNCTION
+|mracosh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrad, `mrad`>>
+|FUNCTION
+|mrad( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mradd, `mradd`>>
+|FUNCTION
+|mradd( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrandbits, `mrandbits`>>
+|FUNCTION
+|mrandbits( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrandomize, `mrandomize`>>
+|FUNCTION
+|mrandomize( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrasin, `mrasin`>>
+|FUNCTION
+|mrasin( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrasinh, `mrasinh`>>
+|FUNCTION
+|mrasinh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mratan, `mratan`>>
+|FUNCTION
+|mratan( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mratanh, `mratanh`>>
+|FUNCTION
+|mratanh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrceil, `mrceil`>>
+|FUNCTION
+|mrceil( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrcos, `mrcos`>>
+|FUNCTION
+|mrcos( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrcosh, `mrcosh`>>
+|FUNCTION
+|mrcosh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrdec, `mrdec`>>
+|FUNCTION
+|mrdec( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrdeg, `mrdeg`>>
+|FUNCTION
+|mrdeg( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrdiv, `mrdiv`>>
+|FUNCTION
+|mrdiv( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mreal, `mreal`>>
+|FUNCTION
+|mreal( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mreset, `mreset`>>
+|FUNCTION
+|mreset()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mreverse, `mreverse`>>
+|FUNCTION
+|mreverse( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrexp, `mrexp`>>
+|FUNCTION
+|mrexp( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrexp10, `mrexp10`>>
+|FUNCTION
+|mrexp10( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrexp2, `mrexp2`>>
+|FUNCTION
+|mrexp2( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrfloor, `mrfloor`>>
+|FUNCTION
+|mrfloor( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrgeomean, `mrgeomean`>>
+|FUNCTION
+|mrgeomean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrgeostdev, `mrgeostdev`>>
+|FUNCTION
+|mrgeostdev( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrharmmean, `mrharmmean`>>
+|FUNCTION
+|mrharmmean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrinc, `mrinc`>>
+|FUNCTION
+|mrinc( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrinv, `mrinv`>>
+|FUNCTION
+|mrinv( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrinvsum, `mrinvsum`>>
+|FUNCTION
+|mrinvsum( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrlog, `mrlog`>>
+|FUNCTION
+|mrlog( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrlog10, `mrlog10`>>
+|FUNCTION
+|mrlog10( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrlog2, `mrlog2`>>
+|FUNCTION
+|mrlog2( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrmean, `mrmean`>>
+|FUNCTION
+|mrmean( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrmod, `mrmod`>>
+|FUNCTION
+|mrmod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrmul, `mrmul`>>
+|FUNCTION
+|mrmul( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mround, `mround`>>
+|FUNCTION
+|mround( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrpow, `mrpow`>>
+|FUNCTION
+|mrpow( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrprod, `mrprod`>>
+|FUNCTION
+|mrprod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrrad, `mrrad`>>
+|FUNCTION
+|mrrad( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrround, `mrround`>>
+|FUNCTION
+|mrround( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsign, `mrsign`>>
+|FUNCTION
+|mrsign( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsin, `mrsin`>>
+|FUNCTION
+|mrsin( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsinc, `mrsinc`>>
+|FUNCTION
+|mrsinc( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsinh, `mrsinh`>>
+|FUNCTION
+|mrsinh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsort, `mrsort`>>
+|FUNCTION
+|mrsort( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsortrev, `mrsortrev`>>
+|FUNCTION
+|mrsortrev( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsq, `mrsq`>>
+|FUNCTION
+|mrsq( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsqrt, `mrsqrt`>>
+|FUNCTION
+|mrsqrt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrstdev, `mrstdev`>>
+|FUNCTION
+|mrstdev( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsub, `mrsub`>>
+|FUNCTION
+|mrsub( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsum, `mrsum`>>
+|FUNCTION
+|mrsum( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrsumsqr, `mrsumsqr`>>
+|FUNCTION
+|mrsumsqr( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrtan, `mrtan`>>
+|FUNCTION
+|mrtan( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mrtanh, `mrtanh`>>
+|FUNCTION
+|mrtanh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mset, `mset`>>
+|FUNCTION
+|mset( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mshl, `mshl`>>
+|FUNCTION
+|mshl( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mshr, `mshr`>>
+|FUNCTION
+|mshr( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msign, `msign`>>
+|FUNCTION
+|msign( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msin, `msin`>>
+|FUNCTION
+|msin( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msinc, `msinc`>>
+|FUNCTION
+|msinc( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msinh, `msinh`>>
+|FUNCTION
+|msinh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msort, `msort`>>
+|FUNCTION
+|msort( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msortrev, `msortrev`>>
+|FUNCTION
+|msortrev( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msq, `msq`>>
+|FUNCTION
+|msq( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msqrt, `msqrt`>>
+|FUNCTION
+|msqrt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mstdev, `mstdev`>>
+|FUNCTION
+|mstdev( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msub, `msub`>>
+|FUNCTION
+|msub( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msubset, `msubset`>>
+|FUNCTION
+|msubset( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msubsetobj, `msubsetobj`>>
+|FUNCTION
+|msubsetobj( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msum, `msum`>>
+|FUNCTION
+|msum( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msumprodobj, `msumprodobj`>>
+|FUNCTION
+|msumprodobj( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_msumsqr, `msumsqr`>>
+|FUNCTION
+|msumsqr( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mtan, `mtan`>>
+|FUNCTION
+|mtan( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mtanh, `mtanh`>>
+|FUNCTION
+|mtanh( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mterm, `mterm`>>
+|FUNCTION
+|mterm( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mul, `mul`>>
+|FUNCTION
+|mul( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mulif, `mulif`>>
+|FUNCTION
+|mulif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvadd, `mvadd`>>
+|FUNCTION
+|mvadd( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvand, `mvand`>>
+|FUNCTION
+|mvand( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvdiv, `mvdiv`>>
+|FUNCTION
+|mvdiv( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvmod, `mvmod`>>
+|FUNCTION
+|mvmod( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvmul, `mvmul`>>
+|FUNCTION
+|mvmul( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvor, `mvor`>>
+|FUNCTION
+|mvor( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvshl, `mvshl`>>
+|FUNCTION
+|mvshl( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvshr, `mvshr`>>
+|FUNCTION
+|mvshr( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvsub, `mvsub`>>
+|FUNCTION
+|mvsub( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mvxor, `mvxor`>>
+|FUNCTION
+|mvxor( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_mxor, `mxor`>>
+|FUNCTION
+|mxor( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nan, `nan`>>
+|LITERAL (none)
+|nan
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_neg, `neg`>>
+|FUNCTION
+|neg( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_neq, `neq`>>
+|FUNCTION
+|neq( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_next, `next`>>
+|[TRAVERSE]OBJECT
+|next
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextaddress, `next.address`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.address
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc, `next.arc`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.dir, `next.arc.dir`>>
+|[TRAVERSE]SYMBOLIC
+|(direction) next.arc.dir
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.dist, `next.arc.dist`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.dist
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.isfwd, `next.arc.isfwd`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.isfwd
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.issyn, `next.arc.issyn`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.issyn
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.mod, `next.arc.mod`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.mod
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.type, `next.arc.type`>>
+|[TRAVERSE]SYMBOLIC
+|(relationship) next.arc.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextarc.value, `next.arc.value`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.arc.value
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbidx, `next.bidx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.bidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbitindex, `next.bitindex`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.bitindex
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextbitvector, `next.bitvector`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.bitvector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextc0, `next.c0`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.c0
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextc1, `next.c1`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.c1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextdeg, `next.deg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.deg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextenum, `next.enum`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.enum
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexthandle, `next.handle`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.handle
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextid, `next.id`>>
+|[DEREF TRAVERSE]OBJECT
+|next.id
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextideg, `next.ideg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.ideg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextindex, `next.index`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.index
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextinternalid, `next.internalid`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.internalid
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextlocked, `next.locked`>>
+|[TRAVERSE]SYMBOLIC
+|(attribute) next.locked
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextodeg, `next.odeg`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.odeg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextoidx, `next.oidx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.oidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextop, `next.op`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.op
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextpropcount, `next.propcount`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.propcount
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextproperty, `next.property`>>
+|[DEREF TRAVERSE]FUNCTION
+|next.property( a[, b[, c]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextrefc, `next.refc`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.refc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmc, `next.tmc`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.tmc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmm, `next.tmm`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.tmm
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttmx, `next.tmx`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.tmx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nexttype, `next.type`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(type) next.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextvector, `next.vector`>>
+|[DEREF TRAVERSE]OBJECT
+|next.vector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nextvirtual, `next.virtual`>>
+|[DEREF TRAVERSE]SYMBOLIC
+|(attribute) next.virtual
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_normalize, `normalize`>>
+|FUNCTION
+|normalize( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_notin, `notin`>>
+|INFIX
+|(binary) notin
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_null, `null`>>
+|LITERAL
+|(none) null
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_or, `or`>>
+|FUNCTION
+|or( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_orif, `orif`>>
+|FUNCTION
+|orif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_phi, `phi`>>
+|SYMBOLIC
+|(real) phi
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_pi, `pi`>>
+|SYMBOLIC
+|(real) pi
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_pop, `pop`>>
+|FUNCTION
+|pop()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_popcnt, `popcnt`>>
+|FUNCTION
+|popcnt( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_popif, `popif`>>
+|FUNCTION
+|popif( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prev, `prev`>>
+|[LOOKBACK]OBJECT
+|prev
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevaddress, `prev.address`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.address
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarc, `prev.arc`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcdir, `prev.arc.dir`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.dir
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcdist, `prev.arc.dist`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.dist
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcisfwd, `prev.arc.isfwd`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.isfwd
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcissyn, `prev.arc.issyn`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.issyn
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcmod, `prev.arc.mod`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.mod
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarctype, `prev.arc.type`>>
+|[LOOKBACK]SYMBOLIC
+|(relationship) prev.arc.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevarcvalue, `prev.arc.value`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.arc.value
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevbidx, `prev.bidx`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.bidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevbitindex, `prev.bitindex`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.bitindex
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevbitvector, `prev.bitvector`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.bitvector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevc0, `prev.c0`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.c0
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevc1, `prev.c1`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.c1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevdeg, `prev.deg`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.deg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevenum, `prev.enum`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.enum
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevhandle, `prev.handle`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.handle
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_previd, `prev.id`>>
+|[LOOKBACK]OBJECT
+|prev.id
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevideg, `prev.ideg`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.ideg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_previndex, `prev.index`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.index
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_previnternalid, `prev.internalid`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.internalid
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevlocked, `prev.locked`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.locked
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevodeg, `prev.odeg`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.odeg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevoidx, `prev.oidx`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.oidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevop, `prev.op`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.op
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevpropcount, `prev.propcount`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.propcount
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevproperty, `prev.property`>>
+|[LOOKBACK]FUNCTION
+|prev.property( a[, b[, c]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevrefc, `prev.refc`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.refc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevtmc, `prev.tmc`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.tmc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevtmm, `prev.tmm`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.tmm
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevtmx, `prev.tmx`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.tmx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevtype, `prev.type`>>
+|[LOOKBACK]SYMBOLIC
+|(type) prev.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevvector, `prev.vector`>>
+|[LOOKBACK]OBJECT
+|prev.vector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prevvirtual, `prev.virtual`>>
+|[LOOKBACK]SYMBOLIC
+|(attribute) prev.virtual
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_probealtarray, `probealtarray`>>
+|FUNCTION
+|probealtarray( a, b, c, d, e )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_probearray, `probearray`>>
+|FUNCTION
+|probearray( a, b, c, d )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_probesuperarray, `probesuperarray`>>
+|FUNCTION
+|probesuperarray( a, b, c, d, e )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prod, `prod`>>
+|FUNCTION
+|prod( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_prox, `prox`>>
+|FUNCTION
+|prox( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_push, `push`>>
+|FUNCTION
+|push( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_pushif, `pushif`>>
+|FUNCTION
+|pushif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rad, `rad`>>
+|FUNCTION
+|rad( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_randbits, `randbits`>>
+|FUNCTION
+|randbits()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_randint, `randint`>>
+|FUNCTION
+|randint( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_random, `random`>>
+|FUNCTION
+|random()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_range, `range`>>
+|FUNCTION
+|range( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rank, `rank`>>
+|[DEREF TRAVERSE]FUNCTION
+|rank( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rdec, `rdec`>>
+|FUNCTION
+|rdec( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rdecif, `rdecif`>>
+|FUNCTION
+|rdecif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_real, `real`>>
+|FUNCTION
+|real( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rel, `rel`>>
+|SUBSCRIPT
+|rel
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_reldec, `reldec`>>
+|FUNCTION
+|reldec( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_relenc, `relenc`>>
+|FUNCTION
+|relenc( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_replace, `replace`>>
+|FUNCTION
+|replace( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_requ, `requ`>>
+|FUNCTION
+|requ( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_require, `require`>>
+|FUNCTION
+|require( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_return, `return`>>
+|FUNCTION
+|return( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_returnif, `returnif`>>
+|FUNCTION
+|returnif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_require, `require`>>
+|FUNCTION
+|require( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rgt, `rgt`>>
+|FUNCTION
+|rgt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rgte, `rgte`>>
+|FUNCTION
+|rgte( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rinc, `rinc`>>
+|FUNCTION
+|rinc( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rincif, `rincif`>>
+|FUNCTION
+|rincif( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rload, `rload`>>
+|FUNCTION
+|rload( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rlt, `rlt`>>
+|FUNCTION
+|rlt( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rlte, `rlte`>>
+|FUNCTION
+|rlte( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rmov, `rmov`>>
+|FUNCTION
+|rmov( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rmovif, `rmovif`>>
+|FUNCTION
+|rmovif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rneq, `rneq`>>
+|FUNCTION
+|rneq( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_root2, `root2`>>
+|SYMBOLIC
+|(real) root2
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_root3, `root3`>>
+|SYMBOLIC
+|(real) root3
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_root5, `root5`>>
+|SYMBOLIC
+|(real) root5
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_round, `round`>>
+|FUNCTION
+|round( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rstore, `rstore`>>
+|FUNCTION
+|rstore( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rstoreif, `rstoreif`>>
+|FUNCTION
+|rstoreif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rwrite, `rwrite`>>
+|FUNCTION
+|rwrite( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rwriteif, `rwriteif`>>
+|FUNCTION
+|rwriteif( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rxchg, `rxchg`>>
+|FUNCTION
+|rxchg( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_rxchgif, `rxchgif`>>
+|FUNCTION
+|rxchgif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_shl, `shl`>>
+|FUNCTION
+|shl( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_shlif, `shlif`>>
+|FUNCTION
+|shlif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_shr, `shr`>>
+|FUNCTION
+|shr( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_shrif, `shrif`>>
+|FUNCTION
+|shrif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sign, `sign`>>
+|FUNCTION
+|sign( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sim, `sim`>>
+|FUNCTION
+|sim( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sin, `sin`>>
+|FUNCTION
+|sin( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sinc, `sinc`>>
+|FUNCTION
+|sinc( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sinh, `sinh`>>
+|FUNCTION
+|sinh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_slice, `slice`>>
+|FUNCTION
+|slice( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_smooth, `smooth`>>
+|FUNCTION
+|smooth( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sqrt, `sqrt`>>
+|FUNCTION
+|sqrt( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_stage, `stage`>>
+|[COLLECT]FUNCTION
+|stage([ a[, b]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_stageif, `stageif`>>
+|[COLLECT]FUNCTION
+|stageif( a[, b[, c]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_startswith, `startswith`>>
+|FUNCTION
+|startswith( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_store, `store`>>
+|FUNCTION
+|store( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_storeif, `storeif`>>
+|FUNCTION
+|storeif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_str, `str`>>
+|FUNCTION
+|str( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_strcasecmp, `strcasecmp`>>
+|FUNCTION
+|strcasecmp( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_strcmp, `strcmp`>>
+|FUNCTION
+|strcmp( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_strftime, `strftime`>>
+|FUNCTION
+|strftime( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sub, `sub`>>
+|FUNCTION
+|sub( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_subif, `subif`>>
+|FUNCTION
+|subif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sum, `sum`>>
+|FUNCTION
+|sum( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sumsqr, `sumsqr`>>
+|FUNCTION
+|sumsqr( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarcdecay, `synarc.decay`>>
+|FUNCTION
+|synarc.decay( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarchasmod, `synarc.hasmod`>>
+|FUNCTION
+|synarc.hasmod( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarchasrel, `synarc.hasrel`>>
+|FUNCTION
+|synarc.hasrel( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarchasrelmod, `synarc.hasrelmod`>>
+|FUNCTION
+|synarc.hasrelmod( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarcvalue, `synarc.value`>>
+|FUNCTION
+|synarc.value( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_synarcxdecay, `synarc.xdecay`>>
+|FUNCTION
+|synarc.xdecay( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_systick, `sys.tick`>>
+|SYMBOLIC
+|(real) sys.tick
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_sysuptime, `sys.uptime`>>
+|SYMBOLIC
+|(real) sys.uptime
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_tan, `tan`>>
+|FUNCTION
+|tan( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_tanh, `tanh`>>
+|FUNCTION
+|tanh( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_true, `true`>>
+|SYMBOLIC
+|(integer) true
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_type, `type`>>
+|SUBSCRIPT
+|type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_typedec, `typedec`>>
+|FUNCTION
+|typedec( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_typeenc, `typeenc`>>
+|FUNCTION
+|typeenc( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_unindex, `unindex`>>
+|FUNCTION
+|unindex( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_unstage, `unstage`>>
+|FUNCTION
+|unstage([ a] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_unstageif, `unstageif`>>
+|FUNCTION
+|unstageif( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vector, `vector`>>
+|SYMBOLIC
+|(integer) vector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertex, `vertex`>>
+|OBJECT
+|vertex
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexaddress, `vertex.address`>>
+|SYMBOLIC
+|(attribute) vertex.address
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexbidx, `vertex.bidx`>>
+|SYMBOLIC
+|(attribute) vertex.bidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexbitindex, `vertex.bitindex`>>
+|SYMBOLIC
+|(attribute) vertex.bitindex
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexbitvector, `vertex.bitvector`>>
+|SYMBOLIC
+|(attribute) vertex.bitvector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexc0, `vertex.c0`>>
+|SYMBOLIC
+|(attribute) vertex.c0
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexc1, `vertex.c1`>>
+|SYMBOLIC
+|(attribute) vertex.c1
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexdeg, `vertex.deg`>>
+|SYMBOLIC
+|(attribute) vertex.deg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexenum, `vertex.enum`>>
+|SYMBOLIC
+|(attribute) vertex.enum
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexhandle, `vertex.handle`>>
+|SYMBOLIC
+|(attribute) vertex.handle
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexid, `vertex.id`>>
+|OBJECT
+|vertex.id
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexideg, `vertex.ideg`>>
+|SYMBOLIC
+|(attribute) vertex.ideg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexindex, `vertex.index`>>
+|SYMBOLIC
+|(attribute) vertex.index
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexinternalid, `vertex.internalid`>>
+|SYMBOLIC
+|(attribute) vertex.internalid
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexlocked, `vertex.locked`>>
+|SYMBOLIC
+|(attribute) vertex.locked
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexodeg, `vertex.odeg`>>
+|SYMBOLIC
+|(attribute) vertex.odeg
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexoidx, `vertex.oidx`>>
+|SYMBOLIC
+|(attribute) vertex.oidx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexop, `vertex.op`>>
+|SYMBOLIC
+|(attribute) vertex.op
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexpropcount, `vertex.propcount`>>
+|SYMBOLIC
+|(attribute) vertex.propcount
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexproperty, `vertex.property`>>
+|FUNCTION
+|vertex.property( a[, b[, c]] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexrefc, `vertex.refc`>>
+|SYMBOLIC
+|(attribute) vertex.refc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertextmc, `vertex.tmc`>>
+|SYMBOLIC
+|(attribute) vertex.tmc
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertextmm, `vertex.tmm`>>
+|SYMBOLIC
+|(attribute) vertex.tmm
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertextmx, `vertex.tmx`>>
+|SYMBOLIC
+|(attribute) vertex.tmx
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertextype, `vertex.type`>>
+|SYMBOLIC
+|(type) vertex.type
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexvector, `vertex.vector`>>
+|OBJECT
+|vertex.vector
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vertexvirtual, `vertex.virtual`>>
+|SYMBOLIC
+|(attribute) vertex.virtual
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_void, `void`>>
+|FUNCTION
+|void( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vsetadd, `vset.add`>>
+|[MAPPING]FUNCTION
+|vset.add( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vsetdel, `vset.del`>>
+|[MAPPING]FUNCTION
+|vset.del( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vsethas, `vset.has`>>
+|[MAPPING]FUNCTION
+|vset.has( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vsetlen, `vset.len`>>
+|[MAPPING]FUNCTION
+|vset.len()
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_vsetclr, `vset.clr`>>
+|[MAPPING]FUNCTION
+|vset.clr( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_write, `write`>>
+|FUNCTION
+|write( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_writeif, `writeif`>>
+|FUNCTION
+|writeif( [...]  )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_xchg, `xchg`>>
+|FUNCTION
+|xchg( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_xchgif, `xchgif`>>
+|FUNCTION
+|xchgif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_xor, `xor`>>
+|FUNCTION
+|xor( a, b )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_xorif, `xorif`>>
+|FUNCTION
+|xorif( a, b, c )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_zeta3, `zeta3`>>
+|SYMBOLIC
+|(real) zeta3
+
+|===
+
+
+== <<specification/timeout.adoc#pyvgxtimeout, Timeout Specification>>
+
+[cols="1,4,6"]
+|===
+|N |Section |Description
+
+|{counter:ctim}
+|<<specification/timeout.adoc#pyvgxtimeout, Timeout>>
+|How to specify timeouts in API calls
+
+|===
+
+== <<VGXCoreConcepts.adoc#vgxcoreconcepts, VGX Core Concepts>>
+
+[cols="1,4,6"]
+|===
+|N |Subject |Description
+
+|{counter:ccncp}
+|<<VGXCoreConcepts.adoc#realvirtualvertices, REAL vs VIRTUAL Vertex>>
+|Explanation of REAL and VIRTUAL vertices
+
+|{counter:ccncp}
+|<<VGXCoreConcepts.adoc#objectsandwrapper, VGX objects vs pyvgx wrappers>>
+|Explanation of how Python vertex objects relate to internal graph objects
+
+|===
+
+== <<limits.adoc#vgxlimits, VGX Limits and Internals>>
+
+[cols="1,4,6"]
+|===
+|N |Subject |Description
+
+|{counter:clim}
+|<<limits.adoc#arcs, Arc Structure (arcvector)>>
+|Brief overview of how arcs are implemented internally
+
+|{counter:clim}
+|<<limits.adoc#limits, Limits, Sizes and Special Numbers>>
+|List of important restrictions and capacities
+
+|{counter:clim}
+|<<limits.adoc#vertices, Vertex Object Structure>>
+|Brief overview of how vertex objects are implemented internally
+
+|===
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<tutorial.adoc#, icon:arrow-circle-left[size=2x, title="pyvgx Tutorial"]>>
+//icon:arrow-circle-up[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+//icon:arrow-circle-right[size=2x, link=VGXCoreConcepts.adoc#, title="VGX Core Concepts"]
+<<reference.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Reference"]>>
+
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,756 @@
+[[arcmodifierconstants]]
+= Arc Modifier Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<valueConditionConstants.adoc#, icon:arrow-circle-right[title="Value Condition Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants are used to specify the kind of value stored or searched in a relationship arc. For any given relationship type it is possible to store a separate arc for each of the available modifiers.
+
+[cols="15,12,12,14,10,2,2,2,10"]
+|===
+|Constant |Description |Value Range |Default Value |Behavior |I |Q |R |Comment
+
+|<<M_ANY>>
+|Wildcard
+|N/A
+|
+|
+|
+|y
+|
+|For use in queries only
+
+|<<M_STAT>>
+|Static
+|1
+|1
+|*Default*
+|y
+|y
+|y
+|Relationship has no numeric value
+
+|<<M_SIM>>
+|Similarity
+|0.0 &#8722; 1.0
+|0.0
+|
+|
+|y
+|y
+|Pre-computed similarity score
+
+|<<M_DIST>>
+|Distance
+|0.0 &#8722; 3.4e+38
+|0.0
+|
+|
+|y
+|y
+|Measure for vertex distance, application defined
+
+|<<M_LSH>>
+|LSH bit pattern
+|0x00000000 &#8722; 0xFFFFFFFF
+|0
+|
+|y
+|y
+|y
+|Bit pattern subject to approximate match by hamming distance
+
+|<<M_INT>>
+|32-bit Integer
+|-2,147,483,648 &#8722; 2,147,483,647
+|0
+|
+|y
+|y
+|y
+|Generic signed integer value
+
+|<<M_UINT>>
+|32-bit Unsigned Integer
+|0 &#8722; 4,294,967,295
+|0
+|
+|y
+|y
+|y
+|Generic unsigned integer value
+
+|<<M_FLT>>
+|Single Precision Floating Point
+|-3.4e+38 &#8722; 3.4e+38
+|0.0
+|
+|y
+|y
+|y
+|Generic floating point value
+
+|<<M_CNT>>
+|Counter
+|0 &#8722; 4,294,967,295
+|1
+|Auto Increment
+|y
+|y
+|y
+|Repeated insertions of the same connection will increment the arc value with a specified delta (default 1)
+
+|<<M_ACC>>
+|Accumulator
+|-3.4e+38 &#8722; 3.4e+38
+|1.0
+|Auto Increment
+|y
+|y
+|y
+|Repeated insertions of the same connection will reinforce or diminish the arc value with a specified delta
+
+|<<M_INTAGGR>>
+|Integer aggregation
+|-2,147,483,648 &#8722; 2,147,483,647
+|1
+|Aggregation result value
+|
+|
+|y
+|Aggregated integer value in result returned by aggregation query
+
+|<<M_FLTAGGR>>
+|Float aggregation
+|-3.4e+38 &#8722; 3.4e+38
+|1.0
+|Aggregation result value
+|
+|
+|y
+|Aggregated floating point value in result returned by aggregation query
+
+|<<M_TMC>>
+|Created Timestamp
+|1 &#8722; 4,102,444,799
+|Current number of seconds since 1970
+|Cannot be modified once set (delete and re-create to modify)
+|y
+|y
+|y
+|Not automatic, must create explicitly to set
+
+|<<M_TMM>>
+|Modified Timestamp
+|1 &#8722; 4,102,444,799
+|Current number of seconds since 1970
+|
+|y
+|y
+|y
+|Not automatic, must create explicitly to set
+
+|<<M_TMX>>
+|Expiration Timestamp
+|1 &#8722; 4,102,444,800
+|<<timestampConstants.adoc#T_NEVER, pyvgx.T_NEVER>>
+|All arcs with same relationship type are removed when expiration timestamp passes
+|y
+|y
+|y
+|Set timestamp when arcs of specified relationship type are automatically removed
+
+|<<M_AUTOTM>>
+|Auto timestamp (bitmask)
+|N/A
+|
+|Creates multiple arc including M_TMC and M_TMM
+|y
+|
+|
+|Shortcut for creating three arcs with one Connect()
+
+|<<M_FWDONLY>>
+|Forward arc only (bitmask)
+|N/A
+|
+|Prevent reverse arc from terminal
+|y
+|
+|y
+|Eliminating reverse arc saves memory but prevents inarc traversal
+
+|===
+
+[[M_ANY]]
+== pyvgx.M_ANY
+
+`*pyvgx.M_ANY = 0*`
+
+Arc filter modifier wildcard used in queries.
+
+*Example:*
+[source, python]
+----
+# Return all arcs of type 'knows' regardless of modifier
+graph.Neighborhood( "Alice", arc=("knows", D_OUT, M_ANY) ) )
+----
+
+[[M_STAT]]
+== pyvgx.M_STAT
+
+`*pyvgx.M_STAT = 1*`
+
+Arc modifier for valueless (static) relationship. This is the default for arcs created without a specified modifier.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_int_
+|N/A
+|N/A
+|always 1
+|===
+
+*Example:*
+[source, python]
+----
+# These are equivalent
+graph.Connect( "Alice", "knows", "Bob" )  # M_STAT, value=1 implied
+graph.Connect( "Alice", ("knows", M_STAT), "Bob" ) # value=1 implied
+
+# This is illegal, will raise pyvgx.ArcError
+graph.Connect( "Alice", ("knows", M_STAT, 123), "Bob" )
+----
+
+[[M_SIM]]
+== pyvgx.M_SIM
+
+`*pyvgx.M_SIM = 18*`
+
+Used for setting explicit similarity score between two vertices.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_float_
+|0.0
+|1.0
+|Similarity measure
+|===
+
+IMPORTANT: Currently this modifier is provided for manual use and expresses similarity between
+vertices only by convention. There is no relation between this modifier and query filters
+using vector similarity. Vertices with vectors are not automatically connected. If a connection
+is manually created using this modifier it is not updated when a vertex vector is changed.
+This modifier simply offers a way to explicitly connect two vertices with a value range
+compatible with similarity scores. The vertices do not require vectors.
+
+*Example:*
+[source, python]
+----
+graph.Connect( "Alice", ("skillset", M_SIM, 0.8), "Bob" )
+graph.Connect( "Alice", ("skillset", M_SIM, 0.3), "Charlie" )
+----
+
+[[M_DIST]]
+== pyvgx.M_DIST
+
+`*pyvgx.M_DIST = 19*`
+
+A generic measure for distance between two vertices. Semantics are application defined.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_float_
+|0.0
+|3.4e+38
+|Generic distance measure
+|===
+
+*Example:*
+[source, python]
+----
+# Some distances, relationship type should indicate unit
+graph.Connect( "Boston", ("kilometers", M_DIST, 306.0), "New York" )
+graph.Connect( "Earth", ("lightyears", M_DIST, 8.611), "Sirius" )
+graph.Connect( "coffee", ("edit", M_DIST, 3), "kaffe" )
+----
+
+
+[[M_LSH]]
+== pyvgx.M_LSH
+
+`*pyvgx.M_LSH = 4*`
+
+Bit pattern subject to approximate match by hamming distance
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_unsigned int_
+|0x00000000
+|0xFFFFFFFF
+|Bit pattern (32 bits)
+|===
+
+*Example:*
+[source, python]
+----
+graph.Connect( "A", ("lsh", M_LSH, 0xFFFFFFFF), "B" )
+graph.Connect( "A", ("lsh", M_LSH, 0x000FFFFF), "C" )
+graph.Connect( "A", ("lsh", M_LSH, 0xFFFFF000), "D" )
+
+graph.Neighborhood( "A", arc=("lsh", D_OUT, M_LSH, V_LTE, (0xFFFFFF33, 4)) )
+# -> ['B']
+
+graph.Neighborhood( "A", arc=("lsh", D_OUT, M_LSH, V_LTE, (0xFFFFFF33, 12)) )
+# -> ['B', 'D']
+
+----
+
+[[M_INT]]
+== pyvgx.M_INT
+
+`*pyvgx.M_INT = 5*`
+
+General purpose signed integer value.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_int_
+|-2,147,483,648
+|2,147,483,647
+|General purpose
+|===
+
+*Example:*
+[source, python]
+----
+graph.Connect( "A", ("boost", M_INT, -50), "B" )
+----
+
+[[M_UINT]]
+== pyvgx.M_UINT
+
+`*pyvgx.M_UINT = 6*`
+
+General purpose unsigned integer.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_unsigned int_
+|0
+|4,294,967,295
+|General purpose
+|===
+
+*Example:*
+[source, python]
+----
+graph.Connect( "A", ("related", M_UINT, 1000), "B" )
+----
+
+[[M_FLT]]
+== pyvgx.M_FLT
+
+`*pyvgx.M_FLT = 23*`
+
+General purpose floating point.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_float_
+|-3.4e+38
+|3.4e+38
+|General purpose
+|===
+
+*Example:*
+[source, python]
+----
+graph.Connect( "A", ("weight", M_FLT, 5.471), "B" )
+----
+
+[[M_CNT]]
+== pyvgx.M_CNT
+
+`*pyvgx.M_CNT = 8*`
+
+Automatic counter which will increment the arc value by a delta each time a connection is made for the same relationship.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_unsigned int_
+|0
+|4,294,967,295
+|Automatic counter
+|===
+
+NOTE: When inserting a relationship with this modifier multiple times (updating an existing arc),
+the value of the existing arc is incremented by a delta amount which defaults to 1. A positive
+value will increment the arc's value by the specified amount. A negative value will decrement
+the arc's value by the specified amount. +
++
+If no previous arc exists a new arc is created and its value is set to the specified increment value. +
++
+Counting beyond 4,294,967,295 or below 0 will have no effect.
+
+*Example:*
+[source, python]
+----
+graph.Connect( "Alice", ("called", M_CNT), "Bob" ) # -> 1
+graph.Connect( "Alice", ("called", M_CNT), "Bob" ) # -> 2
+graph.Connect( "StoreA", ("inventory", M_CNT, 100), "ItemX" ) # -> 100
+graph.Connect( "StoreA", ("inventory", M_CNT, -1), "ItemX" ) # -> 99
+----
+
+[[M_ACC]]
+== pyvgx.M_ACC
+
+`*pyvgx.M_ACC = 25*`
+
+Automatic accumulator which will
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_float_
+|-3.4e+38
+|3.4e+38
+|Automatic accumulator
+|===
+
+NOTE: When inserting a relationship with this modifier multiple times (updating an existing arc), the value of the existing arc is modified rather than overwritten. By default the added value is 1.0 if no value is specified. The specified value will be added to the arc's value. A positive value will be added to the arc. A negative value will be subtracted from the arc. If no previous arc exists a new arc is created and its value is set to the specified value.
+
+*Example:*
+[source, python]
+----
+graph.Connect( "QueryA", ("boost", M_ACC, 14.0), "ItemX" )  # -> 14.0
+graph.Connect( "QueryA", ("boost", M_ACC, -3.5), "ItemX" )  # -> 10.5
+graph.Connect( "QueryA", ("boost", M_ACC, 2.37), "ItemX" )  # -> 12.87
+----
+
+[[M_INTAGGR]]
+== pyvgx.M_INTAGGR
+
+`*pyvgx.M_INTAGGR = 10*`
+
+This modifier is used in aggregation queries. It specifies that aggregation should be performed only for arcs whose modifier value type is _int_ or _unsigned int_.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_int_
+|-2,147,483,648
+|2,147,483,647
+|For display of computed integer aggregation
+|===
+
+*Example:*
+[source, python]
+----
+# Populate graph with different types of arcs
+for n in range(4):
+    via = "via_%d" % n
+    graph.Connect( "A", "to", via)
+    for m in range(4):
+        leaf = "leaf_%d" % m
+        graph.Connect( via, ("score",M_INT,n*m), leaf )
+        graph.Connect( via, ("score",M_UINT,n), leaf )
+        graph.Connect( via, ("score",M_DIST,n/float(m+1)), leaf )
+
+# Sum up all integer values terminating at leaf nodes.
+# Returns four values, one for each aggregated leaf node.
+# Values for integer type arcs are summed, i.e. M_INT and M_UINT in this case.
+graph.Neighborhood(
+    A",
+    "to",
+    sortby   = S_VAL,
+    result   = R_LIST,
+    fields   = F_ID|F_VAL,
+    collect  = False,
+    neighbor = {
+        'arc'     : ("*",D_OUT,M_ANY),
+        'collect' : True
+    },
+    aggregate = {
+        'mode':'sum',
+        'arc':("*",D_ANY,M_INTAGGR)
+    }
+)
+----
+
+[[M_FLTAGGR]]
+== pyvgx.M_FLTAGGR
+
+`*pyvgx.M_FLTAGGR = 27*`
+
+This modifier is used in aggregation queries. It specifies that aggregation should be performed only for arcs whose modifier value type is _float_.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_int_
+|-3.4e+38
+|3.4e+38
+|For display of computed float aggregation
+|===
+
+*Example:*
+[source, python]
+----
+# Populate graph with different types of arcs
+for n in range(4):
+    via = "via_%d" % n
+    graph.Connect( "A", "to", via)
+    for m in range(4):
+        leaf = "leaf_%d" % m
+        graph.Connect( via, ("score",M_INT,n*m), leaf )
+        graph.Connect( via, ("score",M_UINT,n), leaf )
+        graph.Connect( via, ("score",M_DIST,n/float(m+1)), leaf )
+
+# Sum up all float values terminating at leaf nodes.
+# Returns four values, one for each aggregated leaf node.
+# Values for float type arcs are summed, i.e. only M_DIST in this case.
+graph.Neighborhood(
+    "A",
+    "to",
+    sortby   = S_VAL,
+    result   = R_LIST,
+    fields   = F_ID|F_VAL,
+    collect  = False,
+    neighbor = {
+        'arc'     : ("*",D_OUT,M_ANY),
+        'collect' : True
+    },
+    aggregate = {
+        'mode' : 'sum',
+        'arc'  : ("*",D_ANY,M_FLTAGGR)
+    }
+ )
+----
+
+[[M_TMC]]
+== pyvgx.M_TMC
+
+`*pyvgx.M_TMC = 12*`
+
+Arc modifier for a relationship representing arc creation time. Once set this value cannot be modified. To modify creation time the arc has the be deleted first, then re-inserted.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_unsigned int_
+|1
+
+Thu Jan 01 00:00:01 1970
+|4,102,444,799
+
+Thu Dec 31 23:59:59 2099
+|Arc creation time
+
+|===
+
+NOTE: If no value (or zero) is specified the current graph time is assigned to the arc.
+
+IMPORTANT: By default, the creation time arc is not automatically added when creating a relationship. This is to avoid unnecessary memory and computation overhead in the graph for situations where creation time is not needed. However, it is possible to enable automatic arc timestamps by first calling `pyvgx.AutoArcTimestamps( True )`. This is a global setting that will remain in effect until later disabled with `pyvgx.AutoArcTimestamps( False )`. When automatic timestamps are enabled, creating a new relationship will set creation time to current graph time. It is not possible to manually override creation time in this case.
+
+*Example:*
+[source, python]
+----
+# creation time = now
+graph.Connect( "Alice", ("called",M_TMC), "Bob" )  # -> now ts
+
+graph.Connect( "Alice", ("called",M_CNT), "Bob" )  # -> 1
+graph.Connect( "Alice", ("called",M_CNT), "Bob" )  # -> 2
+
+# illegal, will raise pyvgx.ArcError
+graph.Connect( "Alice", ("called",M_TMC), "Bob" )
+----
+
+[[M_TMM]]
+== pyvgx.M_TMM
+
+`*pyvgx.M_TMM = 13*`
+
+Arc modifier for a relationship representing arc modification time.
+
+[%autowidth]
+|===
+|Type |Min |Max |Comment
+
+|_unsigned int_
+|1
+
+Thu Jan 01 00:00:01 1970
+|4,102,444,799
+
+Thu Dec 31 23:59:59 2099
+|Arc modification time
+
+|===
+
+NOTE: If no value (or zero) is specified the current graph time is assigned to the arc.
+
+IMPORTANT: By default, the modification time arc is not automatically added when creating or updating a relationship. This is to avoid unnecessary memory and computation overhead in the graph for situations where modification time is not needed. However, it is possible to enable automatic arc timestamps by first calling `pyvgx.AutoArcTimestamps( True )`. This is a global setting that will remain in effect until later disabled with `pyvgx.AutoArcTimestamps( False )`. When automatic timestamps are enabled, creating or updating a relationship will set modification time to current graph time. It is not possible to manually override modification time in this case.
+
+*Example:*
+[source, python]
+----
+graph.Connect( "Alice", ("called",M_CNT), "Bob" )  # -> 1
+graph.Connect( "Alice", ("called",M_TMM), "Bob" )  # -> now ts
+graph.Connect( "Alice", ("called",M_CNT), "Bob" )  # -> 2
+graph.Connect( "Alice", ("called",M_TMM), "Bob" )  # -> now ts
+----
+
+[[M_TMX]]
+== pyvgx.M_TMX
+
+`*pyvgx.M_TMX = 14*`
+
+Arc TTL modifier, representing the expiration time for this relationship. When inserting a `M_TMX` arc from (A) to (B) all arcs from (A) to (B) sharing the same relationship type as the inserted expiration arc will be removed when the expiration time passes.
+
+[%autowidth]
+|===
+|Type |Min |Max |Never |Comment
+
+|_unsigned int_
+|1
+
+Thu Jan 01 00:00:01 1970
+|4,102,444,799
+
+Thu Dec 31 23:59:59 2099
+|4,102,444,800
+
+Infinity
+|Absolute arc expiration time
+
+|===
+
+NOTE: A positive value sets the absolute expiration time in seconds since 1970. A negative number of seconds is interpreted as being relative to current graph time, i.e. a more negative value schedules expiration further into the future. If no value (or zero) is specified expiration is canceled, i.e. the `M_TMX` arc remains but with a value set to `pyvgx.T_NEVER`.
+
+*Example:*
+[source, python]
+----
+# Create relationships that will automatically expire in two minutes
+
+# Manual
+now = int( time.time() )
+ttl = 120
+graph.Connect( "Alice", ("query", M_CNT, 5), "shoes" )
+graph.Connect( "Alice", ("query", M_TMX, now + ttl), "shoes" )
+
+# Automatic
+graph.Connect( "Bob", ("query", M_CNT, 3), "pants" )
+graph.Connect( "Bob", ("query", M_TMX, -120), "pants" )
+
+# wait 2 minutes...
+graph.Adjacent( "Alice", "query", "shoes" )  # -> False
+graph.Adjacent( "Bob", "query", "pants" )  # -> False
+----
+
+[[M_AUTOTM]]
+== pyvgx.M_AUTOTM
+
+`*pyvgx.M_AUTOTM = 256 (0x100)*`
+
+Bitmask to combine with arc modifier (with OR-operator) to automatically create timestamp arcs along with the specified arc.
+
+*Example:*
+[source, python]
+----
+# A -[link M_INT 123]-> B
+# A -[link M_TMC 1749156031]-> B
+# A -[link M_TMM 1749156031]-> B
+graph.Connect( "A", ("link", M_INT|M_AUTOTM, 123), "B" )
+
+graph.Neighborhood("A", neighbor="B", fields=F_AARC )
+# ['( A )-[ to <M_TMC> 1749156031 ]->( C )',
+#  '( A )-[ to <M_TMM> 1749156031 ]->( C )',
+#  '( A )-[ to <M_INT> 200 ]->( C )']
+
+----
+
+[[M_FWDONLY]]
+== pyvgx.M_FWDONLY
+
+`*pyvgx.M_FWDONLY = 2048 (0x800)*`
+
+Bitmask to combine with arc modifier (with OR-operator) to prevent implicit creation of reverse arc from terminal back to initial.
+
+Normally all arcs have <<../tutorial.adoc#initialterminal, "implicit reverse arcs">> to allow neighborhood traversal from terminals back to their initial. Creating an arc with the `M_FWDONLY` bitmask saves up to 50% memory in highly connected graphs where reverse traversal is never needed.
+
+IMPORTANT: Terminal vertices cannot have a mix of regular inarcs and forward-only inarcs. Trying to create an arc to a terminal that already has inarc(s) of the other kind raises `pyvgx.ArcError`.
+
+NOTE: If the terminal vertex will only ever have a single inarc the reverse implicit arc has no memory cost (all vertices include slots for one outarc and one inarc "for free") and using `M_FWDONLY` in this case has no benefit.
+
+*Example:*
+[source, python]
+----
+# A -> B (regular arc)
+# A -> C (without implicit reverse arc)
+graph.Connect( "A", ("to", M_INT, 100), "B" )
+graph.Connect( "A", ("to", M_INT|M_FWDONLY, 200), "C" )
+
+# A connects to B and C
+graph.Neighborhood( "A", arc=D_OUT, fields=F_AARC )
+# -> ['( A )-[ to <M_INT> 100 ]->( B )',
+#     '( A )-[ to <M_INT|M_FWDONLY> 200 ]->( C )']
+
+# B has a normal reverse implicit arc to A
+graph.Neighborhood( "B", arc=D_IN, fields=F_AARC )
+# -> ['( B )<-[ to <M_INT> 100 ]-( A )']
+
+# C has no implicit arc back to A
+graph.Neighborhood( "C", arc=D_IN, fields=F_AARC )
+# -> []
+
+# C still records indegree
+graph.Degree( "C", arc=D_IN )
+# -> 1
+
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=arcDirectionConstants.adoc#, title="Arc Direction Constants"]
+<<arcDirectionConstants.adoc#, icon:arrow-circle-left[size=2x, title="Arc Direction Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=valueConditionConstants.adoc#, title="Value Condition Constants"]
+<<valueConditionConstants.adoc#, icon:arrow-circle-right[size=2x, title="Value Condition Constants"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

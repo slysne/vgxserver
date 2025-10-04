@@ -1,0 +1,151 @@
+= Graph Objects <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 0
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[class]]
+== pyvgx.Graph
+
+`_class_ pyvgx.*Graph*( _name_**[**, _path_**[**, _local_**[**, _timeout_** ]]]** )`::
+The `pyvgx.Graph` type represents the Python layer's view of VGX graph objects. Objects of this class are wrappers that enable Python code to access core VGX graphs.
++
+*Parameters*
++
+[cols="2,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_name_
+|_str_
+|
+|Unique graph ID
+
+|_path_
+|_str_ or _bytes_
+|_name_
+|Directory storage path relative to <<../reference.adoc#system_initialize_func, _vgxroot_>>
+
+|_local_
+|_bool_
+|False
+|Set local=True to prevent graph operations from being broadcast to <<../reference.adoc#op_attach_func, remote instances when attached>>.
+
+|_timeout_
+|_int_
+|0
+|Time (in milliseconds) to block while waiting for access to VGX graph
+
+|===
+
+
+=== Remarks
+
+The pyvgx.Graph type represents VGX core graph objects. The returned Python object is a wrapper around the internal VGX graph object.
+
+name:: This constructor creates a new VGX graph or opens an existing VGX graph with the specified _name_. A reference to the graph is entered into the *graph registry* both in memory and on disk.
+
+path:: If _path_ is not specified graph data is stored in a subdirectory called _name_ relative to <<../reference.adoc#system_initialize_func, _vgxroot_>>. If the system has not yet been initialized, it is implicitly initialized with _vgxroot_ set to the current working directory.
++
+If _path_ is specified it is used instead of _name_ as the subdirectory on disk. Custom paths must be relative, otherwise an exception is raised.
+
+local:: If _local_ is not specified (or set to False) the graph will broadcast operations performed on it when the system is <<../reference.adoc#op_attach_func, attached to a remote destination>>. To keep the graph private to the local VGX instance even when the system is attached to a remote destination the graph can be instantiated with _local_ = True.
+
+timeout:: The core VGX graph object is owned by the thread calling the constructor. Ownership is in effect for as long as the pyvgx.Graph object is in scope. If another thread already owns the VGX graph an exception is raised. Use the _timeout_ parameter (in milliseconds) to block while waiting for access. The default timeout is 0, i.e. nonblocking. Pass -1 to block indefinitely.
+
+NOTE: It is possible (and safe) for a thread to share access to a pyvgx.Graph it owns with other threads. Sharing a graph object reference across multiple threads enables concurrent work to be performed on the same graph by many threads.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+pyvgx.system.Initialize( "home" )
+g = pyvgx.Graph( "graph1" )
+g.name                      # "graph1"
+g.path                      # "home/graph1"
+pyvgx.system.Registry()     # {'graph1': (0, 0)}
+----
+
+[[extend]]
+== Extending pyvgx.Graph
+
+It is possible to extend `pyvgx.Graph` to provide specialized functionality:
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+import random
+
+pyvgx.system.Initialize()
+
+class RandomGraph( pyvgx.Graph ):
+    def populate( self, N ):
+        for n in range( N ):
+            a = self.NewVertex( str( random.random() ) )
+            b = self.NewVertex( str( random.random() ) )
+            self.Connect( a, ("n", pyvgx.M_INT, n), b )
+
+
+r = RandomGraph( "r" )
+r.populate( 10000 )
+r.size                  # -> 10000
+r.order                 # -> 20000
+----
+
+[[api]]
+== pyvgx.Graph API
+
+|===
+|pyvgx.Graph API Section |Description
+
+|<<graphMembers.adoc#graphmembers, Graph Members>>
+|Graph object members
+
+|<<graphVertex.adoc#graphvertexmethods, Graph Vertex Methods>>
+|Methods for creating, deleting and acquiring vertices
+
+|<<graphArc.adoc#grapharcmethods, Graph Arc Methods>>
+|Methods for creating and removing relationships
+
+|<<graphQuery.adoc#graphquerymethods, Graph Query Methods>>
+|Methods for searching and retrieving information from the graph
+
+|<<graphManagement.adoc#graphmanagementmethods, Graph Management Methods>>
+|Methods for performing global graph operations
+
+|<<graphEnum.adoc#graphenummethods, Graph Enumeration Methods>>
+|Methods for managing enumerations
+
+|<<graphEvent.adoc#grapheventmethods, Graph Event Methods>>
+|Methods for managing the TTL event processor
+
+|<<graphMiscellaneous.adoc#graphmiscellaneousmethods, Graph Miscellaneous Methods>>
+|Methods for debugging and showing various information
+|===
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphMiscellaneous.adoc#, title="Graph Miscellaneous Methods"]
+<<graphMiscellaneous.adoc#, icon:arrow-circle-left[size=2x, title="Graph Miscellaneous Methods"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=graphMembers.adoc#, title="Graph Members"]
+<<graphMembers.adoc#, icon:arrow-circle-right[size=2x, title="Graph Members"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,229 @@
+[[vertexvector]]
+= Vertex Vector Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexTTL.adoc#, icon:arrow-circle-right[title="Vertex TTL Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex Vector Methods |Description
+
+|<<vertexsetvector>>
+|Assign a feature vector to the vertex.
+
+|<<vertexhasvector>>
+|Return `True` if vertex has a vector, otherwise `False`.
+
+|<<vertexgetvector>>
+|Return the vertex vector.
+
+|<<vertexremovevector>>
+|Remove the vertex vector.
+
+|<<vertexarclsh>>
+|Return 32-bit lsh region not overlapping with lsh segment used for projection key
+
+|===
+
+[[vertexsetvector]]
+== pyvgx.Vertex.SetVector()
+
+Assign a feature vector to the vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.SetVector( elements ) -> pyvgx.Vector
+----
+
+=== Parameters
+
+`_elements_`: List of 2-tuples [ (feature, weight), (feature, weight), ... ]
+
+* _feature_ is a string of <<../limits.adoc#limits, no more than 27 characters>> (silent truncation will occur)
+* _weight_ is a number constrained to the range [0.0078125 – 1.875] (silent capping at either end will occur)
+* The <<../limits.adoc#limits, maximum length>> of a vector is 48 features.
+
+=== Return Value
+
+A new <<../similarity/vector.adoc#pyvgxvector, pyvgx.Vector>>  object instance representing the vertex feature vector will be returned. The returned object does not wrap the vertex vector, i.e. there is no way to modify a vector once set. To change the vertex vector one must call <<vertexsetvector>> again with a different element list.
+
+The returned vector is useful for inspection and comparison processing.
+
+=== Remarks
+
+Setting the vertex vector enables similarity matching for the vertex.
+
+Being enabled for similarity matching means the vertex may be a candidate for retrieval (or positive filter match) for a query that includes a similarity threshold condition.
+
+NOTE: The vector is subject to truncation and quantization. Vector feature strings will be truncated beyond the 27th character and weights will be constrained to the interval [0.0078125 – 1.875] and quantized according to a set of pre-defined values. (Please see <<../similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> for technical details.)
+
+WARNING: If feature strings are utf-8 encoded it is possible for truncation to occur in the middle of a utf-8 byte sequence resulting in invalid string data if you try to print the string after retrieving it from a vertex. (Internal processing and comparison will continue work without issue.) For this reason, if you plan to insert vectors with utf-8 encoded features make sure the encoded byte-sequence is shorter than 27 bytes or pre-truncate to avoid cutting off a utf-8 encoded unicode character in the middle.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("g")
+A = g.NewVertex("A")
+B = g.NewVertex("B")
+vA = A.SetVector( [("this",1.3),("is",1.1),("a",0.9),("vector",0.7)] )
+vB = B.SetVector( [("this",1.7),("is",1.2),("another",0.9),("vector",0.5)] )
+
+# Inspect
+vA.Magnitude()       # 1.95
+vB.Magnitude()       # 2.22
+
+# -> [('this', 1.25), ('is', 1.0), ('a', 0.875), ('vector', 0.6875)]
+vA.External()
+
+# -> [(27871805, 61), (43031197, 57), (37390563, 54), (51389292, 48)]
+vB.Internal()
+
+# Compare
+g.Cosine( vA, vB )   # 0.80859375
+g.Jaccard( vA, vB )  # 0.52734375
+----
+
+[[vertexhasvector]]
+== pyvgx.Vertex.HasVector()
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.HasVector()
+----
+
+=== Return Value
+
+Returns `True` if the vertex has a similarity vector, otherwise `False`.
+
+[[vertexgetvector]]
+== pyvgx.Vertex.GetVector()
+
+Return the vertex vector.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetVector() -> pyvgx.Vector
+----
+
+=== Return Value
+
+If the vertex has a vector a new <<../similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> object representing that vector is returned. The returned object does not wrap the vertex vector, i.e. there is no way to modify a vector once set. To change the vertex vector one must call <<vertexsetvector>> with a different element list.
+
+If the vertex does not have a vector a new <<../similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> object representing the null-vector is returned.
+
+The returned vector is useful for inspection and comparison processing.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("g")
+A = g.NewVertex("A")
+A.SetVector( [("this",1.3),("is",1.1),("a",0.9),("vector",0.7)] )
+V = A.GetVector()
+
+# -> <PyVGX_Vector: len=4 mag=1.9486 fp=0xDEF40C4CB2D466A1
+#    elem=[('this', 1.25), ('is', 1.0), ('a', 0.875), 
+#          ('vector', 0.6875)]>
+V
+----
+
+[[vertexremovevector]]
+== pyvgx.Vertex.RemoveVector()
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.RemoveVector()
+----
+
+=== Remarks
+
+Removes the vector from the vertex.
+
+[[vertexarclsh]]
+== pyvgx.Vertex.ArcLSH()
+
+Return 32 lsh bits from a region of the 64-bit LSH not overlapping with LSH segment used to generate a projection key.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.ArcLSH( lsh64 ) -> lsh32
+----
+
+=== Parameters
+
+_lsh64_ is the 64-bit LSH from which we will extract 32 bits to return. The vertex must have been created by <<similarityMethods.adoc#similaritycreateprojectionsets, pyvgx.Similarity.CreateProjectionSets()>> for this to have the desired effect.
+
+=== Return Value
+
+A 32-bit segment extracted from _lsh64_ is returned.
+
+=== Remarks
+
+Call this method to obtain a 32-bit integer suitable for use with arc modifier <<../constants/arcModifierConstants.adoc#M_LSH, pyvgx.MLSH>>.
+
+Vector index implementations may want to set this value on arcs from projection nodes to items holding vectors to make neighborhood queries more efficient. Such queries may want to use a hamming distance filter before traversing the arc to the target item node, thereby reducing expensive memory access and vector similarity computations.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "vectors", euclidean=1 )
+g = Graph("ann")
+
+# Initialize index structure
+g.sim.CreateProjectionSets(1,10)
+
+# Create a random vector
+V = g.sim.NewVector( [random.random() for i in range(768)] )
+
+# Get LSH for seed 0
+lsh = V.Fingerprint( 0 )
+
+# Extract 32 bits from lsh not overlapping with the segment
+# of lsh used for projection 0x1234
+g["_1234|000"].ArcLSH( 0 )   # -> 32 bit integer
+----
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexRank.adoc#, title="Vertex Rank Methods"]
+<<vertexRank.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Rank Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexTTL.adoc#, title="Vertex TTL Methods"]
+<<vertexTTL.adoc#, icon:arrow-circle-right[size=2x, title="Vertex TTL Methods"]>>
+
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
