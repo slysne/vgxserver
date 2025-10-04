@@ -627,7 +627,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <tr>
 <td class="tableblock halign-left valign-top" colspan="2"></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="#evaluatormemory_arraybitwise">Bitwise Operations</a></em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Bitshift and logical operations on memory range (<code>mshr</code>, <code>mxor</code>, etc.)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bit shift and logical operations on memory range (<code>mshr</code>, <code>mxor</code>, etc.)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" colspan="2"></td>
@@ -843,7 +843,7 @@ Substitute <code>next</code> or <code>prev</code> for <code>vertex</code> to acc
 <td class="tableblock halign-left valign-top"><p class="tableblock">!= 0</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">real( <em>self</em> )</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#_isbitvector">isbitvector()</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">64-bit unsigned integer for use with certain operations that handle bitmasks and integers differently.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64-bit unsigned integer for use with certain operations that handle bit masks and integers differently.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#datatype_keyval"><em>keyval</em></a></p></td>
@@ -2781,15 +2781,15 @@ Since vertex properties are costly to store and reference, in some cases you may
 <dl>
 <dt class="hdlist1">First filter iteration for <em>AX</em></dt>
 <dd>
-<p>The neighborhood query visits component arc <em>ax<sub>1</sub></em> = ('count', M_CNT, 25). The subexpression <code>c = synarc.value('count',M_CNT);</code> has a match on <em>ax<sub>1</sub></em> and captures the value 25 into an internal register. The value <code>null</code> is returned and assigned to <code>c</code>. The subexpression <code>w = synarc.value('weight',M_FLT);</code> does not match <em>ax<sub>1</sub></em> and is a no-op. The value <code>null</code> is returned and assigned to <code>w</code>. The subexpression <code>score = c * w;</code> assigns <code>null</code> to <code>score</code> since both factors are <code>null</code>. The subexpression <code>collectif( score &lt; 50.0, score );</code> is a no-op because <code>score &lt; 50.0</code> is false when <code>score</code> is <code>null</code>. (Comparisons involving <code>null</code> are always false, except when testing equality between two <code>null</code> values.)</p>
+<p>The neighborhood query visits component arc <em>ax<sub>1</sub></em> = ('count', M_CNT, 25). The sub-expression <code>c = synarc.value('count',M_CNT);</code> has a match on <em>ax<sub>1</sub></em> and captures the value 25 into an internal register. The value <code>null</code> is returned and assigned to <code>c</code>. The sub-expression <code>w = synarc.value('weight',M_FLT);</code> does not match <em>ax<sub>1</sub></em> and is a no-op. The value <code>null</code> is returned and assigned to <code>w</code>. The sub-expression <code>score = c * w;</code> assigns <code>null</code> to <code>score</code> since both factors are <code>null</code>. The sub-expression <code>collectif( score &lt; 50.0, score );</code> is a no-op because <code>score &lt; 50.0</code> is false when <code>score</code> is <code>null</code>. (Comparisons involving <code>null</code> are always false, except when testing equality between two <code>null</code> values.)</p>
 </dd>
 <dt class="hdlist1">Second filter iteration for <em>AX</em></dt>
 <dd>
-<p>The neighborhood query visits component arc <em>ax<sub>2</sub></em> = ('weight', M_FLT, 4.0). Evaluation is the same as for <em>ax<sub>1</sub></em> as above, except subexpression <code>w = synarc.value('weight',M_FLT);</code> now matches <em>ax<sub>2</sub></em> and captures the value 4.0 into another internal register.</p>
+<p>The neighborhood query visits component arc <em>ax<sub>2</sub></em> = ('weight', M_FLT, 4.0). Evaluation is the same as for <em>ax<sub>1</sub></em> as above, except sub-expression <code>w = synarc.value('weight',M_FLT);</code> now matches <em>ax<sub>2</sub></em> and captures the value 4.0 into another internal register.</p>
 </dd>
 <dt class="hdlist1">Third filter iteration for <em>AX</em></dt>
 <dd>
-<p>The neighborhood query now invokes the evaluator one final time for synthetic arc <em>ax<sub>syn</sub></em> = ('__synthetic__', M_NONE, 0). The subexpression <code>c = synarc.value('count',M_CNT);</code> assigns 25 to <code>c</code> as this value is retrieved from the internal register that previously captured this value from <em>ax<sub>1</sub></em>. The subexpression <code>w = synarc.value('weight',M_FLT);</code> assigned 4.0 to <code>w</code> as this value is retrieved from the internal register that previously captured this value from <em>ax<sub>2</sub></em>. The subexpression <code>score = c * w;</code> multiplies the two values and assigns 100.0 to <code>score</code>; The subexpression <code>collectif( score &lt; 50.0, score );</code> is a no-op since the condition is not met. The arc <em>AX</em> did not match and is not collected.</p>
+<p>The neighborhood query now invokes the evaluator one final time for synthetic arc <em>ax<sub>syn</sub></em> = ('__synthetic__', M_NONE, 0). The sub-expression <code>c = synarc.value('count',M_CNT);</code> assigns 25 to <code>c</code> as this value is retrieved from the internal register that previously captured this value from <em>ax<sub>1</sub></em>. The sub-expression <code>w = synarc.value('weight',M_FLT);</code> assigned 4.0 to <code>w</code> as this value is retrieved from the internal register that previously captured this value from <em>ax<sub>2</sub></em>. The sub-expression <code>score = c * w;</code> multiplies the two values and assigns 100.0 to <code>score</code>; The sub-expression <code>collectif( score &lt; 50.0, score );</code> is a no-op since the condition is not met. The arc <em>AX</em> did not match and is not collected.</p>
 </dd>
 <dt class="hdlist1">First filter iteration for <em>AY</em></dt>
 <dd>
@@ -5389,7 +5389,7 @@ mem[9] -&gt; inf</span></code></pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>String and vector objects can be assigned to memory locations from within expressions and from the Python interpreter. The <code>pyvgx.Memory</code> instance becomes an owner of the assigned object, either by creating a copy or by owning an additonal reference.</p>
+<p>String and vector objects can be assigned to memory locations from within expressions and from the Python interpreter. The <code>pyvgx.Memory</code> instance becomes an owner of the assigned object, either by creating a copy or by owning an additional reference.</p>
 </div>
 <div class="paragraph">
 <p>String and vector objects are retained by the <code>pyvgx.Memory</code> associated with the expression being evaluated. Each time a string-generating function (such as <code>str()</code> or <code>replace()</code>) is used, or a string or vector object is assigned to a memory location, the <code>pyvgx.Memory</code> instance will accumulate ownership of assigned objects even if the memory location is later overwritten by another value.</p>
@@ -8563,7 +8563,7 @@ Operations taking a memory range input are <strong>inclusive of the end index</s
 <div class="sect3">
 <h4 id="_return_value_4">6.2.3. Return Value</h4>
 <div class="paragraph">
-<p>The default (unboosted) score returned when all probe elements exist in the array is 1.0. If one or more probe elements do not exist in array 0.0 is returned.</p>
+<p>The default (un-boosted) score returned when all probe elements exist in the array is 1.0. If one or more probe elements do not exist in array 0.0 is returned.</p>
 </div>
 <div class="paragraph">
 <p>If probe elements match the array <em>in order, starting from the first array element</em> (a prefix match) the return score is multiplied by <em>prefix_boost</em>.</p>
@@ -8984,7 +8984,7 @@ When collecting search results using evaluator expressions it is often desirable
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-03 17:15:55 -0400
+Last updated 2025-10-04 13:01:55 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

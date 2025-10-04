@@ -146,17 +146,17 @@
 <li><a href="#_loginfo">2.1.3.16. LogInfo</a></li>
 <li><a href="#_logtimestamp">2.1.3.17. LogTimestamp</a></li>
 <li><a href="#_logwarning">2.1.3.18. LogWarning</a></li>
-<li><a href="#_md5">2.1.3.19. md5</a></li>
-<li><a href="#_meminfo_2">2.1.3.20. meminfo</a></li>
-<li><a href="#_openaccesslog">2.1.3.21. OpenAccessLog</a></li>
-<li><a href="#_popcnt">2.1.3.22. popcnt</a></li>
-<li><a href="#_profile_2">2.1.3.23. profile</a></li>
-<li><a href="#_rstr">2.1.3.24. rstr</a></li>
-<li><a href="#_selftest">2.1.3.25. selftest</a></li>
-<li><a href="#_selftest_all">2.1.3.26. selftest_all</a></li>
-<li><a href="#_serialize">2.1.3.27. serialize</a></li>
-<li><a href="#_setoutputstream">2.1.3.28. SetOutputStream</a></li>
-<li><a href="#_sha256">2.1.3.29. sha256</a></li>
+<li><a href="#_meminfo_2">2.1.3.19. meminfo</a></li>
+<li><a href="#_openaccesslog">2.1.3.20. OpenAccessLog</a></li>
+<li><a href="#_popcnt">2.1.3.21. popcnt</a></li>
+<li><a href="#_profile_2">2.1.3.22. profile</a></li>
+<li><a href="#_rstr">2.1.3.23. rstr</a></li>
+<li><a href="#_selftest">2.1.3.24. selftest</a></li>
+<li><a href="#_selftest_all">2.1.3.25. selftest_all</a></li>
+<li><a href="#_serialize">2.1.3.26. serialize</a></li>
+<li><a href="#_setoutputstream">2.1.3.27. SetOutputStream</a></li>
+<li><a href="#_sha256">2.1.3.28. sha256</a></li>
+<li><a href="#_strhash128">2.1.3.29. strhash128</a></li>
 <li><a href="#_strhash64">2.1.3.30. strhash64</a></li>
 <li><a href="#_threadid">2.1.3.31. threadid</a></li>
 <li><a href="#_threadinit">2.1.3.32. threadinit</a></li>
@@ -2303,19 +2303,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_md5">2.1.3.19. md5</h5>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><a id="md5_func"></a><code>pyvgx.<strong>md5</strong>( <em>x</em> )</code></dt>
-<dd>
-<p>Compute md5 of string <em>x</em> and return the result as a string of 32 hex digits.</p>
-</dd>
-</dl>
-</div>
-<hr>
-</div>
-<div class="sect4">
-<h5 id="_meminfo_2">2.1.3.20. meminfo</h5>
+<h5 id="_meminfo_2">2.1.3.19. meminfo</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="meminfo_func"></a><code>pyvgx.<strong>meminfo</strong>()</code></dt>
@@ -2327,7 +2315,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_openaccesslog">2.1.3.21. OpenAccessLog</h5>
+<h5 id="_openaccesslog">2.1.3.20. OpenAccessLog</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="openaccesslog_func"></a><code>pyvgx.<strong>OpenAccessLog</strong>( <em>filepath</em> )</code></dt>
@@ -2342,7 +2330,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_popcnt">2.1.3.22. popcnt</h5>
+<h5 id="_popcnt">2.1.3.21. popcnt</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="popcnt_func"></a><code>pyvgx.<strong>popcnt</strong>( <em>x</em> )</code></dt>
@@ -2354,7 +2342,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_profile_2">2.1.3.23. profile</h5>
+<h5 id="_profile_2">2.1.3.22. profile</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="profile_func"></a><code>pyvgx.<strong>profile</strong>()</code></dt>
@@ -2366,7 +2354,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_rstr">2.1.3.24. rstr</h5>
+<h5 id="_rstr">2.1.3.23. rstr</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="rstr_func"></a><code>pyvgx.<strong>rstr</strong>( <em>n</em> )</code></dt>
@@ -2378,7 +2366,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_selftest">2.1.3.25. selftest</h5>
+<h5 id="_selftest">2.1.3.24. selftest</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="selftest_func"></a><code>pyvgx.<strong>selftest</strong>( <em>testroot</em><strong>[</strong>, <em>library</em><strong>[</strong>, <em>names</em><strong>[</strong>, <em>force</em><strong>]]]</strong> )</code></dt>
@@ -2390,7 +2378,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_selftest_all">2.1.3.26. selftest_all</h5>
+<h5 id="_selftest_all">2.1.3.25. selftest_all</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="selftest_all_func"></a><code>pyvgx.<strong>selftest_all</strong>( <em>testroot</em> )</code></dt>
@@ -2402,7 +2390,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serialize">2.1.3.27. serialize</h5>
+<h5 id="_serialize">2.1.3.26. serialize</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="serialize_func"></a><code>pyvgx.<strong>serialize</strong>( <em>obj</em> )</code></dt>
@@ -2414,7 +2402,7 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_setoutputstream">2.1.3.28. SetOutputStream</h5>
+<h5 id="_setoutputstream">2.1.3.27. SetOutputStream</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="SetOutputStream_func"></a><code>pyvgx.<strong>SetOutputStream</strong>( <em>filepath</em> )</code></dt>
@@ -2426,12 +2414,24 @@ Disabled by default.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_sha256">2.1.3.29. sha256</h5>
+<h5 id="_sha256">2.1.3.28. sha256</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="sha256_func"></a><code>pyvgx.<strong>sha256</strong>( <em>x</em> )</code></dt>
 <dd>
 <p>Compute sha256 of string <em>x</em> and return the result as a string of 64 hex digits.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect4">
+<h5 id="_strhash128">2.1.3.29. strhash128</h5>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="strhash128_func"></a><code>pyvgx.<strong>strhash128</strong>( <em>x</em> )</code></dt>
+<dd>
+<p>Return a 128-bit (hex string) hash of string <em>x</em>.</p>
 </dd>
 </dl>
 </div>
@@ -5543,7 +5543,7 @@ This method is only relevant in <strong>Feature vector</strong> mode.
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-03 17:15:55 -0400
+Last updated 2025-10-04 12:42:10 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

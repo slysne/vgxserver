@@ -950,7 +950,7 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
 <p>Define sort order and key type using <em>sortby</em> parameter. Valid <a href="../constants/sortSpecificationConstants.html">sortby constants</a> are the same as those used in graph queries. By default <em>sortby</em> is <code>S_NONE</code>.</p>
 </div>
 <div class="paragraph">
-<p>Explicitly define the <em>keytype</em> as <em>int</em>, <em>float</em>, <em>bytes</em> or <em>str</em>. Must be comparible with <em>sortby</em> if provided.</p>
+<p>Explicitly define the <em>keytype</em> as <em>int</em>, <em>float</em>, <em>bytes</em> or <em>str</em>. Must be comparable with <em>sortby</em> if provided.</p>
 </div>
 <div class="paragraph">
 <p>A dispatcher automatically creates its own internal PluginResponse instance for each request. Partial responses arriving from the back-end matrix carry result items along with <em>maxhits</em> and <em>sortby</em> parameters. The dispatcher response object inherits these parameters by picking the greatest <em>maxhits</em> among all partial results and <em>sortby</em> from the lowest partition&#8217;s response with non-zero hits. As a best practice, configure all PluginResponse instances with identical <em>sortby</em>, <em>keytype</em> and <em>maxhits</em> to avoid confusion.</p>
@@ -1339,7 +1339,7 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-03 17:15:55 -0400
+Last updated 2025-10-04 13:11:40 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">
