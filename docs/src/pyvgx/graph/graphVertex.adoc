@@ -97,6 +97,7 @@ pyvgx.Graph.CreateVertex( id[, type[, lifespan[, properties ]]] ) -> 1 or 0
 
 If the vertex is successfully created, this method returns 1. If the vertex already exists, 0 is returned. If the vertex cannot be created, an exception is raised.
 
+// cspell:ignore typeless
 === Remarks
 
 This method creates a new vertex in the graph if it does not already exist. The created vertex is not acquired. To gain read or write access to the created vertex it is necessary to call <<graphopenvertex>> or <<graphnewvertex>>.
@@ -446,6 +447,7 @@ pyvgx.Graph.OpenVertices( idlist[, mode[, timeout ]] ) -> vertex_list
 |===
 |Parameter |Type |Default |Description
 
+// cspell:ignore idlist
 |_idlist_
 |_str_
 |
@@ -954,6 +956,7 @@ pyvgx.Graph.GetOpenVertices( [ threadid ] ) -> list
 |===
 |Parameter |Type |Default |Description
 
+// cspell:ignore threadid
 |_threadid_
 |_int_
 |0
@@ -1009,7 +1012,7 @@ ___
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphArc.adoc#, title="Graph Arc Methods"]
 <<graphArc.adoc#, icon:arrow-circle-right[size=2x, title="Graph Arc Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

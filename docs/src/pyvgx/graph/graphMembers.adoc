@@ -79,6 +79,7 @@ This returns graph's full path.
 pyvgx.Graph.path
 ----
 
+// cspell:ignore vgxroot
 === Remarks
 
 This function returns the full path of the graph including _vgxroot_ (as initially defined with <<../reference.adoc#system_initialize_func, pyvgx.system.Initialize()>> ) and any additional path provided in the graph constructor's _path_ parameter.
@@ -165,6 +166,7 @@ for n in range( 1000 ):
 g.size                          # -> 1003
 ----
 
+// cspell:ignore objcnt
 [[graphobjcnt]]
 == pyvgx.Graph.objcnt
 
@@ -299,7 +301,7 @@ ___
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphVertex.adoc#, title="Graph Vertex Methods"]
 <<graphVertex.adoc#, icon:arrow-circle-right[size=2x, title="Graph Vertex Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

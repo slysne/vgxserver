@@ -41,6 +41,7 @@ include::common/_copyable.adoc[]
 |65,472
 |A euclidean vector may contain up to 65,472 components, and the number of components must be a multiple of 32.
 
+// cspell:ignore FWDONLY
 |Arc Memory
 |32 bytes
  +
@@ -103,6 +104,7 @@ Vertex <<vertex/vertexProperty.adoc#, properties>> are key-value pairs stored in
 
 In addition to the property map structure a global map (per graph instance) maintains a mapping of unique property key strings and value strings. Repeated use of the same property key and value strings for multiple vertices does not require additional storage for the strings. Vertex property maps only store integer enumerations.
 
+// cspell:ignore arcvector arcvectors
 [[vertexarcs]]
 === Arcs
 
@@ -400,7 +402,7 @@ ___
 <<tutorial.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Tutorial"]>>
 //icon:arrow-circle-right[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
 <<tutorial.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Tutorial"]>>
-
+// cspell:ignore backtotop
 include::common/_backtotop.adoc[]
 --
 

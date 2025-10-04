@@ -258,7 +258,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexProperty.adoc#, title="Vertex Property Methods"]
 <<vertexProperty.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Property Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

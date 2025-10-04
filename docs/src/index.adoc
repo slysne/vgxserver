@@ -76,7 +76,7 @@ ___
 [.float-group]
 --
 [.left]
-
+// cspell:ignore backtotop
 include::pyvgx/common/_backtotop.adoc[]
 --
 

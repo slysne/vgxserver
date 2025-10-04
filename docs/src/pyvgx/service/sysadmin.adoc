@@ -90,6 +90,7 @@ image::ui_admin.png[ui_admin]
 
 `Writing` All data in memory is being written to disk snapshot
 
+// cspell:ignore txport
 .2+|*Mutability*
 |Execution Mode
 |`Local` Graph modification logic is executing in local VGX Server instance
@@ -135,6 +136,7 @@ image::ui_admin.png[ui_admin]
 
 `Paused` VGX Transaction Service has temporarily suspended input processing
 
+// cspell:ignore hport
 |Digest
 |Identicon representing provider's current state
 |Hostname
@@ -156,6 +158,7 @@ image::ui_admin.png[ui_admin]
 
 `Down` Attached subscriber is currently unreachable
 
+// cspell:ignore tport
 |Digest
 |Identicon representing subscriber's current state
 |Hostname
@@ -315,6 +318,7 @@ For this page to work the <<multinode.adoc#system_descriptor, *SYSTEM_Descriptor
 
 Consider a system with eight VGX Server instances deployed as show below:
 
+// cspell:ignore exampleservice
 image::exampleservice.png[exampleservice, 480, 480, align="center"]
 
 The System Overview dashboard for this example system will look like this:
@@ -353,10 +357,12 @@ The dashboard's upper segment shows a summary of information aggregated across a
 |_size_
 |Total number of arcs across all partitions
 
+// cspell:ignore nprop
 |*Properties*
 |_nprop_
 |Total number of properties across all partitions
 
+// cspell:ignore nvec
 |*Vectors*
 |_nvec_
 |Total number of vectors across all partitions
@@ -365,6 +371,7 @@ The dashboard's upper segment shows a summary of information aggregated across a
 |_model_
 |CPU _model_ brand string installed on server(s)
 
+// cspell:ignore hostmem
 |*Memory*
 |_used_ (_hostmem_)
 |Total _used_ memory for all instances in system, out of the total _hostmem_ memory available on all hosts
@@ -620,6 +627,7 @@ Hold down `Shift-Ctrl` (Windows) / `Shift-Cmd` (MacOS) to open the link in a new
 
 All administrative tasks can be performed using the service endpoints described in this section.
 
+// cspell:ignore authtoken authtokens
 [[admin_service_authtoken]]
 === authtoken
 
@@ -835,6 +843,7 @@ New plugins can be dynamically added by POSTing plugin definition JSON. The plug
 
 |===
 
+// cspell:ignore vgxadmin
 [[vgxadmin_tool]]
 == _vgxadmin_ Command Line Tool
 
@@ -1096,6 +1105,7 @@ Clear errors and performance counters for instance(s).
 vgxadmin --resetmetrics "S*"
 ----
 
+// cspell:ignore vgxroot
 [[vgxadmin_option_opdump]]
 ==== `--opdump <id>` (`-M`)
 Dump all graph data to an output file on the instance's local file system. The file will be named `opdump_<timestamp>.tx` located directly under the instance _vgxroot_ directory. Output data is written as <<../io/vgxopxfer.adoc#stream_building_blocks, VGX transactions>> and can be used to populate other instances.
@@ -1426,7 +1436,7 @@ ___
 <<pluginadapter.adoc#, icon:arrow-circle-left[size=2x, title="Plugin Adapter"]>>
 <<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 <<multinode.adoc#, icon:arrow-circle-right[size=2x, title="Multi-Node Setup"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

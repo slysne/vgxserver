@@ -81,6 +81,7 @@ Minimum Jaccard() allowed between vectors to be declared "similar" in *Feature V
 
 NOTE: Ignored in *Euclidean Vector* mode
 
+// cspell:ignore isect
 [[similarityminisect]]
 == pyvgx.Similarity.min_isect
 
@@ -99,11 +100,13 @@ Maximum number of elements in vectors
 Internal set of pre-defined seeds for use with ANN search functionality.
 This is a special case internal implementation which is subject to change, and is thus intentionally undocumented.
 
+// cspell:ignore nsegm
 [[similaritynsegm]]
 == pyvgx.Similarity.nsegm
 
 Future.
 
+// cspell:ignore nsign
 [[similaritynsign]]
 == pyvgx.Similarity.nsign
 
@@ -120,7 +123,7 @@ ___
 <<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
 //icon:arrow-circle-right[size=2x, link=similarityMethods.adoc#, title="Similarity Methods"]
 <<similarityMethods.adoc#, icon:arrow-circle-right[size=2x, title="Similarity Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

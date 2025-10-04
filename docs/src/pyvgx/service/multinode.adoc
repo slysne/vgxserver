@@ -552,6 +552,7 @@ Two static methods of pyvgx.VGXInstance are available:
 +
 *_descriptor_file_*: Full path to a file on disk containing a valid <<system_descriptor, system descriptor>> in JSON format. Defaults to `"vgx.cf"`.
 
+// cspell:ignore vgxroot
 [[pyvgx_vgxinstance_startinstance_func]]`pyvgx.VGXInstance.StartInstance( _id_, _descriptor_**[**, _basedir_**[**, _plugins_**]]** )`:: Initialize, configure and start a VGX Server instance. The instance's _vgxroot_ is automatically named `<instance.type>_<instance.id>`, e.g. "builder_B01".
 +
 *_id_*: Instance identifier string, as defined in the system descriptor
@@ -661,7 +662,7 @@ Run this to start a service instance
 
 <<service_example_plugin_code>>::
 `service/exampleplugin.py` +
-Module containing plugin code used by exampleservice.py
+Module containing plugin code used by `exampleservice.py`
 
 <<service_example_start_instances>>::
 Start components from a terminal
@@ -702,6 +703,7 @@ vgxadmin --stop "*" --confirm
 
 Our system will have two shards with one builder row and two search rows. A top dispatcher is responsible for routing requests and merging responses. We also use a dedicated admin instance.
 
+// cspell:ignore exampleservice
 .Service Example Topology
 image::exampleservice.png[exampleservice, 480, 480, align="center"]
 
@@ -940,6 +942,7 @@ demo/
 │  ├─ exampleplugin.py
 ----
 
+// cspell:ignore exampleplugin
 .service/exampleplugin.py
 [.copyable]
 [source, python]
@@ -1170,7 +1173,7 @@ ___
 <<sysadmin.adoc#, icon:arrow-circle-left[size=2x, title="System Administration"]>>
 <<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 <<service.adoc#, icon:arrow-circle-right[size=2x, title="VGX Server"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

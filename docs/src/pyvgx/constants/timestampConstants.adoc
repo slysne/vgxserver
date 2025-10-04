@@ -60,7 +60,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=opcodeConstants.adoc#, title="Opcode Constants"]
 <<opcodeConstants.adoc#, icon:arrow-circle-right[size=2x, title="Opcode Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

@@ -78,6 +78,7 @@ g.CloseVertex( B )
 
 image::vgx3.png[vgx3, title="Python object B releases ownership of _Bob_, but still remains an active Python object without a reference to the core vertex. Object B is now defunct."]
 
+// cspell:ignore deallocates
 [[closeautomatically]]
 === Close vertex automatically
 
@@ -104,7 +105,7 @@ ___
 <<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 //icon:arrow-circle-right[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
 <<tutorial.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Tutorial"]>>
-
+// cspell:ignore backtotop
 include::common/_backtotop.adoc[]
 --
 

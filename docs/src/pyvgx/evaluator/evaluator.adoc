@@ -11,6 +11,7 @@
 
 include::../common/_copyable.adoc[]
 
+// cspell:ignore latexmath arcsinh arccosh arctanh
 [latexmath]
 ++++
 \DeclareMathOperator\arcsinh{arcsinh}
@@ -229,7 +230,7 @@ See <<selectEvaluator.adoc#selectlabel, Select Evaluator>> for details.
 
 2+|
 |__<<evaluatormemory_arraybitwise>>__
-|Bitshift and logical operations on memory range (`mshr`, `mxor`, etc.)
+|Bit shift and logical operations on memory range (`mshr`, `mxor`, etc.)
 
 2+|
 |__<<evaluatormemory_arrayhash>>__
@@ -381,7 +382,7 @@ The final result of an expression is interpreted according to the context where 
 |!= 0
 |real( _self_ )
 |<<_isbitvector, isbitvector()>>
-|64-bit unsigned integer for use with certain operations that handle bitmasks and integers differently.
+|64-bit unsigned integer for use with certain operations that handle bit masks and integers differently.
 
 |<<datatype_keyval, _keyval_>>
 |_value_ > 0.0
@@ -570,6 +571,7 @@ graph.Evaluate( "'y' in next", head=V ) -> 0
 graph.Evaluate( "next['x']", head=V ) -> 1000
 ----
 
+// cspell:ignore vertexid
 [[datatype_vertexid]]
 ==== Type _vertexid_
 
@@ -1770,6 +1772,7 @@ _Synthetic arcs_ are helpful when the default behavior is not desired. A synthet
 
 Synthetic arcs are not stored in the graph. They are temporary virtual relationships created by the expression evaluator for the purpose of filtering, traversal and collection.
 
+// cspell:ignore issyn
 [[synthetic_arcs__value_capture]]
 ===== Value Capture and Synthetic Arc Evaluation
 
@@ -1856,13 +1859,13 @@ graph.Neighborhood(
 The filter expression is evaluated three times for (multiple) arcs _AX_ and _AY_. First consider the processing of _AX_:
 
 First filter iteration for _AX_::
-The neighborhood query visits component arc _ax~1~_ = ('count', M_CNT, 25). The subexpression `c = synarc.value('count',M_CNT);` has a match on _ax~1~_ and captures the value 25 into an internal register. The value `null` is returned and assigned to `c`. The subexpression `w = synarc.value('weight',M_FLT);` does not match _ax~1~_ and is a no-op. The value `null` is returned and assigned to `w`. The subexpression `score = c * w;` assigns `null` to `score` since both factors are `null`. The subexpression `collectif( score < 50.0, score );` is a no-op because `score < 50.0` is false when `score` is `null`. (Comparisons involving `null` are always false, except when testing equality between two `null` values.)
+The neighborhood query visits component arc _ax~1~_ = ('count', M_CNT, 25). The sub-expression `c = synarc.value('count',M_CNT);` has a match on _ax~1~_ and captures the value 25 into an internal register. The value `null` is returned and assigned to `c`. The sub-expression `w = synarc.value('weight',M_FLT);` does not match _ax~1~_ and is a no-op. The value `null` is returned and assigned to `w`. The sub-expression `score = c * w;` assigns `null` to `score` since both factors are `null`. The sub-expression `collectif( score < 50.0, score );` is a no-op because `score < 50.0` is false when `score` is `null`. (Comparisons involving `null` are always false, except when testing equality between two `null` values.)
 
 Second filter iteration for _AX_::
-The neighborhood query visits component arc _ax~2~_ = ('weight', M_FLT, 4.0). Evaluation is the same as for _ax~1~_ as above, except subexpression `w = synarc.value('weight',M_FLT);` now matches _ax~2~_ and captures the value 4.0 into another internal register.
+The neighborhood query visits component arc _ax~2~_ = ('weight', M_FLT, 4.0). Evaluation is the same as for _ax~1~_ as above, except sub-expression `w = synarc.value('weight',M_FLT);` now matches _ax~2~_ and captures the value 4.0 into another internal register.
 
 Third filter iteration for _AX_::
-The neighborhood query now invokes the evaluator one final time for synthetic arc _ax~syn~_ = ('+++__synthetic__+++', M_NONE, 0). The subexpression `c = synarc.value('count',M_CNT);` assigns 25 to `c` as this value is retrieved from the internal register that previously captured this value from _ax~1~_. The subexpression `w = synarc.value('weight',M_FLT);` assigned 4.0 to `w` as this value is retrieved from the internal register that previously captured this value from _ax~2~_. The subexpression `score = c * w;` multiplies the two values and assigns 100.0 to `score`; The subexpression `collectif( score < 50.0, score );` is a no-op since the condition is not met. The arc _AX_ did not match and is not collected.
+The neighborhood query now invokes the evaluator one final time for synthetic arc _ax~syn~_ = ('+++__synthetic__+++', M_NONE, 0). The sub-expression `c = synarc.value('count',M_CNT);` assigns 25 to `c` as this value is retrieved from the internal register that previously captured this value from _ax~1~_. The sub-expression `w = synarc.value('weight',M_FLT);` assigned 4.0 to `w` as this value is retrieved from the internal register that previously captured this value from _ax~2~_. The sub-expression `score = c * w;` multiplies the two values and assigns 100.0 to `score`; The sub-expression `collectif( score < 50.0, score );` is a no-op since the condition is not met. The arc _AX_ did not match and is not collected.
 
 First filter iteration for _AY_::
 Component arc _ay~1~_ = ('count', M_CNT, 20) matches and the value 20 is captured, in the same manner as described above for _ax~1~_.
@@ -2349,6 +2352,7 @@ graph.Neighborhood(
 // |`&#966; = (1+&#8730;5)/2` Golden ratio
 |latexmath:[ \varphi = \frac{1+\sqrt{5}}{2} ] (golden ratio)
 
+// cspell:ignore Apéry infty
 |`zeta3` [[_zeta3]]
 |_float_
 |1.2020569031595942854
@@ -2442,6 +2446,7 @@ graph.Neighborhood(
 )
 ----
 
+// cspell:ignore sortby
 ==== Current Evaluator Context
 [cols="2,2,6"]
 |===
@@ -2489,6 +2494,7 @@ graph.Neighborhood(
 
 This section summarizes built-in functions available for use in expressions.
 
+// cspell:ignore arcsin arccos arctan binom
 [[mathfunctions]]
 ==== Mathematical Functions
 
@@ -3029,6 +3035,7 @@ B.SetVector( [ 0.3, 0.2, -0.5, 0.5 ] + [0]*28 )
 graph.Evaluate( "sim( vertex.vector, next.vector )", tail="A", head="B" )
 ----
 
+// cspell:ignore kmin kmax
 [[controlfunctions]]
 ==== Control Functions
 
@@ -3192,6 +3199,7 @@ graph.Evaluate( "harmmean( 2, 2, 3, 5, 7 )" ) -> 2.98...
 graph.Evaluate( "geomean( 2, 2, 3, 5, 7 )" ) -> 3.35...
 ----
 
+// cspell:ignore geodist
 [[simplerankingfunctions]]
 ==== Simple Ranking Functions
 
@@ -3395,7 +3403,7 @@ graph.Neighborhood(
 )
 ----
 
-
+// cspell:ignore defaultmem memarray memreg memstack
 [[evaluatormemory]]
 == Evaluator Memory
 
@@ -3484,6 +3492,7 @@ graph.Evaluate( "pop()", memory=mem )   -> 222
 graph.Evaluate( "pop()", memory=mem )   -> 111
 ----
 
+// cspell:ignore moduloindexing
 [[evaluatormemoryindexing]]
 === Memory Indexing
 
@@ -3870,7 +3879,7 @@ mem[10] -> '<PyVGX_Vector: typ=euclidean len=128 mag=6.948...'
 
 [CAUTION]
 ====
-String and vector objects can be assigned to memory locations from within expressions and from the Python interpreter. The `pyvgx.Memory` instance becomes an owner of the assigned object, either by creating a copy or by owning an additonal reference.
+String and vector objects can be assigned to memory locations from within expressions and from the Python interpreter. The `pyvgx.Memory` instance becomes an owner of the assigned object, either by creating a copy or by owning an additional reference.
 
 String and vector objects are retained by the `pyvgx.Memory` associated with the expression being evaluated. Each time a string-generating function (such as `str()` or `replace()`) is used, or a string or vector object is assigned to a memory location, the `pyvgx.Memory` instance will accumulate ownership of assigned objects even if the memory location is later overwritten by another value.
 
@@ -4001,6 +4010,7 @@ CAUTION: Operations taking a memory range input are *inclusive of the end index*
 |[_dest_]
 |Assign numeric value _x_ to memory location _dest_ and return _x_
 
+// cspell:ignore pdest
 |`rstore( _pdest_, _x_ )` [[_rstore]]
 |&#91;&#91; _pdest_ &#93;&#93; := _x_
 |&#91;&#91; _pdest_ &#93;&#93;
@@ -4074,6 +4084,7 @@ CAUTION: Operations taking a memory range input are *inclusive of the end index*
 |===
 |Function |Operation |Ret | Description
 
+// cspell:ignore stackptr
 |`push( _x_ )` [[_push]]
 | [_stackptr_] := _x_, _stackptr_ &#8722;= 1
 |_x_
@@ -4428,6 +4439,7 @@ CAUTION: Operations taking a memory range input are *inclusive of the end index*
 
 |===
 
+// cspell:ignore mathbf
 [[evaluatormemoryvector]]
 ==== Vector Arithmetic
 
@@ -4530,6 +4542,7 @@ CAUTION: Operations taking a memory range input are *inclusive of the end index*
  +
  *NOTE2*: <<_dp_pi8, See `dp_pi8()` NOTE2>> regarding encoding of signed values.
 
+// cspell:ignore overrightarrow
 |`ecld_pi8( *A*, *B* )`
  +
  `ecld_pi8_256( *A*, *B* )`
@@ -4575,6 +4588,7 @@ CAUTION: Operations taking a memory range input are *inclusive of the end index*
  +
  *NOTE2*: <<_dp_pi8, See `dp_pi8()` NOTE2>> regarding encoding of signed values.
 
+// cspell:ignore hamdist
 |`ham_pi8( *A*, *B* )` [[_ham_pi8]]
 |latexmath:[ y := hamdist( \mathbf{A}, \mathbf{B} ) ]
  +
@@ -4642,6 +4656,7 @@ Benchmarking is the only way to select the most performant vector function in a 
 |_x_
 |Compute the array index _x_ for a sub-array index _i_ defined by _mod_ and _ofs_.
 
+// cspell:ignore bitindex
 |`index( _vertex_ )` [[_index]]
 |[_vertex_.bitindex] \|= _vertex_.bitvector
 |1 or 0
@@ -4975,6 +4990,7 @@ Keep smaller values
 |_N_
 |Attempt to insert numeric values _x~1~_ through _x~n~_ into binary _max-heap_ represented by array of _k_ elements starting at location _A_ and return the number of values inserted. This is functionally equivalent to calling <<_mheappushmax, `mheappushmax( _A_, _k_, _x~i~_)`>> for all _i_ from 1 through _n_ and counting as _N_ the number of _x~i~_ successfully inserted. 
 
+// cspell:ignore mheappushmin
 |`mheapsiftmin( _A_, _k_, _m~1~_, _m~n~_ )` [[_mheapsiftmin]]
 |latexmath:[\text{for all } i \in \{1,2,...,n\}]
  +
@@ -4982,6 +4998,7 @@ Keep smaller values
 |_n_
 |Process all numeric values in memory locations _m~1~_ through _m~n~_ by attempting to insert them into binary _min-heap_ represented by array of _k_ elements starting at location _A_ and return the number of processed values, whether inserted or not. On completion the array _A_ will contain the _k_ largest values from the source range.
 
+// cspell:ignore mheappushmax
 |`mheapsiftmax( _A_, _k_, _m~1~_, _m~n~_ )` [[_mheapsiftmax]]
 |latexmath:[\text{for all } i \in \{1,2,...,n\}]
  +
@@ -5009,6 +5026,7 @@ Keep smaller values
 |_n_ &#8804; _k_
 |Sort array of _k_ values starting at location _A_ in descending order, in-place. Any null-value compares less-than any numeric value, and will appear at the end of the sorted array. The number _n_ of non-null values is returned. (All other non-_real_ elements are interpreted as integers.)
 
+// cspell:ignore isreal
 |`mrsort( _A_, _k_ )` [[_mrsort]]
 | _sort~ascending~_( [ _A~1~_ : _A~k~_ ] )
   +
@@ -5635,6 +5653,7 @@ Keep smaller values
 
 4+|*Inverse Hyperbolic*
 
+// cspell:ignore asinh acosh atanh
 |`masinh( _m~1~_, _m~n~_ )`
  +
  `macosh( _m~1~_, _m~n~_ )`
@@ -5671,6 +5690,7 @@ Keep smaller values
 |_n_
 |Compute asinh(_x_), acosh(_x_) or atanh(_x_) for all _x_ (interpreted as floating point) in memory locations _m~1~_ to _m~n~_ and return the number of memory locations affected by the operation.
 
+// cspell:ignore sinc
 4+|*Sinc*
 
 |`msinc( _m~1~_, _m~n~_ )`
@@ -5786,6 +5806,7 @@ Keep smaller values
 
 4+|*Other*
 
+// cspell:ignore popcnt
 |`mpopcnt( _m~1~_, _m~n~_ )` [[_mpopcnt]]
 |latexmath:[ M_n := popcnt(M_n) ]
  +
@@ -5924,6 +5945,7 @@ Keep smaller values
 
 4+|*Deviation*
 
+// cspell:ignore stdev
 |`mstdev( _dest_, _m~1~_, _m~n~_ )` [[_mstdev]]
 // |[_dest_] = _stdev_( [ _m~1~_ : _m~n~_ ] )
 |latexmath:[ [dest\] := \displaystyle \sqrt{ \frac{1}{n} \displaystyle \sum_{i=1}^n {(x_i-\mu)^2} } ]
@@ -5946,6 +5968,7 @@ Keep smaller values
 |[_dest_]
 |Compute the standard deviation of values (interpreted as floating point) in memory locations _m~1~_ through _m~n~_ and assign the result to memory location _dest_ then return the result.
 
+// cspell:ignore geostdev
 |`mgeostdev( _dest_, _m~1~_, _m~n~_ )` [[_mgeostdev]]
 // |[_dest_] = _geostdev_( [ _m~1~_ : _m~n~_ ] )
 |latexmath:[ [dest\] := \exp \left(\displaystyle \sqrt{\displaystyle \frac{\displaystyle \sum_{i=1}^n{\left(\ln{\frac{x_i}{\mu_g}}\right)^2}}{n}}\right)     ]
@@ -6157,6 +6180,7 @@ This section describes specialized operations for solving specific problems.
 
 |===
 
+// cspell:ignore sumprodobj
 [[evaluator_sumprodobj]]
 === _sumprodobj_()
 
@@ -6310,7 +6334,8 @@ g.Evaluate( "msumprodobj(0,4,next['p1'])", memory=m, head="V" )
 # return 17.26
 g.Evaluate( "msumprodobj(0,4,next['p2'])", memory=m, head="V" )
 ----
- 
+
+// cspell:ignore probealtarray altarray
 [[evaluator_probealtarray]]
 === _probealtarray_()
 
@@ -6344,6 +6369,7 @@ probealtarray( p1, pn, altarray, prefix_boost, alt_deboost ) -> score
 |_real_
 |Score multiplier for ordered match starting from the first element of _altarray_
 
+// cspell:ignore deboost
 |_alt_deboost_
 |_real_
 |Score multiplier for match involving one or more matches on secondary (alternative) element regions
@@ -6363,7 +6389,7 @@ Probe bitvectors are limited to 32 bits and therefore _dual bitvectors_ are limi
 
 ==== Return Value
 
-The default (unboosted) score returned when all probe elements exist in the array is 1.0. If one or more probe elements do not exist in array 0.0 is returned.
+The default (un-boosted) score returned when all probe elements exist in the array is 1.0. If one or more probe elements do not exist in array 0.0 is returned.
 
 If probe elements match the array _in order, starting from the first array element_ (a prefix match) the return score is multiplied by _prefix_boost_.
 
@@ -6407,6 +6433,7 @@ graph.Evaluate( "probealtarray( 1 , 3, vertex['data'], 100.0, 0.5 )", head=V, me
 # 1.0 * 0.5 = 0.5.
 ----
 
+// cspell:ignore synarc xdecay
 [[evaluator_synarc_decay]]
 === _synarc.decay_() and _synarc.xdecay_()
 
@@ -6655,7 +6682,7 @@ ___
 <<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
 //icon:arrow-circle-right[size=2x, link=selectEvaluator.adoc#, title="Select Evaluator"]
 <<selectEvaluator.adoc#, icon:arrow-circle-right[size=2x, title="Select Evaluator"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

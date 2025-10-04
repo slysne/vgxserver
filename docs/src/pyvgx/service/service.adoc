@@ -62,16 +62,19 @@ By default all partitions are included when executing a request. This is the des
 
 <<basicmatrix>> shows a simple 2-row, 3-partition matrix served by a single dispatcher.
 
+// cspell:ignore basicmatrix
 [[basicmatrix]]
 image::basicmatrix.png[basicmatrix, title="Basic 2x3 Matrix"]
 
 Any topology is possible, as illustrated in <<complexmatrix>>. The only constraint is for any given VGX Dispatch instance its matrix of back-ends must be rectangular.
 
+// cspell:ignore anymatrix
 [[complexmatrix]]
 image::anymatrix.png[anymatrix, title="Complex Matrix"]
 
 It is also possible to arrange instances in a ring topology as shown in <<ringmatrix>>. Such a system allows a request to be sent to any instance, which forwards the request around the ring until the last instance is reached. Responses are aggregated serially and finally returned to the client. Appropriate plugin code must be in place to make sure request propagation terminates at the top-most VGX Dispatch instance.
 
+// cspell:ignore cyclematrix
 [[ringmatrix]]
 image::cyclematrix.png[cyclematrix, title="Ring Matrix"]
 
@@ -185,6 +188,7 @@ General dispatcher settings are specified here.
 
 === pyvgx.system Socket Server Management
 
+// cspell:ignore servicein
 ==== StartHTTP
 
 [[system_starthttp_func]]`pyvgx.*system.StartHTTP*( _port_**[**, _ip_**[**, _prefix_**[**, _servicein_**[**, _dispatcher_**]]]]** )`::
@@ -406,6 +410,7 @@ The following HTTP headers are recognized and acted upon by the HTTP Server.
 
 Other headers may be sent and acted upon by custom plugins. (See optional <<pluginadapter.adoc#pre_engine_arg_headers, headers argument>> passed to plugin functions.)
 
+// cspell:ignore mediatype mediatypes
 [[request_header_accept]]
 ===== Accept
 `Accept: _mediatype_`
@@ -443,6 +448,7 @@ Target _partition_ for this request when forwarded to VGX Dispatch back-end matr
 
 For internal use. Specify _queueN_ (max 3) of the lowest internal dispatch queue to use for the request, limiting which executor threads are allowed to handle the request.
 
+// cspell:ignore SOUT
 [[request_header_x_vgx_bypass_sout]]
 ===== X-VGX-Bypass-SOUT
 `X-VGX-Bypass-SOUT: _bypass_`
@@ -608,6 +614,7 @@ Content-Length: 123\r\n
 |Invalid HTTP request syntax or header, malformed or incompatible plugin parameter value. Error details must be extracted from response content.
 |See <<service_error_message_format>> for details
 
+// cspell:ignore vgxroot
 |`403 Forbidden`
 |Attempted to access a file outside server's _vgxroot_
 |
@@ -628,6 +635,7 @@ Content-Length: 123\r\n
 |Request line <<limit_request_line, exceeded 8191>> bytes, or a response line from back-end matrix was too long due to an internal error
 |
 
+// cspell:ignore redispatch
 .3+|`429 Too Many Requests`
 |anchor:status_429_cannot_accept[]The request could not be processed because the number of simultaneous socket connections <<limit_clients, exceeded 1021>>
 |`429 Cannot accept new connection at this time`
@@ -1107,7 +1115,7 @@ ___
 <<multinode.adoc#, icon:arrow-circle-left[size=2x, title="Multi-Node Setup"]>>
 <<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 <<pluginadapter.adoc#, icon:arrow-circle-right[size=2x, title="Plugin Adapter"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

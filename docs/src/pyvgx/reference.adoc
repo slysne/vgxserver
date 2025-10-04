@@ -1073,12 +1073,6 @@ Output a log message with the WARNING label.
 
 ___
 
-===== md5
-
-[[md5_func]]`pyvgx.*md5*( _x_ )`::
-Compute md5 of string _x_ and return the result as a string of 32 hex digits.
-
-___
 
 ===== meminfo
 
@@ -1151,6 +1145,13 @@ Compute sha256 of string _x_ and return the result as a string of 64 hex digits.
 
 ___
 // cspell:ignore strhash
+===== strhash128
+
+[[strhash128_func]]`pyvgx.*strhash128*( _x_ )`::
+Return a 128-bit (hex string) hash of string _x_.
+
+___
+
 ===== strhash64
 
 [[strhash64_func]]`pyvgx.*strhash64*( _x_ )`::

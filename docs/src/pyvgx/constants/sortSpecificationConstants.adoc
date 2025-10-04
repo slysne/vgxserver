@@ -175,6 +175,7 @@ The `<rank_spec>` syntax depends on the query method.
 
 `pyvgx.S_ADDR = 32`
 
+// cspell:ignore OBID
 [[S_OBID]]
 == pyvgx.S_OBID
 
@@ -190,11 +191,13 @@ The `<rank_spec>` syntax depends on the query method.
 
 `pyvgx.S_DEG = 80`
 
+// cspell:ignore IDEG
 [[S_IDEG]]
 == pyvgx.S_IDEG
 
 `pyvgx.S_IDEG = 96`
 
+// cspell:ignore ODEG
 [[S_ODEG]]
 == pyvgx.S_ODEG
 
@@ -251,7 +254,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=timestampConstants.adoc#, title="Timestamp Constants"]
 <<timestampConstants.adoc#, icon:arrow-circle-right[size=2x, title="Timestamp Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

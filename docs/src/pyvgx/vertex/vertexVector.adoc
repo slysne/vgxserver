@@ -219,7 +219,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexTTL.adoc#, title="Vertex TTL Methods"]
 <<vertexTTL.adoc#, icon:arrow-circle-right[size=2x, title="Vertex TTL Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

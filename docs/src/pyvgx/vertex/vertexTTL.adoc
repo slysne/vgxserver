@@ -157,7 +157,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexMiscellaneous.adoc#, title="Vertex Miscellaneous Methods"]
 <<vertexMiscellaneous.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Miscellaneous Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

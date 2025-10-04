@@ -87,7 +87,7 @@ ___
 <<graphEnum.adoc#, icon:arrow-circle-left[size=2x, title="Graph Enumeration Methods"]>>
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 <<graphMiscellaneous.adoc#, icon:arrow-circle-right[size=2x, title="Graph Miscellaneous Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

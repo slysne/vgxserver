@@ -98,6 +98,7 @@ parameters:
 
 Arguments can be supplied positionally or as keywords.
 
+// cspell:ignore sortby limexec
 ==== Parameters
 
 [cols="1,2,2,4"]
@@ -240,6 +241,7 @@ pyvgx.Graph.VerticesType( type ) -> list
 This method returns a list of identifier strings of all vertices in the graph
 of the specified type.
 
+// cspell:ignore typeless
 === Remarks
 
 Use `_type_=_None_` or `_type_="+++__vertex__+++"` to return typeless vertices, i.e.
@@ -339,6 +341,7 @@ pyvgx.Graph.GetVertex( id ) -> pyvgx.Vertex
 
 If the vertex exists in the graph a new <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> wrapper object for the vertex is created and returned in readonly mode. If the vertex does not exist an exception is raised.
 
+// cspell:ignore getitem
 === Remarks
 
 It is also possible to use the built-in Python +++__getitem__+++ syntax to
@@ -633,6 +636,7 @@ The aggregation `'mode': <mode>` determines how aggregated values are computed:
 |_sum_
 |Set the value of aggregated arcs to the *sum of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
 
+// cspell:ignore sqsum
 |_sqsum_
 |Set the value of aggregated arcs to the *square-sum of all values* of the arcs in each set of arcs sharing the same head vertex and value type (integer and floating point arc values are aggregated separately)
 
@@ -891,6 +895,7 @@ Aggregation continues in extended neighborhood if <vertex_condition> specifies `
 |Control whether hit counts and/or search execution time are included in the result. The returned
 result is always a dictionary.
 
+// cspell:ignore IDEG ODEG
 |_fields_
 |<<../constants/resultFieldConstants.adoc#resultfieldconstants, &#60;aggregation_fields&#62;>>
 |<<../constants/resultFieldConstants.adoc#F_NONE, pyvgx.F_NONE>>
@@ -1559,7 +1564,7 @@ ___
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
 <<graphManagement.adoc#, icon:arrow-circle-right[size=2x, title="Graph Management Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

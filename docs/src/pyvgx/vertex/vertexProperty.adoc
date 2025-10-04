@@ -143,6 +143,7 @@ Supported value types and ranges are summarized below. Note that the primitive n
 |function
 |Arbitrary code, executable by the Python interpreter. 
 
+// cspell:ignore repr
 |<any_other_object> [[vertex_property_type_other]]
 |Serialized Python object, optionally compressed if large
 |object
@@ -404,7 +405,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexRank.adoc#, title="Vertex Rank Methods"]
 <<vertexRank.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Rank Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

@@ -224,6 +224,7 @@ g.CloseVertex( B )
 g.CloseVertex( C )
 ----
 
+// cspell:ignore ideg
 [[vertexindegree]]
 == pyvgx.Vertex.ideg
 
@@ -251,6 +252,7 @@ g.CloseVertex( B )
 g.CloseVertex( C )
 ----
 
+// cspell:ignore odeg
 [[vertexoutdegree]]
 == pyvgx.Vertex.odeg
 
@@ -603,6 +605,7 @@ A = g.NewVertex( "A" )
 A.index                 # -> 4701957
 ----
 
+// cspell:ignore bitindex
 [[vertexbitindex]]
 == pyvgx.Vertex.bitindex
 
@@ -664,6 +667,7 @@ A.Commit()
 A.op                   # -> 10000000015013809
 ----
 
+// cspell:ignore refc
 [[vertexrefc]]
 == pyvgx.Vertex.refc
 
@@ -681,6 +685,7 @@ A = g.NewVertex( "A" )
 A.refc                  # -> 4
 ----
 
+// cspell:ignore bidx
 [[vertexbidx]]
 == pyvgx.Vertex.bidx
 
@@ -698,6 +703,7 @@ A = g.NewVertex( "A" )
 A.bidx                  # -> 0
 ----
 
+// cspell:ignore oidx
 [[vertexoidx]]
 == pyvgx.Vertex.oidx
 
@@ -779,7 +785,7 @@ g.CloseVertex( A )
 
 A vertex descriptor is a 64-bit value of flags and state information.
 
-
+// cspell:ignore reentrancy typeless threadid xrecursion
 [cols="5,2,1,4,6",options="header"]
 |===
 |Field |Bit Range |Bits |Value Range |Description
@@ -974,7 +980,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexAccess.adoc#, title="Vertex Access Methods"]
 <<vertexAccess.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Access Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

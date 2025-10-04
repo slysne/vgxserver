@@ -104,7 +104,7 @@ ___
 [.left]
 //icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
 <<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

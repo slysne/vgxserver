@@ -22,7 +22,7 @@ result = R_<a> | R_<b> | ...
 Some constants can be combined using the bitwise-OR operator (|).
 
 If no meta-information is requested the returned result is a list of entries.
-When meta-information is requested with <<R_COUNTS>> or <<R_TIMING>> the returned result is a dictionary containing the list of results plus the requested metas.
+When meta-information is requested with <<R_COUNTS>> or <<R_TIMING>> the returned result is a dictionary containing the list of results plus the requested meta-information.
 
 == Result Entry Format
 The format of each entry in the result list is controlled by these constants:
@@ -127,9 +127,9 @@ The result list is:
 ----
 
 [[resultmetas]]
-== Result Metas
+== Result Meta Information
 
-When one or more of the following constants are used the result will be a dictionary containing the list of results and the selected metas:
+When one or more of the following constants are used the result will be a dictionary containing the list of results and the selected meta-information:
 
 ----
 {   '<result_list_name>' : [ <result_entry1>, <result_entry2>, ... ],
@@ -204,6 +204,7 @@ Information for query result counts will be included as a meta named `"counts"`.
 }
 ----
 
+// cspell:ignore R_METAS
 [[R_METAS]]
 === pyvgx.R_METAS
 
@@ -222,7 +223,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=sortSpecificationConstants.adoc#, title="Sort Specification Constants"]
 <<sortSpecificationConstants.adoc#, icon:arrow-circle-right[size=2x, title="Sort Specification Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

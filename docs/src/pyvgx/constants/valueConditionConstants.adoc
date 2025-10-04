@@ -82,6 +82,7 @@ String
 |V_RANGE, (_a_, _b_)
 |Both endpoints included
 
+// cspell:ignore NRANGE
 |<<V_NRANGE>>
 |Outside set / interval ( ∉ [a,b] )
 |V_NRANGE, (_a_, _b_)
@@ -547,7 +548,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=collectConstants.adoc#, title="Collect Constants"]
 <<collectConstants.adoc#, icon:arrow-circle-right[size=2x, title="Collect Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

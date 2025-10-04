@@ -339,6 +339,7 @@ A provider may have multiple subscribers. Transaction exchange is asynchronous a
 
 The building blocks of the VGX Transaction Stream Protocol are summarized in the table below.
 
+// cspell:ignore EBNF
 .Request Format Specification
 [[requestformatspec]]
 [cols="1,6,4"]
@@ -361,6 +362,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
 |`stream ::= { transaction ... }`
 |Operation transfer occurs as a continuous _stream_ of _transaction_ blocks that must be delivered as unbroken units to the destination site. 
 
+// cspell:ignore transid
 |Transaction
 |`transaction ::= "TRANSACTION" transid serial "\n" { operation ... } "COMMIT" transid tms crc32c "\n"`
 |A _transaction_ block embeds a set of _operation_ blocks between the _keywords_ `TRANSACTION` and `COMMIT` and carries a unique identifier _transid_ and _serial_ number.
@@ -369,6 +371,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
 |`transid ::= m128`
 |A _transid_ is a unique transaction identifier appearing at the start and end of a transaction.
 
+// cspell:ignore nrollback
 |Stream Resync
 |`resync ::= "RESYNC" transid nrollback`
 |A resync request is sent after a rollback event occurs, typically triggered by a preceding `RETRY` response from the subscriber. The _transid_ indicates the first transaction that will follow immediately after the resync. The number of bytes _nrollback_ is the amount of data streamed by the provider at the time it received the `RETRY` response which triggered the resync event.
@@ -393,6 +396,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
 |`fingerprint ::= m128`
 |A _fingerprint_ represents a digest of the current data in a VGX instance. Providers and subscribers can communicate their current state via fingerprints to verify data consistency.
 
+// cspell:ignore opgraph optype
 |Operation Block
 |`operation ::= "OP" optype [ opgraph [ objectid ] ] { operator ... } "ENDOP" [ opid tms ] crc32c`
 |An _operation_ block is a group of one or more _operator_ statements pertaining to the object instance (such as a vertex) specified by _objectid_, or the graph instance specified by _opgraph_ if _objectid_ is not included, or the system graph if neither _opgraph_ nor _objectid_ is included. The affected object depends on _optype_.
@@ -409,6 +413,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
 |`objectid ::= m128`
 |The _objectid_ field is present for operation types affecting a specific object within a graph.
 
+// cspell:ignore opid
 |Operation Identifier
 |`opid ::= QWORD`
 |The set of one or more operators within an operation block modify the selected object as a unit identified by the unique identifier _opid_.
@@ -431,6 +436,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
  `c ::= [a-z]`
 |Operators are three-character mnemonics, such as `vxn` (create vertex) and `arc` (connect)
 
+// cspell:ignore opname
 |Opcode
 |`opcode ::= DWORD`
 |The _opcode_ is the numeric equivalent of the _opname_ mnemonic.
@@ -463,6 +469,7 @@ The building blocks of the VGX Transaction Stream Protocol are summarized in the
 |`m128 ::= HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH`
 |A numeric 128-bit value used for representing object identifiers and digests.
 
+// cspell:ignore strmetas strdata strsize nstrqwords
 |Variable string
 |`VARSTR ::= strmetas , strsize , nstrqwords , strdata , { strdata ... }`
  +
@@ -3565,7 +3572,7 @@ ___
 --
 [.left]
 <<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

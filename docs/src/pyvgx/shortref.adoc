@@ -501,10 +501,6 @@ g.Neighborhood(
 |Output WARNING log message
 
 |{counter:p}
-|<<reference.adoc#md5_func, md5()>>
-|MD5 of string
-
-|{counter:p}
 |<<reference.adoc#meminfo_func, meminfo()>>
 |Return basic system memory information
 
@@ -539,6 +535,10 @@ g.Neighborhood(
 |{counter:p}
 |<<reference.adoc#sha256_func, sha256()>>
 |sha256 of string
+
+|{counter:p}
+|<<reference.adoc#strhash128_func, strhash128()>>
+|128-bit hash of string
 
 |{counter:p}
 |<<reference.adoc#strhash64_func, strhash64()>>
@@ -2002,9 +2002,10 @@ g.Neighborhood(
 |<<vertex/vertexMembers.adoc#vertexindex, __v__.index>>
 |Vertex object offset in memory
 
+// cspell:ignore strhash
 |{counter:cvm}
 |<<vertex/vertexMembers.adoc#vertexinternalid, __v__.internalid>>
-|Internal identifier (md5)
+|Internal identifier (strhash128)
 
 |{counter:cvm}
 |<<vertex/vertexMembers.adoc#vertexisolated, __v__.isolated>>

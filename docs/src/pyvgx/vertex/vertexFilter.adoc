@@ -225,6 +225,7 @@ Constraints are evaluated in the following order.
 
 Order matters for execution performance because evaluation is terminated (producing a vertex condition miss) as soon as a non-matching constraint is encountered. Writing smart vertex conditions that eliminate as many matches as possible as early as possible will result in more efficient algorithms.
 
+// cspell:ignore abstime
 ====
 . <<vertexfiltervirtual, `virtual`>>
 . <<vertexfiltertype, `type`>>
@@ -552,6 +553,7 @@ There are four ways to express the <<../similarity/vector.adoc#pyvgxvector, &#60
 +
 ====
 
+// cspell:ignore hamdist
 ==== Similarity Measures
 
 When _'score'_ is used, a similarity score from 0.0 - 1.0 is computed using the currently active similarity parameters for the graph, typically a combination of Cosine and Jaccard computed between the vertex vector and the <probe_vector>. The <value_condition> must express matching for a value in the appropriate 0.0 - 1.0 range.
@@ -1097,7 +1099,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexMembers.adoc#, title="Vertex Members"]
 <<vertexMembers.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Members"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

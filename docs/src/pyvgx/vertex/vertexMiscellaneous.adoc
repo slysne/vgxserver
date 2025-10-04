@@ -50,6 +50,7 @@ pyvgx.Vertex.SetType( type )
 
 `_type_`: Vertex type (str) or None
 
+// cspell:ignore typeless
 === Remarks
 
 This method changes the vertex type. If _type_ is None or empty string the vertex becomes typeless.
@@ -263,7 +264,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexFilter.adoc#, title="Vertex Condition Syntax"]
 <<vertexFilter.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Condition Syntax"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

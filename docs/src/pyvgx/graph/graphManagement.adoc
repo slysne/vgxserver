@@ -263,6 +263,7 @@ The table below show available _metric_ keys.
 |vgx.vertex.object
 |Vertex object allocator memory pool
 
+// cspell:ignore arcvector
 |vgx.vertex.arcvector
 |Arc object allocator memory pool
 
@@ -278,12 +279,14 @@ The table below show available _metric_ keys.
 |vgx.index.type
 |Vertex type index memory usage
 
+// cspell:ignore vertextype
 |vgx.codec.vertextype
 |Memory used by vertex type enumerator
 
 |vgx.codec.relationship
 |Memory used by relationship type enumerator
 
+// cspell:ignore vertexprop
 |vgx.codec.vertexprop
 |Memory used by vertex property enumerator
 
@@ -308,6 +311,7 @@ The table below show available _metric_ keys.
 |vgx.ephemeral.vector
 |Various non-persistable vector objects
 
+// cspell:ignore vertexmap
 |vgx.ephemeral.vertexmap
 |Memory used for tracking vertex acquisition status
 
@@ -334,7 +338,7 @@ ___
 <<graphQuery.adoc#, icon:arrow-circle-left[size=2x, title="Graph Query Methods"]>>
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 <<graphEnum.adoc#, icon:arrow-circle-right[size=2x, title="Graph Enumeration Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

@@ -114,6 +114,7 @@ We sometimes use the notation
 
 to describe the connection shown:
 
+// cspell:ignore graphconnect
 image::graphconnect.png[graphconnect]
 
 This depicts an arc from vertex A to vertex B with relationship _rel_, modifier _mod_, and value _val_.
@@ -518,6 +519,7 @@ pyvgx.Graph.Count( initial, relationship, terminal[, delta[, timeout ]] ) -> cou
 
 This method returns the updated count value after the increment has been applied.
 
+// cspell:ignore typeless
 === Remarks
 
 Perform a counting operation on the arc using the <<../constants/arcModifierConstants.adoc#M_CNT, M_CNT>> modifier to automatically increment the arc value by a specified amount. The delta parameter allows increments other than 1. Negative delta values will decrement the arc value.
@@ -642,7 +644,7 @@ ___
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphQuery.adoc#, title="Graph Query Methods"]
 <<graphQuery.adoc#, icon:arrow-circle-right[size=2x, title="Graph Query Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

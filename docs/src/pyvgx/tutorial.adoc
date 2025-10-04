@@ -212,6 +212,7 @@ g.Connect( "Alice", "visits", "Charlie" )
 g.Connect( "Charlie", "drinks", "coffee" )
 ----
 
+// cspell:ignore typeless
 Our graph now looks like this:
 
 image::tutorial4.png[tutorial4, 400, 400, title="REAL and VIRTUAL vertices"]
@@ -616,7 +617,7 @@ ___
 <<VGXCoreConcepts.adoc#, icon:arrow-circle-left[size=2x, title="VGX Core Concepts"]>>
 <<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
 <<shortref.adoc#, icon:arrow-circle-right[size=2x, title="Compact pyvgx Reference"]>>
-
+// cspell:ignore backtotop
 include::common/_backtotop.adoc[]
 --
 

@@ -42,7 +42,7 @@ The `pyvgx.Graph` type represents the Python layer's view of VGX graph objects. 
 
 |===
 
-
+// cspell:ignore vgxroot
 === Remarks
 
 The pyvgx.Graph type represents VGX core graph objects. The returned Python object is a wrapper around the internal VGX graph object.
@@ -141,7 +141,7 @@ ___
 <<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
 //icon:arrow-circle-right[size=2x, link=graphMembers.adoc#, title="Graph Members"]
 <<graphMembers.adoc#, icon:arrow-circle-right[size=2x, title="Graph Members"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

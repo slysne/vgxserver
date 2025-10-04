@@ -222,6 +222,7 @@ g.sim.Cosine( D, X ) -> some_similarity
 
 ----
 
+// cspell:ignore rvec
 [[similarityrvec]]
 == pyvgx.Similarity.rvec()
 
@@ -337,10 +338,12 @@ pyvgx.Similarity.CreateProjectionSets( nseeds, ksize )
 |===
 |Parameter |Type |Description
 
+// cspell:ignore nseeds
 |_nseeds_
 |_int_
 |Number of seeds (1 - 8) to use for ANN index projections
 
+// cspell:ignore ksize
 |_ksize_
 |_int_
 |Size of projection keys, must be 8, 10, or 12
@@ -744,6 +747,7 @@ Vector fingerprints are 64-bit integers derived from the weighted vector dimensi
 
 The returned value is an integer between 0 and 64.
 
+// cspell:ignore hamdist
 === Remarks
 
 It is more efficient to compare fingerprints than to compute the Cosine/Jaccard for two vectors, especially for vectors with many dimensions. At the same time, the ability of a fingerprint to accurately represent its source vector is directly affected by the number of vector dimensions. That is, the vectors that produce the highest quality fingerprints are also the ones that benefit the most (speed-wise) from fingerprint comparison.
@@ -807,7 +811,7 @@ ___
 <<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
 //icon:arrow-circle-right[size=2x, link=vector.adoc#, title="pyvgx.Vector"]
 <<vector.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx.Vector"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

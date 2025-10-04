@@ -647,7 +647,7 @@ ___
 <<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
 //icon:arrow-circle-right[size=2x, link=similarityMembers.adoc#, title="Similarity Members"]
 <<similarityMembers.adoc#, icon:arrow-circle-right[size=2x, title="Similarity Members"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

@@ -208,6 +208,7 @@ graph.Neighborhood( "Alice", arc=("knows", D_OUT, M_ANY) ) )
 
 Arc modifier for valueless (static) relationship. This is the default for arcs created without a specified modifier.
 
+// cspell:ignore autowidth
 [%autowidth]
 |===
 |Type |Min |Max |Comment
@@ -450,6 +451,7 @@ graph.Connect( "QueryA", ("boost", M_ACC, -3.5), "ItemX" )  # -> 10.5
 graph.Connect( "QueryA", ("boost", M_ACC, 2.37), "ItemX" )  # -> 12.87
 ----
 
+// cspell:ignore INTAGGR
 [[M_INTAGGR]]
 == pyvgx.M_INTAGGR
 
@@ -501,6 +503,7 @@ graph.Neighborhood(
 )
 ----
 
+// cspell:ignore FLTAGGR
 [[M_FLTAGGR]]
 == pyvgx.M_FLTAGGR
 
@@ -673,6 +676,7 @@ graph.Adjacent( "Alice", "query", "shoes" )  # -> False
 graph.Adjacent( "Bob", "query", "pants" )  # -> False
 ----
 
+// cspell:ignore AUTOTM
 [[M_AUTOTM]]
 == pyvgx.M_AUTOTM
 
@@ -695,6 +699,7 @@ graph.Neighborhood("A", neighbor="B", fields=F_AARC )
 
 ----
 
+// cspell:ignore FWDONLY
 [[M_FWDONLY]]
 == pyvgx.M_FWDONLY
 
@@ -746,7 +751,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=valueConditionConstants.adoc#, title="Value Condition Constants"]
 <<valueConditionConstants.adoc#, icon:arrow-circle-right[size=2x, title="Value Condition Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

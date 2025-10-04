@@ -63,6 +63,7 @@ The ranking coefficients have different meanings depending on the ranking functi
 ==== Linear ranking using rank()
 For `rank(a,b,c,...)` _c1_ and _c0_ are the coefficients of the linear equation `y = c1*X + c0` where `X` is the sum of all arguments _a_, _b_, _c_ ,... and `y` is the rank score.
 
+// cspell:ignore georank
 ==== Geographical proximity using georank()
 For `georank()` _c1_ and _c0_ represent the geographical coordinates of head vertex (latitude=_c1_, longitude=_c0_) expressed in degrees.
 
@@ -136,7 +137,7 @@ ___
 <<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
 //icon:arrow-circle-right[size=2x, link=vertexVector.adoc#, title="Vertex Vector Methods"]
 <<vertexVector.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Vector Methods"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

@@ -9,6 +9,7 @@
 
 include::../common/_copyable.adoc[]
 
+// cspell:ignore limexec
 All graph methods operating on objects that may be accessed concurrently by multiple threads have a timeout parameter.
 
 Timeouts are specified in milliseconds to block while waiting to acquire access to one or more resources, or to place an upper limit on execution time if an accompanying _limexec_ parameter is also set to True. If _limexec_ is not specified it always defaults to False.
@@ -44,7 +45,7 @@ ___
 <<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
 //icon:arrow-circle-right[size=2x, link=arcSpecificationSyntax.adoc#, title="Arc Specification Syntax"]
 <<arcSpecificationSyntax.adoc#, icon:arrow-circle-right[size=2x, title="Arc Specification Syntax"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

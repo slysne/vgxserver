@@ -181,6 +181,7 @@ Shorthands for common combinations are also defined.
 
 Identifier string of the initial vertex in a neighborhood traversal.
 
+// cspell:ignore OBID
 [[F_ANCHOR_OBID]]
 === pyvgx.F_ANCHOR_OBID
 
@@ -188,6 +189,7 @@ Identifier string of the initial vertex in a neighborhood traversal.
 
 Internal object identifier of the initial vertex in a neighborhood traversal.
 
+// cspell:ignore ARCDIR
 [[F_ARCDIR]]
 === pyvgx.F_ARCDIR
 
@@ -244,6 +246,7 @@ Vertex type string.
 
 Vertex degree.
 
+// cspell:ignore IDEG
 [[F_IDEG]]
 === pyvgx.F_IDEG
 
@@ -251,6 +254,7 @@ Vertex degree.
 
 Vertex indegree.
 
+// cspell:ignore ODEG
 [[F_ODEG]]
 === pyvgx.F_ODEG
 
@@ -314,6 +318,7 @@ Vertex modification timestamp.
 
 Vertex expiration timestamp.
 
+// cspell:ignore DESCR
 [[F_DESCR]]
 === pyvgx.F_DESCR
 
@@ -363,6 +368,7 @@ Arc fields.
 
 Arc fields plus terminal vertex identifier.
 
+// cspell:ignore AARC
 [[F_AARC]]
 === pyvgx.F_AARC
 
@@ -391,6 +397,7 @@ Vertex properties and vector.
 
 Vertex similarity measures.
 
+// cspell:ignore TSTAMP
 [[F_TSTAMP]]
 === pyvgx.F_TSTAMP
 
@@ -430,7 +437,7 @@ ___
 <<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
 //icon:arrow-circle-right[size=2x, link=resultListEntryConstants.adoc#, title="Result List Entry Constants"]
 <<resultListEntryConstants.adoc#, icon:arrow-circle-right[size=2x, title="Result List Entry Constants"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 

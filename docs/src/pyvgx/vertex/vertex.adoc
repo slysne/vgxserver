@@ -47,6 +47,7 @@ The `pyvgx.Vertex` type represents the Python layer's view of VGX vertex objects
 |0
 |Milliseconds to block while waiting for access
 
+// cspell:ignore typeless
 |===
 +
 *Remarks*
@@ -149,7 +150,7 @@ ___
 <<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
 //icon:arrow-circle-right[size=2x, link=vertexMembers.adoc#, title="Vertex Members"]
 <<vertexMembers.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Members"]>>
-
+// cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --
 
