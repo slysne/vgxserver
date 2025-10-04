@@ -6,8 +6,10 @@
 :linkattrs:
 :source-highlighter: highlightjs
 
-*VGX* is a general purpose graph and vector search platform. *PyVGX* is a Python module exposing the VGX C-API to enable application development via Python plugins. 
+*VGX* 
+Distributed engine for plugin-based graph and vector search
 
+*Vector Graph indeX* is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. Developers can implement service logic using the *PyVGX* C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end. 
 
 == Getting Started
 
