@@ -80,69 +80,215 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_prerequisites">Prerequisites</h2>
+<h2 id="_requirements">Requirements</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>TODO</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Python 3.12+</p>
+</li>
+<li>
+<p>C compiler:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>On Windows: MSVC (Visual Studio 2022 or later)</p>
+</li>
+<li>
+<p>On macOS: Xcode command line tools</p>
+</li>
+<li>
+<p>On Linux: <code>gcc</code> and <code>build-essential</code></p>
+</li>
+</ul>
 </div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare">Prepare</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_virtual_environment_optional_but_recommended">Virtual Environment (optional but recommended)</h3>
 <div class="listingblock copyable">
-<div class="title">Download</div>
+<div class="title">Linux / macOS</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="bash">git clone https://github.com/slysne/vgxserver.git</code></pre>
-</div>
-</div>
-<div class="listingblock copyable">
-<div class="title">Linux and MacOS</div>
-<div class="content">
-<pre class="rouge highlight"><code data-lang="bash">./build-unix.sh</code></pre>
+<pre class="rouge highlight"><code data-lang="bash">python3 <span class="nt">-m</span> venv vgxenv
+<span class="nb">.</span> vgxenv/bin/activate</code></pre>
 </div>
 </div>
 <div class="listingblock copyable">
 <div class="title">Windows</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="bat"><span class="kd">build</span><span class="na">-win</span><span class="m">64</span>.cmd</code></pre>
+<pre class="rouge highlight"><code data-lang="bat"><span class="kd">python</span> <span class="na">-m </span><span class="kd">venv</span> <span class="kd">vgxenv</span>
+<span class="k">call</span> <span class="kd">vgxenv</span>\Scripts\activate.bat</code></pre>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_required_python_version">Required Python Version</h3>
-<div class="ulist">
-<ul>
-<li>
-<p>Python 3.12 or later</p>
-</li>
-</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_supported_platforms">Supported Platforms</h3>
-<div class="admonitionblock important">
+<h3 id="_tools">Tools</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>setuptools build wheel</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_source_code">Source Code</h3>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">git clone https://github.com/slysne/vgxserver.git
+<span class="nb">cd </span>vgxserver</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build">Build</h2>
+<div class="sectionbody">
+<div class="listingblock copyable">
+<div class="title">Linux and MacOS</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">./build-unix.sh <span class="nt">--version</span> <span class="o">{</span>project-version<span class="o">}</span> <span class="nt">--type</span> release</code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Windows</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bat"><span class="kd">build</span><span class="na">-win</span><span class="m">64</span>.cmd <span class="o">{</span><span class="kd">project</span><span class="na">-version</span><span class="o">}</span> <span class="kd">release</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This will build and install the pyvgx package. (You can find the build output wheel in <code>vgxserver/../build-pyvgx/dist</code>.)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_test">Test</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First create a working directory somewhere and cd into it. Then you can run one or more of the following basic tests to verify your build.</p>
+</div>
+<div class="sect2">
+<h3 id="_verify_pyvgx_installed">Verify PyVGX Installed</h3>
+<div class="paragraph">
+<p>This will print some information and exit.</p>
+</div>
+<div class="listingblock copyable">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">python <span class="nt">-c</span> <span class="s2">"import pyvgx"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_demo_service">Demo Service</h3>
+<div class="paragraph">
+<p>Start the demo service to verify all internal communication works.</p>
+</div>
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-<div class="paragraph">
-<p>Currently the x86-64 architecture is supported.</p>
-</div>
-<div class="paragraph">
-<p>Support for Mac OS / Apple Silicon is planned for late 2025.</p>
-</div>
+This will use ~16GB of RAM
 </td>
 </tr>
 </table>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Linux</dt>
-<dd>
-<p>Minimum Requirement: glibc 2.17 (Run <code>ldd --version</code> to verify)</p>
-</dd>
-<dt class="hdlist1">Windows</dt>
-<dd>
-<p>Minimum Requirement: Windows 10</p>
-</dd>
-</dl>
+<div class="listingblock copyable">
+<div class="title">Start demo service</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">vgxdemoservice multi
+<span class="c"># ... service will start, admin page will load in a browser</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Stop demo service</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">vgxdemoservice stop</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_run_test_suite">Run Test Suite</h3>
+<div class="paragraph">
+<p>You can run the pyvgx test suite by following these steps:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Copy <code>vgxserver/test</code> to your working directory</p>
+</li>
+<li>
+<p>Run <code>python test_pyvgx.py</code></p>
+</li>
+</ul>
+</div>
+<div class="listingblock copyable">
+<div class="title">Linux / macOS</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># Assume WORKING is your temporary test directory</span>
+<span class="c"># E.g. WORKING=~/working</span>
+<span class="c"># Start in cloned repo:</span>
+<span class="nb">cd </span>vgxserver
+<span class="nb">cp</span> <span class="nt">-r</span> pyvgx/test <span class="nv">$WORKING</span>/test
+<span class="nb">cd</span> <span class="nv">$WORKING</span>/test
+python test_pyvgx.py</code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Windows</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bat"><span class="c">rem Assume WORKING is your temporary test directory</span>
+<span class="c">rem E.g. set WORKING=C:%HOMEPATH%\working</span>
+<span class="c">rem Start in cloned repo:</span>
+<span class="nb">cd</span> <span class="kd">vgxserver</span>
+<span class="nb">xcopy</span> <span class="na">/E /I /Q /Y </span><span class="kd">pyvgx</span>\test <span class="nv">%WORKING%</span>\test
+<span class="nb">cd</span> <span class="na">/D </span><span class="nv">%WORKING%</span><span class="na">/test
+</span><span class="kd">python</span> <span class="kd">test_pyvgx</span>.py</code></pre>
+</div>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><code>python test_pyvgx.py</code> will run the full suite of tests and takes several hours to complete.</p>
+</div>
+<div class="paragraph">
+<p>You can run a smaller subset of quick tests like this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>python test_pyvgx.py --quick 1</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>You can also run tests for specific components or sub-modules:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>python test_pyvgx.py --component Vector</code></p>
+</li>
+<li>
+<p><code>python test_pyvgx.py --component Graph --module Evaluator --testset BasicEvaluator</code></p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <hr>
 <div class="openblock float-group">

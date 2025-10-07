@@ -20,11 +20,12 @@
 <li><a href="#install">1. Setup</a></li>
 <li><a href="#_introduction">2. Introduction</a>
 <ul class="sectlevel2">
-<li><a href="#_hello_world_service">2.1. Hello World Service</a></li>
-<li><a href="#_quick_note_about_multithreading">2.2. Quick Note about Multithreading</a></li>
+<li><a href="#simple_graph_example">2.1. Simple Graph Example</a></li>
+<li><a href="#hello_world_service">2.2. Hello World Service</a></li>
+<li><a href="#_quick_note_about_multithreading">2.3. Quick Note about Multithreading</a></li>
 </ul>
 </li>
-<li><a href="#gettingstarted">3. Getting Started</a>
+<li><a href="#building_graphs">3. Building Graphs</a>
 <ul class="sectlevel2">
 <li><a href="#makenewgraph">3.1. Import, Initialize and Make a New Graph</a></li>
 <li><a href="#makeconnection">3.2. Make a Connection</a></li>
@@ -40,7 +41,11 @@
 <li><a href="#_run_some_queries">4.2. Run Some Queries</a>
 <ul class="sectlevel3">
 <li><a href="#_query_1_who_purchased_the_most_coffee">4.2.1. Query 1: Who purchased the most Coffee?</a></li>
-<li><a href="#_query_2_how_much_do_companies_spend_on_tea">4.2.2. Query 2: How much do Companies spend on Tea?</a></li>
+<li><a href="#_query_2_how_much_do_companies_spend_on_tea">4.2.2. Query 2: How much do Companies spend on Tea?</a>
+<ul class="sectlevel4">
+<li><a href="#_alternative_query_advanced">4.2.2.1. Alternative Query (advanced)</a></li>
+</ul>
+</li>
 <li><a href="#_query_3_how_many_people_purchased_at_least_20_coffees_and_20_teas">4.2.3. Query 3: How Many People Purchased at Least 20 Coffees and 20 Teas?</a></li>
 <li><a href="#_query_4_who_purchased_more_than_30_coffees_but_no_tea">4.2.4. Query 4: Who Purchased More than 30 Coffees, But No Tea?</a></li>
 </ul>
@@ -133,8 +138,24 @@ document.addEventListener("DOMContentLoaded", function() {
 <pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>pyvgx</code></pre>
 </div>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Python</strong>: 3.12 or higher</p>
+</li>
+<li>
+<p><strong>macOS</strong>: 14 (Sonoma) or higher</p>
+</li>
+<li>
+<p><strong>Linux</strong>: glibc 2.34 or higher (e.g. Ubuntu 22.04+)</p>
+</li>
+<li>
+<p><strong>Windows</strong>: 10 or higher</p>
+</li>
+</ul>
+</div>
 <div class="paragraph">
-<p>If you want to install the Docker Image instead, or use a different package repository than PyPI, see <a href="install.html">how to install</a>.</p>
+<p>You can build the package yourself if needed: <a href="./build.html">Instructions here</a>.</p>
 </div>
 </div>
 </div>
@@ -142,8 +163,13 @@ document.addEventListener("DOMContentLoaded", function() {
 <h2 id="_introduction">2. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This tutorial describes <strong>pyvgx</strong>, a Python module for building and querying graph structures, like this:</p>
+<p>This tutorial is meant to get you started with <strong>PyVGX</strong>, a Python module exposing the VGX engine via C extensions. We focus on the graph capabilities of pyvgx here since graph structures often form the basis of service implementations.</p>
 </div>
+<div class="paragraph">
+<p>Before we begin let&#8217;s try a <a href="#simple_graph_example">Simple Graph Example</a> and <a href="#hello_world_service">Hello World Service</a></p>
+</div>
+<div class="sect2">
+<h3 id="simple_graph_example">2.1. Simple Graph Example</h3>
 <div class="listingblock copyable">
 <div class="title">Create some nodes and run a query</div>
 <div class="content">
@@ -164,34 +190,40 @@ document.addEventListener("DOMContentLoaded", function() {
         <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span>      <span class="p">:</span> <span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span>
         <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span> <span class="p">:</span> <span class="sh">"</span><span class="s">coffee</span><span class="sh">"</span>
     <span class="p">}</span>
-<span class="p">)</span></code></pre>
+<span class="p">)</span> <span class="c1"># -&gt; ['Charlie']
+</span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_hello_world_service">2.1. Hello World Service</h3>
+<h3 id="hello_world_service">2.2. Hello World Service</h3>
 <div class="paragraph">
-<p>To create a useful service you must write at least one plugin to perform the required graph operations.</p>
-</div>
-<div class="paragraph">
-<p>Here is a complete implementation of a basic hello world service.</p>
+<p>Here is a complete implementation of a basic hello world service. The request/response framework is general purpose and, as you can see, no graph operations are required to build a service. You can use the graph capabilities in pyvgx to create service back-ends if you want, but you are also free to import and use any other Python modules needed.</p>
 </div>
 <div class="listingblock copyable">
 <div class="title">Step 1: Complete code for Hello World Service</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">import</span> <span class="n">pyvgx</span>
 
-<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span><span class="p">,</span> <span class="n">http</span><span class="o">=</span><span class="mi">9000</span> <span class="p">)</span>
+<span class="c1"># Use 'hello' directory for storage
+# and start HTTP server on port 9000
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">hello</span><span class="sh">"</span><span class="p">,</span> <span class="n">http</span><span class="o">=</span><span class="mi">9000</span> <span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">hello</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
+<span class="c1"># This is a plugin
+</span><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">PluginRequest</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span><span class="nb">str</span> <span class="p">):</span>
   <span class="k">return</span> <span class="sh">"</span><span class="s">Hello, you said </span><span class="sh">'</span><span class="s">{}</span><span class="sh">'"</span><span class="p">.</span><span class="nf">format</span><span class="p">(</span> <span class="n">message</span> <span class="p">)</span>
 
-<span class="n">system</span><span class="p">.</span><span class="nc">AddPlugin</span><span class="p">(</span> <span class="n">hello</span> <span class="p">)</span></code></pre>
+<span class="c1"># Make it visible
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">AddPlugin</span><span class="p">(</span> <span class="n">hello</span> <span class="p">)</span>
+
+<span class="c1"># Run until SIGINT
+</span><span class="n">pyvgx</span><span class="p">.</span><span class="n">system</span><span class="p">.</span><span class="nc">RunServer</span><span class="p">()</span></code></pre>
 </div>
 </div>
-<div class="listingblock">
+<div class="listingblock copyable">
 <div class="title">Step 2: Test the service</div>
 <div class="content">
-<pre>http://127.0.0.1:9000/vgx/plugin/hello?message=hi</pre>
+<pre class="rouge highlight"><code data-lang="bash">curl <span class="nt">-s</span> http://127.0.0.1:9000/vgx/plugin/hello?message<span class="o">=</span>hi | jq</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -206,19 +238,36 @@ document.addEventListener("DOMContentLoaded", function() {
 </span><span class="p">}</span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>A full description of how to make plugins and deploy services can be found here:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="service/service.html">VGX Server</a></p>
+</li>
+<li>
+<p><a href="service/pluginadapter.html">Plugin Adapter</a></p>
+</li>
+<li>
+<p><a href="service/sysadmin.html">System Administration</a></p>
+</li>
+<li>
+<p><a href="service/multinode.html">Multi-Node Setup</a></p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_quick_note_about_multithreading">2.2. Quick Note about Multithreading</h3>
+<h3 id="_quick_note_about_multithreading">2.3. Quick Note about Multithreading</h3>
 <div class="paragraph">
-<p>Don&#8217;t worry about the Python GIL.</p>
+<p>When you call API methods like <code>Connect()</code> and <code>Neighborhood()</code> the calling thread leaves
+the Python interpreter (releases the GIL) and performs all execution within the low level
+core library. This means multiple concurrent Python threads can execute simultaneously.</p>
 </div>
 <div class="paragraph">
-<p>PyVGX is a wrapper around a lower-level library called <strong>vgx</strong> written in C.
-All features of the C library are exposed to Python via pyvgx. When you call API methods like
-<code>Connect()</code> and <code>Neighborhood()</code> in the example above, the calling thread leaves the Python
-interpreter and continues execution within the <strong>vgx</strong> core until the operation completes.
-This means multiple threads can execute simultaneously, even when those threads originate
-in the Python interpreter as part of your Python code.</p>
+<p>The GIL is obviously in effect when running your plugin&#8217;s pure Python code, but it is released
+for the duration of most pyvgx API calls.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -228,12 +277,12 @@ in the Python interpreter as part of your Python code.</p>
 </td>
 <td class="content">
 Try to minimize the amount of pure Python you write to implement algorithms, especially
-loops and time consuming operations on Python objects such as lists and dictionaries. Instead,
-<a href="reference.html">learn the pyvgx API</a> and see if you can find ways to construct queries
-to perform all the work for you. Pyvgx includes an
-<a href="evaluator/evaluator.html#evaluatoroverview">expression language</a> for use in graph queries
-and gives access to platform native <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a>
-which let you write efficient algorithms that bypass the Python interpreter.
+tight loops and time consuming operations on Python objects such as lists and dictionaries.
+Instead, <a href="reference.html">learn the pyvgx API</a> and see if you can find ways to construct queries
+to perform all the work for you. Use the
+<a href="evaluator/evaluator.html#evaluatoroverview">expression language</a> in graph queries
+for access to platform native <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a>
+and operations which let you write efficient algorithms that bypass the Python interpreter.
 </td>
 </tr>
 </table>
@@ -242,17 +291,16 @@ which let you write efficient algorithms that bypass the Python interpreter.
 </div>
 </div>
 <div class="sect1">
-<h2 id="gettingstarted">3. Getting Started</h2>
+<h2 id="building_graphs">3. Building Graphs</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>At this point you should have Python and pyvgx <a href="install.html">installed on your system</a>,
-either running in a Docker image or installed directly on your system.</p>
-</div>
-<div class="paragraph">
-<p>Let&#8217;s start the Python interpreter and make a graph.</p>
+<p>Let&#8217;s make some graphs using the pyvgx API and explain basic terminology.</p>
 </div>
 <div class="sect2">
 <h3 id="makenewgraph">3.1. Import, Initialize and Make a New Graph</h3>
+<div class="paragraph">
+<p>First we need to import pyvgx and initialize the system to create our graph.</p>
+</div>
 <div class="listingblock copyable">
 <div class="content">
 <pre class="rouge highlight"><code data-lang="python"><span class="c1"># Import the contents of pyvgx
@@ -269,7 +317,8 @@ either running in a Docker image or installed directly on your system.</p>
 <p>After running these statements we have a graph object <code><strong>g</strong></code> to play with.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s insert two persons, <code><strong>Alice</strong></code> and <code><strong>Bob</strong></code>, using the <a href="graph/graphVertex.html#graphcreatevertex"><code>CreateVertex()</code></a> method:</p>
+<p>We use <a href="graph/graphVertex.html#graphcreatevertex"><code>CreateVertex()</code></a> to insert two persons,
+<code><strong>Alice</strong></code> and <code><strong>Bob</strong></code>.</p>
 </div>
 <div class="listingblock copyable">
 <div class="content">
@@ -281,7 +330,8 @@ either running in a Docker image or installed directly on your system.</p>
 <div class="sect2">
 <h3 id="makeconnection">3.2. Make a Connection</h3>
 <div class="paragraph">
-<p>Next, we connect the two persons with a <code>likes</code> relationship using the <a href="graph/graphArc.html#graphconnect"><code>Connect()</code></a> method:</p>
+<p>Let&#8217;s pretend Alice likes Bob and we want to represent this in our graph.
+We use the <a href="graph/graphArc.html#graphconnect"><code>Connect()</code></a> method to create the relationship.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -294,21 +344,20 @@ either running in a Docker image or installed directly on your system.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>This inserts a directed edge of type <em>likes</em> from <em>Alice</em> to <em>Bob</em>. In pyvgx all edges are directed.
-A directed edge is commonly referred to as <strong><em>arc</em></strong>.</p>
+<p>This inserts a directed edge <em>Alice&#8594;[likes]&#8594;Bob</em>.</p>
 </div>
 <div class="paragraph">
-<p>The arc created above has no attributes aside from its type name (<em>likes</em>). It is possible for an arc to
-also have a value and sometimes automatic behaviors. We will see examples later.</p>
+<p>We use the term <strong><em>arc</em></strong> to mean directed edge. In pyvgx all edges are directed.</p>
 </div>
 <div class="paragraph">
-<p>You will see this notation used to express a relationship: <em>Alice&#8594;[likes]&#8594;Bob</em></p>
+<p>The arc created above has no attributes aside from its type name (<em>likes</em>).
+Arcs may also have values and other attributes. We will see examples of this later.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="initialterminal">3.3. Initial and Terminal Vertices</h3>
 <div class="paragraph">
-<p>We will use the terms <strong><em>vertex</em></strong> and <strong><em>node</em></strong> interchangeably. They mean the same thing. When talking about connected nodes in a directed graph we refer to the start node as the <strong><em>initial</em></strong> (or <strong><em>tail vertex</em></strong>) and the end node as the <strong><em>terminal</em></strong> (or <strong><em>head vertex</em></strong>).</p>
+<p>The objects connected together are called nodes or vertices. We will use <strong><em>vertex</em></strong> and <strong><em>node</em></strong> interchangeably because they mean the same thing. When talking about connected nodes in a directed graph we refer to the start node as the <strong><em>initial</em></strong> (or <strong><em>tail vertex</em></strong>) and the end node as the <strong><em>terminal</em></strong> (or <strong><em>head vertex</em></strong>).</p>
 </div>
 <div class="paragraph">
 <p>Above, <em>Alice</em> is the initial/tail and <em>Bob</em> is the terminal/head for the <em>likes</em> arc. If <em>Bob</em> also likes <em>Alice</em> we could insert another arc going the opposite direction. This would reverse the initial/terminal vertex roles for that arc. We only refer to initials and terminals in relation to the arc that connects them.</p>
@@ -321,10 +370,13 @@ also have a value and sometimes automatic behaviors. We will see examples later.
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Be aware that inserting an arc implicitly creates another <em>hidden reverse arc</em>. This is necessary to allow reverse relationship lookup in queries. You should NOT create the reverse arc yourself, that would be a waste of system memory. It is not necessary to explicitly create the reverse arc in order to traverse in reverse. (If you did there would be <strong>four</strong> arcs between the nodes!)</p>
+<p>Be aware that inserting an arc implicitly creates another <em>hidden reverse arc</em> to support queries that need to traverse the graph in reverse. The hidden reverse arc is an internal implementation detail and should not be misunderstood to mean bidirectional relationship.</p>
 </div>
 <div class="paragraph">
-<p>It is possible to suppress creation of the implicit reverse arc via the <a href="constants/arcModifierConstants.html#M_FWDONLY">constants/arcModifierConstants.html</a> modifier bitmask.</p>
+<p>It is NOT necessary to explicitly create the reverse arc to be able to traverse in reverse. If you did there would be <strong>four</strong> arcs between the nodes!</p>
+</div>
+<div class="paragraph">
+<p>Arcs consume memory. For algorithms that only need forward traversal you can suppress creation of the implicit reverse arc via the <a href="constants/arcModifierConstants.html#M_FWDONLY">M_FWDONLY</a> modifier bitmask when calling <a href="reference.html#_connect">Connect()</a>.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -340,7 +392,13 @@ also have a value and sometimes automatic behaviors. We will see examples later.
 <div class="sect2">
 <h3 id="arcsdegree">3.4. Arcs and Degree</h3>
 <div class="paragraph">
-<p>Vertices are connected by arcs. The arcs originating at a vertex are called <strong><em>outarcs</em></strong>. The arcs arriving at a vertex from somewhere else are called <strong><em>inarcs</em></strong>. The number of outarcs leaving a vertex is the vertex <strong><em>outdegree</em></strong>. The number of inarcs entering a vertex is the vertex <strong><em>indegree</em></strong>. The total number of arcs of any direction incident on a vertex is the vertex <strong><em>degree</em></strong>.</p>
+<p>Arcs leaving a vertex are called <strong><em>outarcs</em></strong>, and the number of outarcs leaving a vertex is the vertex <strong><em>outdegree</em></strong>.</p>
+</div>
+<div class="paragraph">
+<p>Arcs arriving at a vertex from somewhere else are called <strong><em>inarcs</em></strong>, and the number of inarcs entering a vertex is the vertex <strong><em>indegree</em></strong>.</p>
+</div>
+<div class="paragraph">
+<p>The vertex <strong><em>degree</em></strong> is the sum of its outdegree and indegree.</p>
 </div>
 <div class="paragraph">
 <p>For example, vertex <code><strong>B</strong></code> below has three outarcs and two inarcs, and therefore outdegree=3, indegree=2 and degree=5.</p>
@@ -465,11 +523,11 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 </span>
 <span class="c1"># Person P0-P99999
 </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100000</span> <span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">P%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sa">f</span><span class="sh">"</span><span class="s">P</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
 
 <span class="c1"># Company C0-C99
 </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
-    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">C%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">company</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sa">f</span><span class="sh">"</span><span class="s">C</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">company</span><span class="sh">"</span> <span class="p">)</span>
 
 <span class="n">Alice</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Alice</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
 <span class="n">Bob</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Bob</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
@@ -493,7 +551,7 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <span class="n">random</span><span class="p">.</span><span class="nf">seed</span><span class="p">(</span> <span class="mi">1234</span> <span class="p">)</span>
 <span class="c1"># Person P0-P99999 behavior
 </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100000</span> <span class="p">):</span>
-    <span class="n">Pn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="n">Pn</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">P</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span>
     <span class="k">if</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">Pn</span><span class="p">,</span> <span class="sh">"</span><span class="s">drinks</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span> <span class="p">)</span>
         <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mf">0.5</span><span class="p">))</span>
@@ -505,7 +563,7 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 
 <span class="c1"># Company C0-C99 behavior
 </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="mi">100</span> <span class="p">):</span>
-    <span class="n">Cn</span> <span class="o">=</span> <span class="sh">"</span><span class="s">C%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="n">Cn</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">C</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span>
     <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mf">0.3</span><span class="p">))</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Count</span><span class="p">(</span> <span class="n">Cn</span><span class="p">,</span> <span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span> <span class="n">Coffee</span><span class="p">,</span> <span class="n">how_many</span> <span class="p">)</span>
     <span class="n">how_many</span> <span class="o">=</span> <span class="nf">int</span><span class="p">(</span><span class="n">random</span><span class="p">.</span><span class="nf">lognormvariate</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mf">0.2</span><span class="p">))</span>
@@ -589,7 +647,7 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <div class="listingblock copyable">
 <div class="content">
 <pre class="rouge highlight"><code data-lang="python"><span class="c1">#
-</span><span class="n">tea_price</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">),</span> <span class="sh">""</span> <span class="p">)</span>
+</span><span class="n">tea_price</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">ArcValue</span><span class="p">(</span> <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">price</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">),</span> <span class="sh">"</span><span class="s">Joe</span><span class="sh">'</span><span class="s">s</span><span class="sh">"</span> <span class="p">)</span>
 <span class="n">tea_purchases</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">Aggregate</span><span class="p">(</span>
     <span class="sh">"</span><span class="s">Tea</span><span class="sh">"</span><span class="p">,</span>
     <span class="n">arc</span>      <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">purchased</span><span class="sh">"</span><span class="p">,</span><span class="n">D_IN</span><span class="p">,</span><span class="n">M_CNT</span><span class="p">),</span>
@@ -610,6 +668,8 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <div class="paragraph">
 <p>Finally, we multiply the two results to get the total cost of tea purchased by companies.</p>
 </div>
+<div class="sect4">
+<h5 id="_alternative_query_advanced">4.2.2.1. Alternative Query (advanced)</h5>
 <div class="paragraph">
 <p>It is also possible to compute the same result in a single query:</p>
 </div>
@@ -628,13 +688,14 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
             <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span>    <span class="p">:</span> <span class="sh">"</span><span class="s">add( R2, prev.arc.value*load(R1) )</span><span class="sh">"</span>
         <span class="p">}</span>
     <span class="p">},</span>
-    <span class="n">select</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">sum=load(R2)</span><span class="sh">"</span><span class="p">,</span>
+    <span class="n">select</span>    <span class="o">=</span> <span class="sh">"</span><span class="s">sum: load(R2)</span><span class="sh">"</span><span class="p">,</span>
     <span class="n">result</span>    <span class="o">=</span> <span class="n">R_SIMPLE</span>
 <span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="sh">'</span><span class="s">sum</span><span class="sh">'</span><span class="p">]</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Although for this example the single query is more complex than the first example running two queries, it illustrates how the <a href="evaluator/evaluator.html#evaluator">expression language</a> and <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a> can be used to construct powerful search queries.</p>
+<p>This example illustrates how <a href="vertex/vertexFilter.html#vertexfilter">Vertex Conditions</a> combined with the <a href="evaluator/evaluator.html#evaluator">VGX Expression Language</a> and <a href="evaluator/evaluator.html#evaluatormemory">memory arrays</a> can be used to construct powerful queries.</p>
+</div>
 </div>
 </div>
 <div class="sect3">
@@ -654,17 +715,14 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <span class="p">)</span>
 
 <span class="c1"># Persons who purchased both coffee and tea at least 20 times
-</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">aggregation</span><span class="sh">'</span><span class="p">][</span><span class="sh">'</span><span class="s">neighbors</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span>
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">neighbors</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span>
 
 <span class="c1"># Total number of coffees purchased by these persons
-</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">aggregation</span><span class="sh">'</span><span class="p">][</span><span class="sh">'</span><span class="s">predicator_value</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span></code></pre>
+</span><span class="nf">print</span><span class="p">(</span> <span class="n">result</span><span class="p">[</span><span class="sh">'</span><span class="s">predicator_value</span><span class="sh">'</span><span class="p">]</span> <span class="p">)</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This query uses nested neighborhood conditions. For example, you can filter on a neighbor&#8217;s relationship to other neighbors. You may nest up to 15 neighbor conditions.</p>
-</div>
-<div class="paragraph">
-<p>For example, you could ask "Show me all of my friends who purchased a device made by Apple in the last 30 days." In fact, we&#8217;ll do just that in another example below after we construct a different graph.</p>
+<p>This query uses nested <a href="vertex/vertexFilter.html#vertexfilter">neighborhood conditions</a>. We filter on neighbor&#8217;s attributes <em>and</em> the neighbor&#8217;s neighbor&#8217;s attributes. In this case the neighbor must be a <em>person</em> and it must have a <em>purchased</em> arc to the <em>Tea</em> node.</p>
 </div>
 </div>
 <div class="sect3">
@@ -729,19 +787,19 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">make_people</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
-        <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sa">f</span><span class="sh">"</span><span class="s">Person_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">employ_people</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
     <span class="n">companies</span> <span class="o">=</span> <span class="nf">list</span><span class="p">(</span><span class="nf">set</span><span class="p">([</span> <span class="n">mfg</span> <span class="k">for</span> <span class="n">thing</span><span class="p">,</span><span class="n">mfg</span> <span class="ow">in</span> <span class="n">DEVICES</span><span class="o">+</span><span class="n">FOODS</span> <span class="p">]))</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
         <span class="n">company</span> <span class="o">=</span> <span class="n">companies</span><span class="p">[</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nf">len</span><span class="p">(</span><span class="n">companies</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
-        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span><span class="p">,</span> <span class="sh">"</span><span class="s">works_at</span><span class="sh">"</span><span class="p">,</span> <span class="n">company</span> <span class="p">)</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sa">f</span><span class="sh">"</span><span class="s">Person_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">works_at</span><span class="sh">"</span><span class="p">,</span> <span class="n">company</span> <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">make_devices</span><span class="p">():</span>
     <span class="k">for</span> <span class="n">device</span><span class="p">,</span> <span class="n">manuf</span> <span class="ow">in</span> <span class="n">DEVICES</span><span class="p">:</span>
         <span class="n">D</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">device</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">device</span><span class="sh">"</span> <span class="p">)</span>
-        <span class="n">product</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P_%s</span><span class="sh">"</span> <span class="o">%</span> <span class="n">device</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">P_</span><span class="si">{</span><span class="n">device</span><span class="si">}</span><span class="sh">"</span>
         <span class="n">P</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">product</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
         <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">D</span><span class="p">,</span> <span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
         <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">manuf</span><span class="p">,</span> <span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
@@ -749,15 +807,15 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 <span class="k">def</span> <span class="nf">make_foods</span><span class="p">():</span>
     <span class="k">for</span> <span class="n">food</span><span class="p">,</span> <span class="n">manuf</span> <span class="ow">in</span> <span class="n">FOODS</span><span class="p">:</span>
         <span class="n">F</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">food</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">food</span><span class="sh">"</span> <span class="p">)</span>
-        <span class="n">product</span> <span class="o">=</span> <span class="sh">"</span><span class="s">P_%s</span><span class="sh">"</span> <span class="o">%</span> <span class="n">food</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">P_</span><span class="si">{</span><span class="n">food</span><span class="si">}</span><span class="sh">"</span>
         <span class="n">P</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">product</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">product</span><span class="sh">"</span> <span class="p">)</span>
         <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">F</span><span class="p">,</span> <span class="sh">"</span><span class="s">is_a</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
         <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">manuf</span><span class="p">,</span> <span class="sh">"</span><span class="s">makes</span><span class="sh">"</span><span class="p">,</span> <span class="n">P</span> <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">make_friends</span><span class="p">(</span> <span class="n">how_many</span><span class="p">,</span> <span class="n">pick_from</span> <span class="p">):</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">how_many</span> <span class="p">):</span>
         <span class="n">pn</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pick_from</span><span class="o">-</span><span class="mi">1</span> <span class="p">)</span>
-        <span class="n">friend</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">pn</span>
+        <span class="n">friend</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">Person_</span><span class="si">{</span><span class="n">pn</span><span class="si">}</span><span class="sh">"</span>
         <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">Me</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="n">friend</span> <span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">pick_a_device_maybe</span><span class="p">():</span>
@@ -773,8 +831,8 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
         <span class="k">return</span> <span class="bp">None</span>
 
 <span class="k">def</span> <span class="nf">run_shopping</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">):</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">xrange</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">):</span>
-        <span class="n">person</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Person_%d</span><span class="sh">"</span> <span class="o">%</span> <span class="n">n</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">):</span>
+        <span class="n">person</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">Person_</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="sh">"</span>
         <span class="n">device</span> <span class="o">=</span> <span class="nf">pick_a_device_maybe</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
             <span class="n">when</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">365</span> <span class="p">)</span> <span class="c1"># days since purchase
@@ -786,7 +844,7 @@ The type of a typeless vertex is the reserved string <code>"__vertex__"</code>.
 
 <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span> <span class="n">how_many_people</span><span class="o">=</span><span class="mi">1000000</span><span class="p">,</span> <span class="n">how_many_friends</span><span class="o">=</span><span class="mi">500</span> <span class="p">):</span>
     <span class="nf">make_people</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="p">)</span>
-    <span class="nf">employ_people</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="o">/</span> <span class="mi">2</span> <span class="p">)</span>
+    <span class="nf">employ_people</span><span class="p">(</span> <span class="n">how_many_people</span> <span class="o">//</span> <span class="mi">2</span> <span class="p">)</span>
     <span class="nf">make_devices</span><span class="p">()</span>
     <span class="nf">make_foods</span><span class="p">()</span>
     <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">Me</span><span class="sh">"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">person</span><span class="sh">"</span> <span class="p">)</span>
@@ -879,7 +937,7 @@ you need to know.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-04 13:28:56 -0400
+Last updated 2025-10-06 20:50:50 -0400
 </div>
 </div>
 </body>
