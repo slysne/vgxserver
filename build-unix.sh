@@ -134,18 +134,31 @@ python -m build --wheel
 # Find and install wheel
 pushd dist
 
+ABI_TAG=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+WHEEL_FILENAME=$(basename ./*$ABI_TAG*.whl)
+
 if [[ "$OS_NAME" == "Darwin" ]]; then
     if command -v delocate-wheel >/dev/null 2>&1; then
         echo "Running delocate-wheel to fix macOS wheel tags..."
-        delocate-wheel -w ./ ./*.whl
+        delocate-wheel -w ./ $WHEEL_FILENAME
+        rm $WHEEL_FILENAME
+        WHEEL_FILENAME=$(basename ./*$ABI_TAG*.whl)
     else
         echo "Warning: delocate-wheel not found. Skipping wheel tag fix."
         echo "To install: pip install delocate"
     fi
+else
+    if command -v auditwheel >/dev/null 2>&1; then
+        echo "Running auditwheel to fix linux wheel tags..."
+        auditwheel repair $WHEEL_FILENAME -w ./
+        rm $WHEEL_FILENAME
+        WHEEL_FILENAME=$(basename ./*$ABI_TAG*.whl)
+    else
+        echo "Warning: auditwheel not found. Skipping wheel tag fix."
+        echo "To install: pip install auditwheel"
+    fi
 fi
 
-ABI_TAG=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
-WHEEL_FILENAME=$(basename dist/*$ABI_TAG*.whl)
 pip install $WHEEL_FILENAME
 popd
 
