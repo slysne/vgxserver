@@ -1,0 +1,1125 @@
+[[pyvgxserver]]
+= VGX Server <<../../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<pluginadapter.adoc#, icon:arrow-circle-right[title="Plugin Adapter"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:xrefstyle: full
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+VGX Server is a self-contained platform for building plugin-based PyVGX services exposed via HTTP endpoints. Everything is implemented in C except for service bootstrap and plugin code which execute in the Python interpreter. Multiple VGX Server instances may be connected to form a scalable system.
+
+== Component Overview
+
+<<socketserver, Socket Server>>::
+_Socket Server_ is a fully asynchronous, multithreaded socket server built directly on the operating system's standard socket API.
+It currently supports the HTTP protocol, accepting methods `GET`, `POST` and `HEAD`.
+
+<<pluginadapter.adoc#, Plugin Adapter>>::
+_Plugin Adapter_ allows custom Python code to be installed as plugins which can be invoked via HTTP requests.
++
+Socket Server must be running before plugin requests can be made. Use <<system_starthttp_func, pyvgx.StartHTTP()>> or <<../reference.adoc#system_initialize_func, pyvgx.Initialize()>> to start the socket server.
++
+Plugins are added using <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>, which associates a unique service URI with a Python function. Any number of services may be defined, creating a unique service URI for each plugin function added.
+
+Graph Engine::
+_Graph Engine_ stores graph data and executes queries.
+
+<<../io/vgxopxfer.adoc#, Transaction Interconnect>>::
+_Transaction Interconnect_ is responsible for sending and receiving graph data to and from other VGX Server instances, enabling durable data replication.
+
+image::vgxserver.png[vgxserver, title="VGX Server"]
+
+[[socketserver]]
+== Socket Server
+
+Socket Server runs in one of three modes:
+
+[[vgx_server_mode_engine]]VGX Engine::
+Socket Server receives, executes, and responds to requests by invoking Python functions registered via the *_engine_* argument to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
++
+Socket Server runs in this mode by default when <<system_starthttp_func, pyvgx.system.StartHTTP()>> is called (without the *_dispatcher_* argument.)
+
+[[vgx_server_mode_dispatch]]VGX Dispatch::
+Socket Server forwards requests to one or more Socket Servers whose individual responses are combined into an aggregate response. Requests may be pre-processed before they are dispatched to other Socket Servers, and the aggregate response may be post-processed. Pre and post processors are optionally registered via the *_pre_* and *_post_* arguments to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
++
+Socket Server runs in this mode when <<system_starthttp_func, pyvgx.system.StartHTTP()>> receives a matrix configuration in the *_dispatcher_* argument.
+
+[[vgx_server_mode_proxy]]Reverse Proxy::
+This is a special case dispatch mode where the dispatcher matrix contains a single instance and no pre or post processors are used. A request is simply forwarded to the single instance whose unmodified response is used as the proxy response.
+
+[[vgx_server_dispatcher]]
+=== VGX Dispatch Matrix
+Multiple VGX Server instances can be deployed to form a dispatch matrix. A _VGX Dispatch_ instance acts as the front-end to a set of back-end instances arranged in a rectangular _M_ x _N_ matrix, where _M_ is the number of rows (replicas) and _N_ is the number of columns (partitions). A back-end instance may be another _VGX Dispatch_ instance, or a bottom layer _VGX Engine_ instance.
+
+A request sent to VGX Dispatch is forwarded to exactly one back-end instances per partition. The replica chosen for a given partition depends on the replica priority and the amount of work currently being performed by all replicas in the partition. The selected back-end instances return their individual responses to VGX Dispatch where they are merged.
+
+By default all partitions are included when executing a request. This is the desired behavior for queries that must aggregate responses from all partitions. A specific partition may be targeted when so instructed via plugin code or HTTP headers, which is required when feeding data to a system. In this case the selected replica must be the primary instance within a set of replicas, i.e. the graph provider.
+
+<<basicmatrix>> shows a simple 2-row, 3-partition matrix served by a single dispatcher.
+
+// cspell:ignore basicmatrix
+[[basicmatrix]]
+image::basicmatrix.png[basicmatrix, title="Basic 2x3 Matrix"]
+
+Any topology is possible, as illustrated in <<complexmatrix>>. The only constraint is for any given VGX Dispatch instance its matrix of back-ends must be rectangular.
+
+// cspell:ignore anymatrix
+[[complexmatrix]]
+image::anymatrix.png[anymatrix, title="Complex Matrix"]
+
+It is also possible to arrange instances in a ring topology as shown in <<ringmatrix>>. Such a system allows a request to be sent to any instance, which forwards the request around the ring until the last instance is reached. Responses are aggregated serially and finally returned to the client. Appropriate plugin code must be in place to make sure request propagation terminates at the top-most VGX Dispatch instance.
+
+// cspell:ignore cyclematrix
+[[ringmatrix]]
+image::cyclematrix.png[cyclematrix, title="Ring Matrix"]
+
+[[server_a_and_server_b]]
+=== Server Ports
+
+VGX Server runs two independent Socket Server loops; Server A and Server B. Server A runs on the <<system_starthttp_func, port>> specified with <<../reference.adoc#system_initialize_func, Initialize()>> or <<system_starthttp_func, StartHTTP()>>. Server B runs on port+1.
+
+[[server_a_port]]
+==== Main Server A (_port_)
+Server A is the main server used for executing plugin requests.
+
+[[server_b_port]]
+==== Admin Server B (_port_+1)
+Server B is used for monitoring and administrative requests.
+
+[[dispatcher_configuration]]
+=== Dispatcher Configuration
+
+Socket Server is started in VGX Dispatch mode by passing the _dispatcher_ parameter to <<system_starthttp_func, StartHTTP()>>, which is a dict describing the back-end matrix:
+
+[source, python]
+----
+# Dispatcher configuration
+cfg = {
+    'partitions': [
+        # Partition 1
+        [   {'host': <h_1.1>, 'port': <p_1.1>},
+            {'host': <h_2.1>, 'port': <p_2.1>},
+            ...,
+            {'host': <h_M.1>, 'port': <p_M.1>}
+        ],
+        # Partition 2
+        [   {'host': <h_1.2>, 'port': <p_1.1>},
+            {'host': <h_2.2>, 'port': <p_2.2>},
+            ...,
+            {'host': <h_M.2>, 'port': <p_M.2>}
+        ],
+        ...,
+        # Partition N
+        [   {'host': <h_1.N>, 'port': <p_1.N>},
+            {'host': <h_2.N>, 'port': <p_2.N>},
+            ...,
+            {'host': <h_M.N>, 'port': <p_M.N>}
+        ]
+    ],
+    'replicas': [
+        # Row 1
+        {'channels': <ch_1>, 'priority': <pr_1>},
+        # Row 2
+        {'channels': <ch_2>, 'priority': <pr_2>},
+        ...,
+        # Row M
+        {'channels': <ch_M>, 'priority': <pr_M>, 'primary': 1}
+    ],
+    'options' : {
+        'allow-incomplete': <bool>
+    }
+}
+
+# Start server in dispatcher mode
+pyvgx.system.StartHTTP( <port>, dispatcher=cfg )
+----
+
+[[config_partitions]]
+==== _partitions_
+This defines a _M_ x _N_ matrix of back-end server instances to which we will dispatch requests. The value is a list of lists of dicts, where the outer list represents partitions 1 &minus; _N_ and the inner lists represent replicas 1 &minus; _M_. Each inner list must contain exactly _M_ dicts identifying the back-end servers in their corresponding matrix positions.
+
+[[config_partitions_host]]_host_:: Host name or IP address
+
+[[config_partitions_port]]_port_:: Main server port (<<server_a_port, Server A>>)
+
+[[config_replicas]]
+==== _replicas_
+These are row parameters, expressed as a list of _M_ dicts whose positions correspond to the inner list dicts of _partitions_. Row parameters are common to all servers within the same row.
+
+[[config_replicas_channels]]_channels_ (1-127):: _Default: 32_
++
+Sets an upper limit for the number of socket connections between dispatcher and back-end servers. This setting controls the maximum number of concurrent requests a given row will handle for this dispatcher.
+
+[[config_replicas_priority]]_priority_ (0-127):: _Default: 2_
++
+Assigns the _Base Reference Cost_ for back-end servers in a given row. Lower values encourage higher utilization of the row. Every request executing inside a back-end server contributes to the server's _Running Execution Cost_, which at any point in time equals its Base Reference Cost multiplied by the number of concurrent requests from this dispatcher.
++
+A new request will always be dispatched to the back-end in a replica stack with the lowest Running Execution Cost, and if equal the back-end at the lowest row index _m_ is preferred. A row with priority=0 will never accumulate Running Execution Cost and will continue to receive requests until _channel_ capacity is exhausted.
++
+Running Execution Cost is maintained per back-end, which means a request may be dispatched to different rows for each partition.
++
+IMPORTANT: Requirement: latexmath:[ \displaystyle channels \cdot priority <= 127 ]
+
+[[config_replicas_primary]]_primary_ (0 or 1):: _Default: 1 for first replica, 0 for all others_
++
+When 1, designates the (at most one) row where primary requests are sent. Primary requests are those which must be executed on _provider_ VGX Server instances such as data insertion requests, source-of-truth data counter requests, etc.
++
+Primary requests must be made explicitly by setting `pyvgx.PluginRequest` attributes in a pre-processor plugin or via HTTP header `x-vgx-partial-target`.
++
+Partition-specific requests (such as data insertion) are made by setting `pyvgx.PluginRequest.partial` or `x-vgx-partial-target` to a non-negative value. (Target partition numbers start at 0.)
++
+All-partitions requests to the primary row are made by setting `pyvgx.PluginRequest.primary` to 1.
+
+[[config_options]]
+==== _options_
+
+General dispatcher settings are specified here.
+
+[[config_options_allow_incomplete]]_allow-incomplete_ (True or False):: _Default: False_
++
+`False`: All partitions must have at least one replica available to serve requests. If one or more partitions are unavailable the dispatcher will respond with error `503 Partition(s) down`.
++
+`True`: Requests are allowed to complete when at least one partition is available. Responses from the available partitions will be aggregated and returned on a best-effort basis. If no partitions are available the dispatcher will respond with error `503 All partitions down`.
+
+=== pyvgx.system Socket Server Management
+
+// cspell:ignore servicein
+==== StartHTTP
+
+[[system_starthttp_func]]`pyvgx.*system.StartHTTP*( _port_**[**, _ip_**[**, _prefix_**[**, _servicein_**[**, _dispatcher_**]]]]** )`::
+Start VGX Server HTTP service.
++
+*port*: <<server_a_and_server_b, Two independent socket servers>> are started on _port_ and _port_+1, enabling plugin execution and remote system monitoring. <<plugin_execution_request, Plugin execution requests>> should be made on _port_, and <<builtin_services, all other requests>> should be made on _port_+1.
++
+*ip*: Optionally identify the server's ip address
++
+[[system_starthttp_func__prefix]]*prefix*: An optional service _prefix_ may be specified, which creates URI aliases for plugins, files placed under `<<../reference.adoc#system_initialize_func, **_vgxroot_**>>/WEB-ROOT`, and certain built-in artifacts:
++
+`http://**_host_**:**_port_**/**_prefix_**/plugin/**_servicename_**?**_parameters_**`
++
+`http://**_host_**:**_port_**/**_prefix_**/**_file-under-WEB-ROOT_**`
++
+`http://**_host_**:**_port_**/**_prefix_**/jquery.js`
++
+*servicein*: The server may optionally be started Service-OUT by passing _servicein_=`False`. (Default is `True`.) Plugin requests will return HTTP code `503` while in Service-OUT mode. Use <<system_serviceinhttp_func, `pyvgx.system.ServiceInHTTP()`>> later to enable plugin execution.
++
+*dispatcher*: The server may be configured as a dispatcher by passing a non-empty <<dispatcher_configuration, configuration dict>> in this parameter.
+
+___
+
+==== StopHTTP
+
+[[system_stophttp_func]]`pyvgx.*system.StopHTTP*()`::
+Stop a running HTTP service.
+
+___
+
+==== RestartHTTP
+
+[[system_restarthttp_func]]`pyvgx.*system.RestartHTTP*()`::
+Restart a running HTTP service.
++
+[NOTE]
+====
+Server will be restarted Service-OUT.
+
+To Service-IN after restart, call `system.ServiceInHTTP()`.
+====
+
+___
+
+==== DispatcherConfig
+
+[[system_dispatcherconfig_func]]`pyvgx.*system.DispatcherConfig*()`::
+Return the effective dispatcher configuration (dict) as provided to `StartHTTP()`, or None if the server is not running in dispatcher mode.
+
+___
+
+==== ServiceInHTTP
+
+[[system_serviceinhttp_func]]`pyvgx.*system.ServiceInHTTP*( **[**service_in**]** )`::
+Service-IN or Service-OUT a running HTTP service. If _service_in_ is `False` or `0` the running HTTP service will be made unavailable for <<pluginadapter.adoc#system_addplugin_func, plugin execution>>. Plugin execution is enabled when _service_in_ is `True` or non-zero (the default.)
+
+___
+
+==== ServerMetrics
+
+[[system_servermetrics_func]]`pyvgx.*system.ServerMetrics*( _percentiles_ )`::
+Return a dict of HTTP Server performance metrics. The _percentiles_ argument must be a list of one or more latency buckets representing a latency percentile as a float greater than 0.0 and less than 100.0.
+
+___
+
+==== ServerPorts
+
+[[system_serverports_func]]`pyvgx.*system.ServerPorts*()`::
+Return dict `{'base': _port_, 'admin': _port_+1}`
+
+___
+
+==== ServerHost
+
+[[system_serverhost_func]]`pyvgx.*system.ServerHost*()`::
+Return dict `{'host': "_name_">, 'ip': "_x.x.x.x_"}`
+
+___
+
+==== ServerPrefix
+
+[[system_serverprefix_func]]`pyvgx.*system.ServerPrefix*()`::
+Return the <<system_starthttp_func__prefix, service prefix>> specified to `StartHTTP()`, or None if no prefix is used.
+
+___
+
+==== ServerAdminIP
+
+[[system_serveradminip_func]]`pyvgx.*system.ServerAdminIP*()`::
+Return the server's IP address as internally known by the server.
+
+___
+
+
+==== RequestRate
+
+[[system_requestrate_func]]`pyvgx.*system.RequestRate*()`::
+Return the current request rate for <<server_a_and_server_b, HTTP Server A>> running on base _port_.
+
+___
+
+==== ResetMetrics
+
+[[system_resetmetrics_func]]`pyvgx.*system.ResetMetrics*()`::
+Reset all HTTP Server performance metrics to their initial state.
+
+___
+
+
+[[socket_server_limits]]
+=== Socket Server Limits
+
+[cols="5,2,5"]
+|===
+|Resource/Attribute |Limit |Comment
+
+|anchor:limit_server_a_threads[]Executor thread pool size (Server A)
+|32
+|Used for serving plugin requests
+
+|anchor:limit_server_b_threads[]Executor thread pool size (Server B)
+|8
+|Used for monitoring and administration
+
+|anchor:limit_clients[]Max simultaneous requests (socket connections) per server port
+|1021
+|HTTP error `429 Too Many Requests` is returned if limit exceeded
+
+|anchor:limit_request_line[]HTTP request line size
+|8191
+|Use `POST` method for requests with large data
+
+|anchor:limit_header_line[]HTTP header line size
+|8191
+|Limit applies to individual headers
+
+|anchor:limit_partitions[]Max number of partitions per dispatcher
+|127
+.3+|The dispatch matrix shape is limited by the maximum number of simultaneous file descriptors (sockets) _FD~max~_ supported by the operating system such that:
+latexmath:[ \displaystyle partitions \cdot replicas \cdot channels <= FD_{max} ]
+
+|anchor:limit_replicas[]Max number of replicas per dispatcher
+|127
+
+|anchor:limit_channels[]Max number of channels from dispatcher to any back-end instance
+|127
+
+|===
+
+[[request_and_response]]
+== Request and Response
+
+[[http_request]]
+=== HTTP Request
+
+Socket Server accepts standard HTTP 1.1 requests.
+
+==== HTTP Methods
+Supported methods are `GET`, `POST`, `HEAD`, and `OPTIONS`.
+
+===== HTTP GET
+
+Supported for all request types.
+
+[source, http]
+----
+GET /path HTTP/1.1\r\n
+Header1: Field1\r\n
+Header2: Field2\r\n
+\r\n
+----
+
+===== HTTP POST
+
+Supported for plugin requests.
+
+[source, http]
+----
+POST /path HTTP/1.1\r\n
+Header1: Field1\r\n
+Header2: Field2\r\n
+Content-Length: 14\r\n
+\r\n
+Sample content
+----
+
+===== HTTP HEAD
+
+Supported for file resource and builtin artifact request.
+
+[source, http]
+----
+HEAD /path HTTP/1.1\r\n
+\r\n
+----
+
+===== HTTP OPTIONS
+
+Supported for all request types.
+
+[source, http]
+----
+OPTIONS /path HTTP/1.1\r\n
+\r\n
+----
+
+
+[[request_headers]]
+==== Recognized HTTP Request Headers
+
+The following HTTP headers are recognized and acted upon by the HTTP Server.
+
+* `Accept`
+* `Content-Type`
+* `Content-Length`
+* `X-VGX-Partial-Target`
+* `X-VGX-Builtin-Min-Executor`
+* `X-VGX-Bypass-SOUT`
+
+Other headers may be sent and acted upon by custom plugins. (See optional <<pluginadapter.adoc#pre_engine_arg_headers, headers argument>> passed to plugin functions.)
+
+// cspell:ignore mediatype mediatypes
+[[request_header_accept]]
+===== Accept
+`Accept: _mediatype_`
+
+Specify _mediatype_ of <<pluginadapter.adoc#pyvgx_pluginresponse, response returned from plugin>> request. Three mediatypes are currently supported:
+
+* `application/json` (default) +
+Render plugin response object as JSON 
+* `text/plain` +
+Render plugin response as `repr( object )`
+* `application/x-vgx-partial` +
+Internal format used between dispatcher and back-end matrix
+
+[[request_header_content_type]]
+===== Content-Type
+`Content-Type: _mediatype_`
+
+Specify _mediatype_ of `content` in `POST` requests
+
+[[request_header_content_length]]
+===== Content-Length
+`Content-Length: _length_`
+
+Specify _length_ in bytes of `content` in `POST` requests
+
+[[request_header_x_vgx_partial_target]]
+===== X-VGX-Partial-Target
+`X-VGX-Partial-Target: _partition_`
+
+Target _partition_ for this request when forwarded to VGX Dispatch back-end matrix. See <<pluginadapter.adoc#request_attr_partial, _request.partial_>>.
+
+[[request_header_x_vgx_builtin_min_executor]]
+===== X-VGX-Builtin-Min-Executor
+`X-VGX-Builtin-Min-Executor: _queueN_`
+
+For internal use. Specify _queueN_ (max 3) of the lowest internal dispatch queue to use for the request, limiting which executor threads are allowed to handle the request.
+
+// cspell:ignore SOUT
+[[request_header_x_vgx_bypass_sout]]
+===== X-VGX-Bypass-SOUT
+`X-VGX-Bypass-SOUT: _bypass_`
+
+Override service S-OUT when _bypass_ is `1`. Requests with this header will be executed regardless of service S-IN/S-OUT state.
+
+[[plugin_execution_request]]
+==== Plugin Execution Request
+
+The Python plugin function to execute and its parameters are determined by the service URL path.
+To execute _servicename_, use HTTP request path `/vgx/plugin/**_servicename_**?**_parameters_**`. 
+
+If an _engine_ or _pre_-processor named _servicename_ has been added with <<pluginadapter.adoc#system_addplugin_func, system.AddPlugin()>> its registered function is called. In <<vgx_server_mode_engine, Engine>> mode the registered _engine_ function is called. In <<vgx_server_mode_dispatch, Dispatch>> mode the registered _pre_ function is called.
+
+In Engine mode there must be an _engine_ matching _servicename_, otherwise the request will fail.
+
+In Dispatch mode both _pre_ and _post_-processors are optional. If _pre_ is defined for _servicename_ it is called before the request is forwarded to the back-end matrix. If _post_ is defined for _servicename_ it is called after a merged response has been generated from back-end matrix partial results.
+
+[[request_character_encoding]]
+===== Request Character Encoding
+
+The only supported character encoding is UTF-8.
+
+
+[[request_parameters]]
+===== Plugin Request Parameters
+
+URL query _parameters_ are generally of the form `p1=x&p2=y&...` and are passed to the _engine_ or _pre_ function. Query parameters whose names match function arguments in the <<pluginadapter.adoc#pre_engine_signature, plugin signature>> are passed to the function as arguments _func_( _p1_=_x_, _p2_=_y_, ... ). 
+
+[[request_parameter_annotation]]
+===== Parameter Annotation
+
+Python function argument annotation `_arg_: _type_` enables automatic type conversion of HTTP request parameters. If a function argument _arg_ is annotated as `def _func_( _arg_: _type_ ): ...` then HTTP request parameter `arg=_x_` will be passed to _func_() as keyword argument _arg_ with a value converted according to _type_.
+
+The following annotation types are supported:
+
+* _int_
+* _float_
+* _str_
+* _bytes_
+* _json_
+
+Type _json_ produces value `json.loads(x)`, type _bytes_ produces value `x.decode()`, and the others produce value `_type_(x)`.
+
+Non-annotated arguments are passed as strings.
+
+[[request_parameter_explicit_cast]]
+===== Explicit Parameter Conversion
+
+Parameter type can be specified directly in the query for _int_ and _float_ types:
+
+`p1=(int)x&p2=(float)y` will convert _x_ to _int_ and _y_ to _float_ before passing arguments _p1_ and _p2_ to the plugin function.
+
+[[request_execution_threads]]
+===== Request Execution Details
+
+A new plugin request is made by creating a new (or reusing an existing) socket connection to the <<server_a_port, main server port>>. The connection is assigned from a pool of <<limit_clients, 1021 client handlers>>, and will remain uniquely allocated to the connected client for as long as the connection persists.
+
+Once a request has been fully received and parsed the server assigns an executor thread to process the request. The thread is selected from a <<limit_server_a_threads, pool of 16>>.
+
+The executor thread acquires the GIL and calls the Python plugin function identified by the URL. Upon return from the Python plugin function the GIL is released. During the course of execution the function may release and re-acquire the GIL many times depending on the work being performed. 
+
+Once processing is completed the executor thread returns to the pool, ready to serve another request.
+
+Note that _pre_ and _post_-processors for the same request are generally executed in different threads. The executor thread is returned to the pool as soon as _pre_ function completes, and is free to execute other requests while the first one is being processed in the back-end matrix. Another executor thread is allocated to handle merging of response partials, and optionally to execute the _post_ function if defined.
+
+CAUTION: Executor threads are uniquely allocated to _engine_, _pre_, or _post_ functions from start to finish. A Python plugin function must therefore be thought of as a real-time processor `IN->(process)->OUT` where _process_ must perform its task as quickly as possible with minimal blocking on shared resources and never put the thread to sleep.
+
+
+[[http_response]]
+=== HTTP Response
+
+Socket Server returns standard HTTP 1.1 responses. 
+
+.HTTP Response
+[source, http]
+----
+HTTP/1.1 <statuscode> <statustext>\r\n
+Allowed: <methods>\r\n
+Server: VGX/3\r\n
+Connection: keep-Alive\r\n
+Content-Type: <mediatype>; charset=UTF-8\r\n
+Content-Length: <length>\r\n
+\r\n
+<content>
+----
+
+
+[[response_headers]]
+==== HTTP Response Headers
+
+Some or all of the following HTTP headers may be returned in the response:
+
+* `Allowed`
+* `Server`
+* `Connection`
+* `Content-Type`
+* `Content-Length`
+
+[[response_header_allowed]]
+===== Allowed
+`Allowed: _methods_`
+
+Included if HTTP method is `OPTIONS`, value _methods_ is comma-separated list of supported HTTP methods for the requested resource
+
+[[response_header_server]]
+===== Server
+Always `Server: VGX/3`
+
+[[response_header_connection]]
+===== Connection
+Always `Connection: keep-Alive`
+
+[[response_header_content_type]]
+===== Content-Type
+`Content-Type: _mediatype_; charset-UTF-8`
+
+Included if Content-Length is non-zero, value _mediatype_ depends on request header <<request_header_accept, Accept>> for plugin requests, or as defined per <<builtin_services, builtin service>> endpoint
+
+[[response_header_content_length]]
+===== Content-Length
+`Content-Length: _length_`
+
+Included if non-zero, value _length_ represents number of bytes in HTTP `<content>`
+
+.Sample response without content
+[source, http]
+----
+HTTP/1.1 200 OK\r\n
+Server: VGX/3\r\n
+Connection: keep-Alive\r\n
+\r\n
+----
+
+.Sample response with content
+[source, http]
+----
+HTTP/1.1 200 OK\r\n
+Server: VGX/3\r\n
+Connection: keep-Alive\r\n
+Content-Type: application/json; charset=UTF-8\r\n
+Content-Length: 123\r\n
+\r\n
+{"status": "OK", "response": [5, 25, 2.23606797749979, 2.23606797749979], "level": 0, "partitions": null, "exec_ms": 0.222}
+----
+
+[[response_status_codes]]
+==== HTTP Status Codes
+
+[cols="4,4,4"]
+|===
+|Status |Description |Response Content Detail
+
+3+|*2xx*
+
+|`200 OK`
+|Request successful
+|
+
+3+|*4xx*
+
+|`400 Bad Request`
+|Invalid HTTP request syntax or header, malformed or incompatible plugin parameter value. Error details must be extracted from response content.
+|See <<service_error_message_format>> for details
+
+// cspell:ignore vgxroot
+|`403 Forbidden`
+|Attempted to access a file outside server's _vgxroot_
+|
+
+|`404 Not Found`
+|A non-existing plugin or file was requested
+|
+
+|`405 Method Not Allowed`
+|The HTTP method is not allowed for the requested resource
+|
+
+|`413 Payload Too Large`
+|Request content could not be processed because internal buffer ran out of memory
+|
+
+|`414 URI Too Long`
+|Request line <<limit_request_line, exceeded 8191>> bytes, or a response line from back-end matrix was too long due to an internal error
+|
+
+// cspell:ignore redispatch
+.3+|`429 Too Many Requests`
+|anchor:status_429_cannot_accept[]The request could not be processed because the number of simultaneous socket connections <<limit_clients, exceeded 1021>>
+|`429 Cannot accept new connection at this time`
+|anchor:status_429_backlog_full[]Dispatcher back-end matrix busy
+|`429 Client backlog full`
+|anchor:status_429_backlog_full_after_redispatch[]Dispatcher back-end matrix busy on internal retry
+|`429 Client backlog full after re-dispatch attempt`
+
+3+|*5xx*
+
+|`500 Internal Server Error`
+|General purpose error code covering both plugin exceptions and various internal execution errors. Error details must be extracted from response content.
+|See <<service_error_message_format>> for details
+
+|`501 Not Implemented`
+|A valid, but unimplemented, resource was requested
+|
+
+.4+|`503 Service Unavailable`
+|anchor:status_503_service_out[]Server is currently <<system_serviceinhttp_func, Service-OUT>>, plugins cannot be executed
+|`503 Service Out`
+|anchor:status_503_cannot_accept[]Server is shutting down
+|`503 Cannot accept new connection at this time`
+|anchor:status_503_partitions_down[]At least one dispatcher partition has no available replica, and dispatcher configuration option <<config_options_allow_incomplete, allow-incomplete>> is False 
+|`503 Partition(s) down`
+|anchor:status_503_all_partitions_down[]Entire dispatcher back-end matrix is unavailable
+|`503 All partitions down`
+
+|`505 HTTP Version Not Supported`
+|HTTP/1.1 is required
+|
+
+|===
+
+[[service_response_format]]
+==== Service Response Format
+
+Services returning JSON responses (plugins and builtin services) use a common JSON format in their responses. Certain fields may be omitted, depending on the type of response.
+
+.General JSON response format
+[source, json]
+----
+{
+  "status": <status>,
+  "message": <json>,
+  "response": <json>,
+  "port": [
+    <port>,
+    <offset>
+  ],
+  "exec_id": <int>,
+  "level": <int>,
+  "partitions": <list_or_null>,
+  "exec_ms": <float>
+}
+----
+
+[[response_json_field_status]]status::
+* *<status>* is `"OK"` for successful requests
+* *<status>* is `"ERROR"` for failed requests
+
+[[response_json_field_message]]message::
+* *<json>* is error message as JSON object, format varies depending on error type
+
+[[response_json_field_response]]response::
+* *<json>* is Successful response payload as JSON object, format varies depending on service type and plugin implementation
+
+[[response_json_field_port]]port (_not always present_)::
+* *<port>* is the request port number
+* *<offset>* is `0` for main port, `1` for admin port
+
+[[response_json_field_exec_id]]exec_id (_not always present_)::
+* *<int>* is a number 0 or higher identifying the executor thread generating the response
+
+[[response_json_field_level]]level::
+* *<int>* is a number 0 or higher identifying the server's position in a dispatcher hierarchy
+
+[[response_json_field_partitions]]partitions::
+<list_or_null> is `null` for responses generated without a dispatcher back-end matrix, or a list `[parts, incomplete, deep]` for dispatched requests, where:
++
+* *_parts_* is the number of partitions in the immediate lower level of dispatcher's back-end matrix
+* *_incomplete_* is the number of partitions that did not respond, normally 0
+* *_deep_* is the total number of VGX Server instances in the dispatcher back-end matrix that contributed to this response
+
+[[response_json_field_exec_ms]]exec_ms::
+* *<float>* is the request execution time, in milliseconds
+
+[[service_error_message_format]]
+===== Service Error Message Format
+
+A failed request may include the `"message"` field in the response when the returned HTTP status is `400 Bad Request` or `500 Internal Server Error`. When the `"message"` field is included it may be formatted in various ways depending on the type of error. These are described by way of examples below.
+
+====== system
+These error messages represent internal errors.
+
+.system error message example
+[source, json]
+----
+"message": {
+  "system": {
+    "exception": "<class 'ValueError'>",
+    "value": "PyCapsule_New called with null pointer"
+  }
+}
+----
+
+====== vgx
+These error messages are caused by unsuccessful parameter processing or result rendering.
+
+.vgx error message example
+[source, json]
+----
+"message": {
+  "vgx": {
+    "exception": "<class 'TypeError'>",
+    "value": "x=sdd (an integer is required)"
+  }
+}
+----
+
+====== plugin
+These error messages are generated by exceptions raised in plugin code
+
+.plugin error message example
+[source, json]
+----
+"message": {
+  "plugin": {
+    "exception": "<class 'ZeroDivisionError'>",
+    "value": "division by zero",
+    "traceback": [
+      "  File \"<stdin>\", line 1, in engine\n"
+    ]
+  }
+}
+----
+
+====== back-end matrix
+Errors generated in a dispatcher back-end matrix will be relayed as a string with partition and error code information for each dispatcher level:
+
+`<partial: _p_ width: _w_> | _code_ | _message_`
+
+_p_:: Dispatcher's partition number
+
+_w_:: Number of dispatcher partitions
+
+_code_:: Response error code
+
+_message_:: Response error message, which may be recursive
+
+.dispatcher back-end matrix error example
+[source, json]
+----
+"message": "<partial: 0 width: 2> | 500 Internal Server Error | <partial: 0 width: 3> | 500 Internal Server Error | {'plugin': {'exception':  <class 'Exception'> , 'value': 'deep problems', 'traceback': ['  File  <stdin> , line 2, in engine\n']}}>>"
+----
+
+====== other
+Other error messages are reported as plain strings
+
+.other error message example
+[source, json]
+----
+"message": "unknown internal error"
+----
+
+[[service_response_examples]]
+==== Service Response Examples
+
+.Plugin Success Example
+[source, json]
+----
+{
+  "status": "OK",
+  "response": [
+    [ 0.2661956764021819, "This" ],
+    [ 0.3168133587680386, "That" ],
+    [ 0.8208368275190551, "The other" ]
+  ],
+  "level": 2,
+  "partitions": [ 2, 0, 4 ],
+  "exec_ms": 1.58
+}
+----
+
+.Builtin Service Success Example
+[source, json]
+----
+{
+  "status": "OK",
+  "response": {
+    "sysroot": "/data/testsystem"
+  },
+  "port": [ 9000, 0 ],
+  "exec_id": 0,
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 0.162
+}
+----
+
+.Plugin Error Response Example
+[source, json]
+----
+{
+  "status": "ERROR",
+  "message": {
+    "plugin": {
+      "exception": "<class 'ZeroDivisionError'>",
+      "value": "division by zero",
+      "traceback": [
+        "  File \"<stdin>\", line 1, in engine\n"
+      ]
+    }
+  },
+  "port": [ 9000, 0 ],
+  "exec_id": 7,
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 3691.37
+}
+----
+
+
+[[builtin_services]]
+== Built-in Services
+
+VGX Server includes service endpoints for getting system information and metrics, inspecting graph data, and performing administrative tasks.
+
+
+
+=== Status and Metrics
+
+[cols="2,3,4"]
+|===
+|Path |Response MimeType |Description
+
+|`/vgx/hc`
+
+`/<prefix>/vgx/hc`
+|`text/plain`
+|Return health-check response string `VGX/3`. HTTP status `200` for OK service, `503` for unavailable service.
+
+|`/vgx/ping`
+
+`<prefix>/vgx/ping`
+|`application/json`
+|Basic information about VGX Server host.
+
+|`/vgx/time`
+|`application/json`
+|Uptime, start time and current time of VGX Server.
+
+|`/vgx/storage`
+|`application/json`
+|Local data storage location
+
+|`/vgx/graphsum`
+|`application/json`
+|Summary of basic graph object counters, aggregated for all loaded graphs.
+
+|`/vgx/objcnt`
+|`application/json`
+|Basic object counters
+
+|`/vgx/status`
+|`application/json`
+|Metrics for VGX Server request rate, latency, errors, and other I/O information.
+
+|`/vgx/txstat`
+|`application/json`
+|VGX transaction I/O metrics.
+
+|`/vgx/peerstat`
+|`application/json`
+|VGX provider/subscriber status and upstream/downstream peer information.
+
+|`/vgx/meminfo`
+|`application/json`
+|Basic memory consumption information.
+
+|`/vgx/nodestat`
+|`application/json`
+|Summary of the most essential configuration, counters, and status 
+
+|`/vgx/matrix`
+|`application/json`
+|Back-end matrix (for VGX Server running in Dispatch mode)
+
+|`/vgx/dispatch`
+|`application/json`
+|Executor thread statistics and back-end matrix information
+
+|`/vgx/inspect`
+|`application/json`
+|Socket server connection details. Use parameter `level=n` (0-3) to control amount of detail.
+
+|`/vgx/randstr`
+|`text/plain`
+|A long string of random hex digits
+
+|`/vgx/randint`
+|`text/plain`
+|A short string of random hex digits
+
+|===
+
+=== Plugin Information
+
+[cols="2,3,4"]
+|===
+|Path |Response MimeType |Description
+
+|`/vgx/plugins`
+|`application/json`
+|User-defined plugins, as returned by <<pluginadapter.adoc#system_getplugins_func, system.GetPlugins()>>
+
+|`/vgx/builtins`
+|`application/json`
+|Builtin plugins, as returned by <<pluginadapter.adoc#system_getbuiltins_func, system.GetBuiltins()>>
+
+|`/vgx/builtin/matrixplugins`
+|`application/json`
+|Deep listing of user-defined plugins at all dispatch layers
+
+|`/vgx/builtin/argspec`
+|`application/json`
+|Return interface specification for plugin _name_ given by parameter `plugin=_name_`, e.g. +
+`/vgx/builtin/argspec?plugin=neighbor`.
+
+|===
+
+=== Builtin Plugins
+
+==== Graph Status and Queries
+
+[cols="2,4"]
+|===
+|Path |Description
+
+|`/vgx/builtin/arcs`
+|Global graph <<../graph/graphQuery.adoc#grapharcs, pyvgx.Graph.Arcs()>> query
+
+|`/vgx/builtin/evaluate`
+|VGX expression evaluator, i.e. <<../reference.adoc#evaluate_func, pyvgx.Graph.Evaluate()>>
+
+|`/vgx/builtin/eventbacklog`
+|TTL event processor backlog, i.e. <<../reference.adoc#eventbacklog_func, pyvgx.Graph.EventBacklog()>>
+
+|`/vgx/builtin/graphinfo`
+|Detailed graph status information
+
+|`/vgx/builtin/memory`
+|Detailed graph memory usage information
+
+|`/vgx/builtin/neighbor`
+|Graph <<../graph/graphQuery.adoc#graphneighborhood, pyvgx.Graph.Neighborhood()>> query
+
+|`/vgx/builtin/properties`
+|Return the system graph properties, i.e. <<../reference.adoc#system_get_properties_func, pyvgx.system.GetProperties()>>
+
+|`/vgx/builtin/vertex`
+|Return detailed information about a specific vertex
+
+|`/vgx/builtin/vertices`
+|Global graph <<../graph/graphQuery.adoc#graphvertices, pyvgx.Graph.Vertices()>> query
+
+|===
+
+==== Graph Modification
+
+[cols="2,4"]
+|===
+|Path |Description
+
+|`/vgx/builtin/connect`
+|Create arc from initial to terminal, i.e. <<../reference.adoc#connect_func, pyvgx.Graph.Connect()>>
+
+|`/vgx/builtin/createvertex`
+|Create a new vertex, i.e. <<../reference.adoc#createvertex_func, pyvgx.Graph.CreateVertex()>>
+
+|`/vgx/builtin/deletevertex`
+|Delete a vertex, i.e. <<../reference.adoc#deletevertex_func, pyvgx.Graph.DeleteVertex()>>
+
+|`/vgx/builtin/disconnect`
+|Remove arc, i.e. <<../reference.adoc#disconnect_func, pyvgx.Graph.Disconnect()>>
+
+|===
+
+==== VGX Server Status and Metrics
+
+[cols="2,4"]
+|===
+|Path |Description
+
+|`/vgx/builtin/echo`
+|VGX Server echo
+
+|`/vgx/builtin/metrics`
+|Detailed VGX Server request rate, latency, and I/O information
+
+|`/vgx/builtin/ping`
+|A no-op plugin returning `true`
+
+|`/vgx/builtin/status`
+|Detailed status information for all graphs, or optionally limit to graph _g_ with parameter `graph=_g_`.
+
+|===
+
+==== Additional Dispatcher Matrix Information
+
+[cols="2,4"]
+|===
+|Path |Description
+
+|`/vgx/builtin/Identify`
+|Execute a dummy request and return a JSON structure identifying all involved dispatcher and engine instances
+
+|`/vgx/builtin/MatrixObjects`
+|Return accumulated graph object counts across all partitions
+
+|===
+
+==== Multi-Node System Monitoring
+
+These requests can be sent to any instance part of a multi-node system, as described in <<multinode.adoc#system_descriptor, System Descriptor>>. Some requests require return information for all instances, others require parameter `idlist=id1,id2,...` where id__n__ is an <<multinode.adoc#descriptor_instances, instance identifier>>.
+
+[cols="2,4"]
+|===
+|Path |Description
+
+|`/vgx/builtin/system_counts`
+|Requires parameter `idlist=id1,id2,...`. Returns object counts, serial number and basic host information for each specified instance identifier
+
+|`/vgx/builtin/system_descriptor`
+|Returns the <<multinode.adoc#system_descriptor, system descriptor>>
+
+|`/vgx/builtin/system_overview`
+|Returns a comprehensive set of information for all instances in the system
+
+|`/vgx/builtin/system_rates`
+|Requires parameter `idlist=id1,id2,...`. Returns request rate, latency and basic host information for each specified instance identifier
+
+|===
+
+=== User Defined Files
+
+[cols="2,3,4"]
+|===
+|Path |Response MimeType |Description
+
+|`/<path>`
+
+ `/<prefix>/<path>`
+|*
+|Return the contents of file `<path>` resolved relative to `<<../reference.adoc#system_root_func, <vgxroot>>>/WEB-ROOT/` as long as `<path>` does not start with `/vgx/` and does not match any other built-in URI path.
+
+|===
+
+
+
+[source, json]
+----
+{
+    "status": "OK",
+    "response": 1.4142135623730951,
+    "level": 0,
+    "partitions": null,
+    "exec_ms": 0.283
+}
+----
+
+___
+
+[.float-group]
+--
+[.left]
+<<multinode.adoc#, icon:arrow-circle-left[size=2x, title="Multi-Node Setup"]>>
+<<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<pluginadapter.adoc#, icon:arrow-circle-right[size=2x, title="Plugin Adapter"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+

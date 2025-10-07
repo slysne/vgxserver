@@ -1,0 +1,75 @@
+{
+    "name": "Test system 1",
+
+    "instances": {
+        "TOP"    : { "group":0, "type": "dispatch", "host": "10.10.1.115",   "hport": 9910,                     "description": "Top Dispatcher" },
+        "MATRIX" : { "group":0, "type": "dispatch", "host": "10.10.1.115",   "hport": 9990,                     "description": "Matrix Dispatcher" },
+        "D1"     : { "group":1, "type": "dispatch", "host": "10.10.1.115",   "hport": 9190,                     "description": "Partition 1" },
+        "B1"     : { "group":1, "type": "builder",  "host": "10.10.1.115",   "hport": 9110,  "tport": 10110,    "description": "Builder 1.1" },
+        "S1"     : { "group":1, "type": "search",   "host": "10.10.1.115",   "hport": 9120,  "tport": 10120,    "description": "Search 1.1" },
+        "D2"     : { "group":2, "type": "dispatch", "host": "10.10.1.115",   "hport": 9290,                     "description": "Partition 2" },
+        "B2"     : { "group":2, "type": "builder",  "host": "10.10.1.115",   "hport": 9210,  "tport": 10210,    "description": "Builder 2.1" },
+        "S2"     : { "group":2, "type": "search",   "host": "10.10.1.115",   "hport": 9220,  "tport": 10220,    "description": "Search 2.1" }
+    },
+
+    "topology": {
+        "input": {
+            "B1": {
+                "S1": {}
+            },
+            "B2": {
+                "S2": {}
+            }
+        },
+        "search": {
+
+            "D1" : {
+                "B1": { "channels": 32, "priority": 1 },
+                "S1": { "channels": 32, "priority": 1 }
+            },
+
+            "D2" : {
+                "B2": { "channels": 32, "priority": 1 },
+                "S2": { "channels": 32, "priority": 1 }
+            },
+
+            "TOP": [
+                { 
+                    "channels": 32,
+                    "priority": 1,
+                    "partitions": ["D1"]
+                },
+
+                { 
+                    "channels": 32,
+                    "priority": 1,
+                    "partitions": ["D2"]
+                }
+            ],
+
+            "MATRIX": [
+                { 
+                    "description": "ROW 1",
+                    "channels": 32,
+                    "priority": 1,
+                    "primary": 1,
+                    "partitions": [
+                        "B1",
+                        "B2"
+                    ]
+                },
+
+                { 
+                    "description": "ROW 2",
+                    "channels": 32,
+                    "priority": 1,
+                    "partitions": [
+                        "S1",
+                        "S2"
+                    ]
+                }
+            ]
+        }
+    },
+    "graphs": ["g1"]
+}

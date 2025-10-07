@@ -1,0 +1,84 @@
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx.test
+# File:    __init__.py
+# Author:  Stian Lysne slysne.dev@gmail.com
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+import pkgutil
+__path__ = pkgutil.extend_path(__path__, __name__)
+from pyvgxtest.pyvgxtest import ListTestSets, RunTestSets
+
+import pyvgx
+
+from . import Order
+from . import Size
+from . import Enumerator
+from . import Relationships
+from . import VertexTypes
+from . import PropertyKeys
+from . import PropertyStringValues
+from . import GetMemoryUsage
+from . import Save
+from . import Truncate
+from . import Lock
+from . import ReadonlyGraph
+from . import EventProcessor
+
+
+modules = [
+    Order,
+    Size,
+    Enumerator,
+    Relationships,
+    VertexTypes,
+    PropertyKeys,
+    PropertyStringValues,
+    GetMemoryUsage,
+    Save,
+    Truncate,
+    Lock,
+    ReadonlyGraph,
+    EventProcessor
+]
+
+
+
+###############################################################################
+# List
+#
+###############################################################################
+def List():
+    """
+    """
+    ListTestSets( modules )
+
+
+
+
+###############################################################################
+# Run
+#
+###############################################################################
+def Run():
+    """
+    """
+    RunTestSets( modules, __name__ )

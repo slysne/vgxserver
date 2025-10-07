@@ -1,0 +1,147 @@
+[[vertexrank]]
+= Vertex Rank Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexVector.adoc#, icon:arrow-circle-right[title="Vertex Vector Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex Rank Methods |Description
+
+|<<vertexsetrank>>
+|Assign vertex ranking coefficients
+
+|<<vertexgetrank>>
+|Return vertex ranking coefficients
+
+|===
+
+[[vertexsetrank]]
+== pyvgx.Vertex.SetRank()
+
+Assign vertex ranking coefficients.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.SetRank( [ c1[, c0 ] ] ) -> tuple
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_c1_
+|_float_
+|1.0
+|Dynamic ranking coefficient `c1`
+
+|_c0_
+|_float_
+|0.0
+|Dynamic ranking coefficient `c0`
+
+|===
+
+=== Return Value
+
+This method returns a tuple `(c1, c0)` representing the ranking coefficients currently assigned to the vertex.
+
+=== Remarks
+
+Ranking coefficients are used by the `rank()` and `georank()` functions to compute dynamic rank scores for vertices in <<../evaluator/evaluator.adoc#quickrank, ranking expressions>>.
+
+The ranking coefficients have different meanings depending on the ranking function used.
+
+==== Linear ranking using rank()
+For `rank(a,b,c,...)` _c1_ and _c0_ are the coefficients of the linear equation `y = c1*X + c0` where `X` is the sum of all arguments _a_, _b_, _c_ ,... and `y` is the rank score.
+
+// cspell:ignore georank
+==== Geographical proximity using georank()
+For `georank()` _c1_ and _c0_ represent the geographical coordinates of head vertex (latitude=_c1_, longitude=_c0_) expressed in degrees.
+
+==== As numeric properties
+Both _c1_ and _c0_ are stored as 32-bit floating point values within a vertex object. It is possible to use these as general purpose numeric properties instead of the normal key/value properties. For some applications, avoiding key/value lookups may provide significantly faster access and keep memory usage to a minimum.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+for n in range( 1000 ):
+    r = A.Connect( A, "to", str(n))
+
+A.SetRank( 5.0, 10000 )                     # -> (5.0, 10000.0)
+A.c1                                        # -> 5.0
+A.c0                                        # -> 10000.0
+g.Evaluate( "rank()", head=A )              # -> 10000.0
+g.Evaluate( "rank( next.odeg )", head=A )   # -> 15000.0
+g.CloseVertex( A )
+----
+
+[[vertexgetrank]]
+== pyvgx.Vertex.GetRank()
+
+Return vertex ranking coefficients.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetRank() -> tuple
+----
+
+=== Return Value
+
+This method returns a tuple `(c1, c0)` representing the ranking coefficients currently assigned to the vertex.
+
+=== Remarks
+
+Coefficients _c1_ and _c0_ are also available as vertex attributes.
+The following statements are equivalent:
+
+* `vertex.GetRank()`
+* `( vertex.c1, vertex.c0 )`
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A.c1 = 5.0                      #
+A.c0 = 10000                    #
+A.GetRank()                     # -> (5.0, 10000.0)
+g.CloseVertex( A )
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexProperty.adoc#, title="Vertex Property Methods"]
+<<vertexProperty.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Property Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexVector.adoc#, title="Vertex Vector Methods"]
+<<vertexVector.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Vector Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,1183 @@
+[[pyvgxserver_multinode]]
+= VGX Server Multi-Node Setup <<../../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<service.adoc#, icon:arrow-circle-right[title="VGX Server"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:xrefstyle: full
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+Multi-node deployments require a <<system_descriptor, *system descriptor*>> defining roles of all instances and how they are connected. 
+Configuring and starting each VGX Server instance can be simplified by using the <<pyvgx_vgxinstance, built-in `pyvgx.VGXInstance` class>>, which removes the need to explicitly call system.Initialize(), op.Bind(), system.AddPlugin(), system.StartHTTP() and other common preparation steps.
+
+[[system_descriptor]]
+== System Descriptor
+
+A reserved system property `"SYSTEM_Descriptor"` holds a dict describing all members of the system. At least one VGX Server instance must have this property set, allowing it to orchestrate administrative actions across all instances, and to display the <<sysadmin.adoc#admin_ui_system, Multi-Node System Dashboard>>.
+
+A default system descriptor with a single `generic` instance is automatically generated when <<service.adoc#system_starthttp_func, system.StartHTTP()>> is called and the property is not already defined.
+
+.System descriptor property
+[source, python]
+----
+{
+    # Friendly system name shown on Dashboard
+    "name": system_name,
+    
+    # Declare graphs names to be used
+    "graphs": [
+      <graph_name_1>,
+      ...
+    ],
+
+    # Define all VGX Server instances
+    "instances": {
+        "S1": {
+            "group":        display_group_number,
+            "graph":        graph_name,
+            "type":         instance_type,
+            "host":         hostname_or_ip,
+            "hport":        http_main_port,
+            "prefix":       http_service_prefix,
+            "s-in":         http_service_in_at_startup,
+            "tport":        tx_input_port,
+            "durable":      true_or_false,
+            "description":  instance_description
+        },
+        ...,
+        "Sn": { ... }
+    },
+
+    # Common instance parameters
+    "common": {
+      <instance_param>: <param_value>,
+      ...
+    },
+
+    # Define how instances are connected
+    "topology": {
+        # Transaction input flow
+        "transaction": {
+            # S1 attached to S2 and S3
+            "S1": [
+              "S2", "S3"
+            ],
+            # Nesting: S4 attached to S5, S5 attached to S6 and S7
+            "S4": {
+              "S5": ["S6", "S7"],
+              ...
+            },
+            ...
+        },
+        # HTTP Server dispatch matrix
+        "dispatch": {
+            # Dispatcher S10 matrix: replicas and partitions
+            "S10": [
+              # First row
+              {
+                "channels": max_socket_connections,
+                "priority": reference_cost,
+                "primary": true_or_false,
+                "partitions": [
+                  "S11",
+                  "S12",
+                  "S13",
+                ]
+              },
+              # Second row
+              { ... },
+              ...
+            ],
+            # Dispatcher S20 matrix: replicas only
+            "S20": {
+              "S21": {
+                "channels": max_socket_connections,
+                "priority": reference_cost
+              },
+              "S22": { ... },
+              ...
+            }
+        }
+    }
+}
+----
+
+[[descriptor_name]]
+=== System Name (`*name*`)
+[Default=`"Unspecified _n_-node System"`] +
+This _system_name_ will be displayed on the <<sysadmin.adoc#admin_ui_system, Multi-Node System Dashboard>>.
+
+[[descriptor_graphs_list]]
+=== Graph Names (`graphs`)
+[Default=`[]`] +
+This list of graph names declare all graphs that will be used by instances.
+
+[[descriptor_instances]]
+=== VGX Server Instance Definitions (`*instances*`)
+All VGX Server instances are defined in this dict, as unique instance identifiers *S__i__* mapping to parameter dicts.
+
+[[descriptor_instance_id]]Instance Identifier: `instances.Si`:: [*Required*] +
+Unique instance identifier
+
+[[descriptor_instance_group]]Display Group: `instances.Si.*group*`:: [Default=`0.0`] +
+Numeric (float) value used for visually grouping instances shown on the Multi-Node System Dashboard. Instances in the same group are shown together between horizontal lines, and instances are rendered in increasing order sorted by the group value. Engine instances (of type `builder`, `txproxy`, or `search`) belonging to the same partition must have the same group number.
+
+[[descriptor_instance_graph]]Graph Name: `instances.Si.*graph*`:: [Default=`None`] +
+The name of the graph to be loaded for this instance. This name must match one of the <<descriptor_graphs_list, previously declared>> names.
+
+[[descriptor_instance_type]]Instance Type: `instances.Si.*type*`:: [Default=`"generic"`] +
+Instance type must be one of `"admin"`, `"dispatch"`, `"search"`, `"builder"`, `"txproxy"` or `"generic"`. This affects how <<pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>> initializes the instance, and how it is rendered on the Multi-Node System Dashboard.
+
+[[descriptor_instance_host]]Hostname: `instances.Si.*host*`:: [Default=`"127.0.0.1"`] +
+Hostname or IP address of server where instance is running
+
+[[descriptor_instance_hport]]HTTP Port: `instances.Si.*hport*`:: [*Required*] +
+HTTP Socket Server <<service.adoc#server_a_port, main port>>
+
+[[descriptor_instance_prefix]]HTTP Service Prefix: `instances.Si.*prefix*`:: [Default=`None`] +
+HTTP Service <<service.adoc#system_starthttp_func__prefix, path prefix>> for URI aliases.
+[CAUTION]
+====
+The _prefix_ parameter must be the same for all instances.
+====
+
+[[descriptor_instance_servicein]]HTTP S-IN Startup State: `instances.Si.*s-in*`:: [Default=`None`] +
+HTTP <<service.adoc#system_starthttp_func__servicein, Service In state>> at startup. Instances of type `"search"` and `"txproxy"` start `S-OUT` by default. All other instance types start `S-IN` by default.
+
+[[descriptor_instance_tport]]Transaction Port: `instances.Si.*tport*`:: [Default=`None`] +
+VGX Transaction Service input port. If specified, the instance will listen for incoming transactions on this port.
+
+[[descriptor_instance_durable]]Durable Flag: `instances.Si.*durable*`:: [Default=`False`] +
+If `True`, incoming transactions are streamed to disk if VGX Transaction Service is running.
+
+[[descriptor_instance_description]]Instance Description: `instances.Si.*description*`:: [Default=`"_type_ _Si_ at __host__:__hport__"`] +
+Free text describing this instance
+
+.Instance definition example
+[source, python]
+----
+{ 
+  "instances": {}
+    "T1" : {
+        "group": 1.1,
+        "graph": "testgraph",
+        "type": "txproxy",
+        "host": "the.host.running.this.instance",
+        "hport": 9500,
+        "prefix": "/my-service/path/",
+        "s-in": True,
+        "tport": 10500,
+        "durable": True,
+        "description": "Transaction proxy and durable archiver #1"
+    }
+  }
+}
+----
+
+
+[[descriptor_common]]
+=== VGX Server Instance Common Parameters (`common`)
+Key-value pairs in this dict are applied to all instance definitions as defaults. (Parameters explicitly defined per instance take precedence.)
+
+[[descriptor_topology]]
+=== System Deployment Topology (`topology`)
+The topology descriptor section defines how VGX Server instances are connected. Two types of connections must be defined: 1) Transaction input flow and 2) HTTP server dispatcher hierarchy.
+
+[[descriptor_topology_transaction]]
+==== Data Input Transaction Flow (`topology.transaction`)
+[Default=*see below*] +
+The transaction sub-section defines the provider/subscriber relationships between all instances in the system. A provider may have zero or more subscribers. A subscriber has exactly one provider. A subscriber may itself be a provider for other subscribers.
+
+A provider is defined by mapping its instance identifier *S__i__* to a dict or list of zero or more subscribers. Leaf-instance subscribers may be specified as a list of identifiers, or as a dict of identifiers mapping to `null`, `{}`, or `[]`.
+
+Instance identifiers can appear at most once in the transaction topology, thus preventing illegal loops and multi-input subscribers.
+
+Referencing an undefined instance identifier is not allowed.
+
+[[descriptor_topology_transaction_default]]
+===== Default Value
+All instances defined in <<descriptor_instances, `instances` section>> must be part of the topology. Any instance not explicitly referenced in `topology.transaction` or `topology.dispatch` is automatically added to `topology.transaction` as an isolated instance.
+
+===== Transaction Topology Example
+
+.Transaction topology example
+[source, python]
+----
+{ 
+  "topology": {
+    "transaction": {
+      # Isolated instance A
+      "A": None,
+
+      # B1 has two subscribers S1 and S2
+      "B1": [
+          "S1",
+          "S2"
+      ],
+
+      # B2 has three subscribers T1, T2, and S30
+      "B2": {
+          # T1 has three subscribers S10, S11, S12
+          "T1": {
+              "S10": None,
+              "S11": None,
+              # S12 has one subscriber S12b
+              "S12": [
+                  "S12b"
+              ]
+          },
+          # T2 has two subscribers S20 and S21
+          "T2": [
+              "S20",
+              "S21"
+          ],
+          # S30 has no subscribers
+          "S30": None
+      }
+    }
+  }
+}
+----
+
+[NOTE]
+====
+Although not enforced, it is recommended to define instance types in accordance with the intended transaction topology.
+
+Isolated instances should have `admin`, `generic` or `builder` types.
+
+Instances with one or more outputs but no input should have `builder` type.
+
+Instances with input but no outputs should have `search` type.
+
+Instances with both input and outputs should have `txproxy` or `search` types.
+
+Normally `dispatch` instances are not part of the transaction topology, but it is allowed and may be appropriate in some deployments.
+====
+
+[[descriptor_topology_dispatch]]
+==== Request Dispatch Matrix `topology.dispatch`
+[Default=`{}`] +
+This dispatch sub-section defines the back-end matrix for all dispatchers in the system.
+
+The dispatcher topology is described by mapping each dispatcher instance to a definition of its immediate lower layer. Instances referenced in the definition of a layer may themselves be dispatchers if so declared elsewhere in the dispatcher topology.
+
+A dispatcher back-end is a matrix of _M_ replicas (rows) split into _N_ partitions. The general syntax specifies a list of _M_ replica dicts, each with a set of parameters including the list of partition instances.
+
+.General syntax of dispatcher's immediate lower back-end layer
+[source, python]
+----
+dispatcher: [
+    # Replica/row 1
+    { 
+        "channels": max_sockets_per_part_i_instance,
+        "priority": reference_cost_of_parts_in_this_row,
+        "primary": true_if_primary_row,
+        "partitions": [
+            part_1_instance,
+            part_2_instance,
+            ...
+            part_N_instance
+        ]
+    },
+    # Replica/row 2
+    { ... }
+    ,
+    ...,
+    # Replica/row M
+    { ... }
+]
+----
+
+For dispatchers with a single partition back-end the following alternative syntax is allowed.
+
+.Alternative syntax of single partition dispatcher back-end
+
+[source, python]
+----
+dispatcher: {
+    "replica_1_instance": {
+        "channels": max_sockets_to_replica_1_instance,
+        "priority": reference_cost_of_replica_1_instance,
+        "primary": true_if_primary_replica,
+    },
+    "replica_2_instance": { ... },
+    ...,
+    "replica_N_instance": { ... }
+}
+----
+
+[[descriptor_topology_dispatch_configuration_mapping]]
+===== Descriptor Dispatcher Topology vs. Dispatcher Configuration
+
+<<service.adoc#dispatcher_configuration, Dispatcher Configuration>> describes the configuration passed to <<service.adoc#system_starthttp_func, system.StartHTTP()>> in _dispatcher_ argument. The system descriptor's dispatcher topology is used by <<pyvgx_vgxinstance, pyvgx.VGXInstance helper class>> to generate appropriate dispatcher configurations for all instances.
+
+[[descriptor_topology_dispatch_partial_results]]
+===== Allow Partial Results
+
+By default a dispatcher requires all back-end partitions to be available, which means at least one replica must exist per partition. If a partition has no replicas the dispatcher refuses to process the request and returns error <<service.adoc#status_503_partitions_down, `503 Partition(s) down`>>.
+
+To override this behavior and allow a dispatcher to process a request with an incomplete set of partitions, add a *fallback empty replica* as the last row in the dispatcher specification:
+
+.Fallback empty replica
+[source, python]
+----
+# Fallback replica
+{ 
+  "priority": -1, "partitions": [] 
+}
+#     |
+#     |
+# maps to system.StartHTTP()
+# dispatcher argument 'options' element:
+#     |
+#     V 
+{    
+    "options": {
+        "allow-incomplete": True
+    }
+}
+----
+
+The combination of `"priority": -1` and `"partitions": []` results in a dispatcher configuration being generated with <<service.adoc#config_options_allow_incomplete, allow-incomplete option>> set to `True`.
+
+[[descriptor_dispatch_topology_example]]
+===== Dispatch Topology Example
+
+.Dispatch topology example
+[.copyable]
+[source, python]
+----
+{ 
+  "topology": { 
+    "dispatch": {
+      # Top-level proxy dispatcher
+      "TOP": {
+          # Single back-end instance
+          "D1": {
+              "channels": 64
+          }
+      },
+
+      # Dispatcher with 2x3 back-end,
+      # allowing partial results
+      "D1": [
+          # First row of searchers S1, S2, S3
+          {
+              "channels": 32, # Max sockets from D1
+                              # to each searcher
+              "priority": 1,  # More traffic
+              "partitions": [ "S1", "S2", "S3" ]
+          },
+          # Second row of builders B1, B2, B3
+          {
+              "channels": 16,  # Max sockets from D1
+                               # to each builder
+              "priority": 10,  # Less traffic
+              "primary": True, # Feed requests go to this row
+              "partitions": [ "B1", "B2", "B3" ]
+          },
+          # Fallback row, allowing partial results
+          {
+              "priority": -1, "partitions": []
+          }
+      ]
+    }
+  }
+}
+----
+
+
+[[vgxinstance_plugin_definitions]]
+== Plugin Definition List
+
+When passing a list of plugin definitions in <<pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>> _plugins_ argument, this function will automatically register the plugins in accordance with the instance type.
+
+A plugin is specified as a __name__d group of _pre_, _engine_, and _post_ functions, optionally located in _module_ within _package_, along with an optional _graph_ to be bound to those plugin functions.
+
+.Service endpoint definitions
+[source, python]
+----
+[
+    # First service endpoint
+    {
+        "name": service_name_1,
+        "package": python_package,
+        "module": python_module,
+        "engine": engine_main_processor_1,
+        "pre": dispatcher_pre_processor_1,
+        "post": dispatcher_post_processor_1,
+        "graph": name_of_bound_graph_1
+    },
+    # Second service endpoint
+    {
+        "name": service_name_2,
+        "package": python_package,
+        "module": python_module,
+        "engine": engine_main_processor_2,
+        "pre": dispatcher_pre_processor_2,
+        "post": dispatcher_post_processor_2,
+        "graph": name_of_bound_graph_2
+    },
+    ...,
+    # N-th service endpoint
+    { ... }
+]
+----
+
+_name_::
+[*Required*] +
+Define name of service endpoint: `/vgx/plugin/*_service_name_i_*`
+
+_package_:: 
+[*Optional*] +
+Python package containing plugin module(s)
+
+_module_::
+[*Optional*] +
+Python module^[1]^ containing plugin function(s) to be referenced by name in _engine_, _pre_, and _post_.
+
+_engine_::
+[Default=`None`] +
+Plugin function^[2]^ to be registered as <<pluginadapter.adoc#plugin_function_engine, main engine processor>>. Instances of type `builder`, `search`, `txproxy`, `generic` and `admin` will execute this plugin for request path `/vgx/plugin/*_service_name_i_*`.
+
+_pre_::
+[Default=`None`] +
+Plugin function^[2]^ to be registered as a <<pluginadapter.adoc#plugin_function_pre, dispatcher pre-processor>>. Instances of type `dispatch` will execute this plugin for request path `/vgx/plugin/*_service_name_i_*`.
+
+_post_::
+[Default=`None`] +
+Plugin function^[2]^ to be registered as a <<pluginadapter.adoc#plugin_function_post, dispatcher post-processor>>. Instances of type `dispatch` will execute this plugin when all responses from the back-end matrix have been received and merged.
+
+_graph_::
+[Default=`None`] +
+Name of graph to be passed in the _graph_ argument of <<pluginadapter.adoc#pre_engine_arg_graph, engine, pre>>, and <<pluginadapter.adoc#post_arg_graph, post>> functions. +
+If `None` the plugin functions will not be bound to a graph. +
+If `"*"` the plugin functions will be bound to the <<descriptor_instance_graph, descriptor instance graph>>.
+
+*^[1]^* Plugins defined in modules are <<sysadmin.adoc#vgx_builtin_ADMIN_ReloadPlugins, dynamically re-loadable>> allowing plugin code changes without restarting.
+
+*^[2]^* Functions may be given as callable objects or strings. When function is located in _package_/_module_ it must be referenced by name (string).
+
+=== Plugin Definitions Example
+
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+
+
+def prepare( request:pyvgx.PluginRequest, query:str ):
+  """
+  Dispatcher pre-processor: look for cached query response
+  and return immediately if cached, otherwise forward
+  request to back-end
+  """
+  response = get_cached( query )
+  if response:
+    return response
+  return request
+
+
+def complete( response:pyvgx.PluginResponse ):
+  """
+  Dispatcher post-processor: format the final merged 
+  response as a list of strings
+  """
+  items = []
+  for score, item in response.entries:
+    items.append( "{:.4f}: {}".format( score, transform(item) ) )
+  return items
+
+
+def search( request:pyvgx.PluginRequest, query:str ):
+  """
+  Execute search and return response object
+  """
+  response = pyvgx.PluginResponse( sortby=pyvgx.S_RANK )
+  for score, item in run_query( query ):
+    response.Append( score, item )
+  return response
+
+
+PluginDefs = [
+  # Use locally defined plugin functions
+  {
+    "name":    "PluginFromLocalFunctions",
+    "engine":  search,
+    "pre":     prepare,
+    "post":    complete
+  },
+  # Use plugin functions defined in class Example
+  # within module example.plugin_module
+  {
+    "name":    "PluginFromModuleFunctions",
+    "package": "example",
+    "module":  ".plugin_module",
+    "engine":  "Example.Engine",
+    "pre":     "Example.PreProcessor",
+    "post":    "Example.PostProcessor",
+  }
+]
+
+# Now use PluginDefs with
+# pyvgx.VGXInstance.StartInstance( plugins=PluginDefs )
+
+----
+
+
+[[pyvgx_vgxinstance]]
+== pyvgx.VGXInstance
+
+When implementing services it is possible to use built-in helper class `pyvgx.VGXInstance` to simplify development. This class understands <<system_descriptor, system descriptors>> and handles all initialization and startup of a specified instance.
+
+It is necessary to call `pyvgx.initadmin()` before use `pyvgx.VGXInstance` can be used:
+
+[source, python]
+----
+import pyvgx
+pyvgx.initadmin()
+
+# pyvgx.VGXInstance is now available
+descriptor = pyvgx.VGXInstance.Descriptor( "vgx.cf" )
+----
+
+Two static methods of pyvgx.VGXInstance are available:
+
+[[pyvgx_vgxinstance_getdescriptor_func]]`pyvgx.VGXInstance.GetDescriptor( **[**_descriptor_file_**]** )`:: Return a `pyvgx.Descriptor` instance, suitable for passing in the _descriptor_ argument of <<pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>>. (Avoid accessing the returned object's attributes and methods, as these are for internal use only.)
++
+*_descriptor_file_*: Full path to a file on disk containing a valid <<system_descriptor, system descriptor>> in JSON format. Defaults to `"vgx.cf"`.
+
+// cspell:ignore vgxroot
+[[pyvgx_vgxinstance_startinstance_func]]`pyvgx.VGXInstance.StartInstance( _id_, _descriptor_**[**, _basedir_**[**, _plugins_**]]** )`:: Initialize, configure and start a VGX Server instance. The instance's _vgxroot_ is automatically named `<instance.type>_<instance.id>`, e.g. "builder_B01".
++
+*_id_*: Instance identifier string, as defined in the system descriptor
++
+*_descriptor_*: System descriptor object, which may be _dict_, _str_, _None_ or _pyvgx.Descriptor_. If _str_ or _None_ the descriptor is loaded using <<pyvgx_vgxinstance_getdescriptor_func, pyvgx.VGXInstance.GetDescriptor( descriptor_file=_descriptor_ )>>.
++
+*_basedir_*: Directory path where _vgxroot_ will be located. Default is current directory.
++
+*_plugins_*: <<vgxinstance_plugin_definitions, Plugin definitions>> list, specifying names and function references for all plugins to be automatically registered.
+
+=== pyvgx.VGXInstance Example
+
+Set up a single instance that can compute square roots.
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+
+def sqrt( request, x:float ):
+  return x ** 0.5
+
+PLUGINS = [
+    {
+        "name": "SquareRoot",
+        "engine": sqrt
+    }
+]
+
+DESCRIPTOR = {
+  "name": "Square Root Service",
+  "instances": {
+    "SQRT01": {
+      "type": "generic",
+      "host":"127.0.0.1",
+      "hport":9500
+    }
+  },
+  "topology": {
+    "transaction":{
+      "SQRT01": {}
+    },
+    "dispatch": {
+    }
+  },
+  "graphs":[]
+}
+
+pyvgx.initadmin()
+
+instance = pyvgx.VGXInstance.StartInstance( 
+  id="SQRT01",
+  descriptor=DESCRIPTOR,
+  plugins=PLUGINS
+)
+
+pyvgx.system.RunServer( name=instance.id )
+----
+
+.Test SquareRoot endpoint
+----
+http://127.0.0.1:9501/vgx/plugin/SquareRoot?x=2
+----
+
+.SquareRoot response
+----
+{
+  "status": "OK",
+  "response": 1.4142135623730951,
+  "level": 0,
+  "partitions": null,
+  "exec_ms": 0.072
+}
+----
+
+
+[[service_example]]
+== Service Example
+
+In this section we will create a multi-node demo service. We will need a system descriptor file (vgx.cf) and some Python code to implement the service. You can try to run this system by following the steps outlined below.
+
+The first step is to create a new folder (e.g. "demo") somewhere on your computer. You will populate this directory with a system descriptor file `vgx.cf` and a sub-directory named `service`, which will contain the Python code for your service implementation. This establishes a Python package named `service` in the `demo` directory.
+
+.Example Service Directory
+----
+demo/
+├─ vgx.cf
+├─ run.cmd
+├─ run.sh
+├─ service/
+│  ├─ exampleservice.py
+│  ├─ exampleplugin.py
+----
+
+The following sections describe how to get our system up and running. Here is a quick summary:
+
+<<service_example_topology>>::
+Summary of service components
+
+<<service_example_descriptor>>::
+`vgx.cf` +
+System descriptor file in JSON format
+
+<<service_example_python_service>>::
+`service/exampleservice.py` +
+Run this to start a service instance
+
+<<service_example_plugin_code>>::
+`service/exampleplugin.py` +
+Module containing plugin code used by `exampleservice.py`
+
+<<service_example_start_instances>>::
+Start components from a terminal
+
+<<service_example_verify>>::
+[.copyable]
+[source, shell]
+----
+vgxadmin --status "*"
+----
+
+<<service_example_feed_request>>::
+[.copyable]
+[source, shell]
+----
+curl "http://127.0.0.1:9990/vgx/plugin/add?N=250000&count=3000000"
+----
+
+<<service_example_search_request>>::
+[.copyable]
+[source, shell]
+----
+curl "http://127.0.0.1:9990/vgx/plugin/search?name=12345"
+----
+
+<<service_example_system_overview>>::
+`http://127.0.0.1/system`
+
+<<service_example_shutdown>>::
+[.copyable]
+[source, shell]
+----
+vgxadmin --stop "*" --confirm
+----
+
+[[service_example_topology]]
+=== Service Example Topology
+
+Our system will have two shards with one builder row and two search rows. A top dispatcher is responsible for routing requests and merging responses. We also use a dedicated admin instance.
+
+// cspell:ignore exampleservice
+.Service Example Topology
+image::exampleservice.png[exampleservice, 480, 480, align="center"]
+
+[[service_example_descriptor]]
+=== Service Example Descriptor
+
+The system descriptor for our example topology is shown below. Place this JSON data in a file named `vgx.cf` in your demo directory.
+
+----
+demo/
+├─ vgx.cf
+----
+
+
+.vgx.cf
+[.copyable]
+[source, json]
+----
+{
+    "name": "Example Service",
+
+    "instances": {
+        "A1": { 
+            "type": "admin", "description": "Admin",
+            "group": 1000.001,
+            "hport": 9000
+        },
+        "TD": {
+            "type": "dispatch", "description": "Top Dispatcher",
+            "group": 2000.001,
+            "hport": 9990
+        },
+        "B0.1": {
+            "type": "builder", "description": "Builder 0.1",
+            "hport": 9100, "tport": 10100
+        },
+        "S1.1": { 
+            "type": "search", "description": "Search 1.1",
+            "hport": 9110, "tport": 10110
+        },
+        "S2.1": { 
+            "type": "search", "description": "Search 2.1",
+            "hport": 9120, "tport": 10120
+        },
+        "B0.2": {
+            "type": "builder", "description": "Builder 0.2",
+            "hport": 9200, "tport": 10200
+        },
+        "S1.2": {
+            "type": "search", "description": "Search 1.2",
+            "hport": 9210, "tport": 10210
+        },
+        "S2.2": {
+            "type": "search", "description": "Search 2.2",
+            "hport": 9220, "tport": 10220
+        }
+    },
+
+    "common": {
+        "host": "127.0.0.1"
+    },
+
+    "topology": {
+        "transaction": {
+            "A1": {},
+            "B0.1": [
+                "S1.1",
+                "S2.1"
+            ],
+            "B0.2": [
+                "S1.2",
+                "S2.2"
+            ]
+        },
+        "dispatch": {
+            "TD": [
+                { "channels": 32, "priority": 1,
+                  "partitions": [ "S1.1", "S1.2" ]
+                },
+                { "channels": 32, "priority": 1,
+                  "partitions": [ "S2.1", "S2.2" ]
+                },
+                { "channels": 2, "priority": 20,
+                  "partitions": [ "B0.1", "B0.2" ],
+                  "primary": 1
+                }
+            ]
+        }
+    },
+
+    "graphs": ["g1"]
+}
+----
+
+[[service_example_python_service]]
+=== Service Example Python Program
+
+The Python service implementation code below should be placed in a file named `exampleservice.py` in your demo `service` package directory.
+
+----
+demo/
+├─ service/
+│  ├─ exampleservice.py
+----
+
+.service/exampleservice.py
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import pyvgx
+import sys
+import time
+
+
+def LocalSamplePlugin( request:PluginRequest ):
+    """
+    Hello world plugin
+    """
+    response = PluginResponse()
+    msg = "Hello, the current time is: {}".format( time.ctime() )
+    response.Append( msg )
+    return response
+
+
+
+def GetPluginDefinitions():
+    """
+    Service endpoint definitions
+    """
+    return [
+      { 
+        "name"   : "search",         # /vgx/plugin/search
+        "package": __package__,      # 'service'
+        "module" : ".exampleplugin", # exampleplugin.py
+        "engine" : "Search",         # name of plugin function
+        "pre"    : None,             # no pre-processor
+        "post"   : None,             # no post-processor
+        "graph"  : "*"               # use 'g1' defined in vgx.cf
+      },
+      { 
+        "name"   : "add",            # /vgx/plugin/add
+        "package": __package__,      # 'service'
+        "module" : ".exampleplugin", # exampleplugin.py
+        "engine" : "Add",            # name of plugin function
+        "pre"    : "PreAdd",         # name of pre-processor
+        "post"   : None,             # no post-processor
+        "graph"  : "*"               # use 'g1' defined in vgx.cf
+      },
+      {
+        "name"   : "hello",          # /vgx/plugin/hello
+        "engine" : LocalSamplePlugin
+      }
+    ]
+
+
+def AdminInit():
+    """
+    Finalize startup of all instances
+    """
+    t0 = time.time()
+    expected_ids = set(
+      pyvgx.Descriptor( "vgx.cf" ).instances.keys()
+    )
+    while time.time() - t0 < 30:
+        try:
+            S = pyvgx.VGXAdmin.Run(
+                arguments=[ '--status', '*' ],
+                address="127.0.0.1:9001",
+                print_to_stdout=False,
+                default_descriptor_filename="vgx.cf"
+            )
+            ids = set( [x.split()[0] for x in S[0]['trace'] 
+                        if x.split()[1] == '0d']
+            )
+            assert ids == expected_ids
+            R = pyvgx.VGXAdmin.Run(
+                arguments=[ '--attach', 'B*',
+                            '--servicein', 'S*'
+                ],
+                address="127.0.0.1:9001",
+                print_to_stdout=False,
+                default_descriptor_filename="vgx.cf"
+            )
+            for r in R[1:]:
+                A = ['attached', 'service_in']
+                assert r[1]['action'] in A
+        except:
+            time.sleep(1)
+
+
+
+def RunService( instance_id ):
+    """
+    Run VGX Server instance
+    """
+    # Initialize core library to enable instance startup
+    pyvgx.initadmin()
+
+    # Service endpoint definitions
+    plugins = GetPluginDefinitions()
+
+    # VGX System descriptor
+    descriptor = pyvgx.VGXInstance.GetDescriptor( "vgx.cf" )
+
+    # Start VGX instance
+    instance = pyvgx.VGXInstance.StartInstance(
+        id         = instance_id,
+        descriptor = descriptor,
+        basedir    = "demoservice",
+        plugins    = plugins
+    )
+
+    # Finalize startup
+    if instance.type == "admin":
+        AdminInit()
+
+    # Run until SIGINT
+    pyvgx.system.RunServer( name=instance.description )
+
+
+
+if __name__ == "__main__":
+    RunService( sys.argv[1] )
+----
+
+
+[[service_example_plugin_code]]
+=== Service Example Plugin Code
+
+The plugin implementation code below should be placed in a file named `exampleplugin.py` in your demo `service` package directory.
+
+----
+demo/
+├─ service/
+│  ├─ exampleplugin.py
+----
+
+// cspell:ignore exampleplugin
+.service/exampleplugin.py
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import random
+import time
+    
+
+def Search( request:PluginRequest,
+            graph:Graph,
+            name:str,
+            hits:int=10,
+            sortby:str="val",
+            sortdir:str="desc",
+            fields:int=F_AARC|F_RANK ) -> PluginResponse:
+    """
+    Engine plugin example: Search
+    """
+    root = system.Root()
+    if sortdir == "desc":
+        d = S_DESC
+    else:
+        d = S_ASC
+
+    if sortby == "val":
+        pr = PluginResponse( maxhits=hits, sortby=S_VAL|d )
+        sf = F_VAL
+        fn = "arc"
+        fn2 = "value"
+    elif sortby == "id":
+        pr = PluginResponse( maxhits=hits, sortby=S_ID|d )
+        sf = F_ID
+        fn = "id"
+    elif sortby == "deg":
+        pr = PluginResponse( maxhits=hits, sortby=S_DEG|d )
+        sf = F_DEG
+        fn = "degree"
+    else:
+        pr = PluginResponse( maxhits=hits, sortby=S_NONE )
+        sf = 0
+        fn = None
+
+    try:
+        result = graph.Neighborhood(
+            id      = name,
+            arc     = D_ANY,
+            hits    = pr.maxhits,
+            sortby  = pr.sortby,
+            fields  = fields|sf,
+            result  = R_DICT,
+            timeout = 1000
+        )
+        pre_message = request.get('pre-message')
+        for r in result:
+            rv = r.get(fn)
+            if type(rv) is dict:
+                rv = rv.get(fn2)
+            r['pre'] = pre_message
+            r['this'] = root
+            pr.Append( rv, r )
+    except KeyError:
+        return pr
+    except Exception as err:
+        pr.message = repr(err)
+        print(err)
+    return pr
+
+
+
+def PreAdd( request:PluginRequest, graph:Graph ) -> PluginRequest:
+    """
+    Pre-processor plugin example: PreAdd
+    """
+    # Always route this request to the primary row
+    request.primary = 1
+    return request
+
+
+
+def Add( request:PluginRequest, 
+         graph:Graph,
+         N:int=10000,
+         count:int=500,
+         sleep:int=0 ) -> PluginResponse:
+    """
+    Engine plugin example: Add
+    """
+    # Add random data
+    response = PluginResponse()
+    if count >= 0:
+        for i in range(count):
+            a = random.randint(1, N)
+            while True:
+                b = random.randint(1, N)
+                if a != b:
+                    break
+            r = random.random()
+            A = None
+            B = None
+            try:
+                graph.CreateVertex( str(a) )
+                graph.CreateVertex( str(b) )
+                A, B = graph.OpenVertices(
+                  [str(a), str(b)],
+                  timeout=100
+                )
+                graph.Connect( A, ("to", M_FLT, r), B )
+            finally:
+                if A is not None:
+                    A.Close()
+                if B is not None:
+                    B.Close()
+            if sleep > 0:
+                time.sleep( sleep/1000 )
+        response.Append( "Added {}".format(count) )
+    else:
+        count = -count
+        c0 = graph.Order()
+        for i in range(count):
+            if graph.Order() == 0:
+                break
+            x = graph.GetVertexID()
+            graph.Disconnect( x, timeout=2000 )
+            graph.DeleteVertex( x, timeout=2000 )
+            if sleep > 0:
+                time.sleep( sleep/1000 )
+        c1 = graph.Order()
+        response.Append( "Deleted {}".format( c0-c1 ) )
+    return response
+----
+
+[[service_example_start_instances]]
+=== Service Example Start Instances
+
+In a terminal, navigate to your demo directory and run the commands below to start all system instances.
+
+----
+demo/
+├─ run.cmd
+├─ run.sh
+----
+
+
+.Script (run.cmd) to start all instances (Windows)
+[.copyable]
+[source, shell]
+----
+for %%i in (A1 TD B0.1 B0.2 S1.1 S1.2 S2.1 S2.2) do (
+    start "" /MIN python -m service.exampleservice %%i
+)
+
+----
+
+.Script (run.sh) to start all instances (Unix)
+[.copyable]
+[source, shell]
+----
+for i in A1 TD B0.1 B0.2 S1.1 S1.2 S2.1 S2.2; do
+    python -m service.exampleservice "$i" > /dev/null 2>&1 &
+done
+
+----
+
+
+[[service_example_verify]]
+=== Service Example Verify System Overview
+
+In a browser, navigate to http://127.0.0.1:9001/system to make sure all instances are running properly. Look for the green `OK` in the Status column.
+
+You can also run the following command in a terminal to show status of each component:
+
+[.copyable]
+[source, shell]
+----
+vgxadmin --status "*"
+----
+
+[[service_example_feed_request]]
+=== Service Example Load Data
+
+The plugin endpoint `/vgx/plugin/add` can be used to populate the system with randomly generated data. Run the command below to generate a random graph. (If you don't have curl installed, you can send the same request from a web browser.)
+
+.Send a feed request
+[.copyable]
+[source, shell]
+----
+curl "http://127.0.0.1:9990/vgx/plugin/add?N=250000&count=3000000"
+----
+
+[[service_example_search_request]]
+=== Service Example Search Request
+
+The plugin endpoint `/vgx/plugin/search` can be used to query the graph. Run the command below to test the search plugin.
+
+.Send a search request
+[.copyable]
+[source, shell]
+----
+curl "http://127.0.0.1:9990/vgx/plugin/search?name=12345"
+----
+
+[[service_example_system_overview]]
+=== Service Example System Overview
+
+Open http://127.0.0.1:9001/system in a browser. You should see the System Overview dashboard.
+
+.http://127.0.0.1/system
+image::ui_system.png[ui_system]
+
+[[service_example_shutdown]]
+=== Service Example Shutdown
+
+Run the command below to stop all service instances.
+
+.Shutdown
+[.copyable]
+[source, shell]
+----
+vgxadmin --stop "*" --confirm
+----
+
+___
+
+[.float-group]
+--
+[.left]
+<<sysadmin.adoc#, icon:arrow-circle-left[size=2x, title="System Administration"]>>
+<<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<service.adoc#, icon:arrow-circle-right[size=2x, title="VGX Server"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+

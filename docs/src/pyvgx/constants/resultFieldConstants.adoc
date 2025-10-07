@@ -1,0 +1,447 @@
+[[resultfieldconstants]]
+= Result Field Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<resultListEntryConstants.adoc#, icon:arrow-circle-right[title="Result List Entry Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Summary
+
+These constants are used with the `fields=` parameter to control which fields are included in search results.
+
+Multiple fields can be specified by combining the constants with the bitwise-OR operator (|).
+
+[source, python]
+----
+fields = F_<a> | F_<b> | ...
+----
+
+Since multiple fields are specified as a single integer is it not possible to control the
+order of fields returned. The order of fields returned is fixed according to Display Order in the table below
+when using <<resultListEntryConstants.adoc#resultlistentryconstants, result entry formats>> `R_STR` or
+`R_LIST`. (Format `R_DICT` returns an unordered dictionary.)
+
+TIP: As an alternative to `fields=`, some methods offer a <<../evaluator/selectEvaluator.adoc#select, `select=` parameter>> which makes it possible
+to specify fields to be returned as _properties_. Returned fields will then appear in the specified
+order when using `R_STR` or `R_LIST` result entry formats.
+
+[[resultfieldconstants_order]]
+[cols="2,2,6"]
+|===
+|Constant |Display Order |Description
+
+|<<F_ANCHOR>>
+|1
+| Identifier of the initial vertex in a neighborhood traversal
+
+|<<F_ANCHOR_OBID>>
+|2
+| Internal object identifier of the initial vertex in a neighborhood traversal
+
+|<<F_ARCDIR>>
+|3
+| Direction of the arc between two neighbor vertices
+
+|<<F_REL>>
+|4
+| Relationship type for the arc between two neighbor vertices
+
+|<<F_MOD>>
+|5
+| Relationship modifier for the arc between two neighbor vertices
+
+|<<F_VAL>>
+|6
+| Relationship value of the arc between two neighbor vertices
+
+|<<F_ID>>
+|7
+| Vertex identifier
+
+|<<F_OBID>>
+|8
+| Internal object identifier of vertex
+
+|<<F_TYPE>>
+|9
+| Vertex type
+
+|<<F_DEG>>
+|10
+| Vertex degree
+
+|<<F_IDEG>>
+|11
+| Vertex indegree
+
+|<<F_ODEG>>
+|12
+| Vertex outdegree
+
+|<<F_VEC>>
+|13
+| Vertex <<../vertex/vertexMembers.adoc#vertexvector, vector>>
+
+|<<F_PROP>>
+|14
+| Vertex properties
+
+|<<F_RANK>>
+|15
+| Vertex <<../evaluator/evaluator.adoc#quickrank, rank score>> as computed by dynamic ranking formula
+
+|<<F_SIM>>
+|16
+| Vertex <<../vertex/vertexMembers.adoc#vertexvector, vector>> similarity to the probe vector
+
+|<<F_HAM>>
+|17
+| Vertex <<../vertex/vertexMembers.adoc#vertexvector, vector>> fingerprint hamming distance the the probe vector fingerprint
+
+|<<F_TMC>>
+|18
+| Vertex creation timestamp
+
+|<<F_TMM>>
+|19
+| Vertex modification timestamp
+
+|<<F_TMX>>
+|20
+| Vertex expiration timestamp
+
+|<<F_DESCR>>
+|21
+| Vertex <<../vertex/vertexMembers.adoc#vertexdescriptor, descriptor>> (for debugging)
+
+|<<F_ADDR>>
+|22
+| Vertex memory address (for debugging)
+
+|<<F_HANDLE>>
+|23
+| Vertex memory allocator handle (for debugging)
+
+|<<F_RAW>>
+|24
+| Binary dump of internal vertex data structure (for debugging)
+|===
+
+Shorthands for common combinations are also defined.
+
+[cols="2,8"]
+|===
+|Combined Constant |Value
+
+|<<F_NAMES>>
+|`F_ANCHOR + F_ANCHOR_OBID + F_ID + F_OBID + F_TYPE`
+
+|<<F_PRED>>
+|`F_ARCDIR + F_REL + F_MOD + F_VAL`
+
+|<<F_ARC>>
+|`F_PRED + F_ID`
+
+|<<F_AARC>>
+|`F_ANCHOR + F_ARC`
+
+|<<F_DEGREES>>
+|`F_DEG + F_IDEG + F_ODEG`
+
+|<<F_PROPS>>
+|`F_VEC + F_PROP`
+
+|<<F_RLV>>
+|`F_RANK + F_SIM + F_HAM`
+
+|<<F_TSTAMP>>
+|`F_TMC + F_TMM + F_TMX`
+
+|<<F_DETAILS>>
+|`F_DESCR + F_ADDR + F_HANDLE + F_RAW`
+
+|<<F_ALL>>
+|`F_NAMES + F_PRED + F_DEGREES + F_PROPS + F_RLV + F_TSTAMP + F_DETAILS`
+
+|<<F_NONE>>
+|`0`
+
+|===
+
+== Field Codes
+
+[[F_ANCHOR]]
+=== pyvgx.F_ANCHOR
+
+`pyvgx.F_ANCHOR = 1`
+
+Identifier string of the initial vertex in a neighborhood traversal.
+
+// cspell:ignore OBID
+[[F_ANCHOR_OBID]]
+=== pyvgx.F_ANCHOR_OBID
+
+`pyvgx.F_ANCHOR_OBID = 2`
+
+Internal object identifier of the initial vertex in a neighborhood traversal.
+
+// cspell:ignore ARCDIR
+[[F_ARCDIR]]
+=== pyvgx.F_ARCDIR
+
+`pyvgx.F_ARCDIR = 256`
+
+Direction of the arc between two neighbor vertices.
+
+[[F_REL]]
+=== pyvgx.F_REL
+
+`pyvgx.F_REL = 512`
+
+Relationship type for the arc between two neighbor vertices.
+
+[[F_MOD]]
+=== pyvgx.F_MOD
+
+`pyvgx.F_MOD = 1024`
+
+Relationship modifier for the arc between two neighbor vertices.
+
+[[F_VAL]]
+=== pyvgx.F_VAL
+
+`pyvgx.F_VAL = 2048`
+
+Relationship value of the arc between two neighbor vertices.
+
+[[F_ID]]
+=== pyvgx.F_ID
+
+`pyvgx.F_ID = 4`
+
+Vertex identifier string.
+
+[[F_OBID]]
+=== pyvgx.F_OBID
+
+`pyvgx.F_OBID = 8`
+
+Internal object identifier of vertex.
+
+[[F_TYPE]]
+=== pyvgx.F_TYPE
+
+`pyvgx.F_TYPE = 16`
+
+Vertex type string.
+
+[[F_DEG]]
+=== pyvgx.F_DEG
+
+`pyvgx.F_DEG = 32`
+
+Vertex degree.
+
+// cspell:ignore IDEG
+[[F_IDEG]]
+=== pyvgx.F_IDEG
+
+`pyvgx.F_IDEG = 64`
+
+Vertex indegree.
+
+// cspell:ignore ODEG
+[[F_ODEG]]
+=== pyvgx.F_ODEG
+
+`pyvgx.F_ODEG = 128`
+
+Vertex outdegree.
+
+[[F_VEC]]
+=== pyvgx.F_VEC
+
+`pyvgx.F_VEC = 4096`
+
+Vertex <<../vertex/vertexMembers.adoc#vertexvector, vector>>.
+
+[[F_PROP]]
+=== pyvgx.F_PROP
+
+`pyvgx.F_PROP = 8192`
+
+Vertex properties.
+
+[[F_RANK]]
+=== pyvgx.F_RANK
+
+`pyvgx.F_RANK = 65536`
+
+Dynamic <<../evaluator/evaluator.adoc#quickrank, rank score>> computed according to formula given in `rank=` parameter.
+
+[[F_SIM]]
+=== pyvgx.F_SIM
+
+`pyvgx.F_SIM = 131072`
+
+Vertex vector similarity to the probe vector
+
+[[F_HAM]]
+=== pyvgx.F_HAM
+
+`pyvgx.F_HAM = 262144`
+
+Vertex vector fingerprint hamming distance the the probe vector fingerprint.
+
+[[F_TMC]]
+=== pyvgx.F_TMC
+
+`pyvgx.F_TMC = 1048576`
+
+Vertex creation timestamp.
+
+[[F_TMM]]
+=== pyvgx.F_TMM
+
+`pyvgx.F_TMM = 2097152`
+
+Vertex modification timestamp.
+
+[[F_TMX]]
+=== pyvgx.F_TMX
+
+`pyvgx.F_TMX = 4194304`
+
+Vertex expiration timestamp.
+
+// cspell:ignore DESCR
+[[F_DESCR]]
+=== pyvgx.F_DESCR
+
+`pyvgx.F_DESCR = 16777216`
+
+Vertex descriptor.
+
+[[F_ADDR]]
+=== pyvgx.F_ADDR
+
+`pyvgx.F_ADDR = 33554432`
+
+Vertex memory address.
+
+[[F_HANDLE]]
+=== pyvgx.F_HANDLE
+
+`pyvgx.F_HANDLE = 67108864`
+
+Vertex memory allocator handle.
+
+[[F_RAW]]
+=== pyvgx.F_RAW
+
+`pyvgx.F_RAW = 134217728`
+
+Binary dump of internal vertex data.
+
+[[F_NAMES]]
+=== pyvgx.F_NAMES
+
+`pyvgx.F_NAMES = F_ANCHOR + F_ANCHOR_OBID + F_ID + F_OBID + F_TYPE = 31`
+
+Vertex identifiers and type.
+
+[[F_PRED]]
+=== pyvgx.F_PRED
+
+`pyvgx.F_PRED = F_ARCDIR + F_REL + F_MOD + F_VAL = 3840`
+
+Arc fields.
+
+[[F_ARC]]
+=== pyvgx.F_ARC
+
+`pyvgx.F_ARC = F_PRED + F_ID = 3844`
+
+Arc fields plus terminal vertex identifier.
+
+// cspell:ignore AARC
+[[F_AARC]]
+=== pyvgx.F_AARC
+
+`pyvgx.F_AARC = F_ANCHOR + F_ARC = 3845`
+
+Arc fields plus initial and terminal identifiers.
+
+[[F_DEGREES]]
+=== pyvgx.F_DEGREES
+
+`pyvgx.F_DEGREES = F_DEG + F_IDEG + F_ODEG = 224`
+
+Vertex degrees.
+
+[[F_PROPS]]
+=== pyvgx.F_PROPS
+
+`pyvgx.F_PROPS = F_VEC + F_PROP = 12288`
+
+Vertex properties and vector.
+
+[[F_RLV]]
+=== pyvgx.F_RLV
+
+`pyvgx.F_RLV = F_SIM + F_HAM = 393216`
+
+Vertex similarity measures.
+
+// cspell:ignore TSTAMP
+[[F_TSTAMP]]
+=== pyvgx.F_TSTAMP
+
+`pyvgx.F_TSTAMP = F_TMC + F_TMM + F_TMX = 7340032`
+
+Vertex timestamps.
+
+[[F_DETAILS]]
+=== pyvgx.F_DETAILS
+
+`pyvgx.F_DETAILS = F_DESCR + F_ADDR + F_HANDLE + F_RAW = 251658240`
+
+Internal vertex details.
+
+[[F_ALL]]
+=== pyvgx.F_ALL
+
+`pyvgx.F_ALL = F_NAMES + F_PRED + F_DEGREES + F_PROPS + F_RLV + F_TSTAMP + F_DETAILS = 259407871`
+
+All fields.
+
+[[F_NONE]]
+=== pyvgx.F_NONE
+
+`pyvgx.F_NONE = 0`
+
+No fields.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=collectConstants.adoc#, title="Collect Constants"]
+<<collectConstants.adoc#, icon:arrow-circle-left[size=2x, title="Collect Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=resultListEntryConstants.adoc#, title="Result List Entry Constants"]
+<<resultListEntryConstants.adoc#, icon:arrow-circle-right[size=2x, title="Result List Entry Constants"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

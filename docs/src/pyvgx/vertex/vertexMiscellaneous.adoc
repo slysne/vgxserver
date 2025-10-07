@@ -1,0 +1,274 @@
+[[vertexmiscellaneous]]
+= Vertex Miscellaneous Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexFilter.adoc#, icon:arrow-circle-right[title="Vertex Condition Syntax"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex Miscellaneous Methods |Description
+
+|<<vertexsettype>>
+|Set or change the vertex type
+
+|<<vertexgettype>>
+|Get the vertex type
+
+|<<vertexgettypeenum>>
+|Get the vertex type enumeration code
+
+|<<vertexcommit>>
+|Commit all vertex modifications
+
+|<<vertexisvirtual>>
+|Check if vertex is virtual
+
+|<<vertexasdict>>
+|Return a dictionary representation of the vertex
+
+|<<vertexdescriptor>>
+|Return a human readable formatted string representing the pyvgx.Vertex.descriptor
+|===
+
+[[vertexsettype]]
+== pyvgx.Vertex.SetType()
+
+Set or change the vertex type.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.SetType( type )
+----
+
+=== Parameters
+
+`_type_`: Vertex type (str) or None
+
+// cspell:ignore typeless
+=== Remarks
+
+This method changes the vertex type. If _type_ is None or empty string the vertex becomes typeless.
+
+=== Return Value
+
+None
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "g1" )
+A = g.NewVertex( "A" )            # A is typeless
+B = g.NewVertex( "B", "node" )    # B type = "node"
+A.SetType( "thing" )              # A type now = "thing"
+B.SetType( None )                 # B now typeless
+----
+
+[[vertexgettype]]
+== pyvgx.Vertex.GetType()
+
+Return the vertex type.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetType()
+----
+
+=== Return Value
+
+Return the type name set at vertex creation or the most recent call to <<vertexsettype, `SetType()`>>. The reserved type name `"__vertex__"` is returned for typeless vertices.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "g1" )
+A = g.NewVertex( "A" )            # A is typeless
+B = g.NewVertex( "B", "node" )    # B type = "node"
+A.GetType()                       # -> "__vertex__"
+B.GetType()                       # -> "node"
+----
+
+[[vertexgettypeenum]]
+== pyvgx.Vertex.GetTypeEnum()
+
+Return the vertex type enumeration code.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetTypeEnum()
+----
+
+=== Return Value
+
+Return the type enumeration (int) code representing the vertex type. 
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "g1" )
+A = g.NewVertex( "A" )            # A is typeless
+B = g.NewVertex( "B", "node" )    # B type = "node"
+A.GetTypeEnum()                   # -> 17
+B.GetTypeEnum()                   # -> 132
+----
+
+[[vertexcommit]]
+== pyvgx.Vertex.Commit()
+
+Commit all vertex modifications and mark vertex object as dirty. This has the same effect as <<../graph/graphVertex.adoc#graphclosevertex, CloseVertex()>> but without releasing the lock. Returns the graph operation id.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Commit()
+----
+
+=== Return Value
+
+Graph operation id.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "g1" )
+A = g.NewVertex( "A" )
+A.Commit()          # -> 10000000000000002
+A.Writable()        # True
+A['x'] = 123
+A.Commit()          # -> 10000000000000003
+g.CloseVertex( A )  # True
+----
+
+[[vertexisvirtual]]
+== pyvgx.Vertex.IsVirtual()
+
+Return `True` if vertex is virtual, otherwise `False`.
+
+[[vertexasdict]]
+== pyvgx.Vertex.AsDict()
+
+Return a dictionary representation of the vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.AsDict()
+----
+
+=== Return Value
+
+A Python dictionary of the vertex attributes, flags and states.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+
+from pyvgx import *
+import pprint
+A = g.NewVertex( "Alice", type="person" )
+g.Connect( "Alice", "knows", "Bob" )
+A["occupation"] = "Software Engineer"
+A["age"] = 29
+A.SetVector( [("java",1.2), ("c++",0.89), ("python",0.73)] )
+pprint.pprint( A.AsDict() )
+# Prints:
+# {'allocator': {'aidx': 2,
+#                'bidx': 0,
+#                'flags.invl': 0,
+#                'flags.ovsz': 0,
+#                'offset': 0,
+#                'refc': 4,
+#                'size': 1},
+#  'created-time': 1504225659,
+#  'degree': 1,
+#  'descriptor': 122513461082088878,
+#  'expires-time': 4294967295,
+#  'id': 'Alice',
+#  'indegree': 0,
+#  'internalid': '10384b2187cd857b78e02fdc859c4864',
+#  'man': 'REAL',
+#  'modified-time': 1504225659,
+#  'outdegree': 1,
+#  'properties': {'age': 29, 'occupation': 'Software Engineer'},
+#  'type': 'person',
+#  'vector': [('java', 1.125), ('c++', 0.875), ('python', 0.6875)]}
+g.CloseVertex( A )
+----
+
+[[vertexdescriptor]]
+== pyvgx.Vertex.Descriptor()
+
+Return a human readable formatted string representing the <<vertexMembers.adoc#vertexdescriptor, pyvgx.Vertex.descriptor>>.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Descriptor()
+----
+
+=== Return Value
+
+The descriptor is returned as a string:
+----
+[semaphore.count]   [type]   [ [<MAN> <PRE>]  [<YIB> <INY> <WRQ> <RWL> <LCK>] ]   [ [<IN> <OUT>] [<CTR> <VEC>] [<FLD>] [0] ]   [writer.threadid]
+----
+
+Please see <<vertexMembers.adoc#vertexdescriptor, pyvgx.Vertex.descriptor>> for a detailed explanation of the different values.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+V = g.NewVertex( "x", type="node" )
+V.Descriptor() # '[1] [node] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [2356]'
+g.CloseVertex( V )
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexTTL.adoc#, title="Vertex TTL Methods"]
+<<vertexTTL.adoc#, icon:arrow-circle-left[size=2x, title="Vertex TTL Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexFilter.adoc#, title="Vertex Condition Syntax"]
+<<vertexFilter.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Condition Syntax"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,222 @@
+/******************************************************************************
+ * 
+ * VGX Server
+ * Distributed engine for plugin-based graph and vector search
+ * 
+ * Module:  vgx
+ * File:    vgx.css
+ * Author:  Stian Lysne slysne.dev@gmail.com
+ * 
+ * Copyright © 2025 Rakuten, Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+ *****************************************************************************/
+
+* {
+  box-sizing: border-box;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: rgba( 255, 255, 255, 0.7 ) url('loader.gif') 88px 400px no-repeat;
+}
+
+
+#busymsg {
+  position: relative;
+  top: 455px;
+  left: 206px;
+  font-size: 200%;
+}
+
+.disable_select {
+  user-select: none; /* supported by Chrome and Opera */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: -moz-none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+}
+
+.enable_select {
+  user-select: all; /* supported by Chrome and Opera */
+  -webkit-user-select: all; /* Safari */
+  -khtml-user-select: all; /* Konqueror HTML */
+  -moz-user-select: all; /* Firefox */
+  -ms-user-select: all; /* Internet Explorer/Edge */
+  cursor: copy;
+}
+
+#logo {
+  padding-bottom: 8px;
+  padding-right: 20px;
+  padding-left: 0px;
+}
+
+#logoimg {
+  height: 60px;
+  cursor: pointer;
+  transition: transform 5s;
+}
+
+#logoimg:hover {
+  transform: scale(1.05) translateX(4px);
+}
+
+#logoimg:active {
+  transform: scale(0) translateX(0px);
+}
+
+
+.container {
+  overflow: hidden;
+}
+
+.container > div {
+  margin: 0px 40px 20px 0;
+}
+
+body {
+  display: none;
+  margin: 12px;
+  font-family: Cambria;
+  overflow: auto;
+  opacity: 0.0;
+  transition: opacity 250ms ease-in, transform 125ms ease-in;
+}
+
+body.ready {
+  opacity: 1.0;
+}
+
+body.leavepage {
+  opacity: 0.0;
+}
+
+td {
+  font-size: 100%;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#commonHeaderTable {
+  font-size: 120%;
+  white-space: nowrap;
+}
+
+#commonFooterDiv {
+  font-size: 70%;
+  color: #A0A0A0;
+}
+
+.highlight .highlightable {
+  font-weight: bold;
+  background-color: #ffffff;
+  border-style: ridge;
+}
+
+.highlight td {
+  background-color: #F0F0F0;
+}
+
+.hoverlight td {
+  background-color: #F8F8F8;
+}
+
+button {
+  font-family: Cambria;
+  font-weight: bold;
+  background: #E0E0E0;
+  border-radius: 5px;
+  border-width: 2px;
+  border-style: groove;
+  border-color: #F8F8F8;
+}
+
+button:hover {
+  background: #F0F0F0;
+}
+
+button:active {
+  background: #E0E0E0;
+  border: inset 2px;
+}
+
+select {
+  font-family: Consolas, monospace;
+  border: solid;
+  border-color: #A0A0A0;
+  border-width: 1px;
+  border-radius: 3px;
+  background: #F0F0F0;
+  padding-left: 2px;
+  height: 22px;
+}
+
+
+input {
+  font-family: Cambria;
+  border: solid;
+  border-color: #A0A0A0;
+  border-width: 1px;
+  border-radius: 3px;
+  padding-left: 5px;
+}
+
+textarea {
+  border: solid;
+  border-color: #A0A0A0;
+  border-width: 1px;
+  border-radius: 3px;
+  padding-left: 5px;
+}
+
+#messageArea {
+  /*font-family: cambria;*/
+  font-size: 90%;
+  color: #303030;
+  padding-top: 25px;
+  max-width: 800px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.success {
+  color: #007050;
+}
+
+.error {
+  color: #FF2000;
+}
+
+#errortext {
+  font-size: 80%;
+  /*font-family: cambria;*/
+  color: #FF2000;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}

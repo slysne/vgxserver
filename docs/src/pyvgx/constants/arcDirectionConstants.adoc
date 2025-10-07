@@ -1,0 +1,88 @@
+[[arcdirectionconstants]]
+= Arc Direction Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<arcModifierConstants.adoc#, icon:arrow-circle-right[title="Arc Modifier Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+These constants are used to specify the search direction for neighborhood queries.
+
+|===
+|Constant |Description |Example
+
+|<<D_ANY>>
+|No direction filter for arcs
+|Who is "x" connected to?
+
+Neighborhood( "x", arc=("connected", D_ANY) )
+
+|<<D_IN>>
+|Require arc to be inbound (inarc)
+|Who likes "x"?
+
+Neighborhood( "x", arc=("likes", D_IN) )
+
+|<<D_OUT>>
+|Require arc to be outbound (outarc)
+|What did "x" purchase?
+
+Neighborhood( "x", arc=("purchase", D_OUT) )
+
+|<<D_BOTH>>
+|Require both inbound and outbound arcs
+|Who did "x" call who also called "x"?
+
+Neighborhood( "x", arc("called", D_BOTH) )
+|===
+
+[[D_ANY]]
+== pyvgx.D_ANY
+
+`*pyvgx.D_ANY = 0*`
+
+Arc filter direction wildcard.
+
+[[D_IN]]
+== pyvgx.D_IN
+
+`*pyvgx.D_IN = 1*`
+
+In arc filter, require arc direction to be inbound.
+
+[[D_OUT]]
+== pyvgx.D_OUT
+
+`*pyvgx.D_OUT = 2*`
+
+In arc filter, require arc direction to be outbound.
+
+[[D_BOTH]]
+== pyvgx.D_BOTH
+
+`*pyvgx.D_BOTH = 3*`
+
+In arc filter, require the arc direction to be bi-directional, i.e. an arc matching all other filter criteria must exist in both directions between two vertices for the arc filter to match.
+
+___
+
+[.float-group]
+--
+[.left]
+//<<opcodeConstants.adoc#, icon:arrow-circle-left[size=2x, title="OPcode Constants"]>>
+<<opcodeConstants.adoc#, icon:arrow-circle-left[size=2x, title="Opcode Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=arcModifierConstants.adoc#, title="Arc Modifier Constants"]
+<<arcModifierConstants.adoc#, icon:arrow-circle-right[size=2x, title="Arc Modifier Constants"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

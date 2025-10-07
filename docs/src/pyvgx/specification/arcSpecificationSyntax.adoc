@@ -1,0 +1,189 @@
+[[arcspecificationsyntax]]
+= Arc Syntax <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<timeout.adoc#, icon:arrow-circle-right[title="Timeout Specification"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Two Syntax Forms
+Arc syntax is common for all methods that take `arc=` arguments. There are two distinct syntax forms, one for arc <<arcinsertion,insertion>> and one for arc <<arcfilter,filters>>.
+
+[[arcinsertion]]
+== Arc Insertion
+
+Methods that create relationships between vertices accept a tuple of zero, one, two, or three elements in the `arc=` parameter.
+
+Inserting or modifying a relationship will always create an outbound arc from the _initial_ to the _terminal_ vertex.
+
+=== Arc Insertion Syntax
+
+[source, python]
+----
+<arc> ::= ( [ <relationship> [, <modifier> [, <value> ] ] ] )
+----
+
+=== Arc Elements
+
+|===
+|Parameter |Type |Default Value |Comment
+
+|<relationship>
+|<str>
+|"+++__related__+++"
+|Relationship type names are enumerated as integers internally in the graph, using a limited enumeration space. The <<../limits.adoc#vgxlimits, maximum number>> of unique relationship types allowed per graph instance is <<../limits.adoc#limits, 15616>>. An insertion attempt that exhausts the enumeration space will raise <<../exceptions/exceptions.adoc#EnumerationError, pyvgx.EnumerationError>>
+
+|<modifier>
+|<<../constants/arcModifierConstants.adoc#arcmodifierconstants, Arc Modifier>>
+|<<../constants/arcModifierConstants.adoc#M_STAT, pyvgx.M_STAT>>
+|Arc modifier constants are integer values. Although a method will perform the correct operation if the correct plain integer is used for the arc modifier, the method behavior is generally undefined if an invalid integer is passed.
+
+|<value>
+| <int>
+
+<float>
+|<modifier> dependent
+|The value type and range depend on the modifier.
+
+|===
+
+=== Shortcut Notation
+
+.Insert a fully unspecified arc pass None or the empty tuple ()
+[source, python]
+----
+arc = None
+arc = ()
+----
+
+.Insert an arc with unspecified relationship type, pass None for <relationship>
+[source, python]
+----
+arc = ( None, <modifier>, <value> )
+----
+
+=== Automatic Value Assignment
+
+.Create arc and set creation time to now (set once, cannot be changed)
+[source, python]
+----
+arc = ( <relationship>, pyvgx.M_TMC )
+----
+
+.Create/modify arc and update modification time to current time
+[source, python]
+----
+arc = ( <relationship>, pyvgx.M_TMM )
+----
+
+.Counter (integer value)
+[source, python]
+----
+# Increment arc value, or set it to <assign_value>
+arc = ( <relationship>, pyvgx.M_CNT[, <assign_value>] )
+----
+
+.Accumulator (float value)
+[source, python]
+----
+# Accumulate arc value, or set it to <assign_value>
+arc = ( <relationship>, pyvgx.M_ACC[, <assign_value>] )
+----
+
+[[arcfilter]]
+== Arc Filter
+
+Query methods that support the `arc=` parameter accept a filter tuple of zero, one, two, three or five elements. (Four-element tuples are not valid since <condition> also requires <value>.)
+
+The filter logic is inverted when wrapping the filter tuple within another tuple (False, filter).
+
+=== Arc Filter Syntax
+
+.positive (default) logic
+[source, python]
+----
+arcfilter ::= ( [ <relationship> [, <direction> [, <modifier> [, <condition>, <value> ] ] ] ] )
+----
+
+.inverse logic
+[source, python]
+----
+arcfilter ::= ( False, ( [ <relationship> [, <direction> [, <modifier> [, <condition>, <value> ] ] ] ] ) )
+----
+
+=== Arc Filter Elements
+
+|===
+|Parameter |Type |Default Value |Comment
+
+|<relationship>
+|<str>
+|None
+|To match any relationship type use `None` or `"&#42;"`.
+
+Wildcard syntax for partial string match is not supported.
+
+|<direction>
+|<<../constants/arcDirectionConstants.adoc#arcdirectionconstants, Arc Direction>>
+|Query method dependent
+|
+
+|<modifier>
+|<<../constants/arcModifierConstants.adoc#arcmodifierconstants, Arc Modifier>>
+|<<../constants/arcModifierConstants.adoc#M_ANY, pyvgx.M_ANY>>
+|
+
+|<condition>
+|<<../constants/valueConditionConstants.adoc#valueconditionconstants, Value Condition>>
+| -
+|Specifying a <condition> also requires <modifier> and <value> to be specified. The specified
+<modifier> cannot be <<../constants/arcModifierConstants.adoc#M_ANY, pyvgx.M_ANY>>.
+
+|<value>
+|<numeric>
+
+or
+
+( <numeric>, <numeric> )
+|-
+|Depending on the <condition> code this may either be a single numeric value _n_ or a 2-tuple (_a_, _b_).
+|===
+
+=== Shortcut Notation
+
+.Match any arc by specifying None or the empty tuple ()
+[source, python]
+----
+arc = None
+arc = ()
+----
+
+.Match any relationship by using None for <relationship>
+[source, python]
+----
+arc = ( None, <modifier>, ... )
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=timeout.adoc#, title="Timeout"]
+<<timeout.adoc#, icon:arrow-circle-left[size=2x, title="Timeout"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=timeout.adoc#, title="Timeout"]
+<<timeout.adoc#, icon:arrow-circle-right[size=2x, title="Timeout"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+

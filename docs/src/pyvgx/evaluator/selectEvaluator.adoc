@@ -1,0 +1,158 @@
+[[select]]
+= Select Evaluator <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<evaluator.adoc#, icon:arrow-circle-right[title="VGX Expression Language"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[selectstatement]]
+== Select Statement
+
+Some query methods have a `select=` parameter that allows result fields to be specified.
+
+=== Syntax
+
+[source, python]
+----
+select="<sel_1>; <sel_2>; ..."
+
+where <sel_n> ::= <vertex_property>
+                  |
+                  <vertex_property> ? <default>
+                  |
+                  .<attribute>
+                  |
+                  <label> : <expression>
+----
+
+Fields to be included in the result are specified as a semi-colon `;` separated list of _select items_ `<sel_n>`. A select item is either a vertex property, an attribute, or a labeled expression.
+
+Fields will appear as key-value pairs in the result according to the specified <<../constants/resultListEntryConstants.adoc#resultlistentryconstants, result format>>.
+
+[[selectproperty]]
+==== Vertex Property
+When the select item is the name of a vertex property the result field key is the property name and the result field value is the property value. A default property value may be specified by adding `?` followed by the default value.
+
+For example, `select="color; score ? 5.0; size"` will include fields 'color', 'score' and 'size' whose values are retrieved from the head vertex properties. The returned value for 'score' will be 5.0 if the property does not exist. The returned values for 'color' and 'size' will be `None` or `'null'` if they do not exist.
+
+[[selectattribute]]
+==== Attribute
+When the select item is a vertex attribute or arc attribute (starting with period `.`) the result field key is the attribute name (including the initial period) and the result field value is the attribute value.
+
+For example, `select=".id; .arc.value"` will include fields '.id' and '.arc.value' whose values are the head vertex identifier and next arc value, respectively.
+
+IMPORTANT: The select item is interpreted as an attribute reference only if it stars with a period `.`, otherwise it is interpreted as a vertex property. For instance, `select="next.id"` refers to a vertex head property named `next.id`, NOT the vertex identifier!
+
+[[selectlabel]]
+==== Labeled Expression
+When the select item is a labeled expression the result field key is the label and the result field value is the value produced by evaluating the expression.
+
+For example, `select="score : next['score'] / next.arc.value; name : next.id"` will include fields 'score' and 'name' whose values will be set to the results of their respective expressions.
+
+NOTE: When the select item is a labeled expression the "normal" syntax applies, e.g. `select="name=next.id"` references the head vertex identifier.
+
+[[selectmixed]]
+==== Mixed Select Items
+Any number of select items may be specified and their types can be mixed.
+
+For example, `select=".arc.value; score : next['score']/2; color; .id"` will include four fields in the result: 1) arc attribute '.arc.value', 2) labeled expression 'score', 3) head vertex property 'color', and 4) head vertex attribute '.id'. For ordered result formats (i.e. other than `R_DICT`) the field order of the select specification is preserved. The same field name may be specified multiple times and thus included multiple times in the result.
+
+[[selectresult]]
+=== Result Format
+
+Selected fields are included in the result according to the result format as summarized below. For each result format there are two possible ways to render the results, depending on whether the overall <<../constants/resultFieldConstants.adoc#resultfieldconstants, field specification>> includes only <<../constants/resultFieldConstants.adoc#F_PROP, pyvgx.F_PROP>> or more.
+
+.Result field rendering depends on result format and field specification
+[cols="3,6,7"]
+|===
+|Result Format |`*fields = F_PROP*` |`*fields = ... \| F_PROP \| ...*`
+
+|<<../constants/resultListEntryConstants.adoc#R_SIMPLE, pyvgx.R_SIMPLE>>
+|`{key:value,...}`
+|N/A
+
+|<<../constants/resultListEntryConstants.adoc#R_STR, pyvgx.R_STR>>
+|`'{ key:value, ... }'`
+|`'..., "properties": { key:value, ... }, ...'`
+
+|<<../constants/resultListEntryConstants.adoc#R_LIST, pyvgx.R_LIST>>
+|`([(key, value), ...],)`
+|`(..., [(key, value), ...], ...)`
+
+|<<../constants/resultListEntryConstants.adoc#R_DICT, pyvgx.R_DICT>>
+|`{'properties': {key:value, ...}}`
+|`{..., 'properties': {key:value, ...}, ...}`
+
+|===
+
+NOTE: If `select=` is used without specifying a result field, <<../constants/resultFieldConstants.adoc#F_PROP, `fields=F_PROP`>> is automatically assumed. If other result fields are explicitly specified, `F_PROP` will be automatically added if missing.
+
+[[selectremarks]]
+=== Remarks
+
+Using `select=` offers a comprehensive way of returning information from search results, beyond what is possible using `fields=` alone. Select is the only way to:
+
+* include vertex properties in the result
+* accompany values with their names
+* specify field order in the result
+* post-process or combine value(s) using formulas
+
+However, `select=` adds a small computational overhead compared to `fields=F_...`. If query latency is a concern it is recommended to use only `fields=` whenever possible.
+
+If a vertex property does not exist and a default value is not provided its value will be `None` or `'null'` in the result. Result format `R_STR` uses the JSON compatible `'null'`, the other formats use `None`.
+
+For `pyvgx.Graph.Neighborhood()` and `pyvgx.Graph.Arcs()` it is possible to reference all elements of the collected arcs, i.e. tail vertex, relationship, and head vertex. Note that the `prev*` references are not valid in the context of `select=` and if used will fall back to `vertex*` for vertex elements and `next*` for arc elements.
+
+For `pyvgx.Graph.Vertices()` only vertices are collected. Vertex references `vertex*`, `next*`, and `prev*` are equivalent and all refer to the collected vertex. Arc references such as `next.arc.type`  or  `prev.arc.value` are not valid in the context of a global vertex query.
+
+[[selectexample]]
+=== Example
+
+.Include selected and computed properties in result
+[source, python]
+----
+result = graph.Neighborhood(
+    "Alice",
+    select = "age; address; SCORE1 : .arc.value / (1 + log( next.odeg / next.ideg )); LABEL1 : hash( next.id )",
+    result = R_DICT
+)
+
+# result =
+#
+#  [ { 'properties': { 'LABEL1'  : 372502444862628893,
+#                      'SCORE1'  : -0.13440860215053763,
+#                      'address' : '123 Main St.',
+#                      'age'     : 33 } },
+#    { 'properties': { 'LABEL1'  : 372502444862621213,
+#                      'SCORE1'  : -0.09408602150537634,
+#                      'address' : '45 Summer St.',
+#                      'age'     : 28 } },
+#    { 'properties': { 'LABEL1'  : 372502444862626333,
+#                      'SCORE1'  : -0.12096774193548387,
+#                      'address' : '67 Winter St.',
+#                      'age'     : 29 } } ]
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=evaluator.adoc#, title="VGX Expression Language"]
+<<evaluator.adoc#, icon:arrow-circle-left[size=2x, title="VGX Expression Language"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=evaluator.adoc#, title="VGX Expression Language"]
+<<evaluator.adoc#, icon:arrow-circle-right[size=2x, title="VGX Expression Language"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

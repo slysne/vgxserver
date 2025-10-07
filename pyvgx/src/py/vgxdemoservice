@@ -1,0 +1,125 @@
+#!/bin/bash
+
+DEMOMODE=$1
+REL=`dirname $0`
+LOCATION=`realpath $REL`
+
+export PYTHONPATH=$PYTHONPATH:$LOCATION
+
+LOCALHOST="127.0.0.1"
+ADMIN="$LOCALHOST:9001"
+DISPATCH=""
+
+if [ -z "$DEMOMODE" ]; then
+    echo
+    echo "Usage:"
+    echo "`basename $0` <single|multi|stop>"
+    echo
+    exit 1
+fi
+
+if [ "$DEMOMODE" = "stop" ]; then
+    vgxadmin $ADMIN --stop '*' --confirm
+    exit 0
+fi
+
+vgxadmin $ADMIN > /dev/null 2>&1
+retcode=$?
+if [ $retcode -eq 0 ]; then
+    vgxadmin $ADMIN --status '*'
+    echo
+    echo "Service already running"
+    exit 1
+fi
+
+
+
+ntarget=0
+
+if [ "$DEMOMODE" = "single" ]; then
+    ntarget=1
+    DISPATCH="$LOCALHOST:9000"
+    nohup python3 -m vgxdemoservice --demo single --instanceid G1 > /dev/null 2>&1 &
+
+elif [ "$DEMOMODE" = "multi" ]; then
+    ntarget=6
+    DISPATCH="$LOCALHOST:9990"
+    nohup python3 -m vgxdemoservice --demo multi --instanceid A1 > /dev/null 2>&1 &
+    nohup python3 -m vgxdemoservice --demo multi --instanceid TD > /dev/null 2>&1 &
+    nohup python3 -m vgxdemoservice --demo multi --instanceid B0.1 > /dev/null 2>&1 &
+    nohup python3 -m vgxdemoservice --demo multi --instanceid B0.2 > /dev/null 2>&1 &
+    nohup python3 -m vgxdemoservice --demo multi --instanceid S1.1 > /dev/null 2>&1 &
+    nohup python3 -m vgxdemoservice --demo multi --instanceid S1.2 > /dev/null 2>&1 &
+else
+    echo "Invalid mode '${DEMOMODE}'"
+    exit 1
+fi
+
+echo
+echo -n "*** Starting ${ntarget} service instance(s)..."
+
+retry=0
+nrunning=0
+while [ $nrunning -ne $ntarget ] && [ $retry -lt 30 ]; do
+    retry=$(($retry+1))
+    vgxadmin $ADMIN > /dev/null 2>&1
+    retcode=$?
+    sleep 1
+    echo -n "."
+    if [ $retcode -ne 0 ]; then
+        continue
+    fi
+    nrunning=`vgxadmin $ADMIN --status '*' | grep $LOCALHOST | wc -l`
+    echo -n "${nrunning}"
+done
+echo
+
+vgxadmin $ADMIN > /dev/null 2>&1
+retcode=$?
+if [ $retcode -ne 0 ]; then
+    echo "*** One or more instances failed to start"
+    exit 1
+fi
+
+if [ "$DEMOMODE" = "multi" ]; then
+    echo "*** Attaching Builder instances"
+    echo
+    vgxadmin $ADMIN --attach 'B*'
+    echo
+fi
+
+echo "*** ADMIN"
+vgxadmin $ADMIN
+echo
+
+echo "*** SYSTEM"
+vgxadmin $ADMIN --status '*'
+echo
+
+echo "*** Adding sample data"
+vgxadmin $DISPATCH --endpoint "/vgx/plugin/add?count=50000"
+echo
+
+echo "*** Running sample search"
+vgxadmin $DISPATCH --endpoint "/vgx/plugin/search?name=1234&hits=3"
+echo
+echo "------------------------------------------------------------"
+echo
+echo "Sample code location: ${LOCATION}"
+echo
+echo "Show system status:"
+echo "vgxadmin $ADMIN --status @"
+echo
+echo "Display effective system descriptor:"
+echo "vgxadmin $ADMIN --show"
+echo
+echo "Write effective system descriptor to local file:"
+echo "vgxadmin $ADMIN --show > vgx.cf"
+echo
+
+
+
+
+
+
+

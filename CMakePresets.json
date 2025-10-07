@@ -1,0 +1,65 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 10
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "displayName": "Base",
+      "description": "Base configuration",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "inherits": "base",
+      "name": "release",
+      "displayName": "Release",
+      "description": "Build as Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "inherits": "base",
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Build as Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "inherits": "base",
+      "name": "relWithDebInfo",
+      "displayName": "RelWithDebInfo",
+      "description": "Build as RelWithDebInfo",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "jobs": 0
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "jobs": 0
+    },
+    {
+      "name": "relWithDebInfo",
+      "configurePreset": "relWithDebInfo",
+      "jobs": 0
+    }
+  ]
+}

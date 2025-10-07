@@ -1,0 +1,40 @@
+= Similarity <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[preface]]
+== Preface
+
+This section covers:
+
+* <<vector.adoc#pyvgxvector, pyvgx.Vector>>
+
+* <<similarityMembers.adoc#similaritymembers, pyvgx Similarity Members>>
+
+* <<similarityMethods.adoc#similaritymethods, pyvgx Similarity Methods>>
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=similarityMethods.adoc#, title="Similarity Methods"]
+<<similarityMethods.adoc#, icon:arrow-circle-left[size=2x, title="Similarity Methods"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=vector.adoc#, title="pyvgx.Vector"]
+<<vector.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx.Vector"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

@@ -1,0 +1,268 @@
+[[vertexaccess]]
+= Vertex Access Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexProperty.adoc#, icon:arrow-circle-right[title="Vertex Property Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex Access Methods |Description
+
+|<<vertexwritable>>
+|Check if a vertex is open in a writable state
+
+|<<vertexreadonly>>
+|Check if a vertex is open in readonly mode
+
+|<<vertexreadable>>
+|Check if a vertex is accessible
+
+|<<vertexclose>>
+|Release vertex access lock
+
+|<<vertexescalate>>
+|Promote vertex access from readonly to writable
+
+|<<vertexrelax>>
+|Relax vertex access from writable to readonly
+
+|===
+
+[[vertexwritable]]
+== pyvgx.Vertex.Writable()
+
+Check if a vertex is open in a writable state.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Writable()
+----
+
+=== Return Value
+
+This method returns True if the vertex is currently open and writable by the calling thread, otherwise False is returned.
+
+=== Remarks
+
+The vertex must be writable by the calling thread for this method to return True. If the vertex was formerly held in a writable state by the current thread, then closed, then opened writable by another thread, this method will return False when called on the (still valid) Python object in the current thread.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.Writable()           # True
+g.CloseVertex( A )
+A.Writable()           # False
+A = g.OpenVertex( "A", mode="r" )
+A.Writable()           # False
+g.CloseVertex( A )
+A = g.OpenVertex( "A", mode="w" )
+A.Writable()           # True
+g.CloseVertex( A )
+----
+
+[[vertexreadonly]]
+== pyvgx.Vertex.Readonly()
+
+Check if a vertex is open in readonly mode.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Readonly()
+----
+
+=== Return Value
+
+This method returns True if the vertex is currently open in readonly mode by the calling thread, otherwise False is returned.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.Readonly()           # False
+g.CloseVertex( A )
+A = g.OpenVertex( "A", mode="r" )
+A.Readonly()           # True
+g.CloseVertex( A )
+----
+
+
+[[vertexreadable]]
+== pyvgx.Vertex.Readable()
+
+Check if a vertex is accessible.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Readable()
+----
+
+=== Return Value
+
+This method returns True if the vertex is accessible, either writable or readonly, otherwise False is returned.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+A = g.NewVertex( "A" )
+A.Readable()           # True
+g.CloseVertex( A )
+A.Readable()           # False
+A = g.OpenVertex( "A", mode="r" )
+A.Readable()           # True
+g.CloseVertex( A )
+----
+
+[[vertexclose]]
+== pyvgx.Vertex.Close()
+
+Release vertex lock.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Close() -> None
+----
+
+=== Remarks
+
+This method releases the vertex and commits any changes if no other pyvgx.Vertex object(s) reference the same vertex in the graph.
+
+The closed pyvgx.Vertex instance can no longer access the vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+g.CreateVertex( "A" )
+A = g.OpenVertex( "A", "w" )    # open
+A['x'] = 123                    # modify
+A.Close()                       # close (and commit)
+A['y'] = 456                    # AccessError
+----
+
+[[vertexescalate]]
+== pyvgx.Vertex.Escalate()
+
+Promote vertex acquisition status from readonly to writable.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Escalate( [ timeout ] ) -> None
+----
+
+=== Parameters
+
+[cols="1,2,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_timeout_
+|_int_
+|0
+|Maximum milliseconds to wait for write-lock
+
+|===
+
+=== Remarks
+
+Promote vertex acquisition status from readonly to writable. An optional _timeout_ (in milliseconds) allows blocking while waiting for writable access to be obtained. The default is nonblocking. If the vertex is already writable or the readonly vertex cannot be acquired writable <<../reference.adoc#AccessError_exc, AccessError>> is raised.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+g.CreateVertex( "A" )
+A = g.OpenVertex( "A", "r" )    # readonly
+A.Writable()                    # -> False
+A.Escalate()                    # become writable
+A.Writable()                    # -> True
+----
+
+[[vertexrelax]]
+== pyvgx.Vertex.Relax()
+
+Relax vertex acquisition status from writable to readonly
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.Relax() -> bool
+----
+=== Return Value
+
+Return True if vertex is readonly.
+Return False if vertex is still writable.
+
+=== Remarks
+
+Calling this method on a vertex that is already readonly has no effect and will return True.
+
+Calling this method on a recursively write-locked vertex _V_ (i.e. `_V_.xrecursion > 1`) has the same effect as releasing one level of write recursion and the vertex will still be writable. The return value is False in this case.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+g.CreateVertex( "A" )
+A = g.OpenVertex( "A", "w" )    # writable
+A.Writable()                    # -> True
+A.Relax()                       # -> True
+A.Writable()                    # -> False
+----
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexMembers.adoc#, title="Vertex Members"]
+<<vertexMembers.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Members"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexProperty.adoc#, title="Vertex Property Methods"]
+<<vertexProperty.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Property Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

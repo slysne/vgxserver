@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<!--
+  
+  VGX Server
+  Distributed engine for plugin-based graph and vector search
+  
+  Module:  vgx
+  File:    plugin.html
+  Author:  Stian Lysne slysne.dev@gmail.com
+  
+  Copyright © 2025 Rakuten, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+-->
+
+<html>
+<head>
+    <title>VGX Plugin</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div style="margin: 8">
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container">
+
+            <div id="templateArea" style="display: none">
+                <table>
+                    <tr id="parameter_template" class="inputrow">
+                        <td class="col1 paramName">
+                            <span class="parameterName"></span>
+                        </td>
+                        <td class="col2 paramType"></td>
+                        <td class="col3 paramValue">
+                            <pre><textarea class="parameterValue" spellcheck="false"></textarea></pre>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <table id="pluginSetup">
+                <tbody>
+                    <tr id="mode" class="inputrow">
+                        <td colspan="3" id="modeArea">
+                            <input type="radio" class="mode" id="pluginMode" name="mode" value="plugin" checked>
+                            <label for="pluginMode">User</label>
+                            <input type="radio" class="mode" id="builtinMode" name="mode" value="builtin">
+                            <label for="builtinMode">Builtin</label>
+                            <input type="radio" class="mode" id="matrixMode" name="mode" value="matrix">
+                            <label for="matrixMode">Matrix</label>
+                        </td>
+                    </tr>
+                    <tr id="plugin" class="inputrow">
+                        <td class="col1">
+                            <select name="pluginlist" id="pluginlist"></select>
+                        </td>
+                        <td class="col2">
+                        </td>
+                        <td class="col3">
+                            <button id="submit" type="button">Execute</button>
+                        </td>
+                    </tr>
+                    <tr id="description_row" class="inputrow">
+                        <td class="col1" colspan="3"><pre class="vstr" id="description"></pre></td>
+                    </tr>
+                    <tr id="param_headrow" class="inputrow">
+                        <td class="col1"><b>Parameter</b></td>
+                        <td class="col2"><b>Type</b></td>
+                        <td class="col3"><b>Value</b></td>
+                    </tr>
+                    <tr id="graph_row" class="inputrow" style="display: none">
+                        <td class="col1 paramName"><b>graph</b></td>
+                        <td class="col2 paramType"></td>
+                        <td class="col3 paramValue"><select name="graphlist" id="graphlist"></select></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="result_box">
+                <pre><textarea class="area" id="result" name="result" rows=10 readonly=readonly></textarea></pre>
+            </div>
+            <div id="message_box">
+                <pre><span class="area" id="infotext"></span></pre>
+                <div id="httpinfo">
+                    <span class="area" id="httpmethod"></span>&nbsp;
+                    <span class="area enable_select" id="urlinfo"></span>
+                    <br>
+                    <span class="area enable_select" id="httpcontent"></span>
+                </div>
+                <pre><span class="area" id="errortext"></span></pre>
+            </div>
+            <div class="modal"><span id="busymsg"></span></div>
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+</html>
+
+<script>
+
+    let currentPlugin = null;
+    let availablePlugins = null;
+    let mode = null;
+
+
+    class Progress {
+        t0 = 0;
+        delayer = null;
+        updater = null;
+        display = false;
+
+        constructor() {
+            this.t0 = Date.now();
+            this.delayer = setTimeout(this.refresh.bind(this), 250);
+            this.display = false;
+            $('#submit').prop("disabled", true);
+        }
+
+
+        refresh() {
+            if (this.delayer) {
+                clearTimeout(this.delayer);
+                this.delayer = null;
+            }
+            if (!this.display) {
+                $('.container').addClass("loading");
+                this.display = true;
+                this.updater = setInterval(this.refresh.bind(this), 10);
+            }
+            let t1 = Date.now();
+            let t_100 = Math.floor((t1 - this.t0) / 100.0);
+            let t_elapse = t_100 / 10.0;
+            $('#busymsg').html("" + t_elapse.toFixed(1) + " s");
+        }
+
+
+        stop() {
+            $('#submit').prop("disabled", false);
+            $('#busymsg').html("");
+            $('.container').removeClass("loading");
+            if (this.delayer) {
+                clearTimeout(this.delayer);
+                this.delayer = null;
+            }
+            if (this.updater) {
+                clearInterval(this.updater);
+                this.updater = null;
+            }
+        }
+    }
+
+
+    function clearPageFields() {
+        $('.parameter_row').remove();
+        $('#description').html("");
+        $('#result').html("");
+        $('#infotext').html("");
+        $('#errortext').html("");
+    }
+
+
+    function submitOnEnter(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            $(":focus").trigger("change");
+            document.getElementById("submit").click();
+        }
+    }
+
+    function submitOnAltEnter(event) {
+        if (event.key === "Enter" && event.shiftKey) {
+            event.preventDefault();
+            $(":focus").trigger("change");
+            document.getElementById("submit").click();
+        }
+    }
+
+
+
+    class Plugin {
+        static specialParameters = ["request", "graph", "method", "headers", "content"];
+
+        name = null;
+        path = null;
+        description = null;
+        graph = null;
+        parameters = null;
+        progress = null;
+
+        constructor(path, graph, description) {
+            this.path = path;
+            const graphRex = /name=(\S+)/;
+            let m = graphRex.exec(graph);
+            if (m != null) {
+                this.graph = m[1];
+            }
+            let nameRex = null;
+            switch (mode) {
+                case "plugin":
+                    nameRex = /\/vgx\/plugin\/(\S+)/;
+                    break;
+                case "builtin":
+                    nameRex = /\/vgx\/builtin\/(\S+)/;
+                    break;
+                case "matrix":
+                    nameRex = /\/vgx\/plugin\/(\S+)/;
+                    break;
+            }
+            if (nameRex) {
+                m = nameRex.exec(path);
+                this.name = m[1];
+            }
+            else {
+                this.name = "?";
+            }
+            this.parameters = {};
+            if (typeof (description) === "object") {
+                this.description = "";
+                for (var n = 0; n < description.length; n++) {
+                    this.description += description[n] + "\n";
+                }
+            }
+            else {
+                this.description = description;
+            }
+        }
+
+        addParameter(name, info) {
+            let type = null;
+            let dflt = null;
+            if (typeof (info) === "object") {
+                type = info[0];
+                dflt = info[1];
+                if (typeof (dflt) === "object") {
+                    dflt = JSON.stringify(dflt);
+                }
+            }
+            else {
+                type = info;
+            }
+            this.parameters[name] = { 'name': name, 'type': type, 'value': null, 'dflt': dflt };
+        }
+
+        setParameter(name, value) {
+            param = this.parameters[name];
+            param.value = value;
+        }
+
+        activate() {
+            $('.parameter_row').remove();
+            let graphRow = $('#graph_row');
+            let graphList = $('#graphlist');
+            graphRow.css("display", "none");
+            $('#description').html(this.description);
+            // plugin has bound graph - display only
+            if (this.graph != null) {
+                $('#graph').html(this.graph);
+                graphRow.css("display", "inline");
+                graphList.prop("disabled", true);
+                graphList.css("font-style", "italic");
+                graphList.addClass("vstr");
+            }
+            // plugin without bound graph takes graph parameter
+            else if ("graph" in this.parameters) {
+                let param = this.parameters["graph"];
+                graphRow.css("display", "inline");
+                graphList.prop("disabled", false);
+                graphList.css("font-style", "normal");
+                graphList.removeClass("vstr");
+                graphList.off("change");
+                graphList.on("change", function () {
+                    const graphName = $('#graphlist').find(':selected').val();
+                    this.parameters["graph"].value = graphName;
+                }.bind(this));
+            }
+
+            const pkeys = Object.keys(this.parameters);
+            for (var p = 0; p < pkeys.length; p++) {
+                const pkey = pkeys[p];
+                if (!Plugin.specialParameters.includes(pkey)) {
+                    let param = this.parameters[pkey];
+                    this.generateParamBox(param);
+                }
+            }
+            if ("content" in this.parameters) {
+                let param = this.parameters["content"];
+                this.generateParamBox(param);
+            }
+
+        }
+
+
+
+        readParameter(param_name) {
+            const element = $("#parameter_" + param_name + "_value");
+            const param_value = element.val().trim();
+            let param = this.parameters[param_name];
+            let valid = true;
+            switch (param.type) {
+                case "int":
+                    valid = this.validateInt(param_value);
+                    break;
+                case "float":
+                    valid = this.validateFloat(param_value);
+                    break;
+                case "json":
+                    valid = this.validateJson(param_value);
+                    break;
+            }
+            if (valid) {
+                element.removeClass("invalid");
+                element.addClass("valid");
+            }
+            else {
+                element.removeClass("valid");
+                element.addClass("invalid");
+            }
+            if (param_value === "") {
+                param.value = null;
+            }
+            else {
+                param.value = param_value;
+            }
+        }
+
+
+        paramChange(eventObj) {
+            $('#errortext').html("");
+            const param_name = eventObj["data"];
+            this.readParameter(param_name);
+        }
+
+
+        generateParamBox(param) {
+            let rowTemplate = $('#parameter_template').html();
+            const paramID = "parameter_" + param.name;
+
+            let parametersBody = $('#pluginSetup tbody');
+            parametersBody.append('<tr class="inputrow parameter_row" id="' + paramID + '">' + rowTemplate + '</tr>');
+            let row = $('#' + paramID);
+            // Name
+            let nameElem = row.find(".parameterName");
+            nameElem.html(param.name);
+            let nameFontSize = 100;
+            nameElem.css("font-size", "100%");
+            while (nameElem.width() > 120 && nameFontSize > 10) {
+                nameFontSize -= 1;
+                nameElem.css("font-size", nameFontSize + "%");
+            }
+
+            // Type
+            let typeElem = row.find(".paramType");
+            // Value
+            let valueboxID = paramID + "_value";
+            let valElem = row.find(".paramValue .parameterValue");
+            valElem.attr("id", valueboxID);
+            // Value Type
+            let vtype = null;
+            const type = this.parameters[param.name].type;
+            switch (type) {
+                case "int":
+                    typeElem.html(param.type);
+                    vtype = "vint";
+                    valElem.css("min-width", "181px");
+                    valElem.css("width", "181px");
+                    valElem.css("max-height", "26px");
+                    valElem.keypress(submitOnEnter);
+                    break;
+                case "float":
+                    typeElem.html(param.type);
+                    vtype = "vfloat";
+                    valElem.css("min-width", "181px");
+                    valElem.css("width", "181px");
+                    valElem.css("max-height", "26px");
+                    valElem.keypress(submitOnEnter);
+                    break;
+                case "str":
+                    typeElem.html(param.type);
+                    vtype = "vstr";
+                    if (param.name != "content") {
+                        valElem.keypress(submitOnEnter);
+                    }
+                    break;
+                case "json":
+                    typeElem.html(param.type);
+                    vtype = "vjson";
+                    valElem.css("height", "4em");
+                    valElem.keypress(submitOnAltEnter);
+                    break;
+                default:
+                    vtype = "vany";
+                    valElem.keypress(submitOnEnter);
+            }
+
+            if (param.name === "content") {
+                valElem.css("height", "6em");
+                valElem.keypress(submitOnAltEnter);
+            }
+
+            if (param.dflt != null && param.dflt != 'null') {
+                valElem.val(param.dflt);
+            }
+
+            typeElem.addClass(vtype);
+            valElem.addClass(vtype);
+            // Value onchange
+            valElem.off("change");
+            valElem.on("change", null, param.name, this.paramChange.bind(this));
+        }
+
+
+        validateInt(x) {
+            const decrex = /^[-+]?\d+$/;
+            if (x === "" || decrex.exec(x) != null) {
+                return true;
+            }
+            else {
+                const hexrex = /^[-+]?0x[0-9a-fA-F]+$/;
+                if (hexrex.exec(x) != null) {
+                    return true;
+                }
+                $('#errortext').html("SyntaxError: invalid int");
+                return false;
+            }
+        }
+
+
+        validateFloat(x) {
+            const rex = /^[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/;
+            if (x === "" || rex.exec(x) != null) {
+                return true;
+            }
+            else {
+                $('#errortext').html("SyntaxError: invalid float");
+                return false;
+            }
+        }
+
+
+        validateJson(x) {
+            try {
+                JSON.parse(x);
+                return true;
+            }
+            catch (error) {
+                $('#errortext').html(error);
+                return false;
+            }
+        }
+
+
+        execute(renderCallback) {
+            if (this.progress) {
+                this.progress.stop();
+            }
+            this.progress = new Progress();
+            try {
+                let content = null;
+                let url = this.path;
+                let sep = "?";
+                const pkeys = Object.keys(this.parameters);
+                for (var p = 0; p < pkeys.length; p++) {
+                    const pkey = pkeys[p];
+                    const param = this.parameters[pkey];
+                    if (param.value != null) {
+                        if (param.name != "content") {
+                            url = url + sep + param.name + "=" + param.value;
+                            sep = "&";
+                        }
+                        else {
+                            content = param.value;
+                        }
+                    }
+                }
+                $('#urlinfo').html(url);
+                $('#urlinfo').mouseup(CommonHeader.copySelectionToClipboard);
+                if (content == null) {
+                    this.requestGET(url, renderCallback);
+                }
+                else {
+                    this.requestPOST(url, content, renderCallback);
+                }
+            }
+            catch (error) {
+                renderCallback({ "error": error });
+            }
+            finally {
+            }
+        }
+
+        requestGET(url, renderCallback) {
+            //alert( "GET: " + url );
+            $('#httpmethod').html("GET");
+            $.get(url, function (data, textStatus, jqXHR) {
+                renderCallback(data);
+            }, "json").fail(function (xhr, txt, err) {
+                let errtext = xhr["responseText"] + " | " + txt + " | " + err;
+                renderCallback({ "error": errtext });
+            });
+
+        }
+
+        requestPOST(url, content, renderCallback) {
+            //alert( "POST: " + url );
+            $('#httpmethod').html("POST");
+            $('#httpcontent').html(content);
+            $.post(url, content, function (data, textStatus, jqXHR) {
+                renderCallback(data);
+            }, "json").fail(function (xhr, txt, err) {
+                let errtext = xhr["responseText"] + " | " + txt + " | " + err;
+                renderCallback({ "error": errtext });
+            });
+        }
+    }
+
+
+
+
+    function loadPluginDefinitions( selectName, selectMode ) {
+        clearPageFields();
+        $('#pluginlist').find("option").remove();
+        if (selectMode) {
+            $(`#mode input[type=radio][value="${selectMode}"]`).prop('checked', true);
+        }
+        mode = $('#mode').find(':checked').val();
+        let url = null;
+        switch (mode) {
+            case "plugin":
+                url = "/vgx/plugins";
+                break;
+            case "builtin":
+                url = "/vgx/builtins";
+                break;
+            case "matrix":
+                url = "/vgx/builtin/matrixplugins";
+                break;
+            default:
+                return;
+        }
+
+        $.get(url, function (data, textStatus, jqXHR) {
+            availablePlugins = {};
+            const pluginList = data["response"];
+            const message = data["message"];
+            let opt = null;
+            let first = null;
+            if (pluginList.length > 0) {
+                pluginList.sort((a, b) => ((a.path > b.path) ? 1 : -1));
+                for (var admin in [false, true]) {
+                    for (var i = 0; i < pluginList.length; i++) {
+                        const pluginDef = pluginList[i];
+                        const path = pluginDef["path"];
+                        if (path.includes("/ADMIN_") == admin) {
+                            const descr = pluginDef["description"];
+                            const graph = pluginDef["bound_graph"];
+                            const params = pluginDef["parameters"];
+                            let plugin = new Plugin(path, graph, descr);
+                            const pkeys = Object.keys(params);
+                            for (var p = 0; p < pkeys.length; p++) {
+                                const pkey = pkeys[p];
+                                plugin.addParameter(pkey, params[pkey]);
+                            }
+                            let matrix = pluginDef["matrix"];
+                            let plugin_ident = plugin.name;
+                            if (matrix) {
+                                plugin_ident += " [" + matrix["location"] + "/" + matrix["level"] + "]";
+                            }
+
+                            availablePlugins[plugin_ident] = plugin;
+
+                            opt = document.createElement("option");
+                            opt.value = plugin_ident;
+                            if (first == null) {
+                                first = plugin_ident;
+                            }
+                            opt.innerHTML = plugin_ident;
+                            $('#pluginlist').append(opt);
+                        }
+                    }
+                }
+                if (selectName === null) {
+                    $('#pluginlist').val(first).change();
+                }
+                else {
+                    $('#pluginlist').val(selectName).change();
+                }
+                $('#pluginlist').prop("disabled", false);
+            }
+            else {
+                opt = document.createElement("option");
+                opt.innerHTML = "(no plugins)";
+                $('#pluginlist').append(opt);
+                $('#pluginlist').prop("disabled", true);
+                updatePluginSetup();
+            }
+        }).fail(function (xhr, txt, err) {
+            let errtext = xhr["responseText"];
+            $('#errortext').html("" + errtext );
+        });
+    }
+
+
+    function updateGraphList() {
+        $('#graphlist').find("option").remove();
+        $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+            const names = data["response"]["graphsum"]["names"];
+            let opt = null;
+            let first = null;
+            for (var i = 0; i < names.length; i++) {
+                opt = document.createElement("option");
+                opt.value = names[i];
+                if (first == null) {
+                    first = names[i];
+                }
+                opt.innerHTML = names[i];
+                $('#graphlist').append(opt);
+            }
+            opt = document.createElement("option");
+            opt.value = "system";
+            if (first == null) {
+                first = "system";
+            }
+            opt.innerHTML = "_system";
+            $('#graphlist').append(opt);
+            $('#graphlist').val(first).change();
+        });
+    }
+
+
+    function updatePluginSetup() {
+        clearPageFields();
+        mode = $('#mode').find(':checked').val();
+        const name = $('#pluginlist').find(':selected').val();
+        if (name != null) {
+            currentPlugin = availablePlugins[name];
+            if (currentPlugin != null) {
+                currentPlugin.activate();
+                updateGraphList();
+            }
+        }
+        else {
+            currentPlugin = null;
+        }
+        let matrixModeLabel = "Matrix";
+        if (CommonHeader.port_offset != 0) {
+            $('#matrixMode').prop('disabled', true);
+            matrixModeLabel += " (base port required)";
+        }
+        $('label[for="matrixMode"]').text(matrixModeLabel);
+    }
+
+
+    function callPlugin() {
+        if (currentPlugin != null) {
+            currentPlugin.execute(function (data) {
+                let result = null;
+                try {
+                    const stat = data["status"];
+                    if (stat === "OK") {
+                        const response = data["response"];
+                        result = response;
+                        const t = data["exec_ms"];
+                        $('#infotext').html(t.toFixed(2) + " ms");
+                        $('#errortext').html("");
+                    }
+                    else if (stat === "ERROR") {
+                        const msg = data["message"];
+                        $('#infotext').html("");
+                        $('#errortext').html(JSON.stringify(msg, null, 4));
+                    }
+                    else {
+                        result = data;
+                        $('#infotext').html("");
+                        $('#errortext').html("ERROR");
+                    }
+                }
+                catch (error) {
+                    result = error;
+                }
+                finally {
+                    let rstr = "";
+                    if (result != null) {
+                        rstr = JSON.stringify(result, null, 4);
+                    }
+                    $('#result').html(rstr);
+                    currentPlugin.progress.stop();
+                }
+            });
+        }
+        else {
+            $('#errortext').html("No plugin");
+        }
+    }
+
+    function main() {
+
+        const params = new URLSearchParams(window.location.search);
+        const pluginName = params.get("plugin");
+        const pluginType = params.get("type");
+
+        $('#mode').on("change", function(event) {
+            loadPluginDefinitions( null, null );
+        });
+        $('#pluginlist').on("change", updatePluginSetup);
+        $('#pluginlist').keypress(function () {
+            $('#submit').focus();
+        });
+
+
+        $('#submit').click(callPlugin);
+
+        loadPluginDefinitions( pluginName, pluginType );
+    }
+
+    CommonHeader.ready(main, 10, true, null, false);
+</script>
+
+<style>
+
+    .container.loading .modal {
+        display: block;
+    }
+
+    tr#mode {
+        padding-bottom: 20px;
+    }
+
+    #modeArea {
+        display: inline;
+    }
+
+    #modeArea input {
+        margin-right: 3px;
+    }
+
+    #modeArea label {
+        margin-right: 6px;
+    }
+
+    #pluginSetup {
+        border-spacing: 0px;
+    }
+
+    #pluginSetup tbody {
+        border-spacing: 3px;
+    }
+
+    #pluginSetup tr {
+        display: block;
+    }
+
+    #pluginSetup td {
+        font-size: 100%;
+        padding-left: 0px;
+        padding-top: 0px;
+        padding-bottom: 0px;
+    }
+
+    #plugin {
+        margin-bottom: 20px;
+    }
+
+    #plugin td {
+        vertical-align: middle
+    }
+
+    #description_row td {
+        vertical-align: middle;
+        padding-left: 5px;
+        padding-bottom: 20px;
+    }
+
+    #description {
+        vertical-align: middle font-size: 100%;
+        font-weight: bold;
+        /*color: #777777;*/
+    }
+
+    #graph_row td {
+        padding-top: 9px;
+        padding-bottom: 7px;
+        padding-left: 1px;
+        vertical-align: middle;
+    }
+
+    #graphlist {
+        vertical-align: middle font-size: 100%;
+        /*color: #777777;*/
+    }
+
+    #param_headrow td {
+        background-color: #F8F8F8;
+        padding-left: 5px;
+        padding-bottom: 5px;
+    }
+
+    .col1 {
+        min-width: 140px;
+        max-width: 140px;
+        vertical-align: top;
+    }
+
+    .col2 {
+        min-width: 80px;
+        max-width: 80px;
+    }
+
+    .col3 {
+        min-width: 569px;
+        max-width: 569px;
+        padding-right: 0px;
+    }
+
+    .paramName {
+        font-family: Consolas, monospace;
+        font-weight: bold;
+        text-align: right;
+        padding-right: 20px;
+    }
+
+    .paramType {
+        font-family: Consolas, monospace;
+    }
+
+    .parameterValue {
+        min-width: 100%;
+        max-width: 100%;
+        font-size: 95%;
+        font-family: Consolas, monospace;
+        min-height: 26px;
+        height: 26px;
+    }
+
+    .paramValue pre {
+        margin: 1px;
+    }
+
+    .parameter_row td {
+        vertical-align: middle
+    }
+
+
+    button {
+        cursor: pointer;
+    }
+
+    #submit {
+        width: 90px;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+
+    #result {
+        font-family: Consolas, monospace;
+        font-size: 100%;
+        font-weight: bold;
+        background-color: #F8F8F8;
+        border: 1px solid #CCCCCC;
+        outline: none;
+        min-width: 795px;
+        min-height: 100px;
+        margin-bottom: 10px;
+        margin-left: 3px;
+    }
+
+    #result_box {
+        margin-top: 30px;
+    }
+
+    #result_box label {
+        margin-left: 8px;
+        font-weight: bold;
+    }
+
+    #httpinfo {
+        font-family: Consolas, monospace;
+        font-size: 70%;
+        color: #808080;
+    }
+
+
+    select {
+        margin-right: 10px;
+        width: 180px;
+    }
+
+    label {
+        margin-right: 0px;
+    }
+
+    /*    .area {
+      min-width: 800px;
+      max-width: 800px;
+    }*/
+
+    .val {
+        padding-right: 10px;
+        text-align: right;
+        font-family: Consolas, monospace;
+        font-size: 90%;
+    }
+
+    .vint {
+        color: #0000C0;
+    }
+
+    .vfloat {
+        color: #8e44ad;
+    }
+
+    .vstr {
+        color: #007050;
+    }
+
+    .vjson {
+        color: #af601a;
+    }
+
+    .vany {
+        color: #000000;
+    }
+
+    .valid {
+        background-color: unset;
+    }
+
+    .invalid {
+        background-color: #fdedec;
+    }
+
+
+    .faded {
+        color: #C0C0C0;
+    }
+</style>

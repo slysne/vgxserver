@@ -1,0 +1,160 @@
+[[pyvgxvertex]]
+= Vertex Objects <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 0
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+
+[[class]]
+== pyvgx.Vertex
+
+`_class_ pyvgx.*Vertex*( _graph_, _id_**[**, type_**[**, _mode_**[**, _timeout_ **]]]** )`::
+The `pyvgx.Vertex` type represents the Python layer's view of VGX vertex objects. Objects of this class are wrappers that enable Python code to access core VGX vertices.
++
+*Parameters*
++
+[cols="2,3,2,4"]
+|===
+|Parameter |Type |Default |Description
+
+|_graph_
+|<<../graph/graph.adoc#, `pyvgx.Graph` instance>>
+|
+|Parent graph
+
+|_id_
+|_str_ or _bytes_ or _int_
+|
+|Unique vertex identifier string or memory address known to reference vertex 
+
+|_type_
+|_str_ or _bytes_
+|`None`
+|
+
+|_mode_
+|_chr_
+|"a"
+|Access mode: "w" (writable), "a" (modify), or "r" (readonly)
+
+|_timeout_
+|_int_
+|0
+|Milliseconds to block while waiting for access
+
+// cspell:ignore typeless
+|===
++
+*Remarks*
++
+The pyvgx.Vertex type represents VGX core vertex objects. The returned Python object is a wrapper around the internal VGX vertex object.
++
+This constructor creates a new VGX vertex in parent _graph_ or opens an existing VGX vertex. If the vertex already exists _id_ may be given as a string or as a memory address known to reference the vertex. If the vertex does not already exist _id_ must be a string.
++
+The optional _type_ string may only be specified if the _mode_ is "w", otherwise ValueError is raised. If the vertex already exists with a type other than _type_ ValueError is raised. When _type_ is `None` (the default) a typeless vertex is created.
++
+The optional _mode_ character specifies access type.
++
+[cols="2,8"]
+|===
+|Mode |Description
+
+|`"w"`
+|Open vertex writable and create if it does not exist
+
+|`"a"`
+|Open vertex writable but do not create
+
+|`"r"`
+|Open vertex readonly
+
+|===
++
+Both `"a"` and `"r"` will raise KeyError if vertex does not exist.
++
+An optional _timeout_ in milliseconds may be specified to allow blocking while waiting for vertex to become available to the calling thread.
++
+Instead of calling this constructor directly it is recommended to use one of the following pyvgx.Graph API methods:
++
+====
+* <<../graph/graphVertex.adoc#graphcreatevertex, `pyvgx.Graph.CreateVertex( _id_**[**, _type_**]** )`>>
+* <<../graph/graphVertex.adoc#graphnewvertex, `pyvgx.Graph.NewVertex( _id_**[**, _type_**[**, _timeout_**]]** )`>>
+* <<../graph/graphVertex.adoc#graphopenvertex, `pyvgx.Graph.OpenVertex( _id_**[**, _mode_**[**, _timeout_**]]** )`>>
+====
++
+*Example*
++
+[.copyable]
+[source, python]
+----
+import pyvgx
+pyvgx.system.Initialize()
+g = pyvgx.Graph( "graph1" )
+A = pyvgx.Vertex( g, "A", "node", "w" ) # create "A" of type "node"
+del A
+A = pyvgx.Vertex( g, "A", mode="r" )    # open "A" readonly
+----
+
+[[api]]
+== pyvgx.Vertex API
+
+|===
+|pyvgx.Vertex API Section |Description
+
+|<<vertexMembers.adoc#vertexmembers, Vertex Members>>
+|Vertex object members
+
+|<<vertexAccess.adoc#vertexaccess, Vertex Access Methods>>
+|Methods for checking and modifying vertex access mode
+
+|<<vertexProperty.adoc#vertexproperty, Vertex Property Methods>>
+|Methods for managing vertex properties
+
+|<<vertexRank.adoc#vertexrank, Vertex Rank Methods>>
+|Methods for accessing vertex ranking coefficients
+
+|<<vertexVector.adoc#vertexvector, Vertex Vector Methods>>
+|Methods for managing vertex vectors
+
+|<<vertexTTL.adoc#vertexTTL, Vertex TTL Methods>>
+|Methods for managing vertex expiration
+
+|<<vertexMiscellaneous.adoc#vertexmiscellaneous, Vertex Miscellaneous Methods>>
+|Methods for accessing and managing various vertex attributes
+
+|<<vertexFilter.adoc#vertexfilter, Vertex Condition Syntax>>
+|Syntax rules for vertex conditions used in queries
+ +
+ <<vertexFilter.adoc#generalsyntax, General Syntax>>
+ +
+ <<vertexFilter.adoc#constraints, Constraints>>
+ +
+ <<vertexFilter.adoc#evalorder, Evaluation Order>>
+ +
+ <<vertexFilter.adoc#vertexfilters, Vertex Filters>>
+
+|===
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexFilter.adoc#, title="Vertex Condition Syntax"]
+<<vertexFilter.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Condition Syntax"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=vertexMembers.adoc#, title="Vertex Members"]
+<<vertexMembers.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Members"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

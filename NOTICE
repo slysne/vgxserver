@@ -1,0 +1,46 @@
+This product includes software developed by Rakuten, Inc.
+and is Copyright © 2025 Rakuten, Inc.
+
+Original author: Stian Lysne (2014–2025)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+
+---
+
+This project includes third-party components as detailed below.
+
+**LZ4 Compression Library**
+ - Copyright (c) Yann Collet
+ - License: BSD 2-Clause "Simplified" License
+   and is also included here:
+     licenses/jquery/LICENSE.txt 
+ - Original project: https://github.com/lz4/lz4
+ - Source files used are version v1.10.0 and are located here:
+    cxlib/src/lz4.c
+    cxlib/src/include/lz4.h
+ - The used lz4.h and lz4.c files are taken from the `lib` directory
+   at https://github.com/lz4/lz4/tree/v1.10.0/lib
+
+
+
+**jQuery v3.6.0**
+- jQuery is:
+  Copyright (c) OpenJS Foundation and other contributors
+  https://jquery.org/
+- License: MIT
+  The full license text is available at: https://jquery.org/license
+  and is also included here:
+    licenses/jquery/LICENSE.txt
+- The file used is the minified release version and is located here:
+    vgx/src/resources/WEB-ROOT/artifacts/jquery-3.6.0.min.js
+- This file includes the following header, as present in the official release:
+    /*! jQuery v3.6.0 | (c) OpenJS Foundation and other contributors | jquery.org/license */
+- The full contents of juery-3.6.0.min.js is embedded into the final binary output 

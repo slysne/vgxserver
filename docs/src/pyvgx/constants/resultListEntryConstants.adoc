@@ -1,0 +1,233 @@
+[[resultlistentryconstants]]
+= Result List Entry Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<sortSpecificationConstants.adoc#, icon:arrow-circle-right[title="Sort Specification Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Summary
+
+These constants control the format of result entries in the query result list returned
+by various search methods.
+
+[source, python]
+----
+result = R_<a> | R_<b> | ...
+----
+
+Some constants can be combined using the bitwise-OR operator (|).
+
+If no meta-information is requested the returned result is a list of entries.
+When meta-information is requested with <<R_COUNTS>> or <<R_TIMING>> the returned result is a dictionary containing the list of results plus the requested meta-information.
+
+== Result Entry Format
+The format of each entry in the result list is controlled by these constants:
+
+[[R_SIMPLE]]
+=== pyvgx.R_SIMPLE
+
+`pyvgx.R_SIMPLE = 0`
+
+Result list entries are singleton objects representing the value of the earliest display order field within the specified <<resultFieldConstants.adoc#resultfieldconstants, result fields>>.
+
+----
+[   field1,
+    field1,
+    field1,
+    ...
+]
+----
+
+[[R_STR]]
+=== pyvgx.R_STR
+
+`pyvgx.R_STR = 268435456`
+
+Result list entries are single strings built from the selected <<resultFieldConstants.adoc#resultfieldconstants, result fields>>. The entry format depends on the fields. The format is JSON compatible except when only fields included in `F_AARC` are requested (see below.)
+
+----
+[   "formatted_entry1",
+    "formatted_entry2",
+    "formatted_entry3",
+    ...
+]
+----
+
+When requesting a single field with a string value (such as `F_ID`) a simple string representation of the field value is returned. This is generally not JSON compatible, unless the string happens to represent a number.
+
+When requesting multiple fields within `F_AARC` (such as `F_ID|F_VAL`) the combined fields are rendered as ASCII-art to help visualize the arc. This is not JSON compatible. The result entry is then formatted as `( F_ANCHOR )-[ F_REL F_MOD F_VAL ]-&gt;( F_ID )`, rendering blank spaces for missing fields.
+
+When requesting multiple fields where at least one is not part of `F_AARC` the result is rendered as JSON name/value pairs.
+
+[[R_LIST]]
+=== pyvgx.R_LIST
+
+`pyvgx.R_LIST = 536870912`
+
+Result list entries are lists of values as specified by the result fields. The <<resultFieldConstants.adoc#resultfieldconstants_order, field order>> is fixed.
+
+----
+[   [ field1, field2, ... ],
+    [ field1, field2, ... ],
+    [ field1, field2, ... ],
+    ...
+]
+----
+
+[[R_DICT]]
+=== pyvgx.R_DICT
+
+`pyvgx.R_DICT = 805306368`
+
+Result list entries are dictionaries of name:value as specified by the <<resultFieldConstants.adoc#resultfieldconstants, result fields>>. Generally, the entry is a subset of:
+
+----
+entry_n = {
+    'anchor'            : "<initial_vertex_identifier>",
+    'anchor-internalid' : "<initial_vertex_internalid>",
+    'arc': {
+        'direction'       : "<arc_direction>",
+        'relationship'    : "<relationship_type>",
+        'modifier'        : "<modifier>",
+        'value'           : <numeric_value>
+    },
+    'id'                : "<terminal_vertex_identifier>",
+    'internalid'        : "<terminal_vertex_internalid>",
+    'type'              : "<vertex_type>",
+    'degree'            : <degree>,
+    'indegree'          : <indegree>,
+    'outdegree'         : <outdegree>,
+    'vector'            : [(<"dim1">, <weight>), ("<dim2>", <weight>), ...],
+    'properties'        : { <properties_dict> },
+    'rankscore'         : <dynamic_rank>,
+    'similarity'        : <similarity_score>,
+    'hamming-distance'  : <hamming_distance>,
+    'created'           : <TMC>,
+    'modified'          : <TMM>,
+    'expires'           : <TMX>,
+    'descriptor'        : <numeric_descriptor>,
+    'address'           : <vertex_memory_address>,
+    'handle'            : <vertex_allocator_handle>,
+    'raw-vertex'        : "<binary_dump>"
+}
+----
+
+The result list is:
+
+----
+[   entry_1,
+    entry_2,
+    entry_3,
+    ...
+]
+----
+
+[[resultmetas]]
+== Result Meta Information
+
+When one or more of the following constants are used the result will be a dictionary containing the list of results and the selected meta-information:
+
+----
+{   '<result_list_name>' : [ <result_entry1>, <result_entry2>, ... ],
+    '<meta_name1>' : <meta_value1>,
+    '<meta_name2>' : <meta_value2>,
+    ...
+}
+----
+
+[[R_TIMING]]
+=== pyvgx.R_TIMING
+
+`pyvgx.R_TIMING = 1073741824`
+
+Query execution timing information will be included as a meta named `"time"`.
+
+*Neighborhood query result*
+
+----
+{
+    'neighborhood' : [ <entry1>, <entry2>, ... ]
+    'time' : {
+        'search' : <seconds>,
+        'result' : <seconds>,
+        'total'  : <seconds>
+    }
+}
+----
+
+*Global query result*
+
+----
+{
+    'vertices' : [ <entry1>, <entry2>, ... ]
+    'time' : {
+        'search' : <seconds>,
+        'result' : <seconds>,
+        'total'  : <seconds>
+    }
+}
+----
+
+[[R_COUNTS]]
+=== pyvgx.R_COUNTS
+
+`pyvgx.R_COUNTS = -2147483648`
+
+Information for query result counts will be included as a meta named `"counts"`.
+
+*Neighborhood query result*
+
+----
+{
+    'neighborhood' : [ <entry1>, <entry2>, ... ]
+    'counts' : {
+        'neighbors' : <seconds>,
+        'arcs'      : <seconds>
+    }
+}
+----
+
+*Global query result*
+
+----
+{
+    'vertices' : [ <entry1>, <entry2>, ... ]
+    'time' : {
+        'search' : <seconds>,
+        'result' : <seconds>,
+        'total'  : <seconds>
+    }
+}
+----
+
+// cspell:ignore R_METAS
+[[R_METAS]]
+=== pyvgx.R_METAS
+
+`pyvgx.R_METAS = -1073741824`
+
+Shorthand for <<R_TIMING>> | <<R_COUNTS>>
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=resultFieldConstants.adoc#, title="Result Field Constants"]
+<<resultFieldConstants.adoc#, icon:arrow-circle-left[size=2x, title="Result Field Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=sortSpecificationConstants.adoc#, title="Sort Specification Constants"]
+<<sortSpecificationConstants.adoc#, icon:arrow-circle-right[size=2x, title="Sort Specification Constants"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

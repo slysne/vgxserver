@@ -1,0 +1,657 @@
+[[pyvgxvector]]
+= pyvgx.Vector <<similarity.adoc#, icon:arrow-circle-up[title="pyvgx.Similarity"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Vector Objects
+
+Vectors have two distinct representations in pyvgx: *external* and *internal*. The external vector is the original vector (with applicable normalization, truncation and quantization applied.) The internal vector is an encoded version of the external vector.
+
+Vectors can be <<../vertex/vertexVector.adoc#, assigned to vertices>> to enable similarity matching for those vertices.
+
+Vectors can also be created and used as separate objects. In this case the built-in default similarity configuration controls how vectors are compared.
+
+Two vector modes are supported:
+
+. Feature Vectors (default)
+. Euclidean Vectors
+
+Vector mode is chosen at <<../reference.adoc#system_initialize_func, system initialization>> and cannot be changed after initialization. The chosen vector mode applies to all graphs in the VGX instance.
+
+[[featurevector]]
+=== Feature Vector
+
+Feature vectors are lists of `(<dimension>, <weight>)` key-value pairs, where `<dimension>` is a string and `<weight>` is a number. The <<limits.adoc#featurevector, maximum length>> of `<dimension>` is <<limits.adoc#limits, 27>> bytes. The range of `<weight>` is [0.0078125, 1.875], internally quantized into 64 discrete buckets. The maximum number of vector features is <<limits.adoc#limits, 48>>.
+
+[[euclideanvector]]
+=== Euclidean Vector
+
+Euclidean vectors are lists of numeric vector components latexmath:[A = \lbrace c_1, c_2, ..., c_n \rbrace] where  _n_ is a multiple of 32 or 64. The required multiple for your system can be found by inspecting the value returned by <<../reference.adoc#avxbuild_func, pyvgx.avxbuild()>>. If 512 is returned the multiple is 64, otherwise 32.
+
+The maximum number of vector components is <<limits.adoc#limits, 65472>>.
+
+Euclidean vectors are internally normalized by a scaling factor. This is done because the internal representation uses 8-bit integers to store each component and must ensure maximum use of the 8-bit resolution. The scaling factor latexmath:[a] is determined from _|c|~max~_, the component with the largest absolute value:
+
+latexmath:[ a = \displaystyle \frac{1}{| \text{c}|_{max} }]
+
+An internal (normalized) Euclidean vector latexmath:[A'] is thus computed:
+
+latexmath:[A' = a \cdot A = \lbrace c'_1, c'_2, ..., c'_n \rbrace], which implies latexmath:[c'_k \in \lbrack -1, 1 \rbrack] and latexmath:[c'_\text{max} \in \lbrace -1, 1 \rbrace].
+
+Consequently latexmath:[A'] is distorted due to loss of resolution. 
+
+NOTE: Internal Euclidean vector representation uses 8-bit integers to encode normalized values in the range latexmath:[ \langle \frac{-1}{127}, 1 \rbrack ] as integers latexmath:[ \lbrack 0, 127 \rbrack ], and normalized values in the range latexmath:[ \lbrack -1, \frac{-1}{127} \rbrack ] as integers latexmath:[ \lbrack 129, 255 \rbrack ]. (Internal byte value latexmath:[128] is reserved and not used.)
+
+
+=== Example: Feature Vectors
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+# Initialize in the default feature vectors mode
+system.Initialize()
+
+# Make two feature vectors
+Coffee = Vector( [("beverage",1.5), ("black",0.5), ("hot",0.5)] )
+Soda = Vector( [("beverage",1.5), ("bubbly",0.8), ("sweet",0.8)] )
+
+# Compare using default similarity parameters
+DefaultSimilarity.Similarity( Coffee, Soda ) # -> 0.7421875
+
+# Change similarity parameters and compare again
+DefaultSimilarity.jaccard_exp = 1.0
+DefaultSimilarity.Similarity( Coffee, Soda ) # -> 0.375
+----
+
+=== Example: Euclidean Vectors
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import *
+
+# Initialize in euclidean mode
+system.Initialize( euclidean=True )
+
+# Make two random Euclidean vectors with components in range [-1,1]
+A = Vector( [2*random()-1 for i in range(768)] )
+B = Vector( [2*random()-1 for i in range(768)] )
+
+# Cosine of angle between random vectors is close to zero
+DefaultSimilarity.Cosine( A, B ) # -> near zero
+
+----
+
+[[vectormembers]]
+== Vector Members
+
+|===
+|pyvgx Vector Member |Description
+
+|<<vectorlength>>
+|Number of elements in vector
+
+|<<vectormagnitude>>
+|Euclidean length of vector
+
+|<<vectorfingerprint>>
+|64-bit integer representing the vector
+
+|<<vectorexternal>>
+|Vector with original elements where terms are strings and weights are floats
+
+|<<vectorinternal>>
+|Enumerated version of vector as used internally for storage and similarity computation
+
+|===
+
+[[vectorlength]]
+=== pyvgx.Vector.length
+
+Return the number of elements in the vector.
+Equivalent: `len( pyvgx.Vector )`
+
+[[vectormagnitude]]
+=== pyvgx.Vector.magnitude
+
+Return the Euclidean length of the vector.
+
+NOTE: For Euclidean vectors the magnitude of the original vector is not preserved, since the vector is normalized.
+
+[[vectorfingerprint]]
+=== pyvgx.Vector.fingerprint
+
+Return a 64-bit integer representing the vector. This is a dimensionality-reduced (compressed) vector that can be used to speed up certain types of similarity computations. Two fingerprints are compared by counting the number of bit positions where the two differ, i.e. the _hamming distance_ between the two numbers. Small hamming distance translates to high similarity.
+
+[[vectorexternal]]
+=== pyvgx.Vector.external
+
+Return the vector as originally defined.
+
+==== Feature Vectors
+
+Elements are pairs of string terms and floating point weights:
+
+[source, python]
+----
+<external_vector> ::= [
+    (<s_term>, <f_weight>),
+    (<s_term>, <f_weight>),
+    (<s_term>, <f_weight>),
+    ...
+]
+
+where
+    <s_term>    ::= <string_up_to_27_bytes>
+    <f_weight>  ::= <float>
+----
+
+Vector terms <<../limits.adoc#limits, longer than 27 bytes>> are truncated.
+
+Vector weights are quantized into 64 distinct buckets, and have a range [0.0078125, 1.875].
+
+==== Euclidean Vectors
+
+Elements are floating point values:
+
+[source, python]
+----
+<external_vector> ::= [ c1, c2, ..., cn ]
+
+where n is a multiple of 32 and |ci| <= 1.
+----
+
+[[vectorinternal]]
+=== pyvgx.Vector.internal
+
+Return the internal representation of the vector.
+
+==== Feature Vectors
+
+Elements are pairs of enumerated terms and integer weights:
+
+[source, python]
+----
+<internal_vector> ::= [
+    (<e_term>, <i_weight>),
+    (<e_term>, <i_weight>),
+    (<e_term>, <i_weight>),
+    ...
+]
+
+where
+    <e_term>    ::= <integer_mapping_of_s_term>
+    <i_weight>  ::= <encoded_f_term>
+----
+
+Vector terms are mapped internally to integer values for more efficient storage and matching.
+
+Internal vector weights are encoded as a small integer in the range [0, 63]
+
+==== Euclidean Vectors
+
+Elements are bytes, and the returned object is a bytearray:
+
+[source, python]
+----
+<internal_vector> ::= bytearray(b'\xnn\xnn...\xnn')
+
+where the number of bytes is a multiple of 32.
+----
+
+Vector components are mapped internally to 8-bit integer values for more efficient storage and matching.
+
+[[vectormethods]]
+== Vector Methods
+
+|===
+|pyvgx Vector Method |Description
+
+|<<vector_fingerprint_method>>
+|Compute a 64-bit integer representing the vector
+
+|<<vector_asdict_method>>
+|Dictionary representation of vector
+
+|<<vector_projections_method>>
+|Return vector index projection information
+
+|===
+
+[[vector_fingerprint_method]]
+=== pyvgx.Vector.Fingerprint()
+
+Compute 64-bit vector fingerprint.
+
+==== Syntax
+
+[source, python]
+----
+pyvgx.Vector.Fingerprint( [seed] ) -> int
+----
+
+==== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_seed_
+|_int_
+|Projection seed (default 0)
+
+|===
+
+==== Return Value
+
+This method returns a 64-bit integer representing a projection of the n-dimensional _vector_ onto 64-dimensional binary space. The optional _seed_ allows alternative projections.
+
+==== Remarks
+
+A vector's fingerprint is a locality sensitive hash and represents a mapping of a high-dimensional object onto a low-dimensional "shadow" of that object. By using different values for _seed_ it is possible to create multiple fingerprints forming a set of projections which more accurately represent the original vector.
+
+==== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import random
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+base = [2*random()-1 for x in range(768)]
+V = Vector( [x+0.1*random() for x in base] )
+fp0 = V.Fingerprint()
+fp1 = V.Fingerprint( 1234 )
+fp2 = V.Fingerprint( 0xd5c098876a90fe2c )
+----
+
+
+[[vector_asdict_method]]
+=== pyvgx.Vector.AsDict()
+
+Return the vector data as a dictionary.
+
+==== Syntax
+
+[source, python]
+----
+pyvgx.Vector.AsDict() -> dict
+----
+
+==== Return Value
+
+This method returns all vector attributes in a dict.
+
+===== Feature Vectors
+
+[source, python]
+----
+<feature_vector_dict> ::= {
+    'type'        : 'feature',
+    'length'      : <number_of_elements>,
+    'magnitude'   : <euclidean_length>,
+    'fingerprint' : <int64>
+    'external'    : [ (<str>, <float>), (<str>, <float>), ... ],
+    'internal'    : [ (<int>, <int>), (<int>, <int>), ... ],
+    'centroid'    : <bool>
+}
+----
+
+===== Euclidean Vectors
+
+[source, python]
+----
+<euclidean_vector_dict> ::= {
+    'type'        : 'array',
+    'length'      : <number_of_elements>,
+    'magnitude'   : <normalized_euclidean_length>,
+    'fingerprint' : <int64>
+    'external'    : [ <float>, <float>, ... ],
+    'internal'    : bytearray(b'\xnn\xnn...'),
+    'centroid'    : <bool>
+}
+----
+
+==== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import random
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+base = [2*random()-1 for x in range(768)]
+V = Vector( [x+0.1*random() for x in base] )
+V.AsDict()
+----
+
+[[vector_projections_method]]
+=== pyvgx.Vector.Projections()
+
+Return the vector's LSH, "low confidence mask", and index projections for a given seed.
+
+==== Syntax
+
+[source, python]
+----
+pyvgx.Vector.Projections( seed[, lsh[, lcm[, reduce[, expand]]]] ) -> (lsh, lcm, [p1, p2, ...])
+----
+
+==== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_seed_
+|_int_
+|Projection seed
+
+|_lsh_
+|_int_
+|Use this vector fingerprint instead of computing it from vector
+
+|_lcm_
+|_int_
+|Use this "low confidence mask" for the provided _lsh_
+
+|_reduce_
+|_bool_
+|Omit index projections for LSH segments where the corresponding _lcm_ segment is non-zero
+
+|_expand_
+|_bool_
+|Create two index projections for LSH segments where the corresponding _lcm_ segment has exactly one bit set to 1
+
+|===
+
+==== Return Value
+
+For a given projection _seed_, return a 3-tuple containing the vector's fingerprint (LSH), the "low confidence mask" associated with the LSH, and a list of projection node names that map to the vector: `(lsh, lcm, [p1, p2, ...])`
+
+lsh:: The vector's fingerprint for the given _seed_
+
+lcm:: Bitmask where the occurrence of a `1` indicates a low confidence bit value in the corresponding *lsh* position. When *lcm* is all zeros it means the entire *lsh* has high confidence bit values. Bit regions in *lsh* corresponding to non-zero regions in *lcm* are less likely to produce good projection keys. 
+
+[p1, p2, ...]:: Projection node name p__i__ corresponding to a node in the graph structure created by <<similarityMethods.adoc#similaritycreateprojectionsets, pyvgx.Similarity.CreateProjectionSets()>>.
+
+==== Remarks
+
+Use <<similarityMethods.adoc#similaritycreateprojectionsets, pyvgx.Similarity.CreateProjectionSets()>> to initialize a graph structure suitable for building a vector index. Given a vector _V_, use _V_.Projections() to obtain the set of anchor nodes that should be connected to the item node representing _V_.
+
+To search for probe vector _Q_, use _Q_.Projections() to obtain the set of anchor nodes for neighborhood queries that will find candidates.
+
+Implementations may want to encode the arcs from projection nodes to item nodes with a portion of the vector LSH that was not used to generate the projection key. Use <<../vertex/vertexVector.adoc#vertexarclsh, pyvgx.Vertex.ArcLSH()>> to obtain a suitable arc value for this purpose.
+
+If _lsh_ and _lcm_ parameters are provided they will be used instead of computing them from the vector.
+
+If parameter _reduce_ is True the returned projection nodes will only be those generated from LSH segments where the corresponding _lcm_ segment is zero. The purpose of this is to prevent the use of a projection that is likely to provide poor recall, thereby saving memory that may be better spent elsewhere to improve recall.
+
+If parameter _expand_ is True two projection nodes will be generated for LSH segments where the corresponding _lcm_ segment has exactly one bit set to 1. The purpose of this is to increase recall by allowing more neighborhood queries to be performed.
+
+Parameters _reduce_ and _expand_ are mutually exclusive.
+
+==== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "vectors", euclidean=1 )
+g = Graph("ann")
+
+# Create a random vector
+V = g.sim.NewVector( [random.random() for i in range(768)] )
+
+# Compute LSH, mask, and projection node names
+lsh, lcm, proj = V.Projections( 0 )
+
+# Reduced number of projections
+len( V.Projections( 0, reduce=True )[2] )   # <= len(proj)
+
+# Expanded number of projections
+len( V.Projections( 0, expand=True )[2] )   # >= len(proj)
+
+print(hex(lsh)) # -> 0xa4b8d0ad7ae6a767
+print(hex(lcm)) # -> 0x0108000400810000 
+print(proj)     # -> [b'_0367|000', b'_053B|000', b'_09A9|000',
+                #     b'_0DCD|000', b'_13AE|000', b'_16BD|000',
+                #     b'_1AB5|000', b'_1E15|000', b'_20D0|000',
+                #     b'_25C6|000', b'_292E|000', b'_2F49|000']
+
+----
+
+
+
+
+
+[[featurevector_weights]]
+== Feature Vector Weight Encoding
+
+|===
+|Internal Encoding |External Weight (quantized)
+
+|0
+|0.0078125
+
+|1
+|0.0087890625
+
+|2
+|0.009765625
+
+|3
+|0.0107421875
+
+|4
+|0.01171875
+
+|5
+|0.0126953125
+
+|6
+|0.013671875
+
+|7
+|0.0146484375
+
+|8
+|0.015625
+
+|9
+|0.017578125
+
+|10
+|0.01953125
+
+|11
+|0.021484375
+
+|12
+|0.0234375
+
+|13
+|0.025390625
+
+|14
+|0.02734375
+
+|15
+|0.029296875
+
+|16
+|0.03125
+
+|17
+|0.03515625
+
+|18
+|0.0390625
+
+|19
+|0.04296875
+
+|20
+|0.046875
+
+|21
+|0.05078125
+
+|22
+|0.0546875
+
+|23
+|0.05859375
+
+|24
+|0.0625
+
+|25
+|0.0703125
+
+|26
+|0.078125
+
+|27
+|0.0859375
+
+|28
+|0.09375
+
+|29
+|0.1015625
+
+|30
+|0.109375
+
+|31
+|0.1171875
+
+|32
+|0.125
+
+|33
+|0.140625
+
+|34
+|0.15625
+
+|35
+|0.171875
+
+|36
+|0.1875
+
+|37
+|0.203125
+
+|38
+|0.21875
+
+|39
+|0.234375
+
+|40
+|0.25
+
+|41
+|0.28125
+
+|42
+|0.3125
+
+|43
+|0.34375
+
+|44
+|0.375
+
+|45
+|0.40625
+
+|46
+|0.4375
+
+|47
+|0.46875
+
+|48
+|0.5
+
+|49
+|0.5625
+
+|50
+|0.625
+
+|51
+|0.6875
+
+|52
+|0.75
+
+|53
+|0.8125
+
+|54
+|0.875
+
+|55
+|0.9375
+
+|56
+|1.0
+
+|57
+|1.125
+
+|58
+|1.25
+
+|59
+|1.375
+
+|60
+|1.5
+
+|61
+|1.625
+
+|62
+|1.75
+
+|63
+|1.875
+
+|===
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=similarityMethods.adoc#, title="Similarity Methods"]
+<<similarityMethods.adoc#, icon:arrow-circle-left[size=2x, title="Similarity Methods"]>>
+//icon:arrow-circle-up[size=2x, link=similarity.adoc#, title="pyvgx Similarity"]
+<<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
+//icon:arrow-circle-right[size=2x, link=similarityMembers.adoc#, title="Similarity Members"]
+<<similarityMembers.adoc#, icon:arrow-circle-right[size=2x, title="Similarity Members"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

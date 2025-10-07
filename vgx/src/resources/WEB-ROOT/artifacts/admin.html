@@ -1,0 +1,2665 @@
+<!DOCTYPE html>
+<!--
+  
+  VGX Server
+  Distributed engine for plugin-based graph and vector search
+  
+  Module:  vgx
+  File:    admin.html
+  Author:  Stian Lysne slysne.dev@gmail.com
+  
+  Copyright © 2025 Rakuten, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+-->
+
+<html>
+<head>
+    <title>VGX Admin</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <script src="uptime.js"></script>
+    <script src="boxstate.js"></script>
+    <script src="digest.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div>
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container" id="mainBody">
+            <div id="templateArea" style="visibility: hidden">
+                <table>
+                    <tr id="subscriber_template">
+                        <td class="substat"><input type="text" value=""></td>
+                        <td class="subdgst"></td>
+                        <td class="subslct"><input type="radio" class="select_subscriber" name="subscriber_radio"></td>
+                        <!--td class="subschm"></td-->
+                        <td class="subhost"><input class="highlightable subinput" type="text" placeholder="hostname" value=""></td>
+                        <td class="subcoln"></td>
+                        <td class="subport"><input class="highlightable subinput" type="text" placeholder="tport" value=""></td>
+                        <td class="subactn"><button type="button" class="disabled"></button></td>
+                    </tr>
+                </table>
+                
+            </div>
+
+            <div class="nodeStateArea">
+                <!--h3>Local</h3-->
+                <table id="nodeState">
+                    <tr>
+                        <th class="nodeState_double">Service</th>
+                        <th class="nodeState_single">Request</th>
+                        <th class="nodeState_single">Durability</th>
+                        <th class="nodeState_single">Mutability</th>
+                        <th class="nodeState_single">TX I/O kiB/s</th>
+                    </tr>
+                    <tr>
+                        <td class="nodeState_double box" ><input id="nodeStateIdentity"></td>
+                        <td class="nodeState_single box" ><input id="nodeStateRequestRate"></td>
+                        <td class="nodeState_single box" ><input id="nodeStatePersistenceMode"></td>
+                        <td class="nodeState_single box" ><input id="nodeStateExecutionMode"></td>
+                        <td class="nodeState_single box" ><input id="nodeStateTxInRate"></td>
+                    </tr>
+                    <tr>
+                        <td class="nodeState_double box" >
+                            <input id="nodeStateIdentityStatus">
+                            <input id="nodeStateUptime">
+                        </td>
+                        <td class="nodeState_single box" ><input id="nodeStateQueryLatency"></td>
+                        <td class="nodeState_single box" ><input id="nodeStatePersistActivity"><img id="busyPersisting" src="loader.gif"></td>
+                        <td class="nodeState_single box" ><input id="nodeStateMutableMode"></td>
+                        <td class="nodeState_single box" ><input id="nodeStateTxOutRate"></td>
+                    </tr>
+                    <tr>
+                        <td class="nodeState_double">
+                            <input class="nodeStateObjectCount objLabel" value="Order" >
+                            <input class="nodeStateObjectCount objLabel" value="Size" >
+                        </td>
+                        <td class="nodeState_single box"><button id="forceShutdown" type="button" class="localactn disabled">Shutdown</button></td>
+                        <td class="nodeState_single box"><button id="createSnapshot" type="button" class="localactn disabled">Snapshot</button></td>
+                        <td class="nodeState_single box"><button id="toggleBind" type="button" class="localactn disabled">-</button></td>
+                        <td class="nodeState_single box"><button id="toggleStreamTxInput" type="button" class="localactn disabled">-</button></td>
+                    </tr>
+                    <tr>
+                        <td class="nodeState_double box">
+                            <input class="nodeStateObjectCount memWarn" id="nodeStateOrder">
+                            <input class="nodeStateObjectCount memWarn" id="nodeStateSize">
+                        </td>
+                        <td class="nodeState_single box"><button id="toggleServiceOut" type="button" class="localactn disabled">-</button></td>
+                        <td class="nodeState_single box"><button id="syncSubscribers" type="button" class="localactn disabled">Sync</button></td>
+                        <td class="nodeState_single box"><button id="toggleTTL" type="button" class="localactn disabled">-</button></td>
+                        <td class="nodeState_single box"><button id="toggleStreamTxOutput" type="button" class="localactn disabled">-</button></td>
+                    </tr>
+                    <tr>
+                        <td class="nodeState_double box">
+                            <input class="memWarn" id="nodeStateMemory" value="-">
+                        </td>
+                        <td class="nodeState_single box"><button id="resetMetrics" type="button" class="localactn disabled">Reset</button></td>
+                        <td class="nodeState_single box"><button id="truncateAll" type="button" class="localactn disabled">Truncate</button></td>
+                        <td class="nodeState_single box"><button id="toggleReadonly" type="button" class="localactn disabled">-</button></td>
+                        <td class="nodeState_single box"><button id="detachAll" type="button" class="localactn disabled">Detach All</button></td>
+                    </tr>
+                    <tr>
+                        <td class="message" colspan="5"><input type="text" id="message"></input><pre id="longmessage"></pre></td>
+                    </tr>
+                </table>
+
+            </div>
+
+            <div id="armArea">
+                <hr>
+                <h4>Local</h4>
+                <span id="localStatus" class="substat hostlist"><input type="text" value=""></span>
+                <span id="localDigest"></span>
+                <span id="masterSerial"><input type="text" value="" disabled/></span>
+                <span id="lockArea" style="display: inline-block">
+                    <div id="lock" style="display: inline-block">
+                        <img id="lockStateLocked" class="lockState" src="lock.png"/>
+                        <img id="lockStateUnlocked" class="lockState" src="unlocked.png" style="display: none"/>
+                    </div>
+                    <input id="armRemain" type="button" class="armstate disable_select" style="visibility: hidden; display: inline-block"></input>
+                </span>
+                <span style="display: none">
+                        <input id="safebox" type="button" class="armstate armaction safe disable_select" value="SAFE">
+                        <input id="armedbox" type="button" class="armstate armaction armed   disable_select" value="UNLOCKED">
+                </span>
+                <div>
+                    <label for="armAction">
+                        <input type="range" id="armAction" name="armAction" style="visibility: hidden">
+                    </label>
+                </div>
+                <div id="authTokenArea"><span id="authToken" class="enable_select"></span></div>
+            </div>
+
+
+            <div id="providerArea">
+                <hr>
+                <table id="provider" class="hostlist">
+                    <tbody>
+                        <tr class="hostlistHeader">
+                            <th class="substat">Provider</th>
+                            <th class="subdgst"></th>
+                            <th class="subslct"></th>
+                            <!--th class="subschm"></th-->
+                            <th class="subhost"></th>
+                            <th></th>
+                            <th class="subport"></th>
+                            <th class="subactn"></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="subscribersArea">
+                <hr>
+                <table id="subscribers" class="hostlist">
+                    <tbody>
+                        <tr class="hostlistHeader">
+                            <th class="substat">Subscriber</th>
+                            <th class="subdgst"></th>
+                            <th class="subslct"></th>
+                            <!--th class="subschm"></th-->
+                            <th class="subhost"></th>
+                            <th></th>
+                            <th class="subport"></th>
+                            <th class="subactn"></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="pluginTemplateArea" style="visibility: hidden">
+                <table id="pluginTemplate">
+                    <tbody>
+                        <tr id="plugin_template">
+                            <td class="nodeState_double box"><input class="pluginPath" ></td>
+                            <td class="nodeState_single box"><input class="pluginLocation" ></td>
+                            <td class="nodeState_quad box"><input class="pluginDesc" ></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="nodeStateArea">
+                <hr>
+                <table id="plugins">
+                    <tbody>
+                        <tr>
+                            <th class="nodeState_double">Plugin</th>
+                            <th class="nodeState_single">Location</th>
+                            <th class="nodeState_quad">Description</th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div>
+                <div class="modal"><span id="busymsg"></span></div>
+            </div>
+
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+
+<style>
+
+    #mainBody.loading .modal {
+        display: block;
+    }
+
+    .container {
+        width: 900px;
+    }
+
+    body {
+        overflow: auto;
+    }
+
+    input[disabled] {
+        pointer-events: none;
+    }
+
+    #templateArea {
+        height: 0px;
+    }
+
+    #plugins input {
+        background-color: #F8F8F8;
+        /*background-color: transparent;*/
+        padding: 0;
+        margin: 0;
+        padding-left: 8px;
+    }
+
+    #localStatus {
+        position: relative;
+        left: 1px;
+    }
+
+    #localDigest {
+        position: relative;
+        left: 17px;
+        font-size: 16px;
+    }
+
+    #masterSerial {
+        position: relative;
+        left: 42px;
+    }
+
+    #masterSerial input {
+        width: 200px;
+        font-family: Consolas, Menlo, courier;
+        font-weight: bold;
+        font-size: 14px;
+        color: #AAAAAA;
+        background: transparent;
+        border: none;
+    }
+
+    #lockArea {
+        position: relative;
+        left: 60px;
+        vertical-align: middle;
+    }
+
+    #lock {
+        position: relative;
+        top: -4px;
+        padding: 16px 32px;
+        cursor: pointer;
+    }
+
+    .lockState {
+        /*position: absolute;*/
+        cursor: pointer;
+        opacity: 0.6;
+        height: 26px;
+        vertical-align: middle;
+    }
+
+    #armAction {
+        vertical-align: middle;
+        opacity: 0.25;
+    }
+
+    #armAction:hover {
+        cursor: pointer;
+        opacity: 0.5;
+    }
+
+
+    #armArea {
+        padding-top: 0px;
+        padding-bottom: 5px;
+        margin-top: 0px;
+        margin-bottom: 5px;
+    }
+
+    #armArea label .text {
+        font-weight: bold;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    #armArea > div {
+        margin-bottom: 5px;
+    }
+
+
+    #armedbox {
+        position: relative;
+        background-color: #cb4335;
+        color: #fdedec;
+        left: 100px;
+        width: 100px;
+    }
+
+    #armRemain {
+        position: relative;
+        top: -2px;
+        left: 10px;
+        max-width: 40px;
+        margin-top: 0px;
+        background: transparent;
+    }
+
+    #safebox {
+        position: relative;
+        background-color: #239b56;
+        color: #eafaf1;
+        left: 100px;
+        width: 100px;
+    }
+
+    .arm_x {
+        z-index: 500;
+        background-color: black; /* #4d5656; */
+        width: 20px;
+    }
+
+    input.arm_x {
+        visibility: hidden;
+        font-size: 14px;
+        text-align: left;
+        vertical-align: top;
+        padding-bottom: 4px;
+        padding-left: 3px;
+        transform: rotate(180deg);
+    }
+
+
+    .lamp_off {
+        background-color: #C0C0C0 !important;
+        opacity: 0.5;
+    }
+
+    .armstate {
+        font-family: Consolas, Menlo, courier;
+        position: relative;
+        font-weight: bold;
+        font-size: 16px;
+        text-align: center;
+        vertical-align: middle;
+        border: none;
+        border-radius: 3px;
+        height: 25px;
+        transition: opacity 200ms;
+    }
+
+    .armaction:hover {
+        font-size: 110%;
+        opacity: 0.8;
+        cursor: pointer;
+    }
+
+    .armaction:active {
+        transform: translateX(2px) translateY(2px);
+    }
+
+    #authTokenArea {
+        font-size: 20%;
+        color: #CCCCCC;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        visibility: hidden;
+    }
+
+    .nodeStateArea input {
+        font-weight: bold;
+        font-size: 100%;
+        vertical-align: middle;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    #nodeState {
+        border-spacing: 0px;
+    }
+
+    .nodeStateArea th {
+        text-align: left;
+        padding-left: 0px;
+        margin-left: 0px;
+    }
+
+    .nodeStateArea td {
+        padding-left: 0px;
+        margin-left: 0px;
+    }
+
+
+    .nodeStateArea input {
+        border-radius: 3px;
+        border: solid 0px;
+    }
+
+    .box input {
+        height: 30px;
+        padding-left: 1px;
+        padding-right: 1px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        font-family: Consolas, Menlo, courier;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    #nodeStatePersistActivity {
+        padding: 12px;
+    }
+
+    .nodeState_single {
+        width: 140px;
+    }
+
+    .nodeState_single input {
+        width: 140px;
+        text-align: center;
+        width: 110px;
+        padding: 0px;
+    }
+
+    .nodeState_double {
+        width: 270px;
+    }
+
+    .nodeState_double input {
+        width: 240px;
+    }
+
+    .nodeState_quad {
+        width: 525px;
+    }
+
+    .nodeState_quad input {
+        width: 525px;
+    }
+
+    .pluginDesc {
+        white-space: pre-wrap;
+    }
+
+    input#nodeStateIdentity {
+        font-size: 18px;
+        padding-left: 8px;
+    }
+
+    #nodeStateIdentityStatus {
+        text-align: center;
+        margin-right: 5px;
+        width: 115px;
+    }
+
+    #nodeStateUptime {
+        font-size: 15px;
+        text-align: center;
+        margin-right: 5px;
+        padding: 0px;
+        width: 115px;
+    }
+
+    #nodeStateMemory {
+        height: 22px;
+        padding: 0px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        text-align: center;
+    }
+
+    .message input#message {
+        font-family: Consolas, Menlo, courier;
+        font-weight: normal;
+        font-size: 80%;
+        width: 800px;
+    }
+
+    .message pre#longmessage {
+        font-family: Consolas, Menlo, courier;
+        font-weight: normal;
+        font-size: 80%;
+        width: 800px;
+        display: block;
+        visibility: hidden;
+    }
+
+    #message {
+        height: 22px;
+        padding-left: 8px;
+        margin-top: 15px;
+        margin-bottom: 0px;
+        text-align: left;
+    }
+
+    input.nodeStateObjectCount {
+        margin-right: 5px;
+        width: 115px;
+        height: 22px;
+        padding: 0px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        text-align: center;
+    }
+
+    input.objLabel {
+        background-color: #FFFFFF;
+    }
+
+    button {
+        cursor: pointer;
+        border-radius: 2px;
+    }
+
+    button.localactn {
+        width: 90px;
+        font-weight: bold;
+        font-size: 90%;
+        margin-right: 10px;
+        margin-left: 10px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        padding: 0px;
+    }
+
+
+    button.disabled {
+        opacity: 0.2;
+        cursor: not-allowed;
+        color: #333333;
+    }
+
+
+    #busyPersisting {
+        display: none;
+        opacity: 0.6;
+        height: 56px;
+        vertical-align: middle;
+        position: absolute;
+        margin-top: -3px;
+        margin-left: -45px;
+    }
+
+    #provider {
+       margin-left: -4px;
+    }
+
+   /* #provider tbody .hostlistHeader .subport {
+        font-size: 80%;
+    }*/
+
+    #subscribers {
+        margin-left: -4px;
+    }
+
+    #subscriber_template {
+        visibility: hidden;
+    }
+
+    tr#subscriber_template td {
+        padding-top: 0px;
+        padding-bottom: 0px;
+    }
+
+    .hostlistHeader {
+        visibility: hidden;
+    }
+
+    .hostlist {
+        border-spacing: 0px;
+        /*margin-top: -20px;*/
+        /*margin-bottom: 30px;*/
+    }
+
+    .hostlist td {
+        font-size: 16px;
+        font-family: Consolas, Menlo, courier;
+    }
+
+    .hostlist input {
+        font-size: 16px;
+        font-family: Consolas, Menlo, courier;
+        font-weight: bold;
+    }
+
+    .hostlist th {
+        text-align: left;
+        padding-left: 5px;
+    }
+
+    .hostlist tr th {
+        padding-bottom: 15px;
+    }
+
+    .hostlist tr td {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .subdgst {
+        padding-left: 15px;
+    }
+
+    .subdgst span {
+        width: 88px;
+        height: 24px;
+    }
+
+    .subdgst .digestX {
+        font-size: 16px;
+    }
+
+    th.substat {
+        text-align: left;
+    }
+
+    .substat input {
+        max-width: 100px;
+        font-weight: bold;
+        border: solid 1px;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .subslct input {
+        cursor: pointer;
+        visibility: hidden;
+        display: none;
+    }
+
+    ::placeholder {
+        font-weight: normal;
+        opacity: 0.7;
+    }
+
+    .subhost input {
+        min-width: 382px;
+        max-width: 382px;
+        background-color: transparent;
+        border-style: double;
+    }
+
+    .subport input {
+        max-width: 60px;
+        background-color: transparent;
+        border-style: double;
+    }
+
+
+    .subactn {
+        padding-right: 10px;
+    }
+
+    .subactn button {
+        width: 80px;
+        font-weight: bold;
+        font-size: 90%
+    }
+
+    select {
+        margin-right: 10px;
+    }
+
+    .arc {
+        margin-right: 1px;
+    }
+
+    label {
+        margin-right: 0px;
+    }
+
+    .val {
+        padding-right: 10px;
+        text-align: right;
+        font-size: 90%;
+    }
+
+    .vint {
+        color: #0000C0;
+    }
+
+    .container .headrow {
+        background-color: #D0D0D0;
+    }
+
+    
+
+
+</style>
+
+<script>
+    const NodeState = {
+        New     : Symbol("New"),
+        Idle    : Symbol("Idle"),
+        Active  : Symbol("Active"),
+        Stream  : Symbol("Stream"),
+        Delta   : Symbol("Delta"),
+        Paused  : Symbol("Paused"),
+        Sync    : Symbol("Sync"),
+        Down    : Symbol("Down")
+    }
+
+
+    class StatusColor {
+
+        static scheme = {
+            "green": {
+                "fg": "#007050",
+                "bg": "#EAFAF1"
+            },
+            "greeninv": {
+                "fg": "#EAFAF1",
+                "bg": "#007050"
+            },
+            "gray": {
+                "fg": "#AAAAAA",
+                "bg": "#FFFFFF"
+            },
+            "grayinv": {
+                "fg": "#FFFFFF",
+                "bg": "#AAAAAA"
+            },
+            "black": {
+                "fg": "#000000",
+                "bg": "#FFFFFF"
+            },
+            "blackinv": {
+                "fg": "#FFFFFF",
+                "bg": "#000000"
+            },
+            "orange1": {
+                "fg": "#6E2C00",
+                "bg": "#F9E79F"
+            },
+            "orange2": {
+                "fg": "#6E2C00",
+                "bg": "#F4D03F"
+            },
+            "orange3": {
+                "fg": "#6E2C00",
+                "bg": "#F1C40F"
+            },
+            "orange4": {
+                "fg": "#6E2C00",
+                "bg": "#F39C12"
+            },
+            "orange5": {
+                "fg": "#6E2C00",
+                "bg": "#E67E22"
+            },
+            "orange6": {
+                "fg": "#F6DDCC",
+                "bg": "#D35400"
+            },
+            "orangeinv": {
+                "fg": "#F9E79F",
+                "bg": "#7d6608"
+            },
+            "blue": {
+                "fg": "#1F618D",
+                "bg": "#EAF2F8"
+            },
+            "blueinv": {
+                "fg": "#EAF2F8",
+                "bg": "#1F618D"
+            },
+            "purple": {
+                "fg": "#6C3483",
+                "bg": "#E8DAEF"
+            },
+            "purpleinv": {
+                "fg": "#E8DAEF",
+                "bg": "#6C3483"
+            },
+            "red": {
+                "fg": "#DD2000",
+                "bg": "#FDEDEC"
+            },
+            "redinv": {
+                "fg": "#FDEDEC",
+                "bg": "#DD2000"
+            }
+        }
+
+
+        static update( elem, colorScheme ) {
+            let scheme = StatusColor.scheme[ colorScheme ];
+            elem.css("color", scheme["fg"]);
+            elem.css("background-color", scheme["bg"]);
+        }
+    }
+
+
+    class NodeStatus {
+
+        static update(element, state, serialDelta) {
+            element.addClass("disable-select");
+            element.prop("disabled", true);
+            element.css("text-align", "center");
+
+            switch (state) {
+            case NodeState.Idle:
+                element.val( "Idle" );
+                StatusColor.update( element, "green" );
+                break;
+            case NodeState.Active:
+                element.val( "Active" );
+                StatusColor.update( element, "orange1" );
+                break;
+            case NodeState.Stream:
+                element.val( "Stream" );
+                if (serialDelta < 4) {
+                    StatusColor.update( element, "orange1" );
+                }
+                else if (serialDelta < 32) {
+                    StatusColor.update( element, "orange2" );
+                }
+                else if (serialDelta < 256) {
+                    StatusColor.update( element, "orange3" );
+                }
+                else if (serialDelta < 1024) {
+                    StatusColor.update( element, "orange4" );
+                }
+                else {
+                    StatusColor.update( element, "orange5" );
+                }
+                break;
+            case NodeState.Paused:
+                element.val( "Pause" );
+                StatusColor.update( element, "blueinv" );
+                break;
+            case NodeState.Delta:
+                element.val( "Delta" );
+                StatusColor.update( element, "orange6" );
+                break;
+            case NodeState.Down:
+                element.val( "Down" );
+                StatusColor.update( element, "redinv" );
+                break;
+            case NodeState.New:
+                element.val( "New" );
+                StatusColor.update( element, "gray" );
+                break;
+            case NodeState.Sync:
+                element.val( "Sync" );
+                StatusColor.update( element, "orange1" );
+                break;
+            default:
+                element.val( "???" );
+                StatusColor.update( element, "purple" );
+            }
+        }
+    }
+
+
+    class Message {
+        static display( text, error ) {
+            let m = $('#message');
+            m.val( text );
+            if( error === true ) {
+                BoxState.exception( m );
+            }
+            else {
+                BoxState.light( m );
+            }
+
+            if (text.length > 110) {
+                Message.setLong( text );
+            }
+            else {
+                Message.clearLong();
+            }
+        }
+
+        static clear() {
+            Message.display( "", false );
+        }
+
+
+        static setLong( text ) {
+            let M = $('#longmessage');
+            M.html( text );
+            M.css("visibility","visible");
+        }
+
+        static clearLong() {
+            let M = $('#longmessage');
+            M.html("");
+            M.css("visibility","hidden");
+        }
+
+    }
+
+    class Identity {
+        static display(serviceName) {
+            let identityElem = $('#nodeStateIdentity');
+            let identityStatusElem = $('#nodeStateIdentityStatus');
+
+            BoxState.neutral(identityElem);
+            if (serviceName != "(interactive)") {
+                identityElem.val(serviceName);
+                identityStatusElem.val("Running");
+                BoxState.optimal(identityStatusElem);
+            }
+            else {
+                identityElem.val("?");
+                identityStatusElem.val("Interactive");
+                BoxState.attention(identityStatusElem);
+            }
+        }
+    }
+
+
+    class Persistence {
+        static display(durable, persisting, synchronizing, syncProgress) {
+            const persistence = durable ? "Durable" : "Volatile";
+            const busyAs = synchronizing ? ("Sync " + syncProgress.toString() + "%") : (persisting ? "Writing" : null);
+            const state = busyAs == null ? (durable ? "Streaming" : "In-Memory") : busyAs;
+
+            let persistenceElem = $('#nodeStatePersistenceMode');
+            let stateElem = $('#nodeStatePersistActivity');
+
+            persistenceElem.val(persistence);
+            stateElem.val(state);
+
+            if (durable) {
+                BoxState.optimal(persistenceElem);
+            }
+            else {
+                BoxState.attention(persistenceElem);
+            }
+
+            let busyPersistingElem = $('#busyPersisting');
+            if (busyAs != null) {
+                BoxState.attention(stateElem);
+                stateElem.css("text-align", "left");
+                busyPersistingElem.css("display", "inline");
+            }
+            else {
+                BoxState.neutral(stateElem);
+                stateElem.css("text-align", "center");
+                busyPersistingElem.css("display", "none");
+            }
+
+        }
+    }
+
+
+    class Execution {
+        static display(bindPort, provider, executing, readonly, events, events_running) {
+            let execModeElem = $('#nodeStateExecutionMode');
+            let mutableModeElem = $('#nodeStateMutableMode');
+
+            // -------------------------------------------------------
+            // bound    |   provider    |   executing   |  LABEL
+            // -------------------------------------------------------
+            //    0     |      0        |       0       | LOCAL ONLY
+            //    1     |      0        |       0       | LISTEN ONLY
+            //    1     |      1        |       0       | INPUT BUT IDLE
+            //    1     |      1        |       1       | TRANSACTIONS FLOWING
+            // -------------------------------------------------------
+            //
+
+            // Execution
+            BoxState.attention(execModeElem);
+            let execMode = null;
+            let toggleBind = $('#toggleBind');
+            if (bindPort == 0) {
+                execMode = "Local";
+                BoxState.neutral(execModeElem);
+                toggleBind.html("Bind");
+            }
+            else {
+                toggleBind.html("Unbind");
+                if (provider == null) {
+                    execMode = "Bound:" + bindPort;
+                    BoxState.neutral(execModeElem);
+                }
+                else if (executing == false) {
+                    execMode = "Suspended";
+                    BoxState.neutral(execModeElem);
+                }
+                else {
+                    execMode = "Streaming";
+                    BoxState.optimal(execModeElem);
+                }
+            }
+            execModeElem.val(execMode);
+
+            // TTL / Readonly
+            if( readonly ) {
+                $('#toggleReadonly').html("Mutable");
+                mutableModeElem.val("Readonly");
+                BoxState.frozen(mutableModeElem);
+                toggleBind.css("visibility", "hidden");
+            }
+            else {
+                $('#toggleReadonly').html("Readonly");
+                const ttlMode = events ? (events_running ? "TTL Active" : "TTL Frozen") : "TTL Passive";
+                mutableModeElem.val(ttlMode);
+                if (events) {
+                    if (events_running) {
+                        BoxState.attention(mutableModeElem);
+                        $('#toggleTTL').html("Freeze TTL");
+                    }
+                    else {
+                        BoxState.frozen(mutableModeElem);
+                        $('#toggleTTL').html("Thaw TTL");
+                    }
+                }
+                else {
+                    BoxState.neutral(mutableModeElem);
+                }
+                toggleBind.css("visibility", "visible");
+            }
+
+
+        }
+    }
+
+
+
+    class TransactionIO {
+
+        peers = null;
+        updater = null;
+        halted_in = false;
+        halted_out = false;
+
+        isInputHalted() {
+            return this.halted_in == true;
+        }
+
+        isOutputHalted() {
+            return this.halted_out == true;
+        }
+
+        update() {
+            $.get("/vgx/txstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                this.halted_in = response["halted"]["in"];
+                this.halted_out = response["halted"]["out"];
+                const rate = response["data"]["rate"];
+                const bps_in = parseFloat(rate["in"]);
+                const bps_out = parseFloat(rate["out"]);
+                const kiB_in_rate = Math.round(bps_in / 1024);
+                const kiB_out_rate = Math.round(bps_out / 1024);
+                const tx_in_rate = kiB_in_rate.toLocaleString("en-US");
+                const tx_out_rate = kiB_out_rate.toLocaleString("en-US");
+
+                let inBox = $('#nodeStateTxInRate');
+                let outBox = $('#nodeStateTxOutRate');
+
+                if( this.halted_in == true ) {
+                    inBox.val("I: -");
+                    BoxState.frozen('#nodeStateTxInRate');
+                }
+                else {
+                    inBox.val("I: " + tx_in_rate);
+                    BoxState.neutral('#nodeStateTxInRate');
+                }
+                if( this.halted_out == true ) {
+                    outBox.val("O: -");
+                    BoxState.frozen('#nodeStateTxOutRate');
+                }
+                else {
+                    outBox.val("O: " + tx_out_rate);
+                    BoxState.neutral('#nodeStateTxOutRate');
+                }
+            }.bind(this));
+        }
+
+
+        stop() {
+            if (this.updater) {
+                clearInterval(this.updater);
+                this.updater = null;
+            }
+        }
+
+
+        start() {
+            this.stop();
+            this.updater = setInterval(this.update.bind(this), 1450);
+            this.update();
+        }
+
+
+        static display( bindPort, nSubscribers, busyIO, readonly ) {
+            let execModeElem = $('#nodeStateExecutionMode');
+
+            $.get("/vgx/txstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                this.halted_in = response["halted"]["in"];
+                this.halted_out = response["halted"]["out"];
+
+                // TX in
+                let toggleTxInput = $("#toggleStreamTxInput");
+                if( busyIO == false && bindPort > 0 && readonly == false ) {
+                    toggleTxInput.css("visibility", "visible");
+                    if( this.halted_in == true ) {
+                        toggleTxInput.html("Resume I");
+                    }
+                    else {
+                        toggleTxInput.html("Pause I");
+                    }
+                }
+                else {
+                    toggleTxInput.css("visibility", "hidden");
+                }
+
+                // TX out
+                let toggleTxOutput = $("#toggleStreamTxOutput");
+                let detachAll = $("#detachAll");
+                if( busyIO == false && nSubscribers > 0 ) {
+                    toggleTxOutput.css("visibility", "visible");
+                    if( this.halted_out == true ) {
+                        toggleTxOutput.html("Resume O");
+                    }
+                    else {
+                        toggleTxOutput.html("Pause O");
+                    }
+                    // Detach All
+                    detachAll.css("visibility", "visible");
+                }
+                else {
+                    toggleTxOutput.css("visibility", "hidden");
+                    detachAll.css("visibility", "hidden");
+                }
+
+            }.bind(this));
+        }
+    }
+
+
+
+
+    class GraphSum {
+
+        static lastMasterSerial = 0;
+        static digestObj = new Digest($('#localDigest'));
+
+        static refresh() {
+            if (GraphSum.digestObj == null) {
+                GraphSum.digestObj = new Digest($('#localDigest'));
+            }
+            $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+
+                const names = response["graphsum"]["names"];
+                const order = response["graphsum"]["order"];
+                const size = response["graphsum"]["size"];
+                let digest = "00000000000000000000000000000000";
+                let masterSerial = "0";
+                if (names.length > 0) {
+                    digest = response["graphsum"]["digest"];
+                    masterSerial = response["graphsum"]["master-serial"];
+                }
+
+                const oStr = order.toLocaleString("en-US");
+                const sStr = size.toLocaleString("en-US");
+
+                let oElem = $('#nodeStateOrder');
+                let sElem = $('#nodeStateSize');
+
+                const thres = 100000000;
+
+                oElem.css("font-size", order >= thres ? "80%" : "90%" );
+                sElem.css("font-size", size >= thres ? "80%" : "90%" );
+
+                oElem.val(oStr);
+                sElem.val(sStr);
+
+                if (GraphSum.lastMasterSerial == 0) {
+                    GraphSum.lastMasterSerial = masterSerial;
+                }
+
+                // Local Status
+                let localStatus = $('#localStatus input');
+                if (masterSerial == GraphSum.lastMasterSerial) {
+                    NodeStatus.update( localStatus, NodeState.Idle, 0 );
+                }
+                else {
+                    GraphSum.lastMasterSerial = masterSerial;
+                    let serialDelta = masterSerial - GraphSum.lastMasterSerial;
+                    NodeStatus.update( localStatus, NodeState.Active, serialDelta );
+                }
+              
+                // Local Digest
+                GraphSum.digestObj.update(digest);
+
+                // Local Master Serial
+                const msStr = MasterSerial.render( masterSerial );
+                $('#masterSerial input').val( msStr );
+
+            });
+        }
+    }
+
+
+    class Meminfo {
+        static refresh() {
+            $.get("/vgx/meminfo", function (data, textStatus, jqXHR) {
+                const mem = data["response"]["memory"];
+                const total = parseInt(mem["total"]);
+                const process_mem = parseInt(mem["current"]["process"]);
+                const current_avail = parseInt(mem["current"]["available"]);
+                const usage = 1.0 - (current_avail / total);
+
+                if (usage > 0.85) {
+                    BoxState.exception('.memWarn');
+                }
+                else if (usage > 0.75) {
+                    BoxState.attention('.memWarn');
+                }
+                else {
+                    BoxState.neutral('.memWarn');
+                }
+
+                let meminfo = $('#nodeStateMemory');
+                const memMiB = Math.round( process_mem / (1024*1024) );
+                const memStr = memMiB.toLocaleString("en-US");
+                const usagePct = (usage*100).toFixed(0);
+                meminfo.val( ""+memStr + " MiB    (" + usagePct + "%)");
+
+            });
+        }
+    }
+
+
+    class PluginInfo {
+
+        already = false;
+
+
+        static refresh( mode ) {
+            if( PluginInfo.already ) {
+                return;
+            }
+
+
+            if( mode === "matrix" ) {
+                // Must use baseport
+                const baseport = parseInt(window.location.port, 10) - 1;
+                const url = `${window.location.protocol}//${window.location.hostname}:${baseport}/vgx/builtin/matrixplugins`;
+                $.get(url, function (data) {
+                    const plugins = data["response"];
+                    plugins.sort();
+                    const grex = /name=(\S+)/;
+                    $('.plugin_row').remove();
+                    PluginInfo.already = true;
+                    for (var i = 0; i < plugins.length; i++) {
+                        const plugin = plugins[i];
+                        const path = plugin["path"];
+                        const pluginLocation = plugin.matrix?.location;
+                        const level = plugin.matrix?.level;
+                        const description = plugin["description"];
+                        PluginInfo.renderPluginRow(i, path, description, mode, pluginLocation, level);
+                    }
+                }).fail( function (jqXHR, textStatus, errorThrown) {
+                    let x = 1;
+                });
+
+            }
+            else {
+                $.get("/vgx/plugins", function (data, textStatus, jqXHR) {
+                    const plugins = data["response"];
+                    plugins.sort();
+                    const grex = /name=(\S+)/;
+                    $('.plugin_row').remove();
+                    PluginInfo.already = true;
+                    for (var i = 0; i < plugins.length; i++) {
+                        const plugin = plugins[i];
+                        const path = plugin["path"];
+                        const description = plugin["description"];
+                        PluginInfo.renderPluginRow(i, path, description, mode, "engine", 0);
+                    }
+                });
+            }
+        }
+
+
+
+        static getPluginName( path ) {
+            let nameRex = /\/vgx\/plugin\/(\S+)/;
+            let m = nameRex.exec(path);
+            return m[1];
+        }
+
+
+        static renderPluginRow(pluginId, path, description, mode, pluginLocation, pluginLevel) {
+            let plugins = $('#plugins tbody');
+
+            let rowTemplate = $('#plugin_template').html();
+
+            const rowID = "plugin_" + pluginId;
+
+            plugins.append('<tr class="plugin_row" id="' + rowID + '">' + rowTemplate + '</tr>');
+
+            // Row
+            let row = plugins.find("#" + rowID);
+            row.find("input").prop("disabled", true);
+            row.find("input").addClass("disable_select");
+            row.find("*").css("vertical-align", "middle");
+
+            // Path
+            let pathTD = row.find("td");
+            let pathElem = pathTD.find(".pluginPath");
+            pathElem.attr("id", "pluginPath_" + pluginId);
+            pathElem.val(path);
+            pathElem.css( "font-size", "90%" );
+            pathTD.css("cursor", "pointer");
+            pathTD.off("click");
+            pathTD.on("click", function(eventObj) {
+                let pluginName = PluginInfo.getPluginName(path);
+                let pluginType;
+                if (mode === "matrix") {
+                    pluginName += " [" + pluginLocation + "/" + pluginLevel + "]";
+                    pluginType = "matrix";
+                }
+                else {
+                    pluginType = "plugin";
+                }
+                let pluginLink = "http://" + window.location.hostname + ":" + CommonHeader.baseport + "/plugin?plugin=" + pluginName + "&type=" + pluginType;
+                window.open( pluginLink, "_blank", "height=850, width=925" );
+            }.bind(this));
+
+            // Location/Level
+            let locationElem = pathTD.find(".pluginLocation");
+            locationElem.attr("id", "pluginLocation_" + pluginId);
+            locationElem.val( "" + pluginLocation + "/" + pluginLevel );
+            locationElem.css( "font-weight", "normal" );
+            locationElem.css( "font-family", "unset" );
+            locationElem.css( "font-size", "90%" );
+
+            // Description
+            let descStr = typeof( description ) === "object" ? description.join(" ") : description;
+            let descElem = pathTD.find(".pluginDesc");
+            descElem.attr("id", "pluginDesc_" + pluginId);
+            descElem.val(descStr.trim());
+            descElem.css( "font-weight", "normal" );
+            descElem.css( "font-family", "unset" );
+            descElem.css( "font-size", "90%" );
+
+
+        }
+    }
+
+
+
+    class Peers {
+
+        providerSubId = 0x7fffffff;
+        providerHost = null;
+        providerStat = null;
+        providerDigest = null;
+        providerNoUpdateCount = 0;
+
+
+        constructor(admin, txio) {
+            this.admin = admin;
+            this.txio = txio;
+        }
+
+
+        selectSubscriber() {
+            let thisFocus = $(".subinput:focus");
+            const subId = $('.select_subscriber:checked').val();
+            let rowId = "#subscriber_" + subId;
+            let hostElem = "#subhost_" + subId;
+            let portElem = "#subport_" + subId;
+            let statElem = "#substat_" + subId;
+            let actionElem = "#subactn_" + subId;
+            // Disable host/port inputs by default
+            $('.subhost input').addClass("disable_select");
+            $('.subhost input').prop("disabled", true);
+            $('.subport input').addClass("disable_select");
+            $('.subport input').prop("disabled", true);
+            // Enable one button
+            $('.subactn button').prop("disabled", true);
+            $('.subactn button').addClass("disabled");
+            $(actionElem).prop("disabled", false);
+            $(actionElem).removeClass("disabled");
+            // Highlight one row
+            $('.subscriber_row').removeClass("highlight");
+            $(rowId).addClass("highlight");
+            $(rowId).removeClass("hoverlight");
+            // Allow input if status is not Attached
+            if ( $(statElem).val() === "New" ) {
+                $(hostElem).removeClass("disable_select");
+                $(hostElem).prop("disabled", false);
+                $(portElem).removeClass("disable_select");
+                $(portElem).prop("disabled", false);
+                if (thisFocus.length == 0) {
+                    $(hostElem).focus();
+                }
+                else {
+                    thisFocus.focus();
+                }
+            }
+        }
+
+
+        renderSubscriberRow(subId, subHost, subPort, subAdminPort, subDigest, subStatus, serialDelta) {
+
+            let provider = $('#provider tbody');
+            let subscribers = $('#subscribers tbody');
+
+            let rowTemplate = $('#subscriber_template').html();
+
+            const rowID = "subscriber_" + subId;
+
+            let tbody;
+            if (subId == this.providerSubId) {
+                tbody = provider;
+            }
+            else {
+                tbody = subscribers;
+            }
+            tbody.append('<tr class="subscriber_row" id="' + rowID + '">' + rowTemplate + '</tr>');
+
+            // Row
+            let row = tbody.find("#" + rowID);
+            if (this.admin.authorizer.isSafe()) {
+                row.find("input").prop("disabled", true);
+                row.find("input").addClass("disable_select");
+            }
+            row.find("*").css("vertical-align", "middle");
+
+            // Digest Status Select Host Port Action
+            let subdgstElem = row.find(".subdgst");
+            let substatElem = row.find(".substat input");
+            let subslctElem = row.find(".subslct input");
+            let subhostElem = row.find(".subhost input");
+            let subportElem = row.find(".subport input");
+            let subactnElem = row.find(".subactn button");
+
+            // Digest
+            if (subDigest == null) {
+                new Digest(subdgstElem).update(null);
+            }
+            else {
+                new Digest(subdgstElem).update(subDigest);
+                subdgstElem.prop( "title", "S/N lag: " + serialDelta );
+            }
+
+            // Status
+            let substatTD = row.find(".substat");
+            substatElem.attr("id", "substat_" + subId);
+            substatTD.removeProp("title");
+            substatTD.off("click");
+            substatTD.css("cursor", "default");
+            if (subStatus != null) {
+                NodeStatus.update( $('#substat_'+subId), subStatus, serialDelta );
+                if (substatTD != null && subAdminPort != null && subAdminPort > 0) {
+                    const uri = "http://" + subHost + ":" + subAdminPort + "/admin";
+                    substatTD.prop( "title", uri );
+                    substatTD.css("cursor", "pointer");
+                    substatTD.click(function(eventObj) {
+                        window.open( uri, "_blank", "height=850, width=925" );
+                     }.bind(this));
+                }
+                else {
+                    substatTD.removeProp("title");
+                    substatTD.css("cursor", "default");
+                }
+            }
+
+            // Select
+            subslctElem.attr("id", "subslct_" + subId);
+            subslctElem.val(subId);
+            row.off("mouseover");
+            row.on("mouseover", null, row, function (event) {
+                if (this.admin.authorizer.isArmed() && !$(this).hasClass("highlight")) {
+                    event.data.addClass("hoverlight");
+                }
+            }.bind(this));
+            row.off("mouseout");
+            row.on("mouseout", null, row, function (event) {
+                if (this.admin.authorizer.isArmed()) {
+                    event.data.removeClass("hoverlight");
+                }
+            }.bind(this));
+
+            // Host
+            subhostElem.attr("id", "subhost_" + subId);
+            if (subHost != null) {
+                subhostElem.val(subHost);
+            }
+            else {
+                subhostElem.val("");
+            }
+
+            // Port
+            subportElem.attr("id", "subport_" + subId);
+            if (subId == this.providerSubId) {
+                subportElem.attr("placeholder","hport");
+                if( subPort != null && subPort < 0 ) {
+                    row.find(".subcoln").html('<pre style="margin:0"> </pre>');
+                    subportElem.prop("disabled", true);
+                    subportElem.css("visibility", "hidden");
+                }
+                else {
+                    row.find(".subcoln").html(":");
+                    row.find(".subcoln").css("visibility", "visible");
+                }
+            }
+            else {
+                subportElem.attr("placeholder","tport");
+                row.find(".subcoln").html(":");
+                if (subPort != null) {
+                    subportElem.val(subPort);
+                }
+            }
+            row.find("*").off("mouseup");
+
+            row.find("*").on("mouseup", null, subslctElem, function (eventObj) {
+                let selE = eventObj.data;
+                if (selE.prop("disabled") == false) {
+                    selE.prop("checked", true);
+                    this.selectSubscriber();
+                }
+            }.bind(this));
+
+            // <enter> in host to go to port
+            subhostElem.off("keypress");
+            subhostElem.on("keypress", subportElem, function (event) {
+                if (event.key == "Enter") {
+                    (event.data).focus();
+                }
+            });
+
+            // <enter> in port to perform action
+            subportElem.off("keypress");
+            subportElem.on("keypress", subactnElem, function (event) {
+                if (event.key == "Enter") {
+                    subactnElem.trigger("click");
+                }
+            });
+
+            // Action Button
+            subactnElem.addClass("subscriber_action");
+            subactnElem.attr("id", "subactn_" + subId);
+            subactnElem.prop("disabled", true);
+            subactnElem.addClass("disabled");
+            const subscriberData = {
+                'hostElem': subhostElem,
+                'portElem': subportElem
+            };
+
+            if (subId == this.providerSubId) {
+                if (subHost != null) {
+                    subactnElem.html("Detach");
+                    subactnElem.click(subscriberData, this.admin.performUnsubscribe.bind(this.admin));
+                }
+                else {
+                    subactnElem.html("Subscribe");
+                    subactnElem.click(subscriberData, this.admin.performSubscribe.bind(this.admin));
+                }
+            }
+            else {
+                if (subHost != null) {
+                    subactnElem.html("Detach");
+                    subactnElem.click(subscriberData, this.admin.performDetach.bind(this.admin));
+                }
+                else {
+                    subactnElem.html("Attach");
+                    subactnElem.click(subscriberData, this.admin.performAttach.bind(this.admin));
+                }
+            }
+
+        }
+
+
+        refreshAll(reAuth) {
+            $.get("/vgx/status", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const serving = response["request"]["serving"];
+                if (serving > 0) {
+                    $('#toggleServiceOut').html("Service Out");
+                }
+                else {
+                    $('#toggleServiceOut').html("Service In");
+                }
+            });
+
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                try {
+
+                    const response = data["response"];
+
+                    $(".localactn").css("display", "inline");
+
+                    // Service
+                    const serviceName = response["name"];
+                    Identity.display(serviceName);
+
+                    // Durability / Consistency
+                    const digest = response["digest"];
+                    this.providerDigest = response["provider-digest"];
+                    const idle_ms = parseInt(response["idle-ms"]);
+                    const durable = response["durable"];
+                    const masterSerial = response["master-serial"];
+                    const persisting = response["persisting"];
+                    const synchronizing = response["synchronizing"];
+                    const syncProgress = response["sync-progress"];
+                    Persistence.display(durable, persisting, synchronizing, syncProgress);
+
+                    // Mutability / execution
+                    const bindPort = response["port"];
+                    const provider = response["provider"];
+                    const executing = response["executing"];
+                    const readonly = response["readonly"];
+                    const events = response["events"];
+                    const events_running = response["events-running"];
+                    Execution.display(bindPort, provider, executing, readonly, events, events_running);
+
+                    $('.subscriber_row').remove();
+
+                    const subscribers = response["subscribers"];
+                    const rex = /(\S+):\/\/([^:]+):(\d+)/;
+
+                    // TransactionIO
+                    const busyIO = persisting || synchronizing ? true : false;
+                    TransactionIO.display( bindPort, subscribers.length, busyIO, readonly );
+
+                    // We are configured to accept TX input
+                    if (bindPort > 0) {
+                        // Backend is not reporting an attached provider
+                        if (provider == null) {
+                            // A provider host was recently known to us, render most recent provider state (possible temporary backend timeout)
+                            if (this.providerHost != null && this.providerNoUpdateCount <= 8) {
+                                this.providerNoUpdateCount += 1;
+                                this.renderSubscriberRow(this.providerSubId, this.providerHost, -1, -1, this.providerDigest, this.providerStat, 0);
+                            }
+                            // No recent provider host
+                            else {
+                                this.renderSubscriberRow(this.providerSubId, null, null, null, null, NodeState.New, 0);
+                                this.providerHost = null;
+                                this.providerDigest = null;
+                                this.providerStat = null;
+                            }
+                        }
+                        // Render attached provider state
+                        else {
+                            this.providerNoUpdateCount == 0;
+                            const match = rex.exec(provider);
+                            if (match != null) {
+                                this.providerHost = match[2];
+                            }
+                            else {
+                                this.providerHost = "?";
+                            }
+                            if (this.txio.isInputHalted()) {
+                                this.providerStat = NodeState.Paused;
+                            }
+                            else if ( this.providerDigest === digest ) {
+                                this.providerStat = NodeState.Idle;
+                            }
+                            else if (idle_ms < 10000 ) {
+                                this.providerStat = NodeState.Stream;
+                            }
+                            else {
+                                this.providerStat = NodeState.Delta;
+                            }
+                            this.renderSubscriberRow(this.providerSubId, this.providerHost, -1, -1, this.providerDigest, this.providerStat, 0);
+                        }
+                        $('#providerArea').css("display", "block");
+                        $('#nodeStateTxInRate').css("opacity", "1");
+                    }
+                    else {
+                        $('#providerArea').css("display", "none");
+                        $('#nodeStateTxInRate').css("opacity", "0.3");
+                    }
+
+                    // Subscribers
+                    $('#subscribersArea').css("display", "block");
+
+                    let nAttached = 0;
+                    if (subscribers.length > 0) {
+                        subscribers.sort();
+                        for (var i = 0; i < subscribers.length; i++) {
+                            const S = subscribers[i];
+                            const uri = S[0];
+                            const detail = S[1];
+                            if (detail != null) {
+                                const host = detail['host'];
+                                const txport = detail['txport'];
+                                const adminport = detail['adminport'];
+                                const subDigest = detail['digest'];
+                                const subMasterSerial = detail['master-serial'];
+                                const serialDelta = MasterSerial.diff( masterSerial, subMasterSerial );
+                                let stat = null;
+                                if (synchronizing) {
+                                    stat = NodeState.Sync;
+                                }
+                                else if (detail["status"] === "CONNECTED") {
+                                    nAttached += 1;
+                                    if (this.txio.isOutputHalted()) {
+                                        stat = NodeState.Paused;
+                                    }
+                                    else if (subDigest === digest) {
+                                        stat = NodeState.Idle;
+                                    }
+                                    else if (idle_ms < 10000) {
+                                        stat = NodeState.Stream;
+                                    }
+                                    else {
+                                        stat = NodeState.Delta;
+                                    }
+                                }
+                                else {
+                                    stat = NodeState.Down;
+                                }
+
+                                this.renderSubscriberRow(i, host, txport, adminport, subDigest, stat, serialDelta);
+                            }
+                        }
+                        $('#nodeStateTxOutRate').css("opacity", "1");
+                    }
+                    else {
+                        $('#nodeStateTxOutRate').css("opacity", "0.3");
+                    }
+
+                    if (persisting == false && synchronizing == false) {
+                        // Snapshot allowed if durable or if local execution
+                        if (durable == true || bindPort == 0) {
+                            $("#createSnapshot").css("visibility", "visible");
+                        }
+                        else {
+                            $("#createSnapshot").css("visibility", "hidden");
+                        }
+
+                        if (nAttached > 0 && nAttached == subscribers.length && readonly == false) {
+                            $("#syncSubscribers").css("visibility", "visible");
+                        }
+                        else {
+                            $("#syncSubscribers").css("visibility", "hidden");
+                        }
+
+                        if (readonly)  {
+                            $("#truncateAll").css("visibility", "hidden");
+                        }
+                        else {
+                            $("#truncateAll").css("visibility", "visible");
+                        }
+
+                        if (events == true) {
+                            $("#toggleTTL").css("visibility", "visible");
+                        }
+                        else {
+                            $("#toggleTTL").css("visibility", "hidden");
+                        }
+                        $("#toggleBind").css("visibility", "visible");
+                        $(".subscriber_action").css("visibility", "visible");
+                    }
+                    else {
+                        $("#createSnapshot").css("visibility", "hidden");
+                        $("#syncSubscribers").css("visibility", "hidden");
+                        $("#toggleTTL").css("visibility", "hidden");
+                        $("#toggleBind").css("visibility", "hidden");
+                        $(".subscriber_action").css("visibility", "hidden");
+                    }
+
+                    // Add one more row for attaching new subscriber
+                    if (!synchronizing) {
+                        this.renderSubscriberRow(subscribers.length, null, null, null, null, NodeState.New, 0);
+                    }
+
+                }
+                catch (error) {
+                    Message.display( JSON.stringify(error, null, 2), true );
+                }
+                finally {
+                    if (reAuth) {
+                        this.admin.authorizer.disarm();
+                        this.admin.authorizer.arm();
+                    }
+                    $('.hostlistHeader').css("visibility", "visible");
+                }
+            }.bind(this));
+        }
+
+    }
+
+
+
+    class Authorizer {
+        armSize = 180;
+
+        authToken = null;
+        auth_t0 = 0.0;
+        auth_tx = 0.0;
+        auth_t_server_minus_t_local = 0.0;
+        deauthorizer = null;
+        armActionArmed = false;
+        parentAdmin = null;
+        peers = null;
+
+        constructor(parent) {
+            this.parentAdmin = parent;
+            $('#armAction').css("width", this.armSize);
+            $('#armAction').prop("min", 0);
+            $('#armAction').prop("max", this.armSize);
+            $('#authToken').removeClass("disable_select");
+            $('#authToken').prop("disabled", false);
+            $('.safe').off("click");
+            $('.safe').on("click", this.disarm.bind(this));
+            $('.safe').on("click", Message.clear);
+            $('.message').off("click");
+            $('.message').on("click", Message.clear);
+            $('.armed').off("click");
+            $('.armed').on("click", this.arm.bind(this));
+            $('#lock').off("click");
+            $('#lock').on("click", this.toggle.bind(this));
+        }
+
+
+        registerPeers(peers) {
+            this.peers = peers;
+            $('#armAction').off("input");
+            $('#armAction').on("input", this.detectArm.bind(this));
+        }
+
+
+        get token() {
+            return this.authToken;
+        }
+
+
+        get size() {
+            return this.armSize;
+        }
+
+
+        isArmed() {
+            return this.armActionArmed == true;
+        }
+
+
+        isSafe() {
+            return this.armActionArmed == false;
+        }
+
+
+        lampSafe(safe) {
+            $('.armstate').removeClass("lamp_off");
+            $('.arm_x').val("");
+            if (safe) {
+                $('#armedbox').addClass("lamp_off");
+                $('#armedbox').val("UNLOCK");
+                $('#safebox').val("SAFE");
+                $('#armRemain').css("visibility", "hidden");
+                $('#lockStateLocked').css("display", "inline-block");
+                $('#lockStateUnlocked').css("display", "none");
+            }
+            else {
+                $('#armedbox').val("UNLOCKED");
+                $('#safebox').addClass("lamp_off");
+                $('#safebox').val("LOCK");
+                $('#armRemain').css("visibility", "visible");
+                $('#lockStateLocked').css("display", "none");
+                $('#lockStateUnlocked').css("display", "inline-block");
+            }
+        }
+
+
+        enableLocalActions() {
+            $(".localactn").prop("disabled", false);
+            $(".localactn").removeClass("disabled");
+            $("#forceShutdown").off("click");
+            $("#forceShutdown").on("click", this.parentAdmin.performShutdown.bind(this.parentAdmin));
+            $("#toggleServiceOut").off("click");
+            $("#toggleServiceOut").on("click", this.parentAdmin.performToggleServiceOut.bind(this.parentAdmin));
+            $("#resetMetrics").off("click");
+            $("#resetMetrics").on("click", this.parentAdmin.performResetMetrics.bind(this.parentAdmin));
+            $("#createSnapshot").off("click");
+            $("#createSnapshot").on("click", this.parentAdmin.performCreateSnapshot.bind(this.parentAdmin));
+            $("#toggleBind").off("click");
+            $("#toggleBind").on("click", this.parentAdmin.performToggleBind.bind(this.parentAdmin));
+            $("#toggleTTL").off("click");
+            $("#toggleTTL").on("click", this.parentAdmin.performToggleTTL.bind(this.parentAdmin));
+            $("#syncSubscribers").off("click");
+            $("#syncSubscribers").on("click", this.parentAdmin.performSyncSubscribers.bind(this.parentAdmin));
+            $("#toggleStreamTxInput").off("click");
+            $("#toggleStreamTxInput").on("click", this.parentAdmin.performToggleStreamTxInput.bind(this.parentAdmin));
+            $("#toggleStreamTxOutput").off("click");
+            $("#toggleStreamTxOutput").on("click", this.parentAdmin.performToggleStreamTxOutput.bind(this.parentAdmin));
+            $("#truncateAll").off("click");
+            $("#truncateAll").on("click", this.parentAdmin.performTruncate.bind(this.parentAdmin));
+            $("#toggleReadonly").off("click");
+            $("#toggleReadonly").on("click", this.parentAdmin.performToggleReadonly.bind(this.parentAdmin));
+            $("#detachAll").off("click");
+            $("#detachAll").on("click", this.parentAdmin.performDetachAll.bind(this.parentAdmin));
+        }
+
+
+        getAuthToken() {
+            $.get("/vgx/builtin/ADMIN_GetAuthToken", function (data, textStatus, jqXHR) {
+                let response = null;
+                try {
+                    response = data["response"];
+                    this.authToken = response["authtoken"];
+                    this.auth_t0 = response["t0"];
+                    this.auth_tx = response["tx"];
+
+                    // Enable local actions
+                    this.enableLocalActions();
+
+                    // Set callback for when a row is selected
+                    $('.select_subscriber').off("change");
+                    $('.select_subscriber').on("change", this.peers.selectSubscriber.bind(this.peers));
+
+                    // Deauthorizer
+                    const t_local = Date.now() / 1000;
+                    this.auth_t_server_minus_t_local = this.auth_t0 - t_local;
+                    const authRemain = this.auth_tx - this.auth_t0;
+                    $('#armRemain').val(Math.round(authRemain));
+                    this.lampSafe(false);
+                    this.startDeauthorizer(100);
+                }
+                catch (error) {
+                    Message.display( error + " " + JSON.stringify(jqXHR, null, 2), true );
+                }
+                finally {
+                    $('#mainBody').removeClass("loading");
+                    $('#busymsg').html("");
+                }
+            }.bind(this)).fail(function (xhr, txt, err) {
+                Message.display( txt + " " + JSON.stringify(xhr, null, 2), true );
+                $('#mainBody').removeClass("loading");
+                $('#busymsg').html("");
+            });
+        }
+
+
+        armActionEvents() {
+            // Enable row radio buttons
+            $('.select_subscriber').prop("disabled", false);
+            // Get auth token from server, which will continue the arming if successful
+            $('#mainBody').addClass("loading");
+            $('#busymsg').html("Authorizing...");
+            setTimeout(this.getAuthToken.bind(this), 333);
+        }
+
+
+        arm() {
+            $('#armAction').val(this.size);
+            this.detectArm();
+        }
+
+
+        disarm() {
+            $('#armAction').val(0);
+            this.detectArm();
+        }
+
+
+        toggle() {
+            if ($('#armAction').val() == 0) {
+                this.arm();
+            }
+            else {
+                this.disarm();
+            }
+        }
+
+
+        startDeauthorizer(interval) {
+            if (this.deauthorizer != null) {
+                clearInterval(this.deauthorizer);
+                this.deauthorizer = null;
+            }
+            if (interval > 0) {
+                this.deauthorizer = setInterval(this.decrementArm.bind(this), interval);
+            }
+        }
+
+
+        disableLocalActions() {
+            $(".localactn").prop("disabled", true);
+            $(".localactn").addClass("disabled");
+        }
+
+
+        disarmActionEvents() {
+            // Delete authtoken
+            this.authToken = null;
+            this.auth_t0 = 0.0;
+            this.auth_tx = 0.0;
+            $('#authToken').html("");
+
+            // Disable local actions
+            this.disableLocalActions();
+
+            // Disable all action buttons
+            $('.subactn button').prop("disabled", true);
+            $('.subactn button').addClass("disabled");
+            // Disable row selector
+            $('.select_subscriber').prop("disabled", true);
+            $('.select_subscriber').prop("checked", false);
+            $('.select_subscriber').off("change");
+
+            // Remove any row highlight
+            $('.subscriber_row').removeClass("highlight");
+            $('.subscriber_row').removeClass("hoverlight");
+
+            // Reset to safe
+            $('#armRemain').val(0);
+            this.lampSafe(true);
+        }
+
+
+        decrementArm() {
+            const value = $('#armAction').val();
+            if (this.armActionArmed == true && value > 0) {
+                const t_local = Date.now() / 1000;
+                const t_server = this.auth_t_server_minus_t_local + t_local;
+                const authRemain = this.auth_tx - t_server;
+                const authInterval = this.auth_tx - this.auth_t0;
+                const authValue = Math.round(this.armSize * authRemain / authInterval);
+                $('#armAction').val(authValue - 1);
+                $('#armRemain').val(Math.round(authRemain));
+                this.detectArm();
+            }
+        }
+
+
+        detectArm() {
+            const value = $('#armAction').val();
+            if (value == this.armSize) {
+                this.armActionArmed = true;
+                this.armActionEvents();
+            }
+            else if (value == 0) {
+                this.armActionArmed = false;
+                this.disarmActionEvents();
+                this.startDeauthorizer(-1);
+            }
+        }
+    }
+
+
+
+    class Admin {
+
+        authorizer = null;
+        peers = null;
+
+
+        constructor(auth) {
+            this.authorizer = new Authorizer(this);
+        }
+
+
+        registerPeers(peers) {
+            this.peers = peers;
+            this.authorizer.registerPeers(peers);
+            this.authorizer.disarm();
+        }
+
+
+        handle(data, command, reAuth) {
+            let message = "";
+            let isErr = false;
+            const response = data["response"];
+            try {
+                if (response == null) {
+                    if (data["status"] == "ERROR") {
+                        const data_message = data["message"];
+                        if (data_message) {
+                            const plugin_message = data_message["plugin"];
+                            if (plugin_message) {
+                                throw "" + plugin_message["exception"] + " " + plugin_message["value"];
+                            }
+                            const vgx_message = data_message["vgx"];
+                            if (vgx_message) {
+                                throw "" + vgx_message["exception"] + " " + vgx_message["value"];
+                            }
+                            throw JSON.stringify(data_message, null, 2);
+                        }
+                        throw JSON.stringify(data, null, 2);
+                    }
+                    throw "Empty response";
+                }
+                message = JSON.stringify(response, null, 2);
+                if (typeof response != "object") {
+                    throw message
+                }
+            }
+            catch (error) {
+                message = "" + error;
+                isErr = true;
+            }
+            finally {
+                this.peers.refreshAll(reAuth);
+                GraphSum.refresh();
+                Message.display( message, isErr );
+                setTimeout(function () {
+                    $('#busymsg').html("");
+                    $('#mainBody').removeClass("loading");
+                }, 2000);
+                if (!reAuth) {
+                    this.authorizer.disarm();
+                }
+            }
+        }
+
+
+        execute(command, parameters, reAuth) {
+            let uri = "/vgx/builtin/" + command + "?authtoken=" + this.authorizer.token;
+            if (parameters) {
+                for (var key in parameters) {
+                    uri += "&" + key + "=" + parameters[key];
+                }
+            }
+            $('#mainBody').addClass("loading");
+            $('#busymsg').html(command);
+            $.get(uri, function (data, textStatus, jqXHR) {
+                this.handle(data, command, reAuth);
+            }.bind(this)).fail(function (xhr, txt, err) {
+                let msg = null;
+                try {
+                    msg = xhr.responseJSON['message']['plugin']['value'];
+                }
+                catch(error) {
+                }
+                if (msg === "Invalid authtoken" || msg === "Expired authtoken") {
+                    this.authorizer.disarm();
+                    this.authorizer.arm();
+                    Message.display( "Authtoken refused, retry operation", true );
+                }
+                else {
+                    Message.display( txt + " " + JSON.stringify(xhr, null, 2), true );
+                }
+                $('#mainBody').removeClass("loading");
+                $('#busymsg').html("");
+            }.bind(this));
+        }
+
+
+        performUnsubscribe(eventObj) {
+            this.execute("ADMIN_Unsubscribe", null, true);
+        }
+
+
+        performSubscribe(eventObj) {
+            const data = eventObj["data"];
+            const host= $(data["hostElem"]).val();
+            const port= $(data["portElem"]).val();
+            const subURI = "vgx://" + host + ":" + port;
+            this.execute("ADMIN_Subscribe", { "uri": subURI, "hardsync": 1, "timeout": 30000 }, true);
+        }
+
+
+        performDetach(eventObj) {
+            const data = eventObj["data"];
+            const host = $(data["hostElem"]).val();
+            const port = $(data["portElem"]).val();
+            const subURI = "vgx://" + host + ":" + port;
+            this.execute("ADMIN_Detach", { "uri": subURI }, true);
+        }
+
+
+        performAttach(eventObj) {
+            const data = eventObj["data"];
+            const host = $(data["hostElem"]).val();
+            const port = $(data["portElem"]).val();
+            const subURI = "vgx://" + host + ":" + port;
+            this.execute("ADMIN_Attach", { "uri": subURI }, true);
+        }
+
+
+        performToggleServiceOut(eventObj) {
+            $.get("/vgx/status", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const serving = response["request"]["serving"];
+                if (serving > 0) {
+                    const rate = Math.round( response["request"]["rate"] );
+                    const confirmRate = prompt("Enter " + rate + " to confirm Service Out", "rate");
+                    if( confirmRate != null ) {
+                        const rex = /^(\d+)$/;
+                        const match = rex.exec(confirmRate);
+                        if (match != null) {
+                            const r = parseInt(match[1]);
+                            if (r === rate) {
+                                this.execute("ADMIN_ServiceOut", {}, true);
+                            }
+                            else {
+                                Message.display( "Service Out request rejected: rate mismatch", true );
+                            }
+                        }
+                        else {
+                            Message.display( "Confirm Service Out by typing current &lt;rate&gt;", false );
+                        }
+                    }
+                }
+                else {
+                    this.execute("ADMIN_ServiceIn", {}, true);
+                }
+            }.bind(this));
+        }
+
+
+        performResetMetrics(eventObj) {
+            this.execute("ADMIN_ResetMetrics", {}, true);
+        }
+
+
+        performCreateSnapshot(eventObj) {
+            this.execute("ADMIN_Persist", {}, false);
+        }
+
+
+        performToggleBind(eventObj) {
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const bindPort = response["port"];
+                if (bindPort == 0) {
+                    const portStr = prompt("Bind Port", "port:durable");
+                    if (portStr != null) {
+                        const rex = /^(\d+)(:(\S+))?$/;
+                        const match = rex.exec(portStr);
+                        if (match != null) {
+                            const port = parseInt(match[1]);
+                            const durable = match[3] === 'durable' ? 1 : 0;
+                            if (port < 1024 || port > 65535) {
+                                Message.display( "Invalid bind port", true );
+                            }
+                            else {
+                                this.execute("ADMIN_Bind", { "port": port, "durable": durable }, true);
+                            }
+                        }
+                        else {
+                            Message.display( "Use bind format &lt;port&gt;[:durable]", false );
+                        }
+                    }
+                }
+                else {
+                    this.execute("ADMIN_Unbind", {}, true);
+                }
+            }.bind(this));
+        }
+
+
+        performToggleTTL(eventObj) {
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const events = response["events"];
+                const events_running = response["events-running"];
+                if (events == true) {
+                    if (events_running == true) {
+                        this.execute("ADMIN_SuspendEvents", {}, true);
+                    }
+                    else {
+                        this.execute("ADMIN_ResumeEvents", {}, true);
+                    }
+                }
+            }.bind(this));
+        }
+
+
+        performToggleStreamTxInput(eventObj) {
+            $.get("/vgx/txstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const halted_in = response["halted"]["in"];
+                if( halted_in == true ) {
+                    this.execute("ADMIN_ResumeTxInput", {}, true);
+                }
+                else {
+                    this.execute("ADMIN_SuspendTxInput", {}, true);
+                }
+            }.bind(this));
+        }
+
+
+        performToggleStreamTxOutput(eventObj) {
+            $.get("/vgx/txstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const halted_out = response["halted"]["out"];
+                if( halted_out == true ) {
+                    this.execute("ADMIN_ResumeTxOutput", {}, true);
+                }
+                else {
+                    this.execute("ADMIN_SuspendTxOutput", {}, true);
+                }
+            }.bind(this));
+        }
+
+
+        performTruncate(eventObj) {
+            $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+
+                const order = response["graphsum"]["order"];
+                const size = response["graphsum"]["size"];
+
+                const confirmOrderSize = prompt("Enter " + order + ":" + size + " to confirm Truncate", "order:size");
+                if( confirmOrderSize != null ) {
+                    const rex = /^(\d+):(\d+)$/;
+                    const match = rex.exec(confirmOrderSize);
+                    if (match != null) {
+                        const o = parseInt(match[1]);
+                        const s = parseInt(match[2]);
+                        if (o === order && s === size) {
+                            this.execute("ADMIN_Truncate", {}, false);
+                        }
+                        else {
+                            Message.display( "Truncate request rejected: order/size mismatch", true );
+                        }
+                    }
+                    else {
+                        Message.display( "Confirm truncate by typing current &lt;order&gt;:&lt;durable&gt;", false );
+                    }
+                }
+            }.bind(this));
+        }
+
+
+        performToggleReadonly(eventObj) {
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const readonly = response["readonly"];
+                if( readonly == true ) {
+                    this.execute("ADMIN_ClearReadonly", {}, true);
+                }
+                else {
+                    this.execute("ADMIN_SetReadonly", {}, true);
+                }
+            }.bind(this));
+        }
+
+
+        performDetachAll(eventObj) {
+            $.get("/vgx/peerstat", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const subscribers = response["subscribers"];
+                const lengthStr = prompt("Type " + subscribers.length + " to confirm Detach All", "subscribers");
+                if( lengthStr != null ) {
+                    const rex = /^(\d+)$/;
+                    const match = rex.exec(lengthStr);
+                    if (match != null) {
+                        const s = parseInt(match[1]);
+                        if (s === subscribers.length) {
+                            this.execute("ADMIN_DetachAll", {}, false);
+                        }
+                        else {
+                            Message.display( "Subscribers mismatch", true );
+                        }
+                    }
+                    else {
+                        Message.display( "Type number of &lt;subscribers&gt; to confirm Detach All", false );
+                    }
+                }
+            }.bind(this));
+        }
+
+
+        performSyncSubscribers(eventObj) {
+            const syncMode = prompt("Enter soft or hard sync", "repair/soft/hard");
+            if (syncMode === "repair" || syncMode === "soft" || syncMode === "hard") {
+                this.execute("ADMIN_Sync", { "mode": syncMode }, false);
+                let substat = $('#subscribers').find(".substat input");
+                substat.val("Sync");
+            }
+            else {
+                Message.display( "Invalid sync mode specified", true );
+            }
+        }
+
+
+        performShutdown(eventObj) {
+            const auth0 = this.authorizer.token;
+            const token = auth0.slice(0,6);
+            this.authorizer.getAuthToken();
+
+            $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+
+                const order = response["graphsum"]["order"];
+                const size = response["graphsum"]["size"];
+
+                const confirmOrderSize = prompt("VGX Server Shutdown? Enter " + order + ":" + size + " to proceed.", "order:size");
+                if( confirmOrderSize != null ) {
+                    const rex = /^(\d+):(\d+)$/;
+                    const match = rex.exec(confirmOrderSize);
+                    if (match != null) {
+                        const o = parseInt(match[1]);
+                        const s = parseInt(match[2]);
+                        if (o === order && s === size) {
+                            const confirmToken = prompt( "Enter token " + token + " to confirm VGX Server Shutdown." );
+                            if( confirmToken === token ) {
+                                this.execute("ADMIN_Shutdown", {'authshutdown':auth0}, false);
+                            }
+                            else if( confirmToken != null ) {
+                                Message.display( "Shutdown request rejected: incorrect token", true );
+                            }
+                        }
+                        else {
+                            Message.display( "Shutdown request rejected: order/size mismatch", true );
+                        }
+                    }
+                    else {
+                        Message.display( "Confirm shutdown by typing current &lt;order&gt;:&lt;durable&gt;", false );
+                    }
+                }
+            }.bind(this));
+        }
+
+    }
+
+
+
+    class Uptime {
+        refresher = null;
+
+        constructor() {
+            this.refresher = new UptimeRefresher('nodeStateUptime', function () {
+                BoxState.neutral('#nodeStateUptime');
+            }, function (err) {
+                Message.display( "" );
+                $('#nodeState').find("input").val("");
+                $('#nodeStateIdentityStatus').val("Down");
+                BoxState.exception('#message');
+                BoxState.exception('#nodeStateIdentityStatus');
+                BoxState.attention('#nodeStateUptime');
+                $(".localactn").css("display", "none");
+                $('#providerArea').css("display", "none");
+                $('#subscribersArea').css("display", "none");
+            });
+
+            BoxState.neutral('#nodeStateUptime');
+        }
+
+
+        start() {
+            this.refresher.start();
+        }
+    }
+
+
+
+    class QueryMetrics {
+        lastQPS = 0.0;
+        lastAvgLat = 0.0;
+        lastPctLat = 0.0;
+        lastExecutors = 0.0;
+        lastWorking = 0.0;
+        lastWaiting = 0.0;
+
+        updater = null;
+
+        update() {
+            $.get("/vgx/status", function (data, textStatus, jqXHR) {
+                const response = data["response"];
+                const request = response["request"];
+                const service_in = request["serving"] > 0 ? true : false;
+                let rateBox = $('#nodeStateRequestRate');
+                let latencyBox = $('#nodeStateQueryLatency');
+                if (service_in) {
+                    const qps = parseFloat(request["rate"]);
+                    const avg_latency = parseFloat(response["response_ms"]["mean"]);
+                    const pct_latency = parseFloat(response["response_ms"]["99.0"]);
+                    const executors = parseInt( request["executors"] );
+                    const working = parseInt( request["working"] );
+                    const waiting = parseInt( request["waiting"] );
+                    let alpha = 0.5;
+                    this.lastQPS = this.lastQPS > 0 ? (alpha * this.lastQPS + (1 - alpha) * qps) : qps;
+                    this.lastAvgLat = this.lastAvgLat > 0 ? (alpha * this.lastAvgLat + (1 - alpha) * avg_latency) : avg_latency;
+                    this.lastPctLat = this.lastPctLat > 0 ? (alpha * this.lastPctLat + (1 - alpha) * pct_latency) : pct_latency;
+                    alpha = 0.8;
+                    this.lastExecutors = (alpha * this.lastExecutors + (1 - alpha) * executors);
+                    this.lastWorking = (alpha * this.lastWorking + (1 - alpha) * working);
+                    this.lastWaiting = (alpha * this.lastWaiting + (1 - alpha) * waiting);
+                    const qpsStr = Math.round(this.lastQPS).toLocaleString("en-US") + " qps";
+                    const latStr = Math.round(this.lastAvgLat) + "/" + Math.round(this.lastPctLat) + " ms";
+                    rateBox.val(qpsStr);
+                    latencyBox.val(latStr);
+
+                    if( this.lastWorking < this.lastExecutors ) {
+                        BoxState.optimal( rateBox );
+                        BoxState.optimal( latencyBox );
+                    }
+                    else if( this.lastWaiting < this.lastWorking * 2 ) {
+                        BoxState.attention( rateBox );
+                        BoxState.attention( latencyBox );
+                    }
+                    else {
+                        BoxState.exception( rateBox );
+                        BoxState.exception( latencyBox );
+                    }
+
+                }
+                else {
+                    rateBox.val("-");
+                    latencyBox.val("Service OUT");
+                    BoxState.attention( rateBox );
+                    BoxState.exception( latencyBox );
+                }
+
+            }.bind(this));
+        }
+
+
+        stop() {
+            if (this.updater) {
+                clearInterval(this.updater);
+                this.updater = null;
+            }
+        }
+
+
+        start() {
+            this.stop();
+            this.updater = setInterval(this.update.bind(this), 2000);
+            this.update();
+        }
+
+    }
+
+
+
+
+    class Page {
+
+        refresher = null;
+        static refresh_interval = 233;
+        static peer_multiple = 5;
+        static graph_multiple = 3;
+        static mem_multiple = 7;
+        static plugin_multiple = 11;
+
+        constructor(admin, peers) {
+            $('.nodeStateArea input').prop("disabled", true);
+            $('.nodeStateArea input').addClass("disable_select");
+            GraphSum.refresh();
+            Meminfo.refresh();
+            this.admin = admin;
+            this.peers = peers;
+            this.peer_countdown = Page.peer_multiple;
+            this.graph_countdown = Page.graph_multiple;
+            this.mem_countdown = Page.mem_multiple;
+            this.plugin_countdown = 0;
+        }
+
+        async getServerMode() {
+            const data = await new Promise((resolve, reject) => {
+                $.get("/vgx/status", function (data) {
+                    resolve(data);
+                }).fail( function (jqXHR, textStatus, errorThrown) {
+                    reject(errorThrown);
+                });
+            });
+            const has_matrix = data?.response?.dispatcher?.enabled;
+            if (has_matrix) {
+                return "matrix";
+            }
+            else {
+                return "engine";
+            }
+        }
+
+
+        async refresh() {
+            this.peer_countdown -= 1;
+            this.graph_countdown -= 1;
+            this.mem_countdown -= 1;
+            this.plugin_countdown -= 1;
+            if( this.peer_countdown <= 0 ) {
+                const selectedSubId = $('.select_subscriber:checked').val();
+                if( typeof selectedSubId != "string" ) {
+                    this.peers.refreshAll(false);
+                }
+                this.peer_countdown = Page.peer_multiple;
+            }
+            if( this.graph_countdown <= 0 ) {
+                GraphSum.refresh();
+                this.graph_countdown = Page.graph_multiple;
+            }
+            if( this.mem_countdown <= 0 ) {
+                Meminfo.refresh();
+                this.mem_countdown = Page.mem_multiple;
+            }
+            if( this.plugin_countdown <= 0 ) {
+                PluginInfo.refresh( await this.getServerMode() );
+                this.plugin_countdown = Page.plugin_multiple;
+            }
+        }
+
+
+        stop() {
+            if (this.refresher != null) {
+                clearInterval(this.refresher);
+                this.refresher = null;
+            }
+        }
+
+
+        start() {
+            this.stop();
+            this.refresher = setInterval(this.refresh.bind(this), Page.refresh_interval);
+        }
+    }
+
+
+
+    function main() {
+
+        let uptime = new Uptime();
+        uptime.start();
+
+        let admin = new Admin();
+
+        let queryMetrics = new QueryMetrics();
+        queryMetrics.start();
+
+        let transactionIO = new TransactionIO();
+        transactionIO.start();
+
+        let peers = new Peers(admin, transactionIO);
+        admin.registerPeers(peers);
+        peers.refreshAll(false);
+
+        let page = new Page(admin, peers);
+        page.start();
+
+        Message.display( "", false );
+
+    }
+
+    CommonHeader.ready(main, 12);
+</script>
+</html>

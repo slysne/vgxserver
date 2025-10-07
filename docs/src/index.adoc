@@ -1,0 +1,101 @@
+= VGX/PyVGX v{project-version} <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: pyvgx/images/
+:linkattrs:
+:source-highlighter: highlightjs
+
+Distributed engine for plugin-based graph and vector search
+
+*Vector Graph indeX* is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. Developers can implement service logic using the *PyVGX* C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end. 
+
+== Install PyVGX
+
+[source, bash]
+----
+pip install pyvgx
+----
+
+[NOTE]
+====
+This package includes native C extensions and has the following platform requirements:
+
+* **Python**: 3.12 or higher
+* **macOS**: 14 (Sonoma) or higher
+* **Linux**: glibc 2.34 or higher (e.g. Ubuntu 22.04+)
+* **Windows**: 10 or higher
+
+Ensure your environment meets these requirements before installing.
+====
+
+=== Build Instructions
+
+You can build the package yourself if needed: <<pyvgx/build.adoc#, Instructions here>>.
+
+
+<<pyvgx/tutorial.adoc#, PyVGX Tutorial>>::
+An introduction to pyvgx, the Python module used for creating graph algorithms
+
+== PyVGX Reference
+
+<<pyvgx/reference.adoc#, Full Reference>>::
+A complete description of the VGX Python API. 
+
+<<pyvgx/shortref.adoc#, Compact Reference>>::
+A compact summary of the VGX Python API.
+
+== VGX Server
+
+Create scalable, multi-node services built on pyvgx plugins
+
+**
+... <<pyvgx/service/service.adoc#, VGX Server>>
+... <<pyvgx/service/pluginadapter.adoc#, Plugins>>
+... <<pyvgx/service/multinode.adoc#, Multi-Node>>
+... <<pyvgx/service/sysadmin.adoc#, Admin>>
+**
+
+
+== Quick Links
+
+
+**
+... <<pyvgx/graph/graph.adoc#, Graph Objects>>
+... <<pyvgx/vertex/vertex.adoc#pyvgxvertex, Vertex Objects>>
+... <<pyvgx/reference.adoc#memoryobject, Memory Objects>>
+... <<pyvgx/similarity/vector.adoc#pyvgxvector, Vector Objects>>
+**
+
+**
+... <<pyvgx/graph/graphQuery.adoc#, Queries>>
+... <<pyvgx/vertex/vertexFilter.adoc#vertexfilter, Vertex Condition>>
+... <<pyvgx/constants/constants.adoc#, Constants>>
+... <<pyvgx/limits.adoc#, Limits>>
+**
+
+**
+... <<pyvgx/evaluator/evaluator.adoc#, VGX Expression Language>>
+... <<pyvgx/evaluator/selectEvaluator.adoc#, Select Statement>>
+**
+
+== Other Useful Information
+
+<<pyvgx/io/vgxopxfer.adoc#stream_building_blocks, VGX Transaction Protocol>>::
+VGX Transaction Interconnect protocol definition
+
+<<pyvgx/VGXCoreConcepts.adoc#, VGX Core Concepts>>::
+VGX Core Concepts
+
+___
+
+[.float-group]
+--
+[.left]
+// cspell:ignore backtotop
+include::pyvgx/common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>

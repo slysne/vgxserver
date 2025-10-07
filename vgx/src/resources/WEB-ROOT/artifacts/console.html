@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<!--
+  
+  VGX Server
+  Distributed engine for plugin-based graph and vector search
+  
+  Module:  vgx
+  File:    console.html
+  Author:  Stian Lysne slysne.dev@gmail.com
+  
+  Copyright © 2025 Rakuten, Inc.
+  
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  
+-->
+
+<html>
+<head>
+    <title>VGX Console</title>
+    <script src="jquery.js"></script>
+    <script src="header.js"></script>
+    <link rel="stylesheet" href="vgx.css">
+</head>
+<body class="disable_select">
+    <div>
+        <div id="commonHeaderDiv"></div>
+
+        <div class="container">
+            <table id="editsetup">
+                <tr id="graph" class="inputrow">
+                    <td class="col1">
+                        Graph:
+                    </td>
+                    <td class="col2">
+                        <select name="graphlist" id="graphlist">
+                        </select>
+                        <label for="order">Order: <span class="val vint" id="order"></span></label>
+                        <label for="size">Size: <span class="val vint" id="size"></span></label>
+                    </td>
+                </tr>
+                <tr id="action_box" class="inputrow">
+                    <td class="col1" colspan="2">
+                        <pre><textarea id="inputtext" name="action" rows=3 spellcheck="false"></textarea></pre>
+                    </td>
+                </tr>
+                <tr id="execute" class="inputrow">
+                    <td class="col1" colspan="2">
+                        <button id="submit" type="button">Execute</button>
+                    </td>
+                </tr>
+                <tr id="simple_output" class="outputrow">
+                    <td class="col1" colspan="2">
+                        <pre><textarea id="result" name="result" rows=1 spellcheck="false" readonly=readonly></textarea></pre>
+                    </td>
+                </tr>
+            </table>
+            <div id="message_box">
+                <pre><div class="area" id="infotext"></div></pre>
+                <pre><div class="area" id="errortext"></div></pre>
+            </div>
+        </div>
+
+        <div id="commonFooterDiv"></div>
+    </div>
+</body>
+</html>
+
+<style>
+
+    #result_box.loading .modal {
+        display: block;
+    }
+
+    #executearrow {
+        text-align: right;
+    }
+
+    #editsetup {
+        border-spacing: 0px;
+    }
+
+    #editsetup tbody {
+        border-spacing: 0px;
+    }
+
+    #editsetup tr {
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    #editsetup td {
+        font-size: 100%;
+        padding-left: 0px;
+    }
+
+    .col1 {
+        min-width: 60px;
+        max-width: 60px;
+        vertical-align: top;
+    }
+
+    .col2 {
+        min-width: 735px;
+        max-width: 735px;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    #submit {
+        width: 90px;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+
+    #execute {
+        margin-top: 15px !important;
+        margin-bottom: 15px !important;
+        height: 30px;
+    }
+
+    #inputtext {
+        font-family: Consolas, monospace;
+        font-size: 100%;
+        font-weight: bold;
+        background-color: #FFFFFF;
+        border: 1px solid #CCCCCC;
+        outline: none;
+        min-width: 730px;
+        min-height: 100px;
+    }
+
+    #result {
+        font-family: Consolas, monospace;
+        font-size: 100%;
+        font-weight: bold;
+        background-color: #F8F8F8;
+        border: 1px solid #CCCCCC;
+        outline: none;
+        margin-bottom: 30px;
+        min-width: 730px;
+        min-height: 100px;
+    }
+
+    select {
+        margin-right: 10px;
+    }
+
+    label {
+        margin-right: 0px;
+    }
+
+    .area {
+        min-width: 800px;
+        max-width: 800px;
+    }
+
+    .val {
+        padding-right: 10px;
+        text-align: right;
+        font-family: Consolas, monospace;
+        font-size: 90%;
+    }
+
+    .vint {
+        color: #0000C0;
+    }
+
+    .vstr {
+        color: #007050;
+    }
+
+    .faded {
+        color: #C0C0C0;
+    }
+</style>
+
+<script>
+
+    function main() {
+
+        let autoRefresher = null;
+
+        $.get("/vgx/graphsum", function (data, textStatus, jqXHR) {
+            const names = data["response"]["graphsum"]["names"];
+            let opt = null;
+            let first = null;
+            for (var i = 0; i < names.length; i++) {
+                opt = document.createElement("option");
+                opt.value = names[i];
+                if (first == null) {
+                    first = names[i];
+                }
+                opt.innerHTML = names[i];
+                $('#graphlist').append(opt);
+            }
+            opt = document.createElement("option");
+            opt.value = "system";
+            if (first == null) {
+                first = "system";
+            }
+            opt.innerHTML = "_system";
+            $('#graphlist').append(opt);
+            $('#graphlist').val(first).change();
+        });
+
+        let previousOrder = 0;
+        let previousSize = 0;
+        let graphUpdater = null;
+        function updateGraphInfo() {
+            const graph = $('#graphlist').find(':selected').val();
+            const url = "/vgx/builtin/status?simple=1&graph=" + graph;
+            if (graph == null) {
+                return;
+            }
+            $.get(url, function (data, textStatus, jqXHR) {
+                let pause = 2000;
+                try {
+                    const base = data["response"]["base"];
+                    const order = base["order"];
+                    const size = base["size"];
+                    $('#order').html(order.toLocaleString("en-US"));
+                    $('#size').html(size.toLocaleString("en-US"));
+                    if (order != previousOrder || size != previousSize) {
+                        previousOrder = order;
+                        previousSize = size;
+                        pause = 150;
+                    }
+                }
+                catch (error) {
+                }
+                finally {
+                    if (graphUpdater) {
+                        clearTimeout(graphUpdater);
+                    }
+                    graphUpdater = setTimeout(updateGraphInfo, pause);
+                }
+            }).fail(function (xhr, txt, err) {
+                if (graphUpdater) {
+                    clearTimeout(graphUpdater);
+                }
+                graphUpdater = setTimeout(updateGraphInfo, 5000);
+            });
+        }
+
+        function performAction() {
+            $('#submit').prop("disabled", true);
+            $.get("/vgx/builtin/ADMIN_GetAuthToken", function (data, textStatus, jqXHR) {
+                const authToken = data["response"]["authtoken"];
+                const expression = $('#inputtext').val();
+                const graph = $('#graphlist').find(':selected').val();
+                if (graph == null) {
+                    return;
+                }
+                let url = "/vgx/builtin/ADMIN_Console?graph=" + graph + "&authtoken=" + authToken;
+
+                $.post(url, expression, function (data, textStatus, jqXHR) {
+                    let response = "";
+                    let message = "";
+
+                    try {
+                        const responseRaw = data["response"];
+                        const exec_ms = parseFloat(data["exec_ms"]);
+                        const messageRaw = data["message"];
+                        if (responseRaw != null) {
+                            response = JSON.stringify(responseRaw, null, 4);
+                            $('#result').val(response);
+                        }
+                        else if (messageRaw != null) {
+                            message = JSON.stringify(messageRaw, null, 4);
+                        }
+                        else {
+                            message = data;
+                        }
+                        $('#errortext').html(message);
+                    }
+                    catch (error) {
+                        $('#errortext').html(error);
+                    }
+                    finally {
+                        $('#submit').prop("disabled", false);
+                        updateGraphInfo();
+                    }
+                }, "json").fail(function (xhr, txt, err) {
+                    $('#submit').prop("disabled", false);
+                    $('#result').val("");
+                    $('#errortext').html(xhr["responseText"] + " | " + txt + " | " + err);
+                });
+            }).fail(function (xhr, txt, err) {
+                $('#submit').prop("disabled", false);
+                $('#result').val("");
+                $('#errortext').html(xhr["responseText"] + " | " + txt + " | " + err);
+            });
+        }
+
+        $('#graphlist').on("change", updateGraphInfo);
+        $('#submit').click(performAction);
+
+        function submitOnEnter(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        };
+
+        function submitOnAltEnter(event) {
+            if (event.key === "Enter" && event.shiftKey) {
+                event.preventDefault();
+                document.getElementById("submit").click();
+            }
+        };
+
+
+        document.getElementById("inputtext").addEventListener("keypress", submitOnAltEnter);
+
+
+        updateGraphInfo();
+
+        $('#inputtext').focus();
+    }
+
+    CommonHeader.ready(main, 10);
+</script>

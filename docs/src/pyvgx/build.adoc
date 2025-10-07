@@ -1,0 +1,174 @@
+[[pyvgxbuild]]
+= PyVGX {project-version} Build Instructions <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: images/
+:linkattrs:
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+
+== Requirements
+
+* Python 3.12+
+* C compiler:
+    - On Windows: MSVC (Visual Studio 2022 or later)
+    - On macOS: Xcode command line tools
+    - On Linux: `gcc` and `build-essential`
+
+
+== Prepare
+
+=== Virtual Environment (optional but recommended)
+
+.Linux / macOS
+[.copyable]
+[source, bash]
+----
+python3 -m venv vgxenv
+. vgxenv/bin/activate
+----
+
+.Windows
+[.copyable]
+[source, bat]
+----
+python -m venv vgxenv
+call vgxenv\Scripts\activate.bat
+----
+
+=== Tools
+
+[.copyable]
+[source, bash]
+----
+pip install setuptools build wheel
+----
+
+=== Source Code
+
+[.copyable]
+[source, bash]
+----
+git clone https://github.com/slysne/vgxserver.git
+cd vgxserver
+----
+
+== Build
+
+.Linux and MacOS
+[.copyable]
+[source, bash]
+----
+./build-unix.sh --version {project-version} --type release
+----
+
+.Windows
+[.copyable]
+[source, bat]
+----
+build-win64.cmd {project-version} release
+----
+
+This will build and install the pyvgx package. (You can find the build output wheel in `vgxserver/../build-pyvgx/dist`.)
+
+== Test
+
+First create a working directory somewhere and cd into it. Then you can run one or more of the following basic tests to verify your build.
+
+=== Verify PyVGX Installed
+
+This will print some information and exit.
+
+[.copyable]
+[source, bash]
+----
+python -c "import pyvgx"
+----
+
+=== Demo Service
+
+Start the demo service to verify all internal communication works.
+
+WARNING: This will use ~16GB of RAM
+
+.Start demo service
+[.copyable]
+[source, bash]
+----
+vgxdemoservice multi
+# ... service will start, admin page will load in a browser
+----
+
+.Stop demo service
+[.copyable]
+[source, bash]
+----
+vgxdemoservice stop
+----
+
+=== Run Test Suite
+
+You can run the pyvgx test suite by following these steps:
+
+* Copy `vgxserver/test` to your working directory
+* Run `python test_pyvgx.py`
+
+.Linux / macOS
+[.copyable]
+[source, bash]
+----
+# Assume WORKING is your temporary test directory
+# E.g. WORKING=~/working
+# Start in cloned repo:
+cd vgxserver
+cp -r pyvgx/test $WORKING/test
+cd $WORKING/test
+python test_pyvgx.py
+----
+
+.Windows
+[.copyable]
+[source, bat]
+----
+rem Assume WORKING is your temporary test directory
+rem E.g. set WORKING=C:%HOMEPATH%\working
+rem Start in cloned repo:
+cd vgxserver
+xcopy /E /I /Q /Y pyvgx\test %WORKING%\test
+cd /D %WORKING%/test
+python test_pyvgx.py
+----
+
+[WARNING]
+====
+`python test_pyvgx.py` will run the full suite of tests and takes several hours to complete.
+
+You can run a smaller subset of quick tests like this:
+
+* `python test_pyvgx.py --quick 1`
+
+You can also run tests for specific components or sub-modules:
+
+* `python test_pyvgx.py --component Vector`
+* `python test_pyvgx.py --component Graph --module Evaluator --testset BasicEvaluator`
+
+
+====
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+// cspell:ignore backtotop
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>

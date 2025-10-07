@@ -1,0 +1,4 @@
+#!/bin/bash
+REL=`dirname $0`
+ABS=`realpath $REL`
+python3 "$ABS/vgxadmin.py" "$@"

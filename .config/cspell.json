@@ -1,0 +1,78 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "adoc",
+    "AsciiDoc",
+    "bitmask",
+    "bitvector",
+    "bitvectors",
+    "bytearray",
+    "bytearrays",
+    "CLI",
+    "codepoint",
+    "codepoints",
+    "config",
+    "docs",
+    "GitHub",
+    "highlightjs",
+    "inarc",
+    "inarcs",
+    "indegree",
+    "internalid",
+    "jaccard",
+    "keyval",
+    "kwds",
+    "kwargs",
+    "latexmath",
+    "logpath",
+    "markdown",
+    "multinode",
+    "nonblocking",
+    "outarc",
+    "outarcs",
+    "outdegree",
+    "parameterless",
+    "persistable",
+    "preprocess",
+    "pyvgx",
+    "quadword",
+    "quadwords",
+    "README",
+    "repo",
+    "selftest",
+    "URL",
+    "vgx",
+    "vgxserver",
+    "yaml"
+  ],
+  "ignorePaths": [
+    "node_modules/**",
+    "build/**",
+    "dist/**",
+    "**/*.py",
+    "**/*.c",
+    "**/*.h",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.svg",
+    "**/*.pdf"
+  ],
+  "ignoreRegExpList": [
+    "\\[\\[.*?\\]\\]", // ignore [[anchor]]
+    "<<.*?>>", // ignore <<reference>>
+    "/`[^`]*`/", // ignore inline code
+    "/```[\\s\\S]*?```/", // ignore fenced code blocks
+    "/:.*?:/", // ignore AsciiDoc attributes like :toc:
+    "/\\{.*?\\}/", // ignore {variables}
+    "\\[source,.*?\\][\\s]*----[\\s\\S]*?----", // fenced source blocks
+    "----[\\s\\S]*?----" // fallback for any fenced block
+  ],
+  "enableFiletypes": [
+    "asciidoc",
+    "adoc"
+  ],
+  "dictionaryDefinitions": [],
+  "dictionaries": [],
+  "useGitignore": true
+}

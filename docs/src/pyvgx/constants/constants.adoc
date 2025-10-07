@@ -1,0 +1,40 @@
+[[pyvgxconstants]]
+= Constants <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+Several pyvgx constants are defined to control data types and the behavior of queries.
+
+* The D_ constants: <<arcDirectionConstants.adoc#arcdirectionconstants, Arc Direction Constants>>
+* The M_ constants: <<arcModifierConstants.adoc#arcmodifierconstants, Arc Modifier Constants>>
+* The V_ constants: <<valueConditionConstants.adoc#valueconditionconstants, Value Condition Constants>>
+* The C_ constants: <<collectConstants.adoc#collectconstants, Collect Constants>>
+* The F_ constants: <<resultFieldConstants.adoc#resultfieldconstants, Result Field Constants>>
+* The R_ constants: <<resultListEntryConstants.adoc#resultlistentryconstants, Result List Entry Constants>>
+* The S_ constants: <<sortSpecificationConstants.adoc#sortspecification, Sort Specification Constants>>
+* The T_ constants: <<timestampConstants.adoc#timestampconstants, Timestamp Constants>>
+* The OP_ constants: <<opcodeConstants.adoc#opcodeconstants, Opcode Constants>>
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=opcodeConstants.adoc#, title="Opcode Constants"]
+<<opcodeConstants.adoc#, icon:arrow-circle-left[size=2x, title="Opcode Constants"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=arcDirectionConstants.adoc#, title="Arc Direction Constants"]
+<<arcDirectionConstants.adoc#, icon:arrow-circle-right[size=2x, title="Arc Direction Constants"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

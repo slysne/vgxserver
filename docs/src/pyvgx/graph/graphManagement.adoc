@@ -1,0 +1,347 @@
+[[graphmanagementmethods]]
+= Graph Management Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphEnum.adoc#, icon:arrow-circle-right[title="Graph Enumeration Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Management Methods |Description
+
+|<<graphorder>>
+|Number of vertices in graph
+
+|<<graphsize>>
+|Number of arcs in graph
+
+|<<graphsave>>
+|Persist graph to disk
+
+|<<graphsync>>
+|Send all VGX source data to attached destination(s)
+
+|<<graphtruncate>>
+|Remove vertices
+
+|<<graphlock>>
+|Acquire and return a graph lock object
+
+|<<graphsynchronized>>
+|Call a function while synchronized on a mutex
+
+|<<graphclose>>
+|Close graph instance
+
+|<<grapherase>>
+|Erase graph from memory and disk
+
+|<<graphresetserial>>
+|Change graph serial number
+
+|<<graphsetgraphreadonly>>
+|Make the graph readonly
+
+|<<graphisgraphreadonly>>
+|Check if graph is readonly
+
+|<<graphcleargraphreadonly>>
+|Make graph writable
+
+|<<graphstatus>>
+|Misc. information, counters, resource usage
+
+|<<graphresetcounters>>
+|Reset query counters to zero
+
+|<<graphgetmemoryusage>>
+|Graph memory usage information
+
+|===
+
+[[graphorder]]
+== pyvgx.Graph.Order()
+
+[source, python]
+----
+pyvgx.Graph.Order( [ type ] )
+----
+
+Return the number of vertices in the graph, optionally restricted to vertices of the specified _type_.
+
+[[graphsize]]
+== pyvgx.Graph.Size()
+
+[source, python]
+----
+pyvgx.Graph.Size()
+----
+
+Return the number of explicit connections in the graph.
+
+[[graphsave]]
+== pyvgx.Graph.Save()
+
+[source, python]
+----
+pyvgx.Graph.Save( [ timeout[, force ] ] )
+----
+
+Persist the graph to disk. An optional _timeout_ (in milliseconds) allows blocking while waiting for the entire graph to become idle in order for the operation to proceed. The default is nonblocking. Data is normally saved incrementally, i.e. only modified structures are written to disk. To perform a complete serialization set _force_ to `True`.
+
+[[graphsync]]
+== pyvgx.Graph.Sync()
+
+[source, python]
+----
+pyvgx.Graph.Sync( [ hard ] )
+----
+
+Update data on all attached destinations to match this VGX source instance. When the optional parameter _hard_ (bool) is True the destination VGX instances are truncated before they are re-populated with data from the source. The default is _hard_=False, which means the destinations are not truncated prior to receiving the source data.
+
+[[graphtruncate]]
+== pyvgx.Graph.Truncate()
+
+[source, python]
+----
+pyvgx.Graph.Truncate( [ type ] )
+----
+
+Remove all vertices in graph, or if _type_ is specified remove all vertices of that type. All arcs incident on the removed vertices will also be removed.
+
+[[graphlock]]
+== pyvgx.Graph.Lock()
+
+[source, python]
+----
+pyvgx.Graph.Lock( [ id[, linger[, timeout ] ] ] )
+----
+
+Acquire and return a mutex lock object with an optional _id_ string. The lock object is a special vertex instance of type `_lock` and with a namespaced identifier `lock&#95;::<graphname>::<id>`.
+
+In addition to providing standard mutex functionality a graph lock is useful for preventing graph operations from being emitted to an <<../reference.adoc#op_attach_func, attached operation stream>> while the lock is acquired. Graph operations performed after lock acquisition are queued up and emitted in bulk _as a single transaction_ once the lock is released. A lock is released when the lock object goes out of scope, or by invoking <<../reference.adoc#vertex_close_func, pyvgx.Vertex.Close()>> on the lock object.
+
+Locks without _id_ are anonymous and will always be acquired without blocking.
+
+When lock _id_ is given the acquisition and release operations are transferred to remote subscriber destinations in the order applied. This allows plugins running on remote destinations to synchronize on the same lock _id_ in situations where plugin queries and graph updates cannot be allowed to run concurrently.
+
+The optional _linger_ (in seconds) value specifies how long the lock object should continue to exist after the lock is released. By default _linger_ is 0, causing the lock to be destroyed immediately after release. Set _linger_ to -1 to disable deletion, or to any positive integer to delay deletion by that number of seconds.
+
+An optional _timeout_ (in milliseconds) may be specified to wait for lock access. The default timeout is 0 (nonblocking).
+
+WARNING: If a large number of graph operations are performed while a lock is held the system will consume more memory. It is possible to run out of memory once the lock is released due to internal activities resuming and now being faced with a large backlog of operations that all need to be fitted into a single transaction.
+
+TIP: Manually controlling the contents of a transaction is useful when manipulating several parts of a graph that all need to be in a consistent state for queries to return correct results. This is an important consideration when using a source VGX instance to build a graph to be consumed by destination VGX instances. The time delay between separate transactions arriving at a destination is unspecified. A set of graph updates which must occur atomically (to ensure consistent query results) therefore needs to be confined to a single transaction.
+
+[[graphsynchronized]]
+== pyvgx.Graph.Synchronized()
+
+[source, python]
+----
+pyvgx.Graph.Synchronized( function, *args, **kwds )
+----
+
+Call _function_( *_args_, **_kwds_ ) in a synchronized context and return its returned value. Only one thread of execution will be allowed to perform a synchronized call at a time, even if the called functions are different.
+
+This is a shorthand for:
+[source, python]
+----
+def Synchronized( graph, function, *args, **kwds ):
+    mutex = graph.Lock( "_SYN", 0, 5000 )
+    try:
+        return function( *args, **kwds )
+    finally:
+        mutex.Close()
+----
+
+
+[[graphclose]]
+== pyvgx.Graph.Close()
+
+[source, python]
+----
+pyvgx.Graph.Close()
+----
+
+Close the graph instance. This has the same effect as using the Python `del` operator on the graph instance. Attempting to use a closed graph will raise `pyvgx.AccessError`.
+
+[[grapherase]]
+== pyvgx.Graph.Erase()
+
+[source, python]
+----
+pyvgx.Graph.Erase()
+----
+
+Erase the graph instance from memory and remove its data from disk. This has the same effect as <<graphtruncate>> followed by <<graphsave>> followed by <<../reference.adoc#system_delete_graph_func, system.DeleteGraph()>>. The graph instance is also closed after this call resulting in `pyvgx.AccessError` if used.
+
+CAUTION: All vertices (and therefore arcs and properties) will be lost forever after erasing the graph. Only a basic file structure for the graph will remain on disk.
+
+[[graphresetserial]]
+== pyvgx.Graph.ResetSerial()
+
+[source, python]
+----
+pyvgx.Graph.ResetSerial( [ sn ] )
+----
+
+Force the graph _input serial number_ to 0, or to _sn_ if provided. This allows already consumed operation data to be re-submitted.
+
+CAUTION: This should only be performed as part of testing and debugging, and never in a live production system unless part of a carefully designed recovery procedure.
+
+[[graphsetgraphreadonly]]
+== pyvgx.Graph.SetGraphReadonly()
+
+[source, python]
+----
+pyvgx.Graph.SetGraphReadonly( [ timeout ] )
+----
+
+Make the graph readonly. An optional _timeout_ (in milliseconds) allows blocking while waiting for graph to become idle. The default is nonblocking. No vertices can be acquired writable when a graph is readonly. However, queries are still allowed.
+
+[[graphisgraphreadonly]]
+== pyvgx.Graph.IsGraphReadonly()
+
+[source, python]
+----
+pyvgx.Graph.IsGraphReadonly()
+----
+
+Return `True` if the graph is currently readonly, otherwise `False`.
+
+[[graphcleargraphreadonly]]
+== pyvgx.Graph.ClearGraphReadonly()
+
+[source, python]
+----
+pyvgx.Graph.ClearGraphReadonly()
+----
+
+Make a readonly graph writable.
+
+[[graphstatus]]
+== pyvgx.Graph.Status()
+
+[source, python]
+----
+pyvgx.Graph.Status()
+----
+
+Return a dictionary of various information, counters, and resource usage for the graph.
+
+[[graphresetcounters]]
+== pyvgx.Graph.ResetCounters()
+
+[source, python]
+----
+pyvgx.Graph.ResetCounters()
+----
+
+Reset all query counters to zero.
+
+[[graphgetmemoryusage]]
+== pyvgx.Graph.GetMemoryUsage()
+
+[source, python]
+----
+pyvgx.Graph.GetMemoryUsage( [ metric ] )
+----
+
+Return memory usage information. By default return a dictionary of memory usage details.
+If _metric_ is specified, return an integer value. All memory values are in bytes.
+
+The table below show available _metric_ keys.
+
+.Memory usage metrics
+[cols="3,7"]
+|===
+|Metric |Description
+
+|vgx.vertex.object
+|Vertex object allocator memory pool
+
+// cspell:ignore arcvector
+|vgx.vertex.arcvector
+|Arc object allocator memory pool
+
+|vgx.vertex.property
+|Allocator memory pool for vertex properties
+
+|vgx.string
+|Internal string data memory pool
+
+|vgx.index.global
+|Global vertex index memory usage
+
+|vgx.index.type
+|Vertex type index memory usage
+
+// cspell:ignore vertextype
+|vgx.codec.vertextype
+|Memory used by vertex type enumerator
+
+|vgx.codec.relationship
+|Memory used by relationship type enumerator
+
+// cspell:ignore vertexprop
+|vgx.codec.vertexprop
+|Memory used by vertex property enumerator
+
+|vgx.codec.dimension
+|Memory used by vector dimension enumerator
+
+|vgx.vector.internal
+|Internal vector allocator memory pool
+
+|vgx.vector.external
+|External vector allocator memory pool
+
+|vgx.vector.dimension
+|Vector dimension allocator memory pool
+
+|vgx.event.schedule
+|Memory used for storing object expiration schedules
+
+|vgx.ephemeral.string
+|Various non-persistable string objects
+
+|vgx.ephemeral.vector
+|Various non-persistable vector objects
+
+// cspell:ignore vertexmap
+|vgx.ephemeral.vertexmap
+|Memory used for tracking vertex acquisition status
+
+|vgx.runtime
+|All other runtime memory used (including other graph objects)
+
+|system.process
+|Memory used by current process
+
+|system.available
+|Available physical memory
+
+|system.global
+|Total physical memory installed on machine
+
+|===
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<graphQuery.adoc#, icon:arrow-circle-left[size=2x, title="Graph Query Methods"]>>
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+<<graphEnum.adoc#, icon:arrow-circle-right[size=2x, title="Graph Enumeration Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

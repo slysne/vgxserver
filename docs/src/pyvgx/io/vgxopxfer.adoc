@@ -1,0 +1,3583 @@
+[[vgx_operation_transfer_protocol]]
+= VGX Transaction Protocol <<../../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 4
+:sectnums:
+:sectnumlevels: 4
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[vgx_operation_stream]]
+== VGX Operation Stream
+
+Operations performed on a VGX graph via its API may be captured and transferred to a destination graph where the same operations are applied. A destination graph is a remote replica maintained incrementally via the stream of _VGX transactions_.
+
+A _VGX source_ instance may attach to any number of _VGX destination_ instances. A VGX source produces a transaction stream derived from graph API operations executed in the source instance. A VGX destination consumes the transaction stream to mirror exactly the graphs in the source. We sometimes refer to the VGX source as _provider_ and the VGX destination as _subscriber_.
+
+A subscriber may only have a single provider, but it may itself be a provider for a set of sub-subscribers. Such a subscription tree always has a single root provider. Since all subscriber replicas are built from the stream originating in the root provider _eventual consistency_ among all VGX instances is achieved. _Durability_ is achieved when at least one subscriber has transaction logs enabled.
+
+Eventual consistency is automatic. Temporary disconnects between a subscriber and a provider are handled without loss of data. As long as a provider-subscriber relationship is maintained and the VGX instances are alive the protocol guarantees consistency between the two.
+
+Durability is handled by a combination of automatic transaction logs (incrementally written to disk) and externally triggered graph snapshots, typically managed by application specific plugins that persist data according to rules appropriate for the application. This scheme ensures automatic durable writes. 
+
+A VGX instance configured with durability is referred to as _durable_. Restoring a durable VGX instance from disk is automatic. A VGX instance configured without durability is referred to as _volatile_. Restoring a volatile VGX instance is achieved via externally controlled procedures, which may be automated by a higher level orchestration layer (outside the scope of VGX itself) or through manual operational steps.
+
+[[attach_to_output]]
+=== Attach operation stream to subscriber
+VGX may be configured to generate transaction output at <<../reference.adoc#system_initialize_func, system initialization>> or by calling <<../reference.adoc#op_attach_func, `op.Attach()`>> at a later point. It is usually best to attach at initialization to ensure all operations are emitted.
+
+[[uri_format]]
+==== URI Format
+
+A VGX provider can attach to its subscribers using any of the three supported URI schemes.
+
+===== URI scheme `vgx://`
+
+The `vgx://` scheme is used for streaming VGX transactions over a network to a subscriber VGX instance. When using this scheme the VGX provider will establish a socket connection to the subscriber at `<host>:<port>`.
+
+.vgx scheme:
+----
+vgx://<host>:<port>
+----
+
+===== URI scheme `file://`
+
+The `file://` scheme writes the VGX transaction stream to a local file. In this case the subscriber is the local file system. This is useful for debugging or for storing a set of transactions that can be used later to initialize another VGX instance.
+
+.file scheme
+----
+file://<path>
+----
+
+===== URI scheme `null://`
+
+The `null://` scheme acts as a no-op sink with infinite capacity (like Unix /dev/null.) This is primarily useful for debugging and verification of internal components in the provider's producer logic.
+
+.null scheme
+----
+null://<path>
+----
+
+[[attach_at_init]]
+==== Attach at initialization
+
+In normal operation a VGX provider instance should attach to its subscribers immediately on startup. This ensures all operations are captured and transmitted.
+
+Specify destination URI in the `attach=` parameter of <<../reference.adoc#system_initialize_func, `system.Initialize()`>>.
+
+.Attach at initialization
+[.copyable]
+[source, python]
+----
+import pyvgx
+
+# Attach to subscriber service on localhost port 8099
+pyvgx.system.Initialize( attach="vgx://127.0.0.1:8099" )
+
+# All subsequent API operations are sent to the subscriber
+g = pyvgx.Graph( "test" )
+g.CreateVertex( "A" )
+----
+
+[[explicit_attach]]
+==== Explicit attach after initialization
+
+It is possible to attach subscribers after VGX has been initialized using <<../reference.adoc#op_attach_func, `op.Attach()`>>. Any operations performed before the subscriber is attached will not be transmitted.
+
+.Attach after initialization
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+
+# Local operations only
+g = pyvgx.Graph( "test" )
+A = g.NewVertex( "A" )
+
+# Attach to subscriber service on localhost port 8099
+pyvgx.op.Attach( "vgx://127.0.0.1:8099" )
+
+# All subsequent API operations are sent to the subscriber
+B = g.NewVertex( "B" ) # Create B with
+B['x'] = 123           # property x=3
+g.CloseVertex( B )     # and output transaction.
+
+# However, changes to the vertex A opened before
+# subscriber was attached will NOT be emitted.
+A['x'] = 456           # Local only.
+g.CloseVertex( A )     #
+----
+
+It is possible to attach multiple subscribers. A list of URI strings may be passed instead of a single URI string to attach multiple subscribers at once.
+
+.Attach to multiple subscribers at initialization
+
+[source, python]
+----
+from pyvgx import *
+
+system.Initialize( attach=[ "vgx://vgx.service.one:8099",
+                            "vgx://vgx.service.two:8099",
+                            "file:///./opcodes" ]
+)
+
+# API operations are sent to all attached subscribers
+g = pyvgx.Graph( "test" )
+g.CreateVertex( "A" )
+
+----
+
+.Attach to multiple subscribers after initialization
+[source, python]
+----
+from pyvgx import *
+
+op.Attach( ["vgx://vgx.service.one:8099",
+            "vgx://vgx.service.two:8099",
+            "file:///./opcodes" ]
+)
+
+# API operations are sent to all attached subscribers
+g = pyvgx.Graph( "test" )
+g.CreateVertex( "A" )
+
+----
+
+[[detach]]
+==== Detach
+
+A VGX instance may detach from any attached subscribers. Operations performed after detaching subscribers will not be transmitted to those subscribers.
+
+[source, python]
+----
+from pyvgx import *
+
+# Attach to three subscribers
+system.Initialize( attach=[ "vgx://vgx.service.one:8099",
+                            "vgx://vgx.service.two:8099",
+                            "file:///./opcodes" ]
+)
+
+# Operations are transmitted to attached subscribers
+g = pyvgx.Graph( "test" )
+g.CreateVertex( "A" )
+
+# Detach specific subscriber
+op.Detach( "file:///./opcodes" )
+
+# Operations are no longer written to detached file
+g.CreateVertex( "B" )
+
+# Detach all remaining subscribers
+op.Detach()
+
+# Local operation only
+g.CreateVertex( "C" )
+----
+
+[[consume]]
+=== Consume VGX transaction data
+
+A destination VGX instance may be populated by consuming transaction data generated by a VGX provider. This data may come from a previously written file, or from an external orchestration framework.
+
+A destination VGX instance populated this way is not considered a VGX subscriber.
+
+Transaction data is manually submitted to a VGX destination using <<../reference.adoc#op_consume_func, `op.Consume()`>>. It is recommended to _globally disable event processing_ before calling this function because the TTL processor may interfere with the processing of transactions. To globally disable event processing the system must be <<../reference.adoc#system_initialize_func, initialized with parameter `events=False`>>.
+
+.Manually apply transaction data
+[source, python]
+----
+from pyvgx import *
+# Globally disable asynchronous event processing
+system.Initialize( events=False )
+
+# Assume a function exist capable of returning a chunk
+# of operation data generated by some source VGX instance.
+data = get_transaction_data()
+
+# Submit chunk of operation data. This will modify one
+# or more graphs in the local VGX instance.
+op.Consume( data )
+----
+
+[[operation_filter]]
+==== Operation Filter
+Some applications may want to prevent certain operations from being executed. Operation filters can be configured via <<../reference.adoc#op_deny_func, `op.Deny()`>>, <<../reference.adoc#op_allow_func, `op.Allow()`>> and <<../reference.adoc#op_profile_func, `op.Profile()`>>. Operation filters are applied by supplying operator <<../constants/opcodeConstants.adoc#operatoropcodes, opcodes>>, operator <<../constants/opcodeConstants.adoc#operatorgroups, groups>>, or operator <<../constants/opcodeConstants.adoc#operatorprofiles, profiles>> as arguments to these functions.
+
+For instance, it may be desirable to prevent a VGX instance from executing graph truncation and graph persist:
+
+[source, python]
+----
+op.Deny( op.OP_grt )
+op.Deny( op.OP_grp )
+----
+
+Pre-defined profiles can be applied for instances with certain roles in a larger setup:
+
+[source, python]
+----
+op.Profile( op.OP_PROFILE_consumer )
+----
+
+[[transaction_service]]
+=== VGX Transaction Service
+
+To prepare a VGX instance for becoming a subscriber it must have the VGX Transaction service running. The VGX Transaction service may be started at initialization using the `bind=` parameter, or after initialization using <<../reference.adoc#op_bind_func, `op.Bind()`>>.
+
+==== Bind at initialization
+
+.Start VGX Transaction service at initialization
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+# Start VGX Transaction service at initialization
+system.Initialize( bind=8099, events=False )
+
+# A VGX provider may now attach to this instance at port 8099
+----
+
+==== Bind after initialization
+
+.Start VGX Transaction service after initialization
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+
+# Initialize with events globally disabled
+system.Initialize( events=False )
+
+# Start VGX Transaction service
+op.Bind( 8099 )
+
+# A VGX provider may now attach to this instance at port 8099
+----
+
+==== Unbind
+
+The VGX Transaction service can be shut down by calling <<../reference.adoc#op_unbind_func, `op.Unbind()`>>. Any attached provider will remain attached to a subscriber that shuts down its VGX Transaction service in this manner. This means the provider will automatically reconnect to the subscriber once its VGX Transaction service is restarted.
+
+.Stop VGX Transaction service
+[source, python]
+----
+# Stop VGX Transaction service
+op.Unbind()
+
+# If a provider was attached when Unbind was called
+# the provider will try to reconnect while queuing up
+# transaction data.
+
+# Start VGX Transaction service
+op.Bind( 8099 )
+
+# No transaction data lost from provider
+
+----
+
+[[format_overview]]
+== VGX Transaction Stream Format Overview
+
+Communication between provider and subscriber uses a simple ASCII text format - the VGX Transaction Stream Protocol - consisting of tokens separated by whitespace.
+
+The request stream from provider to subscriber represents a series of commands with arguments that, when executed by a destination VGX instance via `pyvgx.op.Consume()` or VGX Transaction service, re-creates a perfect copy of all graph(s) in the originating VGX instance.
+
+The response stream from subscriber back to provider represents a series of acknowledgements that data has been processed or other responses that ask the provider to modify its behavior in some way.
+
+[[request_overview]]
+=== Request
+
+The major building blocks of the operation stream from provider to subscriber are:
+
+* *transaction*
+** A set of one or more _operation blocks_ that must be presented to the destination as a complete unit. A transaction starts with the `*TRANSACTION*` statement and ends with the `*COMMIT*` statement.
+
+* *operation block*
+** A block of one or more _operators_ pertaining to a specific VGX object such as graph or vertex. An operation block starts with the `*OP*` statement and ends with the `*ENDOP*` statement.
+
+* *operator*
+** A single "instruction" affecting the _operation block_'s object in some way, such as creating a vertex (in a graph), or creating an arc or setting a property (on a vertex.)
+
+.General request structure
+----
+TRANSACTION <transid> <serial>
+OP <optype> [<graph> [<objectid>]]
+  <opname> <opcode> [<arg1> [<arg2> [...]]]
+  ...
+ENDOP [<opid> <tms>] <crc32c>
+...
+COMMIT <transid> <tms> <crc32c> \n
+----
+
+[[response_overview]]
+=== Response
+
+Responses from subscriber to provider are single-line messages (terminated by `\n`) containing a status keyword followed by zero or more arguments.
+
+In typical operation the subscriber responds with the `ACCEPTED` message for every transaction block processed.
+
+.Response for a successfully processed transaction
+----
+ACCEPTED <transid> <crc32c> \n
+----
+
+[[format_spec]]
+== VGX Transaction Stream Format Specification
+
+The _VGX Transaction Stream Protocol_ format is represented in plain ASCII text. This section contains the complete specification for data exchange between VGX providers and subscribers.
+
+Once attached, a provider starts sending data to its subscriber(s) according to the <<requestformat>> and will listen for subscriber responses according to <<responseformat>>.
+
+A provider may have multiple subscribers. Transaction exchange is asynchronous and managed independently, in parallel for each subscriber.
+
+[[requestformat]]
+=== Request Format
+
+The building blocks of the VGX Transaction Stream Protocol are summarized in the table below.
+
+// cspell:ignore EBNF
+.Request Format Specification
+[[requestformatspec]]
+[cols="1,6,4"]
+|===
+|Element |EBNF |Description
+
+|Token
+|`token ::= ([a-z] \| [A-Z] \| [0-9])+ \| "#"`
+|A token is a sequence of one or more alphanumeric characters, or the `"#"` symbol.
+
+|Space
+|`space ::= " " \| "\t" \| "\n"`
+|Tokens are separated by one or more space characters. Consecutive occurrences of space characters are treated as a single space.
+
+|Keyword
+|`keyword ::= "TRANSACTION" \| "COMMIT" \| "OP" \| "ENDOP" \| "RESYNC" \| "ATTACH" \| "DETACH" \| "IDLE"`
+|
+
+|Stream
+|`stream ::= { transaction ... }`
+|Operation transfer occurs as a continuous _stream_ of _transaction_ blocks that must be delivered as unbroken units to the destination site. 
+
+// cspell:ignore transid
+|Transaction
+|`transaction ::= "TRANSACTION" transid serial "\n" { operation ... } "COMMIT" transid tms crc32c "\n"`
+|A _transaction_ block embeds a set of _operation_ blocks between the _keywords_ `TRANSACTION` and `COMMIT` and carries a unique identifier _transid_ and _serial_ number.
+
+|Transaction ID
+|`transid ::= m128`
+|A _transid_ is a unique transaction identifier appearing at the start and end of a transaction.
+
+// cspell:ignore nrollback
+|Stream Resync
+|`resync ::= "RESYNC" transid nrollback`
+|A resync request is sent after a rollback event occurs, typically triggered by a preceding `RETRY` response from the subscriber. The _transid_ indicates the first transaction that will follow immediately after the resync. The number of bytes _nrollback_ is the amount of data streamed by the provider at the time it received the `RETRY` response which triggered the resync event.
+
+|Rollback Bytes
+|`nrollback ::= QWORD`
+|The number of bytes previously streamed that should be discarded as part of a rollback event.
+
+|Attach
+|`attach ::= "ATTACH" protocol version fingerprint`
+|A provider initiates a new connection by sending `ATTACH` to the subscriber, which is expected to respond with `ATTACH` if _protocol_ and _version_ have acceptable values. The expectation of a response can be disabled by passing `handshake=False` to <<../reference.adoc#op_attach_func, `op.Attach()`>>. The provider's _fingerprint_ represents a digest of its state at the time of attach, which the subscriber may match against its own state and take the appropriate action in case of mismatch.
+
+|Detach
+|`detach ::= "DETACH"`
+|A subscriber may request to terminate attachment by sending `DETACH` to its provider, which in turn will respond with `DETACH` after any pending transaction data has been fully sent.
+
+|Idle
+|`idle ::= "IDLE" tms fingerprint`
+|The subscriber should expect regular `IDLE` messages from the provider during periods of operation inactivity. The provider's _fingerprint_ represents a digest of its state at time _tms_ in milliseconds since 1970.
+
+|Fingerprint
+|`fingerprint ::= m128`
+|A _fingerprint_ represents a digest of the current data in a VGX instance. Providers and subscribers can communicate their current state via fingerprints to verify data consistency.
+
+// cspell:ignore opgraph optype
+|Operation Block
+|`operation ::= "OP" optype [ opgraph [ objectid ] ] { operator ... } "ENDOP" [ opid tms ] crc32c`
+|An _operation_ block is a group of one or more _operator_ statements pertaining to the object instance (such as a vertex) specified by _objectid_, or the graph instance specified by _opgraph_ if _objectid_ is not included, or the system graph if neither _opgraph_ nor _objectid_ is included. The affected object depends on _optype_.
+
+|Operation Type
+|`optype ::= WORD`
+|The type of operation block is indicated by _optype_ and determines what kind of _operators_ may appear within the block. A block type having graph-wide effect specifies the graph with _opgraph_ and does not have the _objectid_ field. A block type affecting a specific object within the graph (such as a vertex) specifies the _objectid_ in addition to _opgraph_ containing the object.
+
+|Operation Graph
+|`opgraph ::= m128`
+|The _opgraph_ field specifies the graph affected by the operators in the operation block. 
+
+|Object Identifier
+|`objectid ::= m128`
+|The _objectid_ field is present for operation types affecting a specific object within a graph.
+
+// cspell:ignore opid
+|Operation Identifier
+|`opid ::= QWORD`
+|The set of one or more operators within an operation block modify the selected object as a unit identified by the unique identifier _opid_.
+
+|Timestamp
+|`tms ::= QWORD`
+|The modification time (at the source VGX instance) is given by _tms_ in milliseconds since 1970.
+
+|CRC32C checksum
+|`crc32c ::= DWORD`
+|The operation data _crc32c_ checksum (`ENDOP` parameter) is used to validate the integrity of the operation. The transaction _crc32c_ checksum (`COMMIT` parameter) is used to validate the integrity of the entire transaction.
+
+|Operator
+|`operator ::= opname opcode [ argument ... ]`
+|The _operator_ is a single "instruction" affecting the operation block's object in some way, such as creating a vertex in a graph, or creating and arc or setting a property on a vertex.
+
+|Operator name
+|`opname ::= ccc`
+ +
+ `c ::= [a-z]`
+|Operators are three-character mnemonics, such as `vxn` (create vertex) and `arc` (connect)
+
+// cspell:ignore opname
+|Opcode
+|`opcode ::= DWORD`
+|The _opcode_ is the numeric equivalent of the _opname_ mnemonic.
+
+|Argument
+|`argument ::= BYTE \| WORD \| DWORD \| QWORD \| m128 \| VARSTR`
+|Operators may have arguments. The number, types and order of arguments is defined for each operator.
+
+|Hex digit
+|`H ::= [0-9] \| [A-F] \| [a-f]`
+|Hexadecimal digit
+
+|BYTE
+|`BYTE ::= HH`
+|A numeric 8-bit value, such as `7B` representing the integer value 123.
+
+|WORD
+|`WORD ::= HHHH`
+|A numeric 16-bit value, such as `03E8` representing the integer value 1000.
+
+|DWORD
+|`DWORD ::= HHHHHHHH`
+|A numeric 32-bit value, such as `000F4240` representing the integer value 1000000.
+
+|QWORD
+|`QWORD ::= HHHHHHHHHHHHHHHH`
+|A numeric 64-bit value, such as `FFFF000012345678` representing the integer value  18,446,462,599,038,260,856.
+
+|m128
+|`m128 ::= HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH`
+|A numeric 128-bit value used for representing object identifiers and digests.
+
+// cspell:ignore strmetas strdata strsize nstrqwords
+|Variable string
+|`VARSTR ::= strmetas , strsize , nstrqwords , strdata , { strdata ... }`
+ +
+ `strmetas ::= DWORD`
+ +
+ `strsize ::= DWORD`
+ +
+ `nstrqwords ::= QWORD`
+ +
+ `strdata ::= QWORD`
+|Variable string data such as names, properties and other non-numeric information is encoded in a base-16 format and includes internal meta information (_strmetas_), number of bytes in the original data string (_strsize_), number of data elements (_nstrqwords_) followed by the one or more specified number of data elements (_strdata_)
+
+|Comment
+|`comment ::= "#" [^\n]*`
+|Text appearing after an occurrence of `#` (0x23) is ignored until the next occurrence of newline `\n`
+
+|===
+
+CAUTION: If an intermediary streaming service is used to convey transaction data from a provider to a subscriber (i.e. by not using the VGX Transaction service), the streaming service must guarantee that once the beginning of a transaction has been submitted to a destination VGX instance via `pyvgx.op.Consume()` the entire transaction will eventually be submitted.
+ 
+[[responseformat]]
+=== Response Format
+
+Provider and subscriber communicate asynchronously. A subscriber sends messages back to the provider in the form of single status lines, as summarized in the <<responseformatspec>> table below.
+
+==== Transaction Responses
+
+A subscriber is required to send a response for every transaction it has received from the provider. The transaction response messages are:
+
+* <<accepted_response, *`ACCEPTED`*>> indicates the transaction was processed successfully by the subscriber
+* <<retry_response, `RETRY`>> indicates a temporary failure to process a transaction and requests the provider to re-submit the transaction
+* <<rejected_response, *`REJECTED`*>> indicates a hard stop in the transaction stream
+
+Transactions are identified by a unique <transid> label and ordered by a <serial> number. A subscriber applies transactions only when serial numbers increase monotonically. Out-of-order transactions or repeated transactions are ignored.
+
+It is not necessary to send transaction responses synchronously. The provider will continue to stream new transactions even if previous transactions have not yet been responded to. However, responses must eventually be sent and they must be ordered according to the transaction <serial> number.
+
+If the backlog of unconfirmed transactions grows too large the provider will adjust production to a slower rate.
+
+If an out of order response is received by the provider it will consider the chain of transactions broken at the earliest unconfirmed transaction. The provider will attempt to heal the broken chain by re-transmitting all unconfirmed transactions starting with the earliest unconfirmed transaction. Re-transmitted transactions retain their original <transid> transaction identifiers and <serial> numbers.
+
+If a response is received for a transaction that is unknown to the provider (i.e. not present in the unconfirmed backlog) the response is ignored and the transaction stream continues normally.
+
+==== State Change Responses
+
+Non-transactional messages may be sent from subscriber to provider at any time, requesting certain behavior or actions to be performed by the provider.
+
+* <<suspend_response, *`SUSPEND`*>> indicates the subscriber is unable to keep up with processing at this time and provider should stop streaming new transactions
+* <<resume_response, *`RESUME`*>> indicates the subscriber is ready to process data and the provider may start streaming new transactions
+* <<detach_response, *`DETACH`*>> indicates the subscriber want to terminate attachment and the provider should flush pending transactions, then detach.
+
+[[responseformatspec]]
+.Response Message Specification
+[cols="1,5,4"]
+|===
+|Response |Syntax |Description
+
+|Transaction Accepted
+|`accepted ::= "ACCEPTED" transid crc32c "\n"`
+ +
+ `crc32c ::= DWORD`
+|Subscriber has processed the transaction identified by _transid_. If the subscriber is a VGX Transaction service it means the transaction has been successfully applied. If the subscriber is a non-VGX intermediary streaming service it means the service now has accepted responsibility for propagating the transaction to all its destinations. The _crc32c_ checksum encompasses all bytes starting with the first "T" of the `TRANSACTION` keyword up to but not including the "C" of the `COMMIT` keyword. When the VGX provider receives this response and verifies the _crc32c_ against its own records it takes the response as confirmation a durable write has occurred.
+
+|Retry Transaction
+|`retry ::= "RETRY" transid reason "\n"`
+ +
+ `reason ::= DWORD`
+|The transaction identified by _transid_ could not be processed, and the transaction to be re-tried. The provider will rewind its backlog and re-transmit all transactions starting with the identified transaction. The _reason_ code carries flow-control information.
+
+|Transaction Stream Rejected
+|`rejected ::= "REJECTED" transid reason "\n"`
+|The subscriber refused to process the transaction identified by _transid_ and asks VGX provider to stop the transmission of new transactions. The _reason_ code is currently ignored. The provider should regard this message as a request to permanently cease the production of new transactions.
+
+|Suspend
+|`suspend ::= "SUSPEND" reason "\n"`
+|The subscriber asks the provider to temporarily stop producing new transactions. The provider must transition to a suspended state where no additional transactions are sent to the subscriber for the duration of the suspended state. The requested suspend duration is provided in _reason_.
+
+|Resume
+|`resume ::= "RESUME" "\n"`
+|The subscriber requests VGX provider to resume the production of new transactions. If the provider is currently in a suspended state caused by a previous _suspend_ it will now exit the suspended state and begin producing new transactions. A non-suspended VGX provider ignores this request.
+
+|Hex digit
+|`H ::= [0-9] \| [A-F] \| [a-f]`
+|Hexadecimal digit
+
+|Reason Code
+|`reason ::= HHHHHHHH`
+|A _reason_ code in a response contains flow control hints that the provider should respect. When the upper digits `HHHH----` have the value `0000` the lower digits `----HHHH` indicate the number of milliseconds the provider should pause before sending more information to the subscriber. When the upper digits `HHHH----` have the value `0001` the provider should pause indefinitely until an explicit request to resume is received from the subscriber.
+
+|===
+
+
+[[accepted_response]]
+==== ACCEPTED
+
+The subscriber <<transaction_confirmation, sends the `ACCEPTED` response>> for each transaction processed in the same order they were received from the provider.
+
+.ACCEPTED Response Format
+----
+ACCEPTED <transid> <crc32c> \n
+----
+
+When the subscriber accepts transaction _transid_ by sending the `ACCEPTED` response it assumes responsibility for the durability of all data in this transaction. If the subscriber is a VGX Transaction service it means transaction data has been successfully processed into the destination graph. If the subscriber is a non-VGX streaming service it is now responsible for propagating the transaction to its destination(s).
+
+Data integrity is verified by _crc32c_ checksum. The subscriber <<transaction_crc32c_computation, computes the _crc32c_ checksum>> for each transaction and matches the computed checksum against the checksum provided in the transaction's `COMMIT` statement. The same checksum is returned in the `ACCEPTED` response. 
+
+.ACCEPTED Example
+----
+ACCEPTED 5aa90824415dd8c0475141f186ec51d5 4456A9AD \n
+----
+
+It is not necessary to send a response immediately after processing a transaction. The provider will continue to stream new transactions as they are being produced. However, the provider will begin to throttle its production once a threshold of pending transactions is reached.
+
+.Transactions must be accepted in the order received.
+----
+Provider --> ... t4 t3 t2 t1 --> Subscriber
+                                    |
+                 ACCEPTED           |
+             <-- t1 t2 t3 t4 ... <--'
+                               
+----
+
+If an out-of-order response is detected by the provider it will assume something went wrong with transmission and/or processing at the subscriber side. The provider automatically <<retry_response, triggers a rollback and internally issues a `RETRY` response to itself>> with the transaction identifier of its earliest unconfirmed transaction. I.e., an out-of-order response is equivalent to a `RETRY` for the earliest transaction that has not yet been accepted.
+
+A transaction identifier not known to the provider is not considered out-of-order. An `ACCEPTED` response containing an unknown transaction identifier is simply ignored. Already accepted transactions are erased from the providers's memory and are therefore unknown. Duplicate accepted messages are thus ignored.
+
+[[retry_response]]
+==== RETRY
+
+A temporary failure to receive or process a transaction is communicated by the `RETRY` response. The provider rewinds its output queue to the start of the earliest unconfirmed transaction, i.e. the next transaction in the stream following the last accepted transaction.
+
+.RETRY Response Format
+----
+RETRY <transid> <reason> \n
+----
+
+The _transid_ is echoed by the provider in the subsequent `RESYNC` request which indicates the point in the stream where the subscriber should resume processing. (This _transid_ should match the earliest unconfirmed transaction but will not affect the provider's rollback action. The provider always rewinds to the start of the earliest unconfirmed transaction.)
+
+A _reason_ code carries an optional request to temporarily suspend data output for a brief period.
+
+.RETRY Example
+----
+RETRY ff1e94aa0c72f459a268933eedeb2b71 00000001 \n
+----
+
+When the provider acts upon a retry response it will re-transmit the earliest unconfirmed transaction and then wait for it to be accepted by the subscriber before continuing. Transaction handshakes are thus temporarily synchronous until a reliable stream has been re-established. No further data will be sent by the provider until the subscriber sends a response for the re-tried transaction. If the response is `ACCEPTED` normal operation is resumed. If the response is again `RETRY` the process of retrying is repeated. It is up to the subscriber to decide if and when to terminate a cycle of repeated unsuccessful attempts, either by closing the connection or sending a `REJECTED` response.
+
+A `RESYNC` message is injected into the stream immediately before the earliest unconfirmed transaction is re-transmitted. This allows the subscriber to discard all remaining data queued on the socket until it encounters `RESYNC`.
+
+.RESYNC sent by provider to subscriber as result of previous RETRY response
+----
+\n
+RESYNC ff1e94aa0c72f459a268933eedeb2b71 000000000001E240 \n
+\n
+----
+
+The first argument (_transid_) is the transaction identifier of the earliest unconfirmed transaction. The second argument (_nrollback_) is the amount of data (in bytes) known by the provider to have been streamed to the socket at the time it received the `RETRY` response, and is therefore the amount of data that should have been discarded by the subscriber at the time it receives the `RESYNC` request.
+
+.Synchronous RETRY then RESYNC and resume stream on success
+----
+========                                 ==========
+PROVIDER                                 SUBSCRIBER
+========                                 ==========
+
+(produce) -->  ... t3 t2 t1           \  
+                                      | (find t1 has problem)
+                                      | (discard all incoming until t1)
+(rewind to t1)        RETRY "t1"  <-- '
+  |
+   `-->    RESYNC "t1"                \
+   `-->    t1                         |
+(sync wait)                           | (t1 now ok)
+                                      | 
+(resume stream)    ACCEPTED "t1"  <-- '
+  |
+   `-->        ... t3 t2              \
+                                      | (normal async flow)
+                   ACCEPTED "t2"  <-- '
+                   ACCEPTED "t3"  <-- '
+----
+
+After responding with a `RETRY` for transaction `t1` the subscriber discards all incoming data on the socket until `RESYNC ...` appears, immediately followed by re-transmission of transaction `t1`. Any data queued up before `RESYNC` is invalid and must be read from the socket and discarded by the subscriber. Once the subscriber encounters `RESYNC` it can expect a re-transmission of `t1` to immediately follow. When `t1` is successfully processed and accepted by the subscriber, the provider will resume asynchronous streaming starting with re-transmission of `t2`.
+
+Note that the `RESYNC` request itself has no associated response. The provider expects a response to the first transaction immediately following `RESYNC` before transmitting any more data. If the response is `ACCEPTED` the provider resumes asynchronous streaming. If the response is `RETRY` the resync operation is repeated. If no response is received after 60 seconds the provider will close the socket, then re-connect and re-attempt the resync operation.
+
+.Data flow interrupted by RETRY/RESYNC
+----
+========                                               ==========
+PROVIDER                                               SUBSCRIBER
+========                                               ==========
+             |________________________________________|
+             |    Resulting transaction stream        |
+             |  ... t5 t4 t3 t2 t1 t4* t3 t2 t1 t0 -> |
+             |                     ~~~~~~~~~~~~       |
+             |                     (discarded)        |
+             |              (t4* possibly truncated)  |
+             |________________________________________|
+send     t0  |                                        |
+send     t1  |           <- ACCEPTED "t0"             | process t0
+send     t2  |                                        | t1 error!
+send     t2  |           <- RETRY "t1"                | RETRY t1
+send     t3  |                                        |   
+send     t4* |                                        | (discard all  
+recv RETRY   |                                        |  incoming  
+(rewind t1)  |                                        |  until RESYNC) 
+send RESYNC  |              RESYNC "t1" ->            |
+(re)send t1  |                                        |
+(sync wait)  |           <- ACCEPTED "t1"             | process t1
+(re)send t2  |                                        |
+(re)send t3  |           <- ACCEPTED "t2"             | process t2
+(re)send t4  |                                        | 
+send     t5  |           <- ACCEPTED "t3"             | process t3
+send     ... |           <- ACCEPTED "t4"             | process t4
+             |                                        |
+             |           <- ACCEPTED "t5"             | process t5
+             |           <- ACCEPTED ...              | process ...
+----
+
+[[rejected_response]]
+==== REJECTED
+
+A permanent failure to receive or process transactions is communicated by the `REJECTED` response. The transaction identifier indicates the transaction which triggered the rejection of the stream. The provider should regard this message as a request to permanently cease the production of new transactions.
+
+.REJECTED Response Format
+----
+REJECTED <transid> <reason> \n
+----
+
+A _reason_ code indicates the nature of the rejected message. (This code is currently ignored by the provider.)
+
+.REJECTED Example
+----
+REJECTED ff1e94aa0c72f459a268933eedeb2b71 00000000 \n
+----
+
+[[suspend_response]]
+==== SUSPEND
+
+The subscriber may send a `SUSPEND` response to temporarily halt production of new transactions in the VGX provider.
+
+NOTE: Although the provider will stop producing new transactions as soon as it receives the `SUSPEND` response, data already streamed to the socket by the provider will still be inflight and eventually arrive at the subscriber.
+
+.SUSPEND Response Format
+----
+SUSPEND <reason> \n
+----
+
+The _reason_ encodes how long the provider should suspend production of new transactions. When _reason_ &#8804; 0xffff the value is interpreted as a number of milliseconds to suspend before automatically resuming. When _reason_ &#8805; 0x10000 the provider will suspend indefinitely.
+
+.SUSPEND Example
+----
+SUSPEND 00001388 \n
+----
+
+This response asks the provider to suspend for 5 seconds (0x1388 = 5000 ms) and then automatically resume without the need for an explicit `RESUME`.
+
+
+[[resume_response]]
+==== RESUME
+
+The subscriber may send a `RESUME` response when it is ready to receive new transactions from the VGX provider. 
+
+If the provider is in a suspended state when it receives the `RESUME` response it will immediately exit the suspended state.
+
+The provider ignores the `RESUME` response if it is not currently suspended.
+
+.RESUME Response Format
+----
+RESUME \n
+----
+
+[[stream_building_blocks]]
+== VGX Transaction Stream Building Blocks
+
+[[stream_transaction]]
+=== Transaction
+
+----
+TRANSACTION <transid> <serial>
+  <operation>
+  ...
+COMMIT <transid> <tms> <crc32c> \n
+----
+
+A transaction represents a set of operations that must be processed by a destination VGX instance as a complete unit before any of the operations can be executed. A subscriber must guarantee that processing of a partial transaction is never attempted. However, it is acceptable for a non-VGX streaming service to submit partial transaction data to `pyvgx.op.Consume()` as long as the streaming service can guarantee that the remainder of the transaction data also exists at the destination site and can be submitted in quick succession with further calls to `pyvgx.op.Consume()` until complete.
+
+==== Zero intra-transaction submission delay
+
+Transactions embed a sequence of operations that must be processed by a destination VGX instance such that the speed of processing is determined only by the VGX instance. This has practical meaning only for a non-VGX streaming services acting as an intermediary between VGX instances. (A subscriber running the VGX Transaction service handles these requirements automatically.)
+
+A non-VGX streaming service either has to submit the entire transaction via one call to `pyvgx.op.Consume()`, or split the transaction data over multiple calls to `pyvgx.op.Consume()` with zero delay between calls.
+
+A transaction may operate on multiple objects that require atomic locking, where locks are acquired early in the transaction and released late in the transaction. For this reason it is not acceptable for the a non-VGX streaming service to begin applying a transaction at the destination until all transaction data has arrived at the destination site. Doing so would introduce the risk of leaving VGX objects in a locked state for an undetermined length of time.
+
+==== Transaction identifier and serial number
+
+Transactions carry unique transaction identifiers _transid_ and _serial_ numbers. The _transid_ is a label used for keeping track of individual transactions and must be included in responses from subscriber to provider. The _serial_ numbers are monotonically increasing integers ensuring that transactions are applied in the correct order at destinations.
+
+[[transaction_confirmation]]
+==== Transaction confirmation
+
+Successful processing of a transaction by the a subscriber must be followed by the `ACCEPTED` message back to the VGX provider. The transaction identifier _transid_ and a _crc32c_ checksum are included in this response.
+
+A non-VGX streaming service is not required to compute the _crc32c_ checksum itself. It may echo back the _crc32c_ included in the `COMMIT` statement of the transaction. However, to increase reliability of the overall system the service should compute its own checksum and verify against the transaction request's checksum. A `REJECTED` or `RETRY` response is appropriate after a checksum mismatch.
+
+[[transaction_crc32c_computation]]
+==== Compute transaction CRC32-C checksum
+
+The CRC32-C algorithm is used to compute the checksum. The first byte to be processed is the leading "T" of the `TRANSACTION` keyword. The last byte to be processed is the byte immediately preceding the "C" of the transaction's `COMMIT` keyword. All bytes in between are processed including spaces, newlines and comments.
+
+For example, computing the CRC32-C of the transaction shown below starts with "T", followed by "R", "A", "N", ..., "C", "0", "A", "\n". The resulting checksum is 0x45021C31. This is the same value included in the `COMMIT` statement. The streaming service can match checksums to verify data was received correctly.
+
+.A transaction with CRC32-C checksum 0x45021C31
+----
+TRANSACTION 71ae6c324062bed56a925c74311ab3ce 0000017725809E90
+OP 2001 a5b3aedf778003cd15dc8178017db09b 7fc56270e7a70fa81a5935b72eacbe29
+    arc 1020011C 00052B660000000A 9d5ed678fe57bcca610140957afab571
+ENDOP 002386F26FC10012 0000017725EB59CA 8A26C4B9
+OP 2001 a5b3aedf778003cd15dc8178017db09b 9d5ed678fe57bcca610140957afab571
+    vps 1010161C C4FAA57A858CFC79 02 0000000000000000 0000000000000014
+ENDOP 002386F26FC10014 0000017725EB59CA 9BA3EC0A
+COMMIT 71ae6c324062bed56a925c74311ab3ce 0000017725EB5B12 45021C31 \n
+----
+
+A correctly processed transaction should be followed by an `ACCEPTED` response.
+
+.The corresponding subscriber response
+----
+ACCEPTED 71ae6c324062bed56a925c74311ab3ce 45021C31 \n
+----
+
+==== Transaction Example
+
+This example opens three existing vertices atomically before creating connections and setting properties, then finally releases the vertices triggering a new transaction.
+
+.Code running in source VGX instance (provider)
+[source, python]
+----
+def func():
+    A, B, C = g.OpenVertices( ["A","B","C"] )
+    g.Connect( A, ("to",M_INT,10), B )
+    A['x'] = 10
+    g.Connect( B, ("to",M_INT,10), C )
+    B['x'] = 20
+    g.CloseVertices( [A, B, C] )
+
+# Execute
+func()
+----
+
+The VGX provider instance generates the following transaction data which is sent to the streaming service.
+
+.Request: Transaction sent to streaming service
+----
+TRANSACTION 71ae6c324062bed56a925c74311ab3ce 0000017725809E90
+OP 200A a5b3aedf778003cd15dc8178017db09b
+    lxw 10A011F5 00000003 7fc56270e7a70fa81a5935b72eacbe29 9d5ed678fe57bcca610140957afab571 0d61f8370cad1d412f80b84d143e1257
+ENDOP D08213E7
+OP 1001 a5b3aedf778003cd15dc8178017db09b
+    rea 10E0021C 659DFC2ACDBEACD9 0000000000000AD9 000000010000000200000000000000010000000000006F74
+ENDOP 002386F26FC10010 0000017725EB59CA 66ABBDB6
+OP 1001 a5b3aedf778003cd15dc8178017db09b
+    kea 10E0041C C4FAA57A858CFC79 C4FAA57A858CFC79 000100010000000100000000000000010000000000000078
+ENDOP 002386F26FC10011 0000017725EB59CA 40BABBDD
+OP 2001 a5b3aedf778003cd15dc8178017db09b 7fc56270e7a70fa81a5935b72eacbe29
+    arc 1020011C 00052B660000000A 9d5ed678fe57bcca610140957afab571
+    vps 1010161C C4FAA57A858CFC79 02 0000000000000000 000000000000000A
+ENDOP 002386F26FC10012 0000017725EB59CA E616976A
+OP 2001 a5b3aedf778003cd15dc8178017db09b 9d5ed678fe57bcca610140957afab571
+    arc 1020011C 00052B660000000A 0d61f8370cad1d412f80b84d143e1257
+    vps 1010161C C4FAA57A858CFC79 02 0000000000000000 0000000000000014
+ENDOP 002386F26FC10014 0000017725EB59CA 0FB98268
+OP 200B a5b3aedf778003cd15dc8178017db09b
+    ulv 00A013F5 00000003 7fc56270e7a70fa81a5935b72eacbe29 9d5ed678fe57bcca610140957afab571 0d61f8370cad1d412f80b84d143e1257
+ENDOP 02BD8995
+COMMIT 71ae6c324062bed56a925c74311ab3ce 0000017725EB5B12 68F7E2C0 \n
+----
+
+The subscriber sends a response to the provider indicating the transaction was received and processed successfully.
+
+.Response: Transaction accepted by subscriber
+----
+ACCEPTED 71ae6c324062bed56a925c74311ab3ce 68F7E2C0 \n
+----
+
+If the subscriber is a VGX instance running the VGX Transaction service the graph has now been updated with all data in the accepted transaction.
+
+If the subscriber is a non-VGX streaming service, it now forwards the transaction to a destination VGX instance where it will be applied.
+
+.Transaction applied at destination, by non-VGX streaming service
+[source, python]
+----
+# Events must be globally disabled at initialization
+pyvgx.system.Initialize( attach=None, events=False )
+
+# Suppose this function returns the complete transaction data
+data = get_stream_data()
+
+# This will modify the destination graph having the same effect
+# as func() had in the source VGX instance
+pyvgx.op.Consume( data )
+----
+
+=== Resync
+
+----
+RESYNC <transid> <nrollback>
+----
+
+The resync message identifies the point in the message stream where the subscriber should resume processing new transactions following a temporary interruption.
+
+If the temporary interruption was triggered by a previous `RETRY` response from the subscriber the appearance of `RESYNC` prompts the subscriber to continue processing at the next transaction. In this case the subscriber should expect the `RESYNC` _transid_ to match the transaction id of its most recent `RETRY` response.
+
+It is also possible for `RESYNC` to appear if the provider has performed an internal rollback triggered by circumstances unknown to the subscriber. In this case the subscriber should simply expect a new transaction to follow.
+
+
+=== Operation Block
+
+----
+OP <optype> [ <opgraph> [ <objectid> ] ]
+  <operator>
+  ...
+ENDOP [ <opid> <tms> ] <crc32c>
+----
+
+The operation block embeds one or more <<operator_reference, _operators_>> that modify a graph in some way. An operation block starts with the `OP` keyword and has a type specified by _optype_ which determines the kind of operators that may appear in the block.
+
+Operation blocks have different scope depending on _optype_.
+
+. System Operations
+. Graph Operations
+. Vertex Operations
+. Locking Operations
+
+==== System Operations
+
+Operation blocks with system-wide effect apply operators relative to the _system graph_. The `OP` statement includes _optype_ only, and the `ENDOP` statement includes _crc32c_ only.
+
+.Operation block with system scope
+----
+OP <optype>
+  <operator>
+  ...
+ENDOP <crc32c>
+----
+
+Examples of operators appearing in a system operation block include <<grn, create graph>> and <
+  <grd, delete graph>>.
+
+==== Graph Operations
+
+Operation blocks with graph-wide effect apply operators relative to a specific graph instance. The `OP` statement includes _optype_ and _opgraph_ fields. The `ENDOP` statement includes _opid_, _tms_ and _crc32c_ for <<graph_instance_operators, graph instance>> operation blocks, and _crc32c_ only for <<graph_state_operators, graph state>> operation blocks.
+
+.Graph instance operation block
+----
+OP <optype> <opgraph>
+  <operator>
+  ...
+ENDOP <opid> <tms> <crc32c>
+----
+
+Examples of operators appearing in a graph instance operation block include creating a <<vxn, new vertex>>, defining a <<rea, new relationship type>> and defining a <<kea, new property key>>.
+
+.Graph state operation block
+----
+OP <optype> <opgraph>
+  <operator>
+  ...
+ENDOP <crc23c>
+----
+
+Examples of operators appearing in a graph state operation block include the synchronous <<evx, execute events>> instruction, setting graph to <<grr, readonly mode>> and performing <<tic, time synchronization>>.
+
+==== Vertex Operations
+
+Operation blocks that modify vertices apply operators relative to a specific object instance within a specific graph instance. The `OP` statement includes _optype_, _opgraph_ and _objectid_. The `ENDOP` statement includes _opid_, _tms_ and _crc32c_.
+
+.Vertex instance operation block
+----
+OP <optype> <opgraph> <objectid>
+  <operator>
+  ...
+ENDOP <opid> <tms> <crc32c>
+----
+
+Examples of operators appearing in a vertex instance operation block include <<vps, setting properties>>, assigning <<vxr, rank coefficients>>, and <<arc, connecting>> or <<ard, disconnecting>> arcs.
+
+==== Locking Operations
+
+Operation blocks acquiring or releasing locks for one or more vertices at the same time apply atomic locking operators relative to a specific graph instance. The `OP` statement includes _optype_ and _opgraph_ fields. The `ENDOP` statement includes _crc32c_ only.
+
+.Lock acquisition/release operation block
+----
+OP <optype> <opgraph>
+  <operator>
+  ...
+ENDOP <crc32c>
+----
+
+Operators appearing in lock acquisition operation blocks include <<lxw, acquire exclusive write locks>>. Operators appearing in lock release operation blocks include <<ulv, unlock vertices>>.
+
+==== Compute operation block CRC32-C checksum
+
+All operation blocks include a _crc32c_ checksum in the `ENDOP` statement, allowing the destination VGX instance to validate the integrity of the operation data.
+
+The checksum is computed over all _tokens_ in the operation block starting with `OP` and ending with the token up to but not including the _crc32c_ field itself. Only tokens are included in the computation. Spaces, newlines and comments are all excluded.
+
+===== CRC32-C Example
+
+The two operation blocks below are equivalent since they contain the exact same tokens, and therefore have the same CRC32-C checksum `C9A3FDBB`.
+
+.Operation block with checksum C9A3FDBB
+----
+OP 2001 31e259a88d0d4db53a4dbb629ded46ff 7fc56270e7a70fa81a5935b72eacbe29
+  vps 1010161C C4FAA57A858CFC79 02 0000000000000000 00000000000003E8
+ENDOP 002386F26FC10BE3 00000178B24EB030 C9A3FDBB
+----
+
+.Equivalent operation block with checksum C9A3FDBB
+----
+  OP    2001                             # vertex instance optype
+        31e259a88d0d4db53a4dbb629ded46ff # graph id
+        7fc56270e7a70fa81a5935b72eacbe29 # vertex id
+    
+        # Set vertex property
+        # x = 1000
+        vps 1010161C          # operator: "vertex property set"
+            C4FAA57A858CFC79  # key:      "x"
+            02                # type:     integer
+            0000000000000000  # (n/a)
+            00000000000003E8  # value:    1000
+
+  ENDOP 002386F26FC10BE3 # opid
+        00000178B24EB030 # tms
+        C9A3FDBB         # checksum
+----
+
+
+
+
+
+==== Operation Block Example
+
+This example shows five operation blocks performing the following actions:
+
+. Acquire two existing vertices
+. Define a new relationship type
+. Define a new property key
+. Connect the vertices and set a vertex property
+. Release two vertices
+
+===== Atomically acquire vertices "A" and "B"
+
+.Two previously created vertices "A" and "B" are acquired writable.
+[source, python]
+----
+A, B = graph.OpenVertices( ["A", "B"] )
+----
+
+This is a graph-wide operation of type `200A` specifying _opgraph_ as the target for the `lxw` operator which acquires exclusive write locks on the specified vertices. This operation does not modify the vertices and therefore only includes the _crc32c_ field at the end.
+
+.Resulting operation block acquiring "A" and "B"
+----
+OP 200A eef63fb0fe9de6d719821ad5ff64b3ea
+    lxw 10A011F5 00000002 7fc56270e7a70fa81a5935b72eacbe29 9d5ed678fe57bcca610140957afab571
+ENDOP 12AC3A3C
+----
+
+===== Define new relationship "to"
+
+.The use of previously unused relationship type "to" triggers creation of the type by the relationship type enumerator.
+[source, python]
+----
+g.Connect( A, ("to",M_INT,10), B )
+----
+
+This is a graph-wide operation of type `1001` specifying _opgraph_ as the target for the `rea` operator which adds a new relationship enumeration to the graph. This operation modifies the graph data by affecting the relationship enumerator and therefore includes a new _opid_ and _tms_ for the graph, in addition to the _crc32c_ field at the end.
+
+.Resulting operation block defining relationship type "to"
+----
+OP 1001 eef63fb0fe9de6d719821ad5ff64b3ea
+    rea 10E0021C 659DFC2ACDBEACD9 0000000000000AD9 000000010000000200000000000000010000000000006F74
+ENDOP 002386F26FC1000D 000001772639B8D6 5BC210F7
+----
+
+===== Define new property key "x"
+
+.The use of previously unused property key "x" triggers creation of the key by the property key enumerator.
+[source, python]
+----
+A['x'] = 10
+----
+
+This is a graph-wide operation of type `1001` specifying _opgraph_ as the target for the `kea` operator which adds a new property key enumeration to the graph. This operation modifies the graph data by affecting the property key enumerator and therefore includes a new _opid_ and _tms_ for the graph, in addition to the _crc32c_ field at the end.
+
+.Resulting operation block defining property key "x"
+----
+OP 1001 eef63fb0fe9de6d719821ad5ff64b3ea
+    kea 10E0041C C4FAA57A858CFC79 C4FAA57A858CFC79 000100010000000100000000000000010000000000000078
+ENDOP 002386F26FC1000E 000001772639B8D6 7DD3169C
+----
+
+===== Connect vertices and set property
+
+.After the new relationship type and property key have been defined the two statements can now be completed.
+[source, python]
+----
+g.Connect( A, ("to",M_INT,10), B )
+A['x'] = 10
+----
+
+This is a vertex operation of type `2001` specifying _objectid_ (for vertex "A") as the the target vertex in graph _opgraph_. The operation consists of two operators `arc` and `vps` that modify vertex "A" by first creating the "to" arc to vertex "B" and then assigning the value 10 to a property named "x". This operation modifies vertex "A" and therefore includes a new _opid_ nad _tms_ for the vertex, in addition to the _crc32c_ field at the end.
+
+.Resulting operation block executing the arc creation and property assignment
+----
+OP 2001 eef63fb0fe9de6d719821ad5ff64b3ea 7fc56270e7a70fa81a5935b72eacbe29
+    arc 1020011C 00052B660000000A 9d5ed678fe57bcca610140957afab571
+    vps 1010161C C4FAA57A858CFC79 02 0000000000000000 000000000000000A
+ENDOP 002386F26FC1000F 000001772639B8D6 10E0741C
+----
+
+===== Atomically release both vertices
+
+.Release "A" and "B" writelocks
+[source, python]
+----
+g.CloseVertices( [A, B] )
+----
+
+This is a graph-wide operation of type `200B` specifying _opgraph_ as the target for the `ulv` operator which unlocks the specified vertices. This operation does not modify the vertices and therefore only includes the _crc32c_ field at the end.
+
+.Resulting operation block releasing "A" and "B"
+----
+OP 200B eef63fb0fe9de6d719821ad5ff64b3ea
+    ulv 00A013F5 00000002 7fc56270e7a70fa81a5935b72eacbe29 9d5ed678fe57bcca610140957afab571
+ENDOP 0CF7036D
+----
+
+=== Operator
+
+----
+<opname> <opcode> [ <arg1> [ <arg2> ... ] ]
+----
+
+Operators are the "instructions" that actually perform work. Every type of action that can be performed via the VGX programming API has a corresponding operator or set of operators. Operators are sequenced and bundled into one ore more operation blocks according to an algorithm that ensures semantic equivalence between the original source code and the operation stream output product.
+
+Operators without references to objects outside the scope of the enclosing operation block are guaranteed to complete immediately once executed. This is because all resource acquisition is managed on the operation block level.
+
+Some operators may reference objects whose acquisition is not managed by the enclosing operation block. Such operators (of which `arc` is a prominent example) are not guaranteed to complete immediately upon execution. If a required resource is busy at the time of the operator's execution the operator will block until the resource becomes available. For example, the `arc` operator has to acquire the terminal in order to execute.
+
+==== Operator Example
+
+This example shows two operators executing the following actions:
+
+. Create a new arc
+. Set a vertex property
+
+===== Connect two vertices with `arc`
+
+The `arc` _opname_ mnemonic and `1020011C` _opcode_ fields carry equivalent meaning and are both included to support human readability and parsing convenience at the same time.
+
+The third field `00052B660000000A` encodes the arc data, which in this case happens to reference the `"to"` relationship type with modifier `M_INT` and value `10`. 
+
+The fourth field `9d5ed678fe57bcca610140957afab571` references the terminal vertex which needs to be acquired at the time of execution. The initial vertex has already been acquired by the enclosing operation block. Because the terminal must be acquired this operation may block.
+
+----
+arc 1020011C 00052B660000000A 9d5ed678fe57bcca610140957afab571
+----
+
+===== Set vertex integer property with `vps`
+
+The `vps` _opname_ mnemonic and `1010161C` _opcode_ fields carry equivalent meaning and are both included to support human readability and parsing convenience at the same time.
+
+The third field `C4FAA57A858CFC79` encodes the property key, which in this case happens to reference the "x" property key enumeration.
+
+The fourth field `02` encodes the property value type, which means `integer`.
+
+The fifth field `0000000000000000` is ignored for integer properties (but would be part of a reference to a string value enumeration if this were a string property.)
+
+The sixth field `000000000000000A` encodes the integer value `10`.
+
+----
+vps 1010161C C4FAA57A858CFC79 02 0000000000000000 000000000000000A
+----
+
+[[transaction_reference]]
+== Transaction Reference
+
+[[transaction_start]]
+=== Transaction start `TRANSACTION`
+
+----
+#           transid                          serial
+TRANSACTION hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh HHHHHHHHHHHHHHHH
+----
+
+Transactions open with a `TRANSACTION` statement. The _transid_ and _serial_ field values are unique per transaction.
+
+The _transid_ field is a label representing the transaction.
+
+The _serial_ field is a monotonically increasing integer ensuring transactions are processed in order. Out-of-order transactions applied at the destination will result in an unrecoverable error.
+
+[[fields_transaction_start]]
+.Transaction start fields
+[cols="2,2,5,5"]
+|===
+|Field |Type |Format |Description
+
+|_transid_
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Unique transaction identifier
+
+|_serial_
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Monotonically increasing serial number
+
+|===
+
+[[transaction_end]]
+=== Transaction end `COMMIT`
+
+----
+#      transid                          tms              crc32c
+COMMIT hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh HHHHHHHHHHHHHHHH HHHHHHHH \n
+----
+
+Transactions end with a `COMMIT` statement.
+
+The _transid_ field in `COMMIT` has the same value as _transid_ in `TRANSACTION`.
+
+The _tms_ field is a transaction timestamp, in milliseconds since 1970.
+
+The _crc32c_ field is a <<transaction_crc32c_computation, 32-bit integer checksum>> over all data in the transaction.
+
+[[fields_transaction_end]]
+.Transaction end fields
+[cols="2,2,5,5"]
+|===
+|Field |Type |Format |Description
+
+|_transid_
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Unique transaction identifier
+
+|_tms_
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Transaction timestamp in milliseconds since 1970
+
+|_crc32c_
+|DWORD
+|`HHHHHHHH`
+|Transaction checksum
+
+|===
+
+[[operation_block_reference]]
+== Operation Block Reference
+
+=== Operation Type
+
+.Operation type
+[cols="2,4,10"]
+|===
+|Type |Operation scope |Description
+
+|<<system_operators, 0001>>
+|System
+|Operators within this block type have system-wide effect, such as creating graphs and managing the registry.
+
+|<<graph_instance_operators, 1001>>
+|Graph instance
+|Operators within this block type create or destroy objects in the graph, such as vertices and enumerations.
+
+|<<graph_state_operators, 100A>>
+|Graph state
+|Operators within this block type alter the graph state, such as enabling or disabling event execution and switching between readonly and writable mode.
+
+|<<vertex_instance_operators, 2001>>
+|Vertex instance
+|Operators within this block type manipulate individual vertex objects, such as setting properties and crating connections.
+
+|<<vertex_lock_operators, 200A>>
+|Vertex group lock
+|Operators within this block type acquire vertex locks.
+
+|<<vertex_unlock_operators, 200B>>
+|Vertex group unlock
+|Operators within this block type release vertex locks.
+
+|===
+
+[[operation_start]]
+=== Operation block start `OP`
+
+----
+#  optype [opgraph                          [objectid                        ]]
+OP HHHH   [hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh [hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh]] 
+----
+
+All operation blocks include the operation type _optype_ field. Operations affecting a specific (existing) graph also include the _opgraph_ field. Operations targeting specific objects within a graph also include the object instance reference _objectid_.
+
+[[fields_blockstart]]
+.Operation block fields
+[cols="2,2,5,5"]
+|===
+|Field |Type |Format |Description
+
+|_optype_
+|WORD
+|`HHHH`
+|Determines the target object of the operation and the operators that may appear in the block.
+
+|_opgraph_
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Graph instance that will be affected by the operation.
+
+|_objectid_
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Object within graph that will be affected by the operation.
+
+|===
+
+[[operation_end]]
+=== Operation block end `ENDOP`
+
+----
+#     [opid             tms             ] crc32c
+ENDOP [HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH] HHHHHHHH
+----
+
+The operation block terminates with the `ENDOP` statement. For operation types that apply permanent modifications to object instances, the affected object is updated with the operation identifier _opid_ and timestamp _tms_ after all operators in the operation block have been executed.
+
+A _crc32c_ checksum is included for each operation block to help detect unintended modification or data corruption.
+
+[[fields_blockend]]
+.Block terminator fields
+[cols="2,2,5,5"]
+|===
+|Field |Type |Format |Description
+
+|_opid_
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Unique operation identifier
+
+|_tms_
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Graph tick in milliseconds since 1970
+
+|_crc32c_
+|DWORD
+|`HHHHHHHH`
+|CRC32-C checksum computed over all _tokens_ in the operation block starting with `OP` and ending with the token up to but not including the _crc32c_ field itself. Only tokens are included in the computation. Spaces, newlines and comments are all excluded.
+
+|===
+
+[[operator_reference]]
+== Operator Reference
+
+=== General Operator Format
+
+[[operator]]
+----
+#   opname  opcode   [<p1> [<p2> [...]]]
+    ccc     HHHHHHHH [...  [...  [...]]]
+----
+
+Operators appear as separate lines within operation blocks. All operators within a block are relative to the object instance in the operation header as determined by the operation type. Operators are applied in the order they appear.
+
+An operator starts with a three-character mnemonic _opname_ followed by its numeric _opcode_. Zero or more operator parameters _p1_ ... _pn_ follow next.
+
+[cols="2,2,5,5"]
+|===
+|Field |Type |Format |Description
+
+|_opname_
+|STRING
+|`ccc`
+|Operator mnemonic
+
+|_opcode_
+|DWORD
+|`HHHHHHHH`
+|Numeric opcode
+
+|_p~i~_
+|`BYTE`
+ +
+ `WORD`
+ +
+ `DWORD`
+ +
+ `QWORD`
+ +
+ `m128`
+ +
+ `VARSTR`
+|`HH`
+ +
+ `HHHH`
+ +
+ `HHHHHHHH`
+ +
+ `HHHHHHHHHHHHHHHH`
+ +
+ `hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+ +
+ `...`
+|Operator parameter
+
+|===
+
+[[system_operators]]
+=== System Operators
+
+These operators may appear in operations of type `0001`, which have system-wide effect.
+
+.System operators
+----
+OP 0001
+    sya 103011F5 <tms> <uri> <src> <ver> <stat>
+    syd 003012F5 <tms> <src> <ver> <stat>
+    rcl 003021FD
+    scf 1030311C <nsg> <nsi> <vsz> <vmi> <cm> <jm> <cx> <jx> <ham> <sim>
+    grn 1040511C <vblk> <t0> <opcnt> <id> <path> <name>
+    grd 0040521D <id>
+    dat 1030DA1E <nparts> <pn> <datapart> <sz> <obid>
+ENDOP crc32c
+----
+
+[[system_operator_summary]]
+.System operator summary
+[cols="3,6,10,10"]
+|===
+|Opname |Opcode |Description |Comment
+
+|<<sya, sya>>
+|103011F5
+|<<sya>>
+|Attach source VGX instance to destination
+
+|<<syd, syd>>
+|003012F5
+|<<syd>>
+|Detach source VGX instance
+
+|<<rcl, rcl>>
+|003021FD
+|<<rcl>>
+|Clear system registry
+
+|<<scf, scf>>
+|1030311C
+|<<scf>>
+|Define vector similarity parameters for graph
+
+|<<grn, grn>>
+|1040511C
+|<<grn>>
+|Create a new graph instance
+
+|<<grd, grd>>
+|0040521D
+|<<grd>>
+|Remove graph instance from memory
+
+|<<dat, dat>>
+|1030DA1E
+|<<dat>>
+|Raw data package
+
+|===
+
+[[sya]]
+==== System Attach
+
+[[op_sya]]
+----
+# op  opcode   tms              uri src ver stat
+  sya 103011F5 HHHHHHHHHHHHHHHH ... ... ... 00000001
+----
+
+[[fields_sya]]
+.`sya` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|sya
+|STRING
+|`ccc`
+|"SYstem Attach"
+
+|103011F5
+|DWORD
+|`HHHHHHHH`
+|sya opcode
+
+|<tms>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Source graph timestamp in milliseconds since 1970
+
+|<uri>
+|VARSTR
+|`...`
+|URI of streaming service handling data transport from source to destination
+
+|<src>
+|VARSTR
+|`...`
+|Hostname of source VGX instance
+
+|<ver>
+|VARSTR
+|`...`
+|Source VGX instance version
+
+|<stat>
+|DWORD
+|`HHHHHHHH`
+|Status code = 1
+
+|===
+
+[[syd]]
+==== System Detach
+
+[[op_syd]]
+----
+# op  opcode   tms              src ver stat
+  syd 003012F5 HHHHHHHHHHHHHHHH ... ... 00000000
+----
+
+[[fields_syd]]
+.`syd` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|syd
+|STRING
+|`ccc`
+|"SYstem Detach"
+
+|003012F5
+|DWORD
+|`HHHHHHHH`
+|syd opcode
+
+|<tms>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Source graph timestamp in milliseconds since 1970
+
+|<src>
+|VARSTR
+|`...`
+|Hostname of source VGX instance
+
+|<ver>
+|VARSTR
+|`...`
+|Source VGX instance version
+
+|<stat>
+|DWORD
+|`HHHHHHHH`
+|Status code = 0
+
+|===
+
+[[rcl]]
+==== Clear Registry
+
+[[op_rcl]]
+----
+# op  opcode
+  rcl 003021FD
+----
+
+[[fields_rcl]]
+.`rcl` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|rcl
+|STRING
+|`ccc`
+|"Registry CLear"
+
+|003021FD
+|DWORD
+|`HHHHHHHH`
+|rcl opcode
+
+|===
+
+[[scf]]
+==== Similarity config
+
+[[op_scf]]
+----
+# op  opcode   nsg      nsi      vsz      vmi      cm
+          jm       cx       jx       ham      sim
+  scf 1030311C HHHHHHHH HHHHHHHH HHHHHHHH HHHHHHHH HHHHHHHH
+          HHHHHHHH HHHHHHHH HHHHHHHH HHHHHHHH HHHHHHHH
+----
+
+[[fields_scf]]
+.`scf` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|scf
+|STRING
+|`ccc`
+|"Similarity ConFiguration"
+
+|1030311C
+|DWORD
+|`HHHHHHHH`
+|scf opcode
+
+|<nsg>
+|DWORD
+|`HHHHHHHH`
+|Permutation table segments
+
+|<nsi>
+|DWORD
+|`HHHHHHHH`
+|Permutation table significant regions
+
+|<vsz>
+|DWORD
+|`HHHHHHHH`
+|Maximum vector size
+
+|<vmi>
+|DWORD
+|`HHHHHHHH`
+|Minimum vector intersection
+
+|<cm>
+|DWORD
+|`HHHHHHHH`
+|Minimum cosine
+
+|<jm>
+|DWORD
+|`HHHHHHHH`
+|Minimum jaccard
+
+|<cx>
+|DWORD
+|`HHHHHHHH`
+|Cosine exponent
+
+|<jx>
+|DWORD
+|`HHHHHHHH`
+|Jaccard exponent
+
+|<ham>
+|DWORD
+|`HHHHHHHH`
+|Hamming threshold
+
+|<sim>
+|DWORD
+|`HHHHHHHH`
+|Similarity threshold
+
+|===
+
+[[grn]]
+==== Create new graph
+
+[[op_grn]]
+----
+# op  opcode   vblk     t0       opcnt
+#                 id                               path name
+  grn 1040511C HHHHHHHH HHHHHHHH HHHHHHHHHHHHHHHH 
+                  hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh ...  ...  
+----
+
+[[fields_grn]]
+.`grn` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|grn
+|STRING
+|`ccc`
+|"GRaph New"
+
+|1040511C
+|DWORD
+|`HHHHHHHH`
+|grn opcode
+
+|<vblk>
+|DWORD
+|`HHHHHHHH`
+|Vertex block order
+
+|<t0>
+|DWORD
+|`HHHHHHHH`
+|Inception time
+
+|<opcnt>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Operation count
+
+|<id>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Graph objectid
+
+|<path>
+|VARSTR
+|`...`
+|Graph path
+
+|<name>
+|VARSTR
+|`...`
+|Graph name
+
+|===
+
+[[grd]]
+==== Delete graph from memory
+
+[[op_grd]]
+----
+# op  opcode   id
+  grd 0040521D hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh  
+----
+
+[[fields_grd]]
+.`grd` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|grd
+|STRING
+|`ccc`
+|"GRaph Delete"
+
+|0040521D
+|DWORD
+|`HHHHHHHH`
+|grd opcode
+
+|<id>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Objectid of graph to remove from memory
+
+|===
+
+[[dat]]
+==== Transmit Raw Data
+
+[[op_dat]]
+----
+# op  opcode   nparts           pn               datapart
+#                    sz               obid
+  dat 1030DA1E HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH ...
+                     HHHHHHHHHHHHHHHH hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+----
+
+[[fields_dat]]
+.`dat` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|dat
+|STRING
+|`ccc`
+|"DATa"
+
+|1030DA1E
+|DWORD
+|`HHHHHHHH`
+|dat opcode
+
+|<nparts>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of dataparts (separate dat operators) used to transfer the object
+
+|<pn>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Current datapart for this object transfer
+
+|<datapart>
+|VARSTR
+|`...`
+|Data payload
+
+|<sz>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of bytes in payload
+
+|<obid>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Object identifier
+
+|===
+
+[[graph_instance_operators]]
+=== Graph Instance Operators
+
+These operators may appear in operations of type `1001`, which modify graph instances.
+
+.Graph instance operators
+----
+OP 1001 <opgraph>
+    grt 0040531D <vtyp> <ntrunc>
+    grp 1040551E <ord> <sz> <nk> <ns> <np> <nv> <nd> <nr> <nt> <flg>
+    grs 1040561E <ord> <sz> <nk> <ns> <np> <nv> <nd> <nr> <nt> <flg>
+    vea 10E0011C <hash> <enum> <typestr>
+    ved 00E0011D <hash> <enum>
+    rea 10E0021C <hash> <enum> <relstr>
+    red 00E0021D <hash> <enum>
+    dea 10E0031C <hash> <enum> <dimstr>
+    ded 00E0031D <hash> <enum>
+    kea 10E0041C <hash> <enum> <keystr>
+    ked 00E0041D <hash> <enum>
+    sea 10E0051C <str> <obid>
+    sed 00E0051D <obid>
+    vxn 1010111C <obid> <tp> <tmc> <tmx> <tmx.arc> <rank> <id>
+    vxd 0010111D <obid> <ex>
+ENDOP <opid> <tms> <crc32c>
+----
+
+[[graph_instance_operator_summary]]
+.Graph instance operator summary
+[cols="3,6,10,10"]
+|===
+|Op |Opcode |Description |Comment
+
+|<<grt, grt>>
+|0040531D
+|<<grt>>
+|Remove all or some vertices from graph
+
+|<<grp, grp>>
+|1040551E
+|<<grp>>
+|Persist graph to local storage
+
+|<<grs, grs>>
+|1040561E
+|<<grs>>
+|Assert graph state in terms of object counters
+
+|<<vea, vea>>
+|10E0011C
+|<<vea>>
+|Define a unique numeric code to represent a vertex type string
+
+|<<ved, ved>>
+|00E0011D
+|<<ved>>
+|Remove numeric code mapping for vertex type
+
+|<<rea, rea>>
+|10E0021C
+|<<rea>>
+|Define a unique numeric code to represent a relationship type string
+
+|<<red, red>>
+|00E0021D
+|<<red>>
+|Remove numeric code mapping for relationship type
+
+|<<dea, dea>>
+|10E0031C
+|<<dea>>
+|Define a unique numeric code to represent a vector dimension string
+
+|<<ded, ded>>
+|00E0031D
+|<<ded>>
+|Remove numeric code mapping for vector dimension
+
+|<<kea, kea>>
+|10E0041C
+|<<kea>>
+|Define a unique numeric code to represent a property key string
+
+|<<ked, ked>>
+|00E0041D
+|<<ked>>
+|Remove numeric code mapping for property key
+
+|<<sea, sea>>
+|10E0051C
+|<<sea>>
+|Define a unique numeric code to represent an arbitrary string value
+
+|<<sed, sed>>
+|00E0051D
+|<<sed>>
+|Remove numeric code mapping for string value
+
+|<<vxn, vxn>>
+|1010111C
+|<<vxn>>
+|Create new vertex
+
+|<<vxd, vxd>>
+|0010111D
+|<<vxd>>
+|Delete vertex
+
+|===
+
+[[grt]]
+==== Truncate graph
+
+[[op_grt]]
+----
+# op  opcode   tp ndiscarded
+  grt 0040531D HH HHHHHHHHHHHHHHHH
+----
+
+[[fields_grt]]
+.`grt` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|grt
+|STRING
+|`ccc`
+|"GRaph Truncate"
+
+|0040531D
+|DWORD
+|`HHHHHHHH`
+|grt opcode
+
+|<tp>
+|BYTE
+|`HH`
+|Remove all vertices with specified type enumeration code, or remove all vertices when `00`
+
+|<ndiscarded>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number or vertices discarded from graph (for validation)
+
+|===
+
+[[grp]]
+==== Persist graph to local storage
+
+[[op_grp]]
+----
+# op  opcode   ord              sz               nk
+#                    ns               np               nv
+#                         nd       nr   nt flg
+  grp 1040551E HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+                     HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+                          HHHHHHHH HHHH HH HH
+----
+
+[[fields_grp]]
+.`grp` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|grp
+|STRING
+|`ccc`
+|"GRaph Persist"
+
+|1040551E
+|DWORD
+|`HHHHHHHH`
+|grp opcode
+
+|<ord>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Graph order (number of vertices)
+
+|<sz>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Graph size (number of arcs)
+
+|<nk>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique property keys
+
+|<ns>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique property string values
+
+|<np>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Total number of vertex properties
+
+|<nv>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of vector instances
+
+|<nd>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique vector dimensions
+
+|<nr>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of relationship type enumerations
+
+|<nt>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of vertex type enumerations
+
+|<flg>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Internal flags
+
+|===
+
+[[grs]]
+==== Assert graph state
+
+[[op_grs]]
+----
+# op  opcode   ord              sz               nk
+#                    ns               np               nv
+#                         nd       nr   nt flg
+  grs 1040561E HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+                     HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+                          HHHHHHHH HHHH HH HH
+----
+
+[[fields_grs]]
+.`grs` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|grs
+|STRING
+|`ccc`
+|"GRaph State"
+
+|1040561E
+|DWORD
+|`HHHHHHHH`
+|grs opcode
+
+|<ord>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Graph order (number of vertices)
+
+|<sz>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Graph size (number of arcs)
+
+|<nk>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique property keys
+
+|<ns>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique property string values
+
+|<np>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Total number of vertex properties
+
+|<nv>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of vector instances
+
+|<nd>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of unique vector dimensions
+
+|<nr>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of relationship type enumerations
+
+|<nt>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of vertex type enumerations
+
+|<flg>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Internal flags
+
+|===
+
+[[vea]]
+==== Add vertex type enumeration
+
+[[op_vea]]
+----
+# op  opcode   hash             enum             typestr
+  vea 10E0011C HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH ...
+----
+
+[[fields_vea]]
+.`vea` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vea
+|STRING
+|`ccc`
+|"Vertex Enumeration Add"
+
+|10E0011C
+|DWORD
+|`HHHHHHHH`
+|vea opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of <type> string
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Vertex type enumeration code representing string <typestr>
+
+|<typestr>
+|VARSTR
+|`...`
+|Vertex type string enumerated as <enum>
+
+|===
+
+[[ved]]
+==== Delete vertex type enumeration
+
+[[op_ved]]
+----
+# op  opcode   hash             enum
+  ved 00E0011D HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+----
+
+[[fields_ved]]
+.`ved` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|ved
+|STRING
+|`ccc`
+|"Vertex Enumeration Delete"
+
+|00E0011D
+|DWORD
+|`HHHHHHHH`
+|ved opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of enumerated vertex type string to delete
+
+|<enumtype>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Vertex type enumeration code
+
+|===
+
+[[rea]]
+==== Add relationship type enumeration
+
+[[op_rea]]
+----
+# op  opcode   hash             enum             relstr
+  rea 10E0021C HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH ...
+----
+
+[[fields_era]]
+.`rea` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|rea
+|STRING
+|`ccc`
+|"Relationship Enumeration Add"
+
+|10E0021C
+|DWORD
+|`HHHHHHHH`
+|rea opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of <relstr>
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Relationship type enumeration code representing string <relstr>
+
+|<relstr>
+|VARSTR
+|`...`
+|Relationship type string enumerated as <enum>
+
+|===
+
+[[red]]
+==== Delete relationship type enumeration
+
+[[op_red]]
+----
+# op  opcode   hash             enum
+  red 00E0021D HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+----
+
+[[fields_red]]
+.`red` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|red
+|STRING
+|`ccc`
+|"Relationship Enumeration Delete"
+
+|00E0021D
+|DWORD
+|`HHHHHHHH`
+|red opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of enumerated string relationship string to delete
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Relationship type enumeration code
+
+|===
+
+[[dea]]
+==== Add dimension enumeration
+
+[[op_dea]]
+----
+# op  opcode   hash             enum             dimstr
+  dea 10E0031C HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH ...
+----
+
+[[fields_dea]]
+.`dea` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|dea
+|STRING
+|`ccc`
+|"Dimension Enumeration Add"
+
+|10E0031C
+|DWORD
+|`HHHHHHHH`
+|dea opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of <dimstr>
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Dimension enumeration code representing string <dimstr>
+
+|<dimstr>
+|VARSTR
+|`...`
+|Dimension string enumerated as <enum>
+
+|===
+
+[[ded]]
+==== Delete dimension enumeration
+
+[[op_ded]]
+----
+# op  opcode   hash             enum
+  ded 00E0031D HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+----
+
+[[fields_ded]]
+.`ded` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|ded
+|STRING
+|`ccc`
+|"Dimension Enumeration Delete"
+
+|00E0031D
+|DWORD
+|`HHHHHHHH`
+|ded opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of enumerated dimension string to delete
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Dimension string enumeration code
+
+|===
+
+[[kea]]
+==== Add key enumeration
+
+[[op_kea]]
+----
+# op  opcode   hash             enum             keystr
+  kea 10E0041C HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH ...
+----
+
+[[fields_kea]]
+.`kea` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|kea
+|STRING
+|`ccc`
+|"Key Enumeration Add"
+
+|10E0041C
+|DWORD
+|`HHHHHHHH`
+|kea opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of <keystr>
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Key enumeration code representing string <keystr>
+
+|<keystr>
+|VARSTR
+|`...`
+|Key string enumerated as <enum>
+
+|===
+
+[[ked]]
+==== Delete key enumeration
+
+[[op_ked]]
+----
+# op  opcode   hash             enum
+  ked 00E0041D HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+----
+
+[[fields_ked]]
+.`ked` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|ked
+|STRING
+|`ccc`
+|"Key Enumeration Delete"
+
+|00E0041D
+|DWORD
+|`HHHHHHHH`
+|ked opcode
+
+|<hash>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Hash of enumerated key string to delete
+
+|<enum>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Key string enumeration code
+
+|===
+
+[[sea]]
+==== Add string value enumeration
+
+[[op_sea]]
+----
+# op  opcode   str obid
+  sea 10E0051C ... hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+----
+
+[[fields_sea]]
+.`sea` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|sea
+|STRING
+|`ccc`
+|"String Enumeration Add"
+
+|10E0051C
+|DWORD
+|`HHHHHHHH`
+|sea opcode
+
+|<str>
+|VARSTR
+|`...`
+|String value enumerated as <obid>
+
+|<obid>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|String enumeration code representing string <str>
+
+|===
+
+[[sed]]
+==== Delete string value enumeration
+
+[[op_sed]]
+----
+# op  opcode   obid
+  sed 00E0051D hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+----
+
+[[fields_sed]]
+.`sed` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|sed
+|STRING
+|`ccc`
+|"String Enumeration Delete"
+
+|00E0051D
+|DWORD
+|`HHHHHHHH`
+|sed opcode
+
+|<obid>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Enumeration code for string to delete
+
+|===
+
+[[vxn]]
+==== Create new vertex
+
+[[op_vxn]]
+----
+# op  opcode   obid                             tp tmc
+           tmx      tmx.arc  rank             id
+  vxn 1010111C hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh HH HHHHHHHH
+           HHHHHHHH HHHHHHHH HHHHHHHHHHHHHHHH ...
+----
+
+[[fields_vxn]]
+.`vxn` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxn
+|STRING
+|`ccc`
+|"VerteX New"
+
+|1000111C
+|DWORD
+|`HHHHHHHH`
+|vxn opcode
+
+|<obid>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Vertex internalid
+
+|<tp>
+|BYTE
+|`HH`
+|Vertex type enumeration code, as defined by a preceding <<vea, vea>> operator
+
+|<tmc>
+|DWORD
+|`HHHHHHHH`
+|Vertex creation time, in seconds since 1970
+
+|<tmx>
+|DWORD
+|`HHHHHHHH`
+|Vertex expiration time, in seconds since 1970, or `F4865700` for no vertex expiration
+
+|<tmx.arc>
+|DWORD
+|`HHHHHHHH`
+|Earliest arc expiration time for vertex outarc, in seconds since 1970, or `F4865700` for no arc expiration
+
+|<rank>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Two single-precision floats <<rankencoding, packed as qword>>, representing vertex.c0 and vertex.c1.
+
+|<id>
+|VARSTR
+|`...`
+|Vertex identifier
+
+|===
+
+[[vxd]]
+==== Delete vertex
+
+[[op_vxd]]
+----
+# op  opcode   obid                             ex
+  vxd 0010111D hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh HH
+----
+
+[[fields_vxd]]
+.`vxd` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxd
+|STRING
+|`ccc`
+|"VerteX Delete"
+
+|0010111D
+|DWORD
+|`HHHHHHHH`
+|vxd opcode
+
+|<obid>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Vertex internalid
+
+|<ex>
+|BYTE
+|`HH`
+|Nonzero if TTL triggered deletion, otherwise zero
+
+|===
+
+
+[[graph_state_operators]]
+=== Graph State Operators
+
+These operators may appear in operations of type `100A`, which alter the overall state of graphs.
+
+.Graph state operators
+----
+OP 100A <opgraph>
+    grr 00500115
+    grw 10500215
+    gre 10600315
+    gri 00600415
+    tic 1070051E <tms>
+    evx 1080061E <ts> <tmx>
+ENDOP <crc32c>
+----
+
+[[graph_state_operator_summary]]
+.Graph state operator summary
+[cols="3,6,10,10"]
+|===
+|Op |Opcode |Description |Comment
+
+|<<grr, grr>>
+|00500115
+|<<grr>>
+|Make graph readonly
+
+|<<grw, grw>>
+|10500215
+|<<grw>>
+|Make graph writable
+
+|<<gre, gre>>
+|10600315
+|<<gre>>
+|Enable graph events
+
+|<<gri, gri>>
+|00600415
+|<<gri>>
+|Disable graph events
+
+|<<tic, tic>>
+|1070051E
+|<<tic>>
+|Send a synchronization timestamp
+
+|<<evx, evx>>
+|1080061E
+|<<evx>>
+|Execute events
+
+|===
+
+[[grr]]
+==== Readonly graph
+
+[[op_grr]]
+----
+# op  opcode
+  grr 00500115
+----
+
+[[fields_grr]]
+.`grr` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|grr
+|STRING
+|`ccc`
+|"GRaph Readonly"
+
+|00500115
+|DWORD
+|`HHHHHHHH`
+|grr opcode
+
+|===
+
+[[grw]]
+==== Readwrite graph
+
+[[op_grw]]
+----
+# op  opcode
+  grw 10500215
+----
+
+[[fields_grw]]
+.`grw` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|grw
+|STRING
+|`ccc`
+|"GRaph Writable"
+
+|10500215
+|DWORD
+|`HHHHHHHH`
+|grw opcode
+
+|===
+
+[[gre]]
+==== Enable graph events
+
+[[op_gre]]
+----
+# op  opcode
+  gre 10600315
+----
+
+[[fields_gre]]
+.`gre` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|gre
+|STRING
+|`ccc`
+|"GRaph Events"
+
+|10600315
+|DWORD
+|`HHHHHHHH`
+|gre opcode
+
+|===
+
+[[gri]]
+==== Disable graph events
+
+[[op_gri]]
+----
+# op  opcode
+  gri 00600415
+----
+
+[[fields_gri]]
+.`gri` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|gri
+|STRING
+|`ccc`
+|"GRaph Idle"
+
+|00600415
+|DWORD
+|`HHHHHHHH`
+|gri opcode
+
+|===
+
+[[tic]]
+==== Resync graph time
+
+[[op_tic]]
+----
+# op  opcode   tms
+  tic 1070051E HHHHHHHHHHHHHHHH
+----
+
+[[fields_tic]]
+.`tic` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|tic
+|STRING
+|`ccc`
+|"TICk"
+
+|1070051E
+|DWORD
+|`HHHHHHHH`
+|tic opcode
+
+|<tms>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Milliseconds since 1970
+
+|===
+
+[[evx]]
+==== Execute events
+
+[[op_evx]]
+----
+# op  opcode   ts       tmx
+  evx 1080061E HHHHHHHH HHHHHHHH
+----
+
+[[fields_evx]]
+.`evx` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|evx
+|STRING
+|`ccc`
+|"EVents eXecute"
+
+|1080061E
+|DWORD
+|`HHHHHHHH`
+|evx opcode
+
+|<ts>
+|DWORD
+|`HHHHHHHH`
+|Reference current time (in seconds since 1970)
+
+|<tmx>
+|DWORD
+|`HHHHHHHH`
+|Execute events with expiration no later than <tmx>
+
+|===
+
+[[vertex_instance_operators]]
+=== Vertex Instance Operators
+
+These operators may appear in operations of type `2001`, which modify vertex instances.
+
+.Vertex instance operators
+----
+OP 2001 <graph> <vertex>
+    vxr 1010121A <rank>
+    vxt 1010131A <tp>
+    vxx 1010141A <tmx>
+    vxc 1010151A <man>
+    vps 1010161C <key> <tp> <high> <low>
+    vpd 0010161D <key>
+    vpc 001016FD
+    vvs 1010171C <vector>
+    vvd 0010171D
+    vod 001018FD <ndel>
+    vid 001019FD <ndel>
+    vrl 00101C15
+    arc 1020011C <pred> <head>
+    ard 002002FD <ex> <ndel> <pred> <head>
+ENDOP <opid> <tms> <crc32c>
+----
+
+[[vertex_instance_operator_summary]]
+.Vertex instance operator summary
+[cols="3,6,10,10"]
+|===
+|Op |Opcode |Description |Comment
+
+|<<vxr, vxr>>
+|1010121A
+|<<vxr>>
+|Set vertex rank
+
+|<<vxt, vxt>>
+|1010131A
+|<<vxt>>
+|Set vertex type
+
+|<<vxx, vxx>>
+|1010141A
+|<<vxx>>
+|Set vertex expiration
+
+|<<vxc, vxc>>
+|1010151A
+|<<vxc>>
+|Convert vertex manifestation
+
+|<<vps, vps>>
+|1010161C
+|<<vps>>
+|Set vertex property
+
+|<<vpd, vpd>>
+|0010161D
+|<<vpd>>
+|Delete vertex property
+
+|<<vpc, vpc>>
+|001016FD
+|<<vpc>>
+|Clear all vertex properties
+
+|<<vvs, vvs>>
+|1010171C
+|<<vvs>>
+|Set vertex vector
+
+|<<vvd, vvd>>
+|0010171D
+|<<vvd>>
+|Remove vertex vector
+
+|<<vod, vod>>
+|001018FD
+|<<vod>>
+|Delete vertex outarcs
+
+|<<vid, vid>>
+|001019FD
+|<<vid>>
+|Delete vertex inarcs
+
+|<<vrl, vrl>>
+|00101C15
+|<<vrl>>
+|Release vertex lock
+
+|<<arc, arc>>
+|1020011C
+|<<arc>>
+|Create arc
+
+|<<ard, ard>>
+|002002FD
+|<<ard>>
+|Delete arc
+
+|===
+
+[[vxr]]
+==== Set vertex rank
+
+[[op_vxr]]
+----
+# op  opcode   rank
+  vxr 1010121A HHHHHHHHHHHHHHHH
+----
+
+[[fields_vxr]]
+.`vxr` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxr
+|STRING
+|`ccc`
+|"VerteX Rank"
+
+|1010121A
+|DWORD
+|`HHHHHHHH`
+|vxr opcode
+
+|<rank>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Two single-precision floats <<rankencoding, packed as qword>>, representing vertex.c0 and vertex.c1.
+
+|===
+
+[[rankencoding]]
+===== Rank qword encoding
+
+Then qword expressed with 16 hex digits `HHHHHHHHHHHHHHHH` packs two single-precision float (32 bit) values. The upper 32 bits represent `vertex.c0` and the lower 32 bits represent `vertex.c1`. The packed value can be re-interpreted as two floats using the following Python code:
+
+[source, python]
+----
+import struct
+rankqword = "000000003F800000" # example qword
+c1, c0 = struct.unpack( "ff", struct.pack( "Q", long(rankqword, 16) ) )
+----
+
+[[vxt]]
+==== Set vertex type
+
+[[op_vxt]]
+----
+# op  opcode   tp
+  vxt 1010131A HH
+----
+
+[[fields_vxt]]
+.`vxt` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxt
+|STRING
+|`ccc`
+|"VerteX Type"
+
+|1010131A
+|DWORD
+|`HHHHHHHH`
+|vxt opcode
+
+|<tp>
+|BYTE
+|`HH`
+|Vertex type enumeration code, as defined by preceding <<vea, vea>> operator
+
+|===
+
+[[vxx]]
+==== Set vertex expiration
+
+[[op_vxx]]
+----
+# op  opode    tmx
+  vxx 1010141A HHHHHHHH
+----
+
+[[fields_vxx]]
+.`vxx` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxx
+|STRING
+|`ccc`
+|"VerteX eXpiration"
+
+|1010141A
+|DWORD
+|`HHHHHHHH`
+|vxx opcode
+
+|<tmx>
+|DWORD
+|`HHHHHHHH`
+|Vertex expiration time, in seconds since 1970, or `F4865700` for no vertex expiration
+
+|===
+
+[[vxc]]
+==== Convert vertex manifestation
+
+[[op_vxc]]
+----
+# op  opcode   man
+  vxc 1010151A HH
+----
+
+[[fields_vxc]]
+.`vxc` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vxc
+|STRING
+|`ccc`
+|"VerteX Convert"
+
+|1010151A
+|DWORD
+|`HHHHHHHH`
+|vxc opcode
+
+|<man>
+|BYTE
+|`HH`
+|`01`=REAL, `02`=VIRTUAL
+
+|===
+
+[[vps]]
+==== Set vertex property
+
+[[op_vps]]
+----
+# op  opcode   key              tp high             low
+  vps 1010161C HHHHHHHHHHHHHHHH HH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+----
+
+[[fields_vps]]
+.`vps` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vps
+|STRING
+|`ccc`
+|"Vertex Property Set"
+
+|1010161C
+|DWORD
+|`HHHHHHHH`
+|vps opcode
+
+|<key>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Key enumeration code, as defined by a preceding <<kea, kea>> operator
+
+|<tp>
+|BYTE
+|`HH`
+|<<propvaltypes, Value type>>
+
+|<high>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Encodes the upper 64 bits of a string enumeration, or always `0000000000000000` for numeric values.
+
+|<low>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Encodes numeric values, or the lower 64 bits of a string enumeration.
+
+|===
+
+[[propvaltypes]]
+===== Property value types
+
+.<tp> may be one of the following codes
+[cols="2,2,8"]
+|===
+|Code |Type |Comment
+
+|`01`
+|boolean
+|<low> will be `0000000000000000` for False or `0000000000000001` for True. <high> is ignored.
+
+|`02`
+|integer
+|<low> will be in the range `0000000000000000` to `007FFFFFFFFFFFFF` for positive numbers 0 through 2^55^ - 1, or `FF80000000000000` to `FFFFFFFFFFFFFFFF` for negative numbers -2^55^ through -1. <high> is ignored.
+
+|`04`
+|real
+|<low> packs a double precision float value as a raw qword, which can be re-interpreted as float value using the following Python code `struct.unpack( "d", struct.pack( "Q", long(valueL, 16) ) )`. <high> is ignored.
+
+|`11`
+|string
+|<high> encodes the upper 64 bits and <low> encodes the lower 64 bits of a 128-bit string enumeration defined by a preceding <<sea, sea>> operator.
+
+|`12`
+|string
+|Same as `11`.
+
+|===
+
+[[vpd]]
+==== Delete vertex property
+
+[[op_vpd]]
+----
+# op  opcode   key
+  vpd 0010161D HHHHHHHHHHHHHHHH
+----
+
+[[fields_vpd]]
+.`vpd` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vpd
+|STRING
+|`ccc`
+|"Vertex Property Delete"
+
+|0010161D
+|DWORD
+|`HHHHHHHH`
+|vpd opcode
+
+|<key>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Key enumeration code, as defined by a preceding <<kea, kea>> operator
+
+|===
+
+[[vpc]]
+==== Clear all vertex properties
+
+[[op_vpc]]
+----
+# op  opcode
+  vpc 001016FD
+----
+
+[[fields_vpc]]
+.`vpc` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vpc
+|STRING
+|`ccc`
+|"Vertex Properties Clear"
+
+|001016FD
+|DWORD
+|`HHHHHHHH`
+|Opcode
+
+|===
+
+[[vvs]]
+==== Set vertex vector
+
+[[op_vvs]]
+----
+# op  opcode   vector
+  vvs 1010171C ...
+----
+
+[[fields_vvs]]
+.`vvs` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vvs
+|STRING
+|`ccc`
+|"Vertex Vector Set"
+
+|1010171C
+|DWORD
+|`HHHHHHHH`
+|vvs opcode
+
+|<vector>
+|VARSTR
+|`...`
+|Vector data string
+
+|===
+
+[[vvd]]
+==== Delete vertex vector
+
+[[op_vvd]]
+----
+# op  opcode
+  vvd 0010171D
+----
+
+[[fields_vvd]]
+.`vvd` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vvd
+|STRING
+|`ccc`
+|"Vertex Vector Delete"
+
+|0010171D
+|DWORD
+|`HHHHHHHH`
+|vvd opcode
+
+|===
+
+[[vod]]
+==== Remove vertex outarcs
+
+[[op_vod]]
+----
+# op  opcode   ndel
+  vod 001018FD HHHHHHHHHHHHHHHH
+----
+
+[[fields_vod]]
+.`vod` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vod
+|STRING
+|`ccc`
+|"Vertex Outarcs Delete"
+
+|001018FD
+|DWORD
+|`HHHHHHHH`
+|vod opcode
+
+|<ndel>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of outarcs removed by the operator (for validation)
+
+|===
+
+[[vid]]
+==== Remove vertex inarcs
+
+[[op_vid]]
+----
+# op  opcode   ndel
+  vid 001019FD HHHHHHHHHHHHHHHH
+----
+
+[[fields_vid]]
+.`vid` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vid
+|STRING
+|`ccc`
+|"Vertex Inarcs Delete"
+
+|001019FD
+|DWORD
+|`HHHHHHHH`
+|vid opcode
+
+|<ndel>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of inarcs removed by the operator (for validation)
+
+|===
+
+[[vrl]]
+==== Release vertex lock
+
+[[op_vrl]]
+----
+# op  opcode
+  vrl 00101C15
+----
+
+[[fields_vrl]]
+.`vrl` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|vrl
+|STRING
+|`ccc`
+|"Vertex Release Lock"
+
+|00101C15
+|DWORD
+|`HHHHHHHH`
+|vrl opcode
+
+|===
+
+[[arc]]
+==== Connect arc
+
+[[op_arc]]
+----
+# op  opcode   pred             head
+  arc 1020011C HHHHHHHHHHHHHHHH hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+----
+
+[[fields_arc]]
+.`arc` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|arc
+|STRING
+|`ccc`
+|"ARc Connect"
+
+|1020011C
+|DWORD
+|`HHHHHHHH`
+|arc opcode
+
+|<pred>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Predicator
+
+|<head>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Internalid of head vertex
+
+|===
+
+[[ard]]
+==== Disconnect arc
+
+[[op_ard]]
+----
+# op  opcode   ex ndel             pred
+#                           head
+  ard 002002FD HH HHHHHHHHHHHHHHHH HHHHHHHHHHHHHHHH
+                            hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+----
+
+[[fields_ard]]
+.`ard` fields
+[cols="3,2,3,5"]
+|===
+|Field |Type |Format |Description
+
+|ard
+|STRING
+|`ccc`
+|"ARc Disconnect"
+
+|002002FD
+|DWORD
+|`HHHHHHHH`
+|ard opcode
+
+|<ex>
+|BYTE
+|`HH`
+|Nonzero if TTL triggered arc deletion, otherwise zero
+
+|<ndel>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Number of (multiple)arcs removed (for validation)
+
+|<pred>
+|QWORD
+|`HHHHHHHHHHHHHHHH`
+|Probe predicator
+
+|<head>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Internalid of head vertex
+
+|===
+
+[[vertex_lock_operators]]
+=== Vertex Lock Operators
+
+These operators may appear in operations of type `200A`, which atomically acquire a set of vertices.
+
+.Vertex group lock operators
+----
+OP 200A <opgraph>
+    lxw 10A011F5 <cnt> <vertex1> <vertex2> ... <vertexN>
+ENDOP <crc32c>
+----
+
+[[vertex_lock_operator_summary]]
+.Vertex lock operator summary
+[cols="3,6,10,10"]
+|===
+|Op |Opcode |Description |Comment
+
+|<<lxw, lxw>>
+|10A011F5
+|<<lxw>>
+|Acquire exclusive write lock(s) on specified vertex instance(s)
+
+|===
+
+[[lxw]]
+==== Acquire exclusive write locks
+
+[[op_lxw]]
+----
+# op  opcode   cnt     vertex1                          ...
+  lxw 10A011F5 HHHHHHH hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh ...
+----
+
+[[fields_lxw]]
+.`lxw` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|lxw
+|STRING
+|`ccc`
+|"Lock eXclusive Writable vertices"
+
+|10A011F5
+|DWORD
+|`HHHHHHHH`
+|lxw opcode
+
+|<cnt>
+|DWORD
+|`HHHHHHH`
+|Number of writable vertices to acquire
+
+|<vertexN>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Internalid of vertexN to acquire writeable
+
+|===
+
+[[vertex_unlock_operators]]
+=== Vertex Unlock Operators
+
+These operators may appear in operations of type `200B`, which atomically release a set of previously acquired vertices.
+
+.Vertex group unlock operators
+----
+OP 200B <opgraph>
+    ulv 00A013F5 <cnt> <vertex1> <vertex2> ... <vertexN>
+ENDOP <crc32c>
+----
+
+[[vertex_unlock_operator_summary]]
+.Vertex unlock operator summary
+[cols="3,6,10,10"]
+|===
+|Op |Opcode |Description |Comment
+
+|<<ulv, ulv>>
+|00A013F5
+|<<ulv>>
+|Unlock previously acquired lock(s) on the specified vertex instance(s)
+
+|===
+
+[[ulv]]
+==== Unlock vertices
+
+[[op_ulv]]
+----
+# op  opcode   cnt      vertexN                          ...
+  ulv 00A013F5 HHHHHHHH hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh ...
+----
+
+[[fields_ulv]]
+.`ulv` fields
+[cols="3,2,3,5"]
+|===
+|Fields |Type |Format |Description
+
+|ulv
+|STRING
+|`ccc`
+|"UnLock Vertices"
+
+|00A013F5
+|DWORD
+|`HHHHHHHH`
+|ulv opcode
+
+|<cnt>
+|DWORD
+|`HHHHHHHH`
+|Number of vertices to unlock
+
+|<vertexN>
+|m128
+|`hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh`
+|Internalid of vertexN to unlock
+
+|===
+
+___
+
+[.float-group]
+--
+[.left]
+<<../../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+
+

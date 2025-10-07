@@ -1,0 +1,115 @@
+[[vgxcoreconcepts]]
+= VGX Core Concepts <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+
+[[realvirtualvertices]]
+== REAL/VIRTUAL Vertices
+
+A vertex that is explicitly created is REAL.
+
+When a new connection is created from a vertex to a terminal, the terminal is implicitly created as VIRTUAL if it does not exist. A REAL vertex becomes VIRTUAL if it is explicitly deleted while having inarcs from other vertices.
+
+A VIRTUAL vertex is automatically removed from the graph when its last inarc is removed.
+
+[[objectsandwrapper]]
+== VGX Objects and pyvgx Wrapper Objects
+
+When using the pyvgx Python module to access the VGX graph core it is important to understand the distinction between Python objects and objects in the VGX graph core. A pyvgx object in the Python environment is only a representation of the corresponding object inside VGX. The Python object is a wrapper serving as a bridge between Python and the actual graph structure.
+
+[[vertexobjectexample]]
+=== Vertex Object Example
+
+To illustrate this further, we will use <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> as an example.
+
+Let's assume a vertex _Bob_ exists in the VGX graph. Calling B = <<graph/graphVertex.adoc#graphopenvertex, pyvgx.Graph.OpenVertex>>( "Bob" ) will then look up the vertex _Bob_ inside VGX and try to acquire a lock. If this succeeds a new <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance is created, returned and assigned to B. Internally the Python object B contains a reference to the VGX object _Bob_ and is an independent owner of vertex _Bob_. If we open the vertex again as X = <<graph/graphVertex.adoc#graphopenvertex, pyvgx.Graph.OpenVertex>>( "Bob" ) we will get another <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance referencing _Bob_ assigned to X. Then if we create a relationship <<graph/graphArc.adoc#graphconnect, pyvgx.Graph.Connect>>( X, "knows", "Alice" ) this will result in a new connection _knows_ being established in the VGX graph from _Bob_ to _Alice_. Although B and X are distinct Python objects they reference the same internal vertex _Bob_. Even though object X was used to perform the operation, B now has the exact same view into _Bob_ as X has. For example: <<graph/graphQuery.adoc#graphadjacent, pyvgx.Graph.Adjacent>>( B, "knows", "Alice" ) will return True.
+
+Each call to <<graph/graphVertex.adoc#graphopenvertex, pyvgx.Graph.OpenVertex()>> will return a new <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance with independent ownership of the internal vertex. A call to <<graph/graphVertex.adoc#graphclosevertex, pyvgx.Graph.CloseVertex()>> will release ownership of the internal vertex for the <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> being closed. The closed Python object can no longer be used to access the internal vertex. Trying to use the closed <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance will raise <<exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>. As such the closed Python vertex is now a defunct wrapper that can no longer be used to bridge the gap from Python into VGX (much like a closed file or socket.) Another way to give up ownership of the VGX vertex is to delete the <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> using Python's *del* operator or simply let it go out of scope.
+
+IMPORTANT: Although the VGX vertex is automatically released when its Python wrapper is deleted it is generally better to call <<graph/graphVertex.adoc#graphclosevertex, pyvgx.Graph.CloseVertex()>> explicitly, both for code readability and to know exactly when the release occurs. Managing vertex ownership through Python's object lifecycle means you are at the mercy of the garbage collector, which does not necessarily call the object deallocator immediately. You may end up in a situation where you think the vertex is closed because its former owner (the <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object) is deleted or gone out of scope, but the VGX vertex reference is still active behind the scenes.
+
+The following code and diagrams illustrate how this works.
+
+[[creategraph]]
+=== Create a graph with vertices
+
+We now create a new graph and add two vertices _Alice_ and _Bob_.
+
+[source, python]
+----
+from pyvgx import *
+g = Graph( "test_objects" )
+g.CreateVertex( "Bob" )
+g.CreateVertex( "Alice" )
+----
+
+image::vgx1.png[vgx1, title="The VGX graph contains two vertices, but no pyvgx.Vertex objects exist"]
+
+[[openvertex]]
+=== Open a vertex twice and create/check connection
+
+Here we open the same vertex _Bob_ twice, in a writable state, owned by two separate <<vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects *B* and *X*. We then connect _Bob_ (via the *X* reference) to _Alice_.
+
+[source, python]
+----
+B = g.OpenVertex( "Bob" )             # Python object B owns "Bob"
+X = g.OpenVertex( "Bob" )             # Python object X owns "Bob"
+g.Connect( X, "knows", "Alice" )      # (Bob)-[knows]->(Alice)
+g.Adjacent( B, "knows", "Alice" )     # True
+----
+
+image::vgx2.png[vgx2, title="The VGX vertices are now connected. _Bob_ is locked and owned by two pyvgx.Vertex objects (in the same thread.)"]
+
+[[closevertex]]
+=== Close vertex using explicit call
+
+Closing object *B* releases vertex ownership. The Python object still remains, but in a defunct state. Trying to access *B* will now raise <<exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+
+[source, python]
+----
+g.CloseVertex( B )
+----
+
+image::vgx3.png[vgx3, title="Python object B releases ownership of _Bob_, but still remains an active Python object without a reference to the core vertex. Object B is now defunct."]
+
+// cspell:ignore deallocates
+[[closeautomatically]]
+=== Close vertex automatically
+
+Deleting object *X* is a Python interpreter operation that removes *X* from scope. However, the object will still exist until the garbage collector deallocates it. Only then will object *X* fully release its ownership of _Bob_.
+
+TIP: To ensure deterministic behavior in multi-threaded applications, use <<graph/graphVertex.adoc#graphclosevertex, pyvgx.Graph.CloseVertex()>> instead of relying on Python's garbage collector.
+
+[source, python]
+----
+del X             # X goes out of scope, but Bob may not be closed just yet (gc may not run yet)
+#... we don't know if vertex is closed yet
+----
+
+image::vgx4.png[vgx4, title="Python object X is deleted and no longer accessible, but may still exist within the Python interpreter. The ownership and lock state of _Bob_ is unknown. _Bob_ will not be accessible by other threads until Python's garbage collector deallocates _X_."]
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=reference.adoc#, title="pyvgx Reference"]
+<<reference.adoc#, icon:arrow-circle-left[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-up[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+//icon:arrow-circle-right[size=2x, link=tutorial.adoc#, title="pyvgx Tutorial"]
+<<tutorial.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx Tutorial"]>>
+// cspell:ignore backtotop
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

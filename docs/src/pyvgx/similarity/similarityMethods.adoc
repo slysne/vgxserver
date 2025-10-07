@@ -1,0 +1,821 @@
+[[similaritymethods]]
+= pyvgx Similarity Methods <<similarity.adoc#, icon:arrow-circle-up[title="pyvgx.Similarity"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:stem:
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Similarity Methods |Description
+
+|<<similaritynewvector>>
+|Create a new vector instance
+
+|<<similaritynewcentroid>>
+|Create a new centroid instance
+
+|<<similarityrvec>>
+|Create a new, random vector instance
+
+|<<similarityfingerprint>>
+|Compute vector fingerprint
+
+|<<similaritycreateprojectionsets>>
+|
+
+|<<similaritydeleteprojectionsets>>
+|
+
+|<<similaritysimilarity>>
+|Compute the similarity of two vectors
+
+|<<similarityeuclideandistance>>
+|Compute the Euclidean distance between two vectors
+
+|<<similaritycosine>>
+|Compute the cosine similarity of two vectors
+
+|<<similarityjaccard>>
+|Compute the Jaccard similarity of two vectors
+
+|<<similarityhamming>>
+|Compute the number of differing bits for two vector fingerprints
+
+|<<similarityasdict>>
+|Return a dictionary representation of a similarity instance
+
+|===
+
+
+[[similaritynewvector]]
+== pyvgx.Similarity.NewVector()
+
+Create a new <<vector.adoc#, pyvgx.Vector>> instance.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.NewVector( elements ) -> pyvgx.Vector
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_elements_
+|_list_
+|*Feature Vectors*: List of tuples `[(_dim_, _weight_), ...]` where _dim_ is a dimension string and _weight_ is a numeric weight for the dimension
+ +
+ +
+ *Euclidean Vectors*: List of numeric values `[c~1~, c~2~, ..., c~n~]` where _n_ must be a multiple of 32. The maximum number of vector components is <<limits.adoc#limits, 65472>>. Vectors are normalized by scaling all components by a factor latexmath:[ a = \displaystyle \frac{1}{\| \text{c}_{max} \|} ] where c~max~ is the component with the largest absolute value.
+
+|===
+
+
+=== Return Value
+
+This method returns a new <<vector.adoc#, pyvgx.Vector>> object associated with the Similarity object.
+
+=== Remarks
+
+Vector instances are bound to the Similarity object that spawned them. It is not possible to use a Vector created by one Similarity object with another Similarity object.
+
+Similarity objects are themselves bound to Graph instances (as the <<../graph/graphMembers.adoc#graphsim, pyvgx.Graph.sim member>>.) In practice this means Vector objects are bound to Graph instances, and Vector objects can therefore not be shared among separate Graph instances.
+
+TIP: Use <<vector.adoc#vectorexternal, `pyvgx.Vector.External()`>> to export a Vector to Python list, which may then be used freely with any Similarity object or Graph object.
+
+=== Example: Feature Vector
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize()
+g = Graph( "graph" )
+A = Similarity.NewVector( g.sim, [("x",1),("y",0.7),("z",0.5)] )
+B = g.sim.NewVector( [("x",1.1),("y",0.6),("q",0.5)] )
+g.sim.Cosine( A, B )  # -> 0.8515625
+----
+
+=== Example: Euclidean Vector
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import random
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+base = [2*random()-1 for x in range(768)]
+A = Similarity.NewVector( g.sim, [x+0.1*random() for x in base] )
+B = g.sim.NewVector( [x+0.1*random() for x in base] )
+g.sim.Cosine( A, B )  # -> 0.9976
+----
+
+
+[[similaritynewcentroid]]
+== pyvgx.Similarity.NewCentroid()
+
+Create a new <<vector.adoc#, pyvgx.Vector>> instance representing the centroid of multiple vectors.
+
+=== Syntax
+
+[source, python]
+----
+# -> pyvgx.Vector
+pyvgx.Similarity.NewCentroid( [ v1, v2, ..., vn ] )
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_v~k~_
+|_vector_ or _list_
+|Vector instance or list of elements
+
+|===
+
+=== Return Value
+
+This method returns a new <<vector.adoc#, pyvgx.Vector>> object representing the centroid vector for all vectors _v~1~_ through _v~n~_.
+
+=== Remarks
+
+If the input vectors are considered as points in n-dimensional space, their centroid can be thought of as the geometric center (or center of mass.)
+
+NOTE: In *Feature Vector* mode, since vector objects have an upper limit for how many dimensions they can contain, it is likely for some information to be lost when generating the centroid. Less common features (or features with low weights) in the input vectors may not be included in the centroid.
+
+
+=== Example: Feature Vector
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+# Some things people may think of when they hear "pizza"
+p1 = g.sim.NewVector( [("dough",2), ("cheese",1), ("tomato",1)] )
+p2 = g.sim.NewVector( [("crust",2), ("tomato",1), ("sausage",1)] )
+p3 = g.sim.NewVector( [("dough",2), ("crust",1), ("sauce",1)] )
+p4 = g.sim.NewVector( [("pepperoni",2), ("cheese",1), ("tomato",1)] )
+p5 = g.sim.NewVector( [("dough",2), ("tomato",1), ("cheese",1)] )
+p6 = g.sim.NewVector( [("cheese",1), ("mushroom",1), ("broccoli",1)] )
+
+# Compute the average impression of "pizza"
+P = g.sim.NewCentroid( [p1, p2, p3, p4, p5, p6] )
+P.external # -> [ ('dough', 0.875),
+#      ('cheese', 0.625),
+#      ('tomato', 0.625),
+#      ('crust', 0.46875),
+#      ('pepperoni', 0.28125),
+#      ('sausage', 0.15625),
+#      ('broccoli', 0.15625),
+#      ('mushroom', 0.15625),
+#      ('sauce', 0.15625) ]
+----
+
+=== Example: Euclidean Vector
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import random
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+
+# Random Euclidean vectors
+A = g.sim.NewVector( [2*random()-1 for x in range(768)] )
+B = g.sim.NewVector( [2*random()-1 for x in range(768)] )
+C = g.sim.NewVector( [2*random()-1 for x in range(768)] )
+D = g.sim.NewVector( [2*random()-1 for x in range(768)] )
+
+# Vectors have nothing in common
+g.sim.Cosine( A, B ) -> near_zero
+g.sim.Cosine( A, C ) -> near_zero
+g.sim.Cosine( A, D ) -> near_zero
+g.sim.Cosine( B, C ) -> near_zero
+g.sim.Cosine( B, D ) -> near_zero
+g.sim.Cosine( C, D ) -> near_zero
+
+# Compute the centroid of random vectors
+X = g.sim.NewCentroid( [A, B, C, D] )
+
+# All vectors have something in common with centroid
+g.sim.Cosine( A, X ) -> some_similarity
+g.sim.Cosine( B, X ) -> some_similarity
+g.sim.Cosine( C, X ) -> some_similarity
+g.sim.Cosine( D, X ) -> some_similarity
+
+
+----
+
+// cspell:ignore rvec
+[[similarityrvec]]
+== pyvgx.Similarity.rvec()
+
+Create a new, random <<vector.adoc#, pyvgx.Vector>> instance. (Euclidean mode only.)
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.rvec( n ) -> pyvgx.Vector
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_n_
+|_int_
+|Number of dimensions, rounded up to nearest multiple of 32.
+
+|===
+
+
+=== Return Value
+
+This method returns a new randomized <<vector.adoc#, pyvgx.Vector>> object associated with the Similarity object.
+
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize()
+g = Graph( "graph" )
+A = g.sim.rvec(768)
+B = g.sim.rvec(768)
+g.sim.Cosine( A, B )  # -> -0.071999
+----
+
+
+[[similarityfingerprint]]
+== pyvgx.Similarity.Fingerprint()
+
+Compute 64-bit vector fingerprint.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.Fingerprint( vector[, seed] ) -> int
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_vector_
+|_vector_ or _list_
+|Vector instance or list of elements
+
+|_seed_
+|_int_
+|Projection seed (default 0)
+
+|===
+
+=== Return Value
+
+This method returns a 64-bit integer representing a projection of the n-dimensional _vector_ onto 64-dimensional binary space. The optional _seed_ allows alternative projections.
+
+=== Remarks
+
+A vector's fingerprint is a locality sensitive hash and represents a mapping of a high-dimensional object onto a low-dimensional "shadow" of that object. By using different values for _seed_ it is possible to create multiple fingerprints forming a set of projections which more accurately represent the original vector.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+from random import random
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+base = [2*random()-1 for x in range(768)]
+A = Similarity.NewVector( g.sim, [x+0.1*random() for x in base] )
+fp0 = Similarity.Fingerprint( A )
+fp1 = Similarity.Fingerprint( A, 1234 )
+fp2 = Similarity.Fingerprint( A, 0xd5c098876a90fe2c )
+----
+
+
+[[similaritycreateprojectionsets]]
+== pyvgx.Similarity.CreateProjectionSets()
+
+Initialize a graph structure used for approximate nearest neighbor (ANN) vector search. 
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.CreateProjectionSets( nseeds, ksize )
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+// cspell:ignore nseeds
+|_nseeds_
+|_int_
+|Number of seeds (1 - 8) to use for ANN index projections
+
+// cspell:ignore ksize
+|_ksize_
+|_int_
+|Size of projection keys, must be 8, 10, or 12
+
+|===
+
+=== Return Value
+
+This function returns a list of seed values.
+
+=== Remarks
+
+Use this function to initialize a graph structure used for approximate nearest neighbor search. 
+
+The structure depends on _nseeds_ and _ksize_.
+
+Projection keys are extracted from a vector's fingerprint. The size of each key is equal to _ksize_. Keys are extracted from different bit regions of the fingerprint.
+
+_ksize_=8:: A total of 16 8-bit keys are extracted from the 64-bit LSH. Keys 1 - 8 are the eight 8-bit segments of the LSH, and keys 8 - 16 are the eight 8-bit segments of the LSH shifted four bits to the right (with rotation).
+
+_ksize_=10:: A total of 12 10-bit keys are extracted from the 64-bit LSH. Keys 1 - 6 come from the rightmost 60 bits of the LSH, and keys 7 - 12 come from the rightmost 60 bits of the LSH shifted five bits to the right (with rotation).
+
+_ksize_=12:: A total of 15 12-bit keys are extracted from the 64-bit LSH. Keys 1 - 5 come from the rightmost 60 bits of the LSH, keys 6 - 10 come from the rightmost 60 bits of the LSH shifted four bits to the right (with rotation), and keys 11 - 15 come from the rightmost 60 bits of the LSH shifted eight bits to the right (with rotation).
+
+
+Special index nodes with connections are created as shown below:
+
+----
+_|  ->  _|000   ->  _0000|000
+                    _0001|000
+                    _0002|000
+                    ...
+                    _2FFF|000
+        _|43F   ->  _0000|43F
+                    _0001|43F
+                    _0002|43F
+                    ...
+        ...
+----
+
+The root node is `+++_+++|` connecting to _nseeds_ projection sets.
+
+A projection set node `+++_+++|__set__` connects to _n_ projection nodes, where _n_ depends on _ksize_.
+
+_ksize_=8 -> _n_=4096:: Number of keys is 16, each key is eight bits -> _n_ = 16 * 2^8^ = 4096
+
+_ksize_=10 -> _n_=12288:: Number of keys is 12, each key is 10 bits -> _n_ = 12 * 2^10^ = 12288
+
+_ksize_=12 -> _n_=61440:: Number of keys is 15, each key is 12 bits -> _n_ = 15 * 2^12^ = 61440
+
+A projection node `+++_+++__proj__|__set__` is an index anchor node that can be connected to a node representing an indexed item, when the item has a vector whose fingerprint contains a bit pattern segment mapped to by _proj_.
+
+Note that _set_ will have one of eight fixed values pre-determined by the system's seed values.
+
+Both _set_ and _proj_ in the vertex names are uppercase hex values.
+
+[NOTE]
+====
+There is no built-in indexing algorithm. This function only creates a skeleton indexing structure for service implementations to take advantage of. Extraction of LSH keys must be performed explicitly by calling 
+====
+
+[IMPORTANT]
+====
+System must be initialized in euclidean mode
+====
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "ann", euclidean=1 )
+
+g = Graph("test")
+g.sim.CreateProjectionSets( 2, 10 )     # -> [0, 1087]
+----
+
+
+[[similaritydeleteprojectionsets]]
+== pyvgx.Similarity.DeleteProjectionSets()
+
+Destroy previously created ANN index structure.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.DeleteProjectionSets()
+----
+
+=== Remarks
+
+This removes all vertices created by a previous call to <<similaritycreateprojectionsets>>.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "ann", euclidean=1 )
+
+g = Graph("test")
+g.CreateVertex( "my vertex" )
+g.order                                 # -> 1
+
+g.sim.CreateProjectionSets( 2, 10 )     # -> [0, 1087]
+g.order                                 # -> 24580
+g.size                                  # -> 24578
+
+g.sim.DeleteProjectionSets()
+g.order                                 # -> 1
+
+"my vertex" in g                        # -> True
+----
+
+
+[[similaritysimilarity]]
+== pyvgx.Similarity.Similarity()
+
+Compute the similarity of two vectors.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.Similarity( A, B ) # -> float
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_A_
+|_vector_
+|First vector instance
+
+|_B_
+|_vector_
+|Second vector instance
+
+|===
+
+=== Return Value
+
+This method returns a similarity score for vectors _A_ and _B_.
+
+==== Feature Vectors
+
+The score is computed as a composite of <<similaritycosine, Cosine()>> and <<similarityjaccard, Jaccard()>> using the following formula:
+
+_score_ = Cosine( _A_, _B_ )^&#945;^ &#183; Jaccard( _A_, _B_ )^&#946;^, where &#945; is the <<similarityMembers.adoc#similaritycosineexp, cosine exponent>> and &#946; is the <<similarityMembers.adoc#similarityjaccardexp, jaccard exponent>>.
+
+The returned value is a number between 0.0 and 1.0.
+
+==== Euclidean Vectors
+
+This method is an alias for <<similaritycosine, Cosine()>>.
+
+The returned value is a number between -1.0 and 1.0.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [("x",1),("y",1),("z",1)] )
+B = g.sim.NewVector( [("x",0.5),("y",0.5),("z",0.5)] )
+C = g.sim.NewVector( [("x",1),("y",0.5),("z",0.25)] )
+
+g.sim.cosine_exp = 1.0    # jaccard_exp = 0.0 implied
+g.sim.Similarity( A, B )  # -> 1.0
+g.sim.Similarity( A, C )  # -> 0.8828125
+
+g.sim.cosine_exp = 0.5    # cosine_exp = 0.5 implied
+g.sim.Similarity( A, B )  # -> 0.70703125
+g.sim.Similarity( A, C )  # -> 0.71484375
+----
+
+[[similarityeuclideandistance]]
+== pyvgx.Similarity.EuclideanDistance()
+
+Compute the Euclidean distance between two vectors.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.EuclideanDistance( A, B ) # -> float
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_A_
+|_vector_
+|First vector instance
+
+|_B_
+|_vector_
+|Second vector instance
+
+|===
+
+=== Return Value
+
+This method returns the Euclidean distance between vectors _A_ and _B_ in n-dimensional space.
+
+latexmath:[ dist(A,B) = \displaystyle \sqrt{\displaystyle \sum_{i=1}^n {  (A_i - B_i)^2  }} ]
+
+The returned value is a non-negative float.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "vectors", euclidean=True )
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [0.1, 0.2, 0.3, 0.4] + [0]*28 )
+B = g.sim.NewVector( [0.9, 0.8, 0.7, 0.6] + [0]*28 )
+C = g.sim.NewVector( [-0.5, 0.5, -0.5, 0.5] + [0]*28 )
+
+g.sim.EuclideanDistance( A, B )  # -> 1.0957
+g.sim.EuclideanDistance( A, C )  # -> 1.0482
+g.sim.EuclideanDistance( B, C )  # -> 1.8721
+----
+
+[[similaritycosine]]
+== pyvgx.Similarity.Cosine()
+
+Compute the cosine of the angle between two vectors.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.Cosine( A, B ) # -> float
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_A_
+|_vector_
+|First vector instance
+
+|_B_
+|_vector_
+|Second vector instance
+
+|===
+
+=== Return Value
+
+This method returns the Cosine similarity of vectors _A_ and _B_, which is the cosine of the angle &#920; between the two vectors in n-dimensional space. This is computed as the dot product of the two vectors divided by the product of their magnitudes:
+
+latexmath:[ cos(\theta) = \displaystyle \frac{\displaystyle \sum_{i=1}^n {A_iB_i}}{ \sqrt{\displaystyle \sum_{i=1}^n {A_i^2}} \cdot \sqrt{\displaystyle \sum_{i=1}^n {B_i^2} }} ]
+
+==== Feature Vectors
+The returned value is a number between 0.0 and 1.0.
+
+==== Euclidean Vectors
+The returned value is a number between -1.0 and 1.0.
+
+=== Example: Feature Vectors
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [("x",1),("y",1),("z",1)] )
+B = g.sim.NewVector( [("x",0.5),("y",0.5),("z",0.5)] )
+C = g.sim.NewVector( [("x",1),("y",0.5),("z",0.25)] )
+
+g.sim.Cosine( A, B )  # -> 1.0
+g.sim.Cosine( A, C )  # -> 0.8828125
+----
+
+=== Example: Euclidean Vectors
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( euclidean=True )
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [0.1, 0.2, 0.3, 0.4] + [0]*28 )
+B = g.sim.NewVector( [0.9, 0.8, 0.7, 0.6] + [0]*28 )
+C = g.sim.NewVector( [-0.5, 0.5, -0.5, 0.5] + [0]*28 )
+
+g.sim.Cosine( A, B )  # -> 0.8386
+g.sim.Cosine( A, C )  # -> 0.1845
+g.sim.Cosine( B, C )  # -> -0.0681
+----
+
+[[similarityjaccard]]
+== pyvgx.Similarity.Jaccard()
+
+Compute the Jaccard similarity coefficient of two feature vectors.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.Jaccard( A, B ) # -> float
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_A_
+|_vector_
+|First vector instance
+
+|_B_
+|_vector_
+|Second vector instance
+
+|===
+
+=== Return Value
+
+This method returns the Jaccard similarity coefficient of feature vectors _A_ and _B_, which can be thought of as the intersection divided by the union of the vectors (`A &#8745; B / A &#8746; B`) when the vectors are treated as sets of (weighted) dimensions:
+
+_weighted jaccard similarity_ = &#8721;min(A~i~, B~i~) / &#8721;max( A~i~, B~i~ )
+
+The returned value is a number between 0.0 and 1.0.
+
+NOTE: Jaccard is supported for feature vectors only, not for Euclidean vectors.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [("x",1),("y",1),("z",1)] )
+B = g.sim.NewVector( [("x",0.5),("y",0.5),("z",0.5)] )
+C = g.sim.NewVector( [("x",1),("y",0.5),("z",0.25)] )
+
+g.sim.Jaccard( A, B )  # -> 0.5
+g.sim.Jaccard( A, C )  # -> 0.58203125
+----
+
+[[similarityhamming]]
+== pyvgx.Similarity.HammingDistance()
+
+Compute the number of differing bits in vector fingerprints.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.HammingDistance( A, B ) # -> int
+----
+
+=== Parameters
+
+[cols="1,1,4"]
+|===
+|Parameter |Type |Description
+
+|_A_
+|_vector_
+|First vector instance
+
+|_B_
+|_vector_
+|Second vector instance
+
+|===
+
+=== Return Value
+
+This method compares the <<vector.adoc#vectorfingerprint, fingerprints>> of two vectors _A_ and _B_ and returns the number of bits that are different between the two, i.e. the hamming distance between the fingerprints.
+
+Vector fingerprints are 64-bit integers derived from the weighted vector dimensions. Similar vectors have similar fingerprints, and therefore a small number of differing bit positions, i.e. a small hamming distance.
+
+The returned value is an integer between 0 and 64.
+
+// cspell:ignore hamdist
+=== Remarks
+
+It is more efficient to compare fingerprints than to compute the Cosine/Jaccard for two vectors, especially for vectors with many dimensions. At the same time, the ability of a fingerprint to accurately represent its source vector is directly affected by the number of vector dimensions. That is, the vectors that produce the highest quality fingerprints are also the ones that benefit the most (speed-wise) from fingerprint comparison.
+
+Using hamming distance as a direct measure of similarity should generally be restricted to very similar vectors (sim>0.9) whose fingerprints are nearly identical (hamdist<6), in applications such as duplicate detection.
+
+WARNING: Vectors with few dimensions (<10) do not reliably map to fingerprints. It is better to use Cosine/Jaccard to compare short vectors.
+
+TIP: Using fingerprint similarity as a pre-filter can significantly speed up processing of queries that include vector similarity filters. The fingerprint pre-filter should set the hamming distance threshold such that a majority of result candidates are removed before the cosine/jaccard is evaluated, without adversely impacting recall of the overall query. This strategy works best if the cosine/jaccard threshold is high.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+A = g.sim.NewVector( [("a",1),("b",1),("c",1),("d",1),("e",1)] )
+B = g.sim.NewVector( [("a",1),("b",1),("c",1),("d",1),("f",1)] )
+
+g.sim.HammingDistance( A, B )  # -> 10
+----
+
+[[similarityasdict]]
+== pyvgx.Similarity.AsDict()
+
+Return a dictionary representing the current configuration of the Similarity instance.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Similarity.AsDict() # -> dict
+----
+
+=== Return Value
+
+This methods returns the Similarity object's current configuration parameters as a Python dictionary.
+
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "graph" )
+
+g.sim.AsDict()
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=similarityMembers.adoc#, title="Similarity Members"]
+<<similarityMembers.adoc#, icon:arrow-circle-left[size=2x, title="Similarity Members"]>>
+//icon:arrow-circle-up[size=2x, link=similarity.adoc#, title="pyvgx Similarity"]
+<<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
+//icon:arrow-circle-right[size=2x, link=vector.adoc#, title="pyvgx.Vector"]
+<<vector.adoc#, icon:arrow-circle-right[size=2x, title="pyvgx.Vector"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

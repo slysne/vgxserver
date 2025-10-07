@@ -1,0 +1,311 @@
+[[graphmembers]]
+= Graph Members <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphVertex.adoc#, icon:arrow-circle-right[title="Graph Vertex Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Members |Type |Description
+
+|<<graphname>>
+|`str`
+|Name of graph
+
+|<<graphpath>>
+|`str`
+|Graph path
+
+|<<graphorder>>
+|`int`
+|The number of vertices in the graph
+
+|<<graphsize>>
+|`int`
+|The number of arcs between vertices in the graph
+
+|<<graphobjcnt>>
+|`dict`
+|Basic object counters
+
+|<<graphts>>
+|`float`
+|Graph's current timestamp in seconds since 1970
+
+|<<graphsim>>
+|`pyvgx.Similarity`
+|The Graph <<../similarity/similarity.adoc#preface, Similarity>> object for managing vector similarity configurations and comparison
+|===
+
+[[graphname]]
+== pyvgx.Graph.name
+
+This returns the graph's name.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.name
+----
+
+=== Remarks
+
+The graph name is defined when the graph is first constructed. It is the _name_ parameter of the graph constructor.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph( "the_name" )
+g.name                         # -> "the_name"
+----
+
+[[graphpath]]
+== pyvgx.Graph.path
+
+This returns graph's full path.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.path
+----
+
+// cspell:ignore vgxroot
+=== Remarks
+
+This function returns the full path of the graph including _vgxroot_ (as initially defined with <<../reference.adoc#system_initialize_func, pyvgx.system.Initialize()>> ) and any additional path provided in the graph constructor's _path_ parameter.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+system.Initialize( "custom/root" )
+g = pyvgx.Graph( "the_name", "the/path" )
+g.path                      # -> "custom/root/the/path"
+g.name                      # -> "the_name"
+----
+
+[[graphorder]]
+== pyvgx.Graph.order
+
+This returns the number of vertices in the graph.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.order
+----
+
+=== Remarks
+
+The graph order is the total number of vertices in the graph. This is a readonly attribute. It is automatically updated as vertices are created or removed.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+g.Truncate()
+
+g.order                      # -> 0
+g.CreateVertex( "A" )
+g.order                      # -> 1
+for n in range( 1000 ):
+    g.Connect( "A", "to", str(n) )
+g.order                      # -> 1001
+----
+
+[[graphsize]]
+== pyvgx.Graph.size
+
+This returns the number of arcs between vertices in the graph.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.size
+----
+
+=== Remarks
+
+The graph size is the total number of arcs (relationships) between all vertices in the graph. This is a readonly attribute. It is automatically updated as arcs are created or removed.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+g.Truncate()
+
+g.size                          # -> 0
+g.Connect( "A", "to", "B" )
+g.size                          # -> 1
+g.Connect( "A", "also_to", "B" )
+g.size                          # -> 2
+g.Connect( "B", "to", "A" )
+g.size                          # -> 3
+for n in range( 1000 ):
+    g.Connect( "A", "to", str(n) )
+g.size                          # -> 1003
+----
+
+// cspell:ignore objcnt
+[[graphobjcnt]]
+== pyvgx.Graph.objcnt
+
+Return a dict of basic object counters for the graph.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.objcnt
+----
+
+=== Remarks
+
+This is a convenience attribute returning the graph's order, size, number of properties and number of vectors.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Assume graph is already populated
+print( g.objcnt )
+
+# -> {'order': 524, 'size': 2131, 'properties': 4262, 'vectors': 3771}
+----
+
+
+[[graphts]]
+== pyvgx.Graph.ts
+
+This returns the Graph's current timestamp in seconds in 1970.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.ts
+----
+
+=== Remarks
+
+The returned value is a <float>.
+
+[[graphsim]]
+== pyvgx.Graph.sim
+
+This returns the Graph's <<../similarity/similarity.adoc#preface, pyvgx.Similarity>> object.
+
+=== Attribute
+
+[source, python]
+----
+pyvgx.Graph.sim
+----
+
+=== Remarks
+
+The similarity object is a special aspect of the graph that is used for configuring similarity scoring functions and managing vector creation, deletion and comparison.
+
+Some of the similarity object's attributes can be modified to adjust the way similarity scores are computed.
+
+The similarity object also exposes methods for creating <<../similarity/vector.adoc#pyvgxvector, pyvgx.Vector>> objects and performing manual similarity operations on them.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Print the Similarity object's configuration
+print( g.sim.AsDict() )
+#
+#                     { 'min_cosine': 0.0,
+#                       'max_vector_size': 48,
+#                       'sim_threshold': 1.0,
+#                       'nsign': 0,
+#                       'jaccard_exp': 0.0,
+#                       'hamming_threshold': 0,
+#                       'nsegm': 0,
+#                       'min_isect': 1,
+#                       'min_jaccard': 0.0,
+#                       'cosine_exp': 1.0
+#                      }
+
+# Change the configuration to compute similarity as a blend
+# of Cosine and Jaccard
+g.sim.jaccard_exp = 0.5
+g.sim.cosine_exp = 0.5
+
+# Define some items by their features
+coffee    = g.sim.NewVector( [("beverage",1.8), ("roasted",1.5), ("beans",1.3), ("black",1.0), ("hot",0.9), ("brewed",0.8), ("popular",0.7)] )
+green_tea = g.sim.NewVector( [("beverage",1.8), ("dried",1.3), ("leaves",1.2), ("green",0.9), ("brewed",0.7), ("healthy",0.6), ("hot",0.4)] )
+black_tea = g.sim.NewVector( [("beverage",1.8), ("dried",1.3), ("leaves",1.2), ("black",0.9), ("brewed",0.7), ("hot",0.6)] )
+soda      = g.sim.NewVector( [("beverage",1.8), ("sugar",1.7), ("cold",1.1), ("popular",0.9)] )
+
+# Compute similarity scores
+g.sim.Similarity( coffee, green_tea )      # -> 0.5
+g.sim.Similarity( coffee, black_tea )      # -> 0.63671875
+g.sim.Similarity( coffee, soda )           # -> 0.470703125
+g.sim.Similarity( green_tea, black_tea )   # -> 0.875
+g.sim.Similarity( green_tea, soda )        # -> 0.408203125
+g.sim.Similarity( black_tea, soda )        # -> 0.41015625
+
+# Assign vector to vertices
+C = g.NewVertex( "Coffee" )
+GT = g.NewVertex( "Green Tea" )
+BT = g.NewVertex( "Black Tea" )
+S = g.NewVertex( "Soda" )
+C.SetVector( coffee )
+GT.SetVector( green_tea )
+BT.SetVector( black_tea )
+S.SetVector( soda )
+
+# The similarity function also accepts vertex arguments
+g.sim.Similarity( C, GT )                  # -> 0.5
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphMiscellaneous.adoc#, title="Graph Miscellaneous Methods"]
+<<graphMiscellaneous.adoc#, icon:arrow-circle-left[size=2x, title="Graph Miscellaneous Methods"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphVertex.adoc#, title="Graph Vertex Methods"]
+<<graphVertex.adoc#, icon:arrow-circle-right[size=2x, title="Graph Vertex Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

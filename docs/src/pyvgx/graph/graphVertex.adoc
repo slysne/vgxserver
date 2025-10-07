@@ -1,0 +1,1022 @@
+[[graphvertexmethods]]
+= Graph Vertex Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphArc.adoc#, icon:arrow-circle-right[title="Graph Arc Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 1
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Vertex Methods |Description
+
+|<<graphcreatevertex>>
+|Creates a new vertex in the graph.
+
+|<<graphnewvertex>>
+|Create a new vertex in the graph if it does not already exist, then acquire write access and return the vertex object.
+
+|<<graphdeletevertex>>
+|Delete a vertex from the graph.
+
+|<<graphopenvertex>>
+|Return a <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> object with the requested access mode.
+
+|<<graphopenvertices>>
+|Acquire multiple vertices and return a list of <<../vertex/vertex.adoc#preface, pyvgx.Vertex>> objects with the requested access mode.
+
+|<<graphclosevertex>>
+|Release access lock and commit any vertex changes.
+
+|<<graphclosevertices>>
+|Release multiple vertices.
+
+|<<graphcloseall>>
+|Close all vertices opened by current thread.
+
+|<<graphcommitall>>
+|Commit all write-locked vertices opened by current thread.
+
+|<<graphescalatevertex>>
+|Promote vertex access from readonly to writable.
+
+|<<graphrelaxvertex>>
+|Relax a writable vertex to readonly access.
+
+|<<showopenvertices>>
+|Print open vertices to stdout.
+
+|<<getopenvertices>>
+|Return a list of open vertices.
+
+|===
+
+[[graphcreatevertex]]
+== pyvgx.Graph.CreateVertex()
+
+Creates a new vertex in the graph.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.CreateVertex( id[, type[, lifespan[, properties ]]] ) -> 1 or 0
+----
+
+=== Parameters
+
+[cols="3,3,3,6"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_str_ or _bytes_
+|
+|Unique ID string for the vertex to be created
+
+|_type_
+|_str_ or _bytes_
+|None
+|Type name of the vertex to be created or None
+
+|_lifespan_
+|_int_
+|-1 (infinite)
+|Maximum age of vertex before automatic deletion
+
+|_properties_
+|_dict_
+|{}
+|Pairs of { `str` : `object` } to initialize/update vertex properties
+
+|===
+
+=== Return Value
+
+If the vertex is successfully created, this method returns 1. If the vertex already exists, 0 is returned. If the vertex cannot be created, an exception is raised.
+
+// cspell:ignore typeless
+=== Remarks
+
+This method creates a new vertex in the graph if it does not already exist. The created vertex is not acquired. To gain read or write access to the created vertex it is necessary to call <<graphopenvertex>> or <<graphnewvertex>>.
+
+The vertex can be assigned an optional type name. By default the vertex will be typeless (None). If the vertex already exists and a type argument is supplied which is different from the existing vertex's type <<../exceptions/exceptions.adoc#VertexError, pyvgx.VertexError>> is raised. If too many unique vertex types have been used in the graph <<../exceptions/exceptions.adoc#EnumerationError, pyvgx.EnumerationError>> is raised.
+
+The optional _lifespan_ parameter specifies the maximum vertex age _A_ (in seconds) at which the vertex will be automatically deleted from the graph. Vertices have infinite lifespan by default. This is equivalent to calling <<vertex/vertexTTL.adoc#vertexsetexpiration, `pyvgx.Vertex.SetExpiration( _expires_=_A_, relative=True )`>>.
+
+The optional _properties_ parameter can be used to assign initial properties to the vertex at creation time. Property keys must be `str` and property values may be any object supported by <<vertex/vertexProperty.adoc#vertexsetproperty, `pyvgx.Vertex.SetProperty()`>>. If the vertex already exists its properties will be updated.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+# -> 1 Create vertex A, typeless
+g.CreateVertex( "A" )
+
+# -> 1 Create vertex B, typed
+g.CreateVertex( "B", type="thing" )
+
+# -> 0 Vertex B already exists, no action
+g.CreateVertex( "B" )
+
+# -> 0 Vertex B already exists, no action
+g.CreateVertex( "B", type="thing" )
+
+# Exception, type differs from existing vertex type
+g.CreateVertex( "B", type="other" )
+
+A = g.OpenVertex( "A", mode="r" )    # Open A, readonly
+B = g.OpenVertex( "B", mode="w" )    # Open B, writable
+#
+# Do things with A and B
+#
+g.CloseVertex( A )                    # Close vertex A
+g.CloseVertex( B )                    # Close vertex B
+
+# Vertex C will expire after one hour
+g.CreateVertex( "C", lifespan=3600 )
+
+# Vertex D has initial properties x and y
+g.CreateVertex( "D", properties={'x':1,'y':2} )
+----
+
+[[graphnewvertex]]
+== pyvgx.Graph.NewVertex()
+
+This creates a new vertex in the graph if it does not already exist, then acquires write access and returns the vertex object.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.NewVertex( id[, type[, lifespan[, properties[, timeout ]]]] ) -> pyvgx.Vertex
+----
+
+=== Parameters
+
+[cols="3,3,3,6"]
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_str_
+|
+|Unique ID string for the vertex to be created, or opened (in write mode) if it does not already exist.
+
+|_type_
+|_str_
+|None
+|Type name of the vertex to be created, or None to create a typeless vertex.
+
+|_lifespan_
+|_int_
+|-1 (infinite)
+|Maximum age of vertex before automatic deletion
+
+|_properties_
+|_dict_
+|{}
+|Pairs of { `str` : `object` } to initialize/update vertex properties
+
+|_timeout_
+|_int_
+|0
+|<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>> for acquiring writable access to the vertex.
+
+|===
+
+=== Return Value
+
+If the vertex is successfully created and/or opened, a <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object is returned. If the vertex could not be created or opened, an exception is raised.
+
+=== Remarks
+
+The vertex is returned in a writeable state. The current thread owns full read/write access to the vertex. No other threads can read or modify the vertex until released by the current thread.
+
+When write access is no longer needed, the vertex should either be completely released using <<graphclosevertex>> or relaxed to readonly access using <<graphrelaxvertex>>. If the Python vertex object goes out of scope it is automatically released.
+
+If the vertex does not already exist, it is created and committed.
+
+The vertex can be assigned an optional type name. By default the vertex will be typeless (None). If the vertex already exists and a type argument is supplied which is different from the existing type <<../exceptions/exceptions.adoc#VertexError, pyvgx.VertexError>> is raised. If too many unique vertex types have been used in the graph <<../exceptions/exceptions.adoc#EnumerationError, pyvgx.EnumerationError>> is raised.
+
+The optional _lifespan_ parameter specifies the maximum vertex age _A_ (in seconds) at which the vertex will be automatically deleted from the graph. Vertices have infinite lifespan by default. This is equivalent to calling <<vertex/vertexTTL.adoc#vertexsetexpiration, `pyvgx.Vertex.SetExpiration( _expires_=_A_, relative=True )`>>. Note that when _lifespan_ is specified any previously assigned expiration time is updated.
+
+The optional _properties_ parameter can be used to assign initial properties to the vertex when it is created or update existing properties. Property keys must be `str` and property values may be any object supported by <<vertex/vertexProperty.adoc#vertexsetproperty, `pyvgx.Vertex.SetProperty()`>>. 
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Open vertex, writable, create new if necessary, typeless
+A = g.NewVertex( "A" )
+
+# Open vertex, writeable, create new if necessary, typed
+B = g.NewVertex( "B", type="thing" )
+
+#
+# Do things with A and B
+#
+g.CloseVertex( A )                    # Close vertex A
+g.CloseVertex( B )                    # Close vertex B
+
+# New vertex C will expire after one hour
+C = g.NewVertex( "C", lifespan=3600 )
+
+# New vertex D has initial properties
+D = g.NewVertex( "D", properties={'x':1,'y':2})
+
+----
+
+[[graphdeletevertex]]
+== pyvgx.Graph.DeleteVertex()
+
+Delete a vertex from the graph.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.DeleteVertex( id[, timeout ] ) -> 1 or 0
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_str_
+|
+|Unique ID string of the vertex to be deleted
+
+|_timeout_
+|_int_
+|0
+|<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>> for acquiring writable access to the vertex.
+
+|===
+
+=== Return Value
+
+If the vertex is successfully deleted, this method returns 1. If the vertex does not exist, 0 is returned. If the vertex could not be deleted, an exception is raised. The exception will indicate whether a timeout or some other error occurred.
+
+=== Remarks
+
+This method removes a vertex from the graph. If write access cannot be obtained by the current thread the method will block in accordance with the timeout specified.
+
+If the deleted vertex contains properties, vectors, or outbound relationships (outarcs) to other vertices these will all be removed as well. Inbound relationships (inarcs) will be left intact. If any inarcs exist the vertex will become a <<../VGXCoreConcepts.adoc#vgxcoreconcepts, VIRTUAL vertex>> and continue to exist in the graph. If no inarcs exist the vertex will be completely removed from the graph.
+
+If the vertex cannot be acquired within the timeout <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>> is raised.
+
+If the vertex has outarcs and the terminals of those arcs cannot be acquired within the timeout <<../exceptions/exceptions.adoc#ArcError, pyvgx.ArcError>> is raised. The vertex is automatically scheduled for deletion in the background as soon as possible.
+
+If the vertex is already open and writable by the current thread then the delete operation will be allowed to proceed. However, on completion a reference to the internal vertex is still held by the Python <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object and the vertex will therefore still exist in the graph but as a <<../VGXCoreConcepts.adoc#vgxcoreconcepts, VIRTUAL vertex>>. Once the <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object is deleted or goes out of scope the vertex will be removed completely from the graph.
+
+If the current thread owns a readonly lock on the vertex to be deleted then the operation will fail and raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+
+=== Note About Readonly Locks
+In general, if the current thread holds readonly locks for any vertices then the current thread is prevented from deleting any vertices, even ones that are not yet acquired. This is to prevent a deadlock scenario where the vertex to be deleted has a connection to one of the readonly vertices which would require modification of the arc structure of a readonly vertex. This can never complete, hence the restriction. To perform deletion of a vertex without giving up readonly locks, the readonly locked vertices may be temporarily promoted to writable using <<graphescalatevertex>>, then deleted, and then relaxed back to readonly using <<graphrelaxvertex>>.
+
+=== Example
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Create and delete
+g.CreateVertex( "A" )        # -> 1 Create vertex A
+g.DeleteVertex( "A" )        # -> 1 Delete vertex A
+g.DeleteVertex( "A" )        # -> 0 No effect, vertex A does not exist
+
+# Create, delete while holding reference
+B = g.NewVertex( "B" )       # Create and open vertex B
+g.DeleteVertex( "B" )        # -> 1
+
+# Vertex B is now virtual because Python reference still exists
+del B
+
+# Python reference now out of scope, vertex B is deleted from graph
+
+# Delete when readonly vertex is held
+g.CreateVertex( "C" )        # -> 1 Create vertex C
+g.CreateVertex( "D" )        # -> 1 Create vertex D
+C = g.OpenVertex( "C", mode="r" )    # Open vertex C READONLY
+g.DeleteVertex( "D" )        # Raises pyvgx.AccessError
+g.EscalateVertex( C )        # Promote C to writeable
+g.DeleteVertex( "D" )        # -> 1 Delete vertex D
+g.RelaxVertex( C )           # Relax C back to readonly
+g.DeleteVertex( "C" )        # Raises pyvgx.AccessError
+g.EscalateVertex( C )        # Promote C to writable
+g.DeleteVertex( "C" )        # -> 1
+
+# Vertex C is now virtual because Python reference still exists
+del C
+
+# Python reference now out of scope, vertex C is deleted from graph
+----
+
+[[graphopenvertex]]
+== pyvgx.Graph.OpenVertex()
+
+Return a <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object with the requested access mode.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.OpenVertex( id[, mode[, timeout ]] ) -> pyvgx.Vertex
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_str_
+|
+|Unique ID string or a memory address for the vertex to be opened
+
+|_mode_
+|_chr_
+|'a'
+|Access mode is one of:
+
+'r'=Readonly
+
+'w'=Writable (and create typeless)
+
+'a'=Writable (do not create)
+
+|_timeout_
+|_int_
+|0
+|<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>> for acquiring the requested access to the vertex.
+
+|===
+
+=== Return Value
+
+If the vertex is successfully acquired a <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> object is returned. 
+
+=== Remarks
+
+This method will acquire a lock on the vertex and return it. If a lock cannot be acquired within the timeout <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>> is raised. Successive calls to this method will lock the vertex recursively. It is necessary to call <<graphclosevertex>> exactly once for each recursive call to <<graphopenvertex>> in order to release the acquired vertex.
+
+If the vertex is opened in readonly mode it cannot be recursively opened in writable mode. To promote a readonly vertex (that has not yet been recursively acquired) to writable use <<graphescalatevertex>>.
+
+Recursive acquisition has a limit of 112 levels. Attempting to recursively open a vertex beyond the limit will raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+
+The following acquisition modes are supported:
+
+* *'r' = Readonly*
+
+Open and return the vertex in readonly mode. The vertex is guaranteed to be consistent and unchanged for as long as the current thread holds this lock. Other threads may acquire the same vertex in readonly mode, but will not be able to acquire write access.
+
+The vertex _id_ may be supplied as string or integer for this mode. If an integer is supplied it is assumed to be the raw memory address of the vertex to be opened.
+
+* *'w' = Writable*
+
+Open and return the vertex with full write and read access. If the vertex does not exist it is created. Note that the vertex will be typeless if created this way. If your application requires vertex types other than the default, this access mode should be avoided unless <<graphcreatevertex>> or <<graphnewvertex>> was used earlier to create the vertex. The current thread will not be able to obtain a writable lock as long as any lock (read or write) is held by another thread.
+
+The vertex _id_ must be string for this mode.
+
+* *'a' = Writable (do not create)*
+
+Open and return the vertex with full write and read access. If the vertex does not exist link:https://docs.python.org/3/library/exceptions.html#exceptions.KeyError[KeyError] is raised. The current thread will not be able to obtain a writable lock as long as any lock (read or write) is held by another thread.
+
+The vertex _id_ may be supplied as string or integer for this mode. If an integer is supplied it is assumed to be the raw memory address of the vertex to be opened.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )                # Create vertex A
+A = g.OpenVertex( "A", mode="r" )    # Open A in readonly mode
+addrA = A.address
+
+g.CreateVertex( "B" )                # Create vertex B
+B = g.OpenVertex( "B", mode="a" )    # Open B in writable mode
+
+C = g.OpenVertex( "C", mode="w" )    # Create and open vertex C
+
+# Raises KeyError since vertex D does not exist
+D = g.OpenVertex( "D", mode="r" )
+
+# Raises KeyError since vertex E does not exist
+E = g.OpenVertex( "E", mode="a" )
+
+g.CloseVertex( A )                   # Close vertex A
+g.CloseVertex( B )                   # Close vertex B
+g.CloseVertex( C )                   # Close vertex C
+
+A = g.OpenVertex( addrA )            # Re-open A by its address
+
+# Raises KeyError since address is invalid
+F = g.OpenVertex( addr + 7 )
+----
+
+[[graphopenvertices]]
+== pyvgx.Graph.OpenVertices()
+
+Acquire multiple vertices as an atomic operation and return a list of <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects with the requested access mode.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.OpenVertices( idlist[, mode[, timeout ]] ) -> vertex_list
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+// cspell:ignore idlist
+|_idlist_
+|_str_
+|
+|List of unique ID strings for vertices to be opened
+
+|_mode_
+|_chr_
+|'a'
+|Access mode is one of:
+
+'r'=Readonly
+
+'a'=Writable (do not create)
+
+|_timeout_
+|_int_
+|0
+|<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>> for acquiring the requested access to all vertices.
+
+|===
+
+=== Return Value
+
+If all vertices are successfully acquired within the specified timeout a list of <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects is returned.
+
+=== Remarks
+
+This method will acquire a lock on each vertex in _idlist_. If any vertex is already locked (by the current thread) one additional lock will be acquired, i.e. lock recursion is supported. Acquisition timeout applies to the operation as a whole. All vertices must be successfully acquired within the timeout, otherwise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>> is raised and no vertices are acquired.
+
+Non-existent vertices are not implicitly created. If one or more vertex in _idlist_ does not exist KeyError is raised.
+
+Vertices already opened in readonly cannot be recursively opened in writable mode.
+
+Recursive acquisition has a limit of 112 levels. Attempting to recursively open a vertex beyond the limit will raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+
+The following acquisition modes are supported:
+
+*'r' = Readonly*::
+Open and return vertices in readonly mode. Readonly vertices are guaranteed to be consistent and unchanged for as long as the current thread holds the acquired locks. Other threads may acquire one or more of the same vertices in readonly mode, but will not be able to acquire write access.
+
+*'a' = Writable (do not create)*::
+Open and return existing vertices with full write and read access. If any vertex does not exist link:https://docs.python.org/3/library/exceptions.html#exceptions.KeyError[KeyError] is raised. The current thread will not be able to obtain a writable lock on any vertex as long as it is locked (readonly or writable) by another thread.
++
+When VGX is <<../reference.adoc#op_attach_func, attached to an output stream>> all output is halted while one or more vertices are acquired writable via this method. All graph operations performed while at least one writable acquisition by this method is in effect will be queued internally and emitted in bulk _as a single transaction_ once all such acquired vertices have been released.
+
+Consider using <<graphManagement.adoc#graphlock, pyvgx.Graph.Lock()>> if the only purpose is to confine a set op graph operations to a single transaction.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )                           # Create vertex A
+g.CreateVertex( "B" )                           # Create vertex B
+g.CreateVertex( "C" )                           # Create vertex C
+g.CreateVertex( "D" )                           # Create vertex D
+
+# Open many vertices at once in 'a' mode (writable)
+A, B, C = g.OpenVertices( ["A", "B", "C"] )     # Open A, B and C
+
+# Verify open and writable
+A.Writable()                                    # -> True
+B.Writable()                                    # -> True
+C.Writable()                                    # -> True
+
+# Get another lock for C and open D
+C2, D = g.OpenVertices( ["C", "D"] )            # C (recursive) and D
+
+# Try (and fail) to open D and non-existent E
+D2, E = g.OpenVertices( ["D", "E"] )            # KeyError for E
+
+# Close many vertices
+g.CloseVertices( [A, B, C, D] )                 # Close A, B, C, D
+
+# Still one lock for C
+C2.Writable()                                   # -> True
+
+# Close C
+g.CloseVertex( C2 )                             # Close C
+----
+
+[[graphclosevertex]]
+== pyvgx.Graph.CloseVertex()
+
+Release access lock and commit any vertex changes.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.CloseVertex( vertex_object ) -> bool
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_vertex_object_
+|<<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+| Vertex object to close
+
+|===
+
+=== Return Value
+
+This method returns True if the vertex was released. It returns False if there is no ownership to release.
+
+=== Remarks
+
+This method releases one ownership reference for a vertex and commits any changes made to the vertex if no other owners exist. The closed <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance can no longer access the vertex.
+
+Several <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects may reference the same graph vertex object. Each wrapper object owns one reference to the graph vertex. When the wrapper object is deleted it will implicitly call pyvgx.Graph.CloseVertex() when it is garbage collected. If the vertex is closed with an explicit call to pyvgx.Graph.CloseVertex() the wrapper object is still a valid Python object but it has lost its reference to the graph vertex and can no longer be used.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )                # Create vertex A
+v1 = g.OpenVertex( "A", mode="w" )   # A opened writable, one owner
+v2 = g.OpenVertex( "A", mode="w" )   # A opened writable, two owners
+v3 = g.OpenVertex( "A", mode="w" )   # A opened writable, three owners
+v4 = g.OpenVertex( "A", mode="w" )   # A opened writable, four owners
+
+# Release one ownership, three owners left
+g.CloseVertex( v1 )                  
+
+# Release one ownership, two owners left
+g.CloseVertex( v2 )
+
+# Implicitly release one ownership, one owner left
+del v3
+
+# Release one ownership, no owners
+g.CloseVertex( v4 )
+----
+
+[[graphclosevertices]]
+== pyvgx.Graph.CloseVertices()
+
+Release access locks for multiple vertices at once and commit any vertex changes.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.CloseVertices( vertex_objects ) -> count
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_vertex_objects_
+|list of <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> objects
+|
+|List of one or more vertex objects to close
+
+|===
+
+=== Return Value
+
+This method returns the number of vertices released. If one or more vertices have already been released the returned value is less than the length of _vertex_objects_.
+
+=== Remarks
+
+This method releases one ownership reference for each vertex in _vertex_objects_ and commits any changes made to vertices if no other owners exist. 
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )                           # Create vertex A
+g.CreateVertex( "B" )                           # Create vertex B
+g.CreateVertex( "C" )                           # Create vertex C
+g.CreateVertex( "D" )                           # Create vertex D
+
+# Open many vertices at once
+A, B, C = g.OpenVertices( ["A", "B", "C"] )     # Open A, B and C
+
+# Open C (again) and
+C2, D = g.OpenVertices( ["C", "D"] )            # Open C and D
+
+# Close all four
+g.CloseVertices( [A, B, C, D] )                 # -> 4
+
+# Try to close all four again (no action)
+g.CloseVertices( [A, B, C, D] )                 # -> 0
+
+# Only C2 is still open and will be closed
+g.CloseVertices( [A, B, C2, D] )                # -> 1
+
+----
+
+[[graphcloseall]]
+== pyvgx.Graph.CloseAll()
+
+Close all vertices opened by current thread.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.CloseAll() -> count
+----
+
+=== Return Value
+
+This method returns the number of vertices closed.
+
+=== Remarks
+
+Use this method as a convenience to close all vertices owned by the current thread.
+Vertices opened by other threads are not affected by this call.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+A = g.NewVertex( "A" )    # Open new vertex A
+B = g.NewVertex( "B" )    # Open new vertex B
+C = g.NewVertex( "C" )    # Open new vertex C
+
+# Do something
+A['x'] = 1
+B['x'] = 2
+C['x'] = 3
+
+g.CloseAll()              # Close A, B and C
+
+# Vertices are closed
+A.Writable()              # -> False
+B.Writable()              # -> False
+C.Writable()              # -> False
+
+----
+
+[[graphcommitall]]
+== pyvgx.Graph.CommitAll()
+
+Commit all write-locked vertices opened by current thread.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.CommitAll() -> n_writable
+----
+
+=== Return Value
+
+This method returns the number of write-locked vertices opened by current thread.
+
+=== Remarks
+
+Use this method as a convenience to commit all write-locked vertices owned by the current thread. Vertices opened by other threads are not affected by this call.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+A = g.NewVertex( "A" )    # Open new vertex A
+B = g.NewVertex( "B" )    # Open new vertex B
+C = g.NewVertex( "C" )    # Open new vertex C
+
+# Do something
+A['x'] = 1
+B['x'] = 2
+
+g.CommitAll()             # Commit changes to A, B
+
+# Vertices are still open
+A.Writable()              # -> True
+B.Writable()              # -> True 
+C.Writable()              # -> True
+
+----
+
+[[graphescalatevertex]]
+== pyvgx.Graph.EscalateVertex()
+
+Promote vertex access from readonly to writable.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.EscalateVertex( readonly_vertex_object[, timeout ] ) -> None
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_readonly_vertex_object_
+|<<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+| Vertex instance whose access is readonly and should be promoted to writable
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+
+|0
+|Acquisition timeout (in milliseconds)
+
+|===
+
+=== Return Value
+
+If vertex readonly access is successfully promoted to writable the method will return None. Otherwise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>> is raised.
+
+=== Remarks
+
+This method will attempt to change the readonly access of the supplied <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instance to writable access. This can be accomplished if no other threads hold readonly locks to the vertex and the current thread has acquired the vertex readonly exactly once. If other threads hold readonly locks to the vertex the escalation operation will block in accordance with the timeout specified and raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>> if a timeout occurs.
+
+If the current thread holds more than one readonly lock on the vertex (e.g. opened the same vertex twice for two separate <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> instances) the operation can never complete. For this reason infinite timeout is disallowed.
+
+In more concise terms, the only scenario where vertex escalation can (and will) succeed is when there exists exactly one read lock on the vertex and that lock is owned by the current thread attempting the escalation.
+
+Attempting to escalate a writable vertex will raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Create, open readable, then escalate
+g.CreateVertex( "A" )                # Create vertex A
+A = g.OpenVertex( "A", mode="r" )    # Open A in readonly mode
+g.EscalateVertex( A )                # Promote A to writable
+A.Writable()                         # -> 1
+g.CloseVertex( A )
+
+# Can't escalate if multiple readonly locks
+A1 = g.OpenVertex( "A", mode="r" )   # Open A readonly
+A2 = g.OpenVertex( "A", mode="r" )   # Open A readonly again
+g.EscalateVertex( A1 )               # raise pyvgx.AccessError
+g.CloseVertex( A1 )
+g.CloseVertex( A2 )
+
+# Can't escalate already writable
+A = g.OpenVertex( "A", mode="w" )    # Open A writable
+g.EscalateVertex( A )                # raise pyvgx.AccessError
+----
+
+[[graphrelaxvertex]]
+== pyvgx.Graph.RelaxVertex()
+
+Relax a writable vertex to readonly access.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.RelaxVertex( writable_vertex_object ) -> bool
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_writable_vertex_object_
+|<<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Vertex instance whose access is writable and should be relaxed to readonly
+
+|===
+
+=== Return Value
+
+If vertex write lock is successfully released this method will return True. If vertex is still write-locked False is returned.
+
+=== Remarks
+
+This method will make an attempt to change the access mode of the supplied <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>> to readonly.
+
+The action taken depends on the existing access of the vertex:
+
+* If the vertex was acquired writable exactly once, then the vertex is committed and access changed to readonly.
+
+* If the vertex was acquired writable recursively, then one level of write recursion is released (same behavior as <<graphclosevertex>>).
+
+* If the vertex was acquired readonly, then no action is performed.
+
+It does not matter how vertex writable access was obtained previously. Relaxing access to readonly is valid for any writable vertex whether it was previously escalated to writable, opened as writable, or just created.
+
+TIP: Certain graph operations are not allowed to be performed by the current thread if the current thread holds any readonly vertices. To proceed with such graph operations without giving up access to any acquired readonly vertices (ensuring consistency) the readonly vertices may be temporarily escalated to writable, then relaxed back to readonly once the graph operation is complete. Note that some graph operations are disallowed even though they operate on vertices other than the ones acquired readonly by the current thread. This is a safety measure to eliminate accidental edge cases that would result in a deadlock.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+
+import pyvgx
+g = pyvgx.Graph("graph")
+
+# Create vertex, do something to it, then relax to readonly
+A = g.NewVertex( "A" )          # Create vertex A
+A.SetProperty( "value", 123 )   # Set a property
+g.RelaxVertex( A )              # A is readonly, other threads may access
+
+# Perform a graph operation that does not permit readonly vertices
+# in the current thread
+g.CreateVertex( "X" )
+g.CreateVertex( "Y" )
+g.Connect( "X", "to", "Y" )     # raise pyvgx.AccessError
+g.EscalateVertex( A )           # Make A writable to allow Connect()
+g.Connect( "X", "to", "Y" )     # -> 1 created (X)-[to]->(Y)
+g.RelaxVertex( A )              # Relax A back to readonly
+----
+
+[[showopenvertices]]
+== pyvgx.Graph.ShowOpenVertices()
+
+Print a summary of all vertices in graph that have been acquired.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.ShowOpenVertices() -> None
+----
+
+=== Remarks
+
+This method will print a summary of all acquired vertices. The summary includes
+information about how each vertex is acquired and by which thread.
+
+Useful for debugging.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )
+g.CreateVertex( "B" )
+C = g.NewVertex( "C" )
+D = g.NewVertex( "D" )
+
+A = g.OpenVertex( "A", mode="r" )
+
+g.ShowOpenVertices()
+
+#---------------------------------
+#------- Readonly vertices -------
+#---------------------------------
+#THREAD: 13296
+#RO=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - READONLY LOCKED]] [[- -] [- -] [-] [0]] [0]  A
+#
+#---------------------------------
+#------- Writable vertices -------
+#---------------------------------
+#THREAD: 13296
+#WL=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [13296]  C
+#WL=1   : [1] [__vertex__] [[REAL NORMAL] [IDLE NORMAL - WRITABLE LOCKED]] [[- -] [- -] [-] [0]] [13296]  D
+----
+
+[[getopenvertices]]
+== pyvgx.Graph.GetOpenVertices()
+
+Return a list of open vertices in this graph.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.GetOpenVertices( [ threadid ] ) -> list
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+// cspell:ignore threadid
+|_threadid_
+|_int_
+|0
+|When >0, return vertices currently owned by this thread
+
+The default is 0, which returns open vertices for all threads
+
+|===
+
+=== Remarks
+
+This method returns a list of all of this graph’s vertices currently acquired
+by all threads (the default), or by a single thread specified by threadid.
+
+The returned list includes a 3-tuple for each open vertex:
+----
+[ ("<vertex_id>", threadid, "<mode>"), ... ]
+
+where <mode> is RO or WL.
+----
+
+Useful for debugging.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+
+import pyvgx
+g = pyvgx.Graph("graph")
+
+g.CreateVertex( "A" )
+g.CreateVertex( "B" )
+C = g.NewVertex( "C" )
+D = g.NewVertex( "D" )
+
+A = g.OpenVertex( "A", mode="r" )
+
+V = g.ShowOpenVertices()
+
+# V = [('A', 13296, 'RO'), ('C', 13296, 'WL'), ('D', 13296, 'WL')]
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphMembers.adoc#, title="Graph Members"]
+<<graphMembers.adoc#, icon:arrow-circle-left[size=2x, title="Graph Members"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphArc.adoc#, title="Graph Arc Methods"]
+<<graphArc.adoc#, icon:arrow-circle-right[size=2x, title="Graph Arc Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

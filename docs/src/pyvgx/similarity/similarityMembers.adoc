@@ -1,0 +1,133 @@
+[[similaritymembers]]
+= Similarity Members <<similarity.adoc#, icon:arrow-circle-up[title="pyvgx.Similarity"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Similarity Members |Description
+
+|<<similarityhamming>>
+|Maximum hamming distance allowed between vector fingerprints to be declared "similar"
+
+|<<similaritysim>>
+|Minimum similarity score allowed between vectors to be declared "similar"
+
+|<<similaritycosineexp>>
+|Relative importance of Cosine() in Similarity() score computation
+
+|<<similarityjaccardexp>>
+|Relative importance of Jaccard() in Similarity() score computation (*Feature Vector* only)
+
+|<<similaritymincosine>>
+|Minimum Cosine() allowed between vectors to be declared "similar"
+
+|<<similarityminjaccard>>
+|Minimum Jaccard() allowed between vectors to be declared "similar" (*Feature Vector* only)
+
+|<<similarityminisect>>
+|Minimum overlapping dimensions allowed between vectors to be declared "similar" (*Feature Vector* only)
+
+|<<similaritymaxvector>>
+|Maximum number of elements in vectors
+
+|<<similarityseeds>>
+|Set of pre-defined ANN seeds
+
+|<<similaritynsegm>>
+|Future.
+
+|<<similaritynsign>>
+|Future.
+
+|===
+
+[[similarityhamming]]
+== pyvgx.Similarity.hamming_threshold
+
+Maximum hamming distance allowed between vector fingerprints to be declared "similar"
+
+[[similaritysim]]
+== pyvgx.Similarity.sim_threshold
+
+Minimum similarity score allowed between vectors to be declared "similar"
+
+[[similaritycosineexp]]
+== pyvgx.Similarity.cosine_exp
+
+Relative importance of Cosine() in Similarity() score computation
+
+[[similarityjaccardexp]]
+== pyvgx.Similarity.jaccard_exp
+
+Relative importance of Jaccard() in Similarity() score computation in *Feature Vector* mode.
+
+CAUTION: Must be 0.0 in *Euclidean Vector* mode
+
+[[similaritymincosine]]
+== pyvgx.Similarity.min_cosine
+
+Minimum Cosine() allowed between vectors to be declared "similar"
+
+[[similarityminjaccard]]
+== pyvgx.Similarity.min_jaccard
+
+Minimum Jaccard() allowed between vectors to be declared "similar" in *Feature Vector* mode.
+
+NOTE: Ignored in *Euclidean Vector* mode
+
+// cspell:ignore isect
+[[similarityminisect]]
+== pyvgx.Similarity.min_isect
+
+Minimum overlapping dimensions allowed between vectors to be declared "similar" in *Feature Vector* mode.
+
+CAUTION: Must be 1 in *Euclidean Vector* mode
+
+[[similaritymaxvector]]
+== pyvgx.Similarity.max_vector_size
+
+Maximum number of elements in vectors
+
+[[similarityseeds]]
+== pyvgx.Similarity.seeds
+
+Internal set of pre-defined seeds for use with ANN search functionality.
+This is a special case internal implementation which is subject to change, and is thus intentionally undocumented.
+
+// cspell:ignore nsegm
+[[similaritynsegm]]
+== pyvgx.Similarity.nsegm
+
+Future.
+
+// cspell:ignore nsign
+[[similaritynsign]]
+== pyvgx.Similarity.nsign
+
+Future.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vector.adoc#, title="pyvgx.Vector"]
+<<vector.adoc#, icon:arrow-circle-left[size=2x, title="pyvgx.Vector"]>>
+//icon:arrow-circle-up[size=2x, link=similarity.adoc#, title="pyvgx Similarity"]
+<<similarity.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Similarity"]>>
+//icon:arrow-circle-right[size=2x, link=similarityMethods.adoc#, title="Similarity Methods"]
+<<similarityMethods.adoc#, icon:arrow-circle-right[size=2x, title="Similarity Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

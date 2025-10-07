@@ -1,0 +1,92 @@
+version 6.0
+
+:map <MiddleMouse> <nop> 
+
+if has("gui_running")
+  if &cp | set nocp | endif
+  let s:cpo_save=&cpo
+  set cpo&vim
+  map! <S-Insert> *
+  vmap  "*d
+  nmap gx <Plug>NetrwBrowseX
+  nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)
+
+  vmap <C-Del> "*d
+  vmap <S-Del> "*d
+  vmap <C-Insert> "*y
+  vmap <S-Insert> "-d"*P
+  nmap <S-Insert> "*P
+  let &cpo=s:cpo_save
+  unlet s:cpo_save
+endif
+
+set background=dark
+"set backspace=2
+set backspace=indent,eol,start
+set expandtab
+set helplang=En
+set ruler
+set hlsearch
+set shiftwidth=2
+set tabstop=4
+set window=38
+syntax on
+
+
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
+
+if has("gui_running")
+  set lines=42
+  set columns=190
+  colorscheme torte
+else
+  highlight Cursor ctermfg=white ctermbg=black
+
+  hi Comment                   ctermfg=darkgreen            guifg=Blue
+  hi Constant   term=underline ctermfg=green                 guifg=Magenta
+
+  hi Special    term=bold      ctermfg=lightblue            guifg=SlateBlue
+
+  hi Identifier term=underline ctermfg=white                guifg=DarkCyan
+  hi Statement  term=bold      ctermfg=Yellow      gui=bold guifg=Brown
+  hi PreProc    term=underline ctermfg=DarkMagenta          guifg=Purple
+  hi Type       term=underline ctermfg=Yellow               guifg=SeaGreen gui=bold
+  hi Ignore                    ctermfg=white                guifg=bg
+  hi php3Operator              ctermfg=grey
+
+endif
+
+hi highVgxKeyword                  ctermfg=White               guifg=White
+hi highVgxOperationType            ctermfg=DarkGrey            guifg=DarkGrey
+hi highVgxCRC                      ctermfg=DarkGrey            guifg=DarkGrey
+hi highVgxOperatorNew              ctermfg=Green               guifg=Green
+hi highVgxOperatorSet              ctermfg=Magenta             guifg=Violet
+hi highVgxOperatorEnum             ctermfg=Cyan                guifg=Cyan
+hi highVgxOperatorDelete           ctermfg=Red                 guifg=Red
+hi highVgxOperatorAssign           ctermfg=Yellow              guifg=Yellow
+hi highVgxOperatorState0           ctermfg=Cyan                guifg=Cyan
+hi highVgxOperatorState1           ctermfg=Yellow              guifg=Yellow
+hi highVgxOperatorEvent            ctermfg=LightMagenta        guifg=Purple
+hi highVgxOpcode                   ctermfg=DarkGrey            guifg=DarkGrey
+hi highVgxTransactionID            ctermfg=Brown               guifg=Orange
+hi highVgxTransactionSerial        ctermfg=Yellow              guifg=Yellow
+hi highVgxMasterSerial             ctermfg=LightRed            guifg=LightRed
+hi highVgxGraphID                  ctermfg=White               guifg=White
+hi highVgxVertexID                 ctermfg=LightCyan           guifg=LightCyan
+hi highVgxObjectID                 ctermfg=LightBlue           guifg=LightBlue
+hi highVgxType                     ctermfg=White               guifg=White
+hi highVgxTypeEnum                 ctermfg=Yellow              guifg=LightYellow
+hi highVgxRelEnum                  ctermfg=LightRed            guifg=LightRed
+hi highVgxDimEnum                  ctermfg=LightBlue           guifg=LightBlue
+hi highVgxKeyEnum                  ctermfg=Magenta             guifg=Violet
+hi highVgxStringEnum               ctermfg=LightMagenta        guifg=Purple
+hi highVgxNumericData              ctermfg=LightGreen          guifg=LightGreen
+hi highVgxTimestampData            ctermfg=DarkCyan            guifg=DarkCyan
+hi highVgxEventExec                ctermfg=Red                 guifg=Red
+hi highVgxGeneralData              ctermfg=DarkGrey            guifg=DarkGrey
+hi highVgxComment                  ctermfg=DarkGreen           guifg=DarkGreen
+
+
+au BufRead,BufNewFile *.tx set filetype=vgx

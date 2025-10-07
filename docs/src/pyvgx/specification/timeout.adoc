@@ -1,0 +1,56 @@
+[[pyvgxtimeout]]
+= Timeout Specification <<../reference.adoc#, icon:arrow-circle-up[title="pyvgx Reference"]>> <<arcSpecificationSyntax.adoc#, icon:arrow-circle-right[title="Arc Syntax"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+// cspell:ignore limexec
+All graph methods operating on objects that may be accessed concurrently by multiple threads have a timeout parameter.
+
+Timeouts are specified in milliseconds to block while waiting to acquire access to one or more resources, or to place an upper limit on execution time if an accompanying _limexec_ parameter is also set to True. If _limexec_ is not specified it always defaults to False.
+
+|===
+|Timeout Value |Description |_limexec_=False |_limexec_=True
+
+|>0
+|Upper limit for how long the operation is allowed to execute.
+|The timeout deadline is enforced only when waiting to acquire a blocked resource. If the timeout deadline passes while blocked the operation will terminate and raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+|Execution elapse time is continually monitored against the timeout deadline. If the timeout deadline is reached the operation will terminate and raise <<../exceptions/exceptions.adoc#SearchError, pyvgx.SearchError>>.
+
+|<0
+|No upper execution limit.
+|The operation will never time out.
+|The operation will never time out.
+
+|0
+|Operation is required to complete immediately.
+|Proceed with the operation only if all required resources can be acquired immediately without blocking. As soon as a blocked resource is encountered the operation will terminate and raise <<../exceptions/exceptions.adoc#AccessError, pyvgx.AccessError>>.
+|In general, "very short" operations are permitted while recursive operations are terminated immediately with <<../exceptions/exceptions.adoc#SearchError, pyvgx.SearchError>>.
+
+|===
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=arcSpecificationSyntax.adoc#, title="Arc Specification Syntax"]
+<<arcSpecificationSyntax.adoc#, icon:arrow-circle-left[size=2x, title="Arc Specification Syntax"]>>
+//icon:arrow-circle-up[size=2x, link=../reference.adoc#, title="pyvgx Reference"]
+<<../reference.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Reference"]>>
+//icon:arrow-circle-right[size=2x, link=arcSpecificationSyntax.adoc#, title="Arc Specification Syntax"]
+<<arcSpecificationSyntax.adoc#, icon:arrow-circle-right[size=2x, title="Arc Specification Syntax"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
+

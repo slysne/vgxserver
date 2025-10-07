@@ -1,0 +1,558 @@
+[[valueconditionconstants]]
+= Value Condition Constants <<constants.adoc#, icon:arrow-circle-up[title="pyvgx Constants"]>> <<collectConstants.adoc#, icon:arrow-circle-right[title="Collect Constants"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+== Value Conditions
+
+[source, python]
+----
+# A value condition is a 2-tuple: (pyvgx.V_<x>, <value_or_range>)
+# Conditions may use single-ended values or value ranges.
+
+# Single-ended conditions are 2-tuples where the second item is
+# a number or a string.
+(pyvgx.V_*, n)
+
+# Range conditions are 2-tuples where the second item is another
+# 2-tuple of numbers representing the range.
+(pyvgx.V_RANGE, (a, b))
+(pyvgx.V_DYN_DELTA, (a, b))
+(pyvgx.V_DYN_RATIO, (p, q))
+----
+
+Value conditions may be _static_ or _dynamic_.
+
+A _static value condition_ compares the evaluated value directly to the constant given in the condition.
+
+A _dynamic value condition_ compares the evaluated value to the _corresponding value one level earlier in the parent neighborhood_ during recursive neighborhood traversal.
+
+== Value Condition Comparison Constants
+
+These constants are used to control the evaluation of value conditions in value filters.
+
+[cols="2,4,2,2"]
+|===
+|Constant |Description |Numeric Comparison |Comment
+
+|<<V_LTE>>
+|Less-than or equal (≤)
+|V_LTE, _n_
+|
+
+|<<V_LT>>
+|Less-than (<)
+|V_LT, _n_
+|
+
+|<<V_GTE>>
+|Greater-than or equal (≥)
+|V_GTE, _n_
+|
+
+|<<V_GT>>
+|Greater-than (>)
+|V_GT, _n_
+|
+
+|<<V_EQ>>
+|Equal (=)
+|V_EQ, _n_
+
+V_EQ, _str_
+|Numeric
+
+String
+|<<V_NEQ>>
+|Not equal (≠)
+|V_NEQ, _n_
+
+V_NEQ, _str_
+|Numeric
+
+String
+|<<V_RANGE>>
+|Within set / interval ( ∈ [a,b] )
+|V_RANGE, (_a_, _b_)
+|Both endpoints included
+
+// cspell:ignore NRANGE
+|<<V_NRANGE>>
+|Outside set / interval ( ∉ [a,b] )
+|V_NRANGE, (_a_, _b_)
+|Both endpoints excluded
+
+|<<V_DYN_LTE>> *
+|Dynamic less-than or equal (≤)
+|V_DYN_LTE [, _n_]
+|See * note below
+
+|<<V_DYN_LT>> *
+|Dynamic less-than (<)
+|V_DYN_LT [, _n_]
+|See * note below
+
+|<<V_DYN_GTE>> *
+|	Dynamic greater-than or equal (≥)
+|V_DYN_GTE [, _n_]
+|See * note below
+
+|<<V_DYN_GT>> *
+|Dynamic greater-than (>)
+|V_DYN_GT [, _n_]
+|See * note below
+
+|<<V_DYN_EQ>> *
+|Dynamic equal (=)
+|V_DYN_EQ [, _n_]
+|See * note below
+
+|<<V_DYN_NEQ>> *
+|Dynamic not equal (≠)
+|V_DYN_NEQ [, _n_]
+|See * note below
+
+|<<V_DYN_DELTA>> *
+|Dynamic value deviation (±) by delta
+|V_DYN_DELTA, (_a_, _b_)
+|See * note below
+
+|<<V_DYN_RATIO>> *
+|Dynamic value deviation (±) by ratio
+|V_DYN_RATIO, (_p_, _q_)
+|See * note below
+|===
+
+NOTE: *) Dynamic value comparison matches the evaluated value against another _corresponding_ value previously found during multi-level neighborhood traversal. A corresponding value is a value of the same kind (e.g. arc value). The current corresponding values which are made available for dynamic comparison are updated and in effect every time graph traversal continues in an extended (next) neighborhood. Dynamic matching is always performed against the current corresponding value from the immediate previous neighborhood. The optional [, n] is an offset (positive or negative) added to the dynamic value from the previous neighborhood before evaluating the condition.
+
+image::ValueCondition.png[ValueCondition]
+
+[[V_LTE]]
+=== pyvgx.V_LTE
+
+`pyvgx.V_LTE = 4`
+
+Less-than or equal-to value condition.
+
+Match if inspected value ≤ _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_LTE, n )                     # value <= n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_LTE, n )  # arc value <= n
+
+# Does "A" connect to anything with an integer value
+# less than or equal to 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_LTE, 1000) )
+----
+
+[[V_LT]]
+=== pyvgx.V_LT
+
+`pyvgx.V_LT = 10`
+
+Less-than value condition.
+
+Match if inspected value < _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_LT, n )                     # value < n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_LT, n )  # arc value < n
+
+# Does "A" connect to anything with an integer value
+# less than 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_LT, 1000) )
+----
+
+[[V_GTE]]
+=== pyvgx.V_GTE
+
+`pyvgx.V_GTE = 8`
+
+Greater-than or equal-to value condition.
+
+Match if inspected value ≥ _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_GTE, n )                     # value >= n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_GTE, n )  # arc value >= n
+
+# Does "A" connect to anything with an integer value
+# greater than or equal to 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_GTE, 1000) )
+----
+
+[[V_GT]]
+=== pyvgx.V_GT
+
+`pyvgx.V_GT = 6`
+
+Greater-than value condition.
+
+Match if inspected value > _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_GT, n )                     # value > n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_GT, n )  # arc value > n
+
+# Does "A" connect to anything with an integer value
+# greater than 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_GT, 1000) )
+----
+
+[[V_EQ]]
+=== pyvgx.V_EQ
+
+`pyvgx.V_EQ = 12`
+
+Equal-to value condition.
+
+Match if inspected value = _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_EQ, n )                     # value == n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_EQ, n )  # arc value == n
+
+# Does "A" connect to anything with an integer value
+# equal to 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_EQ, 1000) )
+----
+
+[[V_NEQ]]
+=== pyvgx.V_NEQ
+
+`pyvgx.V_NEQ = 14`
+
+Not-equal-to value condition.
+
+Match if inspected value ≠ _n_.
+
+*Example:*
+[source, python]
+----
+<value> = ( pyvgx.V_NEQ, n )                     # value != n
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_NEQ, n )  # arc value != n
+
+# Does "A" connect to anything with an integer value
+# not equal to 1000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_NEQ, 1000) )
+----
+
+[[V_RANGE]]
+=== pyvgx.V_RANGE
+
+`pyvgx.V_RANGE = 16`
+
+Value within range condition.
+
+Match if inspected value ∈ [a, b].  (Both endpoints included.)
+
+*Example:*
+[source, python]
+----
+# value in interval [a, b]
+<value> = ( pyvgx.V_RANGE, (a, b) )                     
+
+# arc value in interval [a, b]
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_RANGE, (a, b) )
+
+# Does "A" connect to anything with an integer value
+# between 1000 and 2000, both included?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_RANGE, (1000,2000)) )
+----
+
+[[V_NRANGE]]
+=== pyvgx.V_NRANGE
+
+`pyvgx.V_NRANGE = 18`
+
+Value outside range condition.
+
+Match if inspected value ∉ [a, b].  (Both endpoints excluded.)
+
+*Example:*
+[source, python]
+----
+# value outside interval [a, b]
+<value> = ( pyvgx.V_NRANGE, (a, b) )
+
+# arc value outside interval [a, b]
+<arc> = ( <rel>, <dir>, <mod>, pyvgx.V_NRANGE, (a, b) )
+
+# Does "A" connect to anything with an integer value
+# less than 1000 or greater than 2000?
+graph.Adjacent( "A", arc=("*", D_OUT, M_INT, V_NRANGE, (1000,2000)) )
+----
+
+[[V_DYN_LTE]]
+=== pyvgx.V_DYN_LTE
+
+`pyvgx.V_DYN_LTE = 26`
+
+Dynamically less-than or equal-to value comparison.
+
+[source, python]
+----
+# arc value <= previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_LTE )
+
+# arc value <= previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_LTE, n )
+----
+
+Match if the inspected arc value _v_ is less than or equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ ≤ _p_, or optionally _v_ ≤ _p_ + _n_.
+
+[[V_DYN_LT]]
+=== pyvgx.V_DYN_LT
+
+`pyvgx.V_DYN_LT = 29`
+
+Dynamically less-than value comparison.
+
+[source, python]
+----
+# arc value < previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_LT )
+
+# arc value < previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_LT, n )
+----
+
+Match if the inspected arc value _v_ is less than the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ < _p_, or optionally _v_ < _p_ + _n_.
+
+[[V_DYN_GTE]]
+=== pyvgx.V_DYN_GTE
+
+`pyvgx.V_DYN_GTE = 28`
+
+Dynamically greater-than or equal-to value comparison.
+
+[source, python]
+----
+# arc value >= previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_GTE )
+
+# arc value >= previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_GTE, n )
+----
+
+Match if the inspected arc value _v_ is greater than or equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ ≥ _p_, or optionally _v_ ≥ _p_ + _n_.
+
+[[V_DYN_GT]]
+=== pyvgx.V_DYN_GT
+
+`pyvgx.V_DYN_GT = 27`
+
+Dynamically greater-than value comparison.
+
+[source, python]
+----
+# arc value > previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_GT )
+
+# arc value > previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_GT, n )
+----
+
+Match if the inspected arc value _v_ is greater than the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ > _p_, or optionally _v_ > _p_ + _n_.
+
+[[V_DYN_EQ]]
+=== pyvgx.V_DYN_EQ
+
+`pyvgx.V_DYN_EQ = 30`
+
+Dynamically equal-to value comparison.
+
+[source, python]
+----
+# arc value == previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_EQ )
+
+# arc value == previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_EQ, n )
+----
+
+Match if the inspected arc value _v_ is equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ = _p_, or optionally _v_ = _p_ + _n_.
+
+[[V_DYN_NEQ]]
+=== pyvgx.V_DYN_NEQ
+
+`pyvgx.V_DYN_NEQ = 31`
+
+Dynamically not-equal-to value comparison.
+
+[source, python]
+----
+# arc value != previous neighborhood's arc value
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_NEQ )
+
+# arc value != previous neighborhood's arc value + n
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_NEQ, n )
+----
+
+Match if the inspected arc value _v_ is not equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal, with optional offset _n_.
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ ≠ _p_, or optionally _v_ ≠ _p_ + _n_.
+
+[[V_DYN_DELTA]]
+=== pyvgx.V_DYN_DELTA
+
+`pyvgx.V_DYN_DELTA = 24`
+
+Dynamically-within value deviation (additive).
+
+[source, python]
+----
+# arc value v matches previous neighborhood's arc value p
+# if v in the interval [p+a, p+b]
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_DELTA, (a, b) )
+----
+
+Match if the inspected arc value _v_ is approximately equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal.
+The approximation interval is defined as [_p_+_a_, _p_+_b_].
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ ∈ [_p_+_a_, _p_+_b_], end points included.
+
+[[V_DYN_RATIO]]
+=== pyvgx.V_DYN_RATIO
+
+`pyvgx.V_DYN_RATIO = 25`
+
+Dynamically-within value deviation (multiplicative).
+
+[source, python]
+----
+# arc value v matches previous neighborhood's arc value p
+# if v in the interval [p*a, p*b]
+<arc value> = ( <rel>, <dir>, <mod>, pyvgx.V_DYN_DELTA, (a, b) )
+----
+
+Match if the inspected arc value _v_ is approximately equal to the arc value _p_ that led to the previous neighborhood during recursive neighborhood traversal.
+The approximation interval is defined as [_p_•_a_, _p_•_b_].
+
+Modifiers must be the same for value comparison to evaluate to true.
+
+If mod1 = mod2 dynamically match:
+
+(A) -[ <rel>, mod2, _v_ ]-> (B)
+
+with previous arc:
+
+(*) -[ <rel>, mod1, _p_ ]-> (A)
+
+if _v_ ∈ [_p_•_a_, _p_•_b_], end points included.
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=arcModifierConstants.adoc#, title="Arc Modifier Constants"]
+<<arcModifierConstants.adoc#, icon:arrow-circle-left[size=2x, title="Arc Modifier Constants"]>>
+//icon:arrow-circle-up[size=2x, link=constants.adoc#, title="pyvgx Constants"]
+<<constants.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Constants"]>>
+//icon:arrow-circle-right[size=2x, link=collectConstants.adoc#, title="Collect Constants"]
+<<collectConstants.adoc#, icon:arrow-circle-right[size=2x, title="Collect Constants"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

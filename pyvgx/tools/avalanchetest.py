@@ -1,0 +1,92 @@
+###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx
+# File:    avalanchetest.py
+# Author:  Stian Lysne slysne.dev@gmail.com
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+import random
+from pyvgx import strhash128
+
+
+###############################################################################
+# hex_to_bits
+#
+###############################################################################
+def hex_to_bits(hexstr):
+    """
+    """
+    return bin(int(hexstr, 16))[2:].zfill(128)
+
+
+###############################################################################
+# hamming_distance
+#
+###############################################################################
+def hamming_distance(bits1, bits2):
+    """
+    """
+    return sum(b1 != b2 for b1, b2 in zip(bits1, bits2))
+
+
+###############################################################################
+# flip_bit
+#
+###############################################################################
+def flip_bit(s, bit_index):
+    """
+    """
+    b = bytearray(s)
+    byte_idx = bit_index // 8
+    bit_in_byte = bit_index % 8
+    b[byte_idx] ^= 1 << bit_in_byte
+    return bytes(b)
+
+
+###############################################################################
+# run_avalanche_tests
+#
+###############################################################################
+def run_avalanche_tests(num_tests=1000, input_size=8):
+    """
+    """
+    total_distance = 0
+    for _ in range(num_tests):
+        original = bytes(random.getrandbits(8) for _ in range(input_size))
+        flipped = flip_bit(original, random.randint(0, input_size * 8 - 1))
+        
+        h1 = hex_to_bits(strhash128(original.decode('latin1')))
+        h2 = hex_to_bits(strhash128(flipped.decode('latin1')))
+        
+        dist = hamming_distance(h1, h2)
+        total_distance += dist
+
+    avg = total_distance / num_tests
+    print(f"Average Hamming distance: {avg} bits out of 128 (~{(avg/128)*100:.2f}%)")
+
+run_avalanche_tests( num_tests=1000, input_size=1 )
+run_avalanche_tests( num_tests=10000, input_size=2 )
+run_avalanche_tests( num_tests=10000, input_size=7 )
+run_avalanche_tests( num_tests=10000, input_size=8 )
+run_avalanche_tests( num_tests=100000, input_size=9 )
+run_avalanche_tests( num_tests=100000, input_size=25 )
+run_avalanche_tests( num_tests=100000, input_size=255 )
+run_avalanche_tests( num_tests=100000, input_size=1255 )

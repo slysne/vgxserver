@@ -1,0 +1,77 @@
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx.test
+# File:    GetType.py
+# Author:  Stian Lysne slysne.dev@gmail.com
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
+from pyvgx import *
+import pyvgx
+
+graph = None
+
+
+
+
+###############################################################################
+# TEST_GetType
+#
+###############################################################################
+def TEST_GetType():
+    """
+    pyvgx.Vertex.GetType()
+    test_level=3101
+    """
+    g = graph
+    g.Truncate()
+
+    # Create typeless vertex
+    A = g.NewVertex( "vertex" )
+
+    # Create typed vertex
+    B = g.NewVertex( "node_0", type="node" )
+
+    tp = A.GetType()
+    Expect( tp == "__vertex__",                 "vertex should be typeless, got %s" % tp )
+
+    tp = B.GetType()
+    Expect( tp == "node",                       "vertex type should be \"node\", got %s" % tp )
+
+    del A
+    del B
+
+
+
+
+
+###############################################################################
+# Run
+#
+###############################################################################
+def Run( name ):
+    """
+    """
+    global graph
+    graph = pyvgx.Graph( name )
+    RunTests( [__name__] )
+    graph.Close()
+    del graph

@@ -1,0 +1,160 @@
+﻿###############################################################################
+# 
+# VGX Server
+# Distributed engine for plugin-based graph and vector search
+# 
+# Module:  pyvgx.test
+# File:    EventProcessor.py
+# Author:  Stian Lysne slysne.dev@gmail.com
+# 
+# Copyright © 2025 Rakuten, Inc.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+###############################################################################
+
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
+from pyvgx import *
+import pyvgx
+
+graph = None
+
+
+
+###############################################################################
+# TEST_vxevent_eventapi
+#
+###############################################################################
+def TEST_vxevent_eventapi():
+    """
+    Core vxevent_eventapi
+    t_nominal=289
+    test_level=501
+    """
+    try:
+        pyvgx.selftest( force=True, testroot="vgxtest", library="vgx", names=["vxevent_eventapi.c"] )
+    except:
+        Expect( False )
+
+
+
+
+###############################################################################
+# TEST_vxevent_eventmon
+#
+###############################################################################
+def TEST_vxevent_eventmon():
+    """
+    Core vxevent_eventmon
+    test_level=501
+    """
+    try:
+        pyvgx.selftest( force=True, testroot="vgxtest", library="vgx", names=["vxevent_eventmon.c"] )
+    except:
+        Expect( False )
+
+
+
+
+###############################################################################
+# TEST_vxevent_eventexec
+#
+###############################################################################
+def TEST_vxevent_eventexec():
+    """
+    Core vxevent_eventexec
+    test_level=501
+    """
+    try:
+        pyvgx.selftest( force=True, testroot="vgxtest", library="vgx", names=["vxevent_eventexec.c"] )
+    except:
+        Expect( False )
+
+
+
+
+###############################################################################
+# TEST_EventBacklog
+#
+###############################################################################
+def TEST_EventBacklog():
+    """
+    pyvgx.Graph.EventBacklog()
+    Call method
+    test_level=3101
+    """
+    graph.EventBacklog()
+
+
+
+
+###############################################################################
+# TEST_EventDisable
+#
+###############################################################################
+def TEST_EventDisable():
+    """
+    pyvgx.Graph.EventDisable()
+    Call method
+    test_level=3101
+    """
+    graph.EventDisable()
+
+    # restore
+    graph.EventEnable()
+
+
+
+
+###############################################################################
+# TEST_EventEnable
+#
+###############################################################################
+def TEST_EventEnable():
+    """
+    pyvgx.Graph.EventEnable()
+    Call method
+    test_level=3101
+    """
+    graph.EventEnable()
+
+
+
+
+###############################################################################
+# TEST_EventFlush
+#
+###############################################################################
+def TEST_EventFlush():
+    """
+    pyvgx.Graph.EventFlush()
+    Call method
+    test_level=3101
+    """
+    graph.EventFlush()
+
+
+
+
+###############################################################################
+# Run
+#
+###############################################################################
+def Run( name ):
+    """
+    """
+    global graph
+    graph = pyvgx.Graph( name )
+    RunTests( [__name__] )
+    graph.Close()
+    del graph

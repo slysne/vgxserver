@@ -1,0 +1,654 @@
+[[grapharcmethods]]
+= Graph Arc Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphQuery.adoc#, icon:arrow-circle-right[title="Graph Query Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx.Graph Arc Methods |Description
+
+|<<graphconnect>>
+|Establish a relationship between two vertices
+
+|<<graphdisconnect>>
+|Remove one or more arcs incident on a specified vertex.
+
+|<<graphcount>>
+|Auto-increment relationship value
+
+|<<graphaccumulate>>
+|Auto-accumulate a floating point relationship value
+|===
+
+[[graphconnect]]
+== pyvgx.Graph.Connect()
+
+Establish explicit connection(s) between vertices by inserting one or more directed edges (_arcs_) from the initial vertex to one or more terminal vertices.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Connect( initial, arc, terminals[, lifespan[, condition[, timeout ]]] ) -> number
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_initial_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or vertex instance opened for writable access
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcinsertionsyntax, Relationship specifier>>
+|
+|Arc specification for the connection from initial to a terminal
+
+|_terminals_
+|_term~1~_ or [_term~1~_, ..., _term~n~_]
+
+where _term~i~_ is _str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string(s) or vertex instance(s) opened for writable access, supplied as list or singleton
+
+|_lifespan_
+|_int_
+|-1 (infinite)
+|Number of seconds arc will exist until it automatically expires
+
+|_condition_
+|<<../specification/arcSpecificationSyntax.adoc#arcfiltersyntax, Arc Filter>>
+|None
+|Perform the connect operation only when this condition is met
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices
+
+|===
+
+=== Return Value
+
+This method returns a positive integer indicating the number of arcs created. Only new arcs contribute to the returned count. Updating the value of an existing arc is not considered a new arc.
+
+The return value may be greater than the number of terminals if the operation implicitly creates multiple arcs, which occurs when _lifespan_ is specified and/or <<../reference.adoc#AutoArcTimestamps_func, `AutoArcTimestamps( True )`>> has been called. (See <<arc_timestamps>>.)
+
+=== Remarks
+
+An arc is a directed edge starting at the _initial_ vertex and ending at the _terminal_ vertex, and represents an explicit connection between the two vertices.
+
+When connecting two vertices the _arc_ parameter can take one of several forms depending on the type of connection to establish. In the graph structure an arc always has three elements. The _arc_ parameter may specify all, some, or none of these elements according to the <<../specification/arcSpecificationSyntax.adoc#arcinsertionsyntax, arc insertion syntax>> specification. Unspecified arc elements receive default values.
+
+[[arc_components]]
+==== Arc Elements
+
+The _arc_ parameter is specified as one of these tuples:
+
+* `()`
+* `( relationship )`
+* `( relationship, modifier )`
+* `( relationship, modifier, value )`
+
+The three arc elements are:
+
+* *_relationship_*: User-defined string value indicating the nature of the connection, such as "likes", "clicked", "purchased", "visited", "has", "is_a", etc. There is an <<../limits.adoc#limits, upper limit>> to the number of unique relationship types supported per graph instance. (Currently this limit is 15,616.) Default _relationship_ is `"+++__related__+++"`.
+
+* *_modifier_*: One of several <<../constants/arcModifierConstants.adoc#armodifierconstants, integer constants>> defining the type of the value associated with the arc. <<../constants/arcModifierConstants.adoc#arcmodifierconstants, Some modifiers>> also define additional arc behavior, such as automatic value increment and automatic arc deletion at a future expiration time.  Default _modifier_ is `M_STAT`.
+
+* *_value_*: Integer or floating point value associated with the arc. Valid numeric range <<../constants/arcModifierConstants.adoc#arcmodifierconstants, depends on the modifier>>. The default modifier <<../constants/arcModifierConstants.adoc#M_STAT, M_STAT>> implies value=1 and does not allow a value to be set. Default values for all other modifiers vary depending on the modifier.
+
+We sometimes use the notation
+
+* `(A)-[rel,mod,val]\->(B)`
+
+to describe the connection shown:
+
+// cspell:ignore graphconnect
+image::graphconnect.png[graphconnect]
+
+This depicts an arc from vertex A to vertex B with relationship _rel_, modifier _mod_, and value _val_.
+
+NOTE: Creating an arc from initial A to terminal B also creates a hidden, implicit reverse arc from B to A. This makes it possible to traverse the graph in any direction. If only forward traversal is ever needed by queries the <<../constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY modifier bitmask>> may be used to suppress creation of the implicit reverse arc, which may save memory.
+
+===== Arc Elements Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# A has unspecified relation to B
+g.Connect( "A", (), "B" )
+g.Connect( "A", None, "B" ) # equivalent notation
+
+# C -[to]-> D
+g.Connect( "C", ("to"), "D" )
+g.Connect( "C", "to", "D" ) # equivalent notation
+
+# E -[freq, M_CNT]-> F
+g.Connect( "E", ("freq", M_CNT), "F" )
+
+# G -[score, M_FLT, 4.56]-> H
+g.Connect( "G", ("score", M_FLT, 4.56), "H" )
+----
+
+[[multiple_arc]]
+==== Multiple Arc
+
+When more than one arc connects two vertices we call it a _multiple arc_ (as opposed to _simple arc_ for a single connection.) A multiple arc can contain any number of individual arcs, but any combination of relationship type and modifier can only occur once. Adding another arc with the same relationship and modifier as an existing arc will overwrite the existing arc.
+
+We sometimes refer to a multiple arc with _n_ individual arcs as a __n-multiple__.
+
+For instance, to represent that person _P_ has *visited* country _C_ *four times* in their life, the *first time in 1965*, and spent a *total of 45 days* there, we need a 3-multiple arc from _P_ to _C_. We can define out data model such that `M_CNT` represents "number of times", `M_INT` represents "first year", and `M_FLT` represents "total duration", like this:
+
+* `(P)-[ visited, M_CNT, 4 ]\->(+++C+++)`
+* `(P)-[ visited, M_INT, 1965 ]\->(+++C+++)`
+* `(P)-[ visited, M_FLT, 45.0 ]\->(+++C+++)`
+
+Alternatively, if we want all values to be of type `M_INT` we could use different relationship types, like this:
+
+* `(P)-[ visited_num, M_INT, 4 ]\->(+++C+++)`
+* `(P)-[ visited_first, M_INT, 1965 ]\->(+++C+++)`
+* `(P)-[ visited_total_days, M_INT, 45 ]\->(+++C+++)`
+
+The choice of relationship type and modifier is arbitrary and application defined, and does not matter as long as the modifier is suitable for the value type and the number of unique relationships does not exceed the maximum limit (15,616) per graph.
+
+[WARNING]
+====
+Multiple arcs have additional overhead in terms of memory usage and internal structure, which can have impact on query performance. This is due to the <<../limits.adoc#arcs, data structures used to implement arcs>>.
+
+*Bottom line*: Be aware of the impact of introducing multiple arcs in your data model, and benchmark to arrive at an optimal design.
+====
+
+===== Multiple Arc Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# Alice likes Colombia. She has visited 4 times, the first time
+# was in 1965, and she has spent a total of 45 days there.
+# She knows 7 people who live there.
+g.Connect( "Alice", ("likes"), "Colombia" )
+g.Connect( "Alice", ("visited",M_CNT,4), "Colombia" )
+g.Connect( "Alice", ("visited",M_INT,1965), "Colombia" )
+g.Connect( "Alice", ("visited",M_FLT,45.0), "Colombia" )
+g.Connect( "Alice", ("knows",M_INT,7), "Colombia" )
+----
+
+===== Multiple Arc Memory Overhead
+
+The memory cost of moving from simple to multiple arc is non-linear. In practice you can expect the following memory increase for a _n_-multiple arc compared to the simple arc baseline:
+
+|===
+|_n_ |Raw memory usage compared to simple arc |Memory cost multiplier per arc
+
+|1
+|1x (baseline)
+|1.0 (baseline)
+
+|2
+|6x
+|3.0
+
+|3 - 6
+|12x
+|4.0 - 2.0
+
+|7 - 12
+|18x
+|2.6 - 1.5
+
+|13 - 24
+|30x
+|2.3 - 1.25
+
+|-> N
+|-> Nx
+|-> 1.0
+
+|===
+
+As can be seen above the relative memory cost is high for a low-_n_ multiple, and then moves lower back towards 1.0 in the limit as _n_ grows.
+
+===== Multiple Arc Query Performance Overhead
+
+The impact on query performance when moving from simple to multiple arc is non-linear. In practice you can expect the following increase in execution time when traversing  _n_-multiple arcs compared to a simple arc baseline:
+
+|===
+|_n_ |Query execution time compared to simple arc |Execution cost multiplier per arc
+
+|1
+|1x (baseline)
+|1.0 (baseline)
+
+|2
+|10x
+|5.0
+
+|3 - 6
+|12x
+|3.7 - 2.2
+
+|7 - 12
+|17x &plus;
+|2.4 - 1.6
+
+|13 - 24
+|22x &plus;
+|1.5 &minus;
+
+|-> N
+|-> Nx
+|-> 1.0
+
+|===
+
+As can be seen above the relative query execution cost per arc is very high for a low-_n_ multiple, and then moves lower back towards 1.0 in the limit as _n_ grows.
+
+[[arc_timestamps]]
+==== Arc Timestamps
+
+Arcs may be encoded with up to three timestamps, representing the number of seconds since 1970, using the following modifiers:
+
+* <<../constants/arcModifierConstants.adoc#M_TMC, Creation time: `M_TMC`>>
+* <<../constants/arcModifierConstants.adoc#M_TMM, Modification time: `M_TMM`>>
+* <<../constants/arcModifierConstants.adoc#M_TMX, Expiration time: `M_TMX`>>
+
+Arcs with these modifiers may be created explicitly by specifying the desired timestamp _modifier_ in the _arc_ parameter. Timestamped arcs may also be created automatically using the _lifespan_ parameter to specify the number of seconds the arc should exist before automatic deletion. Arcs created with _lifespan_ receive all three timestamps in addition to the specified modifier, and therefore become 4-multiples.
+
+Explicit use of timestamp modifiers is not allowed when _lifespan_ is specified.
+
+Automatic assignment of creation and modification time is also possible without using the _lifespan_ parameter by including the <<../constants/arcModifierConstants.adoc#M_AUTOTM, M_AUTOTM bitmask>> when creating the arc, or when globally configured with <<../reference.adoc#AutoArcTimestamps_func, `pyvgx.AutoArcTimestamps( True )`>> prior to calling `Connect()`. After so configured `Connect()` will always produce 3-multiples including the `M_TMC`, `M_TMM` and specified modifier.
+
+WARNING: Arc modification time `M_TMM` is only automatically updated when `AutoArcTimestamps( True )` is in effect. Otherwise the modification time must be explicitly updated, even after the arc was originally created with _lifespan_.
+
+WARNING: Being multiple arcs, timestamped arcs have a cost both in terms of memory usage and query efficiency. Be sure to understand the overall system impact before designing a model using timestamped arcs.
+
+===== Arc Timestamps Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+import time
+g = Graph("graph")
+AutoArcTimestamps( True )
+
+# Alice calls Bob. This also records the creation time of the
+# "calls" relationship, which is also the modification time.
+g.Connect( "Alice", ("calls",M_CNT), "Bob" ) # -> 3
+
+# Wait a bit
+time.sleep(5)
+
+# Alice calls Bob again. The modification time is updated
+# but the creation time is unchanged.
+g.Connect( "Alice", ("calls",M_CNT), "Bob" ) # -> 0
+
+g.Neighborhood( "Alice", fields=F_AARC )
+# -> ['( Alice )-[ calls <M_TMC> 1680122000 ]->( Bob )',
+#     '( Alice )-[ calls <M_TMM> 1680122005 ]->( Bob )',
+#     '( Alice )-[ calls <M_CNT> 2 ]->( Bob )'
+#    ]
+----
+
+
+[[arc_expiration]]
+===== Arc Expiration
+
+Setting arc expiration, either explicitly via modifier `M_TMX` or implicitly via the _lifespan_ parameter, results in automatic arc deletion at the specified future time. Deletion affects the entire subset of the multiple arc sharing the same _relationship_ type.
+
+Arc expiration occurs automatically in the background, provided that 1) the system <<../reference.adoc#system_initialize_func, was initialized with `events=True`>> (the default); 2) the TTL processor has <<../reference.adoc#eventdisable_func, not been disabled>>; and 3) the graph has <<../reference.adoc#setgraphreadonly_func, not been set readonly>>.
+
+===== Arc Expiration Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# A temporary boost from a Query to an Item, which is
+# automatically removed after the expiration period.
+g.Connect( "QryA", ("boost",M_FLT,100), "Item1", lifespan=3600 )
+
+----
+
+[[arc_conditional_connect]]
+==== Conditional Connect
+
+When the _condition_ parameter is specified `Connect()` will create or update the arc only when the condition is met. The condition is expressed using <<../specification/arcSpecificationSyntax.adoc#arcfiltersyntax, arc filter syntax>>. The arc filter is applied to existing arc(s) between _initial_ and _term~i~_ (in _terminals_.)
+
+===== Conditional Connect Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# A-[score,3.5]->B
+g.Connect( "A", ("score",M_FLT,3.5), "B" ) # -> 1
+
+# Condition not true
+g.Connect( initial="A",
+           arc=("count",M_CNT),
+           terminal="B",
+           condition=("score",D_OUT,M_FLT,V_LT,2.0)
+         ) # -> 0
+
+# Condition true
+# A-[count,1]->
+g.Connect( initial="A",
+           arc=("count",M_CNT),
+           terminal="B",
+           condition=("score",D_OUT,M_FLT,V_GT,2.0)
+         ) # -> 1
+
+----
+
+[[connect_timeout]]
+==== Connect Timeout
+
+When connecting two vertices (_initial_ and _term~1~_) specified by their identifiers and those vertices are not already write-locked by the current thread, the _timeout_ parameter may be specified to allow `Connect()` to block a <<../specification/timeout.adoc#pyvgxtimeout, maximum number of milliseconds>> while waiting to acquire both vertices.
+
+===== Connect Timeout Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# Try connect X-[to]->Y without blocking
+g.Connect( "X", "to", "Y" )
+
+# Try connect X-[to]->Y, block for up to 1.0 second
+g.Connect( "X", "to", "Y", timeout=1000 )
+
+# Try connect X-[to]->Y, block indefinitely
+g.Connect( "X", "to", "Y", timeout=-1 )               
+----
+
+[[graphdisconnect]]
+== pyvgx.Graph.Disconnect()
+
+Remove one or more arcs incident on a specified vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Disconnect( id[, arc[, neighbor[, timeout ]]] ) -> number_of_removed_arcs
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_id_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or vertex instance opened for writable access.
+This is the vertex whose inarcs and/or outarcs (or subset thereof) should be removed.
+
+|_arc_
+|<<../specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, Relationship specifier>>
+|None
+|Arc specification for arcs to be removed. By default all arcs are removed.
+
+|_neighbor_
+|<<../vertex/vertexFilter.adoc#vertexfilter, Vertex condition>>
+|None
+|Condition for terminal vertex for arcs to be removed. No condition by default.
+
+NOTE: Exact ID match is currently the only supported vertex condition.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+|0
+|Timeout (in milliseconds) for acquiring writable access to anchor vertex, and optionally
+for the neighbor vertex if vertex condition is specified.
+
+|===
+
+=== Return Value
+
+This method returns the number of arcs removed.
+
+=== Remarks
+
+One or more arcs incident on the specified vertex are removed according to the specified <<../specification/arcSpecificationSyntax.adoc#arcspecificationsyntax, arc condition>> and <<../vertex/vertexFilter.adoc#vertexfilter, vertex condition>>. This method can be used to remove both outarcs and inarcs. The direction is specified as part of the arc condition.
+
+The default behavior if no conditions are specified is to remove all arcs, making the vertex an isolated vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+g.Connect( "Alice",   ("likes",M_INT,10),     "Coffee" )
+g.Connect( "Bob",     ("likes",M_INT,20),     "Coffee" )
+g.Connect( "Charlie", ("likes",M_INT,30),     "Coffee" )
+g.Connect( "Coffee",  "is_a",                 "Beverage" )
+g.Connect( "Coffee"   ("sold_by",M_FLT,1.89), "ShopX" )
+g.Connect( "Coffee",  ("sold_by",M_FLT,2.29), "ShopY" )
+
+# -> 0, no arcs removed
+g.Disconnect( "Coffee", "roasted_by" )
+
+# -> 1, removes Coffee-[sold_by,M_FLT,1.89]->ShopX
+g.Disconnect( "Coffee", "*", "ShopX" )
+
+# -> 1, removes Alice-[likes,M_INT,10]->Coffee
+g.Disconnect( "Coffee", ("likes",D_IN,M_INT,V_LT,15) )
+
+# -> 4, removes all other arcs incident on Coffee
+g.Disconnect( "Coffee" )
+----
+
+[[graphcount]]
+== pyvgx.Graph.Count()
+
+Auto-increment relationship value with type <<../constants/arcModifierConstants.adoc#M_CNT, M_CNT>> of arc going from initial to terminal vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Count( initial, relationship, terminal[, delta[, timeout ]] ) -> count
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_initial_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or instance opened for writable access
+
+|_relationship_
+|_str_
+|
+|Relationship of arc whose value will be incremented
+
+|_terminal_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or instance opened for writable access
+
+|_delta_
+|_int_
+|1
+|Increment the arc value by this amount. If the arc does not exist it is created and initialized to the specified value.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+
+|0
+|Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices
+
+|===
+
+=== Return Value
+
+This method returns the updated count value after the increment has been applied.
+
+// cspell:ignore typeless
+=== Remarks
+
+Perform a counting operation on the arc using the <<../constants/arcModifierConstants.adoc#M_CNT, M_CNT>> modifier to automatically increment the arc value by a specified amount. The delta parameter allows increments other than 1. Negative delta values will decrement the arc value.
+
+If the relationship does not already exist it is created and initialized with a value equal to the specified delta amount.
+
+If either vertex does not already exist it is created as a typeless vertex.
+
+=== Examples
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+
+# -> 1, creates both Alice and Bob and the new
+# arc Alice-[called,M_CNT,1]->Bob
+g.Count( "Alice", "called", "Bob" )     
+
+# -> 2, increments and returns updated arc value
+g.Count( "Alice", "called", "Bob" )     
+
+# -> 7, increments by 5
+g.Count( "Alice", "called", "Bob", 5 ) 
+
+# -> 7, no increment, just return current arc value
+g.Count( "Alice", "called", "Bob", 0 )  
+
+# -> 0, decrements by 7, resetting counter to 0
+g.Count( "Alice", "called", "Bob", -7 ) 
+
+# -> -5, decrements by 5
+g.Count( "Alice", "called", "Bob", -5 ) 
+----
+
+[[graphaccumulate]]
+== pyvgx.Graph.Accumulate()
+
+Auto-accumulate a floating point relationship value with type <<../constants/arcModifierConstants.adoc#M_ACC, M_ACC>> of arc going from initial to terminal vertex.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Graph.Accumulate( initial, relationship, terminal[, delta[, timeout ]] ) -> accumulation
+----
+
+=== Parameters
+
+|===
+|Parameter |Type |Default |Description
+
+|_initial_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or instance opened for writable access
+
+|_relationship_
+|_str_
+|
+|Relationship of arc whose value will be accumulated
+
+|_terminal_
+|_str_ or <<../vertex/vertex.adoc#pyvgxvertex, pyvgx.Vertex>>
+|
+|Unique ID string or instance opened for writable access
+
+|_delta_
+|_float_
+|1.0
+|Add this amount to the arc value. If the arc does not exist it is created and initialized to the specified value.
+
+|_timeout_
+|_int_
+
+<<../specification/timeout.adoc#pyvgxtimeout, Timeout specification>>
+
+|0
+|Timeout (in milliseconds) for acquiring writable access to both initial and terminal vertices
+
+|===
+
+=== Return Value
+
+This method returns the updated accumulator value after the addition of delta amount has been applied.
+
+=== Remarks
+
+Perform an accumulating operation on the arc value using the floating point <<../constants/arcModifierConstants.adoc#M_ACC, M_ACC>> modifier to automatically add a specified delta amount to the arc value. Negative delta values will subtract from the arc value.
+
+If the relationship does not already exist it is created and initialized with a value equal to the specified delta amount.
+
+If either vertex does not already exist it is created as a typeless vertex.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph("graph")
+
+# Alice's bank account:
+# -> 100.0, creates both Alice and USD and the new
+# arc Alice-[has,M_ACC,100.0]->USD
+g.Accumulate( "Alice", "has", "USD", 100.0 )     
+g.Accumulate( "Alice", "has", "USD" )            # -> 101.0
+g.Accumulate( "Alice", "has", "USD", 41.99 )     # -> 142.99
+g.Accumulate( "Alice", "has", "USD", -200 )      # -> -57.01
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphVertex.adoc#, title="Graph Vertex Methods"]
+<<graphVertex.adoc#, icon:arrow-circle-left[size=2x, title="Graph Vertex Methods"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphQuery.adoc#, title="Graph Query Methods"]
+<<graphQuery.adoc#, icon:arrow-circle-right[size=2x, title="Graph Query Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

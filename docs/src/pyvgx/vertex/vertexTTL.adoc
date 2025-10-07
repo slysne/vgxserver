@@ -1,0 +1,167 @@
+[[vertexTTL]]
+= Vertex TTL Methods <<vertex.adoc#, icon:arrow-circle-up[title="pyvgx.Vertex"]>> <<vertexMiscellaneous.adoc#, icon:arrow-circle-right[title="Vertex Miscellaneous Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+|===
+|pyvgx Vertex TTL Methods |Description
+
+|<<vertexsetexpiration>>
+|Set vertex expiration
+
+|<<vertexgetexpiration>>
+|Get vertex expiration
+
+|<<vertexisexpired>>
+|Check if vertex expiration timestamp has passed
+
+|<<vertexclearexpiration>>
+|Remove vertex expiration
+|===
+
+[[vertexsetexpiration]]
+== pyvgx.Vertex.SetExpiration()
+
+Set vertex expiration.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.SetExpiration( expires[, relative ] )
+----
+
+Schedule vertex for automatic deletion at timestamp _expires_, which when _relative_ is `False` is
+given in absolute seconds since 1970, or when _relative_ is `True` is given in number of seconds
+into the future relative to current time.
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import time
+from pyvgx import *
+g = Graph( "g1" )
+V = g.NewVertex( "shortlived" )
+V.SetExpiration( 30, True )      # delete vertex after 30 seconds
+g.CloseVertex( V )
+"shortlived" in g                # True, vertex exists
+time.sleep( 15 )                 # Sleep for 15 seconds
+"shortlived" in g                # True, vertex still exists
+time.sleep( 20 )                 # Sleep for 20 more seconds
+"shortlived" in g                # False, vertex has expired
+----
+
+[[vertexgetexpiration]]
+== pyvgx.Vertex.GetExpiration()
+
+Get vertex expiration.
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.GetExpiration()
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+g = Graph( "g1" )
+V = g.NewVertex( "V" )
+V.GetExpiration()            # 4102444800 (T_NEVER)
+V.SetExpiration( 60, True )
+V.GetExpiration()            # 1585516307
+----
+
+[[vertexisexpired]]
+== pyvgx.Vertex.IsExpired()
+
+Check if vertex expiration timestamp has passed
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.IsExpired()
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import time
+from pyvgx import *
+g = Graph( "g1" )
+V = g.NewVertex( "shortlived" )
+V.SetExpiration( 5, True )       # delete vertex after 5 seconds
+"shortlived" in g                # True, vertex exists
+time.sleep( 10 )                 # Sleep for 10 seconds
+V.IsExpired()                    # True
+"shortlived" in g                # True, because still open
+g.CloseVertex( V )               # give up ownership
+"shortlived" in g                # False, expired vertex deleted
+----
+
+[[vertexclearexpiration]]
+== pyvgx.Vertex.ClearExpiration()
+
+Remove vertex expiration
+
+=== Syntax
+
+[source, python]
+----
+pyvgx.Vertex.ClearExpiration()
+----
+
+=== Example
+
+[.copyable]
+[source, python]
+----
+import time
+from pyvgx import *
+g = Graph( "g1" )
+V = g.NewVertex( "vertex" )
+V.SetExpiration( 10, True )      # delete vertex after 10 seconds
+g.CloseVertex( V )
+"vertex" in g                    # True, vertex exists
+time.sleep( 5 )                  # Sleep for 5 seconds
+V = g.OpenVertex( "vertex" )
+V.ClearExpiration()              # cancel TTL
+g.CloseVertex( V )
+time.sleep( 10 )
+"vertex" in g                    # True, vertex still exists
+----
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=vertexVector.adoc#, title="Vertex Vector Methods"]
+<<vertexVector.adoc#, icon:arrow-circle-left[size=2x, title="Vertex Vector Methods"]>>
+//icon:arrow-circle-up[size=2x, link=vertex.adoc#, title="pyvgx.Vertex"]
+<<vertex.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx.Vertex"]>>
+//icon:arrow-circle-right[size=2x, link=vertexMiscellaneous.adoc#, title="Vertex Miscellaneous Methods"]
+<<vertexMiscellaneous.adoc#, icon:arrow-circle-right[size=2x, title="Vertex Miscellaneous Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
