@@ -15,7 +15,7 @@ VGX was originally developed in-house at Rakuten, Inc. between 2014 and 2025 as 
 
 ## Getting Started
 
-You will need Python 3.12 or higher and one of the supported operating systems:
+You will need Python 3.9 or higher and one of the supported operating systems:
 
 - **macOS**: 14 (Sonoma) or higher
 - **Linux**: glibc 2.34 or higher (e.g. Ubuntu 22.04+)

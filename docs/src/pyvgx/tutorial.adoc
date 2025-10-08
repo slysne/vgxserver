@@ -20,7 +20,7 @@ image::pyvgx.png[PYVGX,220,220,align="left"]
 pip install pyvgx
 ----
 
-* **Python**: 3.12 or higher
+* **Python**: 3.9 or higher
 * **macOS**: 14 (Sonoma) or higher
 * **Linux**: glibc 2.34 or higher (e.g. Ubuntu 22.04+)
 * **Windows**: 10 or higher

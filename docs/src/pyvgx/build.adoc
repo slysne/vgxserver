@@ -11,7 +11,7 @@ include::common/_copyable.adoc[]
 
 == Requirements
 
-* Python 3.12+
+* Python 3.9+
 * C compiler:
     - On Windows: MSVC (Visual Studio 2022 or later)
     - On macOS: Xcode command line tools
