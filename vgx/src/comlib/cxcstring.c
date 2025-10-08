@@ -925,7 +925,7 @@ static CString_t * CString_deserialize( comlib_object_t *container, CQwordQueue_
       THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x502 );
     }
 
-    CString_t CSTR__buffer;
+    CString_t CSTR__buffer = {0};
     QWORD *pmeta = &CSTR__buffer.meta._bits;
     int64_t n_meta = qwsizeof( CSTR__buffer.meta._bits );
     if( iq->ReadNolock( input, (void**)&pmeta, n_meta ) != n_meta ) {
