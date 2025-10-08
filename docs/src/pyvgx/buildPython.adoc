@@ -1,0 +1,80 @@
+[[buildpython]]
+= PyVGX {project-version} Build Instructions <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:nofooter:
+:docinfo: shared-footer
+:imagesdir: images/
+:linkattrs:
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+
+== Python Source
+
+----
+curl -O https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz
+curl -O https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
+curl -O https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
+curl -O https://www.python.org/ftp/python/3.12.9/Python-3.12.9.tgz
+curl -O https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
+----
+
+
+== Build
+
+
+=== MacOS
+
+[source, bash]
+----
+# Make compatible from 14 and up
+export MACOSX_DEPLOYMENT_TARGET=14.0
+DIR_NAME=$(basename "$PWD")
+PY_MAJOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
+
+# Set up LDFLAGS for rpath — helpful for embedded or relocatable binaries
+export LDFLAGS="-Wl,-rpath,@loader_path"
+
+./configure \
+    --prefix=$HOME/python3$PY_MAJOR \
+    --enable-shared \
+    --enable-optimizations \
+    --with-openssl=$(brew --prefix openssl)
+
+make -j$(sysctl -n hw.ncpu)
+
+make install
+
+install_name_tool -id @rpath/libpython3.$PY_MAJOR.dylib \
+    $HOME/python3$PY_MAJOR/lib/libpython3.$PY_MAJOR.dylib
+
+cd ~
+
+python3$PY_MAJOR/bin/python3 -m venv venv3$PY_MAJOR
+
+. venv3$PY_MAJOR/bin/activate
+
+pip install --upgrade pip
+
+pip install --upgrade setuptools build wheel delocate
+
+
+----
+
+
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+// cspell:ignore backtotop
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+[.text-center]
+<<index.adoc#, image:pyvgx.png[PYVGX, 180, 180, align="center"]>>
