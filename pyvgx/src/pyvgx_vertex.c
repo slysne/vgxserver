@@ -1658,7 +1658,7 @@ static int __py_set_property( vgx_Vertex_t *vertex_WL, const char *name, PyObjec
         else {
           // Virtual (disk) property?
           if( !vprop ) { // no * hint in name, check virtual parameter
-            vprop = py_virtual && ((Py_IsTrue( py_virtual ) || (PyLong_Check( py_virtual ) && PyLong_AsLong( py_virtual ) > 0 )));
+            vprop = py_virtual && ( py_virtual == Py_True || (PyLong_Check( py_virtual ) && PyLong_AsLong( py_virtual ) > 0 ));
           }
           if( vprop ) {
             vertex_property.val.type = VGX_VALUE_TYPE_CSTRING;
