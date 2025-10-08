@@ -140,9 +140,10 @@ WHEEL_FILENAME=$(basename ./*$ABI_TAG*.whl)
 if [[ "$OS_NAME" == "Darwin" ]]; then
     if command -v delocate-wheel >/dev/null 2>&1; then
         echo "Running delocate-wheel to fix macOS wheel tags..."
-        delocate-wheel -w ./ $WHEEL_FILENAME
+        delocate-wheel -w ./wheelhouse $WHEEL_FILENAME
         rm $WHEEL_FILENAME
-        WHEEL_FILENAME=$(basename ./*$ABI_TAG*.whl)
+        mv wheelhouse/$WHEEL_FILENAME .
+        rmdir wheelhouse
     else
         echo "Warning: delocate-wheel not found. Skipping wheel tag fix."
         echo "To install: pip install delocate"
