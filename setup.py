@@ -25,14 +25,18 @@ VGXINSTANCE = "vgxinstance"
 PYVGX_SCRIPTS = "pyvgx_scripts"
 
 PY_SRC_DIR = "pyvgx/src/py"
-PYTHON_VERSION = f"{sys.version_info.major}{sys.version_info.minor}"
+
+PY_MAJOR = sys.version_info.major
+PY_MINOR = sys.version_info.minor
+
+PYTHON_VERSION = f"{PY_MAJOR}{PY_MINOR}"
 
 
 if IS_WINDOWS:
     PYTHON_EXECUTABLE = sys.executable
     package_data = {"pyvgx": ["*.pyd", "vgx.dll"]}
 else:
-    PYTHON_EXECUTABLE = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    PYTHON_EXECUTABLE = f"python{PY_MAJOR}.{PY_MINOR}"
     if IS_MACOS:
         package_data = {"": ["libvgx.dylib", "pyvgx.so"]}
     elif IS_LINUX:
@@ -64,11 +68,6 @@ class PyVGX_Extension(Extension):
 
 class CmakeBuild(build_ext):
     def build_extension(self, ext: PyVGX_Extension) -> None:
-        include_dir = sysconfig.get_paths()["include"]
-        plat_include_dir = sysconfig.get_paths()["platinclude"]
-        python_lib = sysconfig.get_config_var("LIBRARY")
-        python_libdir = sysconfig.get_config_var("LIBDIR")
-        python_arch = sysconfig.get_platform()
 
         pyvgx_src_dir = f"{ext.sourcedir}/{PY_SRC_DIR}"
         
@@ -165,38 +164,63 @@ class CmakeBuild(build_ext):
             ])
         elif IS_WINDOWS:
 
-            include_paths = []
+            # Fairly reliable
+            include_dir1 = sysconfig.get_paths()["include"]
+            include_dir2 = None
 
-            # include path (containing Python.h)
-            path1 = include_dir
-            while not path1 or not os.path.exists(path1) or not os.path.exists(os.path.join(path1,"Python.h")):
-                path1 = input( "Enter include directory containing Python.h: " )
+            # e.g. python312.lib
+            python_lib = f"python{PY_MAJOR}{PY_MINOR}.lib"
 
-            include_paths.append(path1)
+            # Probably empty
+            python_libdir = sysconfig.get_config_var("LIBDIR")
+            
+            # Will become full path to lib file
+            python_library_path = None
+            
+            # Hint we're in a venv
+            if sys.prefix != sys.base_prefix:
+                home = getattr(sys, "_home", None)
+                if home and os.path.isdir(home):
+                    # Set the correct path containing lib file and verify
+                    python_libdir = home
+                    python_library_path = os.path.join(python_libdir, python_lib)
+                    if not os.path.exists( python_library_path ):
+                        raise EnvironmentError( f"Bad venv, check paths {sys.prefix} and {home}" )
+                # include dirs
+                if os.path.isdir(sys.base_prefix):
+                    if include_dir1 is None:
+                        include_dir1 = os.path.join(sys.base_prefix, "Include")
+                    # decide where pyconfig.h is located
+                    if os.path.exists( os.path.join(sys.base_prefix, "PC", "pyconfig.h") ):
+                        include_dir2 = os.path.join(sys.base_prefix, "PC")
+                    elif python_libdir and os.path.exists( os.path.join(python_libdir, "pyconfig.h") ):
+                        include_dir2 = python_libdir
 
-            # include path (pyconfig.h)
-            path2 = include_dir
-            while not path2 or not os.path.exists(path2) or not os.path.exists(os.path.join(path2,"pyconfig.h")):
-                path2 = input( "Enter include directory containing pyconfig.h: " )
+            # Verify include path 1 contains Python.h
+            while not include_dir1 or not os.path.exists(include_dir1) or not os.path.exists(os.path.join(include_dir1,"Python.h")):
+                include_dir1 = input( "Enter include directory containing Python.h: " )
 
-            if path2 not in include_paths:
-                include_paths.append(path2)
+            # Verify include path 2 contains pyconfig.h
+            while not include_dir2 or not os.path.exists(include_dir2) or not os.path.exists(os.path.join(include_dir2,"pyconfig.h")):
+                include_dir2 = input( "Enter include directory containing pyconfig.h: " )
 
-            include_dirs = ";".join(include_paths)
+            
+            include_dirs = []
+            include_dirs.append(include_dir1)
+            if include_dir2 != include_dir1:
+                include_dirs.append(include_dir2)
 
-            # library path
-            # Full path to .lib file (e.g., python312.lib)
-            if python_lib is None or not python_lib.startswith("python") or not python_lib.endswith(".lib"):
-                python_lib = f"python{PYTHON_VERSION}.lib"
+            include_paths = ";".join(include_dirs)
 
-            while not python_libdir or not os.path.exists(python_libdir) or not os.path.exists(os.path.join(python_libdir,python_lib)):
-                python_libdir = input( f"Enter include directory containing {python_lib}: " )
-
-            python_library_path = os.path.join(python_libdir, python_lib)
+            # Find library path if not already found
+            if python_library_path is None:
+                while not python_libdir or not os.path.exists(python_libdir) or not os.path.exists(os.path.join(python_libdir,python_lib)):
+                    python_libdir = input( f"Enter include directory containing {python_lib}: " )
+                python_library_path = os.path.join(python_libdir, python_lib)
 
 
             cmake_configure_cmd.extend([
-                f"-DPython3_INCLUDE_DIRS={include_dirs}",
+                f"-DPython3_INCLUDE_DIRS={include_paths}",
                 f"-DPython3_LIBRARY={python_library_path}"
             ])
 

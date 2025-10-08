@@ -30,11 +30,13 @@ set "BUILD_DIR=..\build-pyvgx"
 set "SENTINEL=_tmp-pyvgx-build-dir"
 
 echo Build directory: %BUILD_DIR%
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 REM === Call directory cleaner ===
 call :safe_clear_dir %BUILD_DIR% %SENTINEL%
 if errorlevel 1 exit /b 1
+
+REM === Make sure build dir exists
+if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 REM === Create sentinel ===
 type nul > "%BUILD_DIR%\%SENTINEL%"
@@ -124,13 +126,15 @@ for /f %%i in ('dir /b /a "%dir%" 2^>nul ^| find /c /v ""') do (
 )
 
 if "%is_safe%"=="1" (
-    echo Clearing contents of %dir%
-    del /f /q "%dir%\*.*" >nul 2>&1
-    for /d %%d in ("%dir%\*") do rd /s /q "%%d" >nul 2>&1
-    del /f /q "%dir%\.*" >nul 2>&1
+    echo Deleting directory: %dir%
+    rd /s /q "%dir%"
+    if errorlevel 1 (
+        goto safeclear_fail
+    )
     goto :eof
 )
 
 :safeclear_fail
-echo ERROR: Refusing to clear %dir% — no sentinel or not empty.
+echo. ERROR: Failed to delete directory: %dir%
+echo.        Manual cleanup required
 exit /b 1
