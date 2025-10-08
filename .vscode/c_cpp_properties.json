@@ -4,8 +4,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${env:HOME}/python312/include/python3.12",
-                "${env:HOME}/python3.12/include/python3.12"
+                "${env:HOME}/python312/include/python3.12"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
