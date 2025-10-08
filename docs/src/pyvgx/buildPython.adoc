@@ -17,6 +17,7 @@ curl -O https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
 curl -O https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
 curl -O https://www.python.org/ftp/python/3.12.9/Python-3.12.9.tgz
 curl -O https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
+curl -O https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
 ----
 
 
@@ -30,13 +31,13 @@ curl -O https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
 # Make compatible from 14 and up
 export MACOSX_DEPLOYMENT_TARGET=14.0
 DIR_NAME=$(basename "$PWD")
-PY_MAJOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
+PY_MINOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
 
 # Set up LDFLAGS for rpath — helpful for embedded or relocatable binaries
 export LDFLAGS="-Wl,-rpath,@loader_path"
 
 ./configure \
-    --prefix=$HOME/python3$PY_MAJOR \
+    --prefix=$HOME/python3$PY_MINOR \
     --enable-shared \
     --enable-optimizations \
     --with-openssl=$(brew --prefix openssl)
@@ -45,18 +46,81 @@ make -j$(sysctl -n hw.ncpu)
 
 make install
 
-install_name_tool -id @rpath/libpython3.$PY_MAJOR.dylib \
-    $HOME/python3$PY_MAJOR/lib/libpython3.$PY_MAJOR.dylib
+install_name_tool -id @rpath/libpython3.$PY_MINOR.dylib \
+    $HOME/python3$PY_MINOR/lib/libpython3.$PY_MINOR.dylib
 
 cd ~
 
-python3$PY_MAJOR/bin/python3 -m venv venv3$PY_MAJOR
+python3$PY_MINOR/bin/python3 -m venv venv3$PY_MINOR
 
-. venv3$PY_MAJOR/bin/activate
+. venv3$PY_MINOR/bin/activate
 
 pip install --upgrade pip
 
 pip install --upgrade setuptools build wheel delocate
+
+
+----
+
+=== Linux
+
+[source, bash]
+----
+DIR_NAME=$(basename "$PWD")
+PY_MINOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
+
+OPENSSL_PREFIX=$(pkg-config --variable=prefix openssl)
+
+export LDFLAGS="-L${OPENSSL_PREFIX}/lib"
+export CPPFLAGS="-I$OPENSSL_PREFIX/include"
+
+./configure \
+    --prefix=$HOME/python3$PY_MINOR \
+    --enable-shared \
+    --enable-optimizations \
+    --with-openssl=$OPENSSL_PREFIX
+
+make -j"$(nproc)"
+
+make install
+
+patchelf --set-rpath '$ORIGIN/../lib' $HOME/python3${PY_MINOR}/bin/python3.${PY_MINOR}
+
+
+cd ~
+
+python3$PY_MINOR/bin/python3 -m venv venv3$PY_MINOR
+
+. venv3$PY_MINOR/bin/activate
+
+pip install --upgrade pip
+
+pip install --upgrade setuptools build wheel auditwheel
+
+
+----
+
+
+
+=== Windows
+
+[source, bat]
+----
+
+rem 9, 10, 11, 12, 13, 14
+set PY_MINOR=10
+
+cd PCBuild
+
+build.bat -e
+
+amd64\python -m venv C:%HOMEPATH%\venv3%PY_MINOR%
+
+call C:%HOMEPATH%\venv3%PY_MINOR%\Scripts\activate.bat
+
+python -m pip install --upgrade pip
+
+pip install --upgrade setuptools build wheel
 
 
 ----
