@@ -437,7 +437,7 @@ The dashboard's lower segment shows details for each system instance.
 |Memory critical, instance's physical host memory usage is above 93%
 |`*Readonly*`
 |Instance is in readonly mode
-|`*Init...*`
+|`*Starting*`
 |Instance is initializing after startup
 |`*---*`
 |State unknown due to incomplete status information
