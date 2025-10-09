@@ -297,7 +297,7 @@ Due to the schemaless and dynamic nature of data values encountered during trave
 It is impossible to write an expression that will crash, lock or leave the system in a corrupted state.
 
 ==== Incompatible Objects
-Operations on incompatible objects will generally produce results as if the operations were not performed, which usually means keeping the leftmost operand. For example, `"'a string' + 2.5"` will produce `'a string'` and `"17.5 + 'a string' + 2.5"` will produce `20.0`.
+Operations on incompatible objects will generally produce results as if the operations were not performed, which usually means keeping the leftmost operand. For example, `"5 / 'a string'"` will produce `5` and `"5 / 'a string' + 1"` will produce `6`.
 
 ==== Divide by Zero
 The result of zero division is generally a "very large number". For example, `1/0` evaluates to `8.5e37`. This interpretation of zero division ensures formulas are computable even as divisors approach (and reach) zero. The divisor `-0.0` is an exception in that `1/-0.0` produces `-inf` and `0/-0.0` produces `nan`.
@@ -310,11 +310,11 @@ Other functions, such as the trigonometric functions, will produce `nan` for inv
 ==== Non-existent Vertex Properties
 Lookup of a non-existent property will be processed as if the lookup did not take place. For example, if property _"x"_ does not exist then `1 + vertex['x'] + 2` evaluates to 3 and `5 / vertex['x']` evaluates to 5, even though `isnan( vertex['x'] )` yields `true`.
 
-Following this logic, `cos( vertex['x'] )` is `nan` while both `0 + cos( vertex['x'] )` and `cos( 0 + vertex['x'] )` return 1.
+Following this logic, `cos( vertex['x'] )` is `nan` while both `1 + cos( vertex['x'] )` and `cos( 0 + vertex['x'] )` return 1.
 
 Default values for non-existent properties can be obtained in two ways. The first method is <<_property, function `vertex.property( _"x"_, _default_ )`>> which returns property _"x"_ of current _tail_ (i.e. `vertex['x']`) if it exists, or _default_ if the property does not exist. The second method is <<_firstval, function `firstval()`>>, which is variadic (i.e. any number of arguments) and returns the leftmost argument that is not `nan`. For example, `firstval( vertex['x'], 2.5 )` returns 2.5 if property _"x"_ does not exist and `firstval( next['x'], asin(next['y']), pi/2 )` returns &#928;/2 if the two preceding arguments both produce `nan`.
 
-NOTE: Substitute `next` or `prev` for `vertex` to access properties of the current _head_ or previous _tail_ when traversing arcs. E.g. `next.property( _x_ )` or `prev[ _x_ ]`.
+NOTE: Substitute `next` or `prev` for `vertex` to access properties of the current _head_ or previous _tail_ when traversing arcs. E.g. `next.property( _x_ )` or `prev.property( _x_ )`.
 
 
 ==== Out of Range Subscripts
