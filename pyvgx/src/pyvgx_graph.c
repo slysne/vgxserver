@@ -1252,6 +1252,11 @@ static PyObject * PyVGX_Graph__CloseVertex( PyVGX_Graph *pygraph, PyVGX_Vertex *
     return NULL;
   }
 
+  // Ignore if vertex object was None
+  if( (PyObject*)pyvertex == Py_None ) {
+    Py_RETURN_NONE;
+  }
+
   bool released = false;
 
   if( !PyVGX_Vertex_CheckExact( pyvertex ) ) {
@@ -1810,6 +1815,10 @@ static PyObject * PyVGX_Graph__CloseVertices( PyVGX_Graph *pygraph, PyObject *py
     int64_t vidx = 0;
     for( int64_t i=0; i<sz_list; i++ ) {
       PyVGX_Vertex *py_vertex = (PyVGX_Vertex*)PyList_GET_ITEM( py_vertices, i );
+      // Ignore None objects
+      if( (PyObject*)py_vertex == Py_None ) {
+        continue;
+      }
       if( !py_vertex || !PyVGX_Vertex_CheckExact( py_vertex ) ) {
         PyErr_SetString( PyExc_TypeError, "list item must be vertex object" );
         THROW_SILENT( CXLIB_ERR_API, 0x003 );
