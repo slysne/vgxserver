@@ -142,7 +142,7 @@ vgxdemosystem multi
 
 This will start many server instances (using ~16GB RAM) and open a system dashboard in your web browser:
 
-# <img src="./docs/src/pyvgx/images/ui_system.png" alt="SystemDashboard" width="768"/>
+# <img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/ui_system.png" alt="SystemDashboard" width="768"/>
 
 Allow startup to finish and then try to send a query to the dispatcher running on port 9990:
 
@@ -151,7 +151,7 @@ Allow startup to finish and then try to send a query to the dispatcher running o
 curl -s http://127.0.0.1:9990/vgx/plugin/search?name=7357 | jq
 ```
 
-You can see how the demo is implemented here: [vgxdemoservice.py](pyvgx/src/py/vgxdemoservice.py) and [vgxdemoplugin.py](pyvgx/src/py/vgxdemoplugin.py) 
+You can see how the demo is implemented here: [vgxdemoservice.py](https://github.com/slysne/vgxserver/blob/main/pyvgx/src/py/vgxdemoservice.py) and [vgxdemoplugin.py](https://github.com/slysne/vgxserver/blob/main/pyvgx/src/py/vgxdemoplugin.py) 
 
 
 To stop the system type this in a terminal:
