@@ -306,4 +306,3 @@ setup(
     packages=find_packages(include= [PYVGX, VGXADMIN, VGXINSTANCE, PYVGX_SCRIPTS]),
     package_data=package_data
 )
-

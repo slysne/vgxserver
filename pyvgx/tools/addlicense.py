@@ -490,6 +490,38 @@ def process_functions(filepath, find_naked=False, add_comment=False):
 
 
 
+def process_file_end(filepath):
+    global FILE_COUNT
+    name = os.path.basename(filepath)
+
+    if name in EXCLUDE:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    ext = os.path.splitext(filepath)[1]
+
+    style = EXTENSIONS.get(ext)
+    if not style:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    FILE_COUNT += 1
+
+    has_bom, is_min, lines = read_file_with_bom(filepath)
+
+    if not lines or is_min:
+        print( "Skipping {}".format(filepath) )
+        return
+
+    strip_empty_bottom_lines(lines)
+    text = ''.join(lines)
+    write_file_preserving_bom(filepath, text, has_bom)
+
+    print( "Processed {} - Total processed files:{} Lines".format(filepath, FILE_COUNT) )
+
+
+
+
 
 def main():
     what = "add-file-header"
@@ -512,11 +544,11 @@ def main():
                 process_functions(filepath, find_naked=True)
             elif what == "fix-naked-functions":
                 process_functions(filepath, find_naked=True, add_comment=True)
+            elif what == "ensure-final-newline":
+                process_file_end(filepath)
 
 
 
 
 if __name__ == "__main__":
     main()
-
-
