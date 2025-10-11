@@ -147,8 +147,9 @@ This will start many server instances (using ~16GB RAM) and open a system dashbo
 Allow startup to finish and then try to send a query to the dispatcher running on port 9990:
 
 ```bash
-# Run a test query, returns JSON search result
+# Run test queries, return JSON search result
 curl -s http://127.0.0.1:9990/vgx/plugin/search?name=7357 | jq
+curl -s http://127.0.0.1:9990/vgx/plugin/search?name=index | jq
 ```
 
 You can see how the demo is implemented here: [vgxdemoservice.py](https://github.com/slysne/vgxserver/blob/main/pyvgx/src/py/vgxdemoservice.py) and [vgxdemoplugin.py](https://github.com/slysne/vgxserver/blob/main/pyvgx/src/py/vgxdemoplugin.py) 
