@@ -174,8 +174,8 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="title">Clone vgxserver git repo</div>
 <div class="content">
 <pre class="rouge highlight"><code data-lang="bash">git clone https://github.com/slysne/vgxserver.git
-<span class="nb">cd </span>vgxserver
-git checkout <span class="o">{</span>project-version<span class="o">}</span></code></pre>
+cd vgxserver
+git checkout 3.6</code></pre>
 </div>
 </div>
 </div>
@@ -184,13 +184,13 @@ git checkout <span class="o">{</span>project-version<span class="o">}</span></co
 <div class="listingblock copyable">
 <div class="title">Linux and MacOS</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="bash">./build-unix.sh <span class="nt">--version</span> <span class="o">{</span>project-version<span class="o">}</span> <span class="nt">--type</span> release</code></pre>
+<pre class="rouge highlight"><code data-lang="bash">./build-unix.sh --version 3.6 --type release</code></pre>
 </div>
 </div>
 <div class="listingblock copyable">
 <div class="title">Windows</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="bat"><span class="kd">build</span><span class="na">-win</span><span class="m">64</span>.cmd <span class="o">{</span><span class="kd">project</span><span class="na">-version</span><span class="o">}</span> <span class="kd">release</span></code></pre>
+<pre class="rouge highlight"><code data-lang="bat">build-win64.cmd 3.6 release</code></pre>
 </div>
 </div>
 <div class="paragraph">
