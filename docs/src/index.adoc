@@ -1,4 +1,4 @@
-= VGX/PyVGX v{project-version} <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+= VGX/PyVGX {project-version} <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
 
 :nofooter:
 :docinfo: shared-footer

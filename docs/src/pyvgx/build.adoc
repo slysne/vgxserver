@@ -60,7 +60,7 @@ pip install setuptools build wheel
 
 .Clone vgxserver git repo
 [.copyable]
-[source, bash]
+[source, bash, subs="attributes"]
 ----
 git clone https://github.com/slysne/vgxserver.git
 cd vgxserver
@@ -71,14 +71,14 @@ git checkout {project-version}
 
 .Linux and MacOS
 [.copyable]
-[source, bash]
+[source, bash, subs="attributes"]
 ----
 ./build-unix.sh --version {project-version} --type release
 ----
 
 .Windows
 [.copyable]
-[source, bat]
+[source, bat, subs="attributes"]
 ----
 build-win64.cmd {project-version} release
 ----
