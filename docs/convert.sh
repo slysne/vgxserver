@@ -47,7 +47,6 @@ find "$SRC_DIR_ABS" -type f -name "*.adoc" | while read -r SRC_FILE; do
         -a iconsdir= \
         -a linkcss \
         -a project-version=${VERSION} \
-        -a pyvgx-version=${VERSION} \
         -o "$OUT_PATH" "$SRC_FILE"
 done
 

@@ -6,7 +6,6 @@
 :sectnumlevels: 5
 :imagesdir: images/
 :source-highlighter: highlightjs
-:pyvgx-version: 3.5
 
 include::common/_copyable.adoc[]
 
@@ -145,7 +144,7 @@ Let's make some graphs using the pyvgx API and explain basic terminology.
 First we need to import pyvgx and initialize the system to create our graph.
 
 [.copyable]
-[source, python, subs=+attributes]
+[source, python, subs=attributes]
 ----
 # Import the contents of pyvgx
 from pyvgx import *

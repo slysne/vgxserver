@@ -1,17 +1,45 @@
 [[buildpython]]
 = PyVGX {project-version} Build Instructions <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
 :nofooter:
 :docinfo: shared-footer
 :imagesdir: images/
 :linkattrs:
+:xrefstyle: full
 :source-highlighter: highlightjs
 
 include::common/_copyable.adoc[]
 
+Below are general instructions for how to build Python from source and prepare virtual environments for building and running pyvgx.
+
+== Overview
+
+[source, bash]
+----
+# 1. Get Python source
+# Make directory and download source
+# <version> example: 3.12.9
+mkdir pythonsrc
+cd pythonsrc
+curl -O https://www.python.org/ftp/python/<version>/Python-<version>.tgz
+# Extract
+tar xzf Python-<version>.tgz
+cd Python-<version>
+
+# 2. Build Python and prepare virtual environments
+# (see OS-specific instructions below)
+----
+
 
 == Python Source
 
+.Python 3.9 - 3.14 tarball download
+[source, bash]
 ----
+# (Update links and new versions are released)
 curl -O https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz
 curl -O https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
 curl -O https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
@@ -21,113 +49,186 @@ curl -O https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
 ----
 
 
-== Build
+== Build Python (MacOS, Linux, Windows) 
 
+To build Python and prepare virtual environment:
+
+. Set required environment variables
+. Execute build
+** MacOS / Linux
+*** Run `configure` script to generate Makefile
+*** Run `make` and `make install`
+*** Patch output binaries to correct linker path
+** Windows
+*** Run `build.bat`
+. Generate and active virtual environment
+. Install required Python packages
 
 === MacOS
 
+Make sure your environment is ready to build C code. 
+
+.Ensure MacOS C development environment is ready
 [source, bash]
 ----
-# Make compatible from 14 and up
+# Install Homebrew (if not installed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install Command Line Tools
+xcode-select --install
+
+# Install Latest LLVM/Clang
+brew install llvm
+
+# Use Homebrew's Clang
+echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> ~/.zshrc
+echo 'export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"' >> ~/.zshrc
+echo 'export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"' >> ~/.zshrc
+source ~/.zshrc
+----
+
+Now you can build Python on MacOS:
+
+.Build Python on MacOS and prepare for use
+[source, bash]
+----
+# 1. Make compatible from 14 and up
 export MACOSX_DEPLOYMENT_TARGET=14.0
+
+# 2. Extract Python version to match downloaded source code
 DIR_NAME=$(basename "$PWD")
 PY_MINOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
 
-# Set up LDFLAGS for rpath — helpful for embedded or relocatable binaries
+# 3. Set up LDFLAGS for rpath — helpful for embedded or relocatable binaries
 export LDFLAGS="-Wl,-rpath,@loader_path"
 
+# 4. Generate Makefile
+# Python will be installed in your home directory (change --prefix if needed)
 ./configure \
     --prefix=$HOME/python3$PY_MINOR \
     --enable-shared \
     --enable-optimizations \
     --with-openssl=$(brew --prefix openssl)
 
+# 5. Build and install
 make -j$(sysctl -n hw.ncpu)
-
 make install
 
+# 6. Fix the linker path
 install_name_tool -id @rpath/libpython3.$PY_MINOR.dylib \
     $HOME/python3$PY_MINOR/lib/libpython3.$PY_MINOR.dylib
 
+# 7. Generate virtual environment in home directory
 cd ~
-
 python3$PY_MINOR/bin/python3 -m venv venv3$PY_MINOR
 
+# 8. Activate virtual environment and install required Python packages
 . venv3$PY_MINOR/bin/activate
-
 pip install --upgrade pip
-
 pip install --upgrade setuptools build wheel delocate
-
-
 ----
 
 === Linux
 
+Make sure your environment is ready to build C code. 
+
+.Ensure Linux C development environment is ready
 [source, bash]
 ----
+# Debian/Ubuntu
+sudo apt update
+sudo apt install -y build-essential clang lld patchelf
+# -- OR --
+# Fedora/RHEL
+sudo dnf groupinstall "Development Tools"
+sudo dnf install -y clang lld patchelf
+----
+
+Now you can build Python on Linux:
+
+.Build Python on Linux and prepare for use
+[source, bash]
+----
+# 1. Extract Python version to match downloaded source code
 DIR_NAME=$(basename "$PWD")
 PY_MINOR=$(echo "$DIR_NAME" | sed -E 's/^Python-[0-9]+\.([0-9]+)\..*/\1/')
 
+# 2. Prepare OpenSSL
 OPENSSL_PREFIX=$(pkg-config --variable=prefix openssl)
-
 export LDFLAGS="-L${OPENSSL_PREFIX}/lib"
 export CPPFLAGS="-I$OPENSSL_PREFIX/include"
 
+# 3. Generate Makefile
+# Python will be installed in your home directory (change --prefix if needed)
 ./configure \
     --prefix=$HOME/python3$PY_MINOR \
     --enable-shared \
     --enable-optimizations \
     --with-openssl=$OPENSSL_PREFIX
 
+# 4. Build and install
 make -j"$(nproc)"
-
 make install
 
+# 5. Fix the linker path
 patchelf --set-rpath '$ORIGIN/../lib' $HOME/python3${PY_MINOR}/bin/python3.${PY_MINOR}
 
-
+# 6. Generate virtual environment in home directory
 cd ~
-
 python3$PY_MINOR/bin/python3 -m venv venv3$PY_MINOR
 
+# 7. Activate virtual environment and install required Python packages
 . venv3$PY_MINOR/bin/activate
-
 pip install --upgrade pip
-
 pip install --upgrade setuptools build wheel auditwheel
 
-
 ----
-
 
 
 === Windows
 
+Make sure your environment is ready to build C code. 
+
+. Install Visual Studio (Community Edition is free) +
+https://visualstudio.microsoft.com
+. During install, select: +
+Desktop development with C++
+
+Now you can build Python on Windows:
+
+.Build Python on Windows and prepare for use
 [source, bat]
 ----
-
+rem --- 1 ---
+rem Manually set PY_MINOR to one of the following:
 rem 9, 10, 11, 12, 13, 14
+rem Make sure the version matches the source code you're building
+rem e.g. for Python-3.10.11:
 set PY_MINOR=10
 
+rem --- 2 ---
+rem Python source contains a special sub directory for Windows builds
 cd PCBuild
 
+rem --- 3 ---
+rem Execute build
 build.bat -e
 
+rem --- 4 ---
+rem Generate virtual environment in home directory
 amd64\python -m venv C:%HOMEPATH%\venv3%PY_MINOR%
 
+rem --- 5 ---
+rem Activate virtual environment and install required Python packages
 call C:%HOMEPATH%\venv3%PY_MINOR%\Scripts\activate.bat
-
 python -m pip install --upgrade pip
-
 pip install --upgrade setuptools build wheel
-
-
 ----
 
 
+== Build PyVGX
 
-
+Now you are ready to <<build.adoc#build_pyvgx, build pyvgx>>.
 
 ___
 
