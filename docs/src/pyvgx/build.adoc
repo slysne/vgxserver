@@ -1,9 +1,14 @@
 [[pyvgxbuild]]
 = PyVGX {project-version} Build Instructions <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
 :nofooter:
 :docinfo: shared-footer
 :imagesdir: images/
 :linkattrs:
+:xrefstyle: full
 :source-highlighter: highlightjs
 
 include::common/_copyable.adoc[]
@@ -13,9 +18,11 @@ include::common/_copyable.adoc[]
 
 * Python 3.9+
 * C compiler:
-    - On Windows: MSVC (Visual Studio 2022 or later)
     - On macOS: Xcode command line tools
     - On Linux: `gcc` and `build-essential`
+    - On Windows: MSVC (Visual Studio 2022 or later)
+
+You can first <<buildPython.adoc#, build Python from source>> if you want.
 
 
 == Prepare
@@ -46,16 +53,21 @@ call vgxenv\Scripts\activate.bat
 pip install setuptools build wheel
 ----
 
-=== Source Code
+[[build_pyvgx]]
+== Build PyVGX
 
+=== Get source code and check out target branch
+
+.Clone vgxserver git repo
 [.copyable]
 [source, bash]
 ----
 git clone https://github.com/slysne/vgxserver.git
 cd vgxserver
+git checkout {project-version}
 ----
 
-== Build
+=== Build 
 
 .Linux and MacOS
 [.copyable]
@@ -72,6 +84,7 @@ build-win64.cmd {project-version} release
 ----
 
 This will build and install the pyvgx package. (You can find the build output wheel in `vgxserver/../build-pyvgx/dist`.)
+
 
 == Test
 
