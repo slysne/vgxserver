@@ -64,7 +64,7 @@ pip install setuptools build wheel
 ----
 git clone https://github.com/slysne/vgxserver.git
 cd vgxserver
-git checkout {project-version}
+git checkout v{project-version}
 ----
 
 === Build 
