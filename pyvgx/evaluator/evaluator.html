@@ -710,7 +710,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect3">
 <h4 id="_incompatible_objects">2.1.1. Incompatible Objects</h4>
 <div class="paragraph">
-<p>Operations on incompatible objects will generally produce results as if the operations were not performed, which usually means keeping the leftmost operand. For example, <code>"'a string' + 2.5"</code> will produce <code>'a string'</code> and <code>"17.5 + 'a string' + 2.5"</code> will produce <code>20.0</code>.</p>
+<p>Operations on incompatible objects will generally produce results as if the operations were not performed, which usually means keeping the leftmost operand. For example, <code>"5 / 'a string'"</code> will produce <code>5</code> and <code>"5 / 'a string' + 1"</code> will produce <code>6</code>.</p>
 </div>
 </div>
 <div class="sect3">
@@ -734,7 +734,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <p>Lookup of a non-existent property will be processed as if the lookup did not take place. For example, if property <em>"x"</em> does not exist then <code>1 + vertex['x'] + 2</code> evaluates to 3 and <code>5 / vertex['x']</code> evaluates to 5, even though <code>isnan( vertex['x'] )</code> yields <code>true</code>.</p>
 </div>
 <div class="paragraph">
-<p>Following this logic, <code>cos( vertex['x'] )</code> is <code>nan</code> while both <code>0 + cos( vertex['x'] )</code> and <code>cos( 0 + vertex['x'] )</code> return 1.</p>
+<p>Following this logic, <code>cos( vertex['x'] )</code> is <code>nan</code> while both <code>1 + cos( vertex['x'] )</code> and <code>cos( 0 + vertex['x'] )</code> return 1.</p>
 </div>
 <div class="paragraph">
 <p>Default values for non-existent properties can be obtained in two ways. The first method is <a href="#_property">function <code>vertex.property( <em>"x"</em>, <em>default</em> )</code></a> which returns property <em>"x"</em> of current <em>tail</em> (i.e. <code>vertex['x']</code>) if it exists, or <em>default</em> if the property does not exist. The second method is <a href="#_firstval">function <code>firstval()</code></a>, which is variadic (i.e. any number of arguments) and returns the leftmost argument that is not <code>nan</code>. For example, <code>firstval( vertex['x'], 2.5 )</code> returns 2.5 if property <em>"x"</em> does not exist and <code>firstval( next['x'], asin(next['y']), pi/2 )</code> returns &#928;/2 if the two preceding arguments both produce <code>nan</code>.</p>
@@ -746,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Substitute <code>next</code> or <code>prev</code> for <code>vertex</code> to access properties of the current <em>head</em> or previous <em>tail</em> when traversing arcs. E.g. <code>next.property( <em>x</em> )</code> or <code>prev[ <em>x</em> ]</code>.
+Substitute <code>next</code> or <code>prev</code> for <code>vertex</code> to access properties of the current <em>head</em> or previous <em>tail</em> when traversing arcs. E.g. <code>next.property( <em>x</em> )</code> or <code>prev.property( <em>x</em> )</code>.
 </td>
 </tr>
 </table>
@@ -8984,7 +8984,7 @@ When collecting search results using evaluator expressions it is often desirable
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-05 20:18:34 -0400
+Last updated 2025-10-10 09:30:03 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

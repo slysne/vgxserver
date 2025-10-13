@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>PyVGX 3.6 Build Instructions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="buildpython" class="article toc2 toc-left">
+<div id="header">
+<h1>PyVGX 3.6 Build Instructions <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_overview">1. Overview</a></li>
+<li><a href="#_python_source">2. Python Source</a></li>
+<li><a href="#_build_python_macos_linux_windows">3. Build Python (MacOS, Linux, Windows)</a>
+<ul class="sectlevel2">
+<li><a href="#_macos">3.1. MacOS</a></li>
+<li><a href="#_linux">3.2. Linux</a></li>
+<li><a href="#_windows">3.3. Windows</a></li>
+</ul>
+</li>
+<li><a href="#_build_pyvgx">4. Build PyVGX</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied!';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="paragraph">
+<p>Below are general instructions for how to build Python from source and prepare virtual environments for building and running pyvgx.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_overview">1. Overview</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># 1. Get Python source</span>
+<span class="c"># Make directory and download source</span>
+<span class="c"># &lt;version&gt; example: 3.12.9</span>
+<span class="nb">mkdir </span>pythonsrc
+<span class="nb">cd </span>pythonsrc
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/&lt;version&gt;/Python-&lt;version&gt;.tgz
+<span class="c"># Extract</span>
+<span class="nb">tar </span>xzf Python-&lt;version&gt;.tgz
+<span class="nb">cd </span>Python-&lt;version&gt;
+
+<span class="c"># 2. Build Python and prepare virtual environments</span>
+<span class="c"># (see OS-specific instructions below)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_python_source">2. Python Source</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="title">Python 3.9 - 3.14 tarball download</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># (Update links and new versions are released)</span>
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.9.13/Python-3.9.13.tgz
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.10.11/Python-3.10.11.tgz
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.12.9/Python-3.12.9.tgz
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz
+curl <span class="nt">-O</span> https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build_python_macos_linux_windows">3. Build Python (MacOS, Linux, Windows)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To build Python and prepare virtual environment:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Set required environment variables</p>
+</li>
+<li>
+<p>Execute build</p>
+<div class="ulist">
+<ul>
+<li>
+<p>MacOS / Linux</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Run <code>configure</code> script to generate Makefile</p>
+</li>
+<li>
+<p>Run <code>make</code> and <code>make install</code></p>
+</li>
+<li>
+<p>Patch output binaries to correct linker path</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Windows</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Run <code>build.bat</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Generate and active virtual environment</p>
+</li>
+<li>
+<p>Install required Python packages</p>
+</li>
+</ol>
+</div>
+<div class="sect2">
+<h3 id="_macos">3.1. MacOS</h3>
+<div class="paragraph">
+<p>Make sure your environment is ready to build C code.</p>
+</div>
+<div class="listingblock">
+<div class="title">Ensure MacOS C development environment is ready</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># Install Homebrew (if not installed)</span>
+/bin/bash <span class="nt">-c</span> <span class="s2">"</span><span class="si">$(</span>curl <span class="nt">-fsSL</span> https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh<span class="si">)</span><span class="s2">"</span>
+
+<span class="c"># Install Command Line Tools</span>
+xcode-select <span class="nt">--install</span>
+
+<span class="c"># Install Latest LLVM/Clang</span>
+brew <span class="nb">install </span>llvm
+
+<span class="c"># Use Homebrew's Clang</span>
+<span class="nb">echo</span> <span class="s1">'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"'</span> <span class="o">&gt;&gt;</span> ~/.zshrc
+<span class="nb">echo</span> <span class="s1">'export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"'</span> <span class="o">&gt;&gt;</span> ~/.zshrc
+<span class="nb">echo</span> <span class="s1">'export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"'</span> <span class="o">&gt;&gt;</span> ~/.zshrc
+<span class="nb">source</span> ~/.zshrc</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can build Python on MacOS:</p>
+</div>
+<div class="listingblock">
+<div class="title">Build Python on MacOS and prepare for use</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># 1. Make compatible from 14 and up</span>
+<span class="nb">export </span><span class="nv">MACOSX_DEPLOYMENT_TARGET</span><span class="o">=</span>14.0
+
+<span class="c"># 2. Extract Python version to match downloaded source code</span>
+<span class="nv">DIR_NAME</span><span class="o">=</span><span class="si">$(</span><span class="nb">basename</span> <span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span><span class="si">)</span>
+<span class="nv">PY_MINOR</span><span class="o">=</span><span class="si">$(</span><span class="nb">echo</span> <span class="s2">"</span><span class="nv">$DIR_NAME</span><span class="s2">"</span> | <span class="nb">sed</span> <span class="nt">-E</span> <span class="s1">'s/^Python-[0-9]+\.([0-9]+)\..*/\1/'</span><span class="si">)</span>
+
+<span class="c"># 3. Set up LDFLAGS for rpath — helpful for embedded or relocatable binaries</span>
+<span class="nb">export </span><span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">"-Wl,-rpath,@loader_path"</span>
+
+<span class="c"># 4. Generate Makefile</span>
+<span class="c"># Python will be installed in your home directory (change --prefix if needed)</span>
+./configure <span class="se">\</span>
+    <span class="nt">--prefix</span><span class="o">=</span><span class="nv">$HOME</span>/python3<span class="nv">$PY_MINOR</span> <span class="se">\</span>
+    <span class="nt">--enable-shared</span> <span class="se">\</span>
+    <span class="nt">--enable-optimizations</span> <span class="se">\</span>
+    <span class="nt">--with-openssl</span><span class="o">=</span><span class="si">$(</span>brew <span class="nt">--prefix</span> openssl<span class="si">)</span>
+
+<span class="c"># 5. Build and install</span>
+make <span class="nt">-j</span><span class="si">$(</span>sysctl <span class="nt">-n</span> hw.ncpu<span class="si">)</span>
+make <span class="nb">install</span>
+
+<span class="c"># 6. Fix the linker path</span>
+install_name_tool <span class="nt">-id</span> @rpath/libpython3.<span class="nv">$PY_MINOR</span>.dylib <span class="se">\</span>
+    <span class="nv">$HOME</span>/python3<span class="nv">$PY_MINOR</span>/lib/libpython3.<span class="nv">$PY_MINOR</span>.dylib
+
+<span class="c"># 7. Generate virtual environment in home directory</span>
+<span class="nb">cd</span> ~
+python3<span class="nv">$PY_MINOR</span>/bin/python3 <span class="nt">-m</span> venv venv3<span class="nv">$PY_MINOR</span>
+
+<span class="c"># 8. Activate virtual environment and install required Python packages</span>
+<span class="nb">.</span> venv3<span class="nv">$PY_MINOR</span>/bin/activate
+pip <span class="nb">install</span> <span class="nt">--upgrade</span> pip
+pip <span class="nb">install</span> <span class="nt">--upgrade</span> setuptools build wheel delocate</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_linux">3.2. Linux</h3>
+<div class="paragraph">
+<p>Make sure your environment is ready to build C code.</p>
+</div>
+<div class="listingblock">
+<div class="title">Ensure Linux C development environment is ready</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># Debian/Ubuntu</span>
+<span class="nb">sudo </span>apt update
+<span class="nb">sudo </span>apt <span class="nb">install</span> <span class="nt">-y</span> build-essential clang lld patchelf
+<span class="c"># -- OR --</span>
+<span class="c"># Fedora/RHEL</span>
+<span class="nb">sudo </span>dnf groupinstall <span class="s2">"Development Tools"</span>
+<span class="nb">sudo </span>dnf <span class="nb">install</span> <span class="nt">-y</span> clang lld patchelf</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can build Python on Linux:</p>
+</div>
+<div class="listingblock">
+<div class="title">Build Python on Linux and prepare for use</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash"><span class="c"># 1. Extract Python version to match downloaded source code</span>
+<span class="nv">DIR_NAME</span><span class="o">=</span><span class="si">$(</span><span class="nb">basename</span> <span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span><span class="si">)</span>
+<span class="nv">PY_MINOR</span><span class="o">=</span><span class="si">$(</span><span class="nb">echo</span> <span class="s2">"</span><span class="nv">$DIR_NAME</span><span class="s2">"</span> | <span class="nb">sed</span> <span class="nt">-E</span> <span class="s1">'s/^Python-[0-9]+\.([0-9]+)\..*/\1/'</span><span class="si">)</span>
+
+<span class="c"># 2. Prepare OpenSSL</span>
+<span class="nv">OPENSSL_PREFIX</span><span class="o">=</span><span class="si">$(</span>pkg-config <span class="nt">--variable</span><span class="o">=</span>prefix openssl<span class="si">)</span>
+<span class="nb">export </span><span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">"-L</span><span class="k">${</span><span class="nv">OPENSSL_PREFIX</span><span class="k">}</span><span class="s2">/lib"</span>
+<span class="nb">export </span><span class="nv">CPPFLAGS</span><span class="o">=</span><span class="s2">"-I</span><span class="nv">$OPENSSL_PREFIX</span><span class="s2">/include"</span>
+
+<span class="c"># 3. Generate Makefile</span>
+<span class="c"># Python will be installed in your home directory (change --prefix if needed)</span>
+./configure <span class="se">\</span>
+    <span class="nt">--prefix</span><span class="o">=</span><span class="nv">$HOME</span>/python3<span class="nv">$PY_MINOR</span> <span class="se">\</span>
+    <span class="nt">--enable-shared</span> <span class="se">\</span>
+    <span class="nt">--enable-optimizations</span> <span class="se">\</span>
+    <span class="nt">--with-openssl</span><span class="o">=</span><span class="nv">$OPENSSL_PREFIX</span>
+
+<span class="c"># 4. Build and install</span>
+make <span class="nt">-j</span><span class="s2">"</span><span class="si">$(</span><span class="nb">nproc</span><span class="si">)</span><span class="s2">"</span>
+make <span class="nb">install</span>
+
+<span class="c"># 5. Fix the linker path</span>
+patchelf <span class="nt">--set-rpath</span> <span class="s1">'$ORIGIN/../lib'</span> <span class="nv">$HOME</span>/python3<span class="k">${</span><span class="nv">PY_MINOR</span><span class="k">}</span>/bin/python3.<span class="k">${</span><span class="nv">PY_MINOR</span><span class="k">}</span>
+
+<span class="c"># 6. Generate virtual environment in home directory</span>
+<span class="nb">cd</span> ~
+python3<span class="nv">$PY_MINOR</span>/bin/python3 <span class="nt">-m</span> venv venv3<span class="nv">$PY_MINOR</span>
+
+<span class="c"># 7. Activate virtual environment and install required Python packages</span>
+<span class="nb">.</span> venv3<span class="nv">$PY_MINOR</span>/bin/activate
+pip <span class="nb">install</span> <span class="nt">--upgrade</span> pip
+pip <span class="nb">install</span> <span class="nt">--upgrade</span> setuptools build wheel auditwheel</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_windows">3.3. Windows</h3>
+<div class="paragraph">
+<p>Make sure your environment is ready to build C code.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Install Visual Studio (Community Edition is free)<br>
+<a href="https://visualstudio.microsoft.com" class="bare">https://visualstudio.microsoft.com</a></p>
+</li>
+<li>
+<p>During install, select:<br>
+Desktop development with C++</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Now you can build Python on Windows:</p>
+</div>
+<div class="listingblock">
+<div class="title">Build Python on Windows and prepare for use</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bat"><span class="c">rem --- 1 ---</span>
+<span class="c">rem Manually set PY_MINOR to one of the following:</span>
+<span class="c">rem 9, 10, 11, 12, 13, 14</span>
+<span class="c">rem Make sure the version matches the source code you're building</span>
+<span class="c">rem e.g. for Python-3.10.11:</span>
+<span class="kd">set</span> <span class="kd">PY_MINOR</span><span class="o">=</span><span class="m">10</span>
+
+<span class="c">rem --- 2 ---</span>
+<span class="c">rem Python source contains a special sub directory for Windows builds</span>
+<span class="nb">cd</span> <span class="kd">PCBuild</span>
+
+<span class="c">rem --- 3 ---</span>
+<span class="c">rem Execute build</span>
+<span class="kd">build</span>.bat <span class="na">-e
+
+</span><span class="c">rem --- 4 ---</span>
+<span class="c">rem Generate virtual environment in home directory</span>
+<span class="kd">amd64</span>\python <span class="na">-m </span><span class="kd">venv</span> <span class="kd">C</span>:<span class="nv">%HOMEPATH%</span>\venv3<span class="nv">%PY_MINOR%</span>
+
+<span class="c">rem --- 5 ---</span>
+<span class="c">rem Activate virtual environment and install required Python packages</span>
+<span class="k">call</span> <span class="kd">C</span>:<span class="nv">%HOMEPATH%</span>\venv3<span class="nv">%PY_MINOR%</span>\Scripts\activate.bat
+<span class="kd">python</span> <span class="na">-m </span><span class="kd">pip</span> <span class="kd">install</span> <span class="na">--upgrade </span><span class="kd">pip</span>
+<span class="kd">pip</span> <span class="kd">install</span> <span class="na">--upgrade </span><span class="kd">setuptools</span> <span class="kd">build</span> <span class="kd">wheel</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_build_pyvgx">4. Build PyVGX</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now you are ready to <a href="build.html#build_pyvgx">build pyvgx</a>.</p>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="index.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="180" height="180"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
