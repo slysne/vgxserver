@@ -1,0 +1,333 @@
+[[pyvgxtutorial]]
+= PyVGX {project-version} Overview <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+image::pyvgx.png[PYVGX,220,220,align="left"]
+
+
+[[introduction]]
+== Introduction
+*VGX* is a versatile, plugin-based platform designed for building scalable graph processing services using the *PyVGX* Python module. Implemented primarily in C with Python for service bootstrapping and plugin execution, it exposes HTTP endpoints for graph data management and querying.
+
+
+[.text-center]
+image::vgxserver.png[vgxserver, title="VGX Server Components", width=600]
+
+[[components_overview]]
+=== Components
+
+At its core, the architecture is divided into four interconnected components: 1) _Socket Server_, 2) _Plugin Adapter_, 3) _Graph Engine_, and 4) _Transaction Interconnect_. These elements form a modular foundation that handles incoming requests, custom logic execution, data storage and retrieval, and inter-instance communication, enabling efficient graph operations in both single-node and distributed environments.
+
+[[socket_server]]
+==== Socket Server
+
+The Socket Server serves as the primary entry point, functioning as an asynchronous, multithreaded HTTP/1.1 listener that parses incoming requests and dispatches them for execution. It operates in flexible modes—such as Engine mode for direct processing, Dispatch mode for forwarding to backend instances in configurable matrices (e.g., M replicas by N partitions), or Reverse Proxy mode for simple relaying—supporting scalability through load-balanced query distribution and aggregation of responses across nodes.
+
+[[plugin_adapter]]
+==== Plugin Adapter
+
+Bridging the C-based core with Python extensibility, the Plugin Adapter enables the registration and invocation of custom Python functions as plugins tied to unique HTTP URIs. It handles parameter parsing, type conversion, and execution in dedicated threads, allowing real-time request processing, pre- and post-dispatch modifications, and integration with built-in services for tasks like graph queries or system monitoring.
+
+[[graph_engine]]
+==== Graph Engine
+
+The Graph Engine manages the underlying graph data structures, providing robust storage, querying (e.g., neighborhood searches, arc evaluations), and modification operations (e.g., vertex creation or deletion). Its low level impementation ensures efficient processing and memory usage.
+
+[[transaction_interconnect]]
+==== Transaction Interconnect
+
+Facilitating seamless data exchange between VGX instances, the Transaction Interconnect handles replication and synchronization using provider-subscriber patterns over dedicated channels. It ensures data durability by directing modifications to primary replicas and supports monitoring of peer connections, enabling reliable propagation of graph updates in multi-node topologies.
+
+
+[[workflow]]
+=== Workflow
+
+Together, these components orchestrate a cohesive workflow: an HTTP request arrives at the Socket Server, which invokes the Plugin Adapter to execute custom Python logic; this logic interacts with the Graph Engine for graph operations, while the Transaction Interconnect ensures any necessary data replication to other instances. This tight integration allows a single VGX Server instance to function as a self-sufficient graph service, processing queries and updates with low latency.
+
+[[scalability]]
+=== Scalability
+
+For scalability, multiple VGX Server instances can be deployed in coordinated topologies, such as rectangular dispatch matrices, hierarchical cascades, or ring configurations, where data is distributed across partitions (sharded by graph elements) and replicated across designated primaries for fault tolerance. Front-end instances act as dispatchers, intelligently routing queries to one replica per partition based on priority and load, then merging partial responses into unified results—ideal for building search systems that aggregate insights from terabyte-scale graphs without single points of failure. This design supports horizontal scaling, incomplete response tolerance for high availability, and built-in monitoring to query metrics across the entire cluster.
+
+
+[[component_examples]]
+== Component Examples
+
+To get a feel for each of the main components, here are brief examples using the pyvgx API.
+
+If you have not yet installed pyvgx, you can do it like this:
+
+.Install latest version of pyvgx
+[.copyable]
+[source, bash]
+----
+pip install pyvgx
+----
+
+Each of the examples below can be executed after importing and initializing the system. You have to run the examples in the order presented since each example depends on the previous.
+
+First import and initialize the pyvgx module:
+
+.Import and initialize pyvgx
+[.copyable]
+[source, python]
+----
+from pyvgx import *
+system.Initialize( "examples" )
+----
+
+[[socket_server_basic_example]]
+=== Socket Server Example
+
+Start the HTTP server on port 9000 (main) and 9001 (admin). The admin port (main+1) is intended for UI access and other administrative task, while the main port is intended for plugin requests.
+
+.Start HTTP Server
+[.copyable]
+[source, python]
+----
+# Main server on port 9000, admin server on port 9001
+system.StartHTTP( 9000 )
+----
+
+Once the server is running you can open the system dashboard (http://127.0.0.1:9001/system) or call one of the builtin services (http://127.0.0.1:9000/vgx/builtin/createvertex?graph=system&id=A).
+
+
+[[plugin_adapter_basic_example]]
+=== Plugin Adapter Example
+
+Register a new plugin function. The Python function's parameters are automatically mapped to HTTP parameters.
+
+.Register a plugin
+[.copyable]
+[source, python]
+----
+def hello( request: PluginRequest, message: str ):
+    return f"Hi, you said '{message}'"
+
+system.AddPlugin( hello )
+----
+
+Once added, the plugin can be executed via HTTP:
+
+.Send a plugin request
+[.copyable]
+[source]
+----
+http://127.0.0.1:9000/vgx/plugin/hello?message=good+morning!
+----
+
+.Plugin response
+[source, json]
+----
+{"status": "OK", "response": "Hi, you said 'good morning!'", "level": 0, "partitions": null, "exec_ms": 0.056}
+----
+
+[[graph_engine_basic_example]]
+=== Graph Engine Example
+
+Write a function to populate a small graph with randomly connected vertices.
+
+.Build a small sample graph
+[.copyable]
+[source, python]
+----
+import random
+
+graph = Graph("sample_graph")
+
+def make_sample_graph( g, n_nodes=1000, n_arcs_per_node=10 ):
+    # Make vertices
+    for i in range( n_nodes ):
+        g.CreateVertex( f"node_{i}" )
+    # Connect random pairs
+    for i in range( n_nodes * n_arcs_per_node ):
+        a = f"node_{random.randint(1,n_nodes)}"
+        b = f"node_{random.randint(1,n_nodes)}"
+        v = random.random()
+        g.Connect( a, ("connected", M_FLT, v), b )
+
+make_sample_graph( graph )
+----
+
+Now you can run a test query against this graph to see the result.
+
+.Run a test query
+[.copyable]
+[source, python]
+----
+from pprint import pprint
+
+def run_test_query( g, anchor ):
+    return g.Neighborhood(
+        id = anchor,
+        arc = ("connected", D_OUT),
+        sortby = S_VAL,
+        fields = F_AARC
+    )
+
+pprint( run_test_query( graph, "node_123" ) )
+----
+
+The result may look something like this:
+
+.Query result
+[.copyable]
+[source, json]
+----
+['( node_123 )-[ connected <M_FLT> 0.810433 ]->( node_624 )',
+ '( node_123 )-[ connected <M_FLT> 0.650899 ]->( node_913 )',
+ '( node_123 )-[ connected <M_FLT> 0.650647 ]->( node_390 )',
+ '( node_123 )-[ connected <M_FLT> 0.213485 ]->( node_825 )',
+ '( node_123 )-[ connected <M_FLT> 0.0948384 ]->( node_109 )',
+ '( node_123 )-[ connected <M_FLT> 0.0860874 ]->( node_251 )']
+----
+
+[[transaction_interconnect_basic_example]]
+=== Transaction Interconnect Example
+
+At least two VGX instances are required to demonstrate transaction interconnect. Let's start a second instance first, then connect the first instance to the second instance.
+
+.Second VGX instance, prepared to be the subscriber
+[.copyable]
+[source, python]
+----
+############################
+## 2nd INSTANCE (subscriber)
+############################
+from pyvgx import *
+system.Initialize("subscriber_instance")
+# Second instance HTTP interface on main port 9010, admin port 9011
+system.StartHTTP(9010)
+# Prepare to become a subscriber
+op.Bind(10010)
+----
+
+.First VGX instance is the provider
+[.copyable]
+[source, python]
+----
+##########################
+## 1st INSTANCE (provider)
+##########################
+# First instance now becomes the provider 
+# and second instance becomes the subscriber
+op.Attach( "vgx://127.0.0.1:10010" )
+# Mirror existing graph over to subscriber
+graph.Sync()
+# Further local operations are automatically mirrored to subscriber
+graph.CreateVertex( "another_node" )
+# Print local graph summary for reference
+print(graph)
+# -> <PyVGX_Graph: name=sample_graph order=1002 size=9955>
+----
+
+.Check graph in second VGX instance 
+[.copyable]
+[source, python]
+----
+############################
+## 2nd INSTANCE (subscriber)
+############################
+# Print subscriber graph summary and compare with provider
+graph = Graph("sample_graph")
+print(graph)
+# -> <PyVGX_Graph: name=sample_graph order=1002 size=9955>
+----
+
+
+[[]]
+== Bigger Example
+
+
+.Make a graph with sample data
+[.copyable]
+[source, python]
+----
+graph = Graph("sample_graph")
+
+def populate( g, n_nodes=10000, n_arcs_per_node=10 ):
+    # Create a root vertex
+    g.CreateVertex( "root" )
+    # Create vertices and hook up root node
+    for i in range( n_nodes ):
+        a = f"node_{i}"                     # Vertex name
+        A = g.NewVertex( a, type="node" )   # Create the vertex
+        A.SetVector( g.sim.rvec(128) )      # Assign a random vector for testing
+        g.Connect( "root", "to", A )        # Root connects to vertex
+        A.Close()                           # Close vertex
+    # Randomly connect vertices
+    for i in range( n_nodes * n_arcs_per_node ):
+        a = f"node_{random.randint(1, n_nodes)}"
+        b = f"node_{random.randint(1, n_nodes)}"
+        v = random.random()
+        g.Connect( a, ("connected", M_FLT, v), b )
+
+populate( graph )
+----
+
+.Query 
+[.copyable]
+[source, python]
+----
+def search_1( g, anchor ):
+    return g.Neighborhood(
+        id = anchor,
+        arc = ("connected", D_OUT),
+        hits = 5,
+        sortby = S_VAL,
+        fields = F_AARC
+    )
+
+def search_2( g, vector=None ):
+    if vector is None:
+        vector = g.sim.rvec(128)
+    return g.Neighborhood(
+        id = "root",
+        arc = ("to",D_OUT),
+        hits = 25,
+        collect = False,
+        neighbor = {
+            'similarity': {
+                'vector':vector
+            },
+            'filter': 'store(R1,cosine(vector,vertex.vector))',
+            'traverse': {
+                'arc': ('connected',D_OUT),
+                'collect': C_SCAN,
+                'filter': 'collect( prox(next.arc.value, load(R1)) )'
+            }
+        },
+        sortby=S_VAL,
+        select="FIRST: prev.id; SECOND: next.id; SCORE: next.arc.value"
+    )
+
+
+----
+
+
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<VGXCoreConcepts.adoc#, icon:arrow-circle-left[size=2x, title="VGX Core Concepts"]>>
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<shortref.adoc#, icon:arrow-circle-right[size=2x, title="Compact pyvgx Reference"]>>
+// cspell:ignore backtotop
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
