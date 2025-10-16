@@ -375,6 +375,13 @@ This language exists to bridge the gap between high-level query customization an
 Unlike Python, it is compiled and executed natively in the VGX C-based core, bypassing the Python GIL for parallel performance, yet it retains Python-like syntax for accessibility; compared to C, it abstracts low-level memory management while offering memory array manipulation for advanced use cases, such as histograms or cycle detection; and it shares similarities with assembly through low-level operations like inc, dec, mov, and bitwise functions that mimic register and memory instructions for fine-grained control.
 
 
+[[architecture]]
+== Architecture
+
+[.text-center]
+image::architecture.png[architecture, title="VGX Server High Level Architecture"]
+
+
 ___
 
 [.float-group]
