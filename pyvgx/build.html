@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var code = codeBlock.innerText || codeBlock.textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(code).then(function() {
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);

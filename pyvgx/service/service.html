@@ -17,7 +17,7 @@
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#_component_overview">1. Component Overview</a></li>
+<li><a href="#component_overview">1. Component Overview</a></li>
 <li><a href="#socketserver">2. Socket Server</a>
 <ul class="sectlevel2">
 <li><a href="#vgx_server_dispatcher">2.1. VGX Dispatch Matrix</a></li>
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var code = codeBlock.innerText || codeBlock.textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(code).then(function() {
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_component_overview">1. Component Overview</h2>
+<h2 id="component_overview">1. Component Overview</h2>
 <div class="sectionbody">
 <div class="dlist">
 <dl>
@@ -738,10 +738,10 @@ Requirement: \( \displaystyle channels \cdot priority &lt;= 127 \)
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="http"><span class="err">GET /path HTTP/1.1\r\n
-Header1: Field1\r\n
-Header2: Field2\r\n
-\r\n</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">GET /path HTTP/1.1<span class="se">\r\n</span>
+Header1: Field1<span class="se">\r\n</span>
+Header2: Field2<span class="se">\r\n</span>
+<span class="se">\r\n</span></code></pre>
 </div>
 </div>
 </div>
@@ -752,12 +752,12 @@ Header2: Field2\r\n
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="http"><span class="err">POST /path HTTP/1.1\r\n
-Header1: Field1\r\n
-Header2: Field2\r\n
-Content-Length: 14\r\n
-\r\n
-Sample content</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">POST /path HTTP/1.1<span class="se">\r\n</span>
+Header1: Field1<span class="se">\r\n</span>
+Header2: Field2<span class="se">\r\n</span>
+Content-Length: 14<span class="se">\r\n</span>
+<span class="se">\r\n</span>
+Sample content</code></pre>
 </div>
 </div>
 </div>
@@ -768,8 +768,8 @@ Sample content</span></code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="http"><span class="err">HEAD /path HTTP/1.1\r\n
-\r\n</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">HEAD /path HTTP/1.1<span class="se">\r\n</span>
+<span class="se">\r\n</span></code></pre>
 </div>
 </div>
 </div>
@@ -780,8 +780,8 @@ Sample content</span></code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="http"><span class="err">OPTIONS /path HTTP/1.1\r\n
-\r\n</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">OPTIONS /path HTTP/1.1<span class="se">\r\n</span>
+<span class="se">\r\n</span></code></pre>
 </div>
 </div>
 </div>
@@ -997,14 +997,14 @@ Executor threads are uniquely allocated to <em>engine</em>, <em>pre</em>, or <em
 <div class="listingblock">
 <div class="title">HTTP Response</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="http"><span class="err">HTTP/1.1 &lt;statuscode&gt; &lt;statustext&gt;\r\n
+<pre class="rouge highlight"><code>HTTP/1.1 &lt;statuscode&gt; &lt;statustext&gt;\r\n
 Allowed: &lt;methods&gt;\r\n
 Server: VGX/3\r\n
 Connection: keep-Alive\r\n
 Content-Type: &lt;mediatype&gt;; charset=UTF-8\r\n
 Content-Length: &lt;length&gt;\r\n
 \r\n
-&lt;content&gt;</span></code></pre>
+&lt;content&gt;</code></pre>
 </div>
 </div>
 <div class="sect3">
@@ -1208,19 +1208,19 @@ Content-Length: &lt;length&gt;\r\n
 <div class="listingblock">
 <div class="title">General JSON response format</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="w">
-  </span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;status&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;json&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;json&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"port"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
-    </span><span class="err">&lt;port&gt;</span><span class="p">,</span><span class="w">
-    </span><span class="err">&lt;offset&gt;</span><span class="w">
-  </span><span class="p">],</span><span class="w">
-  </span><span class="nl">"exec_id"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;int&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;int&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;list_or_</span><span class="kc">null</span><span class="err">&gt;</span><span class="p">,</span><span class="w">
-  </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="err">&lt;float&gt;</span><span class="w">
-</span><span class="p">}</span></code></pre>
+<pre class="rouge highlight"><code>{
+  "status": &lt;status&gt;,
+  "message": &lt;json&gt;,
+  "response": &lt;json&gt;,
+  "port": [
+    &lt;port&gt;,
+    &lt;offset&gt;
+  ],
+  "exec_id": &lt;int&gt;,
+  "level": &lt;int&gt;,
+  "partitions": &lt;list_or_null&gt;,
+  "exec_ms": &lt;float&gt;
+}</code></pre>
 </div>
 </div>
 <div class="dlist">
@@ -1875,7 +1875,7 @@ Content-Length: &lt;length&gt;\r\n
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2025-10-16 16:10:00 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

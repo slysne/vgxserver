@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>PyVGX 3.6 Examples</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgxtutorial" class="article toc2 toc-left">
+<div id="header">
+<h1>PyVGX 3.6 Examples <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#example">1. Example</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="imageblock text-left">
+<div class="content">
+<img src="images/pyvgx.png" alt="PYVGX" width="220" height="220">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="example">1. Example</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>TODO: This is just a stub, add many examples</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Make a graph with sample data</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">graph</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">sample_graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">populate</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="n">n_nodes</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">n_arcs_per_node</span><span class="o">=</span><span class="mi">10</span> <span class="p">):</span>
+    <span class="c1"># Create a root vertex
+</span>    <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">root</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="c1"># Create vertices and hook up root node
+</span>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">n_nodes</span> <span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">node_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="sh">"</span>                     <span class="c1"># Vertex name
+</span>        <span class="n">A</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="nc">NewVertex</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="sh">"</span><span class="s">node</span><span class="sh">"</span> <span class="p">)</span>   <span class="c1"># Create the vertex
+</span>        <span class="n">A</span><span class="p">.</span><span class="nc">SetVector</span><span class="p">(</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nf">rvec</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span> <span class="p">)</span>      <span class="c1"># Assign a random vector for testing
+</span>        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">root</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span> <span class="n">A</span> <span class="p">)</span>        <span class="c1"># Root connects to vertex
+</span>        <span class="n">A</span><span class="p">.</span><span class="nc">Close</span><span class="p">()</span>                           <span class="c1"># Close vertex
+</span>    <span class="c1"># Randomly connect vertices
+</span>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span> <span class="n">n_nodes</span> <span class="o">*</span> <span class="n">n_arcs_per_node</span> <span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">node_</span><span class="si">{</span><span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span><span class="si">}</span><span class="sh">"</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="sa">f</span><span class="sh">"</span><span class="s">node_</span><span class="si">{</span><span class="n">random</span><span class="p">.</span><span class="nf">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">)</span><span class="si">}</span><span class="sh">"</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">random</span><span class="p">.</span><span class="nf">random</span><span class="p">()</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">connected</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">b</span> <span class="p">)</span>
+
+<span class="nf">populate</span><span class="p">(</span> <span class="n">graph</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Query</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">search_1</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="n">anchor</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor</span><span class="p">,</span>
+        <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">connected</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="n">hits</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">sortby</span> <span class="o">=</span> <span class="n">S_VAL</span><span class="p">,</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">F_AARC</span>
+    <span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">search_2</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="n">vector</span><span class="o">=</span><span class="bp">None</span> <span class="p">):</span>
+    <span class="k">if</span> <span class="n">vector</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="n">g</span><span class="p">.</span><span class="n">sim</span><span class="p">.</span><span class="nf">rvec</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="sh">"</span><span class="s">root</span><span class="sh">"</span><span class="p">,</span>
+        <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">to</span><span class="sh">"</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">),</span>
+        <span class="n">hits</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+        <span class="n">collect</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+        <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">similarity</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span><span class="p">:</span><span class="n">vector</span>
+            <span class="p">},</span>
+            <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">store(R1,cosine(vector,vertex.vector))</span><span class="sh">'</span><span class="p">,</span>
+            <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:</span> <span class="p">(</span><span class="sh">'</span><span class="s">connected</span><span class="sh">'</span><span class="p">,</span><span class="n">D_OUT</span><span class="p">),</span>
+                <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span><span class="p">:</span> <span class="n">C_SCAN</span><span class="p">,</span>
+                <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span><span class="p">:</span> <span class="sh">'</span><span class="s">collect( prox(next.arc.value, load(R1)) )</span><span class="sh">'</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="n">sortby</span><span class="o">=</span><span class="n">S_VAL</span><span class="p">,</span>
+        <span class="n">select</span><span class="o">=</span><span class="sh">"</span><span class="s">FIRST: prev.id; SECOND: next.id; SCORE: next.arc.value</span><span class="sh">"</span>
+    <span class="p">)</span></code></pre>
+</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="VGXCoreConcepts.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="VGX Core Concepts"></i></span></a>
+<a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="shortref.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Compact pyvgx Reference"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="reference.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-16 16:10:00 -0400
+</div>
+</div>
+</body>
+</html>

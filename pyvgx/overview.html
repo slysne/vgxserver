@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>PyVGX 3.6 Overview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="pyvgx_overview" class="article toc2 toc-left">
+<div id="header">
+<h1>PyVGX 3.6 Overview <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#introduction">1. Introduction</a>
+<ul class="sectlevel2">
+<li><a href="#components_overview">1.1. Components</a>
+<ul class="sectlevel3">
+<li><a href="#socket_server">1.1.1. Socket Server</a></li>
+<li><a href="#plugin_adapter">1.1.2. Plugin Adapter</a></li>
+<li><a href="#graph_engine">1.1.3. Graph Engine</a></li>
+<li><a href="#transaction_interconnect">1.1.4. Transaction Interconnect</a></li>
+</ul>
+</li>
+<li><a href="#workflow">1.2. Workflow</a></li>
+<li><a href="#scalability">1.3. Scalability</a></li>
+</ul>
+</li>
+<li><a href="#component_examples">2. Component Examples</a>
+<ul class="sectlevel2">
+<li><a href="#socket_server_basic_example">2.1. Socket Server Example</a></li>
+<li><a href="#plugin_adapter_basic_example">2.2. Plugin Adapter Example</a></li>
+<li><a href="#graph_engine_basic_example">2.3. Graph Engine Example</a></li>
+<li><a href="#transaction_interconnect_basic_example">2.4. Transaction Interconnect Example</a></li>
+</ul>
+</li>
+<li><a href="#scalable_systems">3. Scalable Systems</a>
+<ul class="sectlevel2">
+<li><a href="#server_request_flow">3.1. Request Flow</a></li>
+<li><a href="#server_key_features">3.2. Key Features</a></li>
+<li><a href="#server_multi_node">3.3. Multi-Node System Descriptor</a></li>
+<li><a href="#server_sysadmin">3.4. System Administration</a>
+<ul class="sectlevel3">
+<li><a href="#server_sysadmin_uis">3.4.1. Built-in UIs (via admin port)</a></li>
+<li><a href="#server_sysadmin_vgxadmin">3.4.2. Command-Line Tool (<code>vgxadmin</code>)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#pyvgx_api">4. PyVGX API</a></li>
+<li><a href="#expression_language">5. VGX Expression Language</a></li>
+<li><a href="#architecture">6. Architecture</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+<div class="imageblock text-left">
+<div class="content">
+<img src="images/pyvgx.png" alt="PYVGX" width="220" height="220">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="introduction">1. Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>VGX</strong> is a versatile, plugin-based platform designed for building scalable graph processing services using the <strong>PyVGX</strong> Python module. Implemented primarily in C with Python for service bootstrapping and plugin execution, it exposes HTTP endpoints for graph data management and querying.</p>
+</div>
+<div class="imageblock text-center">
+<div class="content">
+<img src="images/vgxserver.png" alt="vgxserver" width="600">
+</div>
+<div class="title">Figure 1. VGX Server Components</div>
+</div>
+<div class="sect2">
+<h3 id="components_overview">1.1. Components</h3>
+<div class="paragraph">
+<p>At its core, the architecture is divided into four interconnected components: 1) <em>Socket Server</em>, 2) <em>Plugin Adapter</em>, 3) <em>Graph Engine</em>, and 4) <em>Transaction Interconnect</em>. These elements form a modular foundation that handles incoming requests, custom logic execution, data storage and retrieval, and inter-instance communication, enabling efficient graph operations in both single-node and distributed environments.</p>
+</div>
+<div class="sect3">
+<h4 id="socket_server">1.1.1. Socket Server</h4>
+<div class="paragraph">
+<p>The Socket Server serves as the primary entry point, functioning as an asynchronous, multithreaded HTTP/1.1 listener that parses incoming requests and dispatches them for execution. It operates in flexible modes—such as Engine mode for direct processing, Dispatch mode for forwarding to backend instances in configurable matrices (e.g., M replicas by N partitions), or Reverse Proxy mode for simple relaying—supporting scalability through load-balanced query distribution and aggregation of responses across nodes.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="plugin_adapter">1.1.2. Plugin Adapter</h4>
+<div class="paragraph">
+<p>Bridging the C-based core with Python extensibility, the Plugin Adapter enables the registration and invocation of custom Python functions as plugins tied to unique HTTP URIs. It handles parameter parsing, type conversion, and execution in dedicated threads, allowing real-time request processing, pre- and post-dispatch modifications, and integration with built-in services for tasks like graph queries or system monitoring.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="graph_engine">1.1.3. Graph Engine</h4>
+<div class="paragraph">
+<p>The Graph Engine manages the underlying graph data structures, providing robust storage, querying (e.g., neighborhood searches, arc evaluations), and modification operations (e.g., vertex creation or deletion). Its low level impementation ensures efficient processing and memory usage.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="transaction_interconnect">1.1.4. Transaction Interconnect</h4>
+<div class="paragraph">
+<p>Facilitating seamless data exchange between VGX instances, the Transaction Interconnect handles replication and synchronization using provider-subscriber patterns over dedicated channels. It ensures data durability by directing modifications to primary replicas and supports monitoring of peer connections, enabling reliable propagation of graph updates in multi-node topologies.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="workflow">1.2. Workflow</h3>
+<div class="paragraph">
+<p>Together, these components orchestrate a cohesive workflow: an HTTP request arrives at the Socket Server, which invokes the Plugin Adapter to execute custom Python logic; this logic interacts with the Graph Engine for graph operations, while the Transaction Interconnect ensures any necessary data replication to other instances. This tight integration allows a single VGX Server instance to function as a self-sufficient graph service, processing queries and updates with low latency.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalability">1.3. Scalability</h3>
+<div class="paragraph">
+<p>For scalability, multiple VGX Server instances can be deployed in coordinated topologies, such as rectangular dispatch matrices, hierarchical cascades, or ring configurations, where data is distributed across partitions (sharded by graph elements) and replicated across designated primaries for fault tolerance. Front-end instances act as dispatchers, intelligently routing queries to one replica per partition based on priority and load, then merging partial responses into unified results—ideal for building search systems that aggregate insights from terabyte-scale graphs without single points of failure. This design supports horizontal scaling, incomplete response tolerance for high availability, and built-in monitoring to query metrics across the entire cluster.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="component_examples">2. Component Examples</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To get a feel for each of the main components, here are brief examples using the pyvgx API.</p>
+</div>
+<div class="paragraph">
+<p>If you have not yet installed pyvgx, you can do it like this:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Install latest version of pyvgx</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>pyvgx</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each of the examples below can be executed after importing and initializing the system. You have to run the examples in the order presented since each example depends on the previous.</p>
+</div>
+<div class="paragraph">
+<p>First import and initialize the pyvgx module:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Import and initialize pyvgx</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span> <span class="sh">"</span><span class="s">examples</span><span class="sh">"</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="socket_server_basic_example">2.1. Socket Server Example</h3>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 34%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/vgxserver_socketserver.png" alt="socket_server">
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Start the HTTP server on port 9000 (main) and 9001 (admin). The admin port (main+1) is intended for UI access and other administrative task, while the main port is intended for plugin requests.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Start HTTP Server</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1"># Main server on port 9000, admin server on port 9001
+</span><span class="n">system</span><span class="p">.</span><span class="nc">StartHTTP</span><span class="p">(</span> <span class="mi">9000</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the server is running you can open the system dashboard (<a href="http://127.0.0.1:9001/system" class="bare">http://127.0.0.1:9001/system</a>) or call one of the builtin services (<a href="http://127.0.0.1:9000/vgx/builtin/createvertex?graph=system&amp;id=A" class="bare">http://127.0.0.1:9000/vgx/builtin/createvertex?graph=system&amp;id=A</a>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="plugin_adapter_basic_example">2.2. Plugin Adapter Example</h3>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 34%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/vgxserver_pluginadapter.png" alt="plugin_adapter">
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Register a new plugin function. The Python function&#8217;s parameters are automatically mapped to HTTP parameters.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Register a plugin</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">hello</span><span class="p">(</span> <span class="n">request</span><span class="p">:</span> <span class="n">PluginRequest</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="sh">"</span><span class="s">Hi, you said </span><span class="sh">'</span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="sh">'"</span>
+
+<span class="n">system</span><span class="p">.</span><span class="nc">AddPlugin</span><span class="p">(</span> <span class="n">hello</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once added, the plugin can be executed via HTTP:</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Send a plugin request</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="curl">http://127.0.0.1:9000/vgx/plugin/hello?message=good+morning!</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Plugin response</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="json"><span class="p">{</span><span class="nl">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="p">,</span><span class="w"> </span><span class="nl">"response"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Hi, you said 'good morning!'"</span><span class="p">,</span><span class="w"> </span><span class="nl">"level"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nl">"partitions"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="nl">"exec_ms"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.056</span><span class="p">}</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="graph_engine_basic_example">2.3. Graph Engine Example</h3>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 34%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/vgxserver_graphengine.png" alt="graph_engine">
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Write a function to populate this graph:</p>
+</div>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 50%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/samplegraph.png" alt="small_graph">
+</div>
+<div class="title">Figure 2. A Graph</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock copyable">
+<div class="title">Build a sample graph</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">graph</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">sample_graph</span><span class="sh">"</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_sample_graph</span><span class="p">(</span> <span class="n">g</span> <span class="p">):</span>
+    <span class="c1"># Create vertices
+</span>    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">F</span><span class="sh">"</span><span class="p">):</span>
+        <span class="n">g</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="n">name</span> <span class="p">)</span>
+    <span class="c1"># Make connections
+</span>    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">score</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_FLT</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">),</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">weight</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="sh">"</span><span class="s">C</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="sh">"</span><span class="s">D</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span> <span class="p">)</span>
+    <span class="n">g</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">E</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span>
+
+<span class="nf">make_sample_graph</span><span class="p">(</span> <span class="n">graph</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can run a test query against this graph to see the result.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Run a test query</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="kn">from</span> <span class="n">pprint</span> <span class="kn">import</span> <span class="n">pprint</span>
+
+<span class="k">def</span> <span class="nf">find_links</span><span class="p">(</span> <span class="n">g</span><span class="p">,</span> <span class="n">anchor</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor</span><span class="p">,</span>
+        <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+        <span class="n">sortby</span> <span class="o">=</span> <span class="n">S_VAL</span><span class="p">,</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">F_AARC</span>
+    <span class="p">)</span>
+
+<span class="nf">pprint</span><span class="p">(</span> <span class="nf">find_links</span><span class="p">(</span> <span class="n">graph</span><span class="p">,</span> <span class="sh">"</span><span class="s">B</span><span class="sh">"</span> <span class="p">)</span> <span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The result will look like this:</p>
+</div>
+<div class="listingblock">
+<div class="title">Query result</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="text">['( B )-[ link &lt;M_INT&gt; 7 ]-&gt;( C )',
+ '( B )-[ link &lt;M_INT&gt; 1 ]-&gt;( E )',
+ '( B )-[ link &lt;M_INT&gt; 1 ]-&gt;( D )']</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="transaction_interconnect_basic_example">2.4. Transaction Interconnect Example</h3>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/vgxserver_txconnect.png" alt="tx_connect">
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>At least two VGX instances are required to demonstrate transaction interconnect. Let&#8217;s start a second instance first, then connect the first instance to the second instance.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Second VGX instance, prepared to be the subscriber</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1">############################
+## 2nd INSTANCE (subscriber)
+############################
+</span><span class="kn">from</span> <span class="n">pyvgx</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">system</span><span class="p">.</span><span class="nc">Initialize</span><span class="p">(</span><span class="sh">"</span><span class="s">subscriber_instance</span><span class="sh">"</span><span class="p">)</span>
+<span class="c1"># Second instance HTTP interface on main port 9010, admin port 9011
+</span><span class="n">system</span><span class="p">.</span><span class="nc">StartHTTP</span><span class="p">(</span><span class="mi">9010</span><span class="p">)</span>
+<span class="c1"># Prepare to become a subscriber
+</span><span class="n">op</span><span class="p">.</span><span class="nc">Bind</span><span class="p">(</span><span class="mi">10010</span><span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">First VGX instance is the provider</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1">##########################
+## 1st INSTANCE (provider)
+##########################
+# First instance now becomes the provider
+# and second instance becomes the subscriber
+</span><span class="n">op</span><span class="p">.</span><span class="nc">Attach</span><span class="p">(</span> <span class="sh">"</span><span class="s">vgx://127.0.0.1:10010</span><span class="sh">"</span> <span class="p">)</span>
+<span class="c1"># Mirror existing graph over to subscriber
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">Sync</span><span class="p">()</span>
+<span class="c1"># Further local operations are automatically mirrored to subscriber
+</span><span class="n">graph</span><span class="p">.</span><span class="nc">CreateVertex</span><span class="p">(</span> <span class="sh">"</span><span class="s">another_node</span><span class="sh">"</span> <span class="p">)</span>
+<span class="n">graph</span><span class="p">.</span><span class="nc">Connect</span><span class="p">(</span> <span class="sh">"</span><span class="s">A</span><span class="sh">"</span><span class="p">,</span> <span class="p">(</span><span class="sh">"</span><span class="s">link</span><span class="sh">"</span><span class="p">,</span> <span class="n">M_INT</span><span class="p">,</span> <span class="mi">42</span><span class="p">),</span> <span class="sh">"</span><span class="s">another_node</span><span class="sh">"</span> <span class="p">)</span>
+<span class="c1"># Print local graph summary for reference
+</span><span class="nf">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># -&gt; &lt;PyVGX_Graph: name=sample_graph order=7 size=8&gt;</span></code></pre>
+</div>
+</div>
+<div class="listingblock copyable">
+<div class="title">Check graph in second VGX instance</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="c1">############################
+## 2nd INSTANCE (subscriber)
+############################
+# Print subscriber graph summary and compare with provider
+</span><span class="n">graph</span> <span class="o">=</span> <span class="nc">Graph</span><span class="p">(</span><span class="sh">"</span><span class="s">sample_graph</span><span class="sh">"</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="c1"># -&gt; &lt;PyVGX_Graph: name=sample_graph order=7 size=8&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="scalable_systems">3. Scalable Systems</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>VGX Server&#8217;s dispatcher enables scalable graph systems by sharding data across partitions and replicating it for fault tolerance. In VGX Dispatch mode, it routes HTTP requests to a back-end matrix of M replicas (rows) by N partitions (columns). Queries span all partitions, while modifications target primary replicas.</p>
+</div>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/basicmatrix.png" alt="basic_matrix">
+</div>
+<div class="title">Figure 3. Basic Matrix</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
+<div class="content">
+<img src="images/pre_post_engine.png" alt="request_flow">
+</div>
+<div class="title">Figure 4. Request Flow</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="sect2">
+<h3 id="server_request_flow">3.1. Request Flow</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>A pre-processor plugin (optional) enhances requests before backend processing. For example, it can take a user query, perform model inference against a loaded AI model to generate a vector, and embed this vector in the request for backend search.</p>
+</li>
+<li>
+<p>The dispatcher forwards the request to one replica per partition, selected based on priority and load.</p>
+</li>
+<li>
+<p>Backend engines or dispatchers process in parallel, returning partial responses.</p>
+</li>
+<li>
+<p>The dispatcher merges results, applies an optional post-processor plugin (e.g., to format or filter), and returns a unified response.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="server_key_features">3.2. Key Features</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Scales large data sets via flexible topologies (e.g., hierarchies, rings).</p>
+</li>
+<li>
+<p>Plugins (<code>pre</code>, <code>engine</code>, <code>post</code>) handle request logic, with <code>PluginRequest</code> and <code>PluginResponse</code> managing parameters, routing, and aggregation.</p>
+</li>
+<li>
+<p>Configured via <code>pyvgx.system.StartHTTP()</code> with a matrix definition or a JSON system descriptor for multi-node setups using <code>pyvgx.VGXInstance</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="server_multi_node">3.3. Multi-Node System Descriptor</h3>
+<div class="paragraph">
+<p>A system descriptor (e.g., vgx.cf) defines an interconnected multi-node VGX deployment, specifying instance roles, graphs, and connectivity via two topologies:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Transaction Topology</strong>: Governs data ingestion, streaming data (e.g., graph vertices, arcs) through provider-subscriber relationships to partitioned, replicated instances (e.g., builder to search instances). This ensures durable data replication across the matrix.</p>
+</li>
+<li>
+<p><strong>Dispatch Topology</strong>: Manages client requests, routing them through a dispatcher’s back-end matrix for querying or modifying data. Requests are distributed to partitions and aggregated for responses.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The multi-node framework is independent of the Graph Engine, enabling a scalable, fault-tolerant system for data ingestion and querying. While the Graph Engine provides built-in graph storage and query capabilities for plugins, plugins can leverage any Python package (e.g., AI libraries, databases) for custom functionality, making VGX a versatile platform for distributed systems.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="server_sysadmin">3.4. System Administration</h3>
+<div class="paragraph">
+<p>VGX systems can be managed through built-in web UIs or the <code>vgxadmin</code> command-line tool, enabling single-instance or multi-node operations like monitoring, configuration, and data synchronization. Admin UI pages are accessed via the admin port (e.g., host:port+1).</p>
+</div>
+<div class="sect3">
+<h4 id="server_sysadmin_uis">3.4.1. Built-in UIs (via admin port)</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Admin</strong>: Toggle states (e.g., Service In/Out, Readonly/Mutable), perform actions like snapshot, sync, or truncate, and monitor metrics (e.g., uptime, request rate, memory).</p>
+</li>
+<li>
+<p><strong>Status</strong>: Readonly overview of server load, transaction I/O, graph counters, and memory usage.</p>
+</li>
+<li>
+<p><strong>Console</strong>: Execute commands (e.g., Graph.Vertices) or Python expressions for troubleshooting.</p>
+</li>
+<li>
+<p><strong>Search</strong>: Query graphs via neighborhoods, vertices, arcs, or expressions.</p>
+</li>
+<li>
+<p><strong>Plugins</strong>: Test user-defined or builtin plugins.</p>
+</li>
+<li>
+<p><strong>Multi-Node Dashboard</strong>: Aggregated overview of all instances (requires SYSTEM_Descriptor property), showing status, load, memory, and graph data, with clickable actions for administration.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="server_sysadmin_vgxadmin">3.4.2. Command-Line Tool (<code>vgxadmin</code>)</h4>
+<div class="ulist">
+<ul>
+<li>
+<p>Perform multi-node administration, using a system descriptor file (e.g., vgx.cf) to target instances by ID or wildcard.</p>
+</li>
+<li>
+<p>Common options include: <code>--status</code> for summaries, <code>--attach/detach</code> for transaction connections, <code>--sync</code> for data replication, <code>--servicein/out</code> for plugin availability.</p>
+</li>
+<li>
+<p>Supports advanced tasks like rolling updates, reverse syncs, and plugin reloading.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="pyvgx_api">4. PyVGX API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The PyVGX API, part of the VGX platform, is designed to empower developers to build high-performance, scalable graph and vector search applications with a focus on simplicity, flexibility, and efficiency. Its philosophy emphasizes in-memory processing for low-latency operations, index-free adjacency for intuitive graph navigation, and a plugin-based architecture to enable customizable, distributed systems. Implemented in C with Python bindings, PyVGX bridges native performance with Python’s ease of use, minimizing Python interpreter overhead by delegating heavy computation to the VGX core, which bypasses Python’s global interpreter lock for parallel execution.</p>
+</div>
+<div class="paragraph">
+<p>Key aspects of the API for building and querying graphs include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Graph Construction</strong>: Graphs are composed of vertices and arcs, with vertices supporting arbitrary key-value properties and similarity vectors for implicit connections. The API provides methods like <code>Graph.Connect()</code> and <code>Vertex.SetProperty()</code> to create and modify graph structures in real-time, with support for expiration timestamps (TTL) for automatic data lifecycle management.</p>
+</li>
+<li>
+<p><strong>Querying</strong>: The API offers powerful querying capabilities through global searches (<code>Graph.Vertices()</code>, <code>Graph.Arcs()</code>) and local neighborhood traversals (<code>Graph.Neighborhood()</code>), with flexible filtering, sorting, and ranking via a common expression language. Vector-based similarity queries (e.g., Euclidean distance, Cosine similarity) enable advanced applications like a ANN/semantic search and recommendation systems.</p>
+</li>
+<li>
+<p><strong>Concurrency and Scalability</strong>: Thread-safe access to graphs supports concurrent operations, with configurable timeouts and locking mechanisms. Multi-node deployments enable sharding and replication for large-scale data sets.</p>
+</li>
+<li>
+<p><strong>Plugin Integration</strong>: The <code>system.AddPlugin()</code> method allows developers to define custom HTTP endpoints for data ingestion and querying, leveraging the VGX Server’s asynchronous socket server. Plugins can use any Python library, extending functionality beyond the built-in Graph Engine.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Compared to other graph engines like Neo4j or ArangoDB, PyVGX prioritizes in-memory performance and a lightweight, C-based core over disk-based persistence, making it ideal for soft real-time applications. Unlike TinkerPop/Gremlin, which focuses on a standardized query language, PyVGX’s expression-based querying and vector support cater to specialized use cases like vector search or reinforcement learning. Its open-ended design encourages developers to tailor solutions for diverse applications, from graph databases to AI-driven analytics, within a unified, scalable framework.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="expression_language">5. VGX Expression Language</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The VGX Expression Language is a powerful, domain-specific language embedded within the VGX platform, designed to enhance graph traversal and querying with flexible, high-performance expressions for filtering, ranking, and result selection. Its philosophy prioritizes efficiency and expressiveness, enabling developers to define complex logic directly within graph queries like <code>Graph.Neighborhood()</code>.</p>
+</div>
+<div class="paragraph">
+<p>The language supports a rich set of operators, mathematical and string functions, vector similarity computations, and memory array operations, allowing sophisticated algorithms for tasks like scoring, aggregation, or breadth-first searches. Integrated tightly with neighborhood queries, it enables dynamic, context-aware processing of vertices, arcs, and their properties, making it a cornerstone of VGX’s ability to handle diverse graph-based applications efficiently.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Example Expression in a Neighborhood Query</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="sh">"</span><span class="s">B</span><span class="sh">"</span><span class="p">,</span>
+    <span class="nb">filter</span><span class="o">=</span> <span class="sh">"""</span><span class="s">
+            next.arc.type == </span><span class="sh">'</span><span class="s">link</span><span class="sh">'</span><span class="s"> &amp;&amp; next.arc.value &gt; 1
+            </span><span class="sh">"""</span><span class="p">,</span>
+    <span class="n">arc</span><span class="o">=</span><span class="p">(</span><span class="sh">"</span><span class="s">*</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+    <span class="n">hits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">sortby</span><span class="o">=</span><span class="n">S_VAL</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expressions are safely evaluated in a sandboxed environment within the VGX C core, preventing arbitrary code execution, side effects like file I/O or network access, and ensuring thread-safety with controlled memory access to avoid crashes or data corruption.</p>
+</div>
+<div class="paragraph">
+<p>This language exists to bridge the gap between high-level query customization and low-level performance optimization in a graph engine. It allows users to extend VGX&#8217;s querying capabilities inside the graph core, without the need for additional (slower) Python code.</p>
+</div>
+<div class="paragraph">
+<p>Unlike Python, it is compiled and executed natively in the VGX C-based core, bypassing the Python GIL for parallel performance, yet it retains Python-like syntax for accessibility; compared to C, it abstracts low-level memory management while offering memory array manipulation for advanced use cases, such as histograms or cycle detection; and it shares similarities with assembly through low-level operations like inc, dec, mov, and bitwise functions that mimic register and memory instructions for fine-grained control.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="architecture">6. Architecture</h2>
+<div class="sectionbody">
+<div class="imageblock text-center">
+<div class="content">
+<img src="images/architecture.png" alt="architecture">
+</div>
+<div class="title">Figure 5. VGX Server High Level Architecture</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="VGXCoreConcepts.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="VGX Core Concepts"></i></span></a>
+<a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="Index"></i></span></a>
+<a href="shortref.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Compact pyvgx Reference"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="reference.html"><span class="image"><img src="images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2025-10-16 17:53:43 -0400
+</div>
+</div>
+</body>
+</html>

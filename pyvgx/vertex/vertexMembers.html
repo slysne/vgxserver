@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var code = codeBlock.innerText || codeBlock.textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(code).then(function() {
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -1356,7 +1356,7 @@ address which will generally differ between processes. In large graphs
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2025-10-07 15:28:30 -0400
 </div>
 </div>
 </body>

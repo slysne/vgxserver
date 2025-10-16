@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
             var code = codeBlock.innerText || codeBlock.textContent;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(code).then(function() {
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    button.textContent = 'Copied!';
+                    button.textContent = 'Copied';
                     setTimeout(function() {
                         button.textContent = 'Copy';
                     }, 2000);
@@ -109,15 +109,15 @@ document.addEventListener("DOMContentLoaded", function() {
 <h3 id="_syntax">1.1. Syntax</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="python"><span class="n">select</span><span class="o">=</span><span class="sh">"</span><span class="s">&lt;sel_1&gt;; &lt;sel_2&gt;; ...</span><span class="sh">"</span>
+<pre class="rouge highlight"><code data-lang="text">select="&lt;sel_1&gt;; &lt;sel_2&gt;; ..."
 
-<span class="n">where</span> <span class="o">&lt;</span><span class="n">sel_n</span><span class="o">&gt;</span> <span class="p">::</span><span class="o">=</span> <span class="o">&lt;</span><span class="n">vertex_property</span><span class="o">&gt;</span>
-                  <span class="o">|</span>
-                  <span class="o">&lt;</span><span class="n">vertex_property</span><span class="o">&gt;</span> <span class="err">?</span> <span class="o">&lt;</span><span class="n">default</span><span class="o">&gt;</span>
-                  <span class="o">|</span>
-                  <span class="p">.</span><span class="o">&lt;</span><span class="n">attribute</span><span class="o">&gt;</span>
-                  <span class="o">|</span>
-                  <span class="o">&lt;</span><span class="n">label</span><span class="o">&gt;</span> <span class="p">:</span> <span class="o">&lt;</span><span class="n">expression</span><span class="o">&gt;</span></code></pre>
+where &lt;sel_n&gt; ::= &lt;vertex_property&gt;
+                  |
+                  &lt;vertex_property&gt; ? &lt;default&gt;
+                  |
+                  .&lt;attribute&gt;
+                  |
+                  &lt;label&gt; : &lt;expression&gt;</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -278,7 +278,7 @@ If <code>select=</code> is used without specifying a result field, <a href="../c
 </div>
 <div class="sect2">
 <h3 id="selectexample">1.4. Example</h3>
-<div class="listingblock">
+<div class="listingblock copyable">
 <div class="title">Include selected and computed properties in result</div>
 <div class="content">
 <pre class="rouge highlight"><code data-lang="python"><span class="n">result</span> <span class="o">=</span> <span class="n">graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
@@ -325,7 +325,7 @@ If <code>select=</code> is used without specifying a result field, <a href="../c
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2025-10-16 17:40:17 -0400
 </div>
 </div>
 </body>
