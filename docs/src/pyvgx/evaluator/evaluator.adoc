@@ -30,6 +30,7 @@ Expressions can be used in query filters, for result sorting, and to select resu
 
 This filter requires the value of the arc from "A" to its neighbor to be greater than 10 and the neighbor id must equal "B" or start with "C" or end with "d".
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( "A",
@@ -42,10 +43,11 @@ graph.Neighborhood( "A",
 
 This custom ranking function will divide the neighbor's "score" property by the arc value and multiply the result by the anchor's "boost" property. The function's output value is used for sorting the query results.
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( "A",
-    rank="vertex['boost'] * (next['score'] / .arc.value)"
+    rank="vertex['boost'] * (next['score'] / .arc.value)",
     sortby=S_RANK
 )
 ----
@@ -55,6 +57,7 @@ graph.Neighborhood( "A",
 
 This select statement formats the query result to include the neighbor's "score" property, the value of the arc from "A" to its neighbor, and a computed value with custom name "RATIO".
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( "Alice",
@@ -266,6 +269,7 @@ See <<selectEvaluator.adoc#selectlabel, Select Evaluator>> for details.
 
 VGX has a built-in evaluator engine for executing user-defined expressions. Custom formulas can be used in traversal filters (`filter=`), result ranking (`rank=`) and rendering of selected fields (`select=`). For example:
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -284,6 +288,7 @@ A comprehensive library of <<evaluatorfunctions, functions>>, <<evaluatorconstan
 It is possible to define and pass a <<evaluatormemory, memory array object>> to queries. Expressions evaluated as part of a query may then read or write elements of the memory array, opening up many possibilities for algorithm design. For instance, variables captured by a filter expression may be passed as input to a ranking expression. The same memory array object can be used by different queries enabling information sharing from one query to the next. Other uses include value aggregation, creating histograms, tracking graph cycles, and computing averages or deviations just to name a few.
 
 Expressions can also be evaluated stand-alone using <<evaluate, `pyvgx.Graph.Evaluate()`>>. For example:
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "1+1" ) # -> 2
@@ -426,6 +431,7 @@ The final result of an expression is interpreted according to the context where 
 [[datatype_integer]]
 ==== Type _integer_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "1000" )   # -> 1000
@@ -440,6 +446,7 @@ graph.Evaluate( "0xfffffffffffffffe" ) # -> -2   2's complement
 [[datatype_real]]
 ==== Type _real_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "3.14" )  # -> 3.14
@@ -451,6 +458,7 @@ graph.Evaluate( "-.1e1" ) # -> 1.0
 [[datatype_string]]
 ==== Type _string_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "'hello'" ) # -> 'hello'
@@ -459,6 +467,7 @@ graph.Evaluate( "'hello'" ) # -> 'hello'
 [[datatype_group]]
 ==== Type _group_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "(1,2,3,4)" ) # -> 1
@@ -468,6 +477,7 @@ graph.Evaluate( "('hello',2,3,4)" ) # -> 'hello'
 [[datatype_range]]
 ==== Type _range_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "0.999 in range(1,3)" ) # -> 0
@@ -479,6 +489,7 @@ graph.Evaluate( "3 in range(1,3)" ) # -> 0
 [[datatype_set]]
 ==== Type _set_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "{1, 2, 3}" ) # -> '<set>'
@@ -489,6 +500,7 @@ graph.Evaluate( "2.999 in {1, 2, 3}" ) # -> 0
 [[datatype_vector]]
 ==== Type _vector_
 
+[.copyable]
 [source, python]
 ----
 X = graph.NewVertex( "X" )
@@ -524,14 +536,16 @@ g.Evaluate( "sim( prev.vector, next.vector )", tail="X", head="Y" ) # -> 0.97265
 [[datatype_bitvector]]
 ==== Type _bitvector_
 
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "0b11110000" ) -> '<bitvector 0x00000000000000f0>'
+graph.Evaluate( "0b11110000" ) # -> '<bitvector 0x00000000000000f0>'
 ----
 
 [[datatype_keyval]]
 ==== Type _keyval_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "keyval(1000,0.5)" ) # -> '<keyval (1000,0.5)>'
@@ -547,6 +561,7 @@ graph.Evaluate( "real( keyval(1000,0.5) )" ) # -> 0.5
 [[datatype_vertex]]
 ==== Type _vertex_
 
+[.copyable]
 [source, python]
 ----
 V = graph.NewVertex( "Node1" )
@@ -555,78 +570,82 @@ graph.Connect( "Node1", "to", "X" )
 graph.Connect( "Node1", "to", "Y" )
 
 ### Attribute
-graph.Evaluate( "next.odeg", head=V ) -> 2
-graph.Evaluate( "next.tmc", head=V ) -> 1642822680
+graph.Evaluate( "next.odeg", head=V ) # -> 2
+graph.Evaluate( "next.tmc", head=V ) # -> 1642822680
 
 ### Internalid string
-graph.Evaluate( "str(next)", head=V ) -> '42aa906a0037217e4bc4bcaafc11817e'
+graph.Evaluate( "str(next)", head=V ) # -> '76fd13f0d0135ed4c7ed813e1c3db986'
 
 ### Address
-graph.Evaluate( "int( next )", head=V ) -> 2336660804768
+graph.Evaluate( "int( next )", head=V ) # -> 2336660804768
 
 ### Property
-graph.Evaluate( "int( next )", head=V ) -> 2336660804768
-graph.Evaluate( "'x' in next", head=V ) -> 1
-graph.Evaluate( "'y' in next", head=V ) -> 0
-graph.Evaluate( "next['x']", head=V ) -> 1000
+graph.Evaluate( "int( next )", head=V ) # -> 2336660804768
+graph.Evaluate( "'x' in next", head=V ) # -> 1
+graph.Evaluate( "'y' in next", head=V ) # -> 0
+graph.Evaluate( "next['x']", head=V ) # -> 1000
 ----
 
 // cspell:ignore vertexid
 [[datatype_vertexid]]
 ==== Type _vertexid_
 
+[.copyable]
 [source, python]
 ----
 V = graph.NewVertex( "Node1" )
-graph.Evaluate( "next.id", head=V ) -> 'Node1'
-hex(graph.Evaluate( "hash( next.id )", head=V )) -> '0x4bc4bcaafc11817e
+graph.Evaluate( "next.id", head=V ) # -> 'Node1'
+hex(graph.Evaluate( "hash( next.id )", head=V )) # -> '-0x38127ec1e3c2467a'
 ----
 
 [[datatype_nan]]
 ==== Type _nan_
 
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "nan" ) -> nan
-graph.Evaluate( "acos(2)" ) -> nan  # domain error
-graph.Evaluate( "acos(2) == nan" ) -> 1
-graph.Evaluate( "1.8e308" ) -> nan  # out of range
+graph.Evaluate( "nan" ) # -> nan
+graph.Evaluate( "acos(2)" ) # -> nan  # domain error
+graph.Evaluate( "acos(2) == nan" ) # -> 1
+graph.Evaluate( "1.8e308" ) # -> nan  # out of range
 ----
 
 [[datatype_null]]
 ==== Type _null_
 
+[.copyable]
 [source, python]
 ----
 graph.Evaluate( "null" )
-graph.Evaluate( "isnan( null )" ) -> 1
+graph.Evaluate( "isnan( null )" ) # -> 1
 ----
 
 [[datatype_inf]]
 ==== Type _inf_
 
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "inf" ) -> inf
-graph.Evaluate( "1e300 * 1e300" ) -> inf
-graph.Evaluate( "1e300 * 1e300 == inf" ) -> 1
+graph.Evaluate( "inf" ) # -> inf
+graph.Evaluate( "1e300 * 1e300" ) # -> inf
+graph.Evaluate( "1e300 * 1e300 == inf" ) # -> 1
 
 ### Infinity is considered numeric
-graph.Evaluate( "isnan( inf )" ) -> 0
+graph.Evaluate( "isnan( inf )" ) # -> 0
 
 ### NOTE: The expression language is designed to produce
 ###       numeric results even when infinity is involved
 ###       in the computation. Dividing by zero produces
 ###       "a very large number" and dividing by infinity
 ###       produces zero.
-graph.Evaluate( "1/inf" ) -> 0.0
-graph.Evaluate( "1**inf" ) -> 1.0
-graph.Evaluate( "1.000001**inf" ) -> 1.7976931348623157e+308
-graph.Evaluate( "0.999999**inf" ) -> 0.0
-graph.Evaluate( "inf/inf" ) -> nan
-graph.Evaluate( "inf-inf" ) -> nan
-graph.Evaluate( "-1/-0.0" ) -> inf # Special case
-graph.Evaluate( "-1/-0.0 == inf" ) -> 1
+graph.Evaluate( "1/inf" ) # -> 0.0
+graph.Evaluate( "1**inf" ) # -> 1.0
+graph.Evaluate( "1.000001**inf" ) # -> 1.7976931348623157e+308
+graph.Evaluate( "0.999999**inf" ) # -> 0.0
+graph.Evaluate( "inf/inf" ) # -> nan
+graph.Evaluate( "inf-inf" ) # -> nan
+graph.Evaluate( "-1/-0.0" ) # -> inf # Special case
+graph.Evaluate( "-1/-0.0 == inf" ) # -> 1
 ----
 
 
@@ -653,11 +672,12 @@ Suppose we have created a graph with relationships between friends. The followin
 ==== Filter Example
 
 .Find Alice's friends and pets
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
     "Alice",
-    filter  = "( .arc.type in {'friend','knows','likes'} && .type == 'person' ) || ( .arc.type == 'owns' && .type = 'pet' )"
+    filter  = "( .arc.type in {'friend','knows','likes'} && .type == 'person' ) || ( .arc.type == 'owns' && .type == 'pet' )"
 )
 ----
 
@@ -668,6 +688,7 @@ TIP: Complex matching logic like this is not possible using `arc=` and `neighbor
 ==== Dynamic Ranking Example
 
 .Boost Alice's friends
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -682,6 +703,7 @@ Here we use `rank=` to specify a custom scoring function. To use the computed sc
 ==== Select Result Fields Example
 
 .Include selected and computed properties in result
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -982,21 +1004,23 @@ Not equal to
 
 Operations may be enclosed in parentheses `(` `)` to override default precedence rules. Groups may be nested to construct any mathematical formula or logical expression. Nesting is unlimited.
 
-[source, python]
+[.copyable]
+[source, c]
 ----
-1 / ( ( 2 + 3 ) * ( 4 + 5 ) )                   -> 0.02222...
+1 / ( ( 2 + 3 ) * ( 4 + 5 ) )                   // -> 0.02222...
 ----
 
 A group can also be used to perform one or more "hidden" operations needed for their side-effects. When multiple expressions separated by comma `,` appear within the group only the value of the first expression becomes the value of the group. All subsequent expressions are evaluated but their return values are discarded.
 
-[source, python]
+[.copyable]
+[source, c]
 ----
-( 1, 2, 3 ) + ( 1.5, 2.5, 3.5 )                 -> 2.5
-10 * ( 2, store( R1, pi ) )                     -> 20
-4 ** 3 - 2 + 1                                  -> 63
-4 ** (3 - 2) + 1                                -> 5
-4 ** 3 - (2 + 1)                                -> 61
-4 ** (3 - 2 + 1)                                -> 16
+( 1, 2, 3 ) + ( 1.5, 2.5, 3.5 )                 // -> 2.5
+10 * ( 2, store( R1, pi ) )                     // -> 20
+4 ** 3 - 2 + 1                                  // -> 63
+4 ** (3 - 2) + 1                                // -> 5
+4 ** 3 - (2 + 1)                                // -> 61
+4 ** (3 - 2 + 1)                                // -> 16
 ----
 
 [[syn_set]]
@@ -1004,7 +1028,7 @@ A group can also be used to perform one or more "hidden" operations needed for t
 
 A set of discrete numbers or objects is created by placing them within braces `{` `}`, items separated by commas `,`.
 
-[source, python]
+[source, text]
 ----
 { 3, 4, 5, 'hello', 6.7 }
 ----
@@ -1014,7 +1038,7 @@ A set of discrete numbers or objects is created by placing them within braces `{
 
 A pair of parentheses `(...)` with optional comma `,` separated arguments is interpreted as a function call when the preceding token is a string.
 
-[source, python]
+[source, c]
 ----
 random()
 log( 1.23 )
@@ -1026,7 +1050,7 @@ mmul( 0, 31, pi )
 
 A literal string `_'s'_` within a pair of brackets `[ _'s'_ ]` denotes a property lookup when the preceding token is a vertex object. Properties are readonly.
 
-[source, python]
+[source, text]
 ----
 vertex[ 'prop1' ]
 next[ 'value' ]
@@ -1037,7 +1061,7 @@ next[ 'value' ]
 
 The dot `.` operator is used to access vertex attributes, arc attributes and various context information. Attributes are readonly.
 
-[source, python]
+[source, c]
 ----
 vertex.id
 next.arc.value
@@ -1049,11 +1073,11 @@ graph.size
 
 Unary plus `+` and minus `&#8722;` set the sign of a numeric value.
 
-[source, python]
+[source, c]
 ----
--1                      -> -1
--(+2 - +5)              -> 3
--7+-1--8                -> 0
+-1                      // -> -1
+-(+2 - +5)              // -> 3
+-7+-1--8                // -> 0
 ----
 
 [[syn_logicalnot]]
@@ -1061,13 +1085,13 @@ Unary plus `+` and minus `&#8722;` set the sign of a numeric value.
 
 The exclamation point `!` negates a logical value.
 
-[source, python]
+[source, c]
 ----
-!0                      -> 1
-!1                      -> 0
-!2                      -> 0
-!( true || false )      -> 0
-!( !true || false )     -> 1
+!0                      // -> 1
+!1                      // -> 0
+!2                      // -> 0
+!( true || false )      // -> 0
+!( !true || false )     // -> 1
 ----
 
 [[syn_bitwisenot]]
@@ -1075,11 +1099,11 @@ The exclamation point `!` negates a logical value.
 
 A tilde `~` denotes one's complement of a numeric value, i.e. all bits are inverted.
 
-[source, python]
+[source, c]
 ----
-~0                      -> -1
-~1                      -> -2
-~0xffffffffffffffff     -> 0
+~0                      // -> -1
+~1                      // -> -2
+~0xffffffffffffffff     // -> 0
 ----
 
 [[syn_exponentiation]]
@@ -1087,11 +1111,11 @@ A tilde `~` denotes one's complement of a numeric value, i.e. all bits are inver
 
 A pair of infix asterisks `**` raises a number to the power of another number.
 
-[source, python]
+[source, c]
 ----
-16 ** 2                 -> 256
-100.0 ** 0.5            -> 10.0
-e ** -0.1               -> 0.9048...
+16 ** 2                 // -> 256
+100.0 ** 0.5            // -> 10.0
+e ** -0.1               // -> 0.9048...
 ----
 
 [[syn_innumericrange]]
@@ -1099,12 +1123,12 @@ e ** -0.1               -> 0.9048...
 
 The `in` and `notin` operators followed by `range( _a_, _b_ )` express the numeric range conditions &#8712; [ _a_, _b_ > and &#8713; [ _a_, _b_ >, respectively.
 
-[source, python]
+[source, c]
 ----
-5 in range( 2, 6 )          -> true
-5 in range( 2, 5 )          -> false
-pi in range( 3.1, 3.2 )     -> true
-10 notin range( 1, 5 )      -> true
+5 in range( 2, 6 )          // -> true
+5 in range( 2, 5 )          // -> false
+pi in range( 3.1, 3.2 )     // -> true
+10 notin range( 1, 5 )      //  -> true
 ----
 
 [[syn_memberofset]]
@@ -1112,14 +1136,14 @@ pi in range( 3.1, 3.2 )     -> true
 
 The `in` and `notin` operators followed by set `{ _x~1~_, _x~2~_, ..., _x~n~_ }` express the discrete set membership conditions &#8712; { _x~1~_, _x~2~_, ..., _x~n~_ } and &#8713; { _x~1~_, _x~2~_, ..., _x~n~_ }, respectively.
 
-[source, python]
+[source, text]
 ----
-5 in { 9, 5, 'cat', 'dog' }                 -> true
-4 in { 9, 5, 'cat', 'dog' }                 -> false
-'cat' in { 9, 5, 'cat', 'dog' }             -> true
-'mouse' notin { 9, 5, 'cat', 'dog' }        -> true
-'mouse' in { '*ous*', 'm*e' }               -> true
-'mice' in { '*ous*', 'm*e' }                -> true
+5 in { 9, 5, 'cat', 'dog' }                 // -> true
+4 in { 9, 5, 'cat', 'dog' }                 // -> false
+'cat' in { 9, 5, 'cat', 'dog' }             // -> true
+'mouse' notin { 9, 5, 'cat', 'dog' }        // -> true
+'mouse' in { '*ous*', 'm*e' }               // -> true
+'mice' in { '*ous*', 'm*e' }                // -> true
 ----
 
 [[syn_multiplication]]
@@ -1127,10 +1151,10 @@ The `in` and `notin` operators followed by set `{ _x~1~_, _x~2~_, ..., _x~n~_ }`
 
 Infix `*` multiplies two numbers.
 
-[source, python]
+[source, c]
 ----
-2 * 3           -> 6
-2 * pi          -> 6.28...
+2 * 3           // -> 6
+2 * pi          // -> 6.28...
 ----
 
 [[syn_division]]
@@ -1138,13 +1162,13 @@ Infix `*` multiplies two numbers.
 
 Infix `/` divides a number by another.
 
-[source, python]
+[source, c]
 ----
-15 / 3              -> 5
-16 / 3              -> 5.33...
-3.14 / pi           -> 0.999...
-1 / 0               -> 8.51e37
-1 / -0.0            -> -inf
+15 / 3              // -> 5
+16 / 3              // -> 5.33...
+3.14 / pi           // -> 0.999...
+1 / 0               // -> 8.51e37
+1 / -0.0            // -> -inf
 ----
 
 IMPORTANT: When integer division has a remainder the result is promoted to floating point. Zero division results in a large floating point value except for the special case divisor -0.0 which produces `-inf`.
@@ -1154,15 +1178,15 @@ IMPORTANT: When integer division has a remainder the result is promoted to float
 
 Infix `%` yields the remainder after dividing two numbers.
 
-[source, python]
+[source, c]
 ----
-15 % 3              -> 0
-16 % 3              -> 1
-3.14 % pi           -> 3.14
-6.2 % pi            -> 3.06...
-1 % 0               -> 0
-1.1 % 0             -> 1.18e-38
-1 % -0.0            -> nan
+15 % 3              // -> 0
+16 % 3              // -> 1
+3.14 % pi           // -> 3.14
+6.2 % pi            // -> 3.06...
+1 % 0               // -> 0
+1.1 % 0             // -> 1.18e-38
+1 % -0.0            // -> nan
 ----
 
 IMPORTANT: Modulo zero results in 0 (or very close to 0) except for the special case divisor -0.0 which produces `nan`.
@@ -1172,12 +1196,12 @@ IMPORTANT: Modulo zero results in 0 (or very close to 0) except for the special 
 
 Infix `+` adds two numbers or concatenates a string with another object implicitly cast to string.
 
-[source, python]
+[source, c]
 ----
-1 + 1               -> 2
-pi + e              -> 5.8599...
-'x' + 'y'           -> "xy"
-'x' + pi            -> "x3.14159"
+1 + 1               // -> 2
+pi + e              // -> 5.8599...
+'x' + 'y'           // -> "xy"
+'x' + pi            // -> "x3.14159"
 ----
 
 [[syn_subtraction]]
@@ -1185,10 +1209,10 @@ pi + e              -> 5.8599...
 
 Infix `-` subtracts a number from another.
 
-[source, python]
+[source, c]
 ----
-1 - 2               -> -1
-pi - e              -> 0.42331...
+1 - 2               // -> -1
+pi - e              // -> 0.42331...
 ----
 
 [[syn_bitwiseshift]]
@@ -1196,13 +1220,13 @@ pi - e              -> 0.42331...
 
 Infix `<<` and `>>` perform left and right bit shift, respectively, of the integer representation of the left operand by the amount specified by the right operand. Bits are not rotated, i.e. once bits are shifted off the left or right edge they are discarded.
 
-[source, python]
+[source, c]
 ----
-1 << 10             -> 1024
-1.9 << 10           -> 1024
-1.9 << 10.0         -> 1.9
-0xff >> 5           -> 7
-0xff >> 40          -> 0
+1 << 10             // -> 1024
+1.9 << 10           // -> 1024
+1.9 << 10.0         // -> 1.9
+0xff >> 5           // -> 7
+0xff >> 40          // -> 0
 ----
 
 NOTE: If the right operand is not an integer the shift operation is not performed.
@@ -1212,15 +1236,15 @@ NOTE: If the right operand is not an integer the shift operation is not performe
 
 The infix comparison operators `==`, `!=`, `>`, `>=`, `<`, `\<=` compare the left and right operands yielding true or false. Operands may be numbers, strings, vertices or vectors.
 
-[source, python]
+[source, text]
 ----
-'hello' == '*llo'           -> true
-'cat' != 'dog'              -> true
-5 > 4                       -> true
-5 >= 5.0                    -> true
-5.0 < 4.5                   -> false
-5 <= 4.9999999              -> false
-5 == 4.9999999              -> true
+'hello' == '*llo'           // -> true
+'cat' != 'dog'              // -> true
+5 > 4                       // -> true
+5 >= 5.0                    // -> true
+5.0 < 4.5                   // -> false
+5 <= 4.9999999              // -> false
+5 == 4.9999999              // -> true
 ----
 
 IMPORTANT: Two floating point values compare equal when their difference is smaller than approximately 1.1921e-7. This affects `==` and `!=`, but not `>=` and `\<=`.
@@ -1230,11 +1254,11 @@ IMPORTANT: Two floating point values compare equal when their difference is smal
 
 Infix operators `&`, `|` and `^` perform bitwise AND, OR and XOR, respectively, on their left and right operands.
 
-[source, python]
+[source, c]
 ----
-0xf0 & 0x3c                 -> 0x30
-0xf0 | 0x3c                 -> 0xfc
-0xf0 ^ 0x3c                 -> 0xcc
+0xf0 & 0x3c                 // -> 0x30
+0xf0 | 0x3c                 // -> 0xfc
+0xf0 ^ 0x3c                 // -> 0xcc
 ----
 
 [[syn_logicalcondition]]
@@ -1242,11 +1266,11 @@ Infix operators `&`, `|` and `^` perform bitwise AND, OR and XOR, respectively, 
 
 Infix conditional operators `&&` and `||` apply the logical conditions AND and OR, respectively, to their left and right operands.
 
-[source, python]
+[source, c]
 ----
-1 == 2 && 2 > 1             -> false
-1 == 2 || 2 > 1             -> true
-1 == 2 && store( R1, 777 )  -> false   (777 still stored in R1)
+1 == 2 && 2 > 1             // -> false
+1 == 2 || 2 > 1             // -> true
+1 == 2 && store( R1, 777 )  // -> false   (777 still stored in R1)
 ----
 
 IMPORTANT: Logical short circuiting is not applied. All parts of an expression are always evaluated regardless of whether or not they contribute to the overall result of the expression.
@@ -1256,12 +1280,12 @@ IMPORTANT: Logical short circuiting is not applied. All parts of an expression a
 
 The infix `?:` operator selects the second or third operand depending on the value of the first operand.
 
-[source, python]
+[source, c]
 ----
-1 < 2 ? 3 + 4 : 5 + 6                      -> 7
-1 > 2 ? 3 + 4 : 5 + 6                      -> 11
-1 < 2 ? store( R1, 33 ) : store( R1, 44 )  -> 33  (R1 contains 44)
-1 > 2 ? store( R1, 33 ) : store( R1, 44 )  -> 44  (R1 contains 44)
+1 < 2 ? 3 + 4 : 5 + 6                      // -> 7
+1 > 2 ? 3 + 4 : 5 + 6                      // -> 11
+1 < 2 ? store( R1, 33 ) : store( R1, 44 )  // -> 33  (R1 contains 44)
+1 > 2 ? store( R1, 33 ) : store( R1, 44 )  // -> 44  (R1 contains 44)
 ----
 
 IMPORTANT: Logical short circuiting is not applied. All operations are completely evaluated, left to right, regardless of condition.
@@ -1271,7 +1295,7 @@ IMPORTANT: Logical short circuiting is not applied. All operations are completel
 
 The assignment operator `:=` associates a <<evaluatordefine, definition>> with a name that can be referenced later to invoke the expression. Expressions are normally assigned to names using `pyvgx.Graph.Define()`. However, it is also possible to dynamically assign expressions to names during query execution and then reference those names in other parts of the same query.
 
-[source, python]
+[source, text]
 ----
 func := next['score'] / (10 * .arc.value)
 quad := load( R2 ) ** 2 + load( R1 ) + vertex['offset']
@@ -1286,12 +1310,12 @@ An expression may contain one or more independent sub-expressions separated by s
 
 It is possible to assign the result of a sub-expression to a local variable. The scope of such a variable extends from the point of assignment until the end of the expression. Variable assignment uses the `=` operator, and must appear directly after the variable name at the start of a sub-expression. Variable names can be freely chosen so long as they conform to <<../limits.adoc#property_key, valid key>> syntax and do not conflict with pre-defined names or functions like `pi`, `e`, `next`, `sqrt`, etc.
 
-[source, python]
+[source, c]
 ----
-1; 5 + log(10); 2.5;                          -> 2.5
-store(R1, 7); 3 + load( R1 );                 -> 10
-a = 2*pi; b = rad(360); a / b;                -> 1.0
-pi = 3.14;    ==>    Syntax Error: invalid variable assignment
+1; 5 + log(10); 2.5;                          // -> 2.5
+store(R1, 7); 3 + load( R1 );                 // -> 10
+a = 2*pi; b = rad(360); a / b;                // -> 1.0
+pi = 3.14;    //==>    Syntax Error: invalid variable assignment
 ----
 
 NOTE: Variable scope is local to the current evaluation of the expression. Once the last sub-expression has completed and returned its result all variables go out of scope. Use <<evaluatormemory>> for global scope and to transfer data between different expressions or repeated evaluations of the same expression.
@@ -1301,7 +1325,7 @@ NOTE: Variable scope is local to the current evaluation of the expression. Once 
 
 The label operator `:` is exclusive to <<selectEvaluator.adoc#selectlabel, select statements>>, allowing processing of rendered result values to take place and making those values identifiable by the label.
 
-[source, python]
+[source, text]
 ----
 val1: 1 / .arc.value; val2: next['score'] & 0xFFFF; val3: graph.ts
 ----
@@ -1313,7 +1337,7 @@ NOTE: This syntax is only available in `select=` and the expression cannot be pr
 
 The comma `,` is used to separate multiple objects such as function arguments, set members, and group elements.
 
-[source, python]
+[source, text]
 ----
 max( next['score'], vertex['score'] )
 next.id in { 'Alice', '*lie', 'B*' }
@@ -1326,7 +1350,7 @@ x = next['score'] * pi, y = 1 / .arc.value
 
 The semicolon `;` is used to terminate sub-expressions within a larger expression, and to separate fields or labeled expressions in `select=` statements.
 
-[source, python]
+[source, text]
 ----
 /* Sub-Expression */
 x = next['score'] / next.degree; y = log(x) + x/2; z = log2( y * x );
@@ -1367,14 +1391,17 @@ Attributes names `vertex*` reference the current anchor ("Tail" column in <<vert
 
 ==== Example
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
     "Alice",
-    filter      = "next.arc.type == 'knows' && next['age'] >= 21"
+    filter      = "next.arc.type == 'knows' && next['age'] >= 21",
     neighbor    = {
-        'arc'       : D_OUT
-        'filter'    : "prev.arc.value < next.arc.value"
+        'arc'       : D_OUT,
+        'traverse'  : {
+            'filter'    : "prev.arc.value < next.arc.value"
+        }
     }
 )
 ----
@@ -1450,6 +1477,7 @@ NOTE: Expressions involving arc type equality checks may specify integer enumera
 IMPORTANT: Wildcards are not supported in relationship type string literals. E.g. `.arc.type == '\*'` and `.arc.type == 'fr*'` are always false.
 
 .Example: Alice's close relationships
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -1672,6 +1700,7 @@ graph.Neighborhood(
 NOTE: References to `prev*` have meaning only when evaluated in a context where a traversal has already taken place. All `prev*` attributes are undefined otherwise.
 
 .Example: Alice's well-connected friends with first initial "B"
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -1715,6 +1744,7 @@ occurs within arithmetic expressions. The default value is `nan` in all other co
 NOTE: Accessing `prev[ _key_ ]` or `prev.property( _key_, ... )` has meaning only when evaluated in a context where a traversal has already taken place. The lookup will always return `nan` otherwise.
 
 .Example: Alice's well-connected friends who are 20 - 29 years old
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -1752,17 +1782,18 @@ When traversing arc _AB_ each component arc _ab~i~_ is processed separately with
 For example, if _A_ is connected to _B_ with multiple arc _AB_ = { _ab~1~_, _ab~2~_, _ab~3~_ } and _B_ is connected to _C_ with multiple arc _BC_ = { _bc~1~_, _bc~2~_, _bc~3~_ } then there are 3 paths from _A_ to _B_ and 3*3=9 paths from _A_ to _C_. The default query behavior is to exhaustively traverse all unique paths.
 
 .This query returns _ab~1~_, _ab~2~_, _ab~3~_ plus all nine combinations of (_ab~i~_, _bc~j~_) for a total of 12 arcs/paths.
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
     id        = "A",
     fields    = F_AARC,
     collect   = C_COLLECT,
-    neighbors = {
+    neighbor  = {
         'arc'    : D_OUT,
         'collect': C_COLLECT
     }
-) -> list of 12 entries
+) # -> list of 12 entries
 ----
 
 [[synthetic_arcs__arc_collapsing]]
@@ -1841,6 +1872,7 @@ Synthetic arcs have the special reserved relationship name `"+++__synthetic__+++
 Consider vertex _A_ connected to two terminals _X_ and _Y_ with arcs _AX_ = { ('count', M_CNT, 25), ('weight', M_FLT, 4.0 ) }, and _AY_ = { ('count', M_CNT, 20), ('weight', M_FLT, 2.0) }. A filter expression can be written to conditionally collect synthetic arcs rather than individual component arcs.
 
 .Conditionally collect synthetic arc based on composite value
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -1853,7 +1885,7 @@ graph.Neighborhood(
                 score = c * w;
                 collectif( score < 50.0, score );
                 """
-) -> ['( A )-[ __synthetic__ <M_FLT> 40.000 ]->( Y )']
+) # -> ['( A )-[ __synthetic__ <M_FLT> 40.000 ]->( Y )']
 ----
 
 The filter expression is evaluated three times for (multiple) arcs _AX_ and _AY_. First consider the processing of _AX_:
@@ -1884,6 +1916,7 @@ Consider a graph connecting a root vertex to many neighbors with wide multiple a
 Formally, such a graph can be described as follows. Root vertex _A_ has _n_ terminals *B* = { _B~1~_, ... _B~n~_ }, where each _B~i~_ has _m_ terminals *C~i~* = { _C~i,1~_, ..., _C~i,m~_ }. _A_ connects to each _B~i~_ with _k_-multiple arc _AB~i~_ = { _ab~i,1~_, ..., _ab~i,k~_ } and _B~i~_ connects to each _C~i,j~_ with _q_-multiple arc _BC~i,j~_ = { _bc~i,j,1~_, ..., _bc~i,j,q~_}.
 
 .Build graph connecting _A_ via *B* to *C* with wide multiple arcs
+[.copyable]
 [source, python]
 ----
 def build( n=100, m=100, k=10, q=10 ):
@@ -1902,6 +1935,7 @@ def build( n=100, m=100, k=10, q=10 ):
 
 If _n_ = _m_ = 1000 and _k_ = _q_ = 100, then _A_ has 1000 terminals _B~1~_ through _B~1000~_ (each connected via a _100_-multiple arc) and each _B~i~_ has 1000 terminals _C~i,1~_ through _C~i,1000~_ (each connected via a _100_-multiple arc.) 
 
+[.copyable]
 [source, python]
 ----
 graph = build( n=1000, m=1000, k=100, q=100 )
@@ -1909,6 +1943,8 @@ graph = build( n=1000, m=1000, k=100, q=100 )
 
 
 The following query collects all paths from _A_ to all *C*, yielding a large result set with _n_ * _k_ * _m_ * _q_ = 10,000,000,000 arcs.
+
+CAUTION: Do not run this query!
 
 .Exhaustive path traversal from _A_ to *C*
 [source, python]
@@ -1923,12 +1959,13 @@ graph.Neighborhood(
             'collect': C_COLLECT
         }
     }
-) -> list of n*k*m*q=10,000,000,000 arcs 
+) # -> list of n*k*m*q=10,000,000,000 arcs 
 ----
 
 We can use synthetic arcs to avoid exhaustive path traversal. By adding filter conditions that check for `.arc.issyn == true` we can restrict traversal and collection to synthetic arcs:
 
 .Collapsed path traversal from _A_ to *C*
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -1943,12 +1980,13 @@ graph.Neighborhood(
             'filter' : ".arc.issyn"
         }
     }
-) -> list of n*m arcs=1,000,000 arcs
+) # -> list of n*m arcs=1,000,000 arcs
 ----
 
 We can also use a combination of synthetic arcs and value aggregation to collect collapsed arcs with computed values. The query below uses memory registers to accumulate values.  Register `R1` accumulates the sum of values of arcs { _ab~i,1~_, ..., _ab~i,k~_ }.  Register `R2` accumulates the sum of values of arcs { _bc~i,j,1~_, ..., _bc~i,j,q~_ }.
 
 .Fancy collapsed path traversal from _A_ to *C*
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2011,10 +2049,11 @@ Many numeric constants are available for use in expressions. These are summarize
 |===
 
 .Example: Non-existent vertex attributes
+[.copyable]
 [source, python]
 ----
 graph.CreateVertex( "V" )
-graph.Evaluate( "vertex['prop1'] == null", head="V" ) -> 1
+graph.Evaluate( "vertex['prop1'] == null", head="V" ) # -> 1
 ----
 
 ==== Boolean
@@ -2035,9 +2074,10 @@ graph.Evaluate( "vertex['prop1'] == null", head="V" ) -> 1
 |===
 
 .Example: Boolean values are integers
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "true == 1 && false == 0" )  -> 1
+graph.Evaluate( "true == 1 && false == 0" )  # -> 1
 ----
 
 ==== Timestamp Limits
@@ -2063,6 +2103,7 @@ graph.Evaluate( "true == 1 && false == 0" )  -> 1
 |===
 
 .Example: Alice's connections that will expire at some point
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2099,6 +2140,7 @@ graph.Neighborhood(
 |===
 
 .Example: Sort by arc value, boosting inbound arcs by 1000 extra points
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2113,6 +2155,7 @@ graph.Neighborhood(
 IMPORTANT: The `.arc.dir` attribute is "observational" only and cannot be used to control traversal direction. Traversal direction is controlled by the `arc=` parameter and `.arc.dir` reflects the current direction. This implies that `.arc.dir` will never equal `D_ANY`. Furthermore, in `filter=` expressions `.arc.dir` will either be `D_IN` or `D_OUT`, never `D_BOTH`. However, in `rank=` and `select=` expressions `.arc.dir` may equal `D_BOTH` if a bi-directional relationship was collected. This subtle point warrants another example:
 
 .Example: Sort bi-directional arcs before other arcs
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2200,6 +2243,7 @@ graph.Neighborhood(
 |===
 
 .Example: Match multiple arc modifiers
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2236,14 +2280,17 @@ graph.Neighborhood(
 |===
 
 .Example: Sort higher when arc and neighbor's arc have similar values
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
     "Alice",
     filter   = "store( R1, .arc.value ) in range( 1, 100 )",
     neighbor = {
-        'arc'     : D_OUT
-        'filter'  : "store( R2, .arc.value ) in range( 1, 100 )"
+        'arc'     : D_OUT,
+        'traverse': {
+            'filter'  : "store( R2, .arc.value ) in range( 1, 100 )"
+        }
     },
     rank     = "prox( load(R1), load(R2) )",
     sortby   = S_RANK,
@@ -2278,6 +2325,7 @@ graph.Neighborhood(
 |===
 
 .Example: Find the most visited country for each of Alice's friends.
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2361,9 +2409,10 @@ graph.Neighborhood(
 
 |===
 
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "(e + root2) / pi" ) -> 1.3154...
+graph.Evaluate( "(e + root2) / pi" ) # -> 1.3154...
 ----
 
 [[evaluatorenvironment]]
@@ -2405,10 +2454,11 @@ These attributes are relative to the current execution environment.
 NOTE: Graph state attributes are sampled the first time an expression is evaluated in a query and remain constant for the duration of the query.
 
 .Example: Derive information from graph attributes
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "graph.size / graph.order" ) -> average outdegree
-graph.Evaluate( "graph.ts - graph.age" )     -> graph creation time
+graph.Evaluate( "graph.size / graph.order" ) # -> average outdegree
+graph.Evaluate( "graph.ts - graph.age" )     # -> graph creation time
 ----
 
 ==== System Attributes
@@ -2429,6 +2479,7 @@ graph.Evaluate( "graph.ts - graph.age" )     -> graph creation time
 NOTE: System attributes are re-read from their source each time an expression is evaluated.
 
 .Example: Perform deep traversal and return results in the order of most time consuming
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
@@ -2436,8 +2487,12 @@ graph.Neighborhood(
     filter   = "store(R1, sys.tick)",
     neighbor = {
         'arc'      : D_OUT,
-        'neighbor' : {
-            'filter' : ".id == '*z*'"
+        'traverse' : {
+            'neighbor' : {
+                'traverse' : {
+                    'filter' : ".id == '*z*'"
+                }
+            }
         }
     },
     rank     = "sys.tick - load(R1)",
@@ -2479,13 +2534,14 @@ NOTE: Query <<../constants/sortSpecificationConstants.adoc#, sortby>> parameter 
 |===
 
 .Example: Sort results by length of neighbor's id and render result by custom label
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood(
     "X",
-    rank   = "len( .id )"
+    rank   = "len( .id )",
     sortby = S_RANK,
-    select = "ID LEN : int( .rank )"
+    select = "IDLEN: int( .rank )"
 )
 ----
 
@@ -2686,12 +2742,13 @@ This section summarizes built-in functions available for use in expressions.
 |===
 
 .Example: Miscellaneous function calls
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "log( 5 ) - sqrt( 17 )" ) -> -2.51...
-graph.Evaluate( "acos( sin( pi / 3 ) )" ) -> 0.524...
-graph.Evaluate( "sqrt( log( exp(4) ) )" ) -> 2.0
-graph.Evaluate( "hash( 'helloworld!' )" ) -> 7982852363355633418
+graph.Evaluate( "log( 5 ) - sqrt( 17 )" ) # -> -2.51...
+graph.Evaluate( "acos( sin( pi / 3 ) )" ) # -> 0.524...
+graph.Evaluate( "sqrt( log( exp(4) ) )" ) # -> 2.0
+graph.Evaluate( "hash( 'helloworld!' )" ) # -> 7982852363355633418
 ----
 
 [[castandcheckfunctions]]
@@ -2783,16 +2840,17 @@ graph.Evaluate( "hash( 'helloworld!' )" ) -> 7982852363355633418
 |===
 
 .Example: Miscellaneous casts and checks
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "int( 2.5 )" )              -> 2
-graph.Evaluate( "asint( 2.5 )" )            -> 0x4004000000000000
-graph.Evaluate( "asint( '123' )" )          -> 123
-graph.Evaluate( "real( 2 )" )               -> 2.0
-graph.Evaluate( "asreal( 0x4004 << 48 )" )  -> 2.5
-graph.Evaluate( "bitvector( 0xCC )" )       -> 0xCC
-graph.Evaluate( "isinf( -1/-0.0 )" )        -> 1
-graph.Evaluate( "len( 'hello' )" )          -> 5
+graph.Evaluate( "int( 2.5 )" )              # -> 2
+graph.Evaluate( "asint( 2.5 )" )            # -> 0x4004000000000000
+graph.Evaluate( "asint( '123' )" )          # -> 123
+graph.Evaluate( "real( 2 )" )               # -> 2.0
+graph.Evaluate( "asreal( 0x4004 << 48 )" )  # -> 2.5
+graph.Evaluate( "bitvector( 0xCC )" )       # -> 0xCC
+graph.Evaluate( "isinf( -1/-0.0 )" )        # -> 1
+graph.Evaluate( "len( 'hello' )" )          # -> 5
 ----
 
 [[stringfunctions]]
@@ -2854,18 +2912,19 @@ CAUTION: For those functions returning strings, each time the function is evalua
 NOTE: It is also possible to concatenate strings using the infix `+` operator. As long as the first operand is a string object all subsequent infix operands added with `+` are implicitly cast using <<_str, `str()`>>.
 
 .Example: String functions
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "strcmp( 'hello', 'hi' )" )          -> -1
-graph.Evaluate( "strcasecmp( 'Hello', 'hello' )" )   -> 0
-graph.Evaluate( "startswith( 'Hello', 'He' )" )      -> 1
-graph.Evaluate( "endswith( 'Hello', 'lo' )" )        -> 1
-graph.Evaluate( "join( ' ', 'a', 'b', 'c' )" )       ->  "a b c"
-graph.Evaluate( "replace( 'say soda', 's', 'y' )" )  ->  "yay yoda"
-graph.Evaluate( "slice( 'hello', 1, 4 )" )           ->  "ell"
-graph.Evaluate( "str(pi)")                           ->  "3.14159"
-graph.Evaluate( "'hello' + 1 + 2")                   ->  "hello12"
-graph.Evaluate( "''+sin(1)+sin(0)" )                 ->  "0.8414710.00000"
+graph.Evaluate( "strcmp( 'hello', 'hi' )" )          # -> -1
+graph.Evaluate( "strcasecmp( 'Hello', 'hello' )" )   # -> 0
+graph.Evaluate( "startswith( 'Hello', 'He' )" )      # -> 1
+graph.Evaluate( "endswith( 'Hello', 'lo' )" )        # -> 1
+graph.Evaluate( "join( ' ', 'a', 'b', 'c' )" )       # ->  "a b c"
+graph.Evaluate( "replace( 'say soda', 's', 'y' )" )  # ->  "yay yoda"
+graph.Evaluate( "slice( 'hello', 1, 4 )" )           # ->  "ell"
+graph.Evaluate( "str(pi)")                           # ->  "3.14159"
+graph.Evaluate( "'hello' + 1 + 2")                   # ->  "hello12"
+graph.Evaluate( "''+sin(1)+sin(0)" )                 # ->  "0.8414710.00000"
 ----
 
 [[proplookupfunctions]]
@@ -2899,13 +2958,14 @@ graph.Evaluate( "''+sin(1)+sin(0)" )                 ->  "0.8414710.00000"
 |===
 
 .Example: Property lookup
+[.copyable]
 [source, python]
 ----
 V = g.NewVertex( "V" )
 V['x'] = 100
-g.Evaluate( "vertex.property( 'x' )", tail=V )                -> 100
-g.Evaluate( "vertex.property( 'y', 999 )", tail=V )           -> 999
-g.Evaluate( "next.property( 'x', 0, next.deg > 0 )", head=V ) -> 0
+g.Evaluate( "vertex.property( 'x' )", tail=V )                # -> 100
+g.Evaluate( "vertex.property( 'y', 999 )", tail=V )           # -> 999
+g.Evaluate( "next.property( 'x', 0, next.deg > 0 )", head=V ) # -> 0
 ----
 
 Notice how the 3rd property lookup does not perform any lookup unless the degree is non-zero. If evaluated for millions of arcs where the condition is mostly false the memory load is reduced and the query runs faster.
@@ -2950,11 +3010,12 @@ Notice how the 3rd property lookup does not perform any lookup unless the degree
 |===
 
 .Example: Miscellaneous enumerations
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "modtostr( 5 )" )      -> "M_INT"
-graph.Evaluate( "relenc( 'likes' )" )  -> 3229  (may vary!)
-graph.Evaluate( "reldec( 3229 )" )     -> "likes"
+graph.Evaluate( "modtostr( 5 )" )      # -> "M_INT"
+graph.Evaluate( "relenc( 'likes' )" )  # -> 3229  (may vary!)
+graph.Evaluate( "reldec( 3229 )" )     # -> "likes"
 ----
 
 [[similarityfunctions_feature]]
@@ -2991,6 +3052,7 @@ graph.Evaluate( "reldec( 3229 )" )     -> "likes"
 |===
 
 .Example: Feature Vector similarity calculation
+[.copyable]
 [source, python]
 ----
 A = graph.NewVertex( "A" )
@@ -3024,6 +3086,7 @@ graph.Evaluate( "sim( vertex.vector, next.vector )", tail="A", head="B" )
 |===
 
 .Example: Euclidean Vector similarity calculation
+[.copyable]
 [source, python]
 ----
 A = graph.NewVertex( "A" )
@@ -3094,33 +3157,34 @@ graph.Evaluate( "sim( vertex.vector, next.vector )", tail="A", head="B" )
 |===
 
 .Example: Miscellaneous control function calls
+[.copyable]
 [source, python]
 ----
 # Use return() for clarity
-graph.Evaluate( "a=1+2; return( a )" ) -> 3
+graph.Evaluate( "a=1+2; return( a )" ) # -> 3
 
 # Stop execution when returnif() condition satisfied
 V = graph.NewVertex("V")
 V['x'] = 1
 V['y'] = 2
-graph.Evaluate( "a=next['x']; returnif(a,a); next['y']", head="V" ) -> 1
+graph.Evaluate( "a=next['x']; returnif(a,a); next['y']", head="V" ) # -> 1
 
 # Return first argument
-graph.Evaluate( "firstval()" ) -> nan
-graph.Evaluate( "firstval( 1, 2, 3, 4 )" ) -> 1
-graph.Evaluate( "firstval( -1/-0.0, asin(2), 42, 43 )" ) -> 42
+graph.Evaluate( "firstval()" ) # -> nan
+graph.Evaluate( "firstval( 1, 2, 3, 4 )" ) # -> 1
+graph.Evaluate( "firstval( -1/-0.0, asin(2), 42, 43 )" ) # -> 42
 A = graph.NewVertex( "A" )
-graph.Evaluate( "firstval( vertex['xxx'], 123 )", tail="A" ) -> 123
+graph.Evaluate( "firstval( vertex['xxx'], 123 )", tail="A" ) # -> 123
 
 # Return last argument
-graph.Evaluate( "lastval( 1, 2, 3, 4 )" )  -> 4
+graph.Evaluate( "lastval( 1, 2, 3, 4 )" )  # -> 4
 
 # Execute anything and return 1
-graph.Evaluate( "do()" ) -> 1
-graph.Evaluate( "do( 0, 0/-0.0)" ) -> 1
+graph.Evaluate( "do()" ) # -> 1
+graph.Evaluate( "do( 0, 0/-0.0)" ) # -> 1
 
 # Execute anything and return nan
-graph.Evaluate( "void( 1, 2, 3 )" ) -> nan
+graph.Evaluate( "void( 1, 2, 3 )" ) # -> nan
 ----
 
 [[variadicaggregatorfunctions]]
@@ -3187,16 +3251,17 @@ These functions also accept numeric array vertex properties as x~i~. When multip
 ====
 
 .Example: Aggregator function calls
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "sum( 2, 2, 3, 5, 7 )" ) -> 19
-graph.Evaluate( "sumsqr( 2, 2, 3, 5, 7 )" ) -> 91
-graph.Evaluate( "stdev( 2, 2, 3, 5, 7 )" ) -> 2.17...
-graph.Evaluate( "invsum( 2, 2, 3, 5, 7 )" ) -> 1.68...
-graph.Evaluate( "prod( 2, 2, 3, 5, 7 )" ) -> 420
-graph.Evaluate( "mean( 2, 2, 3, 5, 7 )" ) -> 3.8
-graph.Evaluate( "harmmean( 2, 2, 3, 5, 7 )" ) -> 2.98...
-graph.Evaluate( "geomean( 2, 2, 3, 5, 7 )" ) -> 3.35...
+graph.Evaluate( "sum( 2, 2, 3, 5, 7 )" ) # -> 19
+graph.Evaluate( "sumsqr( 2, 2, 3, 5, 7 )" ) # -> 91
+graph.Evaluate( "stdev( 2, 2, 3, 5, 7 )" ) # -> 2.17...
+graph.Evaluate( "invsum( 2, 2, 3, 5, 7 )" ) # -> 1.68...
+graph.Evaluate( "prod( 2, 2, 3, 5, 7 )" ) # -> 420
+graph.Evaluate( "mean( 2, 2, 3, 5, 7 )" ) # -> 3.8
+graph.Evaluate( "harmmean( 2, 2, 3, 5, 7 )" ) # -> 2.98...
+graph.Evaluate( "geomean( 2, 2, 3, 5, 7 )" ) # -> 3.35...
 ----
 
 // cspell:ignore geodist
@@ -3257,16 +3322,17 @@ This function expects arguments in degrees.
 
 
 .Example: Miscellaneous ranking functions
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "prox( 1000, 1050 )" ) -> 0.8366...
-graph.Evaluate( "geodist( 42.3, 71.0, 35.7, -139.7 )" ) -> 10797873.8
+graph.Evaluate( "prox( 1000, 1050 )" ) # -> 0.8366...
+graph.Evaluate( "geodist( 42.3, 71.0, 35.7, -139.7 )" ) # -> 10797873.8
 A = graph.NewVertex( "A" )
 A.c0 = 1000
 A.c1 = 2.5
-graph.Evaluate( "rank()", head="A") -> 1000.0
-graph.Evaluate( "rank(10)", head="A") -> 1025.0
-graph.Evaluate( "rank(10,1,2)", head="A") -> 1032.5
+graph.Evaluate( "rank()", head="A") # -> 1000.0
+graph.Evaluate( "rank(10)", head="A") # -> 1025.0
+graph.Evaluate( "rank(10,1,2)", head="A") # -> 1032.5
 ----
 
 [[collectorstagingfunctions]]
@@ -3311,6 +3377,7 @@ graph.Evaluate( "rank(10,1,2)", head="A") -> 1032.5
 |===
 
 .Example: Collect neighbor's neighbor arc with the highest value and return the top 10 of those arcs
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( 
@@ -3364,6 +3431,7 @@ A return value 1 from `mcull()` does not mean the visited vertex will be in the 
 
 .Example: Collect arcs from A's top-5 highest out-degree neighbors
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( 
@@ -3381,6 +3449,7 @@ graph.Neighborhood(
 
 .Example: Collect arcs from A's top-5 highest out-degree neighbors, and from those neighbors' neighbors top-3 highest in-degree neighbors
 
+[.copyable]
 [source, python]
 ----
 graph.Neighborhood( 
@@ -3426,6 +3495,7 @@ Memory array objects can have any size, only limited by system resources. Size i
 image::memarray.png[fig_memarray]
 
 .Example: Create arc value histogram
+[.copyable]
 [source, python]
 ----
 # Assumption: arc values are 0-99
@@ -3452,6 +3522,7 @@ The last four slots in a memory object are the registers R1 - R4. There is nothi
 image::memreg.png[fig_memreg]
 
 .Example: Use memory registers
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory( 16 )
@@ -3462,7 +3533,7 @@ mem.R1            # -> 111 (memory object attribute)
 mem[ -1 ]         # -> 111 (indexing from end)
 mem[ 15 ]         # -> 111 (indexing from start)
 mem.R1 + mem.R2   # -> 333
-graph.Evaluate( "load(R1)*load(R2)", memory=mem ) -> 24642
+graph.Evaluate( "load(R1)*load(R2)", memory=mem ) # -> 24642
 ----
 
 NOTE: To access the contents of a register it must be dereferenced using functions like `load()`, `store()`, etc., as shown in the example above. I.e. a constant like `R1` is just the number `-1` which represents a memory address.
@@ -3478,6 +3549,7 @@ image::memstack.png[fig_memstack]
 CAUTION: Using `push` and `pop` provides no protection against unbalanced calls. Make sure your algorithm is guaranteed to execute an equal number of each operation to avoid leaking the stack into other areas of the memory array you may be using for other purposes.
 
 .Example: Using the virtual stack
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory( 16 )
@@ -3487,9 +3559,9 @@ graph.Evaluate( "push( 333 )", memory=mem )
 mem[ 11 ]   # -> 111
 mem[ 10 ]   # -> 222
 mem[ 9 ]    # -> 333
-graph.Evaluate( "pop()", memory=mem )   -> 333
-graph.Evaluate( "pop()", memory=mem )   -> 222
-graph.Evaluate( "pop()", memory=mem )   -> 111
+graph.Evaluate( "pop()", memory=mem )   # -> 333
+graph.Evaluate( "pop()", memory=mem )   # -> 222
+graph.Evaluate( "pop()", memory=mem )   # -> 111
 ----
 
 // cspell:ignore moduloindexing
@@ -3502,13 +3574,14 @@ Memory arrays are modulo indexed, protecting system memory from invalid access a
 image::moduloindexing.png[fig_moduloindexing]
 
 .Example: Modulo indexing
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory( 16 )
 graph.Evaluate( "store( 3, 555 )", memory=mem )
-graph.Evaluate( "load( 3 )", memory=mem )    ->   555
-graph.Evaluate( "load( 19 )", memory=mem )    ->   555
-graph.Evaluate( "load( -13 )", memory=mem )     ->   555
+graph.Evaluate( "load( 3 )", memory=mem )    # ->   555
+graph.Evaluate( "load( 19 )", memory=mem )    # ->   555
+graph.Evaluate( "load( -13 )", memory=mem )     # ->   555
 ----
 
 TIP: To restrict the indexing span to a sub-range of the array use <<_modindex, the `modindex()` function>> to compute the array index.
@@ -3618,6 +3691,7 @@ For subscript syntax `[n]` the behavior is the same as for `list`.
 |===
 
 .Memory indexing
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory(32)
@@ -3712,6 +3786,7 @@ Just as for `list` slices may omit either end point, and negative indices refere
 |===
 
 .Memory slices
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory(8)
@@ -3731,6 +3806,7 @@ print( mem[:-2] )           # [0, 0, 0, 0, 444, 555]
 New memory objects can be initialized to specific values by passing an initializer list to the constructor. An existing memory object can have all its elements reset to a certain constant value or range of values.
 
 .Memory object initialization and reset
+[.copyable]
 [source, python]
 ----
 # Construct using initializer
@@ -3757,6 +3833,7 @@ mem.Reset( 1, 5 ) # First value is 1, step is 5
 Memory objects can be sorted. It is possible to sort the entire array or a specific range within the array. The element comparator used for sorting is automatically chosen by the type of the first element in the range to be sorted.
 
 .Memory sorting
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory( 32 )
@@ -3782,95 +3859,103 @@ Although memory objects internally can hold elements of <<evaluatordatatypes, an
 _integer_::
 Maps directly to Python `int`
 +
+[.copyable]
 [source, python]
 ----
 mem[0] = 123
-graph.Evaluate( "isint(load(0))", memory=mem ) -> true
-mem[0] -> 123
+graph.Evaluate( "isint(load(0))", memory=mem ) # -> true
+mem[0] # -> 123
 ----
 
 _real_::
 Maps directly to Python `float`
 +
+[.copyable]
 [source, python]
 ----
 mem[1] = 3.14
-graph.Evaluate( "isreal(load(1))", memory=mem ) -> true
-mem[1] -> 3.14
+graph.Evaluate( "isreal(load(1))", memory=mem ) # -> true
+mem[1] # -> 3.14
 ----
 
 _string_::
 This type is interpreted differently in different contexts. When accessing a Python memory object the evaluator _string_ type maps directly to Python `str` with implicit UTF-8 encoding internally. When the evaluator engine executes an expression the _string_ type also encompasses the _bytearray_ and _bytes_ types, i.e. the execution engine treats _bytearray_ and _bytes_ as subtypes of _string_.
 +
+[.copyable]
 [source, python]
 ----
 mem[2] = 'hello'
-g.Evaluate( "isstr(load(2))", memory=mem ) -> true
-mem[2] -> 'hello'
+g.Evaluate( "isstr(load(2))", memory=mem ) # -> true
+mem[2] # -> 'hello'
 ----
 
 _bitvector_::
 This is a pseudo-type represented by a single-element Python `list` where the element is a Python `int`. Bitvectors are assigned as `mem[_n_] = [_bv_]`. When retrieving the bitvector value it is returned as a singleton list `[_bv_]`. Evaluator expressions can also assign bitvectors, e.g. `"store( 0, bitvector( 0xFF00 ) )"`.
 +
+[.copyable]
 [source, python]
 ----
 mem[3] = [0xfff]
-graph.Evaluate( "isbitvector(load(3))", memory=mem ) -> true
-mem[3] -> [4095]
+graph.Evaluate( "isbitvector(load(3))", memory=mem ) # -> true
+mem[3] # -> [4095]
 ----
 
 _keyval_::
 This is a pseudo-type represented by a two-element Python `tuple` where the first element is a Python `int` and the second element is a Python `float`. Keyval items are assigned as `mem[_n_] = (_key_, _value_)`. Note that _key_ has a 32-bit range and _value_ is truncated to single precision internally.
 +
+[.copyable]
 [source, python]
 ----
 mem[4] = (123,3.14)
-graph.Evaluate( "iskeyval(load(4))", memory=m ) -> true
-mem[4] -> 123, 3.140000104904175)
+graph.Evaluate( "iskeyval(load(4))", memory=mem ) # -> true
+mem[4] # -> 123, 3.140000104904175)
 ----
 
 _bytearray_ and _bytes_::
 These types are applicable only when interacting with memory objects from Python. The Python `bytearray` and `bytes` types are internally represented as subtypes of _string_, which means that evaluator expressions operate on all string data as arrays of bytes. When assigning to a memory location as `mem[_n_] = bytearray( ... )` or `mem[_n_] = bytes( ... )` the internal object is _string_ with attributes indicating the subtype.
 +
+[.copyable]
 [source, python]
 ----
 mem[5] = bytearray([1,2,3])
-graph.Evaluate( "isbytearray(load(5))", memory=mem ) -> true
-graph.Evaluate( "isstr(load(5))", memory=mem ) -> true
-mem[5] -> bytearray(b'\x01\x02\x03')
+graph.Evaluate( "isbytearray(load(5))", memory=mem ) # -> true
+graph.Evaluate( "isstr(load(5))", memory=mem ) # -> true
+mem[5] # -> bytearray(b'\x01\x02\x03')
 
 mem[6] = bytes([1,2,3])
-graph.Evaluate( "isbytes(load(6))", memory=mem ) -> true
-graph.Evaluate( "isstr(load(6))", memory=mem ) -> true
-mem[6] -> b'\x01\x02\x03'
+graph.Evaluate( "isbytes(load(6))", memory=mem ) # -> true
+graph.Evaluate( "isstr(load(6))", memory=mem ) # -> true
+mem[6] # -> b'\x01\x02\x03'
 ----
 
 _null_, _nan_, _inf_::
 These types indicating "no value" in various contexts are all interpreted as Python `float` when retrieved from memory objects. They cannot be set from Python.
 +
+[.copyable]
 [source, python]
 ----
-graph.Evaluate( "store(7,null)", memory=mem ) -> None
-type(mem[7]) -> <class 'float'>
-mem[7] -> nan
+graph.Evaluate( "store(7,null)", memory=mem ) # -> None
+type(mem[7]) # -> <class 'float'>
+mem[7] # -> nan
 
-graph.Evaluate( "store(8,nan)", memory=mem ) -> nan
-type(mem[8]) -> <class 'float'>
-mem[8] -> nan
+graph.Evaluate( "store(8,nan)", memory=mem ) # -> nan
+type(mem[8]) # -> <class 'float'>
+mem[8] # -> nan
 
-graph.Evaluate( "store(9,inf)", memory=mem ) -> inf
-type(mem[9]) -> <class 'float'>
-mem[9] -> inf
+graph.Evaluate( "store(9,inf)", memory=mem ) # -> inf
+type(mem[9]) # -> <class 'float'>
+mem[9] # -> inf
 ----
 
 _vector_::
 Maps directly to Python `pyvgx.Vector`
 +
+[.copyable]
 [source, python]
 ----
 mem[10] = g.sim.rvec(128)
-g.Evaluate( "isvector(load(10))", memory=mem ) -> true
-mem[10] -> '<PyVGX_Vector: typ=euclidean len=128 mag=6.948...'
+g.Evaluate( "isvector(load(10))", memory=mem ) # -> true
+mem[10] # -> '<PyVGX_Vector: typ=euclidean len=128 mag=6.948...'
 ----
 
 
@@ -3890,6 +3975,7 @@ Note that copying existing strings or vectors between memory locations _does not
 ====
 
 .Example: Value Types
+[.copyable]
 [source, python]
 ----
 mem = graph.Memory( 16 )
@@ -3908,18 +3994,18 @@ mem[3]                # -> 'Alice'
 mem.R1                # -> <PyVGX_Vector: ...>
 mem.R2                # -> <PyVGX_Vector: ...>
 
-graph.Evaluate( "isbitvector( load(0) )", memory=m ) # -> 0
-graph.Evaluate( "isbitvector( load(1) )", memory=m ) # -> 1
-graph.Evaluate( "mul( 2, 10 )", memory=m )           # -> 31.4
-graph.Evaluate( "load( 3 ) == 'Ali*'  ", memory=m )  # -> 1
-graph.Evaluate( "store( 4, 'Bob' )", memory=m )      # -> 'Bob'
-graph.Evaluate( "mov( 5, 3 )", memory=m )            # -> 'Alice'
-graph.Evaluate( "mov( 6, 4 )", memory=m )            # -> 'Bob'
-graph.Evaluate( "isvector(r1)", memory=m )           # -> 1
-graph.Evaluate( "cosine(r1,r2)", memory=m )          # -> 0.02157
+graph.Evaluate( "isbitvector( load(0) )", memory=mem ) # -> 0
+graph.Evaluate( "isbitvector( load(1) )", memory=mem ) # -> 1
+graph.Evaluate( "mul( 2, 10 )", memory=mem )           # -> 31.4
+graph.Evaluate( "load( 3 ) == 'Ali*'  ", memory=mem )  # -> 1
+graph.Evaluate( "store( 4, 'Bob' )", memory=mem )      # -> 'Bob'
+graph.Evaluate( "mov( 5, 3 )", memory=mem )            # -> 'Alice'
+graph.Evaluate( "mov( 6, 4 )", memory=mem )            # -> 'Bob'
+graph.Evaluate( "isvector(r1)", memory=mem )           # -> 1
+graph.Evaluate( "cosine(r1,r2)", memory=mem )          # -> 0.02157
 
 # Strings 'Alice' and 'Bob', and vectors are now deleted
-graph.Evaluate( "mreset()", memory=m )
+graph.Evaluate( "mreset()", memory=mem )
 ----
 
 
@@ -6239,6 +6325,7 @@ Keyval item in memory probe location::
 Item key is the tuple's integer_key, and item value is the tuple's float_value.
 
 .Memory probe example
+[.copyable]
 [source, python]
 ----
 from pyvgx import *
@@ -6268,6 +6355,7 @@ Keyval map in vertex property::
 The item key of each _k~i~_ : _v~i~_ pair is integer key _k~i~_, and the item value is float _v~i~_.
 
 .Object example (vertex property)
+[.copyable]
 [source, python]
 ----
 from pyvgx import *
@@ -6306,6 +6394,7 @@ latexmath:[ n = | obj | ]
 
 ==== Example
 
+[.copyable]
 [source, python]
 ----
 from pyvgx import *
@@ -6405,6 +6494,7 @@ Probe elements encoded as _dual bitvectors_ are used to assert matches in _altar
 
 ==== Example
 
+[.copyable]
 [source, python]
 ----
 # Create a vertex and assign a multi-valued
@@ -6448,10 +6538,10 @@ latexmath:[ N_t = N_0 e^{-\lambda t} ]
 [[synarc_decay_syntax]]
 ==== Syntax
 
-[source, python]
+[source, text]
 ----
-synarc.decay( relationship[, rate] ) -> decayed_value Nt
-synarc.xdecay( relationship[, rate] ) -> decayed_value Nt
+synarc.decay( relationship[, rate] ) # -> decayed_value Nt
+synarc.xdecay( relationship[, rate] ) # -> decayed_value Nt
 ----
 
 [[synarc_decay_parameters]]
@@ -6603,7 +6693,7 @@ To collect an arc with a decayed value we pass the result of `synarc.decay()` or
 
 [[synarc_decay_collect_example]]
 ===== Example: Collect decayed arc value
-[source, python]
+[source, text]
 ----
 collect( synarc.decay( 'score' ) )
 ----
@@ -6617,6 +6707,7 @@ The arc collected this way will appear in the result as:
 [[synarc_decay_example]]
 ==== Complete example
 
+[.copyable]
 [source, python]
 ----
 from pyvgx import *

@@ -1,4 +1,4 @@
-[[pyvgxtutorial]]
+[[pyvgx_overview]]
 = PyVGX {project-version} Overview <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
 :toc: left
 :toclevels: 5
@@ -133,7 +133,7 @@ Once added, the plugin can be executed via HTTP:
 
 .Send a plugin request
 [.copyable]
-[source]
+[source, curl]
 ----
 http://127.0.0.1:9000/vgx/plugin/hello?message=good+morning!
 ----
@@ -207,8 +207,7 @@ pprint( find_links( graph, "B" ) )
 The result will look like this:
 
 .Query result
-[.copyable]
-[source, json]
+[source, text]
 ----
 ['( B )-[ link <M_INT> 7 ]->( C )',
  '( B )-[ link <M_INT> 1 ]->( E )',
@@ -358,13 +357,13 @@ The language supports a rich set of operators, mathematical and string functions
 [source, python]
 ----
 graph.Neighborhood(
-    "AnchorVertexID",
+    "B",
     filter= """
-            cosine(vertex.vector, next.vector) > 0.75 && next['category'] == 'tech'
+            next.arc.type == 'link' && next.arc.value > 1
             """,
-    arc=("related", D_ANY),
+    arc=("*", D_OUT),
     hits=10,
-    sortby=S_VAL|S_DESC
+    sortby=S_VAL
 )
 ----
 

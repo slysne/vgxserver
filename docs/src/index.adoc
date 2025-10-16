@@ -33,11 +33,15 @@ Ensure your environment meets these requirements before installing.
 
 You can build the package yourself if needed: <<pyvgx/build.adoc#, Instructions here>>.
 
+== Getting Started
 
-== PyVGX Reference
+<<pyvgx/overview.adoc#, PyVGX Overview>>::
+High level overview of VGX/PyVGX
 
 <<pyvgx/tutorial.adoc#, PyVGX Tutorial>>::
-An introduction to pyvgx, the Python module used for creating graph algorithms
+Introduction to graphs and graph queries
+
+== PyVGX Reference
 
 <<pyvgx/reference.adoc#, Full Reference>>::
 A complete description of the VGX Python API. 

@@ -16,7 +16,7 @@ Some query methods have a `select=` parameter that allows result fields to be sp
 
 === Syntax
 
-[source, python]
+[source, text]
 ----
 select="<sel_1>; <sel_2>; ..."
 
@@ -113,6 +113,7 @@ For `pyvgx.Graph.Vertices()` only vertices are collected. Vertex references `ver
 === Example
 
 .Include selected and computed properties in result
+[.copyable]
 [source, python]
 ----
 result = graph.Neighborhood(
