@@ -13,6 +13,7 @@ include::../common/_copyable.adoc[]
 
 VGX Server is a self-contained platform for building plugin-based PyVGX services exposed via HTTP endpoints. Everything is implemented in C except for service bootstrap and plugin code which execute in the Python interpreter. Multiple VGX Server instances may be connected to form a scalable system.
 
+[[component_overview]]
 == Component Overview
 
 <<socketserver, Socket Server>>::
@@ -353,7 +354,7 @@ Supported methods are `GET`, `POST`, `HEAD`, and `OPTIONS`.
 
 Supported for all request types.
 
-[source, http]
+[source, shell]
 ----
 GET /path HTTP/1.1\r\n
 Header1: Field1\r\n
@@ -365,7 +366,7 @@ Header2: Field2\r\n
 
 Supported for plugin requests.
 
-[source, http]
+[source, shell]
 ----
 POST /path HTTP/1.1\r\n
 Header1: Field1\r\n
@@ -379,7 +380,7 @@ Sample content
 
 Supported for file resource and builtin artifact request.
 
-[source, http]
+[source, shell]
 ----
 HEAD /path HTTP/1.1\r\n
 \r\n
@@ -389,7 +390,7 @@ HEAD /path HTTP/1.1\r\n
 
 Supported for all request types.
 
-[source, http]
+[source, shell]
 ----
 OPTIONS /path HTTP/1.1\r\n
 \r\n
@@ -524,7 +525,7 @@ CAUTION: Executor threads are uniquely allocated to _engine_, _pre_, or _post_ f
 Socket Server returns standard HTTP 1.1 responses. 
 
 .HTTP Response
-[source, http]
+[source]
 ----
 HTTP/1.1 <statuscode> <statustext>\r\n
 Allowed: <methods>\r\n
@@ -676,7 +677,7 @@ Content-Length: 123\r\n
 Services returning JSON responses (plugins and builtin services) use a common JSON format in their responses. Certain fields may be omitted, depending on the type of response.
 
 .General JSON response format
-[source, json]
+[source]
 ----
 {
   "status": <status>,
