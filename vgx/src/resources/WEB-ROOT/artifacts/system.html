@@ -3243,7 +3243,7 @@
               //this.setTitleLink(loadElem, host, httpPort, "vgx/builtin/memory?graph=*");
               let titleMemory = id + " Memory\n\n" + vgxInstanceGiB.toFixed(1) +
                   " GiB (" + proc_pct + "%) " + "\nHost: " + usedGiB.toFixed(1) + " GiB / " + totalGiB.toFixed(1) + " GiB (" + total_pct + "%)" +
-                  "\n\nClick to Persist to Disk";
+                  "\n\nClick to Persist to Disk:\n" + cache.snapshot_location;
               this.setAction(loadElem, loadElem, titleMemory, this.performPersist, cache);
 
               // Order
@@ -3380,8 +3380,10 @@
                     if (this.renderLinearBars(sndfElem, 14, sndiff, Nodes.maxSerialLag, true)) {
                         this.setTitleLink(slagElem, host, httpPort, "vgx/txstat");
                     }
-                    let titleLag = id + " Transaction Input Lag\n\nS/N Delta: " + sndiff.toLocaleString("en-US") + "\n\nClick to unsubscribe";
-                    this.setAction(slagElem, sndfElem, titleLag, this.toggleSubscribe, cache);
+                    if (sndiff != null) {
+                        let titleLag = id + " Transaction Input Lag\n\nS/N Delta: " + sndiff.toLocaleString("en-US") + "\n\nClick to unsubscribe";
+                        this.setAction(slagElem, sndfElem, titleLag, this.toggleSubscribe, cache);
+                    }
                 }
                 else {
                     this.renderLinearBars(sndfElem, null, null, null, true);
@@ -3854,6 +3856,7 @@
                                     cache.durable_max_txlog = nodestatObj["durable-max-txlog"];
                                     cache.persisting = nodestatObj["snapshot-writing"];
                                     cache.snapshot_age = nodestatObj["snapshot-age"];
+                                    cache.snapshot_location = nodestatObj["snapshot-location"];
                                     cache.readonly = nodestatObj["readonly"];
                                     cache.local_only = nodestatObj["local-only"];
                                     cache.matrix = matrix;
@@ -3922,6 +3925,7 @@
                                 cache.durable_max_txlog = 0;
                                 cache.persisting = false;
                                 cache.snapshot_age = -1;
+                                cache.snapshot_location = ".";
                                 cache.readonly = false;
                                 cache.local_only = 0;
                                 cache.matrix = null;
@@ -4031,11 +4035,15 @@
                         StatusColor.update( $('.sysinfo'), sysinfoColor );
 
                         function sumValues( A ) {
-                            return A.reduce((acc,val) => acc+val, 0).toLocaleString("en-US");
+                            let x = A.reduce((acc,val) => acc+val, 0);
+                            if (x == null) {
+                                return 0;
+                            }
+                            return x.toLocaleString("en-US");
                         }
 
                         function partitionValues( title, A ) {
-                            return title + "\n\n" + A.map((val, idx) => `Part ${idx+1}: ${val.toLocaleString("en-US")}`).join("\n");
+                            return title + "\n\n" + A.map((val, idx) => `Part ${idx+1}: ${val != null ? val.toLocaleString("en-US") : "0"}`).join("\n");
                         }
 
                         const plural = this.uniqueHosts.length > 1 ? "s" : "";
@@ -4203,9 +4211,14 @@
                     $('#nodeList').css( "visibility", "hidden" );
                     $('.nodeListHeader').css( "visibility", "hidden" );
                     $('#descriptorSysinfoArea').addClass( "hidearea" );
+                    let line1 = `${window.location.hostname}:${window.location.port} is offline`;
+                    let line2 = "";
+                    if (this.lastRender != null) {
+                        line2 = `Last seen: ${this.lastRender.toLocaleString("en-US")}`;
+                    }
                     const goneMessageList = [
-                        `${window.location.hostname}:${window.location.port} is offline`,
-                        `Last seen: ${this.lastRender.toLocaleString("en-US")}`
+                        line1,
+                        line2
                     ];
                     $('#recentAction').val(goneMessageList.join("\n"));
                     this.pageDown = true;

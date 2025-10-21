@@ -746,6 +746,7 @@
                 }
 
                 digestObj.update(digest);
+                $('#digest').parent().prop("title", digest);
                 $('#masterSerial').html( MasterSerial.render( masterSerial ) );
                 $('#fingerprint').html( digest.slice(14) );
 
@@ -922,6 +923,7 @@
                 const events = response["events"];
                 const executing = response["executing"];
                 const persist_age = response["persist-age"];
+                const persist_location = response["persist-location"];
                 const persisting = response["persisting"];
                 let provider = response["provider"];
                 let subscribers = response["subscribers"];
@@ -959,15 +961,15 @@
                 $('#tx_exec').html(execStr);
 
                 $('#snapshot_age').html(persist_age);
+                $('#snapshot_age').parent().prop("title", persist_location);
 
                 if (provider != null) {
-                    const preRex = /vgx:\/\//;
-                    const postRex = /:(\d+)/;
-                    provider = provider.replace(preRex, "").replace(postRex, "");
                     $('#txprovider').html(provider);
+                    $('#txprovider').parent().prop("title", provider);
                 }
                 else {
                     $('#txprovider').html("-");
+                    $('#txprovider').parent().prop("title", "(no provider)");
                 }
 
                 if (subscribers.length > 0) {
@@ -986,6 +988,7 @@
                         }
                     }
                     $('#txsubscribers').html(sub_names);
+                    $('#txsubscribers').parent().prop("title", "Subscribers:\n\n" + sub_names);
                     let txbox = $('#transaction_connection_status');
                     let fontsize = 90;
                     $('#txsubscribers').css("font-size", "90%");
@@ -1016,6 +1019,7 @@
                 }
                 else {
                     $('#txsubscribers').html("-");
+                    $('#txsubscribers').parent().prop("title", "(no subscribers)");
                 }
 
                 let multiplier = "";
