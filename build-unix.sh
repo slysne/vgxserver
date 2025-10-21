@@ -142,6 +142,7 @@ if [[ "$OS_NAME" == "Darwin" ]]; then
         echo "Running delocate-wheel to fix macOS wheel tags..."
         delocate-wheel -w ./wheelhouse $WHEEL_FILENAME
         rm $WHEEL_FILENAME
+        WHEEL_FILENAME=$(basename ./wheelhouse/*$ABI_TAG*.whl)
         mv wheelhouse/$WHEEL_FILENAME .
         rmdir wheelhouse
     else
