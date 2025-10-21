@@ -1123,6 +1123,14 @@ char * get_abspath( const char *filename ) {
       free( abspath );
       return NULL;
     }
+    // Replace all \ with /
+    char *p = abspath;
+    while( *p != '\0' ) {
+      if( *p == '\\' ) {
+        *p = '/';
+      }
+      ++p;
+    }
   }
 #else
   abspath = realpath( filename, NULL );
