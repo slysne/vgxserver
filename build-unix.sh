@@ -31,7 +31,7 @@ while [[ $# -gt 0 ]]; do
             if [[ "$VERSION" =~ ^([0-9]+!)?([0-9]+)(\.[0-9]+){0,2}((a|b|rc)[0-9]+)?(\.post[0-9]+)?(\.dev[0-9]+)?$ ]]; then
                 echo "Building version $VERSION"
             else
-                echo "Error: Invalid build type: '$VERSION'"
+                echo "Error: Invalid version: '$VERSION'"
                 exit 1
             fi
             shift 2
