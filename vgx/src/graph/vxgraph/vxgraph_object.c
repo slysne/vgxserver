@@ -423,6 +423,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
   const char *graph_name = NULL;
   const char *graph_path = NULL;
   const char *graph_fullpath = NULL;
+  char *graph_abspath = NULL;
 
   if( args == NULL ) {
     return NULL;
@@ -502,6 +503,12 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     }
     graph_fullpath = CharsNew( CStringValue( self->CSTR__fullpath ) );
 
+    if( (graph_abspath = get_abspath( graph_fullpath )) != NULL ) {
+      if( (self->CSTR__abspath = CStringNew( graph_abspath )) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_MEMORY, 0x5C9 );
+      }
+    }
+
 
     // ===============================
     // Locks and condition variables
@@ -573,16 +580,16 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
       .parent = self
     };
     if( (self->similarity = COMLIB_OBJECT_NEW( vgx_Similarity_t, NULL, &simargs )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5C9 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CA );
     }
 
     // [Q5-7] Graph's arcvector framehash dynamic
     iString.Discard( &CSTR__tmpstr );
     if( (CSTR__tmpstr = iString.NewFormat( NULL, "Arcvector Framehash Dynamic for Graph '%s'" , CStringValue(self->CSTR__name) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CA );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CB );
     }
     if( iFramehash.dynamic.InitDynamicSimple( &self->arcvector_fhdyn, CStringValue( CSTR__tmpstr ), 23 ) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CB );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CC );
     }
 
     // [Q8.1] Graph size (number or arcs)
@@ -612,24 +619,24 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // [Q9-11] Graph's property framehash dynamic
     iString.Discard( &CSTR__tmpstr );
     if( (CSTR__tmpstr = iString.NewFormat( NULL, "Property Framehash Dynamic for Graph '%s'" , CStringValue(self->CSTR__name) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CC );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CD );
     }
     if( iFramehash.dynamic.InitDynamicSimple( &self->property_fhdyn, CStringValue( CSTR__tmpstr ), 23 ) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CD );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CE );
     }
     
     // [Q15-17] Graph's vertex map framehash dynamic
     iString.Discard( &CSTR__tmpstr );
     if( (CSTR__tmpstr = iString.NewFormat( NULL, "Vertex Map Framehash Dynamic for Graph '%s'" , CStringValue(self->CSTR__name) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CE );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CF );
     }
     if( iFramehash.dynamic.InitDynamicSimple( &self->vtxmap_fhdyn, CStringValue( CSTR__tmpstr ), 21 ) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5CF );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D0 );
     }
 
     // [Q12.1] Ephemeral String Allocator Context
     if( (self->ephemeral_string_allocator_context = icstringalloc.NewContext( self, NULL, NULL, NULL, "ephemeral string allocator" )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D0 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D1 );
     }
  
     // Property Allocator Context
@@ -643,40 +650,40 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     if( (self->property_allocator_context = icstringalloc.NewContext( self, &self->vxprop_keymap, &self->vxprop_valmap, graph_fullpath, VGX_PATHDEF_STRING_PROPERTY_DATA_DIRNAME )) == NULL )
 #endif
     {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D1 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D2 );
     }
     if( icstringalloc.RestoreObjects( self->property_allocator_context ) < 0 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D2 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D3 );
     }
 
     // [Q12.3-4] Vertex type enumerator (vxtype_encoder + vxtype_decoder)
     if( _vxenum_vtx__create_enumerator( self ) < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D3, "Failed to create graph vertex type enumerator" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D4, "Failed to create graph vertex type enumerator" );
     }
 
     // [Q12.5-6] Relationship enumerator (rel_encoder + rel_decoder)
     if( _vxenum_rel__create_enumerator( self ) < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D4, "Failed to create graph relationship enumerator" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D5, "Failed to create graph relationship enumerator" );
     }
 
     // [Q12.7 Q12.8] Property key/value maps (if not already created above)
     if( _vxenum_prop__create_enumerator( self ) < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D5, "Failed to create graph property maps" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D6, "Failed to create graph property maps" );
     }
    
     // [Q13-14] Virtual Properties
     if( _vxvertex_property__virtual_properties_init( self ) < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D6, "Failed initialize virtual properties" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D7, "Failed initialize virtual properties" );
     }
 
     // [Q2.6] Stack evaluator contexts (depends on ephemeral string allocator)
     if( iEvaluator.CreateEvaluators( self ) < 0 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D7 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D8 );
     }
 
     // [Q23-26] Initialize Event Processor, prepare it to be populated during vertex object restore below
     if( iGraphEvent.Initialize( self, args->with_event_processor ) < 0 ) {
-      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5D8 );
+      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5D9 );
     }
 
     // [Q2.1] Vertex allocator
@@ -688,22 +695,22 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     if( (self->vertex_allocator = ivertexalloc.New( self, args->vertex_block_order, &self->vxtable, &self->vxtypeidx )) == NULL )
 #endif
     {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5D9 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5DA );
     }
     if( CALLABLE( self->vertex_allocator )->RestoreObjects( self->vertex_allocator ) < 0 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5DA );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5DB );
     }
 
 #ifdef VXTABLE_PERSIST
     if( _vxgraph_vxtable__create_index_OPEN( self ) < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5DB, "Failed to create graph vertex index" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5DC, "Failed to create graph vertex index" );
     }
 #endif
 
     // Event Backlog
     if( args->with_event_processor ) {
       if( (CSTR__backlog = iGraphEvent.FormatBacklogInfo( self, NULL )) != NULL ) {
-        VXGRAPH_OBJECT_INFO( self, 0x5DC, "%s", CStringValue( CSTR__backlog ) ); // message may contain '%' so we have to supply it as arg
+        VXGRAPH_OBJECT_INFO( self, 0x5DD, "%s", CStringValue( CSTR__backlog ) ); // message may contain '%' so we have to supply it as arg
       }
     }
 
@@ -712,30 +719,30 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // ---------------------------------
     int64_t vtx_fix = ivertexalloc.Verify( self );
     if( vtx_fix < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5DD, "Vertex allocator corrupted" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5DE, "Vertex allocator corrupted" );
     }
     else if( vtx_fix > 0 ) {
-      VXGRAPH_OBJECT_INFO( self, 0x5DE, "Repaired %lld vertex objects", vtx_fix );
+      VXGRAPH_OBJECT_INFO( self, 0x5DF, "Repaired %lld vertex objects", vtx_fix );
       GRAPH_LOCK( self ) {
         iOperation.Graph_CS.SetModified( self );
       } GRAPH_RELEASE;
     }
     int64_t cstr_fix = icstringalloc.Verify( self->property_allocator_context );
     if( cstr_fix < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5DF, "Property allocator corrupted" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5E0, "Property allocator corrupted" );
     }
     else if( cstr_fix > 0 ) {
-      VXGRAPH_OBJECT_INFO( self, 0x5E0, "Repaired %lld string objects", cstr_fix );
+      VXGRAPH_OBJECT_INFO( self, 0x5E1, "Repaired %lld string objects", cstr_fix );
       GRAPH_LOCK( self ) {
         iOperation.Graph_CS.SetModified( self );
       } GRAPH_RELEASE;
     }
     int64_t sim_fix = CALLABLE( self->similarity )->VerifyAllocators( self->similarity );
     if( sim_fix < 0 ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5E1, "Similarity vector allocators corrupted" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5E2, "Similarity vector allocators corrupted" );
     }
     else if( sim_fix > 0 ) {
-      VXGRAPH_OBJECT_INFO( self, 0x5E2, "Repaired %lld vector objects", sim_fix );
+      VXGRAPH_OBJECT_INFO( self, 0x5E3, "Repaired %lld vector objects", sim_fix );
       GRAPH_LOCK( self ) {
         iOperation.Graph_CS.SetModified( self );
       } GRAPH_RELEASE;
@@ -743,36 +750,36 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
 
     // [Q2.4] Acquired vertex map WL
     if( (self->vtxmap_WL = iFramehash.simple.New( &self->vtxmap_fhdyn )) == NULL ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5E3, "Failed to create vertex acquisition maps" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5E4, "Failed to create vertex acquisition maps" );
     }
 
     // [Q2.5] Acquired vertex map RO
     if( (self->vtxmap_RO = iFramehash.simple.New( &self->vtxmap_fhdyn )) == NULL ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5E4, "Failed to create vertex acquisition maps" );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5E5, "Failed to create vertex acquisition maps" );
     }
 
     // [Q18.7] Vertex list utility
     Cm256iList_constructor_args_t vertex_list_args = { .element_capacity = 8, .comparator = NULL };
     if( (self->vertex_list = COMLIB_OBJECT_NEW( Cm256iList_t, NULL, &vertex_list_args )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E5 );
+      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E6 );
     }
 
     // [Q18.8] Vertex heap utility
     Cm256iHeap_constructor_args_t vertex_heap_args = { .element_capacity = 8, .comparator = NULL };  // <= TODO: define the comparator for min or max heap
     if( (self->vertex_heap = COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &vertex_heap_args )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E6 );
+      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E7 );
     }
 
     // [Q22.7] Arc list utility
     Cm256iList_constructor_args_t arc_list_args = { .element_capacity = 4, .comparator = NULL };
     if( (self->arc_list = COMLIB_OBJECT_NEW( Cm256iList_t, NULL, &arc_list_args )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E7 );
+      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E8 );
     }
 
     // [Q22.8] Arc heap utility
     Cm256iHeap_constructor_args_t arc_heap_args = { .element_capacity = 4, .comparator = NULL }; // <= TODO: define comparator to get min or max heap
     if( (self->arc_heap = COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &arc_heap_args )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E8 );
+      THROW_ERROR( CXLIB_ERR_MEMORY, 0x5E9 );
     }
 
     // [Q20.1.1]
@@ -809,7 +816,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
       tick_start = _vxgraph_tick__initialize_CS( self, args->graph_t0 );
     } GRAPH_RELEASE;
     if( tick_start < 0 ) {
-      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5E9 );
+      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5EA );
     }
 
     // [Q21.6]
@@ -831,7 +838,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
       prep = _vxgraph_vxtable__prepare_vertices_CS_NT( self );
     } GRAPH_RELEASE;
     if( prep < 0 ) {
-      THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x5EA );
+      THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x5EB );
     }
 
     // -----------------------------------
@@ -844,11 +851,11 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // Load state and verify
     // ---------------------
     if( (state = iSerialization.LoadState( self )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5EB );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x5EC );
     }
     // Verify graph name
     if( !CharsEqualsConst( CStringValue( self->CSTR__name ), state->graph.name ) ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5EC, "Incorrect graph name '%s' (expected '%s')", CStringValue( self->CSTR__name ), state->graph.name );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5ED, "Incorrect graph name '%s' (expected '%s')", CStringValue( self->CSTR__name ), state->graph.name );
     }
     
     // -----------------------------------
@@ -874,10 +881,10 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     self->tx_count_in = state->graph.tx_count_in;
 
     if( state->graph.tx_count_out > 0 ) {
-      VXGRAPH_OBJECT_INFO( self, 0x5ED, "Initial transaction OUT: id=%016llx%016llx serial=%lld count=%lld", self->tx_id_out.H, self->tx_id_out.L, self->tx_serial_out, self->tx_count_out );
+      VXGRAPH_OBJECT_INFO( self, 0x5EE, "Initial transaction OUT: id=%016llx%016llx serial=%lld count=%lld", self->tx_id_out.H, self->tx_id_out.L, self->tx_serial_out, self->tx_count_out );
     }
     if( state->graph.tx_count_in > 0 ) {
-      VXGRAPH_OBJECT_INFO( self, 0x5EE, "Initial transaction IN: id=%016llx%016llx serial=%lld count=%lld", self->tx_id_in.H, self->tx_id_in.L, self->tx_serial_in, self->tx_count_in );
+      VXGRAPH_OBJECT_INFO( self, 0x5EF, "Initial transaction IN: id=%016llx%016llx serial=%lld count=%lld", self->tx_id_in.H, self->tx_id_in.L, self->tx_serial_in, self->tx_count_in );
     }
 
     // Durability point
@@ -909,17 +916,17 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // Opid supplied to constructor is unknown
     if( state_opid >= opid ) {
       opid = state_opid;
-      VXGRAPH_OBJECT_VERBOSE( self, 0x5EF, "Opcount initialized to: %016llX", opid );
+      VXGRAPH_OBJECT_VERBOSE( self, 0x5F0, "Opcount initialized to: %016llX", opid );
     }
     else {
-      VXGRAPH_OBJECT_FATAL( self, 0x05F0, "Opcount mismatch: state=%016llx < %016llx", state_opid, opid );
+      VXGRAPH_OBJECT_FATAL( self, 0x5F1, "Opcount mismatch: state=%016llx < %016llx", state_opid, opid );
     }
 
     // Local?
     if( args->local_only == true || state->graph.local_only != 0 ) {
       self->control.local_only = true;
       if( state->graph.local_only != 0 && args->local_only == false ) {
-        VXGRAPH_OBJECT_WARNING( self, 0x5F1, "Graph is local only (from saved state)" );
+        VXGRAPH_OBJECT_WARNING( self, 0x5F2, "Graph is local only (from saved state)" );
       }
     }
 
@@ -929,7 +936,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     //
     // [Q29-38]
     if( iOperation.Initialize( self, opid ) < 0 ) {
-      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F2 );
+      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F3 );
     }
     if( self->control.local_only ) {
       iOperation.Emitter_CS.Disable( self );
@@ -965,13 +972,13 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
       op_open = OPEN_GRAPH_OPERATION_CS( self );
     } GRAPH_RELEASE;
     if( op_open < 0 ) {
-      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F3 );
+      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F4 );
     }
 
     // Readonly until constructor is complete
     vgx_AccessReason_t reason;
     if( CALLABLE( self )->advanced->AcquireGraphReadonly( self, 10000, false, &reason ) != 1 ) {
-      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F4 );
+      THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5F5 );
     }
 
     // Mark graph dirty if we made repairs during restore
@@ -983,21 +990,21 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
 
     // Verify size
     if( GraphSize( self ) != state->graph.size ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F5, "Incorrect graph size %lld (expected %lld)", GraphSize( self ), state->graph.size );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F6, "Incorrect graph size %lld (expected %lld)", GraphSize( self ), state->graph.size );
     }
     // Verify order
     if( GraphOrder( self ) != state->graph.order ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F6, "Incorrect graph order %lld' (expected %lld)", GraphOrder( self ), state->graph.order );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F7, "Incorrect graph order %lld' (expected %lld)", GraphOrder( self ), state->graph.order );
     }
     // Verify property count
     int64_t nproperties = GraphPropCount( self );
     if( nproperties != state->vertex_property.nprop ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F7, "Incorrect graph property count %lld' (expected %lld)", nproperties, state->vertex_property.nprop );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F8, "Incorrect graph property count %lld' (expected %lld)", nproperties, state->vertex_property.nprop );
     }
     // Verify vector count
     int64_t nvectors = GraphVectorCount( self );
     if( nvectors != state->vector.nvectors ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F8, "Incorrect graph vector count %lld' (expected %lld)", nvectors, state->vector.nvectors );
+      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x5F9, "Incorrect graph vector count %lld' (expected %lld)", nvectors, state->vector.nvectors );
     }
 
     // Set inception time
@@ -1012,12 +1019,12 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // Graph access state is readonly: Remain in readonly mode unless forced writable
     bool readonly = state->graph.readonly || args->force_readonly;
     if( readonly && !args->force_writable ) {
-      VXGRAPH_OBJECT_WARNING( self, 0x5F9, "Graph access state is READONLY" );
+      VXGRAPH_OBJECT_WARNING( self, 0x5FA, "Graph access state is READONLY" );
     }
     // Graph access state is writable: Leave readonly mode and start event processor
     else {
       if( CALLABLE( self )->advanced->ReleaseGraphReadonly( self ) < 0 ) {
-        THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5FA );
+        THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5FB );
       
       }
     }
@@ -1026,7 +1033,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     if( state->time.persist_n == 0 ) {
       CString_t *CSTR__err = NULL;
       if( CALLABLE( self )->BulkSerialize( self, 10000, true, false, NULL, &CSTR__err ) < 0 ) {
-        VXGRAPH_OBJECT_REASON( self, 0x5FB, "Initial persist failed: %s", CSTR__err ? CStringValue( CSTR__err ) : "?" );
+        VXGRAPH_OBJECT_REASON( self, 0x5FC, "Initial persist failed: %s", CSTR__err ? CStringValue( CSTR__err ) : "?" );
         iString.Discard( &CSTR__err );
       }
     }
@@ -1035,7 +1042,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     if( args->with_event_processor ) { 
       bool event_enable = (readonly || args->idle_event_processor) ? false : true;
       if( iGraphEvent.Start( self, event_enable ) < 0 ) {
-        THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5FC );
+        THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x5FD );
       }
 
       // Indicate activities suspended if graph is restored in a readonly state
@@ -1045,7 +1052,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
       // Event Backlog
       iString.Discard( &CSTR__backlog );
       if( (CSTR__backlog = iGraphEvent.FormatBacklogInfo( self, NULL )) != NULL ) {
-        VXGRAPH_OBJECT_INFO( self, 0x5FD, "%s", CStringValue( CSTR__backlog ) ); // message may contain '%' so supply it as arg 
+        VXGRAPH_OBJECT_INFO( self, 0x5FE, "%s", CStringValue( CSTR__backlog ) ); // message may contain '%' so supply it as arg 
       }
     }
 
@@ -1053,32 +1060,27 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
   XCATCH( errcode ) {
     // Trace
     cxlib_msg_set( NULL, 0, "graph_constructor_error\t%03X", cxlib_exc_code( errcode ) );
-    if( graph_name ) {
-      cxlib_msg_set( NULL, 0, "graph_name\t%s", graph_name );
-      CharsDelete( graph_name );
-    }
-    if( graph_path ) {
-      cxlib_msg_set( NULL, 0, "graph_path\t%s", graph_path );
-      CharsDelete( graph_path );
-    }
-    if( graph_fullpath ) {
-      cxlib_msg_set( NULL, 0, "graph_fullpath\t%s", graph_fullpath );
-      CharsDelete( graph_fullpath );
-    }
-
+    cxlib_msg_set( NULL, 0, "graph_name\t%s", graph_name ? graph_name : "?" );
+    cxlib_msg_set( NULL, 0, "graph_path\t%s", graph_path ? graph_path : "?" );
+    cxlib_msg_set( NULL, 0, "graph_fullpath\t%s", graph_fullpath ? graph_fullpath : "?" );
+    cxlib_msg_set( NULL, 0, "graph_abspath\t%s", graph_abspath ? graph_abspath : "?" );
     if( self ) {
       COMLIB_OBJECT_DESTROY( self );
       self = NULL;
     }
-    iString.Discard( &CSTR__name );
-    iString.Discard( &CSTR__path );
-    iString.Discard( &CSTR__tmpstr );
   }
   XFINALLY {
     if( state ) {
       free( state );
     }
+    iString.Discard( &CSTR__name );
+    iString.Discard( &CSTR__path );
+    iString.Discard( &CSTR__tmpstr );
     iString.Discard( &CSTR__backlog );
+    CharsDelete( graph_name );
+    CharsDelete( graph_path );
+    CharsDelete( graph_fullpath );
+    CharsDelete( graph_abspath );
   }
 
   // Ready
@@ -1329,6 +1331,9 @@ static void Graph_destructor( vgx_Graph_t *self ) {
 
       // Graph order
       self->_order_atomic = 0;
+
+      // Graph absolute path
+      iString.Discard( &self->CSTR__abspath );
 
       // Graph full path
       iString.Discard( &self->CSTR__fullpath );
@@ -1622,7 +1627,7 @@ static void Graph_dump( vgx_Graph_t *self ) {
       CXLIB_OSTREAM( "vtxmap_RO           : (framehash_cell_t*) %llp", self->vtxmap_RO, self->vtxmap_RO ? iFramehash.simple.Length( self->vtxmap_RO ) : 0 );
       CXLIB_OSTREAM( "evaluators          : (framehash_t*) %llp", self->evaluators );
       CXLIB_OSTREAM( "similarity          : (vgx_Similarity_t*) %llp", self->similarity );
-      CXLIB_OSTREAM( "__rsv_2_8           : %llu", self->__rsv_2_8 );
+      CXLIB_OSTREAM( "CSTR__abspath       : %llu", self->CSTR__abspath );
 
 
       CXLIB_OSTREAM( " 3: -------- STATE LOCK -------" );

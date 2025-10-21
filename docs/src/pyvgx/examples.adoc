@@ -1,0 +1,104 @@
+[[pyvgxtutorial]]
+= PyVGX {project-version} Examples <<../index.adoc#, icon:arrow-circle-up[title="Index"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 5
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: images/
+:source-highlighter: highlightjs
+
+include::common/_copyable.adoc[]
+
+image::pyvgx.png[PYVGX,220,220,align="left"]
+
+
+[[example]]
+== Example
+
+TODO: This is just a stub, add many examples
+
+.Make a graph with sample data
+[.copyable]
+[source, python]
+----
+graph = Graph("sample_graph")
+
+def populate( g, n_nodes=10000, n_arcs_per_node=10 ):
+    # Create a root vertex
+    g.CreateVertex( "root" )
+    # Create vertices and hook up root node
+    for i in range( n_nodes ):
+        a = f"node_{i}"                     # Vertex name
+        A = g.NewVertex( a, type="node" )   # Create the vertex
+        A.SetVector( g.sim.rvec(128) )      # Assign a random vector for testing
+        g.Connect( "root", "to", A )        # Root connects to vertex
+        A.Close()                           # Close vertex
+    # Randomly connect vertices
+    for i in range( n_nodes * n_arcs_per_node ):
+        a = f"node_{random.randint(1, n_nodes)}"
+        b = f"node_{random.randint(1, n_nodes)}"
+        v = random.random()
+        g.Connect( a, ("connected", M_FLT, v), b )
+
+populate( graph )
+----
+
+.Query 
+[.copyable]
+[source, python]
+----
+def search_1( g, anchor ):
+    return g.Neighborhood(
+        id = anchor,
+        arc = ("connected", D_OUT),
+        hits = 5,
+        sortby = S_VAL,
+        fields = F_AARC
+    )
+
+def search_2( g, vector=None ):
+    if vector is None:
+        vector = g.sim.rvec(128)
+    return g.Neighborhood(
+        id = "root",
+        arc = ("to",D_OUT),
+        hits = 25,
+        collect = False,
+        neighbor = {
+            'similarity': {
+                'vector':vector
+            },
+            'filter': 'store(R1,cosine(vector,vertex.vector))',
+            'traverse': {
+                'arc': ('connected',D_OUT),
+                'collect': C_SCAN,
+                'filter': 'collect( prox(next.arc.value, load(R1)) )'
+            }
+        },
+        sortby=S_VAL,
+        select="FIRST: prev.id; SECOND: next.id; SCORE: next.arc.value"
+    )
+
+
+----
+
+
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+<<VGXCoreConcepts.adoc#, icon:arrow-circle-left[size=2x, title="VGX Core Concepts"]>>
+<<../index.adoc#, icon:arrow-circle-up[size=2x, title="Index"]>>
+<<shortref.adoc#, icon:arrow-circle-right[size=2x, title="Compact pyvgx Reference"]>>
+// cspell:ignore backtotop
+include::common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="reference.adoc#"]
+[.text-center]
+<<reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

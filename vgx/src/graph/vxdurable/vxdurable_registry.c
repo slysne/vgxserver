@@ -44,6 +44,7 @@ static const char *g_version_info_ext = GENERATE_VERSION_INFO_EXT_STR( "vgx", VE
 
 static framehash_t *g_graph_registry = NULL;
 static CString_t *CSTR__g_system_root = NULL;
+static CString_t *CSTR__g_system_absroot = NULL;
 
 static int g_registry_readonly_RCS = 0;
 
@@ -122,7 +123,7 @@ static CString_t * GraphInfo_ctime( int64_t tms, bool millisec );
 /* ------------- */
 static int GraphFactory_acquire_readonly( void );
 static int GraphFactory_release( void );
-static const CString_t * GraphFactory_system_root( void );
+static const CString_t * GraphFactory_system_root( bool absolute );
 static const CString_t * GraphFactory_set_system_root( const char *sysroot );
 static bool GraphFactory_disable_events( void );
 static bool GraphFactory_enable_events( void );
@@ -456,7 +457,7 @@ static bool __wait_for_writable_registry_RCS( int timeout_ms ) {
  ***********************************************************************
  */
 static CString_t * GraphInfo_graph_path( const vgx_Graph_t *graph ) {
-  const CString_t *CSTR__system_root = GraphFactory_system_root();
+  const CString_t *CSTR__system_root = GraphFactory_system_root(false);
   if( graph->CSTR__path ) {
     CString_t *CSTR__path = CStringNewFormat( "%s/%s", CSTR__system_root ? CStringValue(CSTR__system_root) : ".", CStringValue(graph->CSTR__path) );
     return CSTR__path;
@@ -667,7 +668,10 @@ DLL_EXPORT void vgx_GRAPH_DESTROY( void ) {
  *
  ***********************************************************************
  */
-static const CString_t * GraphFactory_system_root( void ) {
+static const CString_t * GraphFactory_system_root( bool absolute ) {
+  if( absolute && CSTR__g_system_absroot ) {
+    return CSTR__g_system_absroot;
+  }
   return CSTR__g_system_root;
 }
 
@@ -681,13 +685,30 @@ static const CString_t * GraphFactory_system_root( void ) {
 static const CString_t * GraphFactory_set_system_root( const char *sysroot ) {
   if( CSTR__g_system_root ) {
     CStringDelete( CSTR__g_system_root );
+    CSTR__g_system_root = NULL;
   }
+  if( CSTR__g_system_absroot ) {
+    CStringDelete( CSTR__g_system_absroot );
+    CSTR__g_system_absroot = NULL;
+  }
+
   if( sysroot ) {
     CSTR__g_system_root = CStringNew( sysroot );
   }
   else {
     CSTR__g_system_root = CStringNew( "." );
   }
+
+  if( CSTR__g_system_root == NULL ) {
+    return NULL;
+  }
+
+  char *abspath = get_abspath( CStringValue( CSTR__g_system_root ) );
+  if( abspath )  {
+    CSTR__g_system_absroot = CStringNew( abspath );
+    free( abspath );
+  }
+
   return CSTR__g_system_root;
 }
 
@@ -1576,7 +1597,7 @@ static int GraphFactory_delete_graph( const CString_t *CSTR__graph_path, const C
 
   // Default path same as registry
   if( CSTR__graph_path == NULL ) {
-    CSTR__graph_path = GraphFactory_system_root();
+    CSTR__graph_path = GraphFactory_system_root(false);
   }
 
   REGISTRY_LOCK {
@@ -2423,6 +2444,7 @@ static int __initialize_graph_registry_ROPEN( const CString_t *CSTR__system_root
       }
 
       iString.Discard( &CSTR__g_system_root );
+      iString.Discard( &CSTR__g_system_absroot );
 
       if( (CSTR__g_system_root = iString.Clone( CSTR__system_root )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x5D1 );
@@ -2432,6 +2454,12 @@ static int __initialize_graph_registry_ROPEN( const CString_t *CSTR__system_root
 
       if( (CSTR__registry = CStringNewFormat( "%s/%s", root, VGX_PATHDEF_REGISTRY )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x5D2 );
+      }
+
+      char *abspath = get_abspath( root );
+      if( abspath )  {
+        CSTR__g_system_absroot = CStringNew( abspath );
+        free( abspath );
       }
 
       // Prepare to construct registry
@@ -2458,6 +2486,7 @@ static int __initialize_graph_registry_ROPEN( const CString_t *CSTR__system_root
     }
     XCATCH( errcode ) {
       iString.Discard( &CSTR__g_system_root );
+      iString.Discard( &CSTR__g_system_absroot );
       ret = -1;
     }
     XFINALLY {
@@ -2517,8 +2546,9 @@ static int __destroy_graph_registry_ROPEN( void ) {
         COMLIB_OBJECT_DESTROY( g_graph_registry );
         g_graph_registry = NULL;
 
-        // Path string
+        // Path strings
         iString.Discard( &CSTR__g_system_root );
+        iString.Discard( &CSTR__g_system_absroot );
       }
     } REGISTRY_RELEASE;
 

@@ -68,7 +68,7 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX_GRAPH );
 static void __dump_tx_request_sent( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
-    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot();
+    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot(false);
     CString_t *CSTR__txout = CStringNewFormat( "%s/request_sent.tx", CStringValue( CSTR__sysroot ) );
     CString_t *CSTR__error = NULL;
     out = iURI.NewElements( "file", NULL, NULL, 0, CStringValue( CSTR__txout ), NULL, NULL, &CSTR__error );
@@ -110,7 +110,7 @@ static void __dump_tx_request_sent( const char *data, int64_t sz ) {
 static void __dump_tx_response_recv( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
-    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot();
+    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot(false);
     CString_t *CSTR__txout = CStringNewFormat( "%s/response_recv.tx", CStringValue( CSTR__sysroot ) );
     CString_t *CSTR__error = NULL;
     out = iURI.NewElements( "file", NULL, NULL, 0, CStringValue( CSTR__txout ), NULL, NULL, &CSTR__error );

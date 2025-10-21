@@ -90,7 +90,8 @@ BEGIN_UNIT_TEST( __utest_vxdurable_registry ) {
     TEST_ASSERTION( g_graph_registry != NULL,                                   "Graph registry exists" );
     TEST_ASSERTION( CSTR__g_system_root != NULL,                                "Graph system root path set" );
     TEST_ASSERTION( CStringEqualsChars( CSTR__g_system_root, basedir ),         "Graph system root path correct" );
-    TEST_ASSERTION( igraphfactory.SystemRoot() == CSTR__g_system_root,          "Graph system root path returned" );
+    TEST_ASSERTION( igraphfactory.SystemRoot(false) == CSTR__g_system_root,     "Graph system root path returned" );
+    TEST_ASSERTION( igraphfactory.SystemRoot(true) == CSTR__g_system_absroot,   "Graph system root absolute path returned" );
     igraphfactory.Shutdown();
     TEST_ASSERTION( igraphfactory.IsInitialized() == false,                     "Graph registry not initialized" );
     TEST_ASSERTION( g_graph_registry == NULL,                                   "Graph registry does not exist" );

@@ -39,42 +39,41 @@
 
         <div class="container">
             <div id="http_server">
-                <h3>Service</h3>
+                <h3>Request Engine</h3>
                 <table id="server_metrics" class="databox">
                     <tr class="headrow">
                         <td colspan="3" class="superlabel">Status</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Service name">
                         <td class="sublabel">Name</td>
                         <td colspan="2" class="val vstr"><span id="service_name"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Time since server start">
                         <td class="sublabel">Uptime</td>
                         <td colspan="2" class="val vstr"><span id="uptime"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="S-IN/S-OUT status">
                         <td class="sublabel">Service</td>
                         <td colspan="2" class="val vstr"><span id="service_in"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Engine / Dispatch Mode">
                         <td class="sublabel">Mode</td>
                         <td colspan="2" class="val vstr"><span id="service_mode"></span></td>
                     </tr>
-
                     <tr class="headrow">
                         <td colspan="3" class="superlabel">Request</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Requests/sec on main port">
                         <td class="sublabel">Rate</td>
                         <td class="val vfloat"><span id="qps"></span></td>
                         <td class="unit">qps</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total requests on main port">
                         <td class="sublabel">Total</td>
                         <td class="val vint"><span id="total"></span></td>
                         <td class="unit">requests</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total plugin requests">
                         <td class="sublabel">Plugin</td>
                         <td class="val vint"><span id="plugin"></span></td>
                         <td class="unit">requests</td>
@@ -82,91 +81,96 @@
                     <tr class="headrow">
                         <td colspan="3" class="superlabel">Response Time</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Average response latency">
                         <td class="sublabel">Mean</td>
                         <td class="val vfloat"><span id="mean"></span></td>
                         <td class="unit">ms</td>
                     </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Median</td>
+                    <tr class="datarow" title="50th percentile latency">
+                        <td class="sublabel">50%</td>
                         <td class="val vfloat"><span id="pct50_0"></span></td>
                         <td class="unit">ms</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="90th percentile latency">
                         <td class="sublabel">90%</td>
                         <td class="val vfloat"><span id="pct90_0"></span></td>
                         <td class="unit">ms</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="95th percentile latency">
                         <td class="sublabel">95%</td>
                         <td class="val vfloat"><span id="pct95_0"></span></td>
                         <td class="unit">ms</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="99th percentile latency">
                         <td class="sublabel">99%</td>
                         <td class="val vfloat"><span id="pct99_0"></span></td>
                         <td class="unit">ms</td>
                     </tr>
-                    <tr class="headrow">
-                        <td colspan="3" class="superlabel">Dispatch</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">ExecLoad</td>
-                        <td class="val vint"><span class="alertable" id="loadfactor"></span></td>
-                        <td class="unit">%</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">ExecWait</td>
-                        <td class="val vint"><span id="waiting"></span></td>
-                        <td class="unit">requests</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Matrix</td>
-                        <td class="val vint"><span id="matrix_channels"></span></td>
-                        <td class="unit">channels</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">MatrixWait</td>
-                        <td class="val vint"><span id="matrix_backlog"></span></td>
-                        <td class="unit">requests</td>
+                    <tr class="datarow" title="99.9th percentile latency">
+                        <td class="sublabel">99.9%</td>
+                        <td class="val vfloat"><span id="pct99_9"></span></td>
+                        <td class="unit">ms</td>
                     </tr>
                     <tr class="headrow">
-                        <td colspan="3" class="superlabel">Connection</td>
+                        <td colspan="3" class="superlabel">Front End</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Current number of connected clients">
                         <td class="sublabel">Connected</td>
                         <td class="val vint"><span id="clients"></span></td>
                         <td class="unit">clients</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total client connections since server start">
                         <td class="sublabel">Lifetime</td>
                         <td class="val vint"><span id="total_clients"></span></td>
                         <td class="unit">clients</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total request data received">
                         <td class="sublabel">Inbound</td>
                         <td class="val vkib"><span id="data_in"></span></td>
                         <td class="unit">kiB</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total response data sent">
                         <td class="sublabel">Outbound</td>
                         <td class="val vkib"><span id="data_out"></span></td>
                         <td class="unit">kiB</td>
                     </tr>
                     <tr class="headrow">
+                        <td colspan="3" class="superlabel">Execution</td>
+                    </tr>
+                    <tr class="datarow" title="Local executor thread utilization">
+                        <td class="sublabel">Local Load</td>
+                        <td class="val vint"><span class="alertable" id="loadfactor"></span></td>
+                        <td class="unit">%</td>
+                    </tr>
+                    <tr class="datarow" title="Requests queued for execution">
+                        <td class="sublabel">Local Wait</td>
+                        <td class="val vint"><span id="waiting"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="datarow" title="Number of sockets connected to back-end matrix">
+                        <td class="sublabel">Matrix</td>
+                        <td class="val vint"><span id="matrix_channels"></span></td>
+                        <td class="unit">channels</td>
+                    </tr>
+                    <tr class="datarow" title="Number of queued back-end requests">
+                        <td class="sublabel">Matrix Wait</td>
+                        <td class="val vint"><span id="matrix_backlog"></span></td>
+                        <td class="unit">requests</td>
+                    </tr>
+                    <tr class="headrow">
                         <td colspan="3" class="superlabel">Error</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Current errors/sec">
                         <td class="sublabel">Rate</td>
                         <td class="val vfloat"><span id="err_rate"></span></td>
                         <td class="unit">err/s</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total plugin service errors">
                         <td class="sublabel">Service</td>
                         <td class="val vint"><span id="err_service"></span></td>
                         <td class="unit">errors</td>
                     </tr>
-                    <tr class="datarow" id="http_codes_row">
+                    <tr class="datarow" id="http_codes_row" title="Error count by HTTP code">
                         <td class="sublabel">HTTP Code</td>
                         <td class="val vint"><span id="err_http"></span></td>
                         <td class="vlist vstr wrap-list wrap-codes"><span id="http_codes"></span></td>
@@ -174,33 +178,33 @@
                 </table>
             </div>
             <div id="transaction_io">
-                <h3>Transaction</h3>
+                <h3>Transaction Interconnect</h3>
                 <div class="transaction_metrics">
                     <table id="transaction_status" class="transaction_panel databox">
                         <tr class="headrow">
                             <td colspan="2" class="superlabel">Data Input Service</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="VGX Server durable writes mode">
                             <td class="sublabel">Persistence</td>
                             <td class="val vstr"><span id="tx_durable"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="TTL event processor mode">
                             <td class="sublabel">Expiration</td>
                             <td class="val vstr"><span id="tx_events"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Time since last complete data snapshot to disk">
                             <td class="sublabel">Snapshot Age</td>
                             <td class="val vstr"><span id="snapshot_age"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Transaction input consumer status">
                             <td class="sublabel">Execution</td>
                             <td class="val vstr"><span id="tx_exec"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Original provider's most recent transaction serial number">
                             <td class="sublabel">Master Serial</td>
                             <td class="val vstr"><span id="masterSerial"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Current data fingerprint">
                             <td class="sublabel">Fingerprint</td>
                             <td class="val vstr"><span id="fingerprint"></span></td>
                         </tr>
@@ -211,27 +215,27 @@
                             <td class="superlabel">Out</td>
                             <td class="empty"></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Current transaction data I/O rate">
                             <td class="val vkib"><span id="tx_in_kib_rate"></span></td>
                             <td class="val vkib"><span id="tx_out_kib_rate"></span></td>
                             <td class="unit">kiB/sec<span id="tx_out_kib_multiplier"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Total accumulated transaction I/O data">
                             <td class="val vkib"><span id="tx_in_kib"></span></td>
                             <td class="val vkib"><span id="tx_out_kib"></span></td>
                             <td class="unit">kiB</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Total accumulated transaction opcodes">
                             <td class="val vkib"><span id="tx_in_codes"></span></td>
                             <td class="val vkib"><span id="tx_out_codes"></span></td>
                             <td class="unit">opcodes</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Total accumulated transaction operations">
                             <td class="val vkib"><span id="tx_in_ops"></span></td>
                             <td class="val vkib"><span id="tx_out_ops"></span></td>
                             <td class="unit">operations</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Total accumulated number of transactions">
                             <td class="val vkib"><span id="tx_in_txs"></span></td>
                             <td class="val vkib"><span id="tx_out_txs"></span></td>
                             <td class="unit">transactions</td>
@@ -239,24 +243,24 @@
                     </table>
                     <table id="transaction_input_throttle" class="transaction_panel databox">
                         <tr class="headrow">
-                            <td colspan="3" class="superlabel">Throttle</td>
+                            <td colspan="3" class="superlabel">Input Consumption Throttle</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Maximum processing rate of input bytes">
                             <td class="empty"></td>
                             <td class="val vfloat"><span id="tx_in_bytes_throttle"></span></td>
                             <td class="unit">bytes/sec</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Maximum processing rate of input opcodes">
                             <td class="empty"></td>
                             <td class="val vfloat"><span id="tx_in_opcodes_throttle"></span></td>
                             <td class="unit">opcodes/sec</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Maximum processing rate of input operations">
                             <td class="empty"></td>
                             <td class="val vfloat"><span id="tx_in_operations_throttle"></span></td>
                             <td class="unit">operations/sec</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Maximum processing rate of input transactions">
                             <td class="empty"></td>
                             <td class="val vfloat"><span id="tx_in_transactions_throttle"></span></td>
                             <td class="unit">transactions/sec</td>
@@ -266,21 +270,21 @@
                         <tr class="headrow">
                             <td colspan="3" class="superlabel">Connection Status</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Transaction consumer service input port">
                             <td class="sublabel">Listen Port</td>
                             <td class="val vint"><span id="tx_port"></span></td>
                             <td class="val vstr"><span id="tx_status"></span></td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="Real-time transaction input processing lag">
                             <td class="sublabel">Input Lag</td>
                             <td class="val vfloat"><span id="tx_lag"></span></td>
                             <td class="unit">seconds</td>
                         </tr>
-                        <tr class="datarow">
+                        <tr class="datarow" title="VGX Server provider instance">
                             <td class="sublabel">Data Provider</td>
                             <td class="val vstr" colspan="2"><span id="txprovider"></span></td>
                         </tr>
-                        <tr class="datarow" id="subscribers_row">
+                        <tr class="datarow" id="subscribers_row" title="VGX Server subscriber instance(s)">
                             <td class="sublabel">Subscribers</td>
                             <td id="txsubscribers_td" class="vstr" colspan="2"><pre class="val vstr" id="txsubscribers"></pre></td>
                         </tr>
@@ -288,101 +292,102 @@
                 </div>
             </div>
             <div id="graph_engine">
-                <h3>Graph</h3>
+                <h3>Graph Engine</h3>
                 <table id="graph_status" class="databox">
                     <tr class="headrow">
                         <td colspan="2" class="superlabel">Resident</td>
                     </tr>
-                    <tr class="datarow" id="graph_names_row">
+                    <tr class="datarow" id="graph_names_row" title="Graph(s) loaded in memory">
                         <td class="sublabel"><span id="graphs_label">-</span></td>
                         <td class="val vlist vstr"><span id="graph_names"></span></td>
                     </tr>
-                    <tr class="datarow" id="local_graph_names_row">
+                    <tr class="datarow" id="local_graph_names_row" title="Local-only graph(s) loaded in memory">
                         <td class="sublabel"><span id="local_graphs_label">Local Only</span></td>
                         <td class="val vlist vstr"><span id="local_graph_names"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Data digest identicon">
                         <td class="sublabel">Digest</td>
                         <td class="sublabel" style="text-align:center">
                             <span style="position: relative; text-align: left" id="digest"></span>
                         </td>
                     </tr>
-                    <tr class="headrow">
-                        <td colspan="2" class="superlabel">Object Summary</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Vertex</td>
+                    <tr class="datarow" title="Total vertices in all loaded graphs">
+                        <td class="sublabel">Vertices</td>
                         <td class="val vint"><span id="order"></span></td>
                     </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Arc</td>
+                    <tr class="datarow" title="Total arcs in all loaded graphs">
+                        <td class="sublabel">Arcs</td>
                         <td class="val vint"><span id="size"></span></td>
                     </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Property</td>
-                        <td class="val vint"><span id="nprop"></span></td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Vector</td>
+                    <tr class="datarow" title="Total vectors in all loaded graphs">
+                        <td class="sublabel">Vectors</td>
                         <td class="val vint"><span id="nvec"></span></td>
                     </tr>
-                    <tr class="headrow">
-                        <td colspan="2" class="superlabel">Enumerator Summary</td>
+                    <tr class="datarow" title="Vector mode Euclidean or Feature">
+                        <td class="sublabel">Vector Mode</td>
+                        <td class="val vstr"><span id="vectormode"></span></td>
                     </tr>
-                    <tr class="datarow">
+                     <tr class="headrow">
+                        <td colspan="2" class="superlabel">Properties</td>
+                    </tr>
+                    <tr class="datarow" title="Total properties for all vertices in all graphs">
+                        <td class="sublabel">Count</td>
+                        <td class="val vint"><span id="nprop"></span></td>
+                    </tr>
+                    <tr class="datarow" title="Total unique property keys across all graphs">
+                        <td class="sublabel">Keys</td>
+                        <td class="val vint"><span id="nkey"></span></td>
+                    </tr>
+                    <tr class="datarow" title="Total unique property string values across all graphs">
+                        <td class="sublabel">Mem Str</td>
+                        <td class="val vint"><span id="nval"></span></td>
+                    </tr>
+                    <tr class="datarow" title="Total disk properties for all vertices in all graphs">
+                        <td class="sublabel">Disk Str</td>
+                        <td class="val vint"><span id="vprop_count"></span></td>
+                    </tr>
+                    <tr class="datarow" title="Total disk property bytes for all vertices in all graphs">
+                        <td class="sublabel">Disk Bytes</td>
+                        <td class="val vint"><span id="vprop_bytes"></span></td>
+                    </tr>
+                    <tr class="headrow">
+                        <td colspan="2" class="superlabel">Enumerator</td>
+                    </tr>
+                    <tr class="datarow" title="Total unique relationships across all graphs">
                         <td class="sublabel">Relationship</td>
                         <td class="val vint"><span id="nrel"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Total unique vertex types across all graphs">
                         <td class="sublabel">Vertex Type</td>
                         <td class="val vint"><span id="nvtx"></span></td>
                     </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Property Key</td>
-                        <td class="val vint"><span id="nkey"></span></td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">String Value</td>
-                        <td class="val vint"><span id="nval"></span></td>
-                    </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" id="dimensions" title="Total unique feature vector dimensions across all graphs">
                         <td class="sublabel">Dimension</td>
                         <td class="val vint"><span id="ndim"></span></td>
                     </tr>
                     <tr class="headrow">
-                        <td colspan="2" class="superlabel">Virtual Property</td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Count</td>
-                        <td class="val vint"><span id="vprop_count"></span></td>
-                    </tr>
-                    <tr class="datarow">
-                        <td class="sublabel">Bytes</td>
-                        <td class="val vint"><span id="vprop_bytes"></span></td>
-                    </tr>
-                    <tr class="headrow">
                         <td colspan="2" class="superlabel">Internal Query</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Number of internal query API calls since server start">
                         <td class="sublabel">Total Count</td>
                         <td class="val vint"><span id="qcnt"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Average internal query latency">
                         <td class="sublabel">Latency (&#956;s)</td>
                         <td class="val vint"><span id="qtime"></span></td>
                     </tr>
                     <tr class="headrow">
                         <td colspan="2" class="superlabel">Exception Count</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Number of warnings since server start">
                         <td class="sublabel">Warning</td>
                         <td class="val vint"><span id="nWarning"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Number of errors since server start">
                         <td class="sublabel">Error</td>
                         <td class="val vint" id="errorcell"><span id="nError"></span></td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Number of critical errors since server start">
                         <td class="sublabel">Critical</td>
                         <td class="val vint" id="criticalcell"><span id="nCritical"></span></td>
                     </tr>
@@ -393,11 +398,11 @@
                 <table id="memory_status" class="databox">
                     <tr class="headrow">
                         <td class="superlabel" id="usage">Usage</td>
-                        <td class="superlabel" id="vgx_memory" colspan="2">VGX Memory</td>
-                        <td class="superlabel" id="of_total" colspan="3">of Total</td>
-                        <td class="superlabel" id="total_usage" colspan="2">Total Usage</td>
+                        <td class="superlabel" id="vgx_memory" colspan="2">VGX Server</td>
+                        <td class="superlabel" id="of_total" colspan="3">of Physical</td>
+                        <td class="superlabel" id="total_usage" colspan="2">Physical Used</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Current memory usage">
                         <td class="sublabel">Current</td>
                         <td class="val vint"><span id="mem_MiB"></span></td>
                         <td class="unit">MiB</td>
@@ -407,7 +412,7 @@
                         <td class="val vfloat"><span id="mempct_used"></span></td>
                         <td class="unit">%</td>
                     </tr>
-                    <tr class="datarow">
+                    <tr class="datarow" title="Peak memory usage since server start">
                         <td class="sublabel">Peak</td>
                         <td class="val vint"><span id="max_mem_MiB"></span></td>
                         <td class="unit">MiB</td>
@@ -526,8 +531,8 @@
     }
 
     #memory_status td.superlabel#usage {
-        padding-left: 44px;
-        padding-right: 23px;
+        padding-left: 32px;
+        padding-right: 20px;
     }
 
     #memory_status td.superlabel#vgx_memory {
@@ -633,6 +638,7 @@
                 let size = 0;
                 let nprop = 0;
                 let nvec = 0;
+                let vector_mode = graphs["vector-mode"];
                 let nrel = 0;
                 let nvtx = 0;
                 let nkey = 0;
@@ -718,6 +724,7 @@
                 $('#size').html(sizestr);
                 $('#nprop').html(propstr);
                 $('#nvec').html(vecstr);
+                $('#vectormode').html(vector_mode);
                 $('#nrel').html(relstr);
                 $('#nvtx').html(vtxstr);
                 $('#nkey').html(keystr);
@@ -731,7 +738,15 @@
                 $('#nError').html(errorStr);
                 $('#nCritical').html(criticalStr);
 
+                if (vector_mode === "feature") {
+                    $('#dimensions').show();
+                }
+                else {
+                    $('#dimensions').hide();
+                }
+
                 digestObj.update(digest);
+                $('#digest').parent().prop("title", digest);
                 $('#masterSerial').html( MasterSerial.render( masterSerial ) );
                 $('#fingerprint').html( digest.slice(14) );
 
@@ -908,6 +923,7 @@
                 const events = response["events"];
                 const executing = response["executing"];
                 const persist_age = response["persist-age"];
+                const persist_location = response["persist-location"];
                 const persisting = response["persisting"];
                 let provider = response["provider"];
                 let subscribers = response["subscribers"];
@@ -945,15 +961,15 @@
                 $('#tx_exec').html(execStr);
 
                 $('#snapshot_age').html(persist_age);
+                $('#snapshot_age').parent().prop("title", persist_location);
 
                 if (provider != null) {
-                    const preRex = /vgx:\/\//;
-                    const postRex = /:(\d+)/;
-                    provider = provider.replace(preRex, "").replace(postRex, "");
                     $('#txprovider').html(provider);
+                    $('#txprovider').parent().prop("title", provider);
                 }
                 else {
                     $('#txprovider').html("-");
+                    $('#txprovider').parent().prop("title", "(no provider)");
                 }
 
                 if (subscribers.length > 0) {
@@ -972,6 +988,7 @@
                         }
                     }
                     $('#txsubscribers').html(sub_names);
+                    $('#txsubscribers').parent().prop("title", "Subscribers:\n\n" + sub_names);
                     let txbox = $('#transaction_connection_status');
                     let fontsize = 90;
                     $('#txsubscribers').css("font-size", "90%");
@@ -1002,6 +1019,7 @@
                 }
                 else {
                     $('#txsubscribers').html("-");
+                    $('#txsubscribers').parent().prop("title", "(no subscribers)");
                 }
 
                 let multiplier = "";
@@ -1074,6 +1092,7 @@
                 const pct90_0 = parseFloat(latency["90.0"]);
                 const pct95_0 = parseFloat(latency["95.0"]);
                 const pct99_0 = parseFloat(latency["99.0"]);
+                const pct99_9 = parseFloat(latency["99.9"]);
                 const kiB_in = Math.round(bytes_in / 1024);
                 const kiB_out = Math.round(bytes_out / 1024);
 
@@ -1143,6 +1162,7 @@
                 $('#pct90_0').html(pct90_0.toFixed(2));
                 $('#pct95_0').html(pct95_0.toFixed(2));
                 $('#pct99_0').html(pct99_0.toFixed(2));
+                $('#pct99_9').html(pct99_9.toFixed(2));
                 $('#clients').html(clients);
                 $('#total_clients').html(total_clients);
                 $('#data_in').html(kiB_in.toLocaleString("en-US"));

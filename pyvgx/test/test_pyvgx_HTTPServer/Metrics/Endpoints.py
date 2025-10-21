@@ -204,6 +204,7 @@ def TEST_endpoint__vgx_graphsum():
             "size": 5,
             "properties": 2,
             "vectors": 3,
+            "vector-mode": "euclidean",
             "enumerator": {
                 "relationship": 2,
                 "vertextype": 2,
@@ -468,6 +469,7 @@ def TEST_endpoint__vgx_peerstat():
         "idle-ms": 176282,
         "persist-age": "0:00:12:59",
         "persist-ts": 1689704932,
+        "persist-location": "/usr/data/vgxroot",
         "persisting": 0,
         "synchronizing": 0,
         "sync-progress": 0,
@@ -599,6 +601,7 @@ def TEST_endpoint__vgx_nodestat():
         "durable-max-txlog": 2147483648,
         "snapshot-writing": false,
         "snapshot-age": 893,
+        "snapshot-location": "/usr/data/vgxroot",
         "readonly": false,
         "local-only": 0
     }
