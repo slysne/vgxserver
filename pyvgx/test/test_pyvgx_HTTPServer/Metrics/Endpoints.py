@@ -204,6 +204,7 @@ def TEST_endpoint__vgx_graphsum():
             "size": 5,
             "properties": 2,
             "vectors": 3,
+            "vector-mode": "euclidean",
             "enumerator": {
                 "relationship": 2,
                 "vertextype": 2,

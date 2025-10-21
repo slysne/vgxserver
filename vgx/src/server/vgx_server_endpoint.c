@@ -658,6 +658,8 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
     }
   */
 
+  bool vector_mode_euclidean = igraphfactory.EuclideanVectors();
+
   begin_json_static( response, 1024, '{' ) {
 
     begin_first_key_dict( "graphsum" ) {
@@ -689,7 +691,7 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
               if( graph->similarity && graph->similarity->parent == graph ) {
                 nrel += iEnumerator_CS.Relationship.Count( graph );
                 nvtx += iEnumerator_CS.VertexType.Count( graph );
-                if( !igraphfactory.EuclideanVectors() ) {
+                if( !vector_mode_euclidean ) {
                   ndim += iEnumerator_CS.Dimension.Count( graph->similarity );
                 }
               }
@@ -753,6 +755,8 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
       next_key_int( "size", size );
       next_key_int( "properties", properties );
       next_key_int( "vectors", vectors );
+      const char *vector_mode = vector_mode_euclidean ? "euclidean" : "feature";
+      next_key_str( "vector-mode", vector_mode );
       begin_next_key_dict( "enumerator" ) {
         first_key_int( "relationship", nrel );
         next_key_int( "vertextype", nvtx );
