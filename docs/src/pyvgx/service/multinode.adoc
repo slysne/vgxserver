@@ -136,10 +136,10 @@ Instance type must be one of `"admin"`, `"dispatch"`, `"search"`, `"builder"`, `
 Hostname or IP address of server where instance is running
 
 [[descriptor_instance_hport]]HTTP Port: `instances.Si.*hport*`:: [*Required*] +
-HTTP Socket Server <<service.adoc#server_a_port, main port>>
+Request Engine HTTP service <<service.adoc#server_a_port, main port>>
 
 [[descriptor_instance_prefix]]HTTP Service Prefix: `instances.Si.*prefix*`:: [Default=`None`] +
-HTTP Service <<service.adoc#system_starthttp_func__prefix, path prefix>> for URI aliases.
+Request Engine HTTP service <<service.adoc#system_starthttp_func__prefix, path prefix>> for URI aliases.
 [CAUTION]
 ====
 The _prefix_ parameter must be the same for all instances.

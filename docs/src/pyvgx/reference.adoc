@@ -104,7 +104,7 @@ Vertices and arcs may be assigned expiration timestamps (time-to-live or TTL) fo
 Graphs may be accessed simultaneously by multiple threads. Safe, concurrent access is governed by various internal locking mechanisms that appear seamless at the API level. Optional timeouts may be specified for most operations. Python's global interpreter lock (GIL) is released during execution of graph operations, thus allowing parallel execution across multiple CPU-cores within the same Python process.
 
 ==== Plugins and VGX Server
-A plugin framework allows remote execution of Python functions that you define and register with the system. Plugins are invoked by sending HTTP requests to VGX Server, a fully asynchronous, multithreaded socket server running within the VGX core. This server is independent from the Python interpreter. 
+A plugin framework allows remote execution of Python functions that you define and register with the system. Plugins are invoked by sending HTTP requests to VGX Server, a fully asynchronous, multithreaded request engine running within the VGX core. This server is independent from the Python interpreter. 
 
 === API Components
 

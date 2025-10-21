@@ -16,14 +16,14 @@ VGX Server is a self-contained platform for building plugin-based PyVGX services
 [[component_overview]]
 == Component Overview
 
-<<socketserver, Socket Server>>::
-_Socket Server_ is a fully asynchronous, multithreaded socket server built directly on the operating system's standard socket API.
+<<requestengine, Request Engine>>::
+_Request Engine_ is a fully asynchronous, multithreaded socket server built directly on the operating system's standard socket API.
 It currently supports the HTTP protocol, accepting methods `GET`, `POST` and `HEAD`.
 
 <<pluginadapter.adoc#, Plugin Adapter>>::
 _Plugin Adapter_ allows custom Python code to be installed as plugins which can be invoked via HTTP requests.
 +
-Socket Server must be running before plugin requests can be made. Use <<system_starthttp_func, pyvgx.StartHTTP()>> or <<../reference.adoc#system_initialize_func, pyvgx.Initialize()>> to start the socket server.
+Request Engine must be running before plugin requests can be made. Use <<system_starthttp_func, pyvgx.StartHTTP()>> or <<../reference.adoc#system_initialize_func, pyvgx.Initialize()>> to start the socket server.
 +
 Plugins are added using <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>, which associates a unique service URI with a Python function. Any number of services may be defined, creating a unique service URI for each plugin function added.
 
@@ -35,20 +35,20 @@ _Transaction Interconnect_ is responsible for sending and receiving graph data t
 
 image::vgxserver.png[vgxserver, title="VGX Server"]
 
-[[socketserver]]
-== Socket Server
+[[requestengine]]
+== Request Engine
 
-Socket Server runs in one of three modes:
+Request Engine runs in one of three modes:
 
 [[vgx_server_mode_engine]]VGX Engine::
-Socket Server receives, executes, and responds to requests by invoking Python functions registered via the *_engine_* argument to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
+Request Engine receives, executes, and responds to requests by invoking Python functions registered via the *_engine_* argument to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
 +
-Socket Server runs in this mode by default when <<system_starthttp_func, pyvgx.system.StartHTTP()>> is called (without the *_dispatcher_* argument.)
+Request Engine runs in this mode by default when <<system_starthttp_func, pyvgx.system.StartHTTP()>> is called (without the *_dispatcher_* argument.)
 
 [[vgx_server_mode_dispatch]]VGX Dispatch::
-Socket Server forwards requests to one or more Socket Servers whose individual responses are combined into an aggregate response. Requests may be pre-processed before they are dispatched to other Socket Servers, and the aggregate response may be post-processed. Pre and post processors are optionally registered via the *_pre_* and *_post_* arguments to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
+Request Engine forwards requests to one or more lower level Request Engines whose individual responses are combined into an aggregate response. Requests may be pre-processed before they are dispatched to other Request Engines, and the aggregate response may also be post-processed. Pre and post processors are optionally registered via the *_pre_* and *_post_* arguments to <<pluginadapter.adoc#system_addplugin_func, pyvgx.system.AddPlugin()>>.
 +
-Socket Server runs in this mode when <<system_starthttp_func, pyvgx.system.StartHTTP()>> receives a matrix configuration in the *_dispatcher_* argument.
+Request Engine runs in Dispatcher mode when <<system_starthttp_func, pyvgx.system.StartHTTP()>> receives a matrix configuration in the *_dispatcher_* argument.
 
 [[vgx_server_mode_proxy]]Reverse Proxy::
 This is a special case dispatch mode where the dispatcher matrix contains a single instance and no pre or post processors are used. A request is simply forwarded to the single instance whose unmodified response is used as the proxy response.
@@ -59,9 +59,9 @@ Multiple VGX Server instances can be deployed to form a dispatch matrix. A _VGX 
 
 A request sent to VGX Dispatch is forwarded to exactly one back-end instances per partition. The replica chosen for a given partition depends on the replica priority and the amount of work currently being performed by all replicas in the partition. The selected back-end instances return their individual responses to VGX Dispatch where they are merged.
 
-By default all partitions are included when executing a request. This is the desired behavior for queries that must aggregate responses from all partitions. A specific partition may be targeted when so instructed via plugin code or HTTP headers, which is required when feeding data to a system. In this case the selected replica must be the primary instance within a set of replicas, i.e. the graph provider.
+By default all partitions are included when executing a request. This is the desired behavior for queries that must aggregate responses from all partitions. A specific partition may be targeted when so instructed via plugin code or HTTP headers, which is required when feeding data to a system. In this case the selected replica will be the primary (provider) instance within a set of replicas.
 
-<<basicmatrix>> shows a simple 2-row, 3-partition matrix served by a single dispatcher.
+<<basicmatrix>> shows a simple 2-row, 3-partition matrix served by a single dispatcher. Notice how service requests (http) are separated from transaction data transfer (tx) using different protocols on different ports.
 
 // cspell:ignore basicmatrix
 [[basicmatrix]]
@@ -82,7 +82,7 @@ image::cyclematrix.png[cyclematrix, title="Ring Matrix"]
 [[server_a_and_server_b]]
 === Server Ports
 
-VGX Server runs two independent Socket Server loops; Server A and Server B. Server A runs on the <<system_starthttp_func, port>> specified with <<../reference.adoc#system_initialize_func, Initialize()>> or <<system_starthttp_func, StartHTTP()>>. Server B runs on port+1.
+VGX Server runs two independent Request Engine servers; Server A and Server B. Server A runs on the <<system_starthttp_func, port>> specified with <<../reference.adoc#system_initialize_func, Initialize()>> or <<system_starthttp_func, StartHTTP()>>. Server B runs on port+1.
 
 [[server_a_port]]
 ==== Main Server A (_port_)
@@ -95,7 +95,7 @@ Server B is used for monitoring and administrative requests.
 [[dispatcher_configuration]]
 === Dispatcher Configuration
 
-Socket Server is started in VGX Dispatch mode by passing the _dispatcher_ parameter to <<system_starthttp_func, StartHTTP()>>, which is a dict describing the back-end matrix:
+Request Engine is started in VGX Dispatch mode by passing the _dispatcher_ parameter to <<system_starthttp_func, StartHTTP()>>, which is a dict describing the back-end matrix:
 
 [source, python]
 ----
@@ -187,7 +187,7 @@ General dispatcher settings are specified here.
 +
 `True`: Requests are allowed to complete when at least one partition is available. Responses from the available partitions will be aggregated and returned on a best-effort basis. If no partitions are available the dispatcher will respond with error `503 All partitions down`.
 
-=== pyvgx.system Socket Server Management
+=== pyvgx.system Request Engine Management
 
 // cspell:ignore servicein
 ==== StartHTTP
@@ -195,7 +195,7 @@ General dispatcher settings are specified here.
 [[system_starthttp_func]]`pyvgx.*system.StartHTTP*( _port_**[**, _ip_**[**, _prefix_**[**, _servicein_**[**, _dispatcher_**]]]]** )`::
 Start VGX Server HTTP service.
 +
-*port*: <<server_a_and_server_b, Two independent socket servers>> are started on _port_ and _port_+1, enabling plugin execution and remote system monitoring. <<plugin_execution_request, Plugin execution requests>> should be made on _port_, and <<builtin_services, all other requests>> should be made on _port_+1.
+*port*: <<server_a_and_server_b, Two independent servers>> are started on _port_ and _port_+1, enabling plugin execution and remote system monitoring. <<plugin_execution_request, Plugin execution requests>> should be made on _port_, and <<builtin_services, all other requests>> should be made on _port_+1.
 +
 *ip*: Optionally identify the server's ip address
 +
@@ -299,8 +299,8 @@ Reset all HTTP Server performance metrics to their initial state.
 ___
 
 
-[[socket_server_limits]]
-=== Socket Server Limits
+[[request_engine_limits]]
+=== Request Engine Limits
 
 [cols="5,2,5"]
 |===
@@ -345,7 +345,7 @@ latexmath:[ \displaystyle partitions \cdot replicas \cdot channels <= FD_{max} ]
 [[http_request]]
 === HTTP Request
 
-Socket Server accepts standard HTTP 1.1 requests.
+Request Engine accepts standard HTTP 1.1 requests.
 
 ==== HTTP Methods
 Supported methods are `GET`, `POST`, `HEAD`, and `OPTIONS`.
@@ -522,7 +522,7 @@ CAUTION: Executor threads are uniquely allocated to _engine_, _pre_, or _post_ f
 [[http_response]]
 === HTTP Response
 
-Socket Server returns standard HTTP 1.1 responses. 
+Request Engine returns standard HTTP 1.1 responses. 
 
 .HTTP Response
 [source]
@@ -931,7 +931,7 @@ VGX Server includes service endpoints for getting system information and metrics
 
 |`/vgx/inspect`
 |`application/json`
-|Socket server connection details. Use parameter `level=n` (0-3) to control amount of detail.
+|Request Engine connection details. Use parameter `level=n` (0-3) to control amount of detail.
 
 |`/vgx/randstr`
 |`text/plain`

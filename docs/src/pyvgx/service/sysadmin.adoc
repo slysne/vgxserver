@@ -248,7 +248,7 @@ Subscriber row(s): Detach from subscriber
 
 This is a readonly summary page showing various metrics and counters.
 
-Service:: HTTP Socket Server metrics
+Service:: Request Engine HTTP server metrics
 
 Transaction:: VGX Transaction Service metrics
 
@@ -779,7 +779,7 @@ New plugins can be dynamically added by POSTing plugin definition JSON. The plug
 
 |===
 
-==== Socket Server
+==== Request Engine
 
 [cols="2,4"]
 |===
