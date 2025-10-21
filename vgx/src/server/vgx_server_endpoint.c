@@ -547,26 +547,15 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int __endpoint__service_storage( vgx_VGXServer_t *server, vgx_URIQueryParameters_t *params, vgx_VGXServerResponse_t *response ) {
 
   int ret = 0;
-  char *sysroot_full = NULL;
 
   XTRY {
 
-    const CString_t *CSTR__root = igraphfactory.SystemRoot();
-    if( CSTR__root == NULL ) {
+    const CString_t *CSTR__absroot = igraphfactory.SystemRoot(true);
+    if( CSTR__absroot == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
     }
 
-    const char *sysroot = "";
-    if( (sysroot_full = get_abspath( CStringValue( CSTR__root ) )) != NULL ) {
-      char *p = sysroot_full;
-      while( *p != '\0' ) {
-        if( *p == '\\' ) {
-          *p = '/';
-        }
-        ++p;
-      }
-      sysroot = sysroot_full;
-    }
+    const char *sysroot = CStringValue( CSTR__absroot );
 
     /*  {
           "sysroot":      "/usr/data/instanceX",
@@ -582,7 +571,6 @@ static int __endpoint__service_storage( vgx_VGXServer_t *server, vgx_URIQueryPar
     ret = -1;
   }
   XFINALLY {
-    free( sysroot_full );
   }
 
   return ret;
@@ -632,6 +620,7 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
             "size": 5,
             "properties": 2,
             "vectors": 3,
+            "vector-mode": "euclidean",
             "enumerator": {
                 "relationship": 2,
                 "vertextype": 2,
@@ -1212,6 +1201,9 @@ static int __endpoint__service_peerstat( vgx_VGXServer_t *server, vgx_URIQueryPa
   int64_t durable_ts = 0;
   int n_serializing = 0;
   igraphfactory.DurabilityPoint( &durable_tx, &durable_sn, &durable_ts, &n_serializing );
+
+  const CString_t *CSTR__absroot = igraphfactory.SystemRoot(true);
+  const char *absroot = CStringValueDefault( CSTR__absroot, "." );
   
   char provider_digest[33] = {0};
   GRAPH_LOCK( SYSTEM ) {
@@ -1280,6 +1272,7 @@ static int __endpoint__service_peerstat( vgx_VGXServer_t *server, vgx_URIQueryPa
        "idle-ms": 5782,
        "persist-age" : "0:07:13:45",
        "persist-ts" : 1669316305,
+       "persist-location" : "/usr/data/vgxroot",
        "persisting" : 0,
        "synchronizing" : 1,
        "sync-progress" : 83,
@@ -1332,6 +1325,7 @@ static int __endpoint__service_peerstat( vgx_VGXServer_t *server, vgx_URIQueryPa
       }
     } end_key_direct;
     next_key_int( "persist-ts", durable_ts );
+    next_key_str( "persist-location", absroot );
     next_key_int( "persisting", n_serializing  );
     next_key_int( "synchronizing", synchronizing  );
     next_key_int( "sync-progress", sync_progress  );
@@ -1566,6 +1560,9 @@ static int __endpoint__service_nodestat( vgx_VGXServer_t *server, vgx_URIQueryPa
   bool snapshot_writing = __n_serializing > 0;
   // snapshot-age
   int64_t snapshot_age = (__MILLISECONDS_SINCE_1970() / 1000) - __durable_ts;
+  // snapshot-location
+  const CString_t *CSTR__absroot = igraphfactory.SystemRoot(true);
+  const char *snapshot_location = CStringValueDefault( CSTR__absroot, "." );
   // readonly
   bool readonly = igraphfactory.CountAllReadonly() > 0;
   // (local-only)
@@ -1749,6 +1746,7 @@ static int __endpoint__service_nodestat( vgx_VGXServer_t *server, vgx_URIQueryPa
        "durable-max-txlog": 2147483648,
        "snapshot-writing": false,
        "snapshot-age": 55616,
+       "snapshot-location": "/usr/data/vgxroot",
        "readonly": false,
        "local-only": 0
        }
@@ -1856,6 +1854,7 @@ static int __endpoint__service_nodestat( vgx_VGXServer_t *server, vgx_URIQueryPa
     next_key_int( "durable-max-txlog", durable_max_txlog );
     next_key_bol( "snapshot-writing", snapshot_writing );
     next_key_int( "snapshot-age", snapshot_age );
+    next_key_str( "snapshot-location", snapshot_location );
     next_key_bol( "readonly", readonly );
     next_key_int( "local-only", local_only );
   } catch_json_dynamic {
