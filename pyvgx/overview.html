@@ -21,7 +21,7 @@
 <ul class="sectlevel2">
 <li><a href="#components_overview">1.1. Components</a>
 <ul class="sectlevel3">
-<li><a href="#socket_server">1.1.1. Socket Server</a></li>
+<li><a href="#request_engine">1.1.1. Request Engine</a></li>
 <li><a href="#plugin_adapter">1.1.2. Plugin Adapter</a></li>
 <li><a href="#graph_engine">1.1.3. Graph Engine</a></li>
 <li><a href="#transaction_interconnect">1.1.4. Transaction Interconnect</a></li>
@@ -33,7 +33,7 @@
 </li>
 <li><a href="#component_examples">2. Component Examples</a>
 <ul class="sectlevel2">
-<li><a href="#socket_server_basic_example">2.1. Socket Server Example</a></li>
+<li><a href="#request_engine_basic_example">2.1. Request Engine Example</a></li>
 <li><a href="#plugin_adapter_basic_example">2.2. Plugin Adapter Example</a></li>
 <li><a href="#graph_engine_basic_example">2.3. Graph Engine Example</a></li>
 <li><a href="#transaction_interconnect_basic_example">2.4. Transaction Interconnect Example</a></li>
@@ -142,12 +142,12 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect2">
 <h3 id="components_overview">1.1. Components</h3>
 <div class="paragraph">
-<p>At its core, the architecture is divided into four interconnected components: 1) <em>Socket Server</em>, 2) <em>Plugin Adapter</em>, 3) <em>Graph Engine</em>, and 4) <em>Transaction Interconnect</em>. These elements form a modular foundation that handles incoming requests, custom logic execution, data storage and retrieval, and inter-instance communication, enabling efficient graph operations in both single-node and distributed environments.</p>
+<p>At its core, the architecture is divided into four interconnected components: 1) <em>Request Engine</em>, 2) <em>Plugin Adapter</em>, 3) <em>Graph Engine</em>, and 4) <em>Transaction Interconnect</em>. These elements form a modular foundation that handles incoming requests, custom logic execution, data storage and retrieval, and inter-instance communication, enabling efficient graph operations in both single-node and distributed environments.</p>
 </div>
 <div class="sect3">
-<h4 id="socket_server">1.1.1. Socket Server</h4>
+<h4 id="request_engine">1.1.1. Request Engine</h4>
 <div class="paragraph">
-<p>The Socket Server serves as the primary entry point, functioning as an asynchronous, multithreaded HTTP/1.1 listener that parses incoming requests and dispatches them for execution. It operates in flexible modes—such as Engine mode for direct processing, Dispatch mode for forwarding to backend instances in configurable matrices (e.g., M replicas by N partitions), or Reverse Proxy mode for simple relaying—supporting scalability through load-balanced query distribution and aggregation of responses across nodes.</p>
+<p>The Request Engine serves as the primary entry point, functioning as an asynchronous, multithreaded HTTP/1.1 listener that parses incoming requests and dispatches them for execution. It operates in flexible modes—such as Engine mode for direct processing, Dispatch mode for forwarding to backend instances in configurable matrices (e.g., M replicas by N partitions), or Reverse Proxy mode for simple relaying—supporting scalability through load-balanced query distribution and aggregation of responses across nodes.</p>
 </div>
 </div>
 <div class="sect3">
@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect2">
 <h3 id="workflow">1.2. Workflow</h3>
 <div class="paragraph">
-<p>Together, these components orchestrate a cohesive workflow: an HTTP request arrives at the Socket Server, which invokes the Plugin Adapter to execute custom Python logic; this logic interacts with the Graph Engine for graph operations, while the Transaction Interconnect ensures any necessary data replication to other instances. This tight integration allows a single VGX Server instance to function as a self-sufficient graph service, processing queries and updates with low latency.</p>
+<p>Together, these components orchestrate a cohesive workflow: an HTTP request arrives at the Request Engine, which invokes the Plugin Adapter to execute custom Python logic; this logic interacts with the Graph Engine for graph operations, while the Transaction Interconnect ensures any necessary data replication to other instances. This tight integration allows a single VGX Server instance to function as a self-sufficient graph service, processing queries and updates with low latency.</p>
 </div>
 </div>
 <div class="sect2">
@@ -212,7 +212,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </div>
 <div class="sect2">
-<h3 id="socket_server_basic_example">2.1. Socket Server Example</h3>
+<h3 id="request_engine_basic_example">2.1. Request Engine Example</h3>
 <table class="tableblock frame-none grid-none stretch">
 <colgroup>
 <col style="width: 34%;">
@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="imageblock">
 <div class="content">
-<img src="images/vgxserver_socketserver.png" alt="socket_server">
+<img src="images/vgxserver_requestengine.png" alt="request_engine">
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"></td>
@@ -610,7 +610,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <p><strong>Concurrency and Scalability</strong>: Thread-safe access to graphs supports concurrent operations, with configurable timeouts and locking mechanisms. Multi-node deployments enable sharding and replication for large-scale data sets.</p>
 </li>
 <li>
-<p><strong>Plugin Integration</strong>: The <code>system.AddPlugin()</code> method allows developers to define custom HTTP endpoints for data ingestion and querying, leveraging the VGX Server’s asynchronous socket server. Plugins can use any Python library, extending functionality beyond the built-in Graph Engine.</p>
+<p><strong>Plugin Integration</strong>: The <code>system.AddPlugin()</code> method allows developers to define custom HTTP endpoints for data ingestion and querying, leveraging the VGX Server’s asynchronous request engine. Plugins can use any Python library, extending functionality beyond the built-in Graph Engine.</p>
 </li>
 </ul>
 </div>
@@ -683,7 +683,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-16 17:53:43 -0400
+Last updated 2025-10-21 13:23:25 -0400
 </div>
 </div>
 </body>
