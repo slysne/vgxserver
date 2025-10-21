@@ -3624,8 +3624,8 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       // [Q2.7] Similarity object
       vgx_Similarity_t *similarity;
 
-      // [Q2.8]
-      QWORD __rsv_2_8;
+      // [Q2.8] Absolute graph path
+      CString_t *CSTR__abspath;
     };
   };
 
@@ -4922,7 +4922,7 @@ typedef struct s_vgx_IGraphInfo_t {
 typedef struct s_vgx_IGraphFactory_t {
   int (*Acquire)( void );
   int (*Release)( void );
-  const CString_t * (*SystemRoot)( void );
+  const CString_t * (*SystemRoot)( bool absolute );
   const CString_t * (*SetSystemRoot)( const char *sysroot );
   bool (*DisableEvents)( void );
   bool (*EnableEvents)( void );

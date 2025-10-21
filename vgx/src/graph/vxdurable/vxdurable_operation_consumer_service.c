@@ -233,7 +233,7 @@ __inline static const char *__full_path( vgx_TransactionalConsumerService_t *con
 static void __dump_tx_request_recv( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
-    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot();
+    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot(false);
     CString_t *CSTR__txout = CStringNewFormat( "%s/request_recv" TX_EXT, CStringValue( CSTR__sysroot ) );
     CString_t *CSTR__error = NULL;
     out = iURI.NewElements( "file", NULL, NULL, 0, CStringValue( CSTR__txout ), NULL, NULL, &CSTR__error );
@@ -275,7 +275,7 @@ static void __dump_tx_request_recv( const char *data, int64_t sz ) {
 static void __dump_tx_response_sent( const char *data, int64_t sz ) {
   static vgx_URI_t *out = NULL;
   if( out == NULL ) {
-    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot();
+    const CString_t * CSTR__sysroot = igraphfactory.SystemRoot(false);
     CString_t *CSTR__txout = CStringNewFormat( "%s/response_sent" TX_EXT, CStringValue( CSTR__sysroot ) );
     CString_t *CSTR__error = NULL;
     out = iURI.NewElements( "file", NULL, NULL, 0, CStringValue( CSTR__txout ), NULL, NULL, &CSTR__error );
@@ -4796,7 +4796,7 @@ DLL_HIDDEN int _vxdurable_operation_consumer_service__initialize_SYS_CS( vgx_Gra
 
   memset( consumer_service, 0, sizeof( vgx_TransactionalConsumerService_t ) );
 
-  const CString_t *CSTR__root = igraphfactory.SystemRoot();
+  const CString_t *CSTR__root = igraphfactory.SystemRoot(false);
   if( CSTR__root == NULL ) {
     return -1;
   }

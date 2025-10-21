@@ -381,7 +381,7 @@ static PyObject * PyVGX_System__repr( PyVGX_System *py_system ) {
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_System__root( PyVGX_System *py_system, void *closure ) {
-  const CString_t * CSTR__sysroot = igraphfactory.SystemRoot();
+  const CString_t * CSTR__sysroot = igraphfactory.SystemRoot(false);
   if( CSTR__sysroot ) {
     return PyUnicode_FromString( CStringValue( CSTR__sysroot ) );
   }

@@ -444,7 +444,7 @@ static int __resource__load_file( vgx_VGXServer_t *server, vgx_VGXServerResponse
   THROW_SILENT( CXLIB_ERR_API, Code )
 
 
-  char *abs_vgxroot = NULL;
+  const char *abs_vgxroot = NULL;
   char *abs_filepath = NULL;
   CString_t *CSTR__filepath = NULL;
 
@@ -455,15 +455,12 @@ static int __resource__load_file( vgx_VGXServer_t *server, vgx_VGXServerResponse
 
     // Get system root absolute path
     response->mediatype = MEDIA_TYPE__NONE;
-    const CString_t *CSTR__root = igraphfactory.SystemRoot();
-    if( CSTR__root ) {
-      if( (abs_vgxroot = get_abspath( CStringValue( CSTR__root ) )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
-      }
-    }
-    else {
+    const CString_t *CSTR__absroot = igraphfactory.SystemRoot(true);
+    if( !CSTR__absroot ) {
       THROW_CRITICAL( CXLIB_ERR_GENERAL, 0x003 );
     }
+
+    abs_vgxroot = CStringValue( CSTR__absroot );
 
     // Default
     if( CharsEqualsConst( resource, "" ) || CharsEqualsConst( resource, "/" ) ) {
@@ -511,7 +508,6 @@ static int __resource__load_file( vgx_VGXServer_t *server, vgx_VGXServerResponse
     ret = -1;
   }
   XFINALLY {
-    free( abs_vgxroot );
     free( abs_filepath );
     iString.Discard( &CSTR__filepath );
   }

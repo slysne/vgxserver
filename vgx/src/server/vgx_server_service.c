@@ -561,20 +561,13 @@ static void __service__control_init_SYS_CS( vgx_VGXServer_t *server ) {
  */
 static int __create_WEB_ROOT( void ) {
   // System root
-  const CString_t *CSTR__root = igraphfactory.SystemRoot();
-  if( CSTR__root == NULL ) {
-    return -1;
-  }
-
-  // Absolute path to system root
-  char *abs_vgxroot = get_abspath( CStringValue( CSTR__root ) );
-  if( abs_vgxroot == NULL ) {
+  const CString_t *CSTR__absroot = igraphfactory.SystemRoot(true);
+  if( CSTR__absroot == NULL ) {
     return -1;
   }
 
   // Absolute path to web root
-  CString_t *CSTR__webroot = CStringNewFormat( "%s/WEB-ROOT", abs_vgxroot );
-  free( abs_vgxroot );
+  CString_t *CSTR__webroot = CStringNewFormat( "%s/WEB-ROOT", CStringValue( CSTR__absroot ) );
   if( CSTR__webroot == NULL ) {
     return -1;
   }
