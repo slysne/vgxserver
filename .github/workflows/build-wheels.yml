@@ -54,6 +54,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
+        shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
