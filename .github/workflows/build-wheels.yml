@@ -45,7 +45,7 @@ jobs:
       - name: Checkout tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.BUILD_TAG }}
+          ref: "github_actions"
           fetch-depth: 0
 
       - name: Setup Python
