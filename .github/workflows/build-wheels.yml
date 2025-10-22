@@ -29,7 +29,7 @@ jobs:
     env:
       CIBW_BUILD_VERBOSITY: 3
       CIBW_OUTPUT_DIR: "wheelhouse"
-      BUILD_TAG: ${{ github.event.inputs.tag }}
+      BUILD_TAG: "3.6"
       CMAKE_PRESET: "release"
 
     steps:
