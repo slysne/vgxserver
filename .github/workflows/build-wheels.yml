@@ -53,10 +53,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install build dependencies
+      - name: Install dependencies
         run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-          pip install --upgrade pip setuptools wheel cmake cibuildwheel twine
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+            pip install --upgrade pip setuptools wheel cibuildwheel twine ninja
+          else
+            sudo apt-get update
+            sudo apt-get install -y cmake ninja-build
+            pip install --upgrade pip setuptools wheel cibuildwheel twine
+          fi
 
       - name: Show build info
         run: |
