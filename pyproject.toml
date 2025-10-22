@@ -3,6 +3,7 @@ requires = [
     "setuptools>=78",
     "wheel",
     "cmake",
+    "ninja",
     "build"
 ]
 
@@ -22,3 +23,13 @@ vgxadmin = "pyvgx_scripts.vgxadmin:main"
 [tool.setuptools]
 script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.cmd", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
 
+
+[tool.cibuildwheel]
+build = "cp312-*"
+build-frontend = "build"
+skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
+# The placeholder {project} points to the temporary project directory.
+test-command = "bash {project}/pyvgx/bin/test_pip_package.sh"
+
+[tool.cibuildwheel.linux]
+archs = "x86_64"

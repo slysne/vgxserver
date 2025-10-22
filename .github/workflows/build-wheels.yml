@@ -1,0 +1,64 @@
+name: Build and Publish Wheels
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to build (e.g. 3.6)"
+        required: true
+        type: string
+      cmake_preset:
+        description: "CMake preset (release, debug, relWithDebInfo)"
+        required: true
+        default: "release"
+        type: string
+
+jobs:
+  build-wheels:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [ 3.12 ]
+
+    env:
+      CIBW_BUILD_VERBOSITY: 3
+      CIBW_OUTPUT_DIR: "wheelhouse"
+      BUILD_TAG: ${{ github.event.inputs.tag }}
+      CMAKE_PRESET: ${{ github.event.inputs.cmake_preset }}
+
+    steps:
+      - name: Validate cmake_preset
+        run: |
+          allowed=("release" "debug" "relWithDebInfo")
+          preset="${{ env.CMAKE_PRESET }}"
+          if [[ ! " ${allowed[@]} " =~ " ${preset} " ]]; then
+            echo "Error: invalid cmake_preset '${preset}'. Must be one of: ${allowed[*]}"
+            exit 1
+          fi
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BUILD_TAG }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install build dependencies
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+          pip install --upgrade pip setuptools wheel cmake cibuildwheel twine
+
+      - name: Show build info
+        run: |
+          echo "Building tag: $env:BUILD_TAG"
+          echo "Using preset: $env:CMAKE_PRESET"
+          echo "Build suffix: $env:BUILD_SUFFIX"
+          git rev-parse --short HEAD
+
+      - name: Build wheels
+        run: cibuildwheel --output-dir $env:CIBW_OUTPUT_DIR

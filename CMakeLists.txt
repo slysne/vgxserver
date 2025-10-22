@@ -69,7 +69,7 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
   # we have passed in the variables
   set(Python3_FOUND TRUE CACHE BOOL "")
 else()
-  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 endif()
 
 set(VERSION                     CACHE STRING "Sets the CAP version")

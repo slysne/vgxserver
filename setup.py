@@ -1,12 +1,12 @@
-import calendar
+import datetime
 import glob
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
 import sysconfig
-import time
 import platform
 from pathlib import Path
 
@@ -50,13 +50,25 @@ if preset not in ['release', 'debug', 'relWithDebInfo']:
     raise Exception(f"Unknown cmake preset {preset}")
 
 
-if 'SNAPSHOT' in os.environ.get('PROJECT_VERSION'):
-    package_version = os.environ.get('PROJECT_VERSION').replace("-SNAPSHOT",
-                                                              f".dev0+{calendar.timegm(time.gmtime())}")
-else:
-    package_version = os.environ.get('PROJECT_VERSION')
-            
+def get_version():
+    tag = os.environ.get("BUILD_TAG", "0.0")
 
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL
+        ).decode("utf-8").strip()
+    except Exception:
+        commit = "unknown"
+
+    # Include timestamp to allow multiple builds per tag
+    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    build_suffix = os.environ.get("BUILD_SUFFIX", timestamp)
+
+    return f"{tag}+git{commit}.build{build_suffix}"
+
+
+package_version = os.environ.get('PROJECT_VERSION', get_version())
 
 
 class PyVGX_Extension(Extension):

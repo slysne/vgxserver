@@ -28,6 +28,11 @@
 
 #include "cxplat.h"
 
+#include <sys/syscall.h>
+#include <sys/resource.h>
+#include <pthread.h>
+#include <time.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -647,7 +652,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
     -10,  // HIGHEST
     0     // DEFAULT
   };
-  return setpriority( PRIO_PROCESS, gettid(), nice_map[priority] );
+  return setpriority( PRIO_PROCESS, syscall(SYS_gettid), nice_map[priority] );
 }
 #elif defined(CXPLAT_MAC_ARM64)
 #include <mach/thread_policy.h>
@@ -740,7 +745,11 @@ static void THREAD_JOIN( cxlib_thread_t thread, uint32_t timeout_ms ) {
   struct timespec ts = {0};
   int64_t now_ms = __MILLISECONDS_SINCE_1970();
   ts.tv_sec = (now_ms + timeout_ms) / 1000;
-  pthread_timedjoin_np( thread, NULL, &ts );
+  #ifdef __linux__
+    pthread_timedjoin_np(thread, NULL, &ts);
+  #else
+    pthread_join(thread, NULL);  // fallback for non-Linux
+  #endif
 }
 
 #elif defined CXPLAT_MAC_ARM64
