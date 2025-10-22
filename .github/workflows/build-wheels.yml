@@ -30,7 +30,7 @@ jobs:
       CIBW_BUILD_VERBOSITY: 3
       CIBW_OUTPUT_DIR: "wheelhouse"
       BUILD_TAG: ${{ github.event.inputs.tag }}
-      CMAKE_PRESET: ${{ github.event.inputs.cmake_preset }}
+      CMAKE_PRESET: "release"
 
     steps:
 #      - name: Validate cmake_preset
