@@ -2908,7 +2908,7 @@ static int64_t __operation_consumer__handle_request( vgx_TransactionalConsumerSe
   if( txdata->sz == 0 ) {
     // No lines completed, op buffer contains oversized line which must be handled separately
     // TODO: HANDLE OVERSIZED LINE
-    CONSUMER_SERVICE_CRITICAL( consumer_service, 0xE02, "Oversized transaction line (%lld bytes). Rejecting transaction." );
+    CONSUMER_SERVICE_CRITICAL( consumer_service, 0xE02, "Oversized transaction line. Rejecting transaction." );
     // DISCARD EVERYTHING. THIS WILL LEAD TO ERRORS BUT SHOULD RECOVER. DATA FOR THIS LINE IS OF COURSE LOST.
     iOpBuffer.Clear( consumer_service->buffer.request );
     //  ...
