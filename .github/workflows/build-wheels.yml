@@ -23,24 +23,24 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ linux-latest ]
+        os: [ ubuntu-latest ]
         python-version: [ 3.12 ]
 
     env:
       CIBW_BUILD_VERBOSITY: 3
       CIBW_OUTPUT_DIR: "wheelhouse"
       BUILD_TAG: "3.6.0"
-      CMAKE_PRESET: "release"
+      CMAKE_PRESET: ${{ github.event.inputs.cmake_preset }}
 
     steps:
-#      - name: Validate cmake_preset
-#        run: |
-#          allowed=("release" "debug" "relWithDebInfo")
-#          preset="${{ env.CMAKE_PRESET }}"
-#          if [[ ! " ${allowed[@]} " =~ " ${preset} " ]]; then
-#            echo "Error: invalid cmake_preset '${preset}'. Must be one of: ${allowed[*]}"
-#            exit 1
-#          fi
+      - name: Validate cmake_preset
+        run: |
+          allowed=("release" "debug" "relWithDebInfo")
+          preset="${{ env.CMAKE_PRESET }}"
+          if [[ ! " ${allowed[@]} " =~ " ${preset} " ]]; then
+            echo "Error: invalid cmake_preset '${preset}'. Must be one of: ${allowed[*]}"
+            exit 1
+          fi
 
       - name: Checkout tag
         uses: actions/checkout@v4
