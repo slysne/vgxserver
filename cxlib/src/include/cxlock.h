@@ -627,6 +627,8 @@ static int THREAD_START( cxlib_thread_t *thread, uint32_t *thread_id, f_cxlib_th
 
 #if defined(CXPLAT_LINUX_ANY)
 
+#include <sys/syscall.h>
+
 /**************************************************************************//**
  * THREAD_SET_PRIORITY
  *
@@ -647,7 +649,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
     -10,  // HIGHEST
     0     // DEFAULT
   };
-  return setpriority( PRIO_PROCESS, gettid(), nice_map[priority] );
+  return setpriority( PRIO_PROCESS, (int)syscall(SYS_gettid), nice_map[priority] );
 }
 #elif defined(CXPLAT_MAC_ARM64)
 #include <mach/thread_policy.h>
