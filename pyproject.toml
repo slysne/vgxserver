@@ -25,6 +25,7 @@ script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.cmd"
 
 [tool.cibuildwheel]
 build-frontend = "build"
+manylinux-x86_64-image = "manylinux_2_28"
 skip = ["*-win32", "*-manylinux_i686", "*-musllinux*"]
 # The placeholder {project} points to the temporary project directory.
 test-command = "bash {project}/pyvgx/bin/test_pip_package.sh"

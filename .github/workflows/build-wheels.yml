@@ -1,4 +1,4 @@
-name: Build and Publish Wheels
+name: Build Python Wheels
 
 on:
   workflow_dispatch:
@@ -21,11 +21,11 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
         python-version: [ 3.12 ]
+        cp-version: [ 312 ]
 
     env:
       CIBW_BUILD_VERBOSITY: 3
       CIBW_OUTPUT_DIR: "wheelhouse"
-      CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_28"
       BUILD_TAG: ${{ github.event.inputs.tag }}
       CMAKE_PRESET: ${{ github.event.inputs.cmake_preset }}
 
@@ -70,3 +70,5 @@ jobs:
 
       - name: Build wheels
         run: cibuildwheel --output-dir $env:CIBW_OUTPUT_DIR
+        env:
+          CIBW_BUILD: "cp${{ matrix.cp-version }}-*"
