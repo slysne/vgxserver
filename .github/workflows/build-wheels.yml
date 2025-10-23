@@ -1,16 +1,12 @@
 name: Build and Publish Wheels
 
 on:
-  push:
-    branches:
-      - main
-      - github_actions
   workflow_dispatch:
     inputs:
       tag:
         description: "Git tag to build (e.g. 3.6)"
         required: true
-        default: "3.6"
+        default: "3.6.0"
         type: string
       cmake_preset:
         description: "CMake preset (release, debug, relWithDebInfo)"
@@ -29,7 +25,8 @@ jobs:
     env:
       CIBW_BUILD_VERBOSITY: 3
       CIBW_OUTPUT_DIR: "wheelhouse"
-      BUILD_TAG: "3.6.0"
+      CIBW_MANYLINUX_X86_64_IMAGE: "manylinux_2_31"
+      BUILD_TAG: ${{ github.event.inputs.tag }}
       CMAKE_PRESET: ${{ github.event.inputs.cmake_preset }}
 
     steps:
