@@ -248,13 +248,13 @@ Subscriber row(s): Detach from subscriber
 
 This is a readonly summary page showing various metrics and counters.
 
-Service:: Request Engine HTTP server metrics
+Request Engine:: HTTP server metrics
 
-Transaction:: VGX Transaction Service metrics
+Transaction Interconnect:: VGX Transaction Service metrics
 
-Graph:: Total graph object summary
+Graph Engine:: Graph objects and property storage summary
 
-Memory:: Memory usage information
+Memory:: System memory usage information
 
 image::ui_status.png[ui_status]
 
@@ -406,7 +406,7 @@ The dashboard's lower segment shows details for each system instance.
 |`*Generic*`
 |Default, unspecified node type
 
-.17+|*Status*
+.18+|*Status*
 |`*OK*`
 |Instance is running normally
 |`*Busy*`
@@ -439,6 +439,8 @@ The dashboard's lower segment shows details for each system instance.
 |Instance is in readonly mode
 |`*Starting*`
 |Instance is initializing after startup
+|`*Waiting*`
+|Instance is running but did not provide node status information
 |`*---*`
 |State unknown due to incomplete status information
 
@@ -1128,9 +1130,9 @@ vgxadmin --pauseout "B*"
 
 [[vgxadmin_option_pausettl]]
 ==== `--pausettl <id>` (`-t`)
-Pause TTL event processor. Objects with expiration time set will not be deleted while in the paused state.
+Pause TTL event processor. Objects with expiration time set will not be deleted while in the paused state. Use <<vgxadmin_option_resumettl, --resumettl>> to start processing TTL events again.
 
-.Example: Prevent deletion of expired objects on builder row
+.Prevent deletion of expired objects on builder row
 [.copyable]
 [source, shell]
 ----
@@ -1139,9 +1141,9 @@ vgxadmin --pausettl "B*"
 
 [[vgxadmin_option_persist]]
 ==== `--persist <id>` (`-W`)
-Write instance data to disk.
+Save all instance data (all graphs) to disk.
 
-.Example: Save builder snapshots to disk
+.Save all builder instances to disk
 [.copyable]
 [source, shell]
 ----
@@ -1150,9 +1152,9 @@ vgxadmin --persist "B*"
 
 [[vgxadmin_option_readonly]]
 ==== `--readonly <id>` (`-g`)
-Make all graph(s) in instance(s) readonly.
+Transition all graph(s) to readonly mode. If the instance is currently a subscriber its transaction input processor will be paused.
 
-.Example: Set all instances with identifier prefix "S" to readonly
+.Set all instances with identifier prefix "S" to readonly
 [.copyable]
 [source, shell]
 ----
@@ -1161,9 +1163,11 @@ vgxadmin --readonly "S*"
 
 [[vgxadmin_option_reloadplugins]]
 ==== `--reloadplugins <id>[,<pd>]` (`-N`)
-Reload already registered plugins, or add plugins in `<pd>` json file. If adding new plugins the `<pd>` file format is the JSON equivalent of the Python <<multinode.adoc#vgxinstance_plugin_definitions, plugin definition list>> used with <<multinode.adoc#pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>>.
+Reload updated code for already registered plugins, or add plugins in `<pd>` json file.
 
 The plugin implementation Python code must already exist on the filesystem of the instance being updated, and the plugin definition list must correctly specify the plugin package(s) and function(s).
+
+If adding new plugins the `<pd>` file format is the JSON equivalent of the Python <<multinode.adoc#vgxinstance_plugin_definitions, plugin definition list>> used with <<multinode.adoc#pyvgx_vgxinstance_startinstance_func, pyvgx.VGXInstance.StartInstance()>>.
 
 ===== Example: Add square root capabilities to running system
 
@@ -1195,13 +1199,18 @@ On the local machine (where vgxadmin is to be executed) place a new file `sqrt.j
     "name":    "sqrt",
     "package": "service",
     "module":  ".extras",
-    "engine":  "SquareRoot",
-    "pre":     null,
+    "pre":     "SquareRoot",
+    "engine":  null,
     "post":    null,
     "graph":   "*"
   }
 ]
 ----
+
+[IMPORTANT]
+====
+VGX Server instances running in dispatcher mode load plugins defined as `pre` and/or `post`. Other instance types load plugins defined as `engine`.
+====
 
 Execute the reload command:
 
@@ -1237,7 +1246,7 @@ curl http://127.0.0.1:9990/vgx/plugin/sqrt?x=123
 ==== `--resetmetrics <id>` (`-m`)
 Clear errors and performance counters for instance(s).
 
-.Example: Reset counters and errors for all search instances with prefix "S"
+.Reset counters and errors for all search instances with prefix "S"
 [.copyable]
 [source, shell]
 ----
@@ -1248,7 +1257,7 @@ vgxadmin --resetmetrics "S*"
 ==== `--restarthttp <id>` (`-D`)
 Restart HTTP server(s) with refreshed config. This is useful for dispatcher instances after making changes to the <<multinode.adoc#descriptor_topology_dispatch, dispatch topology>>.
 
-.Example: Restart the HTTP server on instance "TD"
+.Restart the HTTP server on instance "TD"
 [.copyable]
 [source, shell]
 ----
@@ -1259,7 +1268,7 @@ vgxadmin --restarthttp TD
 ==== `--resumein <id>` (`-r`)
 Resume transaction input service on subscriber instance(s). Transactions previously received and queued while in the paused state are immediately applied,  followed by normal streaming operation.
 
-.Example: Resume transaction input on the second search row
+.Resume transaction input on the second search row
 [.copyable]
 [source, shell]
 ----
@@ -1268,10 +1277,9 @@ vgxadmin --resumein "S2*"
 
 [[vgxadmin_option_resumeout]]
 ==== `--resumeout <id>` (`-R`)
-Resume transaction output
 Resume transaction output emitter on provider instance(s). Transactions previously produced and queued while in the paused state are immediately sent to subscribers, followed by normal streaming operation.
 
-.Example: Resume transaction output on the builders
+.Resume transaction output on the builders
 [.copyable]
 [source, shell]
 ----
@@ -1282,7 +1290,7 @@ vgxadmin --resumeout "B*"
 ==== `--resumettl <id>` (`-T`)
 Resume TTL event processor, if globally enabled. Expired objects will be deleted immediately.
 
-.Example: Resume deletion of expired objects on builder row
+.Resume deletion of expired objects on builder row
 [.copyable]
 [source, shell]
 ----
@@ -1293,7 +1301,7 @@ vgxadmin --resumettl "B*"
 ==== `--reversesync <id>` (`-Y`)
 Perform reverse synchronization of provider instance data from its subscriber with the highest master serial number.
 
-.Example: Restore builder B0.1 with data from one of its configured subscribers
+.Restore builder B0.1 with data from one of its configured subscribers
 [.copyable]
 [source, shell]
 ----
@@ -1309,7 +1317,7 @@ Synchronize data from provider instance to all its subscribers, one at a time, w
 At least two destination subscribers must be actively serving in S-IN mode for rolling update to be performed.
 ====
 
-.Example: Perform rolling update of two partitions
+.Perform rolling update of two partitions
 [.copyable]
 [source, shell]
 ----
@@ -1320,7 +1328,7 @@ vgxadmin --rollingupdate B0.1 --rollingupdate B0.2
 ==== `--servicein <id>` (`-I`)
 Set instance(s) HTTP server to the S-IN state. Plugin requests on the <<service.adoc#server_a_and_server_b, main port>> will execute normally.
 
-.Example: S-IN the second search row
+.S-IN the second search row
 [.copyable]
 [source, shell]
 ----
@@ -1329,9 +1337,9 @@ vgxadmin --servicein "S2*"
 
 [[vgxadmin_option_serviceout]]
 ==== `--serviceout <id>` (`-i`)
-Set instance(s) HTTP server to the S-OUT state. Plugin requests on the <<service.adoc#server_a_and_server_b, main port>> will return HTTP code <<service.adoc#status_503_service_out, "503 Service out">>. If a dispatcher is used, any S-OUT instances in its backend matrix will be ignored.
+Set instance(s) HTTP server to the S-OUT state. Plugin requests on the <<service.adoc#server_a_and_server_b, main port>> will return HTTP code <<service.adoc#status_503_service_out, "503 Service out">>. 
 
-.Example: S-OUT the second search row
+.S-OUT the second search row
 [.copyable]
 [source, shell]
 ----
@@ -1342,7 +1350,7 @@ vgxadmin --serviceout "S2*"
 ==== `--show` (`-J`)
 Show effective system descriptor.
 
-.Example: Retrieve and print system descriptor used by local instance on port 9111
+.Retrieve and print system descriptor used by local instance on port 9111
 [.copyable]
 [source, shell]
 ----
@@ -1361,18 +1369,18 @@ For internal development. Do not use.
 ==== `--status <id>` (`-S`)
 Print status summary for instance(s).
 
-.Example: Print status for all instances in system
+.Print status for all instances in system
 [.copyable]
 [source, shell]
 ----
-vgxadmin --status "*"
+vgxadmin --status @
 ----
 
 [[vgxadmin_option_stop]]
 ==== `--stop <id>` (`-x`)
 Shut down instance(s).
 
-.Example: Shut down the second search row
+.Shut down the second search row
 [.copyable]
 [source, shell]
 ----
@@ -1392,7 +1400,7 @@ Send all data to attached subscribers without truncating first
 `repair` (default)::
 Perform hard sync of subscribers that require it, i.e. subscribers with data different from their respective providers. Subscribers that are in sync with their providers are unaffected. Affected subscribers must be set to S-OUT for this operation to proceed.
 
-.Example: Copy data from all builders to their subscribers
+.Copy data from all builders to their subscribers
 [.copyable]
 [source, shell]
 ----
@@ -1401,9 +1409,17 @@ vgxadmin --sync "B*",hard
 
 [[vgxadmin_option_throttle]]
 ==== `--throttle <id>[,<r>,<u>]` (`-V`)
-Get or set data consumption rate limits for the transaction input service. When no rate `<r>` and unit `<u>` are specified the configured throttle parameters are returned. When supplied, update consumption rate `<r>` for consumption unit `<u>`. Allowed values for `<u>` are: `bytes`, `opcodes`, `operations`, `transactions`. Rate `<r>` is specified as units per second. Remove all limits using rate 0 and unit `all_unlimited`.
+Get or set data consumption rate limits for the transaction input service.
 
-.Example: On search nodes, limit input data consumption to 1,000 transactions/sec and 50,000 opcodes/sec
+*Get*: When no rate `<r>` and unit `<u>` are specified the configured throttle parameters are returned.
+
+*Set*: Specify consumption rate `<r>` and unit `<u>` to apply the configuration.
+
+Allowed values for `<u>` are: `bytes`, `opcodes`, `operations`, `transactions`. Rate `<r>` is specified as units per second.
+
+*Clear*: Remove all limits by specifying rate 0 and unit `all_unlimited`.
+
+.On search nodes, limit input data consumption to 1,000 transactions/sec and 50,000 opcodes/sec
 [.copyable]
 [source, shell]
 ----
@@ -1414,7 +1430,7 @@ vgxadmin --throttle "S*",1000,transactions --throttle "S*",50000,opcodes
 ==== `--truncate <id>` (`-X`)
 Erase instance data.
 
-.Example: Delete all builder data (propagated to any attached subscribers)
+.Delete all builder data (propagated to any attached subscribers)
 [.copyable]
 [source, shell]
 ----
@@ -1425,7 +1441,7 @@ vgxadmin --truncate B0.1 --truncate B0.2
 ==== `--unbind <id>` (`-U`)
 Stop the transaction input service on instance.
 
-.Example: Stop transaction input service on second search row
+.Stop transaction input service on second search row
 [.copyable]
 [source, shell]
 ----
@@ -1436,7 +1452,7 @@ vgxadmin --unbind S2.1 --unbind S2.2
 ==== `--unsubscribe <id>` (`-u`)
 Detach subscriber instance(s) from provider(s).
 
-.Example: Detach second search row
+.Detach second search row
 [.copyable]
 [source, shell]
 ----
@@ -1457,7 +1473,7 @@ vgxadmin --version
 ==== `--waitforidle <id>` (`-w`)
 Wait until instance transaction input has not been processing data for at least 5 seconds. This is useful when stringing several actions together in the same command and subsequent actions depend on previous actions to be fully completed.
 
-.Example: Synchronize data from builders to search rows, then S-IN search rows
+.Synchronize data from builders to search rows, then S-IN search rows
 [.copyable]
 [source, shell]
 ----
@@ -1468,7 +1484,7 @@ vgxadmin --sync "B*" --waitforidle "S*" --servicein "S*"
 ==== `--writable <id>` (`-G`)
 Make all graph(s) in instance(s) writable.
 
-.Example: Set instance "S1.1" writable
+.Set instance "S1.1" writable
 [.copyable]
 [source, shell]
 ----
