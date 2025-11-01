@@ -358,6 +358,19 @@ static void __eval_maps_isetadd( vgx_Evaluator_t *self ) {
 
 
 /*******************************************************************//**
+ * __maps__vsetadd( self, vertex )
+ ***********************************************************************
+ */
+__inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex ) {
+  uint64_t index = __vertex_get_index( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( vertex ) );
+  uint32_t key = (uint32_t)index;
+  DWORD item = (DWORD)(index >> __maps__SZ_MIN_MASK);
+  __maps__xsetadd( self, key, item, MAPS_KEYMODE__VERTEX );
+}
+
+
+
+/*******************************************************************//**
  * vsetadd( vertex ) -> 1 (added), 0 (not added), -1 (error)
  *
  *
@@ -368,10 +381,7 @@ static void __eval_maps_vsetadd( vgx_Evaluator_t *self ) {
   if( x->type != STACK_ITEM_TYPE_VERTEX ) {
     STACK_RETURN_INTEGER( self, 0 );
   }
-  uint64_t index = __vertex_get_index( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( x->vertex ) );
-  uint32_t key = (uint32_t)index;
-  DWORD item = (DWORD)(index >> __maps__SZ_MIN_MASK);
-  __maps__xsetadd( self, key, item, MAPS_KEYMODE__VERTEX );
+  __maps_vsetadd( self, x->vertex );
 }
 
 
@@ -463,6 +473,19 @@ static void __eval_maps_isethas( vgx_Evaluator_t *self ) {
 
 
 /*******************************************************************//**
+ * __maps__vsethas( self, vertex )
+ ***********************************************************************
+ */
+__inline static void __maps_vsethas( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex ) {
+  uint64_t index = __vertex_get_index( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( vertex ) );
+  uint32_t key = (uint32_t)index;
+  DWORD item = (DWORD)(index >> __maps__SZ_MIN_MASK);
+  __maps__xsethas( self, key, item );
+}
+
+
+
+/*******************************************************************//**
  * vsethas( vertex ) -> 1 (exists) or 0 (does not exist)
  *
  *
@@ -473,10 +496,7 @@ static void __eval_maps_vsethas( vgx_Evaluator_t *self ) {
   if( x->type != STACK_ITEM_TYPE_VERTEX ) {
     STACK_RETURN_INTEGER( self, 0 );
   }
-  uint64_t index = __vertex_get_index( (vgx_AllocatedVertex_t*)_cxmalloc_linehead_from_object( x->vertex ) );
-  uint32_t key = (uint32_t)index;
-  DWORD item = (DWORD)(index >> __maps__SZ_MIN_MASK);
-  __maps__xsethas( self, key, item );
+  __maps_vsethas( self, x->vertex );
 }
 
 
