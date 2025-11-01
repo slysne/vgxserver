@@ -87,6 +87,46 @@ static int __maps__dwset_add( vgx_ExpressEvalMemory_t *mem, uint32_t key, DWORD 
     return 1;
   }
 
+#elif defined CXPLAT_ARCH_ARM64
+  uint32x4_t E = vdupq_n_u32(__maps__EMPTY);
+  uint32x4_t M = vdupq_n_u32(item);
+  uint32x4_t data, cmp;
+
+  while( cursor < end ) {
+    data = vld1q_u32(cursor);
+    // Already in set
+    cmp = vceqq_u32(M, data);
+    if( vmaxvq_u32(cmp) != 0 ) {
+      return 0;
+    }
+    // No empty slots in this region, continue
+    cmp = vceqq_u32(E, data);
+    if( vmaxvq_u32(cmp) == 0 ) {
+      cursor += 4;
+      continue;
+    }
+    // At least one empty slot, find it and insert item there
+    // Vectorized: extract lanes to find first empty position
+    if (vgetq_lane_u32(cmp, 0) != 0) {
+      cursor[0] = item;
+      return 1;
+    }
+    if (vgetq_lane_u32(cmp, 1) != 0) {
+      cursor[1] = item;
+      return 1;
+    }
+    if (vgetq_lane_u32(cmp, 2) != 0) {
+      cursor[2] = item;
+      return 1;
+    }
+    if (vgetq_lane_u32(cmp, 3) != 0) {
+      cursor[3] = item;
+      return 1;
+    }
+    // Unreachable under contiguous packing, but safety
+    cursor += 4;
+  }
+
 #else
 
   while( cursor < end ) {
@@ -175,6 +215,46 @@ static int __maps__dwset_has( vgx_ExpressEvalMemory_t *mem, uint32_t key, DWORD 
   if( !_mm256_testz_si256( cmp, cmp ) ) {
     return 1;
   }
+
+#elif defined CXPLAT_ARCH_ARM64
+
+  uint32x4_t M = vdupq_n_u32(item);
+  uint32x4_t data, cmp;
+
+  // Check first chunk (entries 0-3)
+  data = vld1q_u32(cursor);
+  cmp = vceqq_u32(M, data);
+  if (vmaxvq_u32(cmp) != 0) {
+    return 1;
+  }
+
+  cursor += 4;
+
+  // Check second chunk (entries 4-7)
+  data = vld1q_u32(cursor);
+  cmp = vceqq_u32(M, data);
+  if (vmaxvq_u32(cmp) != 0) {
+    return 1;
+  }
+
+  cursor += 4;
+
+  // Check third chunk (entries 8-11)
+  data = vld1q_u32(cursor);
+  cmp = vceqq_u32(M, data);
+  if (vmaxvq_u32(cmp) != 0) {
+    return 1;
+  }
+
+  cursor += 4;
+
+  // Check fourth chunk (entries 12-15)
+  data = vld1q_u32(cursor);
+  cmp = vceqq_u32(M, data);
+  if (vmaxvq_u32(cmp) != 0) {
+    return 1;
+  }
+
 
 #else
   
