@@ -19,7 +19,8 @@
         "stddef.h": "c",
         "stdlib.h": "c",
         "memory.h": "c",
-        "_vxhtml.h": "c"
+        "_vxhtml.h": "c",
+        "_maps.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }
