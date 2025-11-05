@@ -943,6 +943,32 @@ static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyOb
 
 
 /******************************************************************************
+ * PyVGX_Memory__ClearSet()
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( ClearSet__doc__,
+  "ClearSet() -> n\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Memory__ClearSet
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Memory__ClearSet( PyVGX_Memory *pymem ) {
+  if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
+    PyVGXError_SetString( PyVGX_AccessError, "not owner thread" );
+    return NULL;
+  }
+
+  int64_t n = iEvaluator.ClearDWordSet( pymem->evalmem );
+  return PyLong_FromLongLong( n );
+}
+
+
+
+/******************************************************************************
  *
  ******************************************************************************
  */
@@ -1421,12 +1447,13 @@ static PyGetSetDef PyVGX_Memory__getset[] = {
 IGNORE_WARNING_UNSAFE_FUNCTION_POINTER_CAST
 static PyMethodDef PyVGX_Memory__methods[] = {
 
-    {"AsList",            (PyCFunction)PyVGX_Memory__AsList,              METH_NOARGS,                    AsList__doc__  },
-    {"Stack",             (PyCFunction)PyVGX_Memory__Stack,               METH_NOARGS,                    Stack__doc__  },
-    {"Reset",             (PyCFunction)PyVGX_Memory__Reset,               METH_VARARGS | METH_KEYWORDS,   Reset__doc__  },
-    {"Sort",              (PyCFunction)PyVGX_Memory__Sort,                METH_VARARGS | METH_KEYWORDS,   Sort__doc__  },
+    {"AsList",            (PyCFunction)PyVGX_Memory__AsList,              METH_NOARGS,                    AsList__doc__   },
+    {"Stack",             (PyCFunction)PyVGX_Memory__Stack,               METH_NOARGS,                    Stack__doc__    },
+    {"Reset",             (PyCFunction)PyVGX_Memory__Reset,               METH_VARARGS | METH_KEYWORDS,   Reset__doc__    },
+    {"ClearSet",          (PyCFunction)PyVGX_Memory__ClearSet,            METH_NOARGS,                    ClearSet__doc__ },
+    {"Sort",              (PyCFunction)PyVGX_Memory__Sort,                METH_VARARGS | METH_KEYWORDS,   Sort__doc__     },
 
-    {"DualInt",           (PyCFunction)PyVGX_Memory__DualInt,             METH_VARARGS,                   DualInt__doc__ },
+    {"DualInt",           (PyCFunction)PyVGX_Memory__DualInt,             METH_VARARGS,                   DualInt__doc__  },
 
     {NULL}  /* Sentinel */
 };
