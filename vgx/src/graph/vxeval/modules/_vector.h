@@ -237,7 +237,7 @@ static void __eval_ternary_anncollect( vgx_Evaluator_t *self ) {
   // [ . . . m B s]
   //         ^-------- Already 1 from above (assume collect successful below)
   //       SP^
-  __collect( self, NULL );
+  __collect( self, pscore );
 }
 
 
