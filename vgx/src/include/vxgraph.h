@@ -6720,6 +6720,7 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
+  Cm128iQueue_t *bfs_queue;                   \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   int64_t size;                               \

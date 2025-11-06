@@ -2403,7 +2403,7 @@ typedef enum e_vgx_vertex_probe_spec {
 
  
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* ** RESERVED1 **                  --M-----           */
+  /* ** RESERVED1 **                  ---M----           */
   _VERTEX_PROBE__rsv1__OFFSET       = 16,
   _VERTEX_PROBE__rsv1__MASK         = VGX_VALUE_MASK << _VERTEX_PROBE__rsv1__OFFSET,        // 0000 0000 0000 1111 0000 0000 0000 0000
   _VERTEX_PROBE__rsv1__MASK_INV     = ~_VERTEX_PROBE__rsv1__MASK,                           // 1111 1111 1111 0000 1111 1111 1111 1111
@@ -2412,7 +2412,7 @@ typedef enum e_vgx_vertex_probe_spec {
 
 
   /* --------------------------------------------------------------------------------------------------------------------------------- */
-  /* ** RESERVED2 **                  --M-----           */
+  /* ** ID LIST **                    --M-----           */
   _VERTEX_PROBE_IDLIST_OFFSET       = 20,
   _VERTEX_PROBE_IDLIST_MASK         = VGX_VALUE_MASK << _VERTEX_PROBE_IDLIST_OFFSET,        // 0000 0000 1111 0000 0000 0000 0000 0000
   _VERTEX_PROBE_IDLIST_MASK_INV     = ~_VERTEX_PROBE_IDLIST_MASK,                           // 1111 1111 0000 1111 1111 1111 1111 1111
