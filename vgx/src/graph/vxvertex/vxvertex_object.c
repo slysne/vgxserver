@@ -1388,7 +1388,7 @@ static vgx_BaseCollector_context_t * __Vertex_collect_neighborhood( vgx_Vertex_t
   vgx_BaseCollector_context_t *result = NULL;
 
   vgx_Graph_t *graph = self_RO->graph;
-  vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CALLABLE( self_RO )->IDString( self_RO ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, NULL );
+  vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CALLABLE( self_RO )->IDString( self_RO ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, VGX_RECURSION_MODE_NONE, NULL );
   if( query == NULL ) {
     return NULL;
   }

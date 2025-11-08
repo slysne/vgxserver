@@ -1507,6 +1507,9 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
       THROW_ERROR( CXLIB_ERR_API, 0x675 );
     }
 
+    // Recursion mode
+    search->recursion_mode = query->recursion_mode;
+
     // 3.
     // -- ADJACENCY --
     // Set the anchor vertex

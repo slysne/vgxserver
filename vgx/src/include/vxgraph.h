@@ -1634,12 +1634,14 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
   __vgx_AdjacencyQuery_members                      \
   __vgx_ResultSetQuery_members                      \
   vgx_ArcConditionSet_t *collect_arc_condition_set; \
-  vgx_collector_mode_t collector_mode; 
+  vgx_collector_mode_t collector_mode;              \
+  vgx_recursion_mode_t recursion_mode;
 
 #define __vgx_NeighborhoodQuery_args                  \
   __vgx_AdjacencyQuery_args                           \
   vgx_ArcConditionSet_t **collect_arc_condition_set;  \
-  vgx_collector_mode_t collector_mode; 
+  vgx_collector_mode_t collector_mode;                \
+  vgx_recursion_mode_t recursion_mode;
 
 
 // vtable
@@ -6699,6 +6701,15 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
 
 /*******************************************************************//**
  *
+ ***********************************************************************
+ */
+typedef Cm256iBuffer_t vgx_RecursionQueue_t;
+
+
+
+
+/*******************************************************************//**
+ *
  *
  *
  ***********************************************************************
@@ -6720,7 +6731,7 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
-  Cm128iQueue_t *bfs_queue;                   \
+  vgx_RecursionQueue_t *recursion_queue;      \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   int64_t size;                               \
@@ -6893,6 +6904,7 @@ typedef struct s_vgx_neighborhood_search_context_t {
   //
   vgx_collector_mode_t collector_mode;    // collect on this level? if so collect arcs or vertices?
   vgx_BaseCollector_context_t *collector; // shared collector instance for all neighborhood levels
+  vgx_recursion_mode_t recursion_mode;    // control automatic recursive traversal
 } vgx_neighborhood_search_context_t;
 
 
@@ -7357,7 +7369,7 @@ typedef struct s_vgx_IGraphQuery_t {
   void (*DeleteQuery)(              vgx_BaseQuery_t         **query );
 
   vgx_AdjacencyQuery_t    * (*NewAdjacencyQuery)(     vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
+  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, vgx_recursion_mode_t recursion_mode, CString_t **CSTR__error );
   vgx_GlobalQuery_t       * (*NewGlobalQuery)(        vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
   vgx_AggregatorQuery_t   * (*NewAggregatorQuery)(    vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 

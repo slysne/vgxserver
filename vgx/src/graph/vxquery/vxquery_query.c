@@ -83,7 +83,7 @@ static void _vxquery_query__delete_query( vgx_BaseQuery_t **query );
 
 //
 static vgx_AdjacencyQuery_t *    _vxquery_query__new_adjacency_query( vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, vgx_recursion_mode_t recursion_mode, CString_t **CSTR__error );
 static vgx_GlobalQuery_t *       _vxquery_query__new_global_query( vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
 static vgx_AggregatorQuery_t *   _vxquery_query__new_aggregator_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 
@@ -1161,7 +1161,10 @@ static vgx_NeighborhoodQuery_t * NeighborhoodQuery_constructor( const void *iden
     // 7. Set the collector mode
     self->collector_mode = args->collector_mode;
 
-    // 8. Set (steal) the collect condition
+    // 8. Set the recursion mode
+    self->recursion_mode = args->recursion_mode;
+
+    // 9. Set (steal) the collect condition
     if( args->collect_arc_condition_set && *args->collect_arc_condition_set ) {
       self->collect_arc_condition_set = *args->collect_arc_condition_set;
       *args->collect_arc_condition_set = NULL;
@@ -3998,13 +4001,14 @@ static void _vxquery_query__delete_neighborhood_query( vgx_NeighborhoodQuery_t *
  *
  ***********************************************************************
  */
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error ) {
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, vgx_recursion_mode_t recursion_mode, CString_t **CSTR__error ) {
   vgx_NeighborhoodQuery_constructor_args_t args = {
     .graph                      = graph,
     .anchor_id                  = vertex_id,
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = collect_arc_condition_set,
-    .collector_mode             = collector_mode
+    .collector_mode             = collector_mode,
+    .recursion_mode             = recursion_mode
   };
   return COMLIB_OBJECT_NEW( vgx_NeighborhoodQuery_t, NULL, &args );
 }
@@ -4022,7 +4026,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_default_neighborhood_query(
     .anchor_id                  = vertex_id,
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = NULL,
-    .collector_mode             = VGX_COLLECTOR_MODE_COLLECT_ARCS
+    .collector_mode             = VGX_COLLECTOR_MODE_COLLECT_ARCS,
+    .recursion_mode             = VGX_RECURSION_MODE_NONE
   };
 
   // TODO: Add the default behavior
@@ -4262,7 +4267,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__clone_neighborhood_query( const
   }
 
   // Create query clone without anchor. It will be set when we copy adjacency query.
-  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, CSTR__error );
+  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, other->recursion_mode, CSTR__error );
   if( self ) {
 
     // 1. copy adjacency part

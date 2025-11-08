@@ -840,6 +840,7 @@ typedef struct __s_neighborhood_query_args {
   vgx_ArcConditionSet_t *collect_arc_condition_set;
   int nest;
   int64_t nested_hits;
+  vgx_recursion_mode_t recursion_mode;
 } __neighborhood_query_args;
 
 

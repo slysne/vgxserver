@@ -350,7 +350,7 @@ NEXT_SLOT:
  */
 DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref, vgx_Graph_t **locked_graph ) {
   // Negative refcount: no action
-  if( vertexref == NULL || vertexref->refcnt < 0 ) {
+  if( vertexref == NULL || vertexref->refcnt <= 0 ) {
     return -1;
   }
 
@@ -468,8 +468,14 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   //
   int locked = 0;
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
-  // Vertices will be dereferenced
-  if( fieldmask & VGX_RESPONSE_ATTRS_DEREF ) {
+
+  bool recursive = false;
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && ((vgx_NeighborhoodQuery_t*)query)->recursion_mode == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+    recursive = true;
+  }
+
+  // Vertices will be dereferenced or used as anchors in recursive traversal
+  if( (fieldmask & VGX_RESPONSE_ATTRS_DEREF) || recursive ) {
     // TODO:  Don't lock unnecessarily if property selector includes no-deref items only!
     // Graph is not readonly - we have to lock head
     if( readonly_graph == false ) {
@@ -477,8 +483,8 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
       if( fieldmask & VGX_RESPONSE_ATTRS_TAIL_DEREF ) {
         *locked_tail = true;
       }
-      // Heads must be locked if fields other than properties or property fields require head deref
-      if( vgx_query_response_head_deref( query ) ) {
+      // Heads must be locked if fields other than properties or property fields require head deref, or used as anchors in recursive traversal
+      if( vgx_query_response_head_deref( query ) || recursive ) {
         *locked_head = true;
       }
       locked = 1;
@@ -522,6 +528,45 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  *
  ***********************************************************************
  */
+static void __delete_recursion_queue( vgx_Graph_t *graph, vgx_RecursionQueue_t **queue ) {
+  if( queue && *queue ) {
+    Cm256iBuffer_t *Q = *queue;
+    vgx_CollectorItem_t item;
+    Cm256iBuffer_vtable_t *iBuffer = CALLABLE( Q );
+    GRAPH_LOCK( graph ) {
+      while( iBuffer->Next( Q, &item.item ) ) {
+        if( item.headref->refcnt > 0 ) {
+          item.headref->refcnt--;
+          _vxgraph_state__unlock_vertex_CS_LCK( graph, &item.headref->vertex, VGX_VERTEX_RECORD_NONE );
+        }
+      }
+    } GRAPH_RELEASE;
+    COMLIB_OBJECT_DESTROY( Q );
+    *queue = NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static vgx_RecursionQueue_t * __new_recursion_queue( int64_t size ) {
+  Cm256iBuffer_constructor_args_t queue_args = {
+    .element_capacity = size * 4  // heuristic: init size 4x heap size
+  };
+  return COMLIB_OBJECT_NEW( Cm256iBuffer_t, NULL, &queue_args );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query ) {
   // The heap will be initialized values of lowest possible rank (last in sorted result)
 
@@ -531,6 +576,26 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_VertexRef_t *refmap = NULL;
   vgx_Ranker_t *ranker = NULL;
   vgx_CollectorStage_t *stage = NULL;
+  vgx_RecursionQueue_t *queue = NULL;
+  int64_t csize = size;
+
+  // Recursive query?
+  vgx_recursion_mode_t recursion_mode = VGX_RECURSION_MODE_NONE;
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
+    vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
+    if( (recursion_mode = neighborhood_query->recursion_mode) == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+      // TEMPORARY: TODO, make this configurable per query
+      if( csize <= 64 ) {
+        csize = 60 + csize*4; // max 316
+      }
+      else if( csize <= 512 ) {
+        csize = 125 + csize*3; // max 1661
+      }
+      else {
+        csize = 636 + csize*2;
+      }
+    }
+  }
 
   XTRY {
     vgx_CollectorItem_t empty = {0};
@@ -541,7 +606,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
-      .element_capacity = size,
+      .element_capacity = csize,
       .comparator = (f_Cm256iHeap_comparator_t)__get_arc_comparator( ranking_context, &empty )
     };
 
@@ -551,7 +616,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     }
 
     // Create vertex reference map
-    if( (refmap = __new_vertex_reference_map( size, &top_k_collector->sz_refmap )) == NULL ) {
+    if( (refmap = __new_vertex_reference_map( csize, &top_k_collector->sz_refmap )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x323 );
     }
 
@@ -565,6 +630,13 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x325 );
     }
 
+    // Create the recursion queue
+    if( recursion_mode == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+      if( (queue = __new_recursion_queue( csize )) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
+      }
+    }
+
     bool locked_tail = false;
     bool locked_head = false;
     __locked_arc_access( ranking_context->readonly_graph, query, &locked_tail, &locked_head );
@@ -576,9 +648,10 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_queue          = queue;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL,
-    top_k_collector->size                     = size;
+    top_k_collector->size                     = csize;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
     top_k_collector->locked_tail_access       = locked_tail;
@@ -594,7 +667,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->counts_are_deep          = true;
     
     // Initialize the heap with "lowest" values
-    CALLABLE(heap)->Initialize( heap, &empty.item, size );
+    CALLABLE(heap)->Initialize( heap, &empty.item, csize );
   }
   XCATCH( errcode ) {
     iGraphCollector.DeleteCollector( (vgx_BaseCollector_context_t**)&top_k_collector );
@@ -665,6 +738,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_queue          = NULL;
     collector->stage                    = stage;
     collector->postheap                 = NULL,
     collector->size                     = size;
@@ -771,6 +845,7 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->ranker                       = ranker;
     map_collector->container.mapping.aggregator = fhmap;
     map_collector->refmap                       = refmap;
+    map_collector->recursion_queue              = NULL;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->size                         = size;
@@ -828,6 +903,7 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
+    collector->recursion_queue    = NULL;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -924,6 +1000,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_queue          = NULL;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->size                     = size;
@@ -1014,6 +1091,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_queue          = NULL,
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->size                     = size;
@@ -1067,7 +1145,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->sz_refmap        = 0;
+    collector->recursion_queue    = NULL;
+    collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
     collector->size               = 0;
@@ -1115,33 +1194,39 @@ static void __set_collect_counts( const int64_t hits, const int offset, vgx_coll
  ***********************************************************************
  */
 static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector ) {
-  if( *collector ) {
+  if( collector && *collector ) {
+    vgx_BaseCollector_context_t *ctx = *collector;
 
-    if( (*collector)->ranker ) {
-      // Delete the ranker
-      __delete_search_ranker_context( &(*collector)->ranker );
+    // Delete the ranker
+    if( ctx->ranker ) {
+      __delete_search_ranker_context( &ctx->ranker );
+    }
+    
+    // Delete the recursion queue
+    if( ctx->recursion_queue ) {
+      __delete_recursion_queue( ctx->graph, &ctx->recursion_queue );
     }
 
     // Delete the container
-    if( (*collector)->container.object ) {
-      COMLIB_OBJECT_DESTROY( (*collector)->container.object );
+    if( ctx->container.object ) {
+      COMLIB_OBJECT_DESTROY( ctx->container.object );
     }
 
     // Delete the stage
-    __delete_collector_stage( &(*collector)->stage );
+    __delete_collector_stage( &ctx->stage );
 
     // Delete any vertex reference map
-    if( (*collector)->refmap ) {
-      __destroy_vertex_reference_map( (*collector)->graph, &(*collector)->refmap, (*collector)->sz_refmap );
+    if( ctx->refmap ) {
+      __destroy_vertex_reference_map( ctx->graph, &ctx->refmap, ctx->sz_refmap );
     }
 
     // Delete any postheap
-    if( (*collector)->postheap ) {
-      COMLIB_OBJECT_DESTROY( (*collector)->postheap );
+    if( ctx->postheap ) {
+      COMLIB_OBJECT_DESTROY( ctx->postheap );
     }
 
     // Delete the collector
-    free( *collector );
+    free( ctx );
     *collector = NULL;
   }
 }
