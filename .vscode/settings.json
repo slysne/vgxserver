@@ -20,7 +20,12 @@
         "stdlib.h": "c",
         "memory.h": "c",
         "_vxhtml.h": "c",
-        "_maps.h": "c"
+        "_maps.h": "c",
+        "_vxevent.h": "c",
+        "_comlibsequence_code.h": "c",
+        "__utest_comlibsequence_heap.h": "c",
+        "__utest_comlibsequence_basic.h": "c",
+        "_comlibsequence_m128i_ops.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }
