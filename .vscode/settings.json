@@ -25,7 +25,10 @@
         "_comlibsequence_code.h": "c",
         "__utest_comlibsequence_heap.h": "c",
         "__utest_comlibsequence_basic.h": "c",
-        "_comlibsequence_m128i_ops.h": "c"
+        "_comlibsequence_m128i_ops.h": "c",
+        "_vxtraverse.h": "c",
+        "_vgx.h": "c",
+        "_vxarcvector.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }
