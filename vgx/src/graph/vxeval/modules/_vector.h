@@ -38,6 +38,7 @@ static void __eval_binary_sim( vgx_Evaluator_t *self );
 static void __eval_binary_cosine( vgx_Evaluator_t *self );
 static void __eval_binary_jaccard( vgx_Evaluator_t *self );
 static void __eval_ternary_anncollect( vgx_Evaluator_t *self );
+static void __eval_nullary_anncollect( vgx_Evaluator_t *self );
 
 
 
@@ -238,6 +239,130 @@ static void __eval_ternary_anncollect( vgx_Evaluator_t *self ) {
   //         ^-------- Already 1 from above (assume collect successful below)
   //       SP^
   __collect( self, pscore );
+}
+
+
+
+/*******************************************************************//**
+ * anncollect()
+ ***********************************************************************
+ */
+static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
+
+#define ANNCOLLECT_R1 3
+#define ANNCOLLECT_R2 2
+#define ANNCOLLECT_R3 1
+#define ANNCOLLECT_R4 0
+
+  // Stack
+  // [ . . . _ ]
+  //     SP^
+  
+  // Arguments implied, expected to be:
+  // R1: Probe vector
+  // R2: Score threshold
+  // R3: Will receive vector similarity score
+  // R4: Score threshold (>0) above which hamming filter kicks in
+
+  // Must have next vertex
+  if( self->context.HEAD == NULL ) {
+    STACK_RETURN_INTEGER( self, 0 );
+  }
+   
+   uint32_t vkey;
+  DWORD ventry;
+  __maps_vset_key_item( self->context.HEAD, &vkey, &ventry );
+
+  // Require next unvisited
+  // [ . . . x]
+  //         ^--------- 1 if already visited, else 0
+  //       SP^
+  __maps__xsethas( self, vkey, ventry );
+
+  // [ . . . x]
+  //     SP^
+  vgx_EvalStackItem_t *pvisited = POP_PITEM( self ); // <- x
+  if( pvisited->integer != 0 ) {
+    STACK_RETURN_INTEGER( self, 0 );
+  }
+
+  // Get argument objects from memory locations
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+
+  // Must have vector
+  if( self->context.HEAD->vector == NULL ) {
+    STACK_RETURN_INTEGER( self, 0 );
+  }
+
+  // Extract probe vector bytes
+  vgx_EvalStackItem_t *pprobe = &mem->data[ ANNCOLLECT_R1 ];
+  if( pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
+    STACK_RETURN_INTEGER( self, 0 );
+  }
+  BYTE *A = (BYTE*)CALLABLE( pprobe->vector )->Elements( pprobe->vector );
+  int32_t len = pprobe->vector->metas.vlen;
+  FP_t lshA = pprobe->vector->fp;
+
+  // Extract target vector bytes
+  vgx_Vector_t *target = self->context.HEAD->vector;
+  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
+  if( target->metas.vlen < len ) {
+    len = target->metas.vlen;
+  }
+  FP_t lshB = target->fp;
+
+  // Similarity threshold 0.0 - 2.0
+  vgx_EvalStackItem_t *pthres = &mem->data[ ANNCOLLECT_R2 ];
+  double threshold = pthres->type == STACK_ITEM_TYPE_REAL ? pthres->real : pthres->type == STACK_ITEM_TYPE_INTEGER ? pthres->integer : 0.0;
+
+  // Hamming distance filter enabled with real value in R4
+  vgx_EvalStackItem_t *phamenable = &mem->data[ ANNCOLLECT_R4 ];
+  if( phamenable->type == STACK_ITEM_TYPE_REAL && phamenable->real > 1.0 ) {
+    // LSH Hamming distance filter kicks in with higher thresholds
+    if( threshold > phamenable->real && threshold <= 2.0 ) {
+      double p = acos( threshold - 1.0 ) / M_PI; // expected fraction of differing bits
+      double sigma = sqrt(64.0 * p * (1.0 - p)); // stdev for 64-bit lsh
+      double h = 64.0 * p + 1.5 * sigma; // add 1.5 stdev margin
+      int maxham = (int)round(h);
+      if( hamdist64( lshA, lshB ) > maxham ) {
+        STACK_RETURN_INTEGER( self, 0 );
+      }
+    }
+  }
+
+  // -------------------
+  // COMPUTE COSINE(A,B)
+  // -------------------
+  double sim = 1 + vxeval_bytearray_cosine(A, B, len); // (0.0 - 2.0)
+
+  // Require sufficient cosine score
+  if( sim <= threshold ) {
+    STACK_RETURN_INTEGER( self, 0 ); // not collected
+  }
+
+  // Mark as visited
+  // [ . . . m]
+  //         ^-------- 1 (next marked as visited)
+  //       SP^
+  __maps__xsetadd( self, vkey, ventry, MAPS_KEYMODE__VERTEX );
+
+  // Write sim score to memory location
+  vgx_EvalStackItem_t *pscore = &mem->data[ ANNCOLLECT_R3 ];
+  SET_REAL_PITEM_VALUE( pscore, sim );
+
+  // Collect
+  // [ . . . m]
+  //         ^-------- Already 1 from above (assume collect successful below)
+  //       SP^
+  __collect( self, pscore );
+  
+  if( self->context.collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
+    Cm256iHeap_t *heap = self->context.collector->container.sequence.heap;
+    vgx_CollectorItem_t difficulty;
+    CALLABLE(heap)->HeapTop(heap, &difficulty.item);
+    SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
+  }
+
 }
 
 

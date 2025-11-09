@@ -3957,7 +3957,7 @@ static int ComlibSequence_heap_push_nolock( _CSEQ_TYPENAME *self, const _CSEQ_EL
 
       _CSEQ_ELEMENT_TYPE *root = self->_rp;
       _CSEQ_ELEMENT_TYPE *item, *parent;
-      int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
+      //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
 
       // Perform up-heap until heap property restored
       __begin_general_buffer_section( self ) {
@@ -3967,7 +3967,7 @@ static int ComlibSequence_heap_push_nolock( _CSEQ_TYPENAME *self, const _CSEQ_EL
           idx = (idx-1) >> 1;
           parent = root + idx;
           __general_cursor_guard( parent );
-          if( cmp( parent, item ) < 0 ) {
+          if( self->_cmp( parent, item ) < 0 ) {
             __swap_elements( parent, item );
           }
           else {
@@ -4039,7 +4039,7 @@ static int ComlibSequence_heap_pop_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_T
 
       _CSEQ_ELEMENT_TYPE *root = self->_rp;
       _CSEQ_ELEMENT_TYPE *parent, *high, *left, *right;
-      int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
+      //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
       // Extract root into destination
       *dest = *root;
@@ -4065,11 +4065,11 @@ static int ComlibSequence_heap_pop_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_T
           right = root + right_idx;
           __general_cursor_guard( left );
           __general_cursor_guard( right );
-          if( left_idx < size && cmp( left, parent ) > 0 ) {
+          if( left_idx < size && self->_cmp( left, parent ) > 0 ) {
             high_idx = left_idx;
             high = left;
           }
-          if( right_idx < size && cmp( right, high ) > 0 ) {
+          if( right_idx < size && self->_cmp( right, high ) > 0 ) {
             high_idx = right_idx;
             high = right;
           }
@@ -4128,7 +4128,7 @@ static int ComlibSequence_heap_replace_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEME
 
       _CSEQ_ELEMENT_TYPE *root = self->_rp;
       _CSEQ_ELEMENT_TYPE *parent, *high, *left, *right, *item;
-      int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
+      //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
       // Extract root into destination (if we care)
       if( popped ) {
@@ -4157,11 +4157,11 @@ static int ComlibSequence_heap_replace_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEME
         right = root + right_idx;
         __general_cursor_guard( left );
         __general_cursor_guard( right );
-        if( left_idx < size && cmp( left, parent ) > 0 ) {
+        if( left_idx < size && self->_cmp( left, parent ) > 0 ) {
           high_idx = left_idx;
           high = left;
         }
-        if( right_idx < size && cmp( right, high ) > 0 ) {
+        if( right_idx < size && self->_cmp( right, high ) > 0 ) {
           high_idx = right_idx;
           high = right;
         }
@@ -4186,7 +4186,7 @@ static int ComlibSequence_heap_replace_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEME
         idx = (idx-1) >> 1;
         parent = root + idx;
         __general_cursor_guard( parent );
-        if( cmp( parent, item ) < 0 ) {
+        if( self->_cmp( parent, item ) < 0 ) {
           __swap_elements( parent, item );
         }
         else {
@@ -4242,12 +4242,12 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk_nolock( _CSEQ_TYPENAME 
     __begin_general_buffer_section( self ) {
 
       _CSEQ_ELEMENT_TYPE *root = self->_rp;
-      int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
+      //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
       // When the root compares "greater than" the candidate it will be yanked and the candidate will be
       // inserted. (For min-heaps the cmp() function is reversed so really if root is smaller than the candidate
       // the root is yanked and the candidate inserted, maintaining a heap with a growing root value.)
-      if( cmp( root, candidate ) > 0 ) {
+      if( self->_cmp( root, candidate ) > 0 ) {
         // The discarded root will be returned
         *discarded = *root;
 
@@ -4263,15 +4263,15 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk_nolock( _CSEQ_TYPENAME 
           __general_cursor_guard( left );
           __general_cursor_guard( right );
           _CSEQ_ELEMENT_TYPE *next = right;
-          if( cmp( left, parent ) > 0 ) { // maybe traverse left branch
-            if( right < end && cmp( right, left ) > 0 ) {
+          if( self->_cmp( left, parent ) > 0 ) { // maybe traverse left branch
+            if( right < end && self->_cmp( right, left ) > 0 ) {
               ++idx; // traverse right branch
             }
             else {
               --next; // back to left left
             }
           }
-          else if( right < end && cmp( right, parent ) > 0 ) {
+          else if( right < end && self->_cmp( right, parent ) > 0 ) {
             ++idx; // traverse right branch
           }
           else {

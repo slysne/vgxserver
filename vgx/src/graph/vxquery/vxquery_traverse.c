@@ -323,48 +323,41 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  ***********************************************************************
  */
 static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
+  vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)search->collector;
 
-  vgx_Graph_t *graph = vertex_RO->graph;
-  vgx_RecursionQueue_t *Q = search->collector->recursion_queue;
-  Cm256iHeap_t *heap = search->collector->container.sequence.heap;
-  vgx_ArcFilter_match match;
-
-  match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe );
-
-  if( __is_arcfilter_error( match ) || Q == NULL || heap == NULL ) {
-    return match;
+  vgx_RecursionQueue_t *Q = collector->recursion_queue;
+  Cm256iHeap_t *heap = collector->container.sequence.heap;
+  if( Q == NULL || heap == NULL ) {
+    return VGX_ARC_FILTER_MATCH_ERROR;
   }
 
-  vgx_CollectorItem_t min_item;
-  vgx_CollectorItem_t next_item;
+  vgx_ArcFilter_match match;
 
+  // Initial neighborhood traversal
+  if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
+    return VGX_ARC_FILTER_MATCH_ERROR;
+  }
 
-  bool err = false;
-  while( CALLABLE(Q)->Next(Q, &next_item.item) ) {
+  // Initialize difficulty to none
+  vgx_CollectorItem_t difficulty;
+  CALLABLE(heap)->HeapTop(heap, &difficulty.item);
+  
+  vgx_CollectorItem_t queued;
+  while( CALLABLE(Q)->Next(Q, &queued.item) ) {
     // Require items from the queue to outrank the lowest scoring item on the heap
-    if( heap->_cmp( &min_item.item, &next_item.item ) > 0 && !err ) {
-      const vgx_Vertex_t *next = next_item.headref->vertex;
+    if( heap->_cmp( &difficulty.item, &queued.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
 
       // Perform new search around next anchor
-      match = iarcvector.GetArcs( &next->outarcs, search->probe );
+      if( __is_arcfilter_error((match = iarcvector.GetArcs( &queued.headref->vertex->outarcs, search->probe ))) ) {
+        return VGX_ARC_FILTER_MATCH_ERROR;
+      }
 
       // Update min score
-      CALLABLE(heap)->HeapTop(heap, &min_item.item);
-
-      // On first error, mark to skip rest of queue
-      if( __is_arcfilter_error( match ) ) {
-        err = true;
-      }
-      
+      CALLABLE(heap)->HeapTop(heap, &difficulty.item);
     }
 
     // Release one lock
-    vgx_Graph_t *locked_graph = NULL;
-    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( search->collector, next_item.headref, &locked_graph );
-    if( locked_graph ) {
-      GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
-    }
-
+    _vxquery_collector__del_vertex_reference_OPEN( search->collector, queued.headref );
   }
 
   return match;

@@ -379,6 +379,20 @@ DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_Base
 
 /*******************************************************************//**
  *
+ * 
+ ***********************************************************************
+ */
+DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref ) {
+  vgx_Graph_t *graph = NULL;
+  int64_t refcnt =  _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, vertexref, &graph );
+  GRAPH_LEAVE_CRITICAL_SECTION( &graph );
+  return refcnt;
+}
+
+ 
+
+/*******************************************************************//**
+ *
  * CALLER IS RESPONSIBLE FOR RELEASING ANY CS LOCK ACQUIRED BY THIS FUNCTION
  *
  ***********************************************************************
