@@ -243,17 +243,74 @@ static void __eval_ternary_anncollect( vgx_Evaluator_t *self ) {
 
 
 
+
+/*
+def ham(sim):
+  p = acos(sim)/pi
+  s = sqrt( 64.0*p*(1.0-p) )
+  h = 64.0*p+1.5*s
+  return int(round(h))
+
+ham(1) -> 0
+ham(0.99) -> 5
+ham(0.98) -> 7
+ham(0.97) -> 8
+...
+ham(0.9) -> 13
+ham(0.8) -> 18
+ham(0.7) -> 21
+ham(0.6) -> 24
+ham(0.5) -> 27
+ham(0.4) -> 29
+ham(0.3) -> 32
+ham(0.2) -> 34
+ham(0.1) -> 36
+ham(0.0) -> 38
+ham(-0.1) -> 40
+ham(-0.2) -> 42
+ham(-0.3) -> 44
+ham(-0.4) -> 46
+ham(-0.5) -> 48
+ham(-0.6) -> 51
+ham(-0.7) -> 53
+ham(-0.8) -> 56
+ham(-0.8) -> 56
+ham(-0.9) -> 59
+ham(-1.0) -> 64
+*/
+
+/*******************************************************************//**
+ * Assume cosine similarity sim in range [0.0, 1.0), then:
+ * cos_to_hamdist[ int(sim * 128) ] -> hamdist
+ *
+ * 
+ ***********************************************************************
+ */
+static BYTE cos_to_hamdist[] = {
+  38, 38, 38, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36, 36, 36, 35,
+  35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33,
+  33, 32, 32, 32, 32, 32, 32, 31, 31, 31, 31, 31, 31, 30, 30, 30,
+  30, 30, 29, 29, 29, 29, 29, 29, 28, 28, 28, 28, 28, 27, 27, 27,
+  27, 27, 26, 26, 26, 26, 26, 25, 25, 25, 25, 25, 24, 24, 24, 24,
+  23, 23, 23, 23, 23, 22, 22, 22, 22, 21, 21, 21, 21, 20, 20, 20,
+  20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15,
+  14, 14, 13, 13, 13, 12, 12, 11, 10, 10,  9,  8,  7,  6,  5,  0
+};
+
+
 /*******************************************************************//**
  * anncollect()
  ***********************************************************************
  */
 static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
 
-#define ANNCOLLECT_R1 3
-#define ANNCOLLECT_R2 2
-#define ANNCOLLECT_R3 1
-#define ANNCOLLECT_R4 0
+#define ANNCOLLECT_R1 -1
+#define ANNCOLLECT_R2 -2
+#define ANNCOLLECT_R3 -3
+#define ANNCOLLECT_R4 -4
 
+  vgx_ExpressEvalContext_t *ctx = &self->context;
+  const vgx_Vertex_t *head = ctx->HEAD;
   // Stack
   // [ . . . _ ]
   //     SP^
@@ -264,16 +321,16 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   // R3: Will receive vector similarity score
   // R4: Score threshold (>0) above which hamming filter kicks in
 
-  // Must have next vertex
-  if( self->context.HEAD == NULL ) {
+  // Must have head vertex
+  if( head == NULL ) {
     STACK_RETURN_INTEGER( self, 0 );
   }
    
-   uint32_t vkey;
+  uint32_t vkey;
   DWORD ventry;
-  __maps_vset_key_item( self->context.HEAD, &vkey, &ventry );
+  __maps_vset_key_item( head, &vkey, &ventry );
 
-  // Require next unvisited
+  // Require head unvisited
   // [ . . . x]
   //         ^--------- 1 if already visited, else 0
   //       SP^
@@ -287,44 +344,43 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   }
 
   // Get argument objects from memory locations
-  vgx_ExpressEvalMemory_t *mem = self->context.memory;
-
+  vgx_ExpressEvalMemory_t *mem = ctx->memory;
+  uint64_t mask = mem->mask;
+  vgx_EvalStackItem_t *data = mem->data;
+  vgx_EvalStackItem_t *pprobe = &data[ mask & ANNCOLLECT_R1 ];
+  vgx_EvalStackItem_t *pthres = &data[ mask & ANNCOLLECT_R2 ];
+  vgx_EvalStackItem_t *pscore = &data[ mask & ANNCOLLECT_R3 ];
+  vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
+  
   // Must have vector
-  if( self->context.HEAD->vector == NULL ) {
+  vgx_Vector_t *target = head->vector;
+
+  // Verify vectors exist
+  if( target == 0 || pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
     STACK_RETURN_INTEGER( self, 0 );
   }
 
   // Extract probe vector bytes
-  vgx_EvalStackItem_t *pprobe = &mem->data[ ANNCOLLECT_R1 ];
-  if( pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
-    STACK_RETURN_INTEGER( self, 0 );
-  }
   BYTE *A = (BYTE*)CALLABLE( pprobe->vector )->Elements( pprobe->vector );
-  int32_t len = pprobe->vector->metas.vlen;
+  int32_t lenA = pprobe->vector->metas.vlen;
   FP_t lshA = pprobe->vector->fp;
 
   // Extract target vector bytes
-  vgx_Vector_t *target = self->context.HEAD->vector;
   BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
-  if( target->metas.vlen < len ) {
-    len = target->metas.vlen;
-  }
+  int32_t lenB = target->metas.vlen;
   FP_t lshB = target->fp;
 
+  // Safeguard
+  int32_t len = minimum_value( lenA, lenB );
+
   // Similarity threshold 0.0 - 2.0
-  vgx_EvalStackItem_t *pthres = &mem->data[ ANNCOLLECT_R2 ];
   double threshold = pthres->type == STACK_ITEM_TYPE_REAL ? pthres->real : pthres->type == STACK_ITEM_TYPE_INTEGER ? pthres->integer : 0.0;
 
   // Hamming distance filter enabled with real value in R4
-  vgx_EvalStackItem_t *phamenable = &mem->data[ ANNCOLLECT_R4 ];
-  if( phamenable->type == STACK_ITEM_TYPE_REAL && phamenable->real > 1.0 ) {
-    // LSH Hamming distance filter kicks in with higher thresholds
-    if( threshold > phamenable->real && threshold <= 2.0 ) {
-      double p = acos( threshold - 1.0 ) / M_PI; // expected fraction of differing bits
-      double sigma = sqrt(64.0 * p * (1.0 - p)); // stdev for 64-bit lsh
-      double h = 64.0 * p + 1.5 * sigma; // add 1.5 stdev margin
-      int maxham = (int)round(h);
-      if( hamdist64( lshA, lshB ) > maxham ) {
+  if( phamflt->type == STACK_ITEM_TYPE_REAL && phamflt->real > 1.0 ) {
+    // LSH Hamming distance filter progressively stricter with higher thresholds
+    if( threshold > phamflt->real && threshold <= 2.0 ) {
+      if( hamdist64( lshA, lshB ) > cos_to_hamdist[ (int)((threshold-1.0) * 127) ] ) {
         STACK_RETURN_INTEGER( self, 0 );
       }
     }
@@ -333,7 +389,20 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   // -------------------
   // COMPUTE COSINE(A,B)
   // -------------------
-  double sim = 1 + vxeval_bytearray_cosine(A, B, len); // (0.0 - 2.0)
+  // Faster when both vectors are cosine_mode
+  double cosine;
+  if( pprobe->vector->metas.flags.cos && target->metas.flags.cos ) {
+    double dp = vxeval_bytearray_dot_product(A, B, len);
+    cosine = dp * pprobe->vector->metas.scalar.invnorm * target->metas.scalar.invnorm;
+    if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
+      cosine = (double)((cosine > 0.0) - (cosine < 0.0));
+    }
+  }
+  else {
+    cosine = vxeval_bytearray_cosine(A, B, len);
+  }
+
+  double sim = cosine + 1.0; // [0.0 - 2.0]
 
   // Require sufficient cosine score
   if( sim <= threshold ) {
@@ -342,12 +411,11 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
 
   // Mark as visited
   // [ . . . m]
-  //         ^-------- 1 (next marked as visited)
+  //         ^-------- 1 (head marked as visited)
   //       SP^
   __maps__xsetadd( self, vkey, ventry, MAPS_KEYMODE__VERTEX );
 
   // Write sim score to memory location
-  vgx_EvalStackItem_t *pscore = &mem->data[ ANNCOLLECT_R3 ];
   SET_REAL_PITEM_VALUE( pscore, sim );
 
   // Collect
@@ -356,8 +424,9 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   //       SP^
   __collect( self, pscore );
   
-  if( self->context.collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
-    Cm256iHeap_t *heap = self->context.collector->container.sequence.heap;
+  // Refresh running threshold
+  if( ctx->collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
+    Cm256iHeap_t *heap = ctx->collector->container.sequence.heap;
     vgx_CollectorItem_t difficulty;
     CALLABLE(heap)->HeapTop(heap, &difficulty.item);
     SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
