@@ -1441,6 +1441,7 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
   static const char *kwlist[] = {
     "data",
     "alpha",
+    "cosine_mode",
     NULL
   };
 
@@ -1449,12 +1450,13 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
     struct {
       PyObject *py_data;
       PyObject *py_alpha;
+      PyObject *py_cosine_mode;
     };
   } vector_args;
 
   vector_args vcargs = {0};
 
-  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 2, vcargs._args ) < 0 ) {
+  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 3, vcargs._args ) < 0 ) {
     return NULL;
   }
 
@@ -1464,7 +1466,7 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
   if( iV->Writable(vertex) ) {
     vgx_Graph_t *graph = iV->Parent(vertex);
     // Create a persistent vector
-    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, vcargs.py_data, vcargs.py_alpha, false );
+    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, vcargs.py_data, vcargs.py_alpha, vcargs.py_cosine_mode, false );
     // Set the vector on the vertex
     if( vector != NULL ) {
       BEGIN_PYVGX_THREADS {
@@ -1557,7 +1559,7 @@ static PyObject * PyVGX_Vertex__GetVector( PyVGX_Vertex *pyvertex ) {
   if( vector == NULL ) {
     BEGIN_PYVGX_THREADS {
       vgx_Similarity_t *sim = vertex->graph->similarity;
-      vector = CALLABLE( sim )->NewInternalVector( sim, NULL, 1.0f, 0, true );
+      vector = CALLABLE( sim )->NewInternalVector( sim, NULL, 1.0f, 0, false, true );
     } END_PYVGX_THREADS;
     if( vector == NULL ) {
       PyErr_SetString( PyExc_Exception, "internal error" );

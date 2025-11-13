@@ -840,7 +840,7 @@ typedef struct __s_neighborhood_query_args {
   vgx_ArcConditionSet_t *collect_arc_condition_set;
   int nest;
   int64_t nested_hits;
-  vgx_recursion_mode_t recursion_mode;
+  vgx_recursion_config_t recursion;
 } __neighborhood_query_args;
 
 
@@ -1410,7 +1410,7 @@ typedef struct s_IPyVGXParser {
   vgx_ExpressEvalMemory_t * (*NewExpressEvalMemory)( vgx_Graph_t *graph, PyObject *py_object );
   int (*ExternalMapElements)( PyObject *py_elements, ext_vector_feature_t **parsed_elements );
   int (*ExternalEuclideanElements)( PyObject *py_elements, float **parsed_elements );
-  vgx_Vector_t * (*InternalVectorFromPyObject)( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool ephemeral );
+  vgx_Vector_t * (*InternalVectorFromPyObject)( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool cosine_mode, bool ephemeral );
   vgx_StringList_t * (*NewStringListFromVertexPyList)( PyObject *py_list );
 } IPyVGXParser;
 
@@ -1784,7 +1784,7 @@ __inline static PyObject * __PyVGX__comparable_from_pyobject( PyObject *py_obj, 
     py_parent = py_obj;
   }
   else {
-    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_obj, NULL, true );
+    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_obj, NULL, false, true );
     if( vector ) {
       *pC = (vgx_Comparable_t)vector;
     }

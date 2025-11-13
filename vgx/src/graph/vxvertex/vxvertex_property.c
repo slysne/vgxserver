@@ -656,7 +656,7 @@ static vgx_VertexProperty_t * __get_internal_attribute_RO( const vgx_CollectorIt
     case VGX_RESPONSE_ATTR_VECTOR:
       if( vertex->vector ) {
         vgx_Graph_t *graph = vertex->graph;
-        vgx_Vector_t *V_ext = CALLABLE( graph->similarity )->TranslateVector( graph->similarity, vertex->vector, true, NULL );
+        vgx_Vector_t *V_ext = CALLABLE( graph->similarity )->TranslateVector( graph->similarity, vertex->vector, false, true, NULL );
         if( V_ext ) {
           // NOTE: We know the external vector formatter renders 42 bytes max per element, always true since last element
           //       doesn't include ", " and therefore accounts for the first "[" and last "]".

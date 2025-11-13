@@ -76,7 +76,9 @@ typedef struct s_vgx_Fingerprinter_vtable_t {
   /* Fingerprinter methods */
   int (*Distance)( const struct s_vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 );
   FP_t (*Compute)( const struct s_vgx_Fingerprinter_t *self, struct s_vgx_Vector_t *vector, int64_t seed, FP_t *rlcm );
+  uint32_t (*Compute32)( const struct s_vgx_Fingerprinter_t *self, struct s_vgx_Vector_t *vector, int64_t seed );
   FP_t (*ComputeBytearray)( const struct s_vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed, FP_t *rlcm );
+  uint32_t (*Compute32Bytearray)( const struct s_vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed );
   char * (*Projections)( const struct s_vgx_Fingerprinter_t *self, char buffer321[], const struct s_vgx_Vector_t *vector, FP_t lsh, FP_t lcm, WORD seed, int ksize, bool reduce, bool expand );
   int (*SegmValid)( const struct s_vgx_Fingerprinter_t *self, int nsegm, int nsign );
   int (*PnoValid)( const struct s_vgx_Fingerprinter_t *self, int pno, int nsegm, int nsign );
@@ -133,11 +135,13 @@ typedef union u_vgx_VectorContext_t {
 typedef union s_vgx_VectorFlags_t {
   uint8_t bits;
   struct {
+    /* compat region */
     uint8_t nul  : 1; /* null vector */
     uint8_t pop  : 1; /* populated */
     uint8_t ext  : 1; /* external */
     uint8_t ecl  : 1; /* euclidean */
-    uint8_t _r5  : 1; /* */
+    /* other */
+    uint8_t cos  : 1; /* cosine-compatible only */
     uint8_t _r6  : 1; /* */
     uint8_t _r7  : 1; /* */
     uint8_t eph  : 1; /* ephemeral */
@@ -147,7 +151,7 @@ typedef union s_vgx_VectorFlags_t {
     uint8_t _5678 : 4;
   } compat;
   struct {
-    uint8_t ____1 : 1;
+    uint8_t ___1  : 1;
     uint8_t bits  : 3;
     uint8_t _5678 : 4;
   } compat_nul;
@@ -168,10 +172,10 @@ typedef union u_vgx_VectorMetas_t {
       // Vector magnitude used with feature vectors
       float norm;
       // Element scaling factor used with Euclidean vectors
-      float factor;
-
-      float XXX_TODO_SCALAR;
-
+      float alpha;
+      // Internal cosine-compatible only vector's inverse norm,
+      // i.e. 1/sqrt(ssq)
+      float invnorm;
       // Bits used for (de)serialization
       DWORD bits;
     } scalar;
@@ -253,7 +257,8 @@ typedef struct s_vgx_Vector_constructor_args_t {
   bool ephemeral;
   vector_type_t type;
   const void *elements;
-  float scale;
+  float alpha;
+  bool cosmode;
   struct s_vgx_Similarity_t *simcontext;
 } vgx_Vector_constructor_args_t;
 
@@ -1635,13 +1640,13 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
   __vgx_ResultSetQuery_members                      \
   vgx_ArcConditionSet_t *collect_arc_condition_set; \
   vgx_collector_mode_t collector_mode;              \
-  vgx_recursion_mode_t recursion_mode;
+  vgx_recursion_config_t recursion;
 
 #define __vgx_NeighborhoodQuery_args                  \
   __vgx_AdjacencyQuery_args                           \
   vgx_ArcConditionSet_t **collect_arc_condition_set;  \
   vgx_collector_mode_t collector_mode;                \
-  vgx_recursion_mode_t recursion_mode;
+  vgx_recursion_config_t recursion;
 
 
 // vtable
@@ -2175,15 +2180,15 @@ typedef struct s_vgx_Similarity_vtable_t {
   COMLIB_VTABLE_HEAD
   /* Similarity methods */
   struct s_vgx_Similarity_t * (*Clone)( struct s_vgx_Similarity_t *self );
-  struct s_vgx_Vector_t * (*NewInternalVector)( struct s_vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool ephemeral );
+  struct s_vgx_Vector_t * (*NewInternalVector)( struct s_vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool cosine_mode, bool ephemeral );
   struct s_vgx_Vector_t * (*NewExternalVector)( struct s_vgx_Similarity_t *self, const void *elements, uint16_t sz, bool ephemeral );
-  struct s_vgx_Vector_t * (*NewInternalVectorFromExternal)( struct s_vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool ephemeral, CString_t **CSTR__error );
-  struct s_vgx_Vector_t * (*NewEmptyInternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
+  struct s_vgx_Vector_t * (*NewInternalVectorFromExternal)( struct s_vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*NewEmptyInternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool cosine_mode, bool ephemeral );
   struct s_vgx_Vector_t * (*NewEmptyExternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
-  struct s_vgx_Vector_t * (*InternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*InternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
   struct s_vgx_Vector_t * (*ExternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral );
-  struct s_vgx_Vector_t * (*TranslateVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error );
-  struct s_vgx_Vector_t * (*NewCentroid)( struct s_vgx_Similarity_t *self, const struct s_vgx_Vector_t *vectors[], bool ephemeral );
+  struct s_vgx_Vector_t * (*TranslateVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*NewCentroid)( struct s_vgx_Similarity_t *self, const struct s_vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral );
   int (*HammingDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
   float (*EuclideanDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
   float (*Cosine)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
@@ -6904,7 +6909,7 @@ typedef struct s_vgx_neighborhood_search_context_t {
   //
   vgx_collector_mode_t collector_mode;    // collect on this level? if so collect arcs or vertices?
   vgx_BaseCollector_context_t *collector; // shared collector instance for all neighborhood levels
-  vgx_recursion_mode_t recursion_mode;    // control automatic recursive traversal
+  vgx_recursion_config_t recursion;       // control automatic recursive traversal
 } vgx_neighborhood_search_context_t;
 
 
@@ -7369,7 +7374,7 @@ typedef struct s_vgx_IGraphQuery_t {
   void (*DeleteQuery)(              vgx_BaseQuery_t         **query );
 
   vgx_AdjacencyQuery_t    * (*NewAdjacencyQuery)(     vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, vgx_recursion_mode_t recursion_mode, CString_t **CSTR__error );
+  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error );
   vgx_GlobalQuery_t       * (*NewGlobalQuery)(        vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
   vgx_AggregatorQuery_t   * (*NewAggregatorQuery)(    vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 

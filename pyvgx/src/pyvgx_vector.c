@@ -54,6 +54,7 @@ static PyObject * __PyVGX_Vector_as_dict( PyVGX_Vector *pyvector ) {
       FP_t fp = vext->fp;
       int ctr = (vint->metas.type & __VECTOR__MASK_CENTROID) != 0;
       int ecl = (vint->metas.type & __VECTOR__MASK_EUCLIDEAN) != 0;
+      int cosmode = vint->metas.flags.cos;
       if( PyVGX_DictStealItemString( py_dict, "external",    py_ext ) < 0 || 
           PyVGX_DictStealItemString( py_dict, "internal",    py_int ) < 0 || 
           PyVGX_DictStealItemString( py_dict, "centroid",    PyBool_FromLong( ctr ) ) < 0 || 
@@ -61,7 +62,8 @@ static PyObject * __PyVGX_Vector_as_dict( PyVGX_Vector *pyvector ) {
           PyVGX_DictStealItemString( py_dict, "length",      PyLong_FromLong( sz) ) < 0 ||
           PyVGX_DictStealItemString( py_dict, "fingerprint", PyLong_FromUnsignedLongLong( fp ) ) < 0 ||
           PyVGX_DictStealItemString( py_dict, "magnitude",   PyFloat_FromDouble( mag ) ) < 0 ||
-          PyVGX_DictStealItemString( py_dict, "scale",       PyFloat_FromDouble( scale ) ) < 0 )
+          PyVGX_DictStealItemString( py_dict, "scale",       PyFloat_FromDouble( scale ) ) < 0 ||
+          PyVGX_DictStealItemString( py_dict, "cosine_mode", PyBool_FromLong( cosmode ) ) < 0 )
       {
         // error
         PyVGX_DECREF( py_dict );
@@ -187,7 +189,22 @@ static PyObject * __PyVGX_Vector__alpha( PyVGX_Vector *pyvector, void *closure )
   if( pyvector->vint == NULL ) {
     return PyFloat_FromDouble( 0.0 );
   }
-  return PyFloat_FromDouble( pyvector->vint->metas.scalar.factor );
+  return PyFloat_FromDouble( pyvector->vint->metas.scalar.alpha );
+}
+
+
+
+/******************************************************************************
+ * __PyVGX_Vector__cosine_mode
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static PyObject * __PyVGX_Vector__cosine_mode( PyVGX_Vector *pyvector, void *closure ) {
+  if( pyvector->vint == NULL ) {
+    Py_RETURN_FALSE;
+  }
+  return PyBool_FromLong( pyvector->vint->metas.flags.cos );
 }
 
 
@@ -252,6 +269,65 @@ static PyObject * PyVGX_Vector__Fingerprint( PyVGX_Vector *pyvector, PyObject *a
   }
 
   return PyLong_FromUnsignedLongLong( fp );
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Vector__LSH64
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( LSH64__doc__,
+  "LSH64() -> int\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Vector__LSH64
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Vector__LSH64( PyVGX_Vector *pyvector ) {
+  FP_t lsh64 = 0;
+  vgx_Vector_t *vector = pyvector->vint;
+  if( vector != NULL ) {
+    lsh64 = vector->fp;
+  }
+
+  return PyLong_FromUnsignedLongLong( lsh64 );
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Vector__LSH32
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( LSH32__doc__,
+  "LSH32() -> int\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Vector__LSH32
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Vector__LSH32( PyVGX_Vector *pyvector ) {
+  uint32_t lsh32 = 0;
+  vgx_Vector_t *vector = pyvector->vint;
+  if( vector != NULL ) {
+    BEGIN_PYVGX_THREADS {
+      // Get fingerprinter
+      vgx_Similarity_t *sim = CALLABLE( vector )->Context( vector )->simobj;
+      vgx_Fingerprinter_t *fingerprinter = sim ? sim->fingerprinter : NULL;
+      // Compute
+      if( fingerprinter ) {
+        lsh32 = CALLABLE( fingerprinter )->Compute32( fingerprinter, vector, 0 );
+      }
+    } END_PYVGX_THREADS;
+  }
+  return PyLong_FromUnsignedLong( lsh32 );
 }
 
 
@@ -482,6 +558,32 @@ static PyObject * PyVGX_Vector__EuclideanDistance( PyObject *py_self, PyObject *
 
 
 /******************************************************************************
+ * PyVGX_Vector__HammingDistance
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( HammingDistance__doc__,
+  "HammingDistance() -> int\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Vector__HammingDistance
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Vector__HammingDistance( PyObject *py_self, PyObject *py_other ) {
+  vgx_Vector_t *v1, *v2;
+  vgx_Similarity_t *sim = __vector_simcontext( py_self, py_other, &v1, &v2 );
+  if( sim == NULL ) {
+    return NULL;
+  }
+
+  return PyLong_FromLong( CALLABLE( sim )->HammingDistance( sim, v1, v2 ) );
+}
+
+
+
+/******************************************************************************
  * PyVGX_Vector__Debug
  *
  ******************************************************************************
@@ -531,13 +633,15 @@ static PyObject * PyVGX_Vector__repr( PyVGX_Vector *pyvector ) {
             type_str = "feature";
           }
           float alpha = ivector->Scaler( vint );
-          CSTR__repr = CStringNewFormat( "<PyVGX_Vector: typ=%s len=%d mag=%#g alpha=%#g fp=0x%016llX elem=%s>",
+          int cosine_mode = vint->metas.flags.cos;
+          CSTR__repr = CStringNewFormat( "<PyVGX_Vector: typ=%s len=%d mag=%#g alpha=%#g cos=%s fp=0x%016llX elem=%s>",
                                                              type_str,
                                                                     ivector->Length(vext),
                                                                            ivector->Magnitude(vext),
                                                                                      alpha,
-                                                                                              ivector->Fingerprint(vext),
-                                                                                                           elem_str
+                                                                                             cosine_mode ? "yes" : "no",
+                                                                                                     ivector->Fingerprint(vext),
+                                                                                                                  elem_str
                           );
         } END_PYVGX_THREADS;
         if( CSTR__repr ) {
@@ -651,8 +755,8 @@ static int __init_PyVGX_Vector_internal( PyVGX_Vector *pyvector, vgx_Vector_t *v
 
       vgx_Similarity_t *simcontext = CALLABLE( vector )->Context( vector )->simobj;
 
-      // Use the same ephemeral/persistent mode as the source
-      if( (translated = CALLABLE( simcontext )->TranslateVector( simcontext, vector, vector->metas.flags.eph, NULL )) == NULL ) {
+      // Use the same ephemeral/persistent and cosine modes as the source
+      if( (translated = CALLABLE( simcontext )->TranslateVector( simcontext, vector, vector->metas.flags.cos, vector->metas.flags.eph, NULL )) == NULL ) {
         CALLABLE(vector)->Decref(vector);
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
       }
@@ -690,12 +794,19 @@ static int __init_PyVGX_Vector_internal( PyVGX_Vector *pyvector, vgx_Vector_t *v
  *
  ******************************************************************************
  */
-static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim, PyObject *py_data, PyObject *py_alpha ) {
+static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim, PyObject *py_data, PyObject *py_alpha, PyObject *py_cosine_mode ) {
   vgx_Similarity_t *simcontext = pysim ? pysim->sim : _global_default_similarity->sim;
   int retcode = 0;
   vgx_Vector_t *vector = NULL;
   vgx_Vector_t *translated = NULL;
   CString_t *CSTR__error = NULL;
+
+  bool cosine_mode = false;
+  if( py_cosine_mode ) {
+    if( py_cosine_mode == Py_True || (PyLong_Check( py_cosine_mode ) && PyLong_AsLong( py_cosine_mode ) > 0 ) ) {
+      cosine_mode = true;
+    }
+  }
 
   // ------------------------------------------
   // 1. Extract or generate vgx_Vector_t object
@@ -703,7 +814,7 @@ static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim,
 
   // NULL vector
   if( py_data == NULL ) {
-    if( (vector = CALLABLE( simcontext )->NewInternalVector( simcontext, NULL, 1.0f, 0, true )) == NULL ) {
+    if( (vector = CALLABLE( simcontext )->NewInternalVector( simcontext, NULL, 1.0f, 0, cosine_mode, true )) == NULL ) {
       PyErr_SetString( PyExc_MemoryError, "Failed to allocate internal null-vector" );
       return -1;
     }
@@ -752,7 +863,7 @@ static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim,
     }
     // Data is (presumably) a python list or bytes
     else {
-      if( (vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_data, py_alpha, true )) == NULL ) {
+      if( (vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_data, py_alpha, cosine_mode, true )) == NULL ) {
         return -1;
       }
       pyvector->origin_is_ext = 1;
@@ -765,7 +876,7 @@ static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim,
   // ---------------------------------------------------
   BEGIN_PYVGX_THREADS {
     // Use the same ephemeral/persistent mode as the source
-    if( (translated = CALLABLE( simcontext )->TranslateVector( simcontext, vector, vector->metas.flags.eph, &CSTR__error )) == NULL ) {
+    if( (translated = CALLABLE( simcontext )->TranslateVector( simcontext, vector, cosine_mode, vector->metas.flags.eph, &CSTR__error )) == NULL ) {
       CALLABLE(vector)->Decref(vector);
     }
   } END_PYVGX_THREADS;
@@ -801,15 +912,16 @@ static int __init_PyVGX_Vector( PyVGX_Vector *pyvector, PyVGX_Similarity *pysim,
  */
 static int PyVGX_Vector__init( PyVGX_Vector *pyvector, PyObject *args, PyObject *kwds ) {
 
-  static char *kwlist[] = { "data", "alpha", NULL };
+  static char *kwlist[] = { "data", "alpha", "cosine_mode", NULL };
 
   PyObject *py_data = NULL;
   PyObject *py_alpha = NULL;
-  if( !PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &py_data, &py_alpha ) ) {
+  PyObject *py_cosine_mode = NULL;
+  if( !PyArg_ParseTupleAndKeywords(args, kwds, "|OOO", kwlist, &py_data, &py_alpha, &py_cosine_mode ) ) {
     return -1;
   }
 
-  return __init_PyVGX_Vector( pyvector, NULL, py_data, py_alpha );
+  return __init_PyVGX_Vector( pyvector, NULL, py_data, py_alpha, py_cosine_mode );
 }
 
 
@@ -825,14 +937,16 @@ static PyObject * PyVGX_Vector__vectorcall( PyObject *callable, PyObject *const 
   static const char *kwlist[] = {
     "data",
     "alpha",
+    "cosine_mode",
     NULL
   };
 
   typedef union u_vector_args {
-    PyObject *_args[2];
+    PyObject *_args[3];
     struct {
       PyObject *py_data;
       PyObject *py_alpha;
+      PyObject *py_cosine_mode;
     };
   } vector_args;
 
@@ -848,13 +962,13 @@ static PyObject * PyVGX_Vector__vectorcall( PyObject *callable, PyObject *const 
     }
   }
   
-  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 2, vcargs._args ) < 0 ) {
+  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 3, vcargs._args ) < 0 ) {
     return NULL;
   }
 
   PyObject *pyobj = __new_PyVGX_Vector();
   if( pyobj ) {
-    if( __init_PyVGX_Vector( (PyVGX_Vector*)pyobj, pysim, vcargs.py_data, vcargs.py_alpha ) < 0 ) {
+    if( __init_PyVGX_Vector( (PyVGX_Vector*)pyobj, pysim, vcargs.py_data, vcargs.py_alpha, vcargs.py_cosine_mode ) < 0 ) {
       PyVGX_Vector__dealloc( (PyVGX_Vector*)pyobj );
       return NULL;
     }
@@ -1159,6 +1273,7 @@ static PyGetSetDef PyVGX_Vector__getset[] = {
   {"internal",     (getter)__PyVGX_Vector__internal,     (setter)NULL,   "internal vector",    NULL },
   {"array",        (getter)__PyVGX_Vector__array,        (setter)NULL,   "internal vector array",    NULL },
   {"alpha",        (getter)__PyVGX_Vector__alpha,        (setter)NULL,   "internal vector scaling factor",    NULL },
+  {"cosine_mode",  (getter)__PyVGX_Vector__cosine_mode,  (setter)NULL,   "internal vector optimized for cosine",    NULL },
   {NULL}  /* Sentinel */
 };
 
@@ -1210,11 +1325,15 @@ static PyMethodDef PyVGX_Vector__methods[] = {
 
     {"AsDict",            (PyCFunction)PyVGX_Vector__AsDict,            METH_NOARGS,                  AsDict__doc__  },
     {"Fingerprint",       (PyCFunction)PyVGX_Vector__Fingerprint,       METH_VARARGS,                 Fingerprint__doc__  },
+    {"LSH64",             (PyCFunction)PyVGX_Vector__LSH64,             METH_NOARGS,                  LSH64__doc__  },
+    {"LSH32",             (PyCFunction)PyVGX_Vector__LSH32,             METH_NOARGS,                  LSH32__doc__  },
 
     {"Projections",       (PyCFunction)PyVGX_Vector__Projections,       METH_VARARGS | METH_KEYWORDS, Projections__doc__  },
 
     {"Cosine",            (PyCFunction)PyVGX_Vector__Cosine,            METH_O,                       Cosine__doc__  },
     {"EuclideanDistance", (PyCFunction)PyVGX_Vector__EuclideanDistance, METH_O,                       EuclideanDistance__doc__  },
+    
+    {"HammingDistance",   (PyCFunction)PyVGX_Vector__HammingDistance,   METH_O,                       HammingDistance__doc__  },
 
     {"Debug",             (PyCFunction)PyVGX_Vector__Debug,             METH_NOARGS,                  Debug__doc__  },
 

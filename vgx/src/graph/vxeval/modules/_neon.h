@@ -326,10 +326,7 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   
   // Cosine
   double cosine = dp * rnorm_a * rnorm_b;
-  if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-    cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-  }
-  return cosine;
+  return __scalar_cosine_clamp( cosine );
 }
 
 
@@ -346,8 +343,9 @@ static void __eval_neon_ecld_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
   float a_scale, b_scale;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
-  if( px ) {
+  bool invnorm; // If this gets set below then one or both vectors in cosine_mode, can't compute Euclidean distance
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len, &invnorm );
+  if( px && !invnorm ) {
     px->real = __neon_ecld_pi8( a_data, b_data, a_scale, b_scale, len );
   }
   else {
@@ -408,11 +406,19 @@ static void __eval_neon_rsqrtssq_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_neon_dp_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __neon_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    if( invnorm ) {
+      px->real = __neon_dp_pi8( a_data, b_data, len ); // dp of raw bytes for cosine_mode vectors
+    }
+    else {
+      double a_scale = a_meta;
+      double b_scale = b_meta;
+      px->real = __neon_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    }
   }
 }
 
@@ -429,11 +435,19 @@ static void __eval_neon_dp_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_neon_cos_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __neon_cos_pi8( a_data, b_data, len );
+    if( invnorm ) {
+      double a_invnorm = a_meta;
+      double b_invnorm = b_meta;
+      px->real = __neon_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+    }
+    else {
+      px->real = __neon_cos_pi8( a_data, b_data, len );
+    }
   }
 }
 

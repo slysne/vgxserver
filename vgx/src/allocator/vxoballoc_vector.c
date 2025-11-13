@@ -420,7 +420,7 @@ DLL_HIDDEN IVectorAllocator_t ivectoralloc = {
 *
 ***********************************************************************
 */
-static vgx_Vector_t *         __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, vector_type_t type, uint16_t length, bool ephemeral );
+static vgx_Vector_t *         __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, vector_type_t type, uint16_t length, bool cosine_mode, bool ephemeral );
 static vgx_Vector_t *         __vxoballoc_vector__null_vector( vgx_Similarity_t *simobj );
 static int                    __vxoballoc_vector__delete_vector( vgx_Vector_t *vector );
 static void                   __vxoballoc_vector__incref_dimensions_nolock( vgx_Vector_t *vector );
@@ -799,7 +799,7 @@ static cxmalloc_family_t * __vxoballoc_vector__new_external_euclidean_ephemeral_
  *
  ***********************************************************************
  */
-static vgx_Vector_t * __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, vector_type_t type, uint16_t length, bool ephemeral ) {
+static vgx_Vector_t * __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, vector_type_t type, uint16_t length, bool cosine_mode, bool ephemeral ) {
   vgx_Vector_t *vector = NULL;
   cxmalloc_family_t *valloc;
 
@@ -807,6 +807,7 @@ static vgx_Vector_t * __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, 
 
   vgx_VectorFlags_t flags = {0};
   flags.eph = ephemeral;
+  flags.cos = cosine_mode;
 
   if( type == VECTOR_TYPE_NULL ) {
     length = 0;
@@ -1343,7 +1344,8 @@ static vgx_Vector_t * __deserialize_feature_vector( vgx_Similarity_t *sim, const
       .ephemeral      = false,
       .type           = metas->type,
       .elements       = NULL,
-      .scale          = 1.0f,
+      .alpha          = 1.0f,
+      .cosmode        = false,
       .simcontext     = sim
     };
     if( (vector = COMLIB_OBJECT_NEW( vgx_Vector_t, NULL, &vargs )) == NULL ) {
@@ -1416,7 +1418,8 @@ static vgx_Vector_t * __deserialize_euclidean_vector( vgx_Similarity_t *sim, con
       .ephemeral      = false,
       .type           = metas->type,
       .elements       = NULL,
-      .scale          = 1.0f,
+      .alpha          = 1.0f,
+      .cosmode        = metas->flags.cos, // redundant to set here (we copy flags below), but be consistent
       .simcontext     = sim
     };
     if( (vector = COMLIB_OBJECT_NEW( vgx_Vector_t, NULL, &vargs )) == NULL ) {
@@ -1427,7 +1430,9 @@ static vgx_Vector_t * __deserialize_euclidean_vector( vgx_Similarity_t *sim, con
     BYTE *vector_elements = (BYTE*)ivectorobject.GetElements( vector );
     memcpy( vector_elements, p, metas->vlen );
 
-    // Scaling factor or Magnitude
+    // Euclidean vectors: Scaling factor
+    //                    or Inverse Magnitude (for cosine mode)
+    // Feature vevtors: Magnitude
     vector->metas.scalar.bits = metas->scalar.bits;
     // Flags
     vector->metas.flags = metas->flags;

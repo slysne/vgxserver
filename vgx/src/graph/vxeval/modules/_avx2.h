@@ -507,10 +507,7 @@ static double __avx2_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   double rnorm_b = __rsqrt_hadd_ps_avx2( &ssq_b );
   // Cosine
   double cosine = dp * rnorm_a * rnorm_b;
-  if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-    cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-  }
-  return cosine;
+  return __scalar_cosine_clamp( cosine );
 #else
   return __scalar_cos_pi8( A, B, len );
 #endif
@@ -531,13 +528,15 @@ static void __eval_avx2_ecld_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
   float a_scale, b_scale;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
-  if( px ) {
+  bool invnorm; // If this gets set below then one or both vectors in cosine_mode, can't compute Euclidean distance
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len, &invnorm );
+  if( px && !invnorm ) {
     px->real = __avx2_ecld_pi8( a_data, b_data, a_scale, b_scale, len );
   }
   else {
     SET_REAL_VALUE( self, INFINITY );
   }
+
 #else
   __eval_scalar_ecld_pi8( self );
 #endif
@@ -605,11 +604,19 @@ static void __eval_avx2_rsqrtssq_pi8( vgx_Evaluator_t *self ) {
 static void __eval_avx2_dp_pi8( vgx_Evaluator_t *self ) {
 #ifdef CXPLAT_ARCH_HASFMA
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __avx2_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    if( invnorm ) {
+      px->real = __avx2_dp_pi8( a_data, b_data, len ); // dp of raw bytes for cosine_mode vectors
+    }
+    else {
+      double a_scale = a_meta;
+      double b_scale = b_meta;
+      px->real = __avx2_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    }
   }
 #else
   __eval_scalar_dp_pi8( self );
@@ -630,12 +637,21 @@ static void __eval_avx2_dp_pi8( vgx_Evaluator_t *self ) {
 static void __eval_avx2_cos_pi8( vgx_Evaluator_t *self ) {
 #ifdef CXPLAT_ARCH_HASFMA
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __avx2_cos_pi8( a_data, b_data, len );
+    if( invnorm ) {
+      double a_invnorm = a_meta;
+      double b_invnorm = b_meta;
+      px->real = __avx2_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+    }
+    else {
+      px->real = __avx2_cos_pi8( a_data, b_data, len );
+    }
   }
+
 #else
   __eval_scalar_cos_pi8( self );
 #endif

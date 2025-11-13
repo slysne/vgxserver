@@ -55,15 +55,15 @@ static void Similarity_destructor( vgx_Similarity_t *self );
 
 static vgx_Similarity_t * Similarity_clone( vgx_Similarity_t *self );
 
-static vgx_Vector_t * Similarity_new_internal_vector( vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool ephemeral );
+static vgx_Vector_t * Similarity_new_internal_vector( vgx_Similarity_t *self, const void *elements, float alpha, uint16_t sz, bool cosine_mode, bool ephemeral );
 static vgx_Vector_t * Similarity_new_external_vector( vgx_Similarity_t *self, const void *elements, uint16_t sz, bool ephemeral );
-static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool ephemeral, CString_t **CSTR__error );
-static vgx_Vector_t * Similarity_new_empty_internal_vector( vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
+static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+static vgx_Vector_t * Similarity_new_empty_internal_vector( vgx_Similarity_t *self, uint16_t vlen, bool cosine_mode, bool ephemeral );
 static vgx_Vector_t * Similarity_new_empty_external_vector( vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
-static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx_Vector_t *source, bool ephemeral, CString_t **CSTR__error );
+static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx_Vector_t *source, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
 static vgx_Vector_t * Similarity_externalize_vector( vgx_Similarity_t *self, vgx_Vector_t *source, bool ephemeral );
-static vgx_Vector_t * Similarity_translate_vector( vgx_Similarity_t *self, vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error );
-static vgx_Vector_t * Similarity_new_centroid( vgx_Similarity_t *self, const vgx_Vector_t *vectors[], bool ephemeral );
+static vgx_Vector_t * Similarity_translate_vector( vgx_Similarity_t *self, vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+static vgx_Vector_t * Similarity_new_centroid( vgx_Similarity_t *self, const vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral );
 static int Similarity_hamming_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
 static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
 static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
@@ -191,10 +191,13 @@ static ext_vector_feature_t * __decode_vecelem_CS( vgx_Similarity_t *self, ext_v
  ***********************************************************************
  */
 static float __distance_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B ) {
+  if( A->metas.flags.cos || B->metas.flags.cos ) {
+    return -1.0f;
+  }
   const BYTE *a_bytes = ivectorobject.GetElements( (vgx_Vector_t*)A );
   const BYTE *b_bytes = ivectorobject.GetElements( (vgx_Vector_t*)B );
   int len = minimum_value( A->metas.vlen, B->metas.vlen );
-  float distance = (float)vxeval_bytearray_distance( a_bytes, b_bytes, A->metas.scalar.factor, B->metas.scalar.factor, len );
+  float distance = (float)vxeval_bytearray_distance( a_bytes, b_bytes, A->metas.scalar.alpha, B->metas.scalar.alpha, len );
   return distance;
 }
 
@@ -231,8 +234,16 @@ static float __cosine_internal_euclidean( const vgx_Vector_t *A, const vgx_Vecto
   const BYTE *b_bytes = ivectorobject.GetElements( (vgx_Vector_t*)B );
   int len = minimum_value( A->metas.vlen, B->metas.vlen );
   double ba_dp = vxeval_bytearray_dot_product( a_bytes, b_bytes, len );
-  double a_ba_rsqrt_ssq = vxeval_bytearray_rsqrt_ssq( a_bytes, len );
-  double b_ba_rsqrt_ssq = vxeval_bytearray_rsqrt_ssq( b_bytes, len );
+  double a_ba_rsqrt_ssq;
+  double b_ba_rsqrt_ssq;
+  if( A->metas.flags.cos && B->metas.flags.cos ) {
+    a_ba_rsqrt_ssq = A->metas.scalar.invnorm;
+    b_ba_rsqrt_ssq = B->metas.scalar.invnorm;
+  }
+  else {
+    a_ba_rsqrt_ssq = vxeval_bytearray_rsqrt_ssq( a_bytes, len );
+    b_ba_rsqrt_ssq = vxeval_bytearray_rsqrt_ssq( b_bytes, len );
+  }
   double cosine = ba_dp * a_ba_rsqrt_ssq * b_ba_rsqrt_ssq;
   if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
     cosine = (double)((cosine > 0.0) - (cosine < 0.0));
@@ -874,7 +885,7 @@ static vgx_Similarity_t * Similarity_constructor( const void *identifier, vgx_Si
     // Nothing was restored from disk - use defaults
     if( n == 0 ) {
       // [11] Null Vector
-      if( (self->nullvector = ivectorobject.New( self, VECTOR_TYPE_NULL, 0, false )) == NULL ) {
+      if( (self->nullvector = ivectorobject.New( self, VECTOR_TYPE_NULL, 0, false, false )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0xC10 );
       }
 
@@ -1012,7 +1023,7 @@ static vgx_Similarity_t * Similarity_clone( vgx_Similarity_t *self ) {
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_new_internal_vector( vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool ephemeral ) {
+static vgx_Vector_t * Similarity_new_internal_vector( vgx_Similarity_t *self, const void *elements, float alpha, uint16_t sz, bool cosine_mode, bool ephemeral ) {
   vector_type_t vtype;
   if( igraphfactory.EuclideanVectors() ) {
     vtype = VECTOR_TYPE_INTERNAL_EUCLIDEAN;
@@ -1029,7 +1040,8 @@ static vgx_Vector_t * Similarity_new_internal_vector( vgx_Similarity_t *self, co
     .ephemeral      = ephemeral,
     .type           = vtype,
     .elements       = elements,
-    .scale          = scale,
+    .alpha          = alpha,
+    .cosmode        = cosine_mode,
     .simcontext     = self
   };
 
@@ -1061,7 +1073,8 @@ static vgx_Vector_t * Similarity_new_external_vector( vgx_Similarity_t *self, co
     .ephemeral      = ephemeral,
     .type           = vtype,
     .elements       = elements,
-    .scale          = 1.0f,
+    .alpha          = 1.0f,
+    .cosmode        = false,
     .simcontext     = self
   };
 
@@ -1076,7 +1089,7 @@ static vgx_Vector_t * Similarity_new_external_vector( vgx_Similarity_t *self, co
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool ephemeral, CString_t **CSTR__error ) {
+static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool cosine_mode, bool ephemeral, CString_t **CSTR__error ) {
   vgx_Vector_t *vector = NULL;
   uint16_t vlen = sz;
   vector_type_t vtype;
@@ -1109,7 +1122,8 @@ static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx
     .ephemeral      = ephemeral,
     .type           = vtype,
     .elements       = NULL,
-    .scale          = 1.0f, // will compute below
+    .alpha          = 1.0f, // will compute below
+    .cosmode        = cosine_mode,
     .simcontext     = self
   };
 
@@ -1121,14 +1135,30 @@ static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx
       char *cursor = elements;
       const float *xelem = (float*)external_elements;
       const float *xend = xelem + sz; // end of supplied elements
-      double factor = __euclidean_scaling_factor( xelem, sz );
-      vector->metas.scalar.factor = (float)factor;
-      double inv_scale = factor > 0.0 ? 1.0/factor : 0.0;
 
       // Populate internal vector from external elements
-      while( xelem < xend ) {
-        *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+      double scale = __euclidean_scaling_factor( xelem, sz );
+      double inv_scale = scale > 0.0 ? 1.0/scale : 0.0;
+      if( cosine_mode ) {
+        int32_t ssq = 0;
+        while( xelem < xend ) {
+          int x = *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+          ssq += x*x;  
+        }
+        if( ssq > 0 ) {
+          vector->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+        }
+        else {
+          vector->metas.scalar.invnorm = FLT_MAX;
+        }
       }
+      else {
+        while( xelem < xend ) {
+          *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+        }
+        vector->metas.scalar.alpha = (float)scale;
+      }
+
       // Zero-fill trailing slots not supplied
       while( cursor < end ) {
         *cursor++ = 0;
@@ -1212,7 +1242,7 @@ static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_new_empty_internal_vector( vgx_Similarity_t *self, uint16_t vlen, bool ephemeral ) {
+static vgx_Vector_t * Similarity_new_empty_internal_vector( vgx_Similarity_t *self, uint16_t vlen, bool cosine_mode, bool ephemeral ) {
   vector_type_t vtype;
   bool euclidean = igraphfactory.EuclideanVectors();
   if( euclidean ) {
@@ -1230,7 +1260,8 @@ static vgx_Vector_t * Similarity_new_empty_internal_vector( vgx_Similarity_t *se
     .ephemeral      = ephemeral,
     .type           = vtype,
     .elements       = NULL,
-    .scale          = 1.0f,
+    .alpha          = 1.0f,
+    .cosmode        = cosine_mode,
     .simcontext     = self
   };
 
@@ -1263,7 +1294,8 @@ static vgx_Vector_t * Similarity_new_empty_external_vector( vgx_Similarity_t *se
     .ephemeral      = ephemeral,
     .type           = vtype,
     .elements       = NULL,
-    .scale          = 1.0f,
+    .alpha          = 1.0f,
+    .cosmode        = false,
     .simcontext     = self
   };
 
@@ -1277,7 +1309,7 @@ static vgx_Vector_t * Similarity_new_empty_external_vector( vgx_Similarity_t *se
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx_Vector_t *source, bool ephemeral, CString_t **CSTR__error ) {
+static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx_Vector_t *source, bool cosine_mode, bool ephemeral, CString_t **CSTR__error ) {
   if( CALLABLE(source)->IsExternal(source) ) {
     vector_type_t vtype;
     bool euclidean = igraphfactory.EuclideanVectors();
@@ -1300,7 +1332,8 @@ static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx
       .ephemeral      = ephemeral,
       .type           = vtype,
       .elements       = NULL,
-      .scale          = 1.0f, // Will compute below
+      .alpha          = 1.0f, // Will compute below
+      .cosmode        = cosine_mode,
       .simcontext     = self
     };
 
@@ -1311,12 +1344,27 @@ static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx
         float *xelem = CALLABLE( source )->Elements( source );
         float *ext_end = xelem + source->metas.vlen;
 
-        double factor = __euclidean_scaling_factor( xelem, source->metas.vlen );
-        internal_vector->metas.scalar.factor = (float)factor;
-        double inv_scale = factor > 0.0 ? 1.0/factor : 0.0;
+        double scale = __euclidean_scaling_factor( xelem, source->metas.vlen );
+        double inv_scale = scale > 0.0 ? 1.0/scale : 0.0;
 
-        while( xelem < ext_end ) {
-          *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+        if( cosine_mode ) {
+          int32_t ssq = 0;
+          while( xelem < ext_end ) {
+            int x = *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+            ssq += x*x;
+          }
+          if( ssq > 0 ) {
+            internal_vector->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+          }
+          else {
+            internal_vector->metas.scalar.invnorm = FLT_MAX;
+          }
+        }
+        else {
+          while( xelem < ext_end ) {
+            *cursor++ = __encode_float_to_char( *xelem++, inv_scale );
+          }
+          internal_vector->metas.scalar.alpha = (float)scale;
         }
 
         internal_vector->metas.flags.pop = 1;
@@ -1414,7 +1462,8 @@ static vgx_Vector_t * Similarity_externalize_vector( vgx_Similarity_t *self, vgx
       .ephemeral      = ephemeral,
       .type           = vtype,
       .elements       = NULL,
-      .scale          = 1.0f,
+      .alpha          = 1.0f,
+      .cosmode        = false,
       .simcontext     = self
     };
 
@@ -1428,12 +1477,12 @@ static vgx_Vector_t * Similarity_externalize_vector( vgx_Similarity_t *self, vgx
       const BYTE *elem = CALLABLE( source )->Elements( source );
       const char *src = (char*)elem; 
       const char *end = src + source->metas.vlen;
-      double factor = source->metas.scalar.factor; 
+      double scale = source->metas.flags.cos ? 1.0 : source->metas.scalar.alpha;
       while( src < end ) {
-        *ext_elem++ = __decode_char_to_float( *src++, factor );
+        *ext_elem++ = __decode_char_to_float( *src++, scale );
       }
       external_vector->metas.flags.pop = 1;
-      external_vector->metas.scalar.norm = (float)(sqrt( vxeval_bytearray_sum_squares( elem, source->metas.vlen ) ) * factor);
+      external_vector->metas.scalar.norm = (float)(sqrt( vxeval_bytearray_sum_squares( elem, source->metas.vlen ) ) * scale);
 
       if( source->fp != 0 ) {
         external_vector->fp = source->fp;
@@ -1483,9 +1532,9 @@ static vgx_Vector_t * Similarity_externalize_vector( vgx_Similarity_t *self, vgx
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_translate_vector( vgx_Similarity_t *self, vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error ) {
+static vgx_Vector_t * Similarity_translate_vector( vgx_Similarity_t *self, vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error ) {
   if( (src->metas.type & __VECTOR__MASK_EXTERNAL) ) {
-    return Similarity_internalize_vector( self, src, ephemeral, CSTR__error );
+    return Similarity_internalize_vector( self, src, cosine_mode, ephemeral, CSTR__error );
   }
   else {
     return Similarity_externalize_vector( self, src, ephemeral );
@@ -1879,7 +1928,7 @@ static vgx_Vector_t * Similarity_vector_arithmetic( vgx_Similarity_t *self, cons
       }
       return CALLABLE(A)->OwnOrClone(A, true);
     }
-    __set_error_string( CSTR__error, "incompatible vectors" ); 
+    __format_error_string( CSTR__error, "incompatible vectors (flags: A=%02X B=%02X)", A->metas.flags.bits, B->metas.flags.bits ); 
     return NULL;
   }
 
@@ -1893,9 +1942,7 @@ static vgx_Vector_t * Similarity_vector_arithmetic( vgx_Similarity_t *self, cons
   else {
     const char *a = CALLABLE(A)->Elements(A);
     const char *b = CALLABLE(B)->Elements(B);
-
-    float fA = A->metas.scalar.factor;
-    float fB = B->metas.scalar.factor;
+    bool cosine_mode = A->metas.flags.cos && B->metas.flags.cos;
 
     float *aggr = malloc( sizeof(float) * A->metas.vlen );
     if( aggr ) {
@@ -1903,18 +1950,34 @@ static vgx_Vector_t * Similarity_vector_arithmetic( vgx_Similarity_t *self, cons
       const char *pb = b;
       float *pf = aggr;
       float *end = aggr + A->metas.vlen;
-      if( subtract ) {
-        while( pf < end ) {
-          *pf++ = *pa++ * fA - *pb++ * fB;
+      if( cosine_mode ) {
+        if( subtract ) {
+          while( pf < end ) {
+            *pf++ = *pa++ - *pb++;
+          }
+        }
+        else {
+          while( pf < end ) {
+            *pf++ = *pa++ + *pb++;
+          }
         }
       }
       else {
-        while( pf < end ) {
-          *pf++ = *pa++ * fA + *pb++ * fB;
+        float fA = A->metas.flags.cos ? 1.0f : A->metas.scalar.alpha;
+        float fB = B->metas.flags.cos ? 1.0f : B->metas.scalar.alpha;
+        if( subtract ) {
+          while( pf < end ) {
+            *pf++ = *pa++ * fA - *pb++ * fB;
+          }
+        }
+        else {
+          while( pf < end ) {
+            *pf++ = *pa++ * fA + *pb++ * fB;
+          }
         }
       }
 
-      vector = CALLABLE(self)->NewInternalVectorFromExternal( self, aggr, A->metas.vlen, true, NULL );
+      vector = CALLABLE(self)->NewInternalVectorFromExternal( self, aggr, A->metas.vlen, cosine_mode, true, NULL );
 
       free( aggr );
     }
@@ -1939,9 +2002,19 @@ static vgx_Vector_t * Similarity_vector_scalar_multiply( vgx_Similarity_t *self,
     __set_error_string( CSTR__error, "must be Euclidean vector" ); 
     return NULL;
   }
-
+  
   if( A->metas.flags.ext ) {
   }
+  else {
+    vector = CALLABLE(vector)->Clone(vector, true);
+    if( A->metas.flags.cos ) {
+      vector->metas.scalar.alpha /= factor;
+    }
+    else {
+      vector->metas.scalar.alpha *= factor;
+    }
+  }
+  /*
   else {
     const char *a = CALLABLE(A)->Elements(A);
 
@@ -1962,6 +2035,7 @@ static vgx_Vector_t * Similarity_vector_scalar_multiply( vgx_Similarity_t *self,
     }
 
   }
+  */
 
   return vector;
 
@@ -1984,7 +2058,7 @@ static double Similarity_vector_dot_product( vgx_Similarity_t *self, const vgx_V
     if( A->metas.flags.compat_nul.bits == B->metas.flags.compat_nul.bits ) { // <- one or both null vector since compat bits were different
       return 0.0;
     }
-    __set_error_string( CSTR__error, "incompatible vectors" ); 
+    __format_error_string( CSTR__error, "incompatible vectors (flags: A=%02X B=%02X)", A->metas.flags.bits, B->metas.flags.bits ); 
     return NAN;
   }
 
@@ -2140,12 +2214,13 @@ static int Similarity_cmp_vectors( vgx_Similarity_t *self, const vgx_Vector_t *A
  *
  ***********************************************************************
  */
-static vgx_Vector_t * Similarity_new_centroid( vgx_Similarity_t *self, const vgx_Vector_t *vectors[], bool ephemeral ) {
+static vgx_Vector_t * Similarity_new_centroid( vgx_Similarity_t *self, const vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral ) {
   vgx_Vector_t *centroid = NULL;          // the centroid 
   vgx_Vector_constructor_args_t cargs = {0};
 
   XTRY {
     cargs.ephemeral = ephemeral;
+    cargs.cosmode = cosine_mode;
     cargs.simcontext = self;
     if( igraphfactory.EuclideanVectors() ) {
       cargs.type = VECTOR_TYPE_CENTROID_EUCLIDEAN;

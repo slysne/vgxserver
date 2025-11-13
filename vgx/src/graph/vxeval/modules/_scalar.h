@@ -142,6 +142,19 @@ static double __scalar_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
 }
 
 
+/*******************************************************************//**
+ * Ensure cosine in range [-1.0 - 1.0]
+ ***********************************************************************
+ */
+__inline static double __scalar_cosine_clamp( double value ) {
+  if( fabs( value ) > 1.0 || isnan( value ) ) {
+    return (double)((value > 0.0) - (value < 0.0));
+  }
+  else {
+    return value;
+  }
+}
+
 
 /*******************************************************************//**
  * Cosine( A, B )
@@ -158,10 +171,7 @@ static double __scalar_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   double ssqB = __scalar_ssq_pi8( B, len );
   double m = sqrt( ssqA * ssqB );
   double cosine = m > 0.0 ? dp / m : 0.0;
-  if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-    cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-  }
-  return cosine;
+  return __scalar_cosine_clamp( cosine );
 }
 
 
@@ -176,8 +186,9 @@ static void __eval_scalar_ecld_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
   float a_scale, b_scale;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
-  if( px ) {
+  bool invnorm; // If this gets set below then one or both vectors in cosine_mode, can't compute Euclidean distance
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len, &invnorm );
+  if( px && !invnorm ) {
     px->real = __scalar_ecld_pi8( a_data, b_data, a_scale, b_scale, len );
   }
   else {
@@ -234,11 +245,19 @@ static void __eval_scalar_rsqrtssq_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_scalar_dp_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __scalar_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    if( invnorm ) {
+      px->real = __scalar_dp_pi8( a_data, b_data, len ); // dp of raw bytes for cosine_mode vectors
+    }
+    else {
+      double a_scale = a_meta;
+      double b_scale = b_meta;
+      px->real = __scalar_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    }
   }
 }
 
@@ -255,11 +274,19 @@ static void __eval_scalar_dp_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_scalar_cos_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __scalar_cos_pi8( a_data, b_data, len );
+    if( invnorm ) {
+      double a_invnorm = a_meta;
+      double b_invnorm = b_meta;
+      px->real = __scalar_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+    }
+    else {
+      px->real = __scalar_cos_pi8( a_data, b_data, len );
+    }
   }
 }
 

@@ -475,7 +475,7 @@ static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, P
 
   vgx_Vector_t *vector = NULL;
   if( py_vector ) {
-    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, true )) == NULL ) {
+    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, false, true )) == NULL ) {
       return NULL;
     }
   }

@@ -54,7 +54,7 @@ static framehash_cell_t * __new_aggregation_mode_keymap( framehash_dynamic_t *dy
 static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, vgx_Vector_t *probe_vector );
 static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition_ex( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, PyObject *py_rank_vector_object, vgx_VertexCondition_t *vertex_condition );
 static vgx_ExpressEvalMemory_t * _ipyvgx_parser__new_express_eval_memory( vgx_Graph_t *graph, PyObject *py_object );
-static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool ephemeral );
+static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool cosine_mode, bool ephemeral );
 static vgx_StringList_t * _ipyvgx_parser__new_string_list_from_vertex_pylist( PyObject *py_list );
 static void _ipyvgx_parser__delete_string_list( CString_t ***list );
 static framehash_cell_t * __new_vertex_condition_keymap( framehash_dynamic_t *dyn );
@@ -1803,14 +1803,14 @@ static int __set_probe_condition__similarity( PyObject *py_similarity, vgx_Verte
             // When the probe vector is a NULL-vector object (not a NULL pointer!) it is interpreted later to fall back to the anchor vertex vector,
             // or for multi-neighborhood traversal the node's vector whose neighborhood is about to be traversed.
             vgx_Similarity_t *simcontext = context->graph->similarity;
-            similarity_condition->probevector = CALLABLE( simcontext )->NewInternalVector( simcontext, NULL, 1.0f, 0, true );
+            similarity_condition->probevector = CALLABLE( simcontext )->NewInternalVector( simcontext, NULL, 1.0f, 0, false, true );
           }
           else {
             PyErr_Format( PyVGX_QueryError, "invalid vector: '%s'", str );
             THROW_SILENT( CXLIB_ERR_API, 0x794 );
           }
         }
-        else if( (similarity_condition->probevector = iPyVGXParser.InternalVectorFromPyObject( context->graph->similarity, py_value, NULL, true )) == NULL ) { 
+        else if( (similarity_condition->probevector = iPyVGXParser.InternalVectorFromPyObject( context->graph->similarity, py_value, NULL, false, true )) == NULL ) { 
           THROW_SILENT( CXLIB_ERR_API, 0x795 );
         }
       }
@@ -2931,7 +2931,8 @@ static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition_ex( vgx_Gr
 
   // Create an internal vector from the supplied python object (list or other pyvector)
   if( py_rank_vector_object ) {
-    if( (rank_vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_rank_vector_object, NULL, true )) == NULL ) {
+    // Note: cosine_mode defaults to false. Use Vector objects to control cosine_mode
+    if( (rank_vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_rank_vector_object, NULL, false, true )) == NULL ) {
       return NULL;
     }
   }
@@ -3041,7 +3042,7 @@ static vgx_ExpressEvalMemory_t * _ipyvgx_parser__new_express_eval_memory( vgx_Gr
  *
  ******************************************************************************
  */
-static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool ephemeral ) {
+static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool cosine_mode, bool ephemeral ) {
   vgx_Vector_t *vector = NULL;
 
   if( py_object != NULL ) {
@@ -3124,7 +3125,7 @@ static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similar
       }
       BEGIN_PYVGX_THREADS {
         // Either ephemeral or persistent vector
-        vector = CALLABLE( simcontext )->NewInternalVector( simcontext, data, (float)alpha, (uint16_t)sz, ephemeral );
+        vector = CALLABLE( simcontext )->NewInternalVector( simcontext, data, (float)alpha, (uint16_t)sz, cosine_mode, ephemeral );
       } END_PYVGX_THREADS;
       if( vector == NULL ) {
         PyVGXError_SetString( PyExc_Exception, "Unable to create new internal vector from bytes" );
@@ -3159,7 +3160,7 @@ static vgx_Vector_t * _ipyvgx_parser__internal_vector_from_pyobject( vgx_Similar
       if( vlen >= 0 ) {
         BEGIN_PYVGX_THREADS {
           // Either ephemeral or persistent vector
-          vector = CALLABLE( simcontext )->NewInternalVectorFromExternal( simcontext, external_elements, (uint16_t)vlen, ephemeral, &CSTR__error );
+          vector = CALLABLE( simcontext )->NewInternalVectorFromExternal( simcontext, external_elements, (uint16_t)vlen, cosine_mode, ephemeral, &CSTR__error );
         } END_PYVGX_THREADS;
         if( vector == NULL ) {
           if( CSTR__error ) {
