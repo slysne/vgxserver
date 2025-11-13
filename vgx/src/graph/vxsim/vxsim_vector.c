@@ -262,7 +262,7 @@ static int __populate_euclidean_vector( vgx_Vector_t *self, vgx_Vector_construct
         ssq += x*x;
         *dest++ = *src++;
       }
-      self->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+      self->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
       self->metas.flags.cos = 1;
     }
     else {
@@ -497,7 +497,7 @@ static int __set_euclidean_vector( vgx_Vector_t *self, int nelem, float scale, c
         *dest++ = *src++;
       }
       if( ssq > 0 ) {
-        self->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+        self->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
       }
       else {
         self->metas.scalar.invnorm = FLT_MAX;

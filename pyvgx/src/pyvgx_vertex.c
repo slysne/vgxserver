@@ -1424,7 +1424,7 @@ static PyObject * PyVGX_Vertex__ArcLSH( PyVGX_Vertex *pyvertex, PyObject *py_lsh
  ******************************************************************************
  */
 PyDoc_STRVAR( SetVector__doc__,
-  "SetVector( [data [,alpha]] ) -> None\n"
+  "SetVector( [data[, alpha[, cosine_mode]]] ) -> None\n"
 );
 
 /**************************************************************************//**
@@ -1446,7 +1446,7 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
   };
 
   typedef union u_vector_args {
-    PyObject *_args[2];
+    PyObject *_args[3];
     struct {
       PyObject *py_data;
       PyObject *py_alpha;

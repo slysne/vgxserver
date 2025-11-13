@@ -189,16 +189,12 @@ static __msgtrace * __new_msgtrace( void ) {
 int cxlib_trace_reset( void ) {
   int ret = 0;
 
-  CS_LOCK *pcs = &g_context->lock;
-
-
   SYNCHRONIZE_ON( g_context->lock ) {
     __delete_msgtrace( &g_context->msgtrace );
     if( (g_context->msgtrace = __new_msgtrace()) == NULL ) {
       ret = -1;
     }
   } RELEASE;
-
 
   return ret;
 }

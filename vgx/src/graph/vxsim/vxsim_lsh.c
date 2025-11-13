@@ -552,10 +552,8 @@ static uint32_t __fp32_bytes_eucl( const BYTE *bytes, int sz, int64_t seed ) {
   // Set bits in lsh according to A +/-.
   p = A;
   for( int n=0; n<32; ++n ) {
-    int64_t i = *p++;
-    int64_t y = i >> 63; // 0xffffffffffffffff if neg
-    int64_t u = (i ^ y) - y; // abs
-    lsh = (lsh << 1) | (uint64_t)(y&1);
+    int64_t y = *p++ >> 63; // 0xffffffffffffffff if neg
+    lsh = (lsh << 1) | (uint32_t)(y&1);
   }
   return lsh;
 }

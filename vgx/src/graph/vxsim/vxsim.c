@@ -1146,7 +1146,7 @@ static vgx_Vector_t * Similarity_new_internal_vector_from_external_elements( vgx
           ssq += x*x;  
         }
         if( ssq > 0 ) {
-          vector->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+          vector->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
         }
         else {
           vector->metas.scalar.invnorm = FLT_MAX;
@@ -1354,7 +1354,7 @@ static vgx_Vector_t * Similarity_internalize_vector( vgx_Similarity_t *self, vgx
             ssq += x*x;
           }
           if( ssq > 0 ) {
-            internal_vector->metas.scalar.invnorm = 1.0 / sqrt( ssq );
+            internal_vector->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
           }
           else {
             internal_vector->metas.scalar.invnorm = FLT_MAX;
@@ -1953,12 +1953,12 @@ static vgx_Vector_t * Similarity_vector_arithmetic( vgx_Similarity_t *self, cons
       if( cosine_mode ) {
         if( subtract ) {
           while( pf < end ) {
-            *pf++ = *pa++ - *pb++;
+            *pf++ = (float)*pa++ - (float)*pb++;
           }
         }
         else {
           while( pf < end ) {
-            *pf++ = *pa++ + *pb++;
+            *pf++ = (float)*pa++ + (float)*pb++;
           }
         }
       }
@@ -2006,12 +2006,14 @@ static vgx_Vector_t * Similarity_vector_scalar_multiply( vgx_Similarity_t *self,
   if( A->metas.flags.ext ) {
   }
   else {
-    vector = CALLABLE(vector)->Clone(vector, true);
-    if( A->metas.flags.cos ) {
-      vector->metas.scalar.alpha /= factor;
-    }
-    else {
-      vector->metas.scalar.alpha *= factor;
+    vector = CALLABLE(A)->Clone(A, true);
+    if( vector ) {
+      if( A->metas.flags.cos ) {
+        vector->metas.scalar.invnorm /= (float)factor;
+      }
+      else {
+        vector->metas.scalar.alpha *= (float)factor;
+      }
     }
   }
   /*

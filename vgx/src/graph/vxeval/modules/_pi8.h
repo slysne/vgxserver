@@ -96,7 +96,6 @@ static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BY
   px->real = 0.0;
 
   int32_t sz_a, sz_b;
-  bool cosine_mode = false;
 
   switch( PAIR_TYPE( &A, &B ) ) {
   case STACK_PAIR_TYPE_XVEC_YVEC:
