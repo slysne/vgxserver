@@ -584,8 +584,13 @@ static vgx_RecursionQueue_t * __new_recursion_queue( int64_t size ) {
 static int __get_recursion_heap_size( const vgx_recursion_config_t *recursion, int64_t hits ) {
   #define RECURSION_HEAP_SIZE_MAX 1048576 
   int64_t heap_size;
+
+  // Heap size already provided
+  if( recursion->heap.size > 0 ) {
+    heap_size = recursion->heap.size;
+  }
   // Auto select heap size based on requested hit count
-  if( recursion->heap_multiplier <= 0 ) {
+  else if( recursion->heap.multiplier <= 0 ) {
     if( hits < 0 ) {
       heap_size = RECURSION_HEAP_SIZE_MAX;
     }
@@ -603,12 +608,15 @@ static int __get_recursion_heap_size( const vgx_recursion_config_t *recursion, i
     }
   }
   else {
-    heap_size = recursion->heap_multiplier * hits;
-    if( heap_size > RECURSION_HEAP_SIZE_MAX ) {
-      heap_size = RECURSION_HEAP_SIZE_MAX;
-    } 
+    heap_size = recursion->heap.multiplier * hits;
   }
-  return heap_size;
+
+  // Clamp at max
+  if( heap_size > RECURSION_HEAP_SIZE_MAX ) {
+    heap_size = RECURSION_HEAP_SIZE_MAX;
+  } 
+
+  return (int)heap_size;
 }
 
 

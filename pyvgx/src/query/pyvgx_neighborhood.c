@@ -202,6 +202,10 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
  ******************************************************************************
  */
 static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
+#define RECURSION_HEAP_SIZE_MAX (1<<20)
+#define RECURSION_HEAP_MULT_MAX (1<<10)
+#define RECURSION_PRUNE_OFFSET_MIN -1.0f
+#define RECURSION_PRUNE_OFFSET_MAX 1.0f
   int ret = 0;
   XTRY {
     // Sorting required
@@ -218,7 +222,8 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
 
     // Defaults
     param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
-    param->recursion.heap_multiplier = 0; // auto
+    param->recursion.heap.size = 0;       // auto
+    param->recursion.heap.multiplier = 0; // auto
     param->recursion.prune_offset = 0.0f;
 
     // Simple auto-config
@@ -227,9 +232,9 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     }
     // Auto-config heap size as multiplier of hits
     else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
-      param->recursion.heap_multiplier = PyLong_AsLong( py_recursion );
+      param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
     }
-    // { "mode": "bfs_progressive", "heap_multiplier": 4, "prune_offset": -0.01 }
+    // { "mode": "bfs_progressive", "heap_size": 256, "prune_offset": -0.01 }
     else if( PyDict_Check( py_recursion) ) {
       Py_ssize_t pos = 0;
       PyObject *py_key, *py_value;
@@ -254,13 +259,21 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
             THROW_SILENT( CXLIB_ERR_API, 0x005 );
           }
         }
+        // "heap_size": 256
+        else if( CharsEqualsConst( key, "heap_size" )) {
+          if( !PyLong_Check(py_value) ) {
+            PyErr_Format( PyExc_TypeError, "recursive search invalid heap_size: %R", py_value );
+            THROW_SILENT( CXLIB_ERR_API, 0x006 );
+          }
+          param->recursion.heap.size = PyLong_AsLong(py_value);
+        }
         // "heap_multiplier": 4
         else if( CharsEqualsConst( key, "heap_multiplier" )) {
           if( !PyLong_Check(py_value) ) {
             PyErr_Format( PyExc_TypeError, "recursive search invalid heap_multiplier: %R", py_value );
             THROW_SILENT( CXLIB_ERR_API, 0x007 );
           }
-          param->recursion.heap_multiplier = PyLong_AsLong(py_value);
+          param->recursion.heap.multiplier = PyLong_AsLong(py_value);
         }
         // "prune_offset": -0.01
         else if( CharsEqualsConst( key, "prune_offset" )) {
@@ -283,16 +296,30 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x00A );
     }
           
+    if( param->recursion.heap.size > 0 && param->recursion.heap.multiplier > 0 ) {
+      PyErr_Format( PyExc_TypeError, "recursive search heap_size and heap_multiplier cannot be specified at the same time" );
+      THROW_SILENT( CXLIB_ERR_API, 0x00B );
+    }
+
+    // Validate heap size
+    if( param->recursion.heap.size > RECURSION_HEAP_SIZE_MAX ) {
+      PyErr_Format( PyExc_TypeError, "recursive search heap_size out of range, must be <= %d", RECURSION_HEAP_SIZE_MAX );
+      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+    }
+
     // Validate heap multiplier
-    if( param->recursion.heap_multiplier > 1000 ) {
-      PyErr_Format( PyExc_TypeError, "recursive search heap_multiplier out of range, must be <= 1000" );
-      THROW_SILENT( CXLIB_ERR_API, 0x007 );
+    if( param->recursion.heap.multiplier > RECURSION_HEAP_MULT_MAX ) {
+      PyErr_Format( PyExc_TypeError, "recursive search heap_multiplier out of range, must be <= %d", RECURSION_HEAP_MULT_MAX );
+      THROW_SILENT( CXLIB_ERR_API, 0x00D );
     }
 
     // Validate prune offset
-    if( param->recursion.prune_offset < -1.0f || param->recursion.prune_offset > 1.0f ) {
-      PyErr_Format( PyExc_ValueError, "recursive search prune_offset out of range, must be in [-1.0, 1.0]" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+    if( param->recursion.prune_offset < RECURSION_PRUNE_OFFSET_MIN || param->recursion.prune_offset > RECURSION_PRUNE_OFFSET_MAX ) {
+      #define PRUNE_ERR_PREFIX "recursive search prune_offset out of range"
+      CString_t *CSTR__err = CStringNewFormat( PRUNE_ERR_PREFIX ", must be in [%f, %f]", RECURSION_PRUNE_OFFSET_MIN, RECURSION_PRUNE_OFFSET_MAX );
+      PyErr_SetString( PyExc_ValueError, CStringValueDefault( CSTR__err, PRUNE_ERR_PREFIX ) );
+      iString.Discard( &CSTR__err );
+      THROW_SILENT( CXLIB_ERR_API, 0x00E );
     }
 
   }

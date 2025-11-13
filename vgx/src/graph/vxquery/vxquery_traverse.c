@@ -344,11 +344,15 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   
   vgx_CollectorItem_t queued;
   while( CALLABLE(Q)->Next(Q, &queued.item) ) {
+
+    // Adjust queue pruning cutoff
+    queued.sort.flt64.value += search->recursion.prune_offset;
+
     // Require items from the queue to outrank the lowest scoring item on the heap
     if( heap->_cmp( &difficulty.item, &queued.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
-
       // Perform new search around next anchor
-      if( __is_arcfilter_error((match = iarcvector.GetArcs( &queued.headref->vertex->outarcs, search->probe ))) ) {
+      vgx_Vertex_t *next = queued.headref->vertex;
+      if( __is_arcfilter_error((match = iarcvector.GetArcs( &next->outarcs, search->probe ))) ) {
         return VGX_ARC_FILTER_MATCH_ERROR;
       }
 
@@ -400,6 +404,7 @@ static int _vxquery_traverse__traverse_neighbor_arcs_OPEN_RO( const vgx_Vertex_t
       }
       else {
         // ???
+        match = VGX_ARC_FILTER_MATCH_ERROR;
       }
     }
 

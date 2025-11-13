@@ -4010,7 +4010,10 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
     .collector_mode             = collector_mode,
     .recursion = {
       .mode                     = recursion_config->mode,
-      .heap_multiplier          = recursion_config->heap_multiplier,
+      .heap = {
+        .size                   = recursion_config->heap.size,
+        .multiplier             = recursion_config->heap.multiplier
+      },
       .prune_offset             = recursion_config->prune_offset
     }
   };
