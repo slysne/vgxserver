@@ -318,11 +318,22 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   // Arguments implied, expected to be:
   // R1: Probe vector
   // R2: Score threshold
-  // R3: Will receive vector similarity score
+  // R3: Will receive early termination exit location
   // R4: Score threshold (>0) above which hamming filter kicks in
+
+  // Get argument objects from memory locations
+  vgx_ExpressEvalMemory_t *mem = ctx->memory;
+  uint64_t mask = mem->mask;
+  vgx_EvalStackItem_t *data = mem->data;
+  vgx_EvalStackItem_t *pprobe = &data[ mask & ANNCOLLECT_R1 ];
+  vgx_EvalStackItem_t *pthres = &data[ mask & ANNCOLLECT_R2 ];
+  vgx_EvalStackItem_t *pexitat = &data[ mask & ANNCOLLECT_R3 ];
+  vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
+
 
   // Must have head vertex
   if( head == NULL ) {
+    SET_INTEGER_PITEM_VALUE( pexitat, 0 );
     STACK_RETURN_INTEGER( self, 0 );
   }
    
@@ -340,23 +351,17 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   //     SP^
   vgx_EvalStackItem_t *pvisited = POP_PITEM( self ); // <- x
   if( pvisited->integer != 0 ) {
+    SET_INTEGER_PITEM_VALUE( pexitat, 1 );
     STACK_RETURN_INTEGER( self, 0 );
   }
 
-  // Get argument objects from memory locations
-  vgx_ExpressEvalMemory_t *mem = ctx->memory;
-  uint64_t mask = mem->mask;
-  vgx_EvalStackItem_t *data = mem->data;
-  vgx_EvalStackItem_t *pprobe = &data[ mask & ANNCOLLECT_R1 ];
-  vgx_EvalStackItem_t *pthres = &data[ mask & ANNCOLLECT_R2 ];
-  vgx_EvalStackItem_t *pscore = &data[ mask & ANNCOLLECT_R3 ];
-  vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
   
   // Must have vector
   vgx_Vector_t *target = head->vector;
 
   // Verify vectors exist
   if( target == 0 || pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
+    SET_INTEGER_PITEM_VALUE( pexitat, 2 );
     STACK_RETURN_INTEGER( self, 0 );
   }
 
@@ -381,6 +386,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     // LSH Hamming distance filter progressively stricter with higher thresholds
     if( threshold > phamflt->real && threshold <= 2.0 ) {
       if( hamdist64( lshA, lshB ) > cos_to_hamdist[ (int)((threshold-1.0) * 127) ] ) {
+        SET_INTEGER_PITEM_VALUE( pexitat, 3 );
         STACK_RETURN_INTEGER( self, 0 );
       }
     }
@@ -406,6 +412,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
 
   // Require sufficient cosine score
   if( sim <= threshold ) {
+    SET_INTEGER_PITEM_VALUE( pexitat, 4 );
     STACK_RETURN_INTEGER( self, 0 ); // not collected
   }
 
@@ -415,14 +422,15 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   //       SP^
   __maps__xsetadd( self, vkey, ventry, MAPS_KEYMODE__VERTEX );
 
-  // Write sim score to memory location
-  SET_REAL_PITEM_VALUE( pscore, sim );
-
   // Collect
   // [ . . . m]
   //         ^-------- Already 1 from above (assume collect successful below)
   //       SP^
-  __collect( self, pscore );
+  vgx_EvalStackItem_t score = {
+    .type = STACK_ITEM_TYPE_REAL,
+    .real = sim,
+  };
+  __collect( self, &score );
   
   // Refresh running threshold
   if( ctx->collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
@@ -432,6 +440,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
   }
 
+  SET_INTEGER_PITEM_VALUE( pexitat, 5 );
 }
 
 
