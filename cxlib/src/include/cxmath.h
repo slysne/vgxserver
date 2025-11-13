@@ -215,6 +215,8 @@ double randfloat( void );
 int32_t hash32( const unsigned char * data, int32_t len );
 int32_t strhash32( const unsigned char * data );
 uint64_t ihash64( uint64_t n );
+uint64_t ihash64v2( uint64_t n );
+uint64_t ihash64v3( uint64_t n );
 int64_t hash64( const unsigned char * data, int64_t len );
 objectid_t hash128( const unsigned char *data, int64_t len );
 int64_t strhash64( const unsigned char *data );

@@ -269,7 +269,7 @@ __inline uint64_t ihash64( uint64_t n ) {
  *
  ***********************************************************************
  */
-__inline static uint64_t ihash64v2(uint64_t n) {
+__inline uint64_t ihash64v2(uint64_t n) {
   uint64_t h = n ^ __M1;
   uint64_t a = n * __M2;
   a ^= ROTR(a,47);
@@ -290,7 +290,7 @@ __inline static uint64_t ihash64v2(uint64_t n) {
  *
  ***********************************************************************
  */
-__inline static uint64_t ihash64v3(uint64_t n) {
+__inline uint64_t ihash64v3(uint64_t n) {
   uint64_t h = n ^ __N1;
   uint64_t a = n * __N2;
   a ^= ROTL(a,41);
