@@ -484,7 +484,7 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
 
   bool recursive = false;
-  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && ((vgx_NeighborhoodQuery_t*)query)->recursion_mode == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && ((vgx_NeighborhoodQuery_t*)query)->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
     recursive = true;
   }
 
@@ -576,6 +576,43 @@ static vgx_RecursionQueue_t * __new_recursion_queue( int64_t size ) {
 
 
 
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int __get_recursion_heap_size( const vgx_recursion_config_t *recursion, int64_t hits ) {
+  #define RECURSION_HEAP_SIZE_MAX 1048576 
+  int64_t heap_size;
+  // Auto select heap size based on requested hit count
+  if( recursion->heap_multiplier <= 0 ) {
+    if( hits < 0 ) {
+      heap_size = RECURSION_HEAP_SIZE_MAX;
+    }
+    else if( hits <= 64 ) {
+      heap_size = 60 + hits*4; // max 316
+    }
+    else if( hits <= 512 ) {
+      heap_size = 125 + hits*3; // max 1661
+    }
+    else if( hits <= 523970 ) {
+      heap_size = 636 + hits*2; // max 1048576
+    }
+    else {
+      heap_size = RECURSION_HEAP_SIZE_MAX;
+    }
+  }
+  else {
+    heap_size = recursion->heap_multiplier * hits;
+    if( heap_size > RECURSION_HEAP_SIZE_MAX ) {
+      heap_size = RECURSION_HEAP_SIZE_MAX;
+    } 
+  }
+  return heap_size;
+}
+
+
+
 /*******************************************************************//**
  *
  *
@@ -597,17 +634,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_recursion_mode_t recursion_mode = VGX_RECURSION_MODE_NONE;
   if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
     vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
-    if( (recursion_mode = neighborhood_query->recursion_mode) == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
-      // TEMPORARY: TODO, make this configurable per query
-      if( csize <= 64 ) {
-        csize = 60 + csize*4; // max 316
-      }
-      else if( csize <= 512 ) {
-        csize = 125 + csize*3; // max 1661
-      }
-      else {
-        csize = 636 + csize*2;
-      }
+    if( (recursion_mode = neighborhood_query->recursion.mode) == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+      csize = __get_recursion_heap_size( &neighborhood_query->recursion, csize );
     }
   }
 
@@ -645,7 +673,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     }
 
     // Create the recursion queue
-    if( recursion_mode == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+    if( recursion_mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
       if( (queue = __new_recursion_queue( csize )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
       }

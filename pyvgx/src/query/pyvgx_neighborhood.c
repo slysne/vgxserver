@@ -201,6 +201,117 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
  *
  ******************************************************************************
  */
+static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
+  int ret = 0;
+  XTRY {
+    // Sorting required
+    if( _vgx_sortby( param->sortspec ) == VGX_SORTBY_NONE || _vgx_sortspec_dontcare( param->sortspec ) ) {
+      PyErr_SetString( PyExc_ValueError, "recursive search requires specific sortby" );
+      THROW_SILENT( CXLIB_ERR_API, 0x001 );
+    }
+
+    // Query arc direction must be D_OUT
+    if( param->arc_condition_set->arcdir != VGX_ARCDIR_OUT ) {
+      PyErr_SetString( PyExc_ValueError, "recursive search requires arc direction D_OUT" );
+      THROW_SILENT( CXLIB_ERR_API, 0x002 );
+    }
+
+    // Defaults
+    param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
+    param->recursion.heap_multiplier = 0; // auto
+    param->recursion.prune_offset = 0.0f;
+
+    // Simple auto-config
+    if( py_recursion == Py_True ) {
+      // use defaults
+    }
+    // Auto-config heap size as multiplier of hits
+    else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
+      param->recursion.heap_multiplier = PyLong_AsLong( py_recursion );
+    }
+    // { "mode": "bfs_progressive", "heap_multiplier": 4, "prune_offset": -0.01 }
+    else if( PyDict_Check( py_recursion) ) {
+      Py_ssize_t pos = 0;
+      PyObject *py_key, *py_value;
+      while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
+        if( !PyUnicode_Check( py_key ) ) {
+          PyErr_Format( PyExc_TypeError, "recursive search invalid parameter name: %R", py_key );
+          THROW_SILENT( CXLIB_ERR_API, 0x003 );
+        }
+        const char *key = PyUnicode_AsUTF8( py_key );
+        // "mode": "bfs_progressive"
+        if( CharsEqualsConst( key, "mode" )) {
+          if( !PyUnicode_Check( py_value ) ) {
+            PyErr_Format( PyExc_TypeError, "recursive search invalid mode: %R", py_value );
+            THROW_SILENT( CXLIB_ERR_API, 0x004 );
+          }
+          const char *mode = PyUnicode_AsUTF8( py_value );
+          if( CharsEqualsConst(mode, "bfs_progressive") ) {
+            param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
+          }
+          else {
+            PyErr_Format( PyExc_TypeError, "recursive search unknown mode: %R", py_value );
+            THROW_SILENT( CXLIB_ERR_API, 0x005 );
+          }
+        }
+        // "heap_multiplier": 4
+        else if( CharsEqualsConst( key, "heap_multiplier" )) {
+          if( !PyLong_Check(py_value) ) {
+            PyErr_Format( PyExc_TypeError, "recursive search invalid heap_multiplier: %R", py_value );
+            THROW_SILENT( CXLIB_ERR_API, 0x007 );
+          }
+          param->recursion.heap_multiplier = PyLong_AsLong(py_value);
+        }
+        // "prune_offset": -0.01
+        else if( CharsEqualsConst( key, "prune_offset" )) {
+          if( !PyFloat_Check(py_value) ) {
+            PyErr_Format( PyExc_TypeError, "recursive search invalid prune_offset: %R", py_value );
+            THROW_SILENT( CXLIB_ERR_API, 0x008 );
+          }
+          param->recursion.prune_offset = (float)PyFloat_AsDouble(py_value);
+        }
+        // UNKNOWN
+        else {
+          PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
+          THROW_SILENT( CXLIB_ERR_API, 0x009 );
+        }
+      }
+    }
+    // unsupported
+    else {
+      PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool, int or dict" );
+      THROW_SILENT( CXLIB_ERR_API, 0x00A );
+    }
+          
+    // Validate heap multiplier
+    if( param->recursion.heap_multiplier > 1000 ) {
+      PyErr_Format( PyExc_TypeError, "recursive search heap_multiplier out of range, must be <= 1000" );
+      THROW_SILENT( CXLIB_ERR_API, 0x007 );
+    }
+
+    // Validate prune offset
+    if( param->recursion.prune_offset < -1.0f || param->recursion.prune_offset > 1.0f ) {
+      PyErr_Format( PyExc_ValueError, "recursive search prune_offset out of range, must be in [-1.0, 1.0]" );
+      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+    }
+
+  }
+  XCATCH( errcode ) {
+    ret = -1;
+  }
+  XFINALLY {
+
+  }
+  return ret;
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
 static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
   if( base ) {
     __neighborhood_query_args *param = (__neighborhood_query_args*)base;
@@ -226,6 +337,10 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
 
 
 
+
+
+
+
 PyVGX_DOC( pyvgx_Neighborhood__doc__,
   "Neighborhood( id, arc=(None,D_OUT), pre=None, filter=None, post=None, neighbor=\"*\", vector=[], collect=C_COLLECT, result=R_STR, fields=F_ID, nest=0, nested_hits=-1, select=None, rank=None, sortby=S_NONE, aggregate=None, memory=4, offset=0, hits=-1, timeout=0, limexec=False ) -> list\n"
   "\n"
@@ -239,7 +354,10 @@ PyVGX_DOC( pyvgx_Neighborhood__doc__,
  ******************************************************************************
  */
 static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Graph *pygraph, PyObject *args, PyObject *kwds, __neighborhood_query_args *param, bool reusable ) {
-  static char *fmt = "|OOz#z#z#OOOiIIiLz#OIOOiLiii";
+
+  #define NEIGHBORHOOD_BASE_FORMAT "|OOz#z#z#OOOOIIiLz#OIOOi"
+
+  static char fmt[] = NEIGHBORHOOD_BASE_FORMAT "Liii";
   static char *kwlist[] = {
     "id",         //  O
     "arc",        //  O
@@ -249,7 +367,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     "neighbor",   //  O
     "vector",     //  O
     "collect",    //  O
-    "recursive",  //  i
+    "recursion",  //  O
     "result",     //  I
     "fields",     //  I
     "nest",       //  i
@@ -266,7 +384,8 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     "__debug",    //  i
     NULL
   };
-  static char *fmt_reusable = "|OOz#z#z#OOOiIIiLz#OIOOi";
+
+  static char fmt_reusable[] = NEIGHBORHOOD_BASE_FORMAT;
   static char *kwlist_reusable[] = {
     "id",         //  O
     "arc",        //  O
@@ -276,7 +395,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     "neighbor",   //  O
     "vector",     //  O
     "collect",    //  O
-    "recursive",  //  i
+    "recursion",  //  O
     "result",     //  I
     "fields",     //  I
     "nest",       //  i
@@ -300,7 +419,6 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
   int64_t sz_filter = 0;
   int64_t sz_post = 0;
   int64_t sz_select = 0;
-  int recursive = 0;
 
   PyObject *py_anchor = NULL;
   PyObject *py_arc_condition = NULL;
@@ -309,6 +427,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
   PyObject *py_rankspec = NULL;
   PyObject *py_aggregate = NULL;
   PyObject *py_collect = NULL;
+  PyObject *py_recursion = NULL;
   PyObject *py_evalmem = NULL;
 
   PyObject *py_filter = NULL;
@@ -327,7 +446,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       &py_vertex_condition,           // O neighbor
       &py_rank_vector_object,         // O vector
       &py_collect,                    // O collect
-      &recursive,                     // i recursive
+      &py_recursion,                  // O recursion
       &param->result_format,          // I result
       &param->result_attrs,           // I fields
       &param->nest,                   // i nest
@@ -358,7 +477,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       &py_vertex_condition,           // O neighbor
       &py_rank_vector_object,         // O vector
       &py_collect,                    // O collect
-      &recursive,                     // i recursive
+      &py_recursion,                  // O recursion
       &param->result_format,          // I result
       &param->result_attrs,           // I fields
       &param->nest,                   // i nest
@@ -490,16 +609,10 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     // ---------
     // recursive
     // ---------
-    if( recursive > 0 ) {
-      if( _vgx_sortby( param->sortspec ) == VGX_SORTBY_NONE || _vgx_sortspec_dontcare( param->sortspec ) ) {
-        PyErr_SetString( PyExc_ValueError, "recursive search requires specific sortby" );
+    if( py_recursion ) {
+      if( _pyvgx_Neighborhood__parse_recursion( py_recursion, param ) < 0 ) {
         THROW_SILENT( CXLIB_ERR_API, 0x009 );
       }
-      if( param->arc_condition_set->arcdir != VGX_ARCDIR_OUT ) {
-        PyErr_SetString( PyExc_ValueError, "recursive search requires arc direction D_OUT" );
-        THROW_SILENT( CXLIB_ERR_API, 0x00A );
-      }
-      param->recursion_mode = VGX_RECURSION_MODE_BFS_RECURSIVE;
     }
 
     // ------
@@ -933,6 +1046,13 @@ static PyObject * _pyvgx_Neighborhood__perform( __neighborhood_query_args *param
     // Construct query
     vgx_NeighborhoodQuery_t *query = _pyvgx_Neighborhood__get_neighborhood_query( param );
     if( query ) {
+
+      // Require positive hits for recursive search
+      if( query->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE && query->hits <= 0 ) {
+        PyErr_SetString( PyExc_ValueError, "recursive search requires non-negative hits parameter" );
+        return NULL;
+      }
+
       // Execute query
       if( CALLABLE( param->implied.graph )->simple->Neighborhood( param->implied.graph, query ) < 0 ) {
         PyVGX_CAPTURE_QUERY_ERROR( query, param );
@@ -981,7 +1101,7 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
   XTRY {
 
     // Construct neighborhood query object (steals collect_condition_set)
-    if( (query = iGraphQuery.NewNeighborhoodQuery( param->implied.graph, param->anchor.id, &param->collect_arc_condition_set, param->implied.collector_mode, param->recursion_mode, &param->implied.CSTR__error )) == NULL ) {
+    if( (query = iGraphQuery.NewNeighborhoodQuery( param->implied.graph, param->anchor.id, &param->collect_arc_condition_set, param->implied.collector_mode, &param->recursion, &param->implied.CSTR__error )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0xC82 );
     }
     CALLABLE( query )->SetResponseFormat( query, param->result_format );

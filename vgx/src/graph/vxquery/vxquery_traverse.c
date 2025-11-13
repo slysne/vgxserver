@@ -391,11 +391,11 @@ static int _vxquery_traverse__traverse_neighbor_arcs_OPEN_RO( const vgx_Vertex_t
       match = iarcvector.GetArcsBidirectional( V1, V2, search->probe );
     }
     else {
-      if( search->recursion_mode == VGX_RECURSION_MODE_NONE ) {
+      if( search->recursion.mode == VGX_RECURSION_MODE_NONE ) {
         V1 = arcdir == VGX_ARCDIR_IN ? &vertex_RO->inarcs : &vertex_RO->outarcs;
         match = iarcvector.GetArcs( V1, search->probe );
       }
-      else if( search->recursion_mode == VGX_RECURSION_MODE_BFS_RECURSIVE ) {
+      else if( search->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
         match = _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( vertex_RO, search );
       }
       else {

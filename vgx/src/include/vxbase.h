@@ -3423,12 +3423,24 @@ typedef enum e_vgx_collector_mode_t {
  ***********************************************************************
  */
 typedef enum e_vgx_recursion_mode_t {
-  _VGX_RECURSION_MODE_MASK_BFS        = 0x00000010,
-  _VGX_RECURSION_MODE_MASK_RECURSIVE  = 0x00000100,
-  //                                    -------RB-
-  VGX_RECURSION_MODE_NONE             = 0x00000000,
-  VGX_RECURSION_MODE_BFS_RECURSIVE    = _VGX_RECURSION_MODE_MASK_BFS | _VGX_RECURSION_MODE_MASK_RECURSIVE
+  _VGX_RECURSION_MODE_MASK_BFS          = 0x00000010,
+  _VGX_RECURSION_MODE_MASK_PROGRESSIVE  = 0x00000100,
+  //                                      -------PB-
+  VGX_RECURSION_MODE_NONE               = 0x00000000,
+  VGX_RECURSION_MODE_BFS_PROGRESSIVE    = _VGX_RECURSION_MODE_MASK_BFS | _VGX_RECURSION_MODE_MASK_PROGRESSIVE
 } vgx_recursion_mode_t;
+  
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+typedef struct s_vgx_recursion_config_t {
+  vgx_recursion_mode_t mode;
+  int heap_multiplier;
+  float prune_offset;
+} vgx_recursion_config_t;
 
 
 

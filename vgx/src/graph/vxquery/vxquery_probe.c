@@ -1508,7 +1508,7 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     }
 
     // Recursion mode
-    search->recursion_mode = query->recursion_mode;
+    search->recursion = query->recursion;
 
     // 3.
     // -- ADJACENCY --
