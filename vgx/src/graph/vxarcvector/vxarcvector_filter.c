@@ -927,6 +927,7 @@ static __inline int __arcvector_vertex_condition_match_identifier_list( vgx_vert
 }
 
 
+#define NON_EMPTY_EVALUATOR( Evaluator ) ((Evaluator) && (Evaluator)->rpn_program.length > 0)
 
 /*******************************************************************//**
  * 
@@ -937,7 +938,7 @@ static __inline int __arcvector_vertex_condition_match_identifier_list( vgx_vert
 static int __arcvector_vertex_condition_match_recursive( const vgx_virtual_ArcFilter_context_t *arcfilter_context, const vgx_vertex_probe_t *vertex_probe, vgx_Vertex_t *vertex_RO, vgx_ArcFilter_match *match ) {
   // LOCAL FILTER
   vgx_Evaluator_t *filter = vertex_probe->advanced.local_evaluator.filter;
-  if( filter ) {
+  if( NON_EMPTY_EVALUATOR(filter) ) {
     if( arcfilter_context ) {
       // Execute filter evaluation unless already executed as part of culling earlier
       if( ((vgx_GenericArcFilter_context_t*)arcfilter_context)->culleval != filter ) { // <== culleval is the same as filter if culling took place!
@@ -1016,14 +1017,16 @@ static int __arcvector_vertex_condition_match_eval_recursion( const vgx_virtual_
 postfilter: 
   if( vertex_probe->advanced.local_evaluator.post ) {
     vgx_Evaluator_t *post = vertex_probe->advanced.local_evaluator.post;
-    if( arcfilter_context ) {
-      vgx_Vector_t *vector = __simprobe_vector( vertex_probe );
-      CALLABLE( post )->SetContext( post, arcfilter_context->current_tail, arcfilter_context->current_head, vector, 0.0 );
-    }
-    vgx_EvalStackItem_t *result = CALLABLE( post )->EvalVertex( post, vertex_RO );
-    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
-      *match = VGX_ARC_FILTER_MATCH_MISS;
-      ret = 0;
+    if( NON_EMPTY_EVALUATOR( post ) ) {
+      if( arcfilter_context ) {
+        vgx_Vector_t *vector = __simprobe_vector( vertex_probe );
+        CALLABLE( post )->SetContext( post, arcfilter_context->current_tail, arcfilter_context->current_head, vector, 0.0 );
+      }
+      vgx_EvalStackItem_t *result = CALLABLE( post )->EvalVertex( post, vertex_RO );
+      if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+        *match = VGX_ARC_FILTER_MATCH_MISS;
+        ret = 0;
+      }
     }
   }
 
@@ -1391,10 +1394,10 @@ static int __specific_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_
  ***********************************************************************
  */
 static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
-  vgx_Evaluator_t *evaluator;
   vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
+  vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
  
-  if( (evaluator = GAF->traversing_evaluator) != NULL ) {
+  if( NON_EMPTY_EVALUATOR( evaluator ) ) {
     //
     // SECURE THE ARC HEAD AS NEEDED
     //
@@ -1459,12 +1462,14 @@ static int __generic_culleval( vgx_virtual_ArcFilter_context_t *arcfilter_contex
     }
   }
   vgx_Evaluator_t *CE = GAF->culleval;
-  vgx_Vector_t *vector = __simprobe_vector( vertex_probe );
-  CALLABLE( CE )->SetContext( CE, GAF->current_tail, &larc->head, vector, 0.0 );
-  vgx_EvalStackItem_t *result = CALLABLE( CE )->EvalVertex( CE, larc->head.vertex );
-  if( result == NULL || !iEvaluator.IsPositive( result ) ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  if( NON_EMPTY_EVALUATOR( CE ) ) {
+    vgx_Vector_t *vector = __simprobe_vector( vertex_probe );
+    CALLABLE( CE )->SetContext( CE, GAF->current_tail, &larc->head, vector, 0.0 );
+    vgx_EvalStackItem_t *result = CALLABLE( CE )->EvalVertex( CE, larc->head.vertex );
+    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
   }
   
   // Special case: Simple arc processing will not run 2nd pass, continue the complete filter logic
@@ -1554,12 +1559,14 @@ static int __generic_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_conte
   vgx_Evaluator_t *ev = GAF->traversing_evaluator;
 
   // Evaluator is local
-  if( ev && CALLABLE( ev )->HeadDeref( ev ) == 0 ) {
-    if( iEvaluator.IsPositive( CALLABLE( ev )->EvalArc( ev, larc ) ) != GAF->positive_match ) {
-      *match = VGX_ARC_FILTER_MATCH_MISS;
-      return 0;
+  if( NON_EMPTY_EVALUATOR( ev ) ) {
+    if( CALLABLE( ev )->HeadDeref( ev ) == 0 ) {
+      if( iEvaluator.IsPositive( CALLABLE( ev )->EvalArc( ev, larc ) ) != GAF->positive_match ) {
+        *match = VGX_ARC_FILTER_MATCH_MISS;
+        return 0;
+      }
+      ev = NULL; // no longer needed
     }
-    ev = NULL; // no longer needed
   }
 
   // 3. RUN ADVANCED FILTERS
@@ -1596,9 +1603,11 @@ static int __generic_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_conte
     // Head safe when here - either locked or no locking required
     do {
       // Traversing filter evaluation
-      if( ev && !iEvaluator.IsPositive( CALLABLE( ev )->EvalArc( ev, larc ) ) ) { // WARNING: arc MUST have both tail and head vertices assigned, otherwise crash!
-        miss = true;
-        break;
+      if( NON_EMPTY_EVALUATOR( ev ) ) {
+        if( !iEvaluator.IsPositive( CALLABLE( ev )->EvalArc( ev, larc ) ) ) { // WARNING: arc MUST have both tail and head vertices assigned, otherwise crash!
+          miss = true;
+          break;
+        }
       }
 
       // Vertex conditions for head vertex
@@ -1670,9 +1679,11 @@ static int __generic_pred_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_contex
 
   // 3. EVALUATOR IS LOCAL
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
-  if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  if( NON_EMPTY_EVALUATOR(evaluator) ) {
+    if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
   }
 
   const vgx_vertex_probe_t *VP = GAF->vertex_probe;
@@ -1767,9 +1778,11 @@ static int __generic_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_context_t *
   
   // 2. EVALUATOR IS LOCAL
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
-  if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  if( NON_EMPTY_EVALUATOR(evaluator) ) {
+    if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
   }
 
   const vgx_vertex_probe_t *VP = GAF->vertex_probe;;
@@ -2111,9 +2124,11 @@ static int __generic_pred_loceval_arcfilter( vgx_virtual_ArcFilter_context_t *ar
 
   // 2. EVALUATOR IS LOCAL
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
-  if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  if( NON_EMPTY_EVALUATOR(evaluator) ) {
+    if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
   }
 
   // PASS!
@@ -2135,9 +2150,11 @@ static int __generic_loceval_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilt
 
   // EVALUATOR IS LOCAL
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
-  if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  if( NON_EMPTY_EVALUATOR(evaluator) ) {
+    if( iEvaluator.IsPositive( CALLABLE( evaluator )->EvalArc( evaluator, larc ) ) != GAF->positive_match ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
   }
 
   // PASS!
@@ -2853,6 +2870,7 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     arcfilter->arcfilter_locked_head_access = false; // Maybe set later
     arcfilter->eval_synarc = false; // Maybe set later
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
+    arcfilter->unvisited = NULL; // Configure later
     arcfilter->filter = arcfilterfunc.EvaluatorFilter;
 
     // Synthetic arc eval?
@@ -2921,6 +2939,9 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
       generic_filter->arcfilter_callback = __dynamic_arc_filter_callback;
       arcfilter->type = VGX_ARC_FILTER_TYPE_GENERIC; 
     }
+
+    // Configure later
+    arcfilter->unvisited = NULL;
 
     // Evaluator
     if( traversing_evaluator ) {

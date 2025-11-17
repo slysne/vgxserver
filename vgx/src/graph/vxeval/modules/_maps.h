@@ -54,6 +54,9 @@ static void __eval_maps_xsetini( vgx_Evaluator_t *self );
  ***********************************************************************
  */
 static int __maps__dwset_add( vgx_ExpressEvalMemory_t *mem, uint32_t key, DWORD item ) {
+  if( mem->dwset.slots == NULL ) {
+    return -1;
+  }
   uint32_t index = key & mem->dwset.mask;
 
   // Use index to locate slot
@@ -459,6 +462,51 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
   DWORD item;
   __maps_vset_key_item( vertex, &key, &item );
   __maps__xsetadd( self, key, item, MAPS_KEYMODE__VERTEX );
+}
+
+
+
+/*******************************************************************//**
+ * __maps__vertex_unvisited( evalmem, vertex )
+ * 
+ * Special use case, call to check if a vertex is unvisited
+ * during recursive traversal. If unvisted we add vertex to
+ * set and return true. When called on a vertex that was
+ * previously added we return false. If we somehow can't add
+ * vertex to map we also return true to be conservative.
+ * 
+ ***********************************************************************
+ */
+__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, const vgx_Vertex_t *vertex ) {
+  uint32_t key;
+  DWORD item;
+  __maps_vset_key_item( vertex, &key, &item );
+
+  if( item == __maps__EMPTY ) {
+    return true; // Pretend unvisited (conservative)
+  }
+
+  int n;
+  do {
+    // Try to add object to set (1:Added, 0:Already Exists, -1:Out of room)
+    n = __maps__dwset_add( evalmem, key, item );
+    // Already exists
+    if( n == 0 ) {
+      return false; // Visited
+    }
+    // Added
+    if( n > 0 ) {
+      evalmem->dwset.sz++;
+      return true; // Unvisited
+    }
+
+    // Either no set or set full, initialize or expand
+    if( __maps__dwset_expand( evalmem, MAPS_KEYMODE__VERTEX ) < 0 ) {
+      break;
+    }
+  } while( n < 0 );
+
+  return true; // Pretend unvisited (conservative)
 }
 
 

@@ -2818,6 +2818,16 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
  *
  ***********************************************************************
  */
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex ) {
+  return __maps_vertex_unvisited( self->context.memory, vertex );
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
 static void __initialize_dummy_vertex( void ) {
   memset( &_aV_dummy, 0, sizeof( vgx_AllocatedVertex_t ) );
   vgx_Vertex_t *V = (vgx_Vertex_t*)&_aV_dummy.object;

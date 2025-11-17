@@ -962,18 +962,32 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
 }
 
 
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+__inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context ) {
+  vgx_virtual_ArcFilter_context_t *afc = context->traverse_filter;
+  return afc->unvisited == NULL || afc->unvisited( afc->traversing_evaluator, afc->current_head->vertex );
+}
+
+
+
 #define __begin_safe_traversal_context( VirtualInputContext, ArcArrayCell  )  \
   do {                                                                        \
     __arcvector_virtual_input_context_t *__context__ = VirtualInputContext;   \
     framehash_cell_t * const __cell__ = ArcArrayCell;                         \
     __arcvector_set_archead_vertex( __context__, __cell__ );                  \
-    vgx_LockableArc_t *__larc__ = __context__->larc;
+    vgx_LockableArc_t *__larc__ = __context__->larc;                          \
+    if( __arcvector_archead_unvisited( __context__ ) )
 
 
 #define __end_safe_traversal_context          \
     __release_lockable_archead( __larc__ );   \
     __arcvector_clear_archead( __context__ ); \
   } WHILE_ZERO
+
 
 
 

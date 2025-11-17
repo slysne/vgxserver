@@ -144,7 +144,6 @@ __inline static int64_t __traverse_arcarray_no_collect( framehash_processing_con
   int64_t n_traversed_here = 0;
   __arcvector_virtual_input_context_t *context = processor->processor.input;
   __arcvector_traversal_output_context_t *output = processor->processor.output;
-
   __begin_safe_traversal_context( context, fh_cell ) {
     __begin_traverse {
       // Multiple Arc: SECONDARY FRAMEHASH

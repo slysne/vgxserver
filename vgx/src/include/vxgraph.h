@@ -5420,6 +5420,8 @@ typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *contex
 
 typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, const vgx_predicator_t target );
 
+typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, const vgx_Vertex_t *vertex );
+
 
 
 /*******************************************************************//**
@@ -5438,6 +5440,8 @@ typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, cons
   bool eval_synarc;                                           \
   /* Advanced filter */                                       \
   struct s_vgx_Evaluator_t *traversing_evaluator;             \
+  /* Advanced filter */                                       \
+  f_vgx_VertexUnvisited unvisited;                            \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -7092,6 +7096,8 @@ typedef struct s_vgx_IArcFilter_t {
   int (*ConfigurePredicatorsFromArcConditionSet)( vgx_Graph_t *self, const vgx_ArcConditionSet_t *arc_condition_set, vgx_predicator_t *predicator1, vgx_predicator_t *predicator2 );
 } vgx_IArcFilter_t;
 
+
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex );
 
 
 /*******************************************************************//**

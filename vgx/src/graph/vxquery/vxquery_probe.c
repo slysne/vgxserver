@@ -76,6 +76,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
+                                                const vgx_recursion_config_t *recursion,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -534,7 +535,7 @@ static vgx_degree_probe_t * __new_vertex_degree_probe_from_condition( vgx_Graph_
     };
     const vgx_RecursiveCondition_t *conditional = &recursive_condition;
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
-    if( __configure_new_neighborhood_probe( self, readonly_graph, NULL, query, NULL, NULL, conditional, traversing, VGX_COLLECTOR_MODE_COLLECT_ARCS, NULL, base_collector, NULL, NULL, 1, &degree_probe->neighborhood_probe ) < 0 ) {
+    if( __configure_new_neighborhood_probe( self, readonly_graph, NULL, query, NULL, NULL, conditional, traversing, NULL, VGX_COLLECTOR_MODE_COLLECT_ARCS, NULL, base_collector, NULL, NULL, 1, &degree_probe->neighborhood_probe ) < 0 ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x614 );
     }
 
@@ -930,6 +931,7 @@ static int __configure_new_vertex_probe_from_condition( vgx_Graph_t *self,
                                                               NULL, // post
                                                               next_conditional,
                                                               next_traversing,
+                                                              NULL,
                                                               collect_next_mode,
                                                               vertex_condition->advanced.recursive.collect_condition_set,
                                                               collector,
@@ -1083,6 +1085,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
+                                                const vgx_recursion_config_t *recursion,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -1104,7 +1107,6 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       THROW_ERROR( CXLIB_ERR_MEMORY, 0x641 );
     }
 
-    // Evaluators
     if( pre_evaluator || post_evaluator || conditional->evaluator || traversing->evaluator ) {
       if( query->evaluator_memory == NULL ) {
         if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
@@ -1229,6 +1231,14 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.override = probe->conditional.override;
     }
 
+    // Patch in mapping function to prevent re-visiting nodes
+    if( recursion && recursion->mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+      // Must have evaluator since we need its memory object to track visited nodes
+      if( probe->traversing.arcfilter->traversing_evaluator ) {
+        probe->traversing.arcfilter->unvisited = vxeval_vertex_unvisited;
+      }
+    }
+
     // 5. Create collector filter for this neighborhood level
     // TODO ---------------------------- ADD advanced filter to collector filter ----------------v
     if( (probe->collect_filter_context = iArcFilter.New( self, readonly_graph, collect_arc_condition_set, NULL, NULL, timing_budget )) == NULL ) {
@@ -1333,7 +1343,7 @@ static int __configure_adjacency_search_context( vgx_Graph_t *self, bool readonl
     };
     const vgx_RecursiveCondition_t *conditional = &recursive_condition; 
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
-    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, search->pre_evaluator, search->post_evaluator, conditional, traversing, VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST, NULL, NULL, search->simcontext, &query->CSTR__error, 1, &search->probe )) < 0 ) {
+    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, search->pre_evaluator, search->post_evaluator, conditional, traversing, NULL, VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST, NULL, NULL, search->simcontext, &query->CSTR__error, 1, &search->probe )) < 0 ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x652 );
     }
   }
@@ -1446,6 +1456,17 @@ static vgx_neighborhood_search_context_t * __clone_neighborhood_search_context( 
 static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool readonly_graph, vgx_Vertex_t *vertex_RO, vgx_NeighborhoodQuery_t *query, vgx_neighborhood_search_context_t *search ) {
   int retcode = 1;
   XTRY {
+
+    // Recursive BFS mode
+    bool recursion_bfs_progressive = false;
+    if( query->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+      recursion_bfs_progressive = true;
+      // We'll need a dummy evaluator if we don't have one
+      if( query->CSTR__vertex_filter == NULL ) {
+        query->CSTR__vertex_filter = CStringNew("");
+      }
+    }
+
     // 1.
     // -- BASE --
     // Configure the neighborhood context's base portion
@@ -1548,7 +1569,11 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     const vgx_RecursiveCondition_t *conditional = &recursive_condition;
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
 
-    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query,search->pre_evaluator, search->post_evaluator, conditional, traversing, immediate_collector_mode, query->collect_arc_condition_set, search->collector, search->simcontext, &query->CSTR__error, 1, probe ) ) < 0 ) {
+    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, 
+                                    search->pre_evaluator, search->post_evaluator, conditional, traversing, &search->recursion,
+                                    immediate_collector_mode, query->collect_arc_condition_set, search->collector,
+                                    search->simcontext, &query->CSTR__error, 1, probe ) ) < 0 )
+    {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x676 );
     }
 
@@ -1713,7 +1738,7 @@ static int __configure_aggregator_search_context( vgx_Graph_t *self, bool readon
     const vgx_RecursiveCondition_t *conditional = &recursive_condition;
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
 
-    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, search->pre_evaluator, search->post_evaluator, conditional, traversing, immediate_collector_mode, query->collect_arc_condition_set, search->collector, search->simcontext, &query->CSTR__error, 1, &search->probe )) < 0 ) {
+    if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, search->pre_evaluator, search->post_evaluator, conditional, traversing, NULL, immediate_collector_mode, query->collect_arc_condition_set, search->collector, search->simcontext, &query->CSTR__error, 1, &search->probe )) < 0 ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x693 );
     }
 

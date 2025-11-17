@@ -1073,23 +1073,27 @@ static PyObject * _pyvgx_Neighborhood__perform( __neighborhood_query_args *param
     // Construct query
     vgx_NeighborhoodQuery_t *query = _pyvgx_Neighborhood__get_neighborhood_query( param );
     if( query ) {
+      XDO {
 
-      // Require positive hits for recursive search
-      if( query->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE && query->hits <= 0 ) {
-        PyErr_SetString( PyExc_ValueError, "recursive search requires non-negative hits parameter" );
-        return NULL;
-      }
+        // Require positive hits for recursive search
+        if( query->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE && query->hits <= 0 ) {
+          PyVGXError_SetString( PyExc_ValueError, "recursive search requires non-negative hits parameter" );
+          XBREAK;
+        }
 
-      // Execute query
-      if( CALLABLE( param->implied.graph )->simple->Neighborhood( param->implied.graph, query ) < 0 ) {
-        PyVGX_CAPTURE_QUERY_ERROR( query, param );
+        // Execute query
+        if( CALLABLE( param->implied.graph )->simple->Neighborhood( param->implied.graph, query ) < 0 ) {
+          PyVGX_CAPTURE_QUERY_ERROR( query, param );
+        }
+        // Steal the result from the query
+        else {
+          search_result = CALLABLE( query )->YankSearchResult( query );
+        }
       }
-      // Steal the result from the query
-      else {
-        search_result = CALLABLE( query )->YankSearchResult( query );
+      XFINALLY {
+        // Delete query
+        iGraphQuery.DeleteNeighborhoodQuery( &query );
       }
-      // Delete query
-      iGraphQuery.DeleteNeighborhoodQuery( &query );
     }
   } END_PYVGX_THREADS;
 
