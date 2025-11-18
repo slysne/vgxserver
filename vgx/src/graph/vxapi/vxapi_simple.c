@@ -1403,7 +1403,7 @@ static vgx_Relation_t * Graph_has_adjacency( vgx_Graph_t *self, vgx_AdjacencyQue
         const char *initial = CStringValue( query->CSTR__anchor_id );
         const char *terminal = NULL;
         if( query->vertex_condition && query->vertex_condition->CSTR__idlist ) {
-          if( iString.List.Size( query->vertex_condition->CSTR__idlist ) != 1 ) {
+          if( iString.List.Size( query->vertex_condition->CSTR__idlist ) < 1 ) {
             THROW_SILENT( CXLIB_ERR_GENERAL, 0xA54 );
           }
           terminal = CStringValue( iString.List.GetItem( query->vertex_condition->CSTR__idlist, 0 ) );
