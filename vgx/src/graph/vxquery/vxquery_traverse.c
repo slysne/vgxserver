@@ -325,45 +325,95 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
 static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
   vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)search->collector;
 
-  vgx_RecursionQueue_t *Q = collector->recursion_queue;
+  vgx_FrontierQueue_t *Q = collector->frontier;
   Cm256iHeap_t *heap = collector->container.sequence.heap;
   if( Q == NULL || heap == NULL ) {
     return VGX_ARC_FILTER_MATCH_ERROR;
   }
+  
+  // Early termination triggers
+  int64_t frontier_limit = search->recursion.limit.frontier;
+  int64_t expansion_limit = search->recursion.limit.expansion;
+  int64_t depth_limit = search->recursion.limit.depth;
+  int64_t exec_nanosec_limit = search->recursion.limit.exec_ms * 1000000LL;
+
+  // Handle edge case
+  if( expansion_limit < 1 || depth_limit < 1 ) {
+    return VGX_ARC_FILTER_MATCH_MISS;
+  }
+  if( search->recursion.visit.reset_state ) {
+    vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
+    if( E ) {
+      iEvaluator.ClearDWordSet( E->context.memory );
+    }
+  }
 
   vgx_ArcFilter_match match;
 
+  int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
+  int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
+
   // Initial neighborhood traversal
+  int64_t expansions = 1;   // initial query implied
+  int64_t depth = 1;        // initial neighborhood implied
   if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
     return VGX_ARC_FILTER_MATCH_ERROR;
+  }
+
+  // Limits reached after initial traversal
+  if( ComlibSequenceLength(Q) > frontier_limit || expansions >= expansion_limit || depth >= depth_limit ) {
+    return match;
   }
 
   // Initialize difficulty to none
   vgx_CollectorItem_t difficulty;
   CALLABLE(heap)->HeapTop(heap, &difficulty.item);
-  
-  vgx_CollectorItem_t queued;
-  while( CALLABLE(Q)->Next(Q, &queued.item) ) {
 
-    // Adjust queue pruning cutoff
-    queued.sort.flt64.value += search->recursion.prune_offset;
+  // Number of nodes in initial neighborhood to expand
+  int64_t level_size = ComlibSequenceLength(Q);
+  bool running = true;
 
-    // Require items from the queue to outrank the lowest scoring item on the heap
-    if( heap->_cmp( &difficulty.item, &queued.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
-      // Perform new search around next anchor
-      vgx_Vertex_t *next = queued.headref->vertex;
-      if( __is_arcfilter_error((match = iarcvector.GetArcs( &next->outarcs, search->probe ))) ) {
-        return VGX_ARC_FILTER_MATCH_ERROR;
+  while( running && level_size > 0 && ++depth <= depth_limit ) {
+    // Frontier size at the start of this loop is exactly the number of nodes at the current depth
+    for( int64_t i=0; i<level_size; ++i ) {
+      // Next anchor in the frontier
+      vgx_CollectorItem_t queued;
+      CALLABLE(Q)->Next(Q, &queued.item);
+
+      // Require items from the queue to outrank the lowest scoring item on the heap
+      if( heap->_cmp( &difficulty.item, &queued.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
+        // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
+        vgx_Vertex_t *next = queued.headref->vertex;
+        if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
+          return VGX_ARC_FILTER_MATCH_ERROR;
+        }
+
+        // Early termination if queue limit reached
+        if( ++expansions >= expansion_limit ) {
+          running = false;
+          break;
+        }
+
+        // We are execution time limited, check
+        if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
+          running = false;
+          break;
+        }
+
+        // Update min score to increase difficulty after heap refinement
+        CALLABLE(heap)->HeapTop(heap, &difficulty.item);
       }
 
-      // Update min score
-      CALLABLE(heap)->HeapTop(heap, &difficulty.item);
+      // Release lock for used up queue item since it's easy to do here
+      // (would also be done when collector is destroyed)
+      _vxquery_collector__del_vertex_reference_OPEN( search->collector, queued.headref );
     }
 
-    // Release one lock
-    _vxquery_collector__del_vertex_reference_OPEN( search->collector, queued.headref );
+    // Next level is the queue size after expanding current level
+    level_size = ComlibSequenceLength(Q);
   }
 
+  // The initial match only since this determines the overall whether anything was found at all
   return match;
 }
 

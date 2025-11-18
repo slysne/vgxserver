@@ -2871,6 +2871,8 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     arcfilter->eval_synarc = false; // Maybe set later
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
     arcfilter->unvisited = NULL; // Configure later
+    arcfilter->max_visited = 0; // Configure later
+    arcfilter->p_skip = 1.0; // Configure later
     arcfilter->filter = arcfilterfunc.EvaluatorFilter;
 
     // Synthetic arc eval?
@@ -2942,6 +2944,8 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
 
     // Configure later
     arcfilter->unvisited = NULL;
+    arcfilter->max_visited = 0;
+    arcfilter->p_skip = 1.0;
 
     // Evaluator
     if( traversing_evaluator ) {

@@ -3439,10 +3439,21 @@ typedef enum e_vgx_recursion_mode_t {
 typedef struct s_vgx_recursion_config_t {
   vgx_recursion_mode_t mode;
   struct {
-    int size;
-    int multiplier;
+    int64_t size;
+    int64_t multiplier;
   } heap;
-  float prune_offset;
+  struct {
+    int64_t frontier;
+    int64_t expansion;
+    int64_t depth;
+    int64_t exec_ms;
+    int64_t visit;
+  } limit;
+  struct {
+    bool reset_state;
+    double skip_probability;
+  } visit;
+  
 } vgx_recursion_config_t;
 
 

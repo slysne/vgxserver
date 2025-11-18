@@ -969,7 +969,15 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
  */
 __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context ) {
   vgx_virtual_ArcFilter_context_t *afc = context->traverse_filter;
-  return afc->unvisited == NULL || afc->unvisited( afc->traversing_evaluator, afc->current_head->vertex );
+  // We don't track visited nodes
+  if( afc->unvisited == NULL ) {
+    return true;
+  }
+  // Probabilistic BFS:
+  // (P(explored) = 1 - p^k
+  // where p = skip probability, k = number of independent paths from start to node X)
+  // True if unvistied node (it is added to map for future), false if already visited or map full
+  return afc->unvisited( afc->traversing_evaluator, afc->max_visited, afc->p_skip, afc->current_head->vertex );
 }
 
 

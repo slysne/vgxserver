@@ -1236,6 +1236,8 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       // Must have evaluator since we need its memory object to track visited nodes
       if( probe->traversing.arcfilter->traversing_evaluator ) {
         probe->traversing.arcfilter->unvisited = vxeval_vertex_unvisited;
+        probe->traversing.arcfilter->max_visited = recursion->limit.visit;
+        probe->traversing.arcfilter->p_skip = recursion->visit.skip_probability;
       }
     }
 

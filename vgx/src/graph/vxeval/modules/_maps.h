@@ -475,9 +475,14 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
  * previously added we return false. If we somehow can't add
  * vertex to map we also return true to be conservative.
  * 
+ * Probabilistic BFS:
+ * (P(explored) = 1 - p^k
+ * where p = skip probability, k = number of independent paths from start to node X)
+ * True if unvistied node (it is added to map for future), false if already visited or map full
+ * 
  ***********************************************************************
  */
-__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, const vgx_Vertex_t *vertex ) {
+__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
   uint32_t key;
   DWORD item;
   __maps_vset_key_item( vertex, &key, &item );
@@ -486,17 +491,33 @@ __inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, 
     return true; // Pretend unvisited (conservative)
   }
 
+  vgx_ExpressEvalDWordSet_t *dwset = &evalmem->dwset;
+
   int n;
   do {
+
+    // Sampling enabled
+    if( p_skip > 0.0 ) {
+      if( xrandom( ++(dwset->counter) ) < p_skip ) {
+        return false; // Pretend visited
+      }
+    }
+
+    // Map size limit reached
+    if( dwset->sz >= max_visited ) {
+      return false; // Pretend visited to prevent use of this vertex
+    }
+
     // Try to add object to set (1:Added, 0:Already Exists, -1:Out of room)
     n = __maps__dwset_add( evalmem, key, item );
+    
     // Already exists
     if( n == 0 ) {
       return false; // Visited
     }
     // Added
     if( n > 0 ) {
-      evalmem->dwset.sz++;
+      dwset->sz++;
       return true; // Unvisited
     }
 

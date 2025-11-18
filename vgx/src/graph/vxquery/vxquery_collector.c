@@ -542,7 +542,7 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  *
  ***********************************************************************
  */
-static void __delete_recursion_queue( vgx_Graph_t *graph, vgx_RecursionQueue_t **queue ) {
+static void __delete_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t **queue ) {
   if( queue && *queue ) {
     Cm256iBuffer_t *Q = *queue;
     vgx_CollectorItem_t item;
@@ -550,8 +550,13 @@ static void __delete_recursion_queue( vgx_Graph_t *graph, vgx_RecursionQueue_t *
     GRAPH_LOCK( graph ) {
       while( iBuffer->Next( Q, &item.item ) ) {
         if( item.headref->refcnt > 0 ) {
-          item.headref->refcnt--;
-          _vxgraph_state__unlock_vertex_CS_LCK( graph, &item.headref->vertex, VGX_VERTEX_RECORD_NONE );
+          if( --(item.headref->refcnt) == 0 ) {
+            if( item.headref->slot.locked > 0 ) {
+              _vxgraph_state__unlock_vertex_CS_LCK( graph, &item.headref->vertex, VGX_VERTEX_RECORD_NONE );
+              item.headref->slot.locked = 0;
+            }
+            item.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+          }
         }
       }
     } GRAPH_RELEASE;
@@ -567,7 +572,7 @@ static void __delete_recursion_queue( vgx_Graph_t *graph, vgx_RecursionQueue_t *
  *
  ***********************************************************************
  */
-static vgx_RecursionQueue_t * __new_recursion_queue( int64_t size ) {
+static vgx_FrontierQueue_t * __new_frontier_queue( int64_t size ) {
   Cm256iBuffer_constructor_args_t queue_args = {
     .element_capacity = size * 4  // heuristic: init size 4x heap size
   };
@@ -635,7 +640,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_VertexRef_t *refmap = NULL;
   vgx_Ranker_t *ranker = NULL;
   vgx_CollectorStage_t *stage = NULL;
-  vgx_RecursionQueue_t *queue = NULL;
+  vgx_FrontierQueue_t *frontier = NULL;
+  int64_t max_frontier = 0;
   int64_t csize = size;
 
   // Recursive query?
@@ -644,6 +650,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
     if( (recursion_mode = neighborhood_query->recursion.mode) == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
       csize = __get_recursion_heap_size( &neighborhood_query->recursion, csize );
+      max_frontier = neighborhood_query->recursion.limit.frontier;
     }
   }
 
@@ -682,7 +689,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
     // Create the recursion queue
     if( recursion_mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
-      if( (queue = __new_recursion_queue( csize )) == NULL ) {
+      if( (frontier = __new_frontier_queue( csize )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
       }
     }
@@ -698,7 +705,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
-    top_k_collector->recursion_queue          = queue;
+    top_k_collector->frontier                 = frontier;
+    top_k_collector->max_frontier             = max_frontier;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL,
     top_k_collector->size                     = csize;
@@ -788,7 +796,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
-    collector->recursion_queue          = NULL;
+    collector->frontier                 = NULL;
+    collector->max_frontier             = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL,
     collector->size                     = size;
@@ -895,7 +904,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->ranker                       = ranker;
     map_collector->container.mapping.aggregator = fhmap;
     map_collector->refmap                       = refmap;
-    map_collector->recursion_queue              = NULL;
+    map_collector->frontier                     = NULL;
+    map_collector->max_frontier                 = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->size                         = size;
@@ -953,7 +963,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->recursion_queue    = NULL;
+    collector->frontier           = NULL;
+    collector->max_frontier       = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1050,7 +1061,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
-    top_k_collector->recursion_queue          = NULL;
+    top_k_collector->frontier                 = NULL;
+    top_k_collector->max_frontier             = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->size                     = size;
@@ -1141,7 +1153,8 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
-    collector->recursion_queue          = NULL,
+    collector->frontier                 = NULL,
+    collector->max_frontier             = 0,
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->size                     = size;
@@ -1195,7 +1208,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->recursion_queue    = NULL;
+    collector->frontier           = NULL;
+    collector->max_frontier       = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1253,8 +1267,8 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
     }
     
     // Delete the recursion queue
-    if( ctx->recursion_queue ) {
-      __delete_recursion_queue( ctx->graph, &ctx->recursion_queue );
+    if( ctx->frontier ) {
+      __delete_frontier_queue( ctx->graph, &ctx->frontier );
     }
 
     // Delete the container

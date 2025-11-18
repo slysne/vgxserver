@@ -331,6 +331,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
 
 
+  /*
   // Must have head vertex
   if( head == NULL ) {
     SET_INTEGER_PITEM_VALUE( pexitat, 0 );
@@ -346,7 +347,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   //         ^--------- 1 if already visited, else 0
   //       SP^
   __maps__xsethas( self, vkey, ventry );
-
+  
   // [ . . . x]
   //     SP^
   vgx_EvalStackItem_t *pvisited = POP_PITEM( self ); // <- x
@@ -354,6 +355,7 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     SET_INTEGER_PITEM_VALUE( pexitat, 1 );
     STACK_RETURN_INTEGER( self, 0 );
   }
+  */
 
   
   // Must have vector
@@ -416,16 +418,22 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     STACK_RETURN_INTEGER( self, 0 ); // not collected
   }
 
+  /*
   // Mark as visited
   // [ . . . m]
   //         ^-------- 1 (head marked as visited)
   //       SP^
   __maps__xsetadd( self, vkey, ventry, MAPS_KEYMODE__VERTEX );
-
+ 
   // Collect
   // [ . . . m]
   //         ^-------- Already 1 from above (assume collect successful below)
   //       SP^
+  */
+
+  // Collect
+  // [ . . . _]
+  //     SP^
   vgx_EvalStackItem_t score = {
     .type = STACK_ITEM_TYPE_REAL,
     .real = sim,
@@ -440,7 +448,9 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
   }
 
-  SET_INTEGER_PITEM_VALUE( pexitat, 5 );
+  STACK_RETURN_INTEGER( self, 1 );
+  
+  //SET_INTEGER_PITEM_VALUE( pexitat, 5 );
 }
 
 

@@ -4014,7 +4014,17 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .size                   = recursion_config->heap.size,
         .multiplier             = recursion_config->heap.multiplier
       },
-      .prune_offset             = recursion_config->prune_offset
+      .limit = {
+        .frontier               = recursion_config->limit.frontier,
+        .expansion              = recursion_config->limit.expansion,
+        .depth                  = recursion_config->limit.depth,
+        .exec_ms                = recursion_config->limit.exec_ms,
+        .visit                  = recursion_config->limit.visit
+      },
+      .visit = {
+        .reset_state            = recursion_config->visit.reset_state,
+        .skip_probability       = recursion_config->visit.skip_probability
+      }
     }
   };
   return COMLIB_OBJECT_NEW( vgx_NeighborhoodQuery_t, NULL, &args );

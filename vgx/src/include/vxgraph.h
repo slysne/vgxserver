@@ -5420,7 +5420,7 @@ typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *contex
 
 typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, const vgx_predicator_t target );
 
-typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, const vgx_Vertex_t *vertex );
+typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 
 
 
@@ -5440,8 +5440,12 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, cons
   bool eval_synarc;                                           \
   /* Advanced filter */                                       \
   struct s_vgx_Evaluator_t *traversing_evaluator;             \
-  /* Advanced filter */                                       \
+  /* Recursive node visitation tracker */                     \
   f_vgx_VertexUnvisited unvisited;                            \
+  /* Recursive node visitation tracker max size */            \
+  int64_t max_visited;                                        \
+  /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
+  double p_skip;  /* 0.0 - 1.0*/                              \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -5980,6 +5984,8 @@ typedef struct s_vgx_ExpressEvalDWordSet_t {
   vgx_ExpressEvalDWordSetSlot_t *slots;
   uint32_t mask;
   uint32_t sz;
+  int64_t counter;
+  int64_t _rsv;
 } vgx_ExpressEvalDWordSet_t;
 
 
@@ -6001,10 +6007,16 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // Q1.8
   CQwordList_t *vectorref;
   // Q1.7-8
+  QWORD __rsv_1_7;
+  QWORD __rsv_1_8;
+  // ==== CL2 ====
+  // Q2.1-4
   vgx_ExpressEvalDWordSet_t dwset;
-  // ==== CL2+3 ====
-  // Q2.1-8
+  // Q2.5-8 
+  QWORD __rsv_2_5_8[4];
+  // ==== CL3+4 ====
   // Q3.1-8
+  // Q4.1-8
   vgx_EvalStackItem_t __data[ 1<<VGX_EXPRESS_EVAL_MEMORY_OSTATIC ];
 
 } vgx_ExpressEvalMemory_t;
@@ -6712,7 +6724,7 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
  *
  ***********************************************************************
  */
-typedef Cm256iBuffer_t vgx_RecursionQueue_t;
+typedef Cm256iBuffer_t vgx_FrontierQueue_t;
 
 
 
@@ -6740,7 +6752,8 @@ typedef Cm256iBuffer_t vgx_RecursionQueue_t;
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
-  vgx_RecursionQueue_t *recursion_queue;      \
+  vgx_FrontierQueue_t *frontier;              \
+  int64_t max_frontier;                       \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   int64_t size;                               \
@@ -7097,7 +7110,7 @@ typedef struct s_vgx_IArcFilter_t {
 } vgx_IArcFilter_t;
 
 
-DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex );
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 
 
 /*******************************************************************//**
