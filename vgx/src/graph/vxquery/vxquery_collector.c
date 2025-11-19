@@ -32,6 +32,7 @@ static void __delete_search_ranker_context( vgx_Ranker_t **ranker );
 static vgx_Ranker_t * __new_search_ranker_context( const vgx_ranking_context_t *ranking_context );
 
 static vgx_VertexRef_t * __new_vertex_reference_map( int64_t collector_size, int64_t *mapsz );
+static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t *refmap, int64_t mapsz );
 static int64_t __destroy_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t **refmap, int64_t mapsz );
 
 static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query );
@@ -42,6 +43,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
 static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query );
 static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t *graph, vgx_BaseQuery_t *query );
 
+static void _vxquery_collector__clear_collector_references( vgx_BaseCollector_context_t *collector );
 static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector );
 static vgx_ArcCollector_context_t * _vxquery_collector__new_arc_collector( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
 static vgx_VertexCollector_context_t * _vxquery_collector__new_vertex_collector( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
@@ -57,6 +59,7 @@ static int64_t _vxquery_collector__transfer_base_list( vgx_ranking_context_t *ra
  ***********************************************************************
  */
 DLL_HIDDEN IGraphCollector_t iGraphCollector = {
+  .ClearCollectorReferences           = _vxquery_collector__clear_collector_references,
   .DeleteCollector                    = _vxquery_collector__delete_collector,
   .NewArcCollector                    = _vxquery_collector__new_arc_collector,
   .NewVertexCollector                 = _vxquery_collector__new_vertex_collector,
@@ -143,34 +146,67 @@ static vgx_VertexRef_t * __new_vertex_reference_map( int64_t collector_size, int
  *
  ***********************************************************************
  */
+static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t *refmap, int64_t mapsz ) {
+  if( refmap == NULL ) {
+    return 0;
+  }
+  int64_t n_released = 0;
+  vgx_VertexRef_t *cursor = refmap;
+  vgx_VertexRef_t *end = refmap + mapsz;
+  vgx_VertexRef_t *ref;
+
+  // Start optimistically by hoping we have no lingering references
+  while( (ref=cursor++) < end ) {
+    // No ref, or ref still positive after giving up ref, or vertex never locked
+    if( ref->refcnt == 0 ||      // no reference
+        --(ref->refcnt) > 0 ||   // still references
+        ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+    {
+      continue;
+    }
+    // Vertex needs to be unlocked, graph lock required for remainder of loop
+    goto continue_locked;
+  }
+
+  // Clean exit, we had no locked vertices
+  return 0;
+
+continue_locked:
+  GRAPH_LOCK( graph ) {
+    goto unlock_vertex_and_reset;
+    while( (ref=cursor++) < end ) {
+      // No ref, or ref still positive after giving up ref, or vertex never locked
+      if( ref->refcnt == 0 ||      // no reference
+          --(ref->refcnt) > 0 ||   // still references
+          ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+      {
+        continue;
+      }
+    unlock_vertex_and_reset:
+      // Vertex needs to be unlocked, graph lock required for remainder of loop
+      // Release core vertex lock
+      _vxgraph_state__unlock_vertex_CS_LCK( graph, &ref->vertex, VGX_VERTEX_RECORD_OPERATION );
+      ++n_released;
+      // Reset slot
+      ref->slot.locked = 0;
+      ref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+    }
+  } GRAPH_RELEASE;
+  
+  return n_released;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static int64_t __destroy_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t **refmap, int64_t mapsz ) {
   int64_t n_released = 0;
   if( refmap && *refmap ) {
-    vgx_VertexRef_t *cursor = *refmap;
-    vgx_VertexRef_t *end = *refmap + mapsz;
-    // Make sure any still-acquired vertices are released now
-    while( cursor < end ) {
-      if( cursor->slot.locked > 0 ) {
-        goto continue_locked;
-      }
-      ++cursor;
-    }
-    goto completed;
-
-continue_locked:
-    // Only here if any locked slots were found in the map.
-    // Now we have to lock the graph and release locks.
-    GRAPH_LOCK( graph ) {
-      while( cursor < end ) {
-        if( cursor->slot.locked > 0 ) {
-          _vxgraph_state__unlock_vertex_CS_LCK( graph, &cursor->vertex, VGX_VERTEX_RECORD_OPERATION );
-          ++n_released;
-        }
-        ++cursor;
-      }
-    } GRAPH_RELEASE;
-
-completed:
+    n_released = __clear_vertex_reference_map( graph, *refmap, mapsz );
     free( *refmap );
     *refmap = NULL;
   }
@@ -542,24 +578,64 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  *
  ***********************************************************************
  */
+static void __clear_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t *frontier_queue ) {
+  if( frontier_queue == NULL ) {
+    return;
+  }
+    
+  vgx_CollectorItem_t frontier = {0};
+  Cm256iBuffer_vtable_t *iBuffer = CALLABLE( frontier_queue );
+  // Start optimistically by hoping we have no lingering references
+  while( iBuffer->Next( frontier_queue, &frontier.item ) ) {
+    // No ref, or ref still positive after giving up ref, or vertex never locked
+    if( frontier.headref->refcnt == 0 ||      // no reference
+        --(frontier.headref->refcnt) > 0 ||   // still references
+        frontier.headref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+    {
+      continue;
+    }
+    // Vertex needs to be unlocked, graph lock required for remainder of loop
+    goto continue_locked;
+  }
+
+  // Clean exit, we had no locked vertices
+  return;
+
+continue_locked:
+  GRAPH_LOCK( graph ) {
+    if( frontier.headref ) {
+      goto unlock_vertex_and_reset;
+    }
+    while( iBuffer->Next( frontier_queue, &frontier.item ) ) {
+      // No ref, or ref still positive after giving up ref, or vertex never locked
+      if( frontier.headref->refcnt == 0 ||      // no reference
+          --(frontier.headref->refcnt) > 0 ||   // still references
+          frontier.headref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+      {
+        continue;
+      }
+    unlock_vertex_and_reset:
+      // Vertex needs to be unlocked, graph lock required for remainder of loop
+      // Release core vertex lock
+      _vxgraph_state__unlock_vertex_CS_LCK( graph, &frontier.headref->vertex, VGX_VERTEX_RECORD_OPERATION );
+      // Reset slot
+      frontier.headref->slot.locked = 0;
+      frontier.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+    }
+  } GRAPH_RELEASE;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static void __delete_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t **queue ) {
   if( queue && *queue ) {
     Cm256iBuffer_t *FQ = *queue;
-    vgx_CollectorItem_t frontier;
-    Cm256iBuffer_vtable_t *iBuffer = CALLABLE( FQ );
-    GRAPH_LOCK( graph ) {
-      while( iBuffer->Next( FQ, &frontier.item ) ) {
-        if( frontier.headref->refcnt > 0 ) {
-          if( --(frontier.headref->refcnt) == 0 ) {
-            if( frontier.headref->slot.locked > 0 ) {
-              _vxgraph_state__unlock_vertex_CS_LCK( graph, &frontier.headref->vertex, VGX_VERTEX_RECORD_OPERATION );
-              frontier.headref->slot.locked = 0;
-            }
-            frontier.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
-          }
-        }
-      }
-    } GRAPH_RELEASE;
+    __clear_frontier_queue( graph, FQ );
     COMLIB_OBJECT_DESTROY( FQ );
     *queue = NULL;
   }
@@ -1257,6 +1333,28 @@ static void __set_collect_counts( const int64_t hits, const int offset, vgx_coll
  *
  ***********************************************************************
  */
+static void _vxquery_collector__clear_collector_references( vgx_BaseCollector_context_t *collector ) {
+  if( collector ) {
+
+    // Clear any lingering references in the recursive frontier queue
+    if( collector->frontier ) {
+      __clear_frontier_queue( collector->graph, collector->frontier );
+    }
+
+    // Clear any lingering references in the vertex reference map
+    if( collector->refmap ) {
+      __clear_vertex_reference_map( collector->graph, collector->refmap, collector->sz_refmap );
+    }
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector ) {
   if( collector && *collector ) {
     vgx_BaseCollector_context_t *ctx = *collector;
@@ -1266,7 +1364,7 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
       __delete_search_ranker_context( &ctx->ranker );
     }
     
-    // Delete the recursion queue
+    // Delete the recursive frontier queue
     if( ctx->frontier ) {
       __delete_frontier_queue( ctx->graph, &ctx->frontier );
     }

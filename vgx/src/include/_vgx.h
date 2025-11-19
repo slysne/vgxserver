@@ -1003,6 +1003,7 @@ typedef struct s_vgx_collect_counts_t {
  ***********************************************************************
  */
 typedef struct s_IGraphCollector_t {
+  void (*ClearCollectorReferences)( vgx_BaseCollector_context_t *collector );
   void (*DeleteCollector)( vgx_BaseCollector_context_t **collector );
   vgx_ArcCollector_context_t * (*NewArcCollector)( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
   vgx_VertexCollector_context_t * (*NewVertexCollector)( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );

@@ -1794,6 +1794,19 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
         THROW_ERROR( CXLIB_ERR_GENERAL, 0xA6C );
       }
 
+      // ----------------------------------------------
+      // Clear any lingering vertex locks in collectors
+      // ----------------------------------------------
+      if( search->collector ) {
+        iGraphCollector.ClearCollectorReferences( search->collector );
+      }
+      if( search->result ) {
+        iGraphCollector.ClearCollectorReferences( search->result );
+      }
+      if( query->collector ) {
+        iGraphCollector.ClearCollectorReferences( query->collector );
+      }
+
       // ------------
       // End
       // ------------
