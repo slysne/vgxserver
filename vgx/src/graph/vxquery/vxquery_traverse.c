@@ -371,42 +371,39 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
   // Number of nodes in initial neighborhood to expand
   int64_t level_size = ComlibSequenceLength(Q);
-  bool running = true;
+  vgx_CollectorItem_t frontier = {0};
 
-  while( running && level_size > 0 && ++depth <= depth_limit ) {
+  while( level_size > 0 && ++depth <= depth_limit ) {
     // Frontier size at the start of this loop is exactly the number of nodes at the current depth
     for( int64_t i=0; i<level_size; ++i ) {
       // Next anchor in the frontier
-      vgx_CollectorItem_t queued;
-      CALLABLE(Q)->Next(Q, &queued.item);
+      CALLABLE(Q)->Next(Q, &frontier.item);
 
       // Require items from the queue to outrank the lowest scoring item on the heap
-      if( heap->_cmp( &difficulty.item, &queued.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
+      if( heap->_cmp( &difficulty.item, &frontier.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
         // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
-        vgx_Vertex_t *next = queued.headref->vertex;
+        vgx_Vertex_t *next = frontier.headref->vertex;
         if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
-          return VGX_ARC_FILTER_MATCH_ERROR;
+          match = VGX_ARC_FILTER_MATCH_ERROR;
+          goto terminate;
         }
 
         // Early termination if queue limit reached
         if( ++expansions >= expansion_limit ) {
-          running = false;
-          break;
+          goto terminate;
         }
 
         // We are execution time limited, check
         if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
-          running = false;
-          break;
+          goto terminate;
         }
 
         // Update min score to increase difficulty after heap refinement
         CALLABLE(heap)->HeapTop(heap, &difficulty.item);
       }
 
-      // Release lock for used up queue item since it's easy to do here
-      // (would also be done when collector is destroyed)
-      _vxquery_collector__del_vertex_reference_OPEN( search->collector, queued.headref );
+      // Used item from frontier must be closed here
+      _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
     }
 
     // Next level is the queue size after expanding current level
@@ -414,6 +411,14 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   }
 
   // The initial match only since this determines the overall whether anything was found at all
+  return match;
+
+terminate:
+  // Used item from frontier must be closed here
+  do {
+    _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
+    break; // TEST: SEE IF COLLECTOR DESTRUCTOR CLEANS UP PROPERLY
+  } while( CALLABLE(Q)->Next(Q, &frontier.item) > 0 );
   return match;
 }
 

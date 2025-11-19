@@ -544,23 +544,23 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  */
 static void __delete_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t **queue ) {
   if( queue && *queue ) {
-    Cm256iBuffer_t *Q = *queue;
-    vgx_CollectorItem_t item;
-    Cm256iBuffer_vtable_t *iBuffer = CALLABLE( Q );
+    Cm256iBuffer_t *FQ = *queue;
+    vgx_CollectorItem_t frontier;
+    Cm256iBuffer_vtable_t *iBuffer = CALLABLE( FQ );
     GRAPH_LOCK( graph ) {
-      while( iBuffer->Next( Q, &item.item ) ) {
-        if( item.headref->refcnt > 0 ) {
-          if( --(item.headref->refcnt) == 0 ) {
-            if( item.headref->slot.locked > 0 ) {
-              _vxgraph_state__unlock_vertex_CS_LCK( graph, &item.headref->vertex, VGX_VERTEX_RECORD_NONE );
-              item.headref->slot.locked = 0;
+      while( iBuffer->Next( FQ, &frontier.item ) ) {
+        if( frontier.headref->refcnt > 0 ) {
+          if( --(frontier.headref->refcnt) == 0 ) {
+            if( frontier.headref->slot.locked > 0 ) {
+              _vxgraph_state__unlock_vertex_CS_LCK( graph, &frontier.headref->vertex, VGX_VERTEX_RECORD_OPERATION );
+              frontier.headref->slot.locked = 0;
             }
-            item.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+            frontier.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
           }
         }
       }
     } GRAPH_RELEASE;
-    COMLIB_OBJECT_DESTROY( Q );
+    COMLIB_OBJECT_DESTROY( FQ );
     *queue = NULL;
   }
 }
