@@ -3453,6 +3453,13 @@ typedef struct s_vgx_recursion_config_t {
     bool reset_state;
     double skip_probability;
   } visit;
+  struct {
+    int64_t width;
+    int64_t offset;
+    int64_t min;
+    int64_t max;
+    double curve;
+  } beam;
   
 } vgx_recursion_config_t;
 

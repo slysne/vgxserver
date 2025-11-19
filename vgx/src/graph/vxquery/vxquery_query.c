@@ -4024,6 +4024,13 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .visit = {
         .reset_state            = recursion_config->visit.reset_state,
         .skip_probability       = recursion_config->visit.skip_probability
+      },
+      .beam = {
+        .width                  = recursion_config->beam.width,
+        .offset                 = recursion_config->beam.offset,
+        .min                    = recursion_config->beam.min,
+        .max                    = recursion_config->beam.max,
+        .curve                  = recursion_config->beam.curve
       }
     }
   };

@@ -323,13 +323,15 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  ***********************************************************************
  */
 static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
+  vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
   vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)search->collector;
 
   vgx_FrontierQueue_t *Q = collector->frontier;
-  Cm256iHeap_t *heap = collector->container.sequence.heap;
-  if( Q == NULL || heap == NULL ) {
+  Cm256iHeap_t *main_heap = collector->container.sequence.heap;
+  if( Q == NULL || main_heap == NULL ) {
     return VGX_ARC_FILTER_MATCH_ERROR;
   }
+  Cm256iHeap_t *beam_heap = NULL;
   
   // Early termination triggers
   int64_t frontier_limit = search->recursion.limit.frontier;
@@ -337,88 +339,130 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   int64_t depth_limit = search->recursion.limit.depth;
   int64_t exec_nanosec_limit = search->recursion.limit.exec_ms * 1000000LL;
 
-  // Handle edge case
-  if( expansion_limit < 1 || depth_limit < 1 ) {
-    return VGX_ARC_FILTER_MATCH_MISS;
-  }
-  if( search->recursion.visit.reset_state ) {
-    vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
-    if( E ) {
-      iEvaluator.ClearDWordSet( E->context.memory );
+  // Beam parameters
+  int64_t beam_width = search->recursion.beam.width;
+  int64_t beam_offset = search->recursion.beam.offset;
+  int64_t beam_min = search->recursion.beam.min;
+  int64_t beam_max = search->recursion.beam.max;
+  double beam_curve = search->recursion.beam.curve;
+
+  XTRY {
+
+    // Beam enabled
+    if( beam_width > 0 ) {
+      int64_t actual_max_size = (beam_offset <= 0 && beam_curve <= 1.0) ? beam_width : beam_max;
+
+      Cm256iHeap_constructor_args_t beam_heap_args = {
+        .element_capacity = actual_max_size,
+        .comparator = main_heap->_cmp
+      };
+
+      // Create the beam heap
+      if( (beam_heap = COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &beam_heap_args )) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_MEMORY, 0x001 );
+      }
     }
-  }
 
-  vgx_ArcFilter_match match;
+    // Handle edge case
+    if( expansion_limit < 1 || depth_limit < 1 ) {
+      match = VGX_ARC_FILTER_MATCH_MISS;
+      XBREAK;
+    }
+    if( search->recursion.visit.reset_state ) {
+      vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
+      if( E ) {
+        iEvaluator.ClearDWordSet( E->context.memory );
+      }
+    }
 
-  int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
-  int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
+    int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
+    int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
 
-  // Initial neighborhood traversal
-  int64_t expansions = 1;   // initial query implied
-  int64_t depth = 1;        // initial neighborhood implied
-  if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
-    return VGX_ARC_FILTER_MATCH_ERROR;
-  }
+    // Initial neighborhood traversal
+    int64_t expansions = 1;   // initial query implied
+    int64_t depth = 1;        // initial neighborhood implied
+    if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
+      THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
+    }
 
-  // Limits reached after initial traversal
-  if( ComlibSequenceLength(Q) > frontier_limit || expansions >= expansion_limit || depth >= depth_limit ) {
-    return match;
-  }
+    // Limits reached after initial traversal
+    if( ComlibSequenceLength(Q) > frontier_limit || expansions >= expansion_limit || depth >= depth_limit ) {
+      XBREAK;
+    }
 
-  // Initialize difficulty to none
-  vgx_CollectorItem_t difficulty;
-  CALLABLE(heap)->HeapTop(heap, &difficulty.item);
+    // Initialize difficulty to none
+    vgx_CollectorItem_t difficulty;
+    CALLABLE(main_heap)->HeapTop(main_heap, &difficulty.item);
 
-  // Number of nodes in initial neighborhood to expand
-  int64_t level_size = ComlibSequenceLength(Q);
-  vgx_CollectorItem_t frontier = {0};
+    // Number of nodes in initial neighborhood to expand
+    int64_t level_size = ComlibSequenceLength(Q);
+    vgx_CollectorItem_t frontier = {0};
 
-  while( level_size > 0 && ++depth <= depth_limit ) {
-    // Frontier size at the start of this loop is exactly the number of nodes at the current depth
-    for( int64_t i=0; i<level_size; ++i ) {
-      // Next anchor in the frontier
-      CALLABLE(Q)->Next(Q, &frontier.item);
-
-      // Require items from the queue to outrank the lowest scoring item on the heap
-      if( heap->_cmp( &difficulty.item, &frontier.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
-        // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
-        vgx_Vertex_t *next = frontier.headref->vertex;
-        if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
-          match = VGX_ARC_FILTER_MATCH_ERROR;
-          goto terminate;
+    while( level_size > 0 ) {
+      // Max depth reached
+      if( ++depth > depth_limit ) {
+        goto terminate_outer;
+      }
+      // Frontier size at the start of this loop is exactly the number of nodes at the current depth
+      for( int64_t i=0; i<level_size; ++i ) {
+        // Next anchor in the frontier
+        if( CALLABLE(Q)->Next(Q, &frontier.item) < 1 || frontier.headref->vertex == NULL ) {
+          THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
         }
 
-        // Early termination if queue limit reached
-        if( ++expansions >= expansion_limit ) {
-          goto terminate;
+        // Require items from the queue to outrank the lowest scoring item on the heap
+        if( main_heap->_cmp( &difficulty.item, &frontier.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
+          // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
+          vgx_Vertex_t *next = frontier.headref->vertex;
+          if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
+            match = VGX_ARC_FILTER_MATCH_ERROR;
+            goto terminate_inner;
+          }
+
+          // Early termination if queue limit reached
+          if( ++expansions >= expansion_limit ) {
+            goto terminate_inner;
+          }
+
+          // We are execution time limited, check
+          if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
+            goto terminate_inner;
+          }
+
+          // Update min score to increase difficulty after heap refinement
+          CALLABLE(main_heap)->HeapTop(main_heap, &difficulty.item);
         }
 
-        // We are execution time limited, check
-        if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
-          goto terminate;
-        }
-
-        // Update min score to increase difficulty after heap refinement
-        CALLABLE(heap)->HeapTop(heap, &difficulty.item);
+        // Used item from frontier must be closed here
+        _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
       }
 
-      // Used item from frontier must be closed here
-      _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
+      // Next level is the queue size after expanding current level
+      level_size = ComlibSequenceLength(Q);
     }
 
-    // Next level is the queue size after expanding current level
-    level_size = ComlibSequenceLength(Q);
+    // The initial match only since this determines the overall whether anything was found at all
+    XBREAK;
+
+  terminate_inner:
+    _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
+
+  terminate_outer:
+    GRAPH_LOCK( search->collector->graph ) {
+      while( CALLABLE(Q)->Next(Q, &frontier.item) > 0 ) {
+        _vxquery_collector__del_vertex_reference_ACQUIRE_CS( search->collector, frontier.headref, &search->collector->graph );
+      }
+    } GRAPH_RELEASE;
+  }
+  XCATCH( errcode ) {
+    match = VGX_ARC_FILTER_MATCH_ERROR;
+  }
+  XFINALLY {
+    if( beam_heap ) {
+      COMLIB_OBJECT_DESTROY( beam_heap );
+    }
   }
 
-  // The initial match only since this determines the overall whether anything was found at all
-  return match;
-
-terminate:
-  // Used item from frontier must be closed here
-  do {
-    _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
-    break; // TEST: SEE IF COLLECTOR DESTRUCTOR CLEANS UP PROPERLY
-  } while( CALLABLE(Q)->Next(Q, &frontier.item) > 0 );
   return match;
 }
 

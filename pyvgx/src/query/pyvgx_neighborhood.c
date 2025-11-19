@@ -218,17 +218,74 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x002 );
     }
 
-    // Defaults
+    struct s_int_config {
+      const char *name;
+      int64_t *target;
+      const int64_t dflt;
+      const int64_t minval;
+      const int64_t maxval;
+    };
+
+    struct s_dbl_config {
+      const char *name;
+      double *target;
+      const double dflt;
+      const double minval;
+      const double maxval;
+    };
+
+    struct s_bool_config {
+      const char *name;
+      bool dflt;
+      bool *target;
+    };
+  
+    struct s_int_config int_config[] = {
+      { .name="heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },  // default 0=auto
+      { .name="heap_multiplier",  .target = &param->recursion.heap.multiplier,  .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_MULT_MAX },  // default 0=auto
+      { .name="frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=LLONG_MAX,  .minval=0,      .maxval=LLONG_MAX },
+      { .name="expansion_limit",  .target = &param->recursion.limit.expansion,  .dflt=LLONG_MAX,  .minval=0,      .maxval=LLONG_MAX },
+      { .name="depth_limit",      .target = &param->recursion.limit.depth,      .dflt=LLONG_MAX,  .minval=0,      .maxval=LLONG_MAX },
+      { .name="exec_ms_limit",    .target = &param->recursion.limit.exec_ms,    .dflt=-1,         .minval=-1,     .maxval=LLONG_MAX },                // default -1=unlimited
+      { .name="visit_limit",      .target = &param->recursion.limit.visit,      .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
+      { .name="beam_width",       .target = &param->recursion.beam.width,       .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },  // default 0=off
+      { .name="beam_offset",      .target = &param->recursion.beam.offset,      .dflt=0,          .minval=-128,   .maxval=128 },                      // default 0=constant
+      { .name="beam_min",         .target = &param->recursion.beam.min,         .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
+      { .name="beam_max",         .target = &param->recursion.beam.max,         .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
+      {0}
+    };
+
+    struct s_dbl_config dbl_config[] = {
+      { .name = "skip_probability", .target = &param->recursion.visit.skip_probability, .dflt=0.0,  .minval=0.0,  .maxval=1.0 },    // default 0.0=no skipping
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,             .dflt=1.0,  .minval=0.0,  .maxval=2.0 },    // default 1.0=constant
+      {0}
+    };
+
+    struct s_bool_config bool_config[] = {
+      { .name = "reset_state",      .target = &param->recursion.visit.reset_state,      .dflt=true },
+      {0}
+    };
+
+    // Set defaults
     param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
-    param->recursion.heap.size = 0;       // auto
-    param->recursion.heap.multiplier = 0; // auto
-    param->recursion.limit.frontier = LLONG_MAX; // unlimited
-    param->recursion.limit.expansion = LLONG_MAX; // unlimited
-    param->recursion.limit.depth = LLONG_MAX; // unlimited
-    param->recursion.limit.visit = RECURSION_HEAP_SIZE_MAX; // reasonable default
-    param->recursion.limit.exec_ms = -1;  // unlimited
-    param->recursion.visit.reset_state = true;  // clear the visited set by default
-    param->recursion.visit.skip_probability = 0.0; // full results by default (no sampling)
+
+    struct s_int_config *int_cursor = int_config;
+    while( int_cursor->name ) {
+      *int_cursor->target = int_cursor->dflt;
+      ++int_cursor;
+    }
+
+    struct s_dbl_config *dbl_cursor = dbl_config;
+    while( dbl_cursor->name ) {
+      *dbl_cursor->target = dbl_cursor->dflt;
+      ++dbl_cursor;
+    }
+
+    struct s_bool_config *bool_cursor = bool_config;
+    while( bool_cursor->name ) {
+      *bool_cursor->target = bool_cursor->dflt;
+      ++bool_cursor;
+    }
 
     // Simple auto-config
     if( py_recursion == Py_True ) {
@@ -242,28 +299,8 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
       param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
     }
-    // { "mode": "bfs_progressive",
-    //   "heap_size": 256, "heap_multiplier": 4,
-    //   "frontier_limit": 10000, "expansion_limit": 500, "depth_limit": 4, "exec_ms_limit": 10,
-    //   "skip_probability: 0.25",
-    //   "reset_state": True }
+    // { "mode": "bfs_progressive", "heap_size": 256, ... }
     else if( PyDict_Check( py_recursion) ) {
-      struct s_int_config {
-        const char *name;
-        int64_t *target;
-      };
-      
-      struct s_int_config int_config[] = {
-        { .name = "heap_size",        .target = &param->recursion.heap.size },
-        { .name = "heap_multiplier",  .target = &param->recursion.heap.multiplier },
-        { .name = "frontier_limit",   .target = &param->recursion.limit.frontier },
-        { .name = "expansion_limit",  .target = &param->recursion.limit.expansion },
-        { .name = "depth_limit",      .target = &param->recursion.limit.depth },
-        { .name = "exec_ms_limit",    .target = &param->recursion.limit.exec_ms },
-        { .name = "visit_limit",      .target = &param->recursion.limit.visit },
-        {0}
-      };
-
       Py_ssize_t pos = 0;
       PyObject *py_key, *py_value;
       while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
@@ -290,100 +327,96 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
             THROW_SILENT( CXLIB_ERR_API, 0x005 );
           }
         }
-        // "reset_state"
-        else if( CharsEqualsConst(key, "reset_state") ) {
-          if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
-            param->recursion.visit.reset_state = true;
-          }
-          else if( py_value == Py_False || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) <= 0) ) {
-            param->recursion.visit.reset_state = false;
-          }
-          else {
-            PyErr_Format( PyExc_TypeError, "recursive search invalid reset_state: %R (bool or int required)", py_value );
-            THROW_SILENT( CXLIB_ERR_API, 0x006 );
-          }
-        }
-        // "skip_probability"
-        else if( CharsEqualsConst(key, "skip_probability") ) {
-          if( !PyFloat_Check(py_value ) ) {
-            PyErr_Format( PyExc_TypeError, "recursive search invalid skip_probability: %R (float required)", py_value );
-            THROW_SILENT( CXLIB_ERR_API, 0x007 );
-          }
-          param->recursion.visit.skip_probability = PyFloat_AsDouble( py_value );
-        }
         else {
-          struct s_int_config *cursor = int_config;
-          while( cursor->name ) {
-            if( CharsEqualsConst( key, cursor->name ) ) {
+          bool found = false;
+          // Integer parameter ?
+          int_cursor = int_config;
+          while( int_cursor->name ) {
+            if( CharsEqualsConst( key, int_cursor->name ) ) {
               if( !PyLong_Check(py_value) ) {
-                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", cursor->name, py_value );
-                THROW_SILENT( CXLIB_ERR_API, 0x008 );
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x006 );
               }
-              *cursor->target = PyLong_AsLongLong(py_value);
+              int64_t value = PyLong_AsLongLong( py_value );
+              if( value > int_cursor->maxval || value < int_cursor->minval ) {
+                CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
+                PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
+                iString.Discard( &CSTR__range );
+                THROW_SILENT( CXLIB_ERR_API, 0x007 );
+              }
+              *int_cursor->target = value;
+              found = true;
               break;
             }
-            ++cursor;
+            ++int_cursor;
           }
+          if( found ) {
+            continue;
+          }
+
+          // Float parameter ?
+          dbl_cursor = dbl_config;
+          while( dbl_cursor->name ) {
+            if( CharsEqualsConst( key, dbl_cursor->name ) ) {
+              if( !PyFloat_Check(py_value) ) {
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (float required)", dbl_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x008 );
+              }
+              double value = PyFloat_AsDouble( py_value );
+              if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
+                CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
+                PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
+                iString.Discard( &CSTR__range );
+                THROW_SILENT( CXLIB_ERR_API, 0x009 );
+              }
+              *dbl_cursor->target = value;
+              found = true;
+              break;
+            }
+            ++dbl_cursor;
+          }
+          if( found ) {
+            continue;
+          }
+
+          // Boolean parameter?
+          bool_cursor = bool_config;
+          while( bool_cursor->name ) {
+            if( CharsEqualsConst( key, bool_cursor->name ) ) {
+              if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
+                *bool_cursor->target = true;
+              }
+              else if( py_value == Py_False || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) <= 0) ) {
+                *bool_cursor->target = false;
+              }
+              else {
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x00A );
+              }
+              found = true;
+              break;
+            }
+            ++bool_cursor;
+          }
+          if( found ) {
+            continue;
+          }
+
           // Unknown config parameter
-          if( cursor->name == NULL ) {
-            PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
-            THROW_SILENT( CXLIB_ERR_API, 0x009 );
-          }
+          PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
+          THROW_SILENT( CXLIB_ERR_API, 0x00B );
         }
       }
     }
     // unsupported
     else {
       PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool, int or dict" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00A );
+      THROW_SILENT( CXLIB_ERR_API, 0x00C );
     }
           
     if( param->recursion.heap.size > 0 && param->recursion.heap.multiplier > 0 ) {
       PyErr_Format( PyExc_TypeError, "recursive search heap_size and heap_multiplier cannot be specified at the same time" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00B );
-    }
-
-    // Validate heap size
-    if( param->recursion.heap.size > RECURSION_HEAP_SIZE_MAX ) {
-      PyErr_Format( PyExc_TypeError, "recursive search heap_size out of range, must be <= %d", RECURSION_HEAP_SIZE_MAX );
-      THROW_SILENT( CXLIB_ERR_API, 0x00C );
-    }
-
-    // Validate heap multiplier
-    if( param->recursion.heap.multiplier > RECURSION_HEAP_MULT_MAX ) {
-      PyErr_Format( PyExc_TypeError, "recursive search heap_multiplier out of range, must be <= %d", RECURSION_HEAP_MULT_MAX );
       THROW_SILENT( CXLIB_ERR_API, 0x00D );
-    }
-
-    // Non-negative frontier_limit 
-    if( param->recursion.limit.frontier < 0 ) {
-      param->recursion.limit.frontier = 0;
-    }
-
-    // Non-negative expansion_limit 
-    if( param->recursion.limit.expansion < 0 ) {
-      param->recursion.limit.expansion = 0;
-    }
-
-    // Non-negative depth_limit 
-    if( param->recursion.limit.depth < 0 ) {
-      param->recursion.limit.depth = 0;
-    }
-
-    // Clamp visit_limit
-    if( param->recursion.limit.visit < 0 ) {
-      param->recursion.limit.visit = 0;
-    }
-    if( param->recursion.limit.visit > INT_MAX ) {
-      param->recursion.limit.visit = INT_MAX;
-    }
-    
-    // Clamp skip_probability
-    if( param->recursion.visit.skip_probability < 0.0 ) {
-      param->recursion.visit.skip_probability = 0.0;
-    }
-    if( param->recursion.visit.skip_probability > 1.0 ) {
-      param->recursion.visit.skip_probability = 1.0;
     }
 
   }
