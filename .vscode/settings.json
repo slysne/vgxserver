@@ -28,7 +28,9 @@
         "_comlibsequence_m128i_ops.h": "c",
         "_vxtraverse.h": "c",
         "_vgx.h": "c",
-        "_vxarcvector.h": "c"
+        "_vxarcvector.h": "c",
+        "_vxeval.h": "c",
+        "eval.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }
