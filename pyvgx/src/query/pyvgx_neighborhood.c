@@ -250,8 +250,8 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name="visit_limit",      .target = &param->recursion.limit.visit,      .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
       { .name="beam_width",       .target = &param->recursion.beam.width,       .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },  // default 0=off
       { .name="beam_offset",      .target = &param->recursion.beam.offset,      .dflt=0,          .minval=-128,   .maxval=128 },                      // default 0=constant
-      { .name="beam_min",         .target = &param->recursion.beam.min,         .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
-      { .name="beam_max",         .target = &param->recursion.beam.max,         .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
+      { .name="beam_min",         .target = &param->recursion.beam.min_width,   .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
+      { .name="beam_max",         .target = &param->recursion.beam.max_width,   .dflt=LLONG_MAX,  .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },
       {0}
     };
 

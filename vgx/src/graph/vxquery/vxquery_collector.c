@@ -668,13 +668,14 @@ static void __clear_beam_heap( vgx_Graph_t *graph, Cm256iHeap_t *beam_heap ) {
   }
 
   // NOTE: we have to enhance the heap api to get this information properly
-  vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)beam_heap->_rp;
+  vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)beam_heap->_buffer;
   vgx_CollectorItem_t *end = cursor + beam_heap->_size;
   vgx_CollectorItem_t *item;
+  vgx_VertexRef_t *ref;
 
   // Start optimistically by hoping we have no lingering references
   while( (item=cursor++) < end ) {
-    vgx_VertexRef_t *ref = item->headref;
+    ref = item->headref;
     // End of heap data
     if( ref == NULL || ref->slot.state == VGX_VERTEXREF_STATE_INVALID ) {
       break;
@@ -697,7 +698,7 @@ continue_locked:
   GRAPH_LOCK( graph ) {
     goto unlock_vertex_and_reset;
     while( (item=cursor++) < end ) {
-      vgx_VertexRef_t *ref = item->headref;
+      ref = item->headref;
       // End of heap data
       if( ref == NULL || ref->slot.state == VGX_VERTEXREF_STATE_INVALID ) {
         break;
@@ -816,6 +817,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   int64_t max_frontier = 0;
   int64_t csize = size;
   Cm256iHeap_t *beam_heap = NULL;
+  int64_t beam_width = 0;
   int64_t max_beam_width = 0;
   
 
@@ -835,7 +837,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
         // Frontier
         max_frontier = recursion->limit.frontier;
         // Beam
-        max_beam_width = (recursion->beam.offset <= 0 && recursion->beam.curve <= 1.0) ? recursion->beam.width : recursion->beam.max;
+        beam_width = recursion->beam.width;
+        max_beam_width = (recursion->beam.offset <= 0 && recursion->beam.curve <= 1.0) ? recursion->beam.width : recursion->beam.max_width;
       }
     }
 
@@ -897,6 +900,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->frontier                 = frontier;
     top_k_collector->max_frontier             = max_frontier;
     top_k_collector->beam_heap                = beam_heap;
+    top_k_collector->beam_width               = beam_width;
     top_k_collector->max_beam_width           = max_beam_width;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
@@ -997,6 +1001,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->beam_heap                = NULL;
+    collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
@@ -1110,6 +1115,7 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->frontier                     = NULL;
     map_collector->max_frontier                 = 0;
     map_collector->beam_heap                    = NULL;
+    map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
@@ -1174,6 +1180,7 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->beam_heap          = NULL;
+    collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
@@ -1275,6 +1282,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->frontier                 = NULL;
     top_k_collector->max_frontier             = 0;
     top_k_collector->beam_heap                = NULL;
+    top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
@@ -1372,6 +1380,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->beam_heap                = NULL;
+    collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
@@ -1432,6 +1441,7 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->beam_heap          = NULL;
+    collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
@@ -1986,6 +1996,52 @@ static int64_t _vxquery_collector__transfer_base_list( vgx_ranking_context_t *ra
   }
 
   return iList->Length( (*dest)->container.sequence.list );
+}
+
+
+
+
+static void _vxquery_collector__heapsort_collector_items( Cm256iList_t *heapified ) {
+  int64_t n = heapified->_size;
+  if(n < 2) {
+    return;
+  }
+
+  __m256i* base = heapified->_buffer;
+
+  for( int64_t end = n - 1; end > 0; --end ) {
+    // Extract max: swap root with last element
+    __m256i tmp = base[0];
+    base[0] = base[end];
+    base[end] = tmp;
+
+    // Sift down on reduced heap [0 .. end-1]
+    size_t root = 0;
+    while(1) {
+      size_t left = 2 * root + 1;
+      if( left >= (size_t)end ) {      // No left child: done
+        break;
+      }
+
+      size_t child = left;
+      size_t right = left + 1;
+
+      if( right < (size_t)end && heapified->_cmp( &base[right], &base[left] ) > 0 ) {
+        child = right;
+      }
+
+      if( heapified->_cmp( &base[child], &base[root] ) <= 0 ) {
+        break;
+      }
+
+      /* Swap with larger child */
+      tmp          = base[root];
+      base[root]   = base[child];
+      base[child]  = tmp;
+
+      root = child;
+    }
+  }
 }
 
 

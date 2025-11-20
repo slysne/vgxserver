@@ -789,6 +789,7 @@ __inline int c99_vsnprintf( char *out_buf, size_t size, const char *format, va_l
 #define maximum_value(a,b) (((a) > (b)) ? (a) : (b))
 #define minimum_value(a,b) (((a) < (b)) ? (a) : (b))
 
+#define clamp_value(x, hi, lo) ((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 
 
 /*******************************************************************//**

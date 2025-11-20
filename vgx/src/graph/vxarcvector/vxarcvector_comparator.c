@@ -434,12 +434,16 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
           if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
             //int headlock = larc->acquired.head_lock;
             if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
+
               // Head is queued as anchor for future recursive traversal
               if( base->frontier && ComlibSequenceLength(base->frontier) < base->max_frontier ) {
                 if( CALLABLE( base->frontier )->Append( base->frontier, &inserted->item ) > 0 ) {
                   inserted->headref->refcnt++;
                 }
               }
+
+
+
               inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
               // SUCCESS
               updated = 1;

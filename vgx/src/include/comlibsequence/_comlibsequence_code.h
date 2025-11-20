@@ -3955,7 +3955,7 @@ static int ComlibSequence_heap_push_nolock( _CSEQ_TYPENAME *self, const _CSEQ_EL
       __cursor_inc;
       self->_size++;
 
-      _CSEQ_ELEMENT_TYPE *root = self->_rp;
+      _CSEQ_ELEMENT_TYPE *root = self->_buffer;
       _CSEQ_ELEMENT_TYPE *item, *parent;
       //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
 
@@ -4037,7 +4037,7 @@ static int ComlibSequence_heap_pop_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_T
   if( self->_size > 0 ) {
     __begin_write_buffer_section( self ) {
 
-      _CSEQ_ELEMENT_TYPE *root = self->_rp;
+      _CSEQ_ELEMENT_TYPE *root = self->_buffer;
       _CSEQ_ELEMENT_TYPE *parent, *high, *left, *right;
       //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
@@ -4126,7 +4126,7 @@ static int ComlibSequence_heap_replace_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEME
 
     __begin_general_buffer_section( self ) {
 
-      _CSEQ_ELEMENT_TYPE *root = self->_rp;
+      _CSEQ_ELEMENT_TYPE *root = self->_buffer;
       _CSEQ_ELEMENT_TYPE *parent, *high, *left, *right, *item;
       //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
@@ -4241,7 +4241,7 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk_nolock( _CSEQ_TYPENAME 
   if( self->_size > 0 ) {
     __begin_general_buffer_section( self ) {
 
-      _CSEQ_ELEMENT_TYPE *root = self->_rp;
+      _CSEQ_ELEMENT_TYPE *root = self->_buffer;
       //int (*cmp)( const _CSEQ_ELEMENT_TYPE *a, const _CSEQ_ELEMENT_TYPE *b) = self->_cmp;
       
       // When the root compares "greater than" the candidate it will be yanked and the candidate will be
@@ -4287,7 +4287,6 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk_nolock( _CSEQ_TYPENAME 
   
   return location;
 }
-
 
 
 

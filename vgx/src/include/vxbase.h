@@ -3456,8 +3456,8 @@ typedef struct s_vgx_recursion_config_t {
   struct {
     int64_t width;
     int64_t offset;
-    int64_t min;
-    int64_t max;
+    int64_t min_width;
+    int64_t max_width;
     double curve;
   } beam;
   

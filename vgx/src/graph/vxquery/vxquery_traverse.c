@@ -322,29 +322,100 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  *
  ***********************************************************************
  */
+static int64_t _vgxquery_traverse__recursive_next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width ) {
+  // next = width * curve + offset
+  int64_t next = (int64_t)round( current_beam_width * recursion->beam.curve + recursion->beam.offset );
+  // clamp 
+  return clamp_value( next, recursion->beam.max_width, recursion->beam.min_width );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void _vgxquery_traverse__recursive_beamify_frontier( vgx_BaseCollector_context_t *collector, vgx_recursion_config_t *recursion, vgx_CollectorItem_t *difficulty ) {
+
+  Cm256iHeap_t *B = collector->beam_heap;
+  vgx_FrontierQueue_t *Q = collector->frontier;
+  vgx_CollectorItem_t frontier = {0};
+  vgx_CollectorItem_t discarded = {0};
+  int64_t effective_width;
+
+  // Adjust beam width
+  collector->beam_width = _vgxquery_traverse__recursive_next_beam_width( recursion, collector->beam_width );
+  // Mutilate the heap size attribute (internal buffer remains sufficiently allocated due to max_beam_width guarantees when created)
+  // Beam heap is never larger than the current frontier queue, but usually smaller controlled by current beam_width
+  effective_width = minimum_value( collector->beam_width, ComlibSequenceLength(Q) );
+  // Initialize beam heap
+  CALLABLE(B)->Clear(B);
+  CALLABLE(B)->Initialize(B, &collector->empty.item, effective_width);
+  // Consume entire frontier queue and push to beam heap
+  while( CALLABLE(Q)->Next(Q, &frontier.item) ) {
+    // Prune as we go, ignoring frontier items known to be inferior at this point
+    if( B->_cmp( &difficulty->item, &frontier.item ) > 0 ) { // heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked
+      // Push and replace, item transferred from frontier to beam retains same vertex reference
+      if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item ) != NULL ) {
+        // Item discarded from beam must be closed if it is a non-dummy item
+        if( discarded.headref && discarded.headref->refcnt > 0 ) {
+          _vxquery_collector__del_vertex_reference_OPEN( collector, discarded.headref ); // <- former beam item closed
+        }
+        continue;
+      }
+    }
+    // Nothing pushed, which means this frontier item is not part of the beam
+    _vxquery_collector__del_vertex_reference_OPEN( collector, frontier.headref ); // <- inferior frontier item closed
+  }
+
+  // Frontier queue now empty and beam contains frontier's top items. Sort before we push
+  qsort( B->_buffer, B->_size, sizeof( vgx_CollectorItem_t ), (int (*)( const void *, const void *))B->_cmp );
+
+  // Push beam back on frontier queue to continue processing
+  vgx_CollectorItem_t *buffer = (vgx_CollectorItem_t*)B->_buffer;
+  for( int i=0; i<effective_width; ++i ) {
+    // Next beam heap entry
+    vgx_CollectorItem_t *pitem = &buffer[i];
+    if( pitem->headref->refcnt < 0 ) { // <- Safety: ignore dummy item, but should never exist due to heap size set above
+      continue;
+    }
+    // Push to frontier queue (transferring ownership back)
+    CALLABLE(Q)->Append(Q, &pitem->item); // <- should always succeed
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
   vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
-  vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)search->collector;
+  vgx_BaseCollector_context_t *collector = search->collector;
+  vgx_recursion_config_t *recursion = &search->recursion;
 
   vgx_FrontierQueue_t *Q = collector->frontier;
   Cm256iHeap_t *main_heap = collector->container.sequence.heap;
   if( Q == NULL || main_heap == NULL ) {
     return VGX_ARC_FILTER_MATCH_ERROR;
   }
-  Cm256iHeap_t *beam_heap = NULL;
+  Cm256iHeap_t *beam_heap = collector->beam_heap;
   
   // Early termination triggers
-  int64_t frontier_limit = search->recursion.limit.frontier;
-  int64_t expansion_limit = search->recursion.limit.expansion;
-  int64_t depth_limit = search->recursion.limit.depth;
-  int64_t exec_nanosec_limit = search->recursion.limit.exec_ms * 1000000LL;
+  int64_t frontier_limit = recursion->limit.frontier;
+  int64_t expansion_limit = recursion->limit.expansion;
+  int64_t depth_limit = recursion->limit.depth;
+  int64_t exec_nanosec_limit = recursion->limit.exec_ms * 1000000LL;
 
   // Beam parameters
-  int64_t beam_width = search->recursion.beam.width;
-  int64_t beam_offset = search->recursion.beam.offset;
-  int64_t beam_min = search->recursion.beam.min;
-  int64_t beam_max = search->recursion.beam.max;
-  double beam_curve = search->recursion.beam.curve;
+  int64_t beam_width = recursion->beam.width;
+  int64_t beam_offset = recursion->beam.offset;
+  int64_t beam_min = recursion->beam.min_width;
+  int64_t beam_max = recursion->beam.max_width;
+  double beam_curve = recursion->beam.curve;
 
   XTRY {
 
@@ -353,12 +424,15 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       match = VGX_ARC_FILTER_MATCH_MISS;
       XBREAK;
     }
-    if( search->recursion.visit.reset_state ) {
+    if( recursion->visit.reset_state ) {
       vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
       if( E ) {
         iEvaluator.ClearDWordSet( E->context.memory );
       }
     }
+    
+    // Initialize beam width in the collector
+    collector->beam_width = recursion->beam.width;
 
     int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
     int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
@@ -424,16 +498,13 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         }
 
         // Used item from frontier must be closed here
-        _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
+        _vxquery_collector__del_vertex_reference_OPEN( collector, frontier.headref );
       }
 
-
-      // TODO:
-      // If beam enabled, transfer everything from frontier queue to beam heap.
-      // Queue --> Beam
-      // 1234       64 best
-      // The adjust level_size to the number of surviving items in the beam heap
-
+      // If beam enabled, focus beam to current top beam-width items in the frontier
+      if( beam_heap ) {
+        _vgxquery_traverse__recursive_beamify_frontier( collector, recursion, &difficulty );
+      }
 
       // Next level is the queue size after expanding current level
       level_size = ComlibSequenceLength(Q);
@@ -443,12 +514,12 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     XBREAK;
 
   terminate_inner:
-    _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
+    _vxquery_collector__del_vertex_reference_OPEN( collector, frontier.headref );
 
   terminate_outer:
-    GRAPH_LOCK( search->collector->graph ) {
+    GRAPH_LOCK( collector->graph ) {
       while( CALLABLE(Q)->Next(Q, &frontier.item) > 0 ) {
-        _vxquery_collector__del_vertex_reference_ACQUIRE_CS( search->collector, frontier.headref, &search->collector->graph );
+        _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &collector->graph );
       }
     } GRAPH_RELEASE;
   }
@@ -456,9 +527,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     match = VGX_ARC_FILTER_MATCH_ERROR;
   }
   XFINALLY {
-    if( beam_heap ) {
-      COMLIB_OBJECT_DESTROY( beam_heap );
-    }
   }
 
   return match;

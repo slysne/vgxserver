@@ -4028,8 +4028,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .beam = {
         .width                  = recursion_config->beam.width,
         .offset                 = recursion_config->beam.offset,
-        .min                    = recursion_config->beam.min,
-        .max                    = recursion_config->beam.max,
+        .min_width              = recursion_config->beam.min_width,
+        .max_width              = recursion_config->beam.max_width,
         .curve                  = recursion_config->beam.curve
       }
     }

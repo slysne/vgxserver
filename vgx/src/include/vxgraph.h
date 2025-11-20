@@ -6755,6 +6755,7 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
   vgx_FrontierQueue_t *frontier;              \
   int64_t max_frontier;                       \
   Cm256iHeap_t *beam_heap;                    \
+  int64_t beam_width;                         \
   int64_t max_beam_width;                     \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
