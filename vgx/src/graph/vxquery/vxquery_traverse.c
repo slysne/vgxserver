@@ -348,21 +348,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
   XTRY {
 
-    // Beam enabled
-    if( beam_width > 0 ) {
-      int64_t actual_max_size = (beam_offset <= 0 && beam_curve <= 1.0) ? beam_width : beam_max;
-
-      Cm256iHeap_constructor_args_t beam_heap_args = {
-        .element_capacity = actual_max_size,
-        .comparator = main_heap->_cmp
-      };
-
-      // Create the beam heap
-      if( (beam_heap = COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &beam_heap_args )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_MEMORY, 0x001 );
-      }
-    }
-
     // Handle edge case
     if( expansion_limit < 1 || depth_limit < 1 ) {
       match = VGX_ARC_FILTER_MATCH_MISS;
@@ -405,6 +390,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       }
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
       for( int64_t i=0; i<level_size; ++i ) {
+        
+        // TODO:
+        // If beam enabled, consume the beam heap items instead of the frontier queue (which is empty)
+        // 
+
         // Next anchor in the frontier
         if( CALLABLE(Q)->Next(Q, &frontier.item) < 1 || frontier.headref->vertex == NULL ) {
           THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
@@ -436,6 +426,14 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         // Used item from frontier must be closed here
         _vxquery_collector__del_vertex_reference_OPEN( search->collector, frontier.headref );
       }
+
+
+      // TODO:
+      // If beam enabled, transfer everything from frontier queue to beam heap.
+      // Queue --> Beam
+      // 1234       64 best
+      // The adjust level_size to the number of surviving items in the beam heap
+
 
       // Next level is the queue size after expanding current level
       level_size = ComlibSequenceLength(Q);
