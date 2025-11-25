@@ -3423,11 +3423,22 @@ typedef enum e_vgx_collector_mode_t {
  ***********************************************************************
  */
 typedef enum e_vgx_recursion_mode_t {
-  _VGX_RECURSION_MODE_MASK_BFS          = 0x00000010,
-  _VGX_RECURSION_MODE_MASK_PROGRESSIVE  = 0x00000100,
-  //                                      -------PB-
-  VGX_RECURSION_MODE_NONE               = 0x00000000,
-  VGX_RECURSION_MODE_BFS_PROGRESSIVE    = _VGX_RECURSION_MODE_MASK_BFS | _VGX_RECURSION_MODE_MASK_PROGRESSIVE
+  //      recursive      _____________________________
+  //        queue        __________________________   |
+  //         beam        _________________________ |  |
+  //                                              ||  |
+  //                                              ||  |
+  //                                              ||  |
+  //                                              VV  V
+  //                                          ----------
+  _VGX_RECURSION_MODE_MASK_RECURSIVE        = 0x00000010,
+  _VGX_RECURSION_MODE_MASK_FRONTIER_NONE    = 0x00000000,
+  _VGX_RECURSION_MODE_MASK_FRONTIER_QUEUE   = 0x00010000,
+  _VGX_RECURSION_MODE_MASK_FRONTIER_BEAM    = 0x00100000,
+  //                                          ----------
+  VGX_RECURSION_MODE_NONE                   = 0x00000000,
+  VGX_RECURSION_MODE_BFS_PROGRESSIVE        = _VGX_RECURSION_MODE_MASK_RECURSIVE | _VGX_RECURSION_MODE_MASK_FRONTIER_QUEUE,
+  VGX_RECURSION_MODE_BEAM_PROGRESSIVE       = _VGX_RECURSION_MODE_MASK_RECURSIVE | _VGX_RECURSION_MODE_MASK_FRONTIER_BEAM
 } vgx_recursion_mode_t;
   
 
@@ -3462,6 +3473,12 @@ typedef struct s_vgx_recursion_config_t {
   } beam;
   
 } vgx_recursion_config_t;
+
+
+
+__inline static bool __is_recursion_enabled( const vgx_recursion_config_t *recursion ) {
+  return recursion && recursion->mode != VGX_RECURSION_MODE_NONE;
+}
 
 
 
@@ -3571,10 +3588,10 @@ typedef enum e_vgx_ResponseAttrFastMask {
   // Names
   VGX_RESPONSE_ATTR_ANCHOR         = 0x00000001,
   VGX_RESPONSE_ATTR_ANCHOR_OBID    = 0x00000002,
-  VGX_RESPONSE_ATTRS_ANCHOR        = 0x00000003,
+  VGX_RESPONSE_ATTRS_ANCHOR        = VGX_RESPONSE_ATTR_ANCHOR | VGX_RESPONSE_ATTR_ANCHOR_OBID,
   VGX_RESPONSE_ATTR_ID             = 0x00000004,
   VGX_RESPONSE_ATTR_OBID           = 0x00000008,
-  VGX_RESPONSE_ATTRS_ID            = 0x0000000C,
+  VGX_RESPONSE_ATTRS_ID            = VGX_RESPONSE_ATTR_ID | VGX_RESPONSE_ATTR_OBID,
   VGX_RESPONSE_ATTR_TYPENAME       = 0x00000010,
   VGX_RESPONSE_ATTRS_VERTICES      = VGX_RESPONSE_ATTR_ANCHOR | VGX_RESPONSE_ATTR_ID,
   VGX_RESPONSE_ATTRS_VERTICES_OBID = VGX_RESPONSE_ATTR_ANCHOR_OBID | VGX_RESPONSE_ATTR_OBID,
@@ -3587,7 +3604,7 @@ typedef enum e_vgx_ResponseAttrFastMask {
   // Predicator
   VGX_RESPONSE_ATTR_ARCDIR         = 0x00000100,  //  0001
   VGX_RESPONSE_ATTR_RELTYPE        = 0x00000200,  //  0010
-  VGX_RESPONSE_ATTR_RELATIONSHIP   = 0x00000300,  //  0011 (two items: relationship 0010 and direction 0001)
+  VGX_RESPONSE_ATTR_RELATIONSHIP   = VGX_RESPONSE_ATTR_ARCDIR | VGX_RESPONSE_ATTR_RELTYPE,  //  0011 (two items: relationship 0010 and direction 0001)
   VGX_RESPONSE_ATTR_MODIFIER       = 0x00000400,  //  0100
   VGX_RESPONSE_ATTR_VALUE          = 0x00000800,  //  1000
   VGX_RESPONSE_ATTRS_PREDICATOR    = VGX_RESPONSE_ATTR_RELATIONSHIP | VGX_RESPONSE_ATTR_MODIFIER | VGX_RESPONSE_ATTR_VALUE,
@@ -3596,21 +3613,21 @@ typedef enum e_vgx_ResponseAttrFastMask {
   // Properties
   VGX_RESPONSE_ATTR_VECTOR         = 0x00001000,
   VGX_RESPONSE_ATTR_PROPERTY       = 0x00002000,  // need property name supplied in addition to bitmask
+  VGX_RESPONSE_ATTRS_PROPERTIES    = VGX_RESPONSE_ATTR_VECTOR | VGX_RESPONSE_ATTR_PROPERTY,
   VGX_RESPONSE_ATTR__P_RSV         = 0x00004000,
   VGX_RESPONSE_ATTR_AS_ENUM        = 0x00008000,  // when present in the attrmask, do not decode enumerations
-  VGX_RESPONSE_ATTRS_PROPERTIES    = VGX_RESPONSE_ATTR_VECTOR | VGX_RESPONSE_ATTR_PROPERTY,
   // Relevance
   VGX_RESPONSE_ATTR_RANKSCORE      = 0x00010000,
   VGX_RESPONSE_ATTR_SIMILARITY     = 0x00020000,
   VGX_RESPONSE_ATTR_HAMDIST        = 0x00040000,
-  VGX_RESPONSE_ATTR__R_RSV         = 0x00080000,
-  VGX_RESPONSE_ATTRS_RELEVANCE     = VGX_RESPONSE_ATTR_RANKSCORE | VGX_RESPONSE_ATTR_SIMILARITY | VGX_RESPONSE_ATTR_HAMDIST,
+  VGX_RESPONSE_ATTR_RECURSION      = 0x00080000,
+  VGX_RESPONSE_ATTRS_RELEVANCE     = VGX_RESPONSE_ATTR_RANKSCORE | VGX_RESPONSE_ATTR_SIMILARITY | VGX_RESPONSE_ATTR_HAMDIST | VGX_RESPONSE_ATTR_RECURSION,
   // Timestamps
   VGX_RESPONSE_ATTR_TMC            = 0x00100000,
   VGX_RESPONSE_ATTR_TMM            = 0x00200000,
   VGX_RESPONSE_ATTR_TMX            = 0x00400000,
-  VGX_RESPONSE_ATTR__T_RSV         = 0x00800000,
   VGX_RESPONSE_ATTRS_TIMESTAMP     = VGX_RESPONSE_ATTR_TMC | VGX_RESPONSE_ATTR_TMM | VGX_RESPONSE_ATTR_TMX,
+  VGX_RESPONSE_ATTR__T_RSV         = 0x00800000,
 
   // ... more
   VGX_RESPONSE_ATTR_DESCRIPTOR     = 0x01000000,

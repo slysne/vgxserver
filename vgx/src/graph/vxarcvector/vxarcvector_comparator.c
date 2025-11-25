@@ -415,6 +415,43 @@ DLL_HIDDEN vgx_VertexStager_t _iStageVertex = {
 
 
 
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static void __update_frontier( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_Graph_t **locked_graph ) {
+  switch( base->recursion_mode ) {
+  case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
+    {
+      Cm256iHeap_t *B = base->beam_heap;
+      vgx_CollectorItem_t discarded = {0};
+      if( CALLABLE(B)->HeapPushTopK(B, &inserted->item, &discarded.item) == NULL ) {
+        return; // item not good enough for beam
+      }
+      // Item discarded from the beam must be decref'ed (dummy items no-op is handled)
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded.headref, locked_graph );
+    }
+    break;
+  case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
+    {
+      Cm256iBuffer_t *F = base->frontier;
+      if( ComlibSequenceLength(F) >= base->max_frontier ) {
+        return; // Frontier queue full
+      }
+      if( CALLABLE(F)->Append(F, &inserted->item) < 1 ) {
+        return; // ?
+      }
+    }
+    break;
+  default:
+    return;
+  }
+    
+  // Frontier owns another reference
+  inserted->headref->refcnt++;
+}
+
+
 
 /*******************************************************************//**
  *
@@ -432,18 +469,12 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
       if( _vxquery_collector__safe_tail_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
         if( (inserted->tailref = _vxquery_collector__add_vertex_reference( base, larc->tail, &larc->acquired.tail_lock )) != NULL ) {
           if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
-            //int headlock = larc->acquired.head_lock;
             if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
-
-              // Head is queued as anchor for future recursive traversal
-              if( base->frontier && ComlibSequenceLength(base->frontier) < base->max_frontier ) {
-                if( CALLABLE( base->frontier )->Append( base->frontier, &inserted->item ) > 0 ) {
-                  inserted->headref->refcnt++;
-                }
+              if( base->recursion_mode != VGX_RECURSION_MODE_NONE ) {
+                // Head is queued as anchor for future recursive traversal
+                __update_frontier( base, inserted, &locked_graph );
               }
-
-
-
+              inserted->headref->slot.depth = base->recursion_depth;
               inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
               // SUCCESS
               updated = 1;

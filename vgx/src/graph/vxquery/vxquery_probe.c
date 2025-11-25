@@ -1232,7 +1232,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
     }
 
     // Patch in mapping function to prevent re-visiting nodes
-    if( recursion && recursion->mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+    if( __is_recursion_enabled( recursion ) ) {
       // Must have evaluator since we need its memory object to track visited nodes
       if( probe->traversing.arcfilter->traversing_evaluator ) {
         probe->traversing.arcfilter->unvisited = vxeval_vertex_unvisited;
@@ -1459,10 +1459,8 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
   int retcode = 1;
   XTRY {
 
-    // Recursive BFS mode
-    bool recursion_bfs_progressive = false;
-    if( query->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
-      recursion_bfs_progressive = true;
+    // Recursion requires evaluator memory to track visited nodes
+    if( __is_recursion_enabled( &query->recursion ) ) {
       // We'll need a dummy evaluator if we don't have one
       if( query->CSTR__vertex_filter == NULL ) {
         query->CSTR__vertex_filter = CStringNew("");

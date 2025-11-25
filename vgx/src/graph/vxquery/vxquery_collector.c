@@ -520,7 +520,7 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
 
   bool recursive = false;
-  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && ((vgx_NeighborhoodQuery_t*)query)->recursion.mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_recursion_enabled( &((vgx_NeighborhoodQuery_t*)query)->recursion ) ) {
     recursive = true;
   }
 
@@ -827,18 +827,26 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     vgx_recursion_config_t *recursion = NULL;
 
     // Recursive query?
-    vgx_recursion_mode_t recursion_mode = VGX_RECURSION_MODE_NONE;
     if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
       vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
       recursion = &neighborhood_query->recursion;
-      if( (recursion_mode = neighborhood_query->recursion.mode) == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
+      if( __is_recursion_enabled( recursion) ) {
         // Main heap
         csize = __get_recursion_heap_size( recursion, csize );
-        // Frontier
-        max_frontier = recursion->limit.frontier;
-        // Beam
-        beam_width = recursion->beam.width;
-        max_beam_width = (recursion->beam.offset <= 0 && recursion->beam.curve <= 1.0) ? recursion->beam.width : recursion->beam.max_width;
+        // Select frontier type
+        switch( recursion->mode ) {
+        // Frontier Queue
+        case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
+          max_frontier = recursion->limit.frontier;
+          break;
+        // Beam Heap
+        case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
+          beam_width = recursion->beam.width;
+          max_beam_width = (recursion->beam.offset <= 0 && recursion->beam.curve <= 1.0) ? recursion->beam.width : recursion->beam.max_width;
+          break;
+        default:
+          break;
+        }
       }
     }
 
@@ -872,14 +880,15 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x325 );
     }
 
-    // Create the recursion queue
-    if( recursion && recursion_mode == VGX_RECURSION_MODE_BFS_PROGRESSIVE ) {
-      // Frontier queue
+    // Recursive search
+    if( recursion ) {
+      // Always a frontier queue
       if( (frontier = __new_frontier_queue( csize )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
       }
-      // Beam
-      if( recursion->beam.width > 0 ) {
+      // Also beam if beam mode
+      if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
+        max_frontier = max_beam_width;
         if( (beam_heap = __new_beam_heap( max_beam_width, comparator )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x327 );
         }
@@ -897,6 +906,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_mode           = recursion ? recursion->mode : VGX_RECURSION_MODE_NONE;
+    top_k_collector->recursion_depth          = 0;
     top_k_collector->frontier                 = frontier;
     top_k_collector->max_frontier             = max_frontier;
     top_k_collector->beam_heap                = beam_heap;
@@ -998,6 +1009,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth          = 0;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->beam_heap                = NULL;
@@ -1112,6 +1125,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->ranker                       = ranker;
     map_collector->container.mapping.aggregator = fhmap;
     map_collector->refmap                       = refmap;
+    map_collector->recursion_mode               = VGX_RECURSION_MODE_NONE;
+    map_collector->recursion_depth              = 0;
     map_collector->frontier                     = NULL;
     map_collector->max_frontier                 = 0;
     map_collector->beam_heap                    = NULL;
@@ -1177,6 +1192,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
+    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth    = 0;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->beam_heap          = NULL;
@@ -1279,6 +1296,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    top_k_collector->recursion_depth          = 0;
     top_k_collector->frontier                 = NULL;
     top_k_collector->max_frontier             = 0;
     top_k_collector->beam_heap                = NULL;
@@ -1377,6 +1396,8 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth          = 0;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->beam_heap                = NULL;
@@ -1438,6 +1459,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
+    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth    = 0;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->beam_heap          = NULL;
@@ -1996,52 +2019,6 @@ static int64_t _vxquery_collector__transfer_base_list( vgx_ranking_context_t *ra
   }
 
   return iList->Length( (*dest)->container.sequence.list );
-}
-
-
-
-
-static void _vxquery_collector__heapsort_collector_items( Cm256iList_t *heapified ) {
-  int64_t n = heapified->_size;
-  if(n < 2) {
-    return;
-  }
-
-  __m256i* base = heapified->_buffer;
-
-  for( int64_t end = n - 1; end > 0; --end ) {
-    // Extract max: swap root with last element
-    __m256i tmp = base[0];
-    base[0] = base[end];
-    base[end] = tmp;
-
-    // Sift down on reduced heap [0 .. end-1]
-    size_t root = 0;
-    while(1) {
-      size_t left = 2 * root + 1;
-      if( left >= (size_t)end ) {      // No left child: done
-        break;
-      }
-
-      size_t child = left;
-      size_t right = left + 1;
-
-      if( right < (size_t)end && heapified->_cmp( &base[right], &base[left] ) > 0 ) {
-        child = right;
-      }
-
-      if( heapified->_cmp( &base[child], &base[root] ) <= 0 ) {
-        break;
-      }
-
-      /* Swap with larger child */
-      tmp          = base[root];
-      base[root]   = base[child];
-      base[child]  = tmp;
-
-      root = child;
-    }
-  }
 }
 
 
