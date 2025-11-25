@@ -851,8 +851,7 @@ typedef struct s_vgx_VertexRef_t {
   struct {
     int8_t locked;
     int8_t state;
-    int8_t __rsv1;
-    int8_t __rsv2;
+    uint16_t depth;
   } slot;
 } vgx_VertexRef_t;
 
@@ -6752,6 +6751,8 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
+  vgx_recursion_mode_t recursion_mode;        \
+  int64_t recursion_depth;                    \
   vgx_FrontierQueue_t *frontier;              \
   int64_t max_frontier;                       \
   Cm256iHeap_t *beam_heap;                    \
