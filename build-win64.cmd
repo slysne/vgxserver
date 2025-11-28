@@ -31,12 +31,12 @@ set "SENTINEL=_tmp-pyvgx-build-dir"
 
 echo Build directory: %BUILD_DIR%
 
+REM === Make sure build dir exists
+if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
+
 REM === Call directory cleaner ===
 call :safe_clear_dir %BUILD_DIR% %SENTINEL%
 if errorlevel 1 exit /b 1
-
-REM === Make sure build dir exists
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 REM === Create sentinel ===
 type nul > "%BUILD_DIR%\%SENTINEL%"
