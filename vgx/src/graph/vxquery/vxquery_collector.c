@@ -153,19 +153,14 @@ static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t
   int64_t n_released = 0;
   vgx_VertexRef_t *cursor = refmap;
   vgx_VertexRef_t *end = refmap + mapsz;
-  vgx_VertexRef_t *ref;
 
+  // Make sure any still-acquired vertices are released now
   // Start optimistically by hoping we have no lingering references
-  while( (ref=cursor++) < end ) {
-    // No ref, or ref still positive after giving up ref, or vertex never locked
-    if( ref->refcnt == 0 ||      // no reference
-        --(ref->refcnt) > 0 ||   // still references
-        ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
-    {
-      continue;
+  while( cursor < end ) {
+    if( cursor->slot.locked > 0 ) {
+      goto continue_locked;
     }
-    // Vertex needs to be unlocked, graph lock required for remainder of loop
-    goto continue_locked;
+    ++cursor;
   }
 
   // Clean exit, we had no locked vertices
@@ -173,23 +168,19 @@ static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t
 
 continue_locked:
   GRAPH_LOCK( graph ) {
-    goto unlock_vertex_and_reset;
-    while( (ref=cursor++) < end ) {
-      // No ref, or ref still positive after giving up ref, or vertex never locked
-      if( ref->refcnt == 0 ||      // no reference
-          --(ref->refcnt) > 0 ||   // still references
-          ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
-      {
-        continue;
+    while( cursor < end ) {
+      // Last chance to release vertex lock
+      if( cursor->slot.locked > 0 ) {
+        // Vertex needs to be unlocked, graph lock required for remainder of loop
+        // Release core vertex lock
+        _vxgraph_state__unlock_vertex_CS_LCK( graph, &cursor->vertex, VGX_VERTEX_RECORD_OPERATION );
+        ++n_released;
+        // Reset slot
+        cursor->refcnt = 0;
+        cursor->slot.locked = 0;
+        cursor->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
       }
-    unlock_vertex_and_reset:
-      // Vertex needs to be unlocked, graph lock required for remainder of loop
-      // Release core vertex lock
-      _vxgraph_state__unlock_vertex_CS_LCK( graph, &ref->vertex, VGX_VERTEX_RECORD_OPERATION );
-      ++n_released;
-      // Reset slot
-      ref->slot.locked = 0;
-      ref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+      ++cursor;
     }
   } GRAPH_RELEASE;
   
