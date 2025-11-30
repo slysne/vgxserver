@@ -2759,6 +2759,7 @@ int init_PyVGX( PyObject *module ) {
   PyModule_AddIntConstant( module,  "S_DESC",         VGX_SORT_DIRECTION_DESCENDING );
   PyModule_AddIntConstant( module,  "S_VAL",          VGX_SORTBY_PREDICATOR );
   PyModule_AddIntConstant( module,  "S_ADDR",         VGX_SORTBY_MEMADDRESS );
+  PyModule_AddIntConstant( module,  "S_RVAL",         VGX_SORTBY_REAL_PREDICATOR );
   PyModule_AddIntConstant( module,  "S_OBID",         VGX_SORTBY_INTERNALID );
   PyModule_AddIntConstant( module,  "S_ID",           VGX_SORTBY_IDSTRING );
   PyModule_AddIntConstant( module,  "S_ANCHOR",       VGX_SORTBY_ANCHOR_ID );

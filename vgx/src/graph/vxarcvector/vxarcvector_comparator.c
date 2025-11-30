@@ -171,6 +171,7 @@ DLL_HIDDEN vgx_VertexComparator_t _iVertexMinComparator = {
  */
 static double __rank_score_from_none(        const vgx_CollectorItem_t *x );
 static double __rank_score_from_predicator(  const vgx_CollectorItem_t *x );
+static double __rank_score_from_real_predicator(  const vgx_CollectorItem_t *x );
 static double __rank_score_from_int32(       const vgx_CollectorItem_t *x );
 static double __rank_score_from_int64(       const vgx_CollectorItem_t *x );
 static double __rank_score_from_uint32(      const vgx_CollectorItem_t *x );
@@ -183,6 +184,7 @@ static double __rank_score_from_qword(       const vgx_CollectorItem_t *x );
 DLL_HIDDEN vgx_RankScoreFromItem_t _iRankScoreFromItem = {
   .from_none        = __rank_score_from_none,
   .from_predicator  = __rank_score_from_predicator,
+  .from_real_predicator  = __rank_score_from_real_predicator,
   .from_int32       = __rank_score_from_int32,
   .from_int64       = __rank_score_from_int64,
   .from_uint32      = __rank_score_from_uint32,
@@ -1982,6 +1984,7 @@ __inline static int __cmp_vertex_double_rank_min(  const vgx_CollectorItem_t *v1
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static double __rank_score_from_none(        const vgx_CollectorItem_t *x ) { return 0.0; }
 __inline static double __rank_score_from_predicator(  const vgx_CollectorItem_t *x ) { return _vgx_predicator_get_value_as_float( x->predicator ); }
+__inline static double __rank_score_from_real_predicator(  const vgx_CollectorItem_t *x ) { return x->predicator.val.real; }
 __inline static double __rank_score_from_int32(       const vgx_CollectorItem_t *x ) { return (double)x->sort.int32.value; }
 __inline static double __rank_score_from_int64(       const vgx_CollectorItem_t *x ) { return (double)x->sort.int64.value; }
 __inline static double __rank_score_from_uint32(      const vgx_CollectorItem_t *x ) { return (double)x->sort.uint32.value; }

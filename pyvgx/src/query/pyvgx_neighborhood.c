@@ -854,7 +854,7 @@ static __neighborhood_query_args * _pyvgx_initials_terminals__parse_params( PyVG
       return NULL;
     }
 
-    if( param->sortspec & VGX_SORTBY_PREDICATOR ) {
+    if( param->sortspec & VGX_SORTBY_PREDICATOR || param->sortspec & VGX_SORTBY_REAL_PREDICATOR ) {
       PyErr_SetString( PyVGX_QueryError, "Sort by arc value not supported for this method" );
       return NULL;
     }

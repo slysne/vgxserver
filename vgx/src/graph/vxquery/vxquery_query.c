@@ -2861,6 +2861,9 @@ static vgx_RankingCondition_t * _vxquery_query__new_ranking_condition( vgx_Graph
     case VGX_SORTBY_PREDICATOR:
       ranking_condition->modifier.bits = modifier;
       break;
+    case VGX_SORTBY_REAL_PREDICATOR:
+      ranking_condition->modifier.bits = VGX_PREDICATOR_MOD_FLOAT; // special (TODO: verify correct)
+      break;
     case VGX_SORTBY_RANKING:
       if( expression == NULL ) {
         __set_error_string( CSTR__error, "rank sorting requires ranking formula" );

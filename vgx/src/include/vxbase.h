@@ -2545,6 +2545,7 @@ typedef enum e_vgx_sortspec_t {
   //                                                            v<------ special, only 1 for predicator sort
   VGX_SORTBY_PREDICATOR              = 0x0010, //  0000 0000 0001 0000
   VGX_SORTBY_MEMADDRESS              = 0x0020, //  0000 0000 0010 0000
+  VGX_SORTBY_REAL_PREDICATOR         = 0x0030, //  0000 0000 0011 0000
   VGX_SORTBY_ANCHOR_OBID             = 0x0040, //  0000 0000 0100 0000
   VGX_SORTBY_ANCHOR_ID               = 0x0060, //  0000 0000 0110 0000
   VGX_SORTBY_NATIVE                  = 0x0080, //  0000 0000 1000 0000
@@ -2582,6 +2583,8 @@ typedef enum e_vgx_sortspec_t {
   _VGX_SORTBY_PREDICATOR_DESCENDING  = VGX_SORTBY_PREDICATOR  | VGX_SORT_DIRECTION_DESCENDING,
   _VGX_SORTBY_MEMADDRESS_ASCENDING   = VGX_SORTBY_MEMADDRESS  | VGX_SORT_DIRECTION_ASCENDING,
   _VGX_SORTBY_MEMADDRESS_DESCENDING  = VGX_SORTBY_MEMADDRESS  | VGX_SORT_DIRECTION_DESCENDING,
+  _VGX_SORTBY_REAL_PREDICATOR_ASCENDING   = VGX_SORTBY_REAL_PREDICATOR  | VGX_SORT_DIRECTION_ASCENDING,
+  _VGX_SORTBY_REAL_PREDICATOR_DESCENDING  = VGX_SORTBY_REAL_PREDICATOR  | VGX_SORT_DIRECTION_DESCENDING,
   _VGX_SORTBY_INTERNALID_ASCENDING   = VGX_SORTBY_INTERNALID  | VGX_SORT_DIRECTION_ASCENDING,
   _VGX_SORTBY_INTERNALID_DESCENDING  = VGX_SORTBY_INTERNALID  | VGX_SORT_DIRECTION_DESCENDING,
   _VGX_SORTBY_ANCHOR_OBID_ASCENDING  = VGX_SORTBY_ANCHOR_OBID | VGX_SORT_DIRECTION_ASCENDING,
@@ -2662,6 +2665,8 @@ __inline static vgx_sortspec_t _vgx_set_sort_direction( vgx_sortspec_t *sortspec
     switch( _vgx_sortby( *sortspec ) ) {
     case VGX_SORTBY_PREDICATOR:
       /* FALLTHRU */
+    case VGX_SORTBY_REAL_PREDICATOR:
+      /* FALLTHRU */
     case VGX_SORTBY_DEGREE:
       /* FALLTHRU */
     case VGX_SORTBY_INDEGREE:
@@ -2699,6 +2704,7 @@ __inline static int _vgx_sortspec_valid( vgx_sortspec_t spec ) {
     switch( _vgx_sortby( spec ) ) {
     case VGX_SORTBY_PREDICATOR:
     case VGX_SORTBY_MEMADDRESS:
+    case VGX_SORTBY_REAL_PREDICATOR:
     case VGX_SORTBY_ANCHOR_OBID:
     case VGX_SORTBY_ANCHOR_ID:
     case VGX_SORTBY_NATIVE:
@@ -2759,6 +2765,7 @@ __inline static int _vgx_sortspec_numeric( vgx_sortspec_t spec ) {
   switch( _vgx_sortby( spec ) ) {
   case VGX_SORTBY_PREDICATOR:
   case VGX_SORTBY_MEMADDRESS:
+  case VGX_SORTBY_REAL_PREDICATOR:
   case VGX_SORTBY_RANKING:
   case VGX_SORTBY_DEGREE:
   case VGX_SORTBY_INDEGREE:
@@ -2848,7 +2855,7 @@ static const char *__reverse_sortspec_map[] = {
   "S_NONE",         // 0x00
   "S_VAL",          // 0x01
   "S_ADDR",         // 0x02
-  "S_???",          // 0x03
+  "S_RVAL",         // 0x03
   "S_ANCHOR_OBID",  // 0x04
   "S_???",          // 0x05
   "S_ANCHOR",       // 0x06
