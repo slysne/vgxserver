@@ -173,8 +173,11 @@ static int __collect( vgx_Evaluator_t *self, vgx_EvalStackItem_t *arcvalue ) {
       // Save original larc predicator
       vgx_predicator_t orig_predicator = larc->head.predicator;
       // Override larc's arc value (in place) if provided
-      __override_predicator( arcvalue, &larc->head.predicator );
-      collected = __arcvector_collect_arc( collector, larc, 0.0, NULL );
+      double rankscore = 0.0;
+      if( __override_predicator( arcvalue, &larc->head.predicator ) != NULL ) {
+        rankscore = arcvalue->type == STACK_ITEM_TYPE_REAL ? arcvalue->real : (double)arcvalue->integer;
+      }
+      collected = __arcvector_collect_arc( collector, larc, rankscore, NULL );
       // Restore original larc predicator
       larc->head.predicator = orig_predicator;
     }
