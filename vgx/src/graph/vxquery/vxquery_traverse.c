@@ -488,6 +488,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
       if( E ) {
         iEvaluator.ClearDWordSet( E->context.memory );
+        E->context.memory->threshold = 0.0;
+        E->context.memory->counter.c1 = 0;
+        E->context.memory->counter.c2 = 0;
+        E->context.memory->counter.c3 = 0;
+        E->context.memory->counter.c4 = 0;
       }
     }
     

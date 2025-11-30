@@ -91,6 +91,7 @@ static int _vxeval__store_cstring( vgx_Evaluator_t *self, const CString_t *CSTR_
 static int64_t _vxeval__clear_cstrings( vgx_ExpressEvalMemory_t *memory );
 static int _vxeval__store_vector( vgx_Evaluator_t *self, const vgx_Vector_t *vector );
 static int64_t _vxeval__clear_vectors( vgx_ExpressEvalMemory_t *memory );
+static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector );
 static int _vxeval__local_auto_scope_object( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
 static void _vxeval__clear_local_scope( vgx_Evaluator_t *self );
 static void _vxeval__delete_local_scope( vgx_Evaluator_t *self );
@@ -130,6 +131,7 @@ DLL_EXPORT vgx_IEvaluator_t iEvaluator = {
   .ClearCStrings        = _vxeval__clear_cstrings,
   .StoreVector          = _vxeval__store_vector,
   .ClearVectors         = _vxeval__clear_vectors,
+  .SetProbeVector       = _vxeval__set_probe_vector,
   .LocalAutoScopeObject = _vxeval__local_auto_scope_object,
   .ClearLocalScope      = _vxeval__clear_local_scope,
   .DeleteLocalScope     = _vxeval__delete_local_scope,
@@ -1162,8 +1164,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     // Stack pointer
     mem->sp = __EXPRESS_EVAL_MEM_SPTOP;
 
-    // CString reference list defaults to empty, allocate as needed.
+    // CString and vector reference lists default to empty, allocate as needed.
     mem->cstringref = NULL;
+    mem->vectorref = NULL;
 
     // Integer set defaults to empty, allocate as needed.
     mem->dwset.slots = NULL;
@@ -1171,6 +1174,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dwset.sz = 0;
     mem->dwset.counter = 0;
     mem->dwset._rsv = 0;
+
+    // Dedicated variables for ann search
+    mem->probe = NULL;
+    mem->threshold = 0.0;
 
   }
   return mem;
@@ -1244,6 +1251,12 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dwset.counter = 0;
     clone->dwset._rsv = 0;
 
+    // Probe vector for ann search
+    if( (clone->probe = other->probe) != NULL ) {
+      CALLABLE( clone->probe )->Incref( clone->probe );
+    }
+    clone->threshold = 0.0;
+
     // One owner
     clone->refc = 1;
 
@@ -1252,6 +1265,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     if( clone ) {
       __delete_cstringrefs( &clone->cstringref );
       __delete_vectorrefs( &clone->vectorref );
+      if( clone->probe ) {
+        CALLABLE(clone->probe)->Decref(clone->probe);
+      }
       free( clone );
     }
   }
@@ -1278,6 +1294,10 @@ static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
       __delete_vectorrefs( &(*mem)->vectorref );
 
       _vxeval__clear_dwset( *mem );
+
+      if( (*mem)->probe ) {
+        CALLABLE( (*mem)->probe )->Decref( (*mem)->probe );
+      }
 
       free( *mem );
     }
@@ -1398,6 +1418,27 @@ static int _vxeval__store_vector( vgx_Evaluator_t *self, const vgx_Vector_t *vec
  */
 static int64_t _vxeval__clear_vectors( vgx_ExpressEvalMemory_t *memory ) {
   return __delete_vectorrefs( &memory->vectorref );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector ) {
+  // Discard any previous vector
+  if( memory->probe ) {
+    CALLABLE( memory->probe )->Decref( memory->probe );
+  }
+  // Threshold reset implied
+  memory->threshold = 0.0;
+  // Assign new vector and own reference
+  if( (memory->probe = vector) != NULL ) {
+    return (int)CALLABLE( memory->probe )->Incref( memory->probe );
+  }
+  return 0;
 }
 
 
@@ -1873,8 +1914,7 @@ static vgx_StringList_t * _vxeval__get_rpn_definitions( void ) {
             case (OP_REAL_OPERAND & CCta):
               p = write_chars( p, "real" );
               break;
-            case (OP_ARC_DIR_ENUM_OPERAND & CCta):
-            case (OP_ARC_MOD_ENUM_OPERAND & CCta):
+            case (OP_ENUM_OPERAND & CCta):
               p = write_chars( p, "enum" );
               break;
           }

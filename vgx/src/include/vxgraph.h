@@ -6011,8 +6011,17 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // ==== CL2 ====
   // Q2.1-4
   vgx_ExpressEvalDWordSet_t dwset;
-  // Q2.5-8 
-  QWORD __rsv_2_5_8[4];
+  // Q2.5
+  vgx_Vector_t *probe;
+  // Q2.6
+  double threshold;
+  // Q2.7-8 
+  struct {
+    uint32_t c1;
+    uint32_t c2;
+    uint32_t c3;
+    uint32_t c4;
+  } counter;
   // ==== CL3+4 ====
   // Q3.1-8
   // Q4.1-8
@@ -6251,6 +6260,7 @@ typedef struct s_vgx_IEvaluator_t {
   int64_t (*ClearCStrings)( vgx_ExpressEvalMemory_t *memory );
   int (*StoreVector)( vgx_Evaluator_t *self, const vgx_Vector_t *vector );
   int64_t (*ClearVectors)( vgx_ExpressEvalMemory_t *memory );
+  int (*SetProbeVector)( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector );
   int (*LocalAutoScopeObject)( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
   void (*ClearLocalScope)( vgx_Evaluator_t *self );
   void (*DeleteLocalScope)( vgx_Evaluator_t *self );
@@ -6571,6 +6581,7 @@ typedef double (*f_vgx_RankScoreFromItem)( const vgx_CollectorItem_t *x );
 typedef struct s_vgx_RankScoreFromItem_t {
   f_vgx_RankScoreFromItem from_none;
   f_vgx_RankScoreFromItem from_predicator;
+  f_vgx_RankScoreFromItem from_real_predicator;
   f_vgx_RankScoreFromItem from_int32;
   f_vgx_RankScoreFromItem from_int64;
   f_vgx_RankScoreFromItem from_uint32;

@@ -203,8 +203,8 @@ typedef enum __e_rpn_op_type {
   OP_REGISTER_OPERAND       = 0x000000B0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
   OP_INTEGER_OPERAND        = 0x000000C0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
   OP_REAL_OPERAND           = 0x000000D0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
-  OP_ARC_DIR_ENUM_OPERAND   = 0x000000E0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
-  OP_ARC_MOD_ENUM_OPERAND   = 0x000000F0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
+  OP_ENUM_OPERAND           = 0x000000E0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
+  OP_OBJECT_OPERAND         = 0x000000F0 | __OP_ARGS_1 | __OP_CLS_SYMBOLIC,  //
   //                               |
   // Numeric Literals              |CCta
   OP_NONE_LITERAL           = 0x00000000 | __OP_ARGS_1 | __OP_CLS_LITERAL,
