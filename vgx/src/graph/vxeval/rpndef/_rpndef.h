@@ -184,7 +184,7 @@ static __rpn_operation RpnBinaryEuclidean    = { .surface.token="euclidean",    
 static __rpn_operation RpnBinarySimilarity   = { .surface.token="sim",              .function.eval = __eval_binary_sim,               .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnBinaryCosine       = { .surface.token="cosine",           .function.eval = __eval_binary_cosine,            .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnBinaryJaccard      = { .surface.token="jaccard",          .function.eval = __eval_binary_jaccard,           .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
-static __rpn_operation RpnBinaryANNCollect   = { .surface.token="anncollect",       .function.eval = __eval_nullary_anncollect,       .type = OP_NULLARY_HEAD_PREFIX,   .precedence = OPP_CALL };
+static __rpn_operation RpnBinaryANNCollect   = { .surface.token="anncollect",       .function.eval = __eval_unary_anncollect,         .type = OP_UNARY_HEAD_PREFIX,     .precedence = OPP_CALL };
 static __rpn_operation RpnBinaryComb         = { .surface.token="comb",             .function.eval = __eval_binary_comb,              .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnBinaryEqu          = { .surface.token="==",               .function.eval = __eval_binary_equ,               .type = OP_BINARY_CMP_INFIX,      .precedence = OPP_EQUALITY };
 static __rpn_operation RpnBinaryNeq          = { .surface.token="!=",               .function.eval = __eval_binary_neq,               .type = OP_BINARY_CMP_INFIX,      .precedence = OPP_EQUALITY };
@@ -807,6 +807,7 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnPushConstantSize,
       &RpnPushConstantOpcnt,
       &RpnPushConstantVector,
+      &RpnPushConstantMVector,
       &RpnPush_T_NEVER,
       &RpnPush_T_MAX,
       &RpnPush_T_MIN,
