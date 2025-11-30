@@ -38,7 +38,7 @@ static void __eval_binary_sim( vgx_Evaluator_t *self );
 static void __eval_binary_cosine( vgx_Evaluator_t *self );
 static void __eval_binary_jaccard( vgx_Evaluator_t *self );
 static void __eval_ternary_anncollect( vgx_Evaluator_t *self );
-static void __eval_nullary_anncollect( vgx_Evaluator_t *self );
+static void __eval_unary_anncollect( vgx_Evaluator_t *self );
 
 
 
@@ -245,10 +245,10 @@ static void __eval_ternary_anncollect( vgx_Evaluator_t *self ) {
 
 
 /*
-def ham(sim):
+def ham(sim, sigma=1.5):
   p = acos(sim)/pi
   s = sqrt( 64.0*p*(1.0-p) )
-  h = 64.0*p+1.5*s
+  h = 64.0*p+sigma*s
   return int(round(h))
 
 ham(1) -> 0
@@ -280,13 +280,13 @@ ham(-1.0) -> 64
 */
 
 /*******************************************************************//**
- * Assume cosine similarity sim in range [0.0, 1.0), then:
- * cos_to_hamdist[ int(sim * 128) ] -> hamdist
+ * Assume cosine similarity sim in range [0.0, 1.0], then:
+ * cos_to_hamdist_1_5_sigma[ int(sim * 127) ] -> hamdist
  *
  * 
  ***********************************************************************
  */
-static BYTE cos_to_hamdist[] = {
+static BYTE cos_to_hamdist_1_5_sigma[] = {
   38, 38, 38, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36, 36, 36, 35,
   35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33,
   33, 32, 32, 32, 32, 32, 32, 31, 31, 31, 31, 31, 31, 30, 30, 30,
@@ -299,18 +299,26 @@ static BYTE cos_to_hamdist[] = {
 
 
 /*******************************************************************//**
- * anncollect()
+ * anncollect( hamfilter_above_score )
  ***********************************************************************
  */
-static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
+static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
 
-#define ANNCOLLECT_R1 -1
-#define ANNCOLLECT_R2 -2
-#define ANNCOLLECT_R3 -3
-#define ANNCOLLECT_R4 -4
+//#define ANNCOLLECT_R1 -1
+//#define ANNCOLLECT_R2 -2
+//#define ANNCOLLECT_R3 -3
+//#define ANNCOLLECT_R4 -4
+ 
+  // Arguments are in memory locations
+  // [ . . . H ]
+  //         ^----- hamfilter_above_sim
+  //     SP^
+  vgx_EvalStackItem_t *p_minscore_ham = POP_PITEM( self );
+  double hamfilter_above_score = p_minscore_ham->real;
 
   vgx_ExpressEvalContext_t *ctx = &self->context;
   const vgx_Vertex_t *head = ctx->HEAD;
+
   // Stack
   // [ . . . _ ]
   //     SP^
@@ -325,83 +333,67 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
   vgx_ExpressEvalMemory_t *mem = ctx->memory;
   uint64_t mask = mem->mask;
   vgx_EvalStackItem_t *data = mem->data;
-  vgx_EvalStackItem_t *pprobe = &data[ mask & ANNCOLLECT_R1 ];
-  vgx_EvalStackItem_t *pthres = &data[ mask & ANNCOLLECT_R2 ];
-  vgx_EvalStackItem_t *pexitat = &data[ mask & ANNCOLLECT_R3 ];
-  vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
+  //vgx_EvalStackItem_t *pprobe = &data[ mask & ANNCOLLECT_R1 ];
+  //vgx_EvalStackItem_t *pthres = &data[ mask & ANNCOLLECT_R2 ];
+  //vgx_EvalStackItem_t *pexitat = &data[ mask & ANNCOLLECT_R3 ];
+  //vgx_EvalStackItem_t *phamflt = &data[ mask & ANNCOLLECT_R4 ];
 
-
-  /*
-  // Must have head vertex
-  if( head == NULL ) {
-    SET_INTEGER_PITEM_VALUE( pexitat, 0 );
-    STACK_RETURN_INTEGER( self, 0 );
-  }
-   
-  uint32_t vkey;
-  DWORD ventry;
-  __maps_vset_key_item( head, &vkey, &ventry );
-
-  // Require head unvisited
-  // [ . . . x]
-  //         ^--------- 1 if already visited, else 0
-  //       SP^
-  __maps__xsethas( self, vkey, ventry );
-  
-  // [ . . . x]
-  //     SP^
-  vgx_EvalStackItem_t *pvisited = POP_PITEM( self ); // <- x
-  if( pvisited->integer != 0 ) {
-    SET_INTEGER_PITEM_VALUE( pexitat, 1 );
-    STACK_RETURN_INTEGER( self, 0 );
-  }
-  */
-
-  
   // Must have vector
   vgx_Vector_t *target = head->vector;
 
   // Verify vectors exist
-  if( target == 0 || pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
-    SET_INTEGER_PITEM_VALUE( pexitat, 2 );
-    STACK_RETURN_INTEGER( self, 0 );
+  //if( target == 0 || pprobe->type != STACK_ITEM_TYPE_VECTOR ) {
+  if( target == NULL || mem->probe == NULL ) {
+    //SET_INTEGER_PITEM_VALUE( pexitat, 2 );
+    STACK_RETURN_REAL( self, 0.0 );
   }
 
+  // Checkpoint 1
+  mem->counter.c1++;
+
   // Extract probe vector bytes
-  BYTE *A = (BYTE*)CALLABLE( pprobe->vector )->Elements( pprobe->vector );
-  int32_t lenA = pprobe->vector->metas.vlen;
-  FP_t lshA = pprobe->vector->fp;
+  //BYTE *A = (BYTE*)CALLABLE( pprobe->vector )->Elements( pprobe->vector );
+  //int32_t lenA = pprobe->vector->metas.vlen;
+  //FP_t lshA = pprobe->vector->fp;
+  BYTE *A = (BYTE*)CALLABLE( mem->probe )->Elements( mem->probe );
+  int32_t lenA = mem->probe->metas.vlen;
 
   // Extract target vector bytes
   BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
   int32_t lenB = target->metas.vlen;
-  FP_t lshB = target->fp;
 
   // Safeguard
   int32_t len = minimum_value( lenA, lenB );
 
   // Similarity threshold 0.0 - 2.0
-  double threshold = pthres->type == STACK_ITEM_TYPE_REAL ? pthres->real : pthres->type == STACK_ITEM_TYPE_INTEGER ? pthres->integer : 0.0;
+  //double threshold = pthres->type == STACK_ITEM_TYPE_REAL ? pthres->real : pthres->type == STACK_ITEM_TYPE_INTEGER ? pthres->integer : 0.0;
 
-  // Hamming distance filter enabled with real value in R4
-  if( phamflt->type == STACK_ITEM_TYPE_REAL && phamflt->real > 1.0 ) {
+  // Hamming distance filter enabled when > 1.0
+  if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
+    FP_t lshA = mem->probe->fp;
+    FP_t lshB = target->fp;
+    double min_cos = mem->threshold - 1.0;
+    int idx = (int)(min_cos * 127) & 0x1F;
+    int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
     // LSH Hamming distance filter progressively stricter with higher thresholds
-    if( threshold > phamflt->real && threshold <= 2.0 ) {
-      if( hamdist64( lshA, lshB ) > cos_to_hamdist[ (int)((threshold-1.0) * 127) ] ) {
-        SET_INTEGER_PITEM_VALUE( pexitat, 3 );
-        STACK_RETURN_INTEGER( self, 0 );
-      }
+    if( hamdist64( lshA, lshB ) > max_ham ) {
+      STACK_RETURN_REAL( self, 0.0 );
     }
   }
+  
+  // Checkpoint 2
+  mem->counter.c2++;
 
   // -------------------
   // COMPUTE COSINE(A,B)
   // -------------------
   // Faster when both vectors are cosine_mode
   double cosine;
-  if( pprobe->vector->metas.flags.cos && target->metas.flags.cos ) {
+  //if( pprobe->vector->metas.flags.cos && target->metas.flags.cos ) {
+  if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
     double dp = vxeval_bytearray_dot_product(A, B, len);
-    cosine = dp * pprobe->vector->metas.scalar.invnorm * target->metas.scalar.invnorm;
+    //cosine = dp * pprobe->vector->metas.scalar.invnorm * target->metas.scalar.invnorm;
+    cosine = dp * mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
     if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
       cosine = (double)((cosine > 0.0) - (cosine < 0.0));
     }
@@ -410,47 +402,38 @@ static void __eval_nullary_anncollect( vgx_Evaluator_t *self ) {
     cosine = vxeval_bytearray_cosine(A, B, len);
   }
 
-  double sim = cosine + 1.0; // [0.0 - 2.0]
+  double score = cosine + 1.0; // [0.0 - 2.0]
 
   // Require sufficient cosine score
-  if( sim <= threshold ) {
-    SET_INTEGER_PITEM_VALUE( pexitat, 4 );
-    STACK_RETURN_INTEGER( self, 0 ); // not collected
+  //if( score <= threshold ) {
+  if( score <= mem->threshold ) {
+    //SET_INTEGER_PITEM_VALUE( pexitat, 4 );
+    STACK_RETURN_REAL( self, 0.0 ); // not collected
   }
-
-  /*
-  // Mark as visited
-  // [ . . . m]
-  //         ^-------- 1 (head marked as visited)
-  //       SP^
-  __maps__xsetadd( self, vkey, ventry, MAPS_KEYMODE__VERTEX );
- 
-  // Collect
-  // [ . . . m]
-  //         ^-------- Already 1 from above (assume collect successful below)
-  //       SP^
-  */
+  
+  // Checkpoint 3
+  mem->counter.c3++;
 
   // Collect
   // [ . . . _]
   //     SP^
-  vgx_EvalStackItem_t score = {
+  vgx_EvalStackItem_t score_arc = {
     .type = STACK_ITEM_TYPE_REAL,
-    .real = sim,
+    .real = score,
   };
-  __collect( self, &score );
+  __collect( self, &score_arc );
   
   // Refresh running threshold
   if( ctx->collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
     Cm256iHeap_t *heap = ctx->collector->container.sequence.heap;
     vgx_CollectorItem_t difficulty;
     CALLABLE(heap)->HeapTop(heap, &difficulty.item);
-    SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
+    //SET_REAL_PITEM_VALUE( pthres, difficulty.sort.flt64.value );
+    mem->threshold = difficulty.sort.flt64.value;
   }
 
-  STACK_RETURN_INTEGER( self, 1 );
+  STACK_RETURN_REAL( self, score );
   
-  //SET_INTEGER_PITEM_VALUE( pexitat, 5 );
 }
 
 
