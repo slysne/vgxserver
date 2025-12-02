@@ -471,8 +471,16 @@ static double __avx512_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   int N = len >> 6;
   const BYTE *a_cur = A;
   const BYTE *b_cur = B;
-  for( int i=0; i<N; i++, a_cur += sizeof(__m512i), b_cur += sizeof(__m512i) ) {
-    __dp_avx512( a_cur, b_cur, &sum );
+
+  int N_minus_2 = N - 2;
+  int i = 0;
+  while( i <= N_minus_2 ) {
+    i += 2;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+  }
+  while( i++ < N ) {
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
   }
 
   return __extract_float_avx512( __hadd_ps_avx512( &sum ) );
@@ -515,6 +523,59 @@ static double __avx512_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   return __scalar_cosine_clamp( cosine );
 #else
   return __avx2_cos_pi8( A, B, len );
+#endif
+}
+
+
+
+/*******************************************************************//**
+ * Cosine( A, B, threshold )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length. Length must be a multiple of 32.
+ *
+ * Returns -1.0 if during computation we give up hope of exceeding threshold
+ *
+ ***********************************************************************
+ */
+static double __avx512_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) {
+#ifdef __cxlib_AVX512_MINIMUM__
+  // Sixteen bins of running (float) sums of products
+  __m512 sum = _mm512_setzero_ps();
+  // Process chunks of 64 bytes, any trailing non-multiple of 64 is ignored!!
+  int N = len >> 6;
+  const BYTE *a_cur = A;
+  const BYTE *b_cur = B;
+
+  double Nscaled_invnorm_prod_margin = N * 1.5 * invnorm_prod;
+
+  int i = 0;
+  int N_minus_2 = N - 2;
+  while( i <= N_minus_2 ) {
+    i += 2;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+    __dp_avx512( a_cur, b_cur, &sum );
+
+    // As i approaches N, i ~= N, which makes the below comparison fair
+    __m512 tempsum = sum; // <- protect sum against destructive horizontal reduction below
+    double partial_dp = __extract_float_avx512( __hadd_ps_avx512( &tempsum ) );
+    double scaled_partial_cos = Nscaled_invnorm_prod_margin * partial_dp;
+    double scaled_min_cos = i * min_cos; 
+    if( scaled_partial_cos < scaled_min_cos ) {
+      return -1.0;
+    }
+
+    a_cur += 64; b_cur += 64;
+  }
+  while( i++ < N ) {
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+  }
+
+  double dp = __extract_float_avx512( __hadd_ps_avx512( &sum ) );
+  double cosine = dp * invnorm_prod;
+  return __scalar_cosine_clamp( cosine );
+#else
+  return __avx2_dp_mincos_pi8( A, B, len, invnorm_prod, min_cos );
 #endif
 }
 

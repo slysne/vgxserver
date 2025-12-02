@@ -279,20 +279,20 @@ static double __neon_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   const int8_t *b_cur = (const int8_t*)B;
 
   int i=0;
-  while( i+8 <= N ) {
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+  int N_minus_8 = N - 8;
+  while( i <= N_minus_8 ) {
     i += 8;
-  }
-  while( i < N ) {
     acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    ++i;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+  }
+  while( i++ < N ) {
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
   }
 
   // Convert to float
@@ -349,6 +349,8 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
 
 
 /*******************************************************************//**
+ * Cosine( A, B, threshold )
+ *
  * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
  * and must have equal length.
  *
@@ -366,41 +368,29 @@ static double __neon_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, doubl
   const int8_t *a_cur = (const int8_t*)A;
   const int8_t *b_cur = (const int8_t*)B;
   
-  double scaled_min_cos; // to avoid division when checking partials
-  double scaled_partial_cos;
-  double margin = 1.5;
+  double Nscaled_invnorm_prod_margin = N * 1.5 * invnorm_prod;
 
   int i=0;
-  while( i+8 <= N ) {
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+  int N_minus_4 = N - 4;
+  while( i <= N_minus_4 ) {
     i += 4;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) );
 
     // As i approaches N, i ~= N, which makes the below comparison fair
-    scaled_min_cos = i * min_cos; 
-    scaled_partial_cos = N * vaddvq_f32( vcvtq_f32_s32(acc) ) * invnorm_prod * margin;
+    double partial_dp = vaddvq_f32( vcvtq_f32_s32(acc) );
+    double scaled_partial_cos = Nscaled_invnorm_prod_margin * partial_dp;
+    double scaled_min_cos = i * min_cos; 
     if( scaled_partial_cos < scaled_min_cos ) {
       return -1.0;
     }
 
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    i += 4;
-
-    scaled_min_cos = i * min_cos; 
-    scaled_partial_cos = N * vaddvq_f32( vcvtq_f32_s32(acc) ) * invnorm_prod * margin;
-    if( scaled_partial_cos < scaled_min_cos ) {
-      return -1.0;
-    }
-
+    a_cur += 16; b_cur += 16;
   }
-  while( i < N ) {
+  while( i++ < N ) {
     acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
-    ++i;
   }
 
   // Compute cosine

@@ -466,11 +466,21 @@ static double __avx2_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   int N = len >> 5;
   const BYTE *a_cur = A;
   const BYTE *b_cur = B;
-  for( int i=0; i<N; i++, a_cur += sizeof(__m256i), b_cur += sizeof(__m256i) ) {
-    __dp_avx2( a_cur, b_cur, &sum );
+  int N_minus_4 = N - 4;
+  int i = 0;
+  while( i <= N_minus_4 ) {
+    i += 4;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+  }
+  while( i++ < N ) {
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
   }
 
-  return __extract_float_avx2( __hadd_ps_avx2( &sum ) );
+  double dp = __extract_float_avx2( __hadd_ps_avx2( &sum ) );
+  return dp;
 #else
   return __scalar_dp_pi8( A, B, len );
 #endif
@@ -512,6 +522,62 @@ static double __avx2_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   return __scalar_cos_pi8( A, B, len );
 #endif
 }
+
+
+
+/*******************************************************************//**
+ * Cosine( A, B, threshold )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length. Length must be a multiple of 32.
+ *
+ * Returns -1.0 if during computation we give up hope of exceeding threshold
+ *
+ ***********************************************************************
+ */
+static double __avx2_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) {
+#ifdef __AVX2__
+  // Eight bins of running (float) sums of products
+  __m256 sum = _mm256_setzero_ps();
+  // Process chunks of 32 bytes, any trailing non-multiple of 32 is ignored!!
+  int N = len >> 5;
+  const BYTE *a_cur = A;
+  const BYTE *b_cur = B;
+
+  double Nscaled_invnorm_prod_margin = N * 1.5 * invnorm_prod;
+
+  int N_minus_4 = N - 4;
+  int i = 0;
+  while( i <= N_minus_4 ) {
+    i += 4;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+    __dp_avx2( a_cur, b_cur, &sum );
+
+    // As i approaches N, i ~= N, which makes the below comparison fair
+    __m256 tempsum = sum; // <- protect sum against destructive horizontal reduction below
+    double partial_dp = __extract_float_avx2( __hadd_ps_avx2( &tempsum ) );
+    double scaled_partial_cos = Nscaled_invnorm_prod_margin * partial_dp;
+    double scaled_min_cos = i * min_cos; 
+    if( scaled_partial_cos < scaled_min_cos ) {
+      return -1.0;
+    }
+
+    a_cur += 32; b_cur += 32;
+  }
+  while( i++ < N ) {
+    __dp_avx2( a_cur, b_cur, &sum ); a_cur += 32; b_cur += 32;
+  }
+
+  double dp = __extract_float_avx2( __hadd_ps_avx2( &sum ) );
+  double cosine = dp * invnorm_prod;
+  return __scalar_cosine_clamp( cosine );
+#else
+  return __scalar_dp_mincos_pi8( A, B, len, invnorm_prod, min_cos );
+#endif
+}
+
 
 
 

@@ -1555,7 +1555,7 @@ DLL_HIDDEN extern int64_t pyvgx__enumerator_size( vgx_Graph_t *graph, int64_t (*
 
 
 
-typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B, double threshold );
+typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
 
 
 /******************************************************************************
@@ -1816,7 +1816,7 @@ static PyObject * __PyVGX__compare_vectors( PyObject *args, vgx_Similarity_t *si
   if( A && B ) {
     float sim;
     BEGIN_PYVGX_THREADS {
-      sim = method( simcontext, A, B, threshold );
+      sim = method( simcontext, A, B, (float)threshold );
     } END_PYVGX_THREADS;
     py_sim = PyFloat_FromDouble( sim );
   }
