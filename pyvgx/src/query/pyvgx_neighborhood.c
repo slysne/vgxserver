@@ -256,8 +256,9 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     };
 
     struct s_dbl_config dbl_config[] = {
-      { .name = "skip_probability", .target = &param->recursion.visit.skip_probability, .dflt=0.0,  .minval=0.0,  .maxval=1.0 },    // default 0.0=no skipping
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,             .dflt=1.0,  .minval=0.0,  .maxval=2.0 },    // default 1.0=constant
+      { .name = "skip_probability", .target = &param->recursion.visit.skip_probability,     .dflt=0.0,  .minval=0.0,  .maxval=1.0 },    // default 0.0=no skipping
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,  .minval=0.0,  .maxval=2.0 },    // default 1.0=constant
+      { .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },    // default 1.0=never apply arc lsh filter
       {0}
     };
 

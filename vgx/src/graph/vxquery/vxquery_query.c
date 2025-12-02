@@ -4026,7 +4026,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       },
       .visit = {
         .reset_state            = recursion_config->visit.reset_state,
-        .skip_probability       = recursion_config->visit.skip_probability
+        .skip_probability       = recursion_config->visit.skip_probability,
+        .arclsh_cos_threshold   = recursion_config->visit.arclsh_cos_threshold
       },
       .beam = {
         .width                  = recursion_config->beam.width,

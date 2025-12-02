@@ -76,20 +76,20 @@ static int __generic_vertexfilter( vgx_VertexFilter_context_t *filter, vgx_Verte
  * 
  ***********************************************************************
  */
-static int __arcvector_predicator_match_relationship( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_modifier( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_key( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_any( const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_relationship( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_modifier( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_key( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_any( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 static int __arcvector_predicator_match_value( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 static int __arcvector_predicator_match_specific( const vgx_predicator_t probe, const vgx_predicator_t target );
 static int __arcvector_predicator_match_relationship_value( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_relationship_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_relationship_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 static int __arcvector_predicator_match_modifier_value( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_modifier_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_modifier_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 static int __arcvector_predicator_match_specific_value( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_specific_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target );
-static int __arcvector_predicator_match_generic( const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_specific_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
+static int __arcvector_predicator_match_generic( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 
 
 
@@ -370,7 +370,7 @@ DLL_EXPORT vgx_IVertexFilter_t iVertexFilter = {
  * NOTE: Probe must not have relationship wildcard
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_relationship( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_relationship( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__REL_DIFF( probe.data ^ target.data );
 }
 
@@ -381,7 +381,7 @@ __inline static int __arcvector_predicator_match_relationship( const vgx_predica
  * NOTE: Probe must not have modifier wildcard
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_modifier( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_modifier( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__MOD_DIFF( probe.data ^ target.data );
 }
 
@@ -392,7 +392,7 @@ __inline static int __arcvector_predicator_match_modifier( const vgx_predicator_
  * NOTE: Probe key must not be 0
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_key( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_key( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__KEY_DIFF( probe.data ^ target.data );
 }
 
@@ -403,7 +403,7 @@ __inline static int __arcvector_predicator_match_key( const vgx_predicator_t pro
  ***********************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-__inline static int __arcvector_predicator_match_any( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_any( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return 1;
 }
 
@@ -440,11 +440,38 @@ __inline static int __arcvector_predicator_match_value( const vgx_predicator_t p
 
 
 
+
+
+
+
 /*******************************************************************//**
  * Predicator value bit pattern hamming distance match
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
+  static BYTE cos_to_ham32_1_0_sigma[] = {
+    19, 19, 19, 18, 18, 18, 18, 18, 18, 17, 17, 17, 17, 17, 17, 16,
+    16, 16, 16, 16, 15, 15, 15, 15, 15, 15, 14, 14, 14, 14, 14, 13,
+    13, 13, 13, 13, 12, 12, 12, 12, 12, 11, 11, 11, 11, 10, 10, 10,
+    10,  9,  9,  9,  8,  8,  8,  7,  7,  6,  6,  5,  5,  4,  3,  0
+  };
+
+
+  // Use dynamically adjusted threshold
+  if( context && context->lsh_cos_threshold < 1.0 ) {
+    // Not filter yet
+    if( context->lsh_cos < context->lsh_cos_threshold ) {
+      return !probe.mod.probe.NEG;
+    }
+    unsigned ham = POPCNT32( target.val.bits ^ probe.val.bits );
+    int idx = (int)(context->lsh_cos * 63) & 0x3F;
+    int max_ham = cos_to_ham32_1_0_sigma[ idx ];
+    // Return 1 if our hamdist is lower than implied by cosine (i.e. good to traverse)
+    // (probe.NEG inverts logic if 1)
+    return !( (ham > max_ham) ^ probe.mod.probe.NEG );
+  }
+
+  // Use normal static threshold
   unsigned ham = POPCNT32( target.val.bits ^ probe.val.bits );
   unsigned pval = _vgx_predicator_eph_get_value( probe );
   switch( __VAL_CONDITION( probe ) ) {
@@ -488,8 +515,8 @@ __inline static int __arcvector_predicator_match_relationship_value( const vgx_p
  * NOTE: Probe must not have relationship or value wildcards
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_relationship_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target ) {
-  return !( __REL_DIFF( probe.data ^ target.data ) || !__arcvector_predicator_match_value_hamming_distance( probe, target ) );
+__inline static int __arcvector_predicator_match_relationship_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
+  return !( __REL_DIFF( probe.data ^ target.data ) || !__arcvector_predicator_match_value_hamming_distance( context, probe, target ) );
 }
 
 
@@ -510,8 +537,8 @@ __inline static int __arcvector_predicator_match_modifier_value( const vgx_predi
  * NOTE: Probe must not have modifier or value wildcards
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_modifier_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target ) {
-  return !( __MOD_DIFF( probe.data ^ target.data ) || !__arcvector_predicator_match_value_hamming_distance( probe, target ) );
+__inline static int __arcvector_predicator_match_modifier_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
+  return !( __MOD_DIFF( probe.data ^ target.data ) || !__arcvector_predicator_match_value_hamming_distance( context, probe, target ) );
 }
 
 
@@ -533,9 +560,9 @@ __inline static int __arcvector_predicator_match_specific_value( const vgx_predi
  * NOTE: Probe must not have relationship, modifier or value wildcards
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_specific_value_hamming_distance( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_specific_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   uint64_t diff = probe.data ^ target.data;
-  return !( __REL_DIFF( diff ) || __MOD_DIFF( diff ) || !__arcvector_predicator_match_value_hamming_distance( probe, target ) );
+  return !( __REL_DIFF( diff ) || __MOD_DIFF( diff ) || !__arcvector_predicator_match_value_hamming_distance( context, probe, target ) );
 }
 
 
@@ -545,7 +572,7 @@ __inline static int __arcvector_predicator_match_specific_value_hamming_distance
  * 
  ***********************************************************************
  */
-__inline static int __arcvector_predicator_match_generic( const vgx_predicator_t probe, const vgx_predicator_t target ) {
+__inline static int __arcvector_predicator_match_generic( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   if( _vgx_predicator_full_wildcard( probe ) || _vgx_predicator_is_synthetic( target ) ) {
     return __HIT;
   }
@@ -569,7 +596,7 @@ __inline static int __arcvector_predicator_match_generic( const vgx_predicator_t
       // Probe VAL not *
       if( __VAL_CONDITION(probe) ) {
         if( _vgx_predicator_eph_is_lsh( probe ) ) {
-          return __arcvector_predicator_match_value_hamming_distance( probe, target );
+          return __arcvector_predicator_match_value_hamming_distance( context, probe, target );
         }
         else {
           return __arcvector_predicator_match_value( probe, target );
@@ -657,7 +684,7 @@ __inline static int __update_predicator_value_from_ratio( vgx_predicator_t *rati
  *
  ***********************************************************************
  */
-__inline static int __dynamic_predicator_match( vgx_predicator_t pred_condition, vgx_predicator_t this_predicator, vgx_predicator_t previous_predicator ) {
+__inline static int __dynamic_predicator_match( vgx_virtual_ArcFilter_context_t *context, vgx_predicator_t pred_condition, vgx_predicator_t this_predicator, vgx_predicator_t previous_predicator ) {
 #define __MODIFIER_TYPE_MISMATCH( Predicator1, Predicator2 ) (((Predicator1).data ^ (Predicator2).data) & __VGX_PREDICATOR_SMT_MASK)
 
   // Predicator is full wildcard: automatic hit
@@ -679,7 +706,7 @@ __inline static int __dynamic_predicator_match( vgx_predicator_t pred_condition,
   }
 
   // Test predicator
-  if( !predmatchfunc.Generic( pred_condition, this_predicator ) ) {
+  if( !predmatchfunc.Generic( context, pred_condition, this_predicator ) ) {
     return 0;
   }
 
@@ -706,12 +733,12 @@ static int __dynamic_arc_filter_callback( vgx_GenericArcFilter_context_t *contex
   vgx_predicator_t previous_predicator = context->previous_context->current_head->predicator;
 
   // == PREDICATOR 1 ==
-  if( !__dynamic_predicator_match( context->pred_condition1, this_predicator, previous_predicator ) ) {
+  if( !__dynamic_predicator_match( (vgx_virtual_ArcFilter_context_t*)context, context->pred_condition1, this_predicator, previous_predicator ) ) {
     return 0;
   }
 
   // == PREDICATOR 2 ==
-  if( !__dynamic_predicator_match( context->pred_condition2, this_predicator, previous_predicator ) ) {
+  if( !__dynamic_predicator_match( (vgx_virtual_ArcFilter_context_t*)context, context->pred_condition2, this_predicator, previous_predicator ) ) {
     return 0;
   }
 
@@ -833,7 +860,7 @@ static __inline int __arcvector_vertex_condition_match_similarity( const vgx_sim
     const vgx_value_condition_t *pscore = &similarity_probe->simscore;
     // Compute similarity score
     vgx_Similarity_t *S = similarity_probe->simcontext;
-    double sim = CALLABLE(S)->Similarity( S, similarity_probe->probevector, vertex_vector );
+    double sim = CALLABLE(S)->Similarity( S, similarity_probe->probevector, vertex_vector, -1.0f );
     // Match similarity score
     __GENERIC_FLOAT_VCOMP__( pscore->vcomp, sim, pscore->value1.data.simple.real, pscore->value2.data.simple.real, !hit )
   }
@@ -1206,7 +1233,7 @@ static int __stop_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context,
  */
 static int __relationship_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *rel_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  bool m = __arcvector_predicator_match_relationship( rel_arc_filter->pred_condition1, larc->head.predicator ) != 0;
+  bool m = __arcvector_predicator_match_relationship( arcfilter_context, rel_arc_filter->pred_condition1, larc->head.predicator ) != 0;
   if( rel_arc_filter->positive_match == m ) {
     *match = VGX_ARC_FILTER_MATCH_HIT;
     return 1;
@@ -1226,7 +1253,7 @@ static int __relationship_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_
  */
 static int __modifier_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *mod_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  bool m = __arcvector_predicator_match_modifier( mod_arc_filter->pred_condition1, larc->head.predicator ) != 0;
+  bool m = __arcvector_predicator_match_modifier( arcfilter_context, mod_arc_filter->pred_condition1, larc->head.predicator ) != 0;
   if( mod_arc_filter->positive_match == m ) {
     *match = VGX_ARC_FILTER_MATCH_HIT;
     return 1;
@@ -1266,7 +1293,7 @@ static int __value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context
  */
 static int __hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *hamdist_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  return *match = __arcvector_predicator_match_value_hamming_distance( hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !hamdist_arc_filter->positive_match;
+  return *match = __arcvector_predicator_match_value_hamming_distance( arcfilter_context, hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !hamdist_arc_filter->positive_match;
 }
 
 
@@ -1318,7 +1345,7 @@ static int __relationship_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcf
  */
 static int __relationship_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *rel_hamdist_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  return *match = __arcvector_predicator_match_relationship_value_hamming_distance( rel_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !rel_hamdist_arc_filter->positive_match;
+  return *match = __arcvector_predicator_match_relationship_value_hamming_distance( arcfilter_context, rel_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !rel_hamdist_arc_filter->positive_match;
 }
 
 
@@ -1350,7 +1377,7 @@ static int __modifier_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilte
  */
 static int __modifier_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *mod_hamdist_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  return *match = __arcvector_predicator_match_modifier_value_hamming_distance( mod_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !mod_hamdist_arc_filter->positive_match;
+  return *match = __arcvector_predicator_match_modifier_value_hamming_distance( arcfilter_context, mod_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !mod_hamdist_arc_filter->positive_match;
 }
 
 
@@ -1382,7 +1409,7 @@ static int __specific_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilte
  */
 static int __specific_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *relmod_hamdist_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
-  return *match = __arcvector_predicator_match_specific_value_hamming_distance( relmod_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !relmod_hamdist_arc_filter->positive_match;
+  return *match = __arcvector_predicator_match_specific_value_hamming_distance( arcfilter_context, relmod_hamdist_arc_filter->pred_condition1, larc->head.predicator ) ^ !relmod_hamdist_arc_filter->positive_match;
 }
 
 
@@ -1513,31 +1540,31 @@ static int __generic_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_conte
     switch( GAF->logic ) {
     case VGX_LOGICAL_NO_LOGIC:
       // hit = A
-      miss = !__arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator );
+      miss = !__arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator );
       break;
     case VGX_LOGICAL_AND:
       // hit = A*B
-      if( !__arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator )
+      if( !__arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator )
           ||
-          !__arcvector_predicator_match_generic( GAF->pred_condition2, larc->head.predicator ) )
+          !__arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition2, larc->head.predicator ) )
       {
         miss = true; // miss = /hit = /A + /B
       }
       break;
     case VGX_LOGICAL_OR:
       // hit = A+B
-      if( !__arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator )
+      if( !__arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator )
           &&
-          !__arcvector_predicator_match_generic( GAF->pred_condition2, larc->head.predicator ) )
+          !__arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition2, larc->head.predicator ) )
       {
         miss = true; // miss = /hit = /A * /B
       }
       break;
     case VGX_LOGICAL_XOR:
       // hit = A^B
-      if( __arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator )
+      if( __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator )
           ==
-          __arcvector_predicator_match_generic( GAF->pred_condition2, larc->head.predicator ) )
+          __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition2, larc->head.predicator ) )
       {
         miss = true; // miss = /hit = /(A^B) = A==B
       }
@@ -1672,7 +1699,7 @@ static int __generic_pred_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_contex
   
   // 2. CHECK THE ARC
   // We check single predicator here, terminating according to pos/neg match logic
-  if( __arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
+  if( __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }
@@ -1877,7 +1904,7 @@ static int __generic_pred_vertex_arcfilter( vgx_virtual_ArcFilter_context_t *arc
   
   // 2. CHECK THE ARC
   // We check single predicator here, terminating according to pos/neg match logic
-  if( __arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
+  if( __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }
@@ -2117,7 +2144,7 @@ static int __generic_pred_loceval_arcfilter( vgx_virtual_ArcFilter_context_t *ar
 
   // 1. CHECK THE ARC
   // We check single predicator here, terminating according to pos/neg match logic
-  if( __arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
+  if( __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }
@@ -2176,7 +2203,7 @@ static int __generic_pred_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_
 
   // 1. CHECK THE ARC
   // We check single predicator here, terminating according to pos/neg match logic
-  if( __arcvector_predicator_match_generic( GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
+  if( __arcvector_predicator_match_generic( arcfilter_context, GAF->pred_condition1, larc->head.predicator ) != GAF->positive_match ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }
@@ -2870,9 +2897,11 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     arcfilter->arcfilter_locked_head_access = false; // Maybe set later
     arcfilter->eval_synarc = false; // Maybe set later
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
-    arcfilter->unvisited = NULL; // Configure later
-    arcfilter->max_visited = 0; // Configure later
-    arcfilter->p_skip = 1.0; // Configure later
+    arcfilter->unvisited = NULL;        // Configure later
+    arcfilter->max_visited = 0;         // Configure later
+    arcfilter->p_skip = 0.0;            // Configure later
+    arcfilter->lsh_cos_threshold = 1.0; // Configure later
+    arcfilter->lsh_cos = 0.0;           // Configure later
     arcfilter->filter = arcfilterfunc.EvaluatorFilter;
 
     // Synthetic arc eval?
@@ -2945,7 +2974,10 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
     // Configure later
     arcfilter->unvisited = NULL;
     arcfilter->max_visited = 0;
-    arcfilter->p_skip = 1.0;
+    arcfilter->p_skip = 0.0;
+    arcfilter->lsh_cos_threshold = 1.0;
+    arcfilter->lsh_cos = 0.0;
+
 
     // Evaluator
     if( traversing_evaluator ) {

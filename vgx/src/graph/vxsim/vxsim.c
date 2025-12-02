@@ -65,11 +65,11 @@ static vgx_Vector_t * Similarity_externalize_vector( vgx_Similarity_t *self, vgx
 static vgx_Vector_t * Similarity_translate_vector( vgx_Similarity_t *self, vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
 static vgx_Vector_t * Similarity_new_centroid( vgx_Similarity_t *self, const vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral );
 static int Similarity_hamming_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-static float Similarity_jaccard( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+static float Similarity_jaccard( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
 static int8_t Similarity_intersect( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
 static bool Similarity_valid( vgx_Similarity_t *self );
 static void Similarity_clear( vgx_Similarity_t *self );
 static vgx_Similarity_value_t * Similarity_value( vgx_Similarity_t *self );
@@ -137,6 +137,7 @@ static vgx_Similarity_vtable_t Similarity_Methods = {
 static float __distance_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
 static float __distance_external_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
 static float __cosine_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
+static float __cosine_with_threshold_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B, float min_cos );
 static float __cosine_external_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
 static float __jaccard_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
 static float __jaccard_external_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B );
@@ -249,6 +250,27 @@ static float __cosine_internal_euclidean( const vgx_Vector_t *A, const vgx_Vecto
     cosine = (double)((cosine > 0.0) - (cosine < 0.0));
   }
   return (float)cosine;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static float __cosine_with_threshold_internal_euclidean( const vgx_Vector_t *A, const vgx_Vector_t *B, float min_cos ) {
+  const BYTE *a_bytes = ivectorobject.GetElements( (vgx_Vector_t*)A );
+  const BYTE *b_bytes = ivectorobject.GetElements( (vgx_Vector_t*)B );
+  int len = minimum_value( A->metas.vlen, B->metas.vlen );
+  double invnorm_prod;
+  if( A->metas.flags.cos && B->metas.flags.cos ) {
+    invnorm_prod = (double)A->metas.scalar.invnorm * (double)B->metas.scalar.invnorm;
+  }
+  else {
+    invnorm_prod = vxeval_bytearray_rsqrt_ssq( a_bytes, len ) * vxeval_bytearray_rsqrt_ssq( b_bytes, len );
+  }
+  return (float)vxeval_bytearray_dp_cosine_with_threshold( a_bytes, b_bytes, len, invnorm_prod, min_cos );
 }
 
 
@@ -1589,7 +1611,7 @@ static int Similarity_hamming_distance( vgx_Similarity_t *self, const vgx_Compar
  *
  ***********************************************************************
  */
-static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B ) {
+static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold ) {
   vgx_Vector_t *v1 = __object_vector( A );
   vgx_Vector_t *v2 = __object_vector( B );
 
@@ -1647,7 +1669,7 @@ static float Similarity_euclidean_distance( vgx_Similarity_t *self, const vgx_Co
  *
  ***********************************************************************
  */
-static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B ) {
+static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold ) {
   vgx_Vector_t *v1 = __object_vector( A );
   vgx_Vector_t *v2 = __object_vector( B );
   if( v1 == NULL || v2 == NULL ) {
@@ -1660,6 +1682,9 @@ static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A
     if( igraphfactory.EuclideanVectors() ) {
       if( v1->metas.flags.ext ) {
         self->value.cosine = __cosine_external_euclidean( v1, v2 );
+      }
+      else if( threshold > 0.0f ) {
+        self->value.cosine = __cosine_with_threshold_internal_euclidean( v1, v2, threshold );
       }
       else {
         self->value.cosine = __cosine_internal_euclidean( v1, v2 );
@@ -1697,7 +1722,7 @@ static float Similarity_cosine( vgx_Similarity_t *self, const vgx_Comparable_t A
  *
  ***********************************************************************
  */
-static float Similarity_jaccard( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B ) {
+static float Similarity_jaccard( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold ) {
   vgx_Vector_t *v1 = __object_vector( A );
   vgx_Vector_t *v2 = __object_vector( B );
   if( v1 == NULL || v2 == NULL ) {
@@ -1791,10 +1816,10 @@ static int8_t Similarity_intersect( vgx_Similarity_t *self, const vgx_Comparable
  *
  ***********************************************************************
  */
-static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B ) {
+static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold ) {
 
   if( igraphfactory.EuclideanVectors() ) {
-    return Similarity_cosine( self, A, B );
+    return Similarity_cosine( self, A, B, threshold );
   }
 
 
@@ -1818,7 +1843,7 @@ static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable
 
   // Jaccard
   if( cf->jaccard_exponent > 0.0f ) {
-    if( Similarity_jaccard( self, A, B ) < cf->min_jaccard ) {
+    if( Similarity_jaccard( self, A, B, threshold ) < cf->min_jaccard ) {
       return val->similarity = 0.0f;
     }
     if( !(cf->cosine_exponent > 0.0f) ) {
@@ -1828,7 +1853,7 @@ static float Similarity_similarity( vgx_Similarity_t *self, const vgx_Comparable
 
   // Cosine
   if( cf->cosine_exponent > 0.0f ) {
-    if( Similarity_cosine( self, A, B ) < cf->min_cosine ) {
+    if( Similarity_cosine( self, A, B, threshold ) < cf->min_cosine ) {
       return val->similarity = 0.0f;
     }
     if( !(cf->jaccard_exponent > 0.0f) ) {
@@ -1889,7 +1914,7 @@ static int Similarity_match( vgx_Similarity_t *self, const vgx_Comparable_t A, c
   vgx_Vector_t *v2 = __object_vector( B );
   if( v1 && v2 ) {
     if( igraphfactory.EuclideanVectors() ) {
-      if( !(Similarity_cosine( self, A, B ) < self->params.threshold.similarity ) ) {
+      if( !(Similarity_cosine( self, A, B, -1.0f ) < self->params.threshold.similarity ) ) {
         return 1;
       }
     }
@@ -1897,7 +1922,7 @@ static int Similarity_match( vgx_Similarity_t *self, const vgx_Comparable_t A, c
       // First: low-cost fingerprint distance match
       if( CALLABLE(self->fingerprinter)->Distance( self->fingerprinter, v1->fp, v2->fp ) <= self->params.threshold.hamming ) {
         // Second: costlier vector similarity
-        if( !(Similarity_similarity( self, A, B ) < self->params.threshold.similarity) ) {
+        if( !(Similarity_similarity( self, A, B, -1.0f ) < self->params.threshold.similarity) ) {
           return 1;
         }
       }

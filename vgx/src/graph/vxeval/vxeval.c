@@ -44,6 +44,7 @@ DLL_HIDDEN double (*vxeval_bytearray_sum_squares)( const BYTE *A, int len ) = NU
 DLL_HIDDEN double (*vxeval_bytearray_rsqrt_ssq)( const BYTE *A, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_dot_product)( const BYTE *A, const BYTE *B, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_cosine)( const BYTE *A, const BYTE *B, int len ) = NULL;
+DLL_HIDDEN double (*vxeval_bytearray_dp_cosine_with_threshold)( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) = NULL;
 
 
 
@@ -323,6 +324,7 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __scalar_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __scalar_dp_pi8;
     vxeval_bytearray_cosine = __scalar_cos_pi8;
+    vxeval_bytearray_dp_cosine_with_threshold = __scalar_dp_mincos_pi8;
 
 #if defined CXPLAT_ARCH_HASFMA
     int fma_feature = iVGXProfile.CPU.HasFeatureFMA();
@@ -339,6 +341,7 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx512_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx512_dp_pi8;
         vxeval_bytearray_cosine = __avx512_cos_pi8;
+        vxeval_bytearray_dp_cosine_with_threshold = __avx512_dp_mincos_pi8;
       }
       else if( fma_feature && avx_version == 2 ) {
         f_ecld_pi8 = __eval_avx2_ecld_pi8;
@@ -351,6 +354,7 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx2_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx2_dp_pi8;
         vxeval_bytearray_cosine = __avx2_cos_pi8;
+        vxeval_bytearray_dp_cosine_with_threshold = __avx2_dp_mincos_pi8;
       }
     }
 #elif defined CXPLAT_ARCH_ARM64
@@ -365,6 +369,7 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __neon_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __neon_dp_pi8;
     vxeval_bytearray_cosine = __neon_cos_pi8;
+    vxeval_bytearray_dp_cosine_with_threshold = __neon_dp_mincos_pi8;
 
 
 #endif

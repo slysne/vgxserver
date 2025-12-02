@@ -1555,7 +1555,7 @@ DLL_HIDDEN extern int64_t pyvgx__enumerator_size( vgx_Graph_t *graph, int64_t (*
 
 
 
-typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B );
+typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B, double threshold );
 
 
 /******************************************************************************
@@ -1802,9 +1802,10 @@ __inline static PyObject * __PyVGX__comparable_from_pyobject( PyObject *py_obj, 
 static PyObject * __PyVGX__compare_vectors( PyObject *args, vgx_Similarity_t *simcontext, f_similarity_method method ) {
   PyObject *py_sim = NULL;
   PyObject *py_A, *py_B;
+  double threshold = -1.0;
   vgx_Comparable_t A = NULL, B = NULL;
   
-  if( !PyArg_ParseTuple( args, "OO", &py_A, &py_B ) ) {
+  if( !PyArg_ParseTuple( args, "OO|d", &py_A, &py_B, &threshold ) ) {
     return NULL;
   }
 
@@ -1815,7 +1816,7 @@ static PyObject * __PyVGX__compare_vectors( PyObject *args, vgx_Similarity_t *si
   if( A && B ) {
     float sim;
     BEGIN_PYVGX_THREADS {
-      sim = method( simcontext, A, B );
+      sim = method( simcontext, A, B, threshold );
     } END_PYVGX_THREADS;
     py_sim = PyFloat_FromDouble( sim );
   }

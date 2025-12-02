@@ -177,6 +177,36 @@ static double __scalar_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
 
 
 /*******************************************************************//**
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multipled by supplied invers norms product,
+ * and return -1.0 if the cosine computation cannot exceeed min_cos.
+ *
+ ***********************************************************************
+ */
+static double __scalar_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) {
+  const int8_t *pa = (const int8_t*)A;
+  const int8_t *paend = pa + len;
+  const int8_t *pb = (const int8_t*)B;
+
+  double a, b;
+  double dp = 0.0;
+
+  // TODO: Implement the early exit logic. We're ignoring min_cos right now
+
+  while( pa < paend ) {
+    a = (double)*pa++;
+    b = (double)*pb++;
+    dp += a * b;
+  }
+
+  double cosine = dp * invnorm_prod;
+  return __scalar_cosine_clamp( cosine );
+}
+
+
+/*******************************************************************//**
  * EuclideanDistance( A, B )
  *
  *

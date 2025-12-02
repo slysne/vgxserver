@@ -2189,11 +2189,11 @@ typedef struct s_vgx_Similarity_vtable_t {
   struct s_vgx_Vector_t * (*TranslateVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
   struct s_vgx_Vector_t * (*NewCentroid)( struct s_vgx_Similarity_t *self, const struct s_vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral );
   int (*HammingDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*EuclideanDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Cosine)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Jaccard)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+  float (*EuclideanDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+  float (*Cosine)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+  float (*Jaccard)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
   int8_t (*Intersect)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Similarity)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+  float (*Similarity)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
   bool (*Valid)( struct s_vgx_Similarity_t *self );
   void (*Clear)( struct s_vgx_Similarity_t *self );
   union u_vgx_Similarity_value_t * (*Value)( struct s_vgx_Similarity_t *self );
@@ -5417,7 +5417,7 @@ __inline static int __is_arcfilter_error( const vgx_ArcFilter_match m ) {
 
 typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *context, vgx_LockableArc_t *arc, vgx_ArcFilter_match *match );
 
-typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, const vgx_predicator_t target );
+typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 
 typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 
@@ -5445,6 +5445,10 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   int64_t max_visited;                                        \
   /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
   double p_skip;  /* 0.0 - 1.0*/                              \
+  /* For M_LSH: Apply arc lsh hamming distance filter when lsh_cos is above this threshold */ \
+  double lsh_cos_threshold;                                   \
+  /* For M_LSH: Current cosine difficulty */                  \
+  double lsh_cos;                                             \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -6769,6 +6773,7 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
   Cm256iHeap_t *beam_heap;                    \
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
+  double current_cos_difficulty;              \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \

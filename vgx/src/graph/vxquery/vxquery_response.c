@@ -1618,7 +1618,7 @@ if( SingleFieldBitmask & Remain )  {                                  \
           IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_RANKSCORE, remaining_fields, wp )     { wp++->value.real = getrank( collected ); } END_IF_FIELDS_REMAIN
           vector = head->vector;
           if( vector && probe_vector ) {
-            IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = CALLABLE(similarity)->Similarity( similarity, probe_vector, vector ); } END_IF_FIELDS_REMAIN
+            IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = CALLABLE(similarity)->Similarity( similarity, probe_vector, vector, -1.0f ); } END_IF_FIELDS_REMAIN
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_HAMDIST, remaining_fields, wp )     { wp++->value.i64 = hamdist64( probe_vector->fp, vector->fp ); } END_IF_FIELDS_REMAIN
           }
           else {

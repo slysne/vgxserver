@@ -1238,6 +1238,8 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
         probe->traversing.arcfilter->unvisited = vxeval_vertex_unvisited;
         probe->traversing.arcfilter->max_visited = recursion->limit.visit;
         probe->traversing.arcfilter->p_skip = recursion->visit.skip_probability;
+        probe->traversing.arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+        probe->traversing.arcfilter->lsh_cos = -1.0; //
       }
     }
 

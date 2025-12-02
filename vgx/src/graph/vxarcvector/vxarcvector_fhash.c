@@ -800,7 +800,7 @@ DLL_HIDDEN int _vxarcvector_fhash__multiple_arc_has_key( framehash_dynamic_t *dy
     // VAL
     else {
       vgx_predicator_t stored_predicator = { .data=predicator_lookup_context.value.raw56 };
-      return predmatchfunc.Generic( key_predicator, stored_predicator );
+      return predmatchfunc.Generic( NULL, key_predicator, stored_predicator );
     }
   }
   // Miss
@@ -852,7 +852,7 @@ DLL_HIDDEN int _vxarcvector_fhash__remove_key_from_multiple_arc( framehash_dynam
       // Value match?
       vgx_predicator_t stored_predicator = { .data=predicator_deletion_context.value.raw56 };
       // Yes match, proceed with deletion
-      if( predmatchfunc.Generic( key_predicator, stored_predicator ) ) {
+      if( predmatchfunc.Generic( NULL, key_predicator, stored_predicator ) ) {
         ret = __framehash_del( &predicator_deletion_context, MAV );
       }
       // No, don't delete

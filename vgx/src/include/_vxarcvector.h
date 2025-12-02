@@ -692,7 +692,7 @@ __inline static void __arcvector_context_prepare_multipred( __arcvector_virtual_
  * 
  ***********************************************************************
  */
-typedef int (*__f_match_pred)( const vgx_predicator_t A, const vgx_predicator_t B );
+typedef int (*__f_match_pred)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t A, const vgx_predicator_t B );
 
 
 

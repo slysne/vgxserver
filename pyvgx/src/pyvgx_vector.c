@@ -526,7 +526,7 @@ static PyObject * PyVGX_Vector__Cosine( PyObject *py_self, PyObject *py_other ) 
     return NULL;
   }
 
-  return PyFloat_FromDouble( CALLABLE( sim )->Cosine( sim, v1, v2 ) );
+  return PyFloat_FromDouble( CALLABLE( sim )->Cosine( sim, v1, v2, -1.0f ) );
 }
 
 
@@ -552,7 +552,7 @@ static PyObject * PyVGX_Vector__EuclideanDistance( PyObject *py_self, PyObject *
     return NULL;
   }
 
-  return PyFloat_FromDouble( CALLABLE( sim )->EuclideanDistance( sim, v1, v2 ) );
+  return PyFloat_FromDouble( CALLABLE( sim )->EuclideanDistance( sim, v1, v2, -1.0f ) );
 }
 
 
