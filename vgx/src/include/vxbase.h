@@ -3487,7 +3487,7 @@ typedef struct s_vgx_recursion_config_t {
 #define VGX_RECURSION_HEAP_SIZE_MAX (1<<20)
 #define VGX_RECURSION_HEAP_SHADOW_MAX (1<<20)
 #define VGX_RECURSION_FRONTIER_SIZE_MAX (1<<20)
-#define VGX_RECURSION_BEAM_SIZE_MAX (1<<13)
+#define VGX_RECURSION_BEAM_SIZE_MAX (1<<16)
 
 __inline static bool __is_recursion_enabled( const vgx_recursion_config_t *recursion ) {
   return recursion && recursion->mode != VGX_RECURSION_MODE_NONE;
