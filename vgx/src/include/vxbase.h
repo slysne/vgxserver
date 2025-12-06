@@ -3458,7 +3458,7 @@ typedef struct s_vgx_recursion_config_t {
   vgx_recursion_mode_t mode;
   struct {
     int64_t size;
-    int64_t multiplier;
+    int64_t shadow;
   } heap;
   struct {
     int64_t frontier;
@@ -3468,21 +3468,26 @@ typedef struct s_vgx_recursion_config_t {
     int64_t visit;
   } limit;
   struct {
-    bool reset_state;
+    bool reset_metrics;
+    bool reset_map;
     double skip_probability;
     double arclsh_cos_threshold;
   } visit;
   struct {
     int64_t width;
-    int64_t offset;
     int64_t min_width;
     int64_t max_width;
     double curve;
+    bool adaptive_taper;
   } beam;
   
 } vgx_recursion_config_t;
 
 
+#define VGX_RECURSION_HEAP_SIZE_MAX (1<<20)
+#define VGX_RECURSION_HEAP_SHADOW_MAX (1<<20)
+#define VGX_RECURSION_FRONTIER_SIZE_MAX (1<<20)
+#define VGX_RECURSION_BEAM_SIZE_MAX (1<<13)
 
 __inline static bool __is_recursion_enabled( const vgx_recursion_config_t *recursion ) {
   return recursion && recursion->mode != VGX_RECURSION_MODE_NONE;

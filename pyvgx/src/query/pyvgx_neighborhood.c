@@ -202,8 +202,6 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
  ******************************************************************************
  */
 static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
-#define RECURSION_HEAP_SIZE_MAX (1<<20)
-#define RECURSION_HEAP_MULT_MAX (1<<10)
   int ret = 0;
   XTRY {
     // Sorting required
@@ -241,29 +239,30 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     };
   
     struct s_int_config int_config[] = {
-      { .name="heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },  // default 0=auto
-      { .name="heap_multiplier",  .target = &param->recursion.heap.multiplier,  .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_MULT_MAX },  // default 0=auto
-      { .name="frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
+      { .name="heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 0=auto
+      { .name="heap_shadow",      .target = &param->recursion.heap.shadow,      .dflt=-1,         .minval=-1,     .maxval=VGX_RECURSION_HEAP_SHADOW_MAX },  // default -1=auto
+      { .name="frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_FRONTIER_SIZE_MAX },  // default 0=auto
       { .name="expansion_limit",  .target = &param->recursion.limit.expansion,  .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
       { .name="depth_limit",      .target = &param->recursion.limit.depth,      .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
       { .name="exec_ms_limit",    .target = &param->recursion.limit.exec_ms,    .dflt=-1,         .minval=-1,     .maxval=LLONG_MAX },                // default -1=unlimited
       { .name="visit_limit",      .target = &param->recursion.limit.visit,      .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
-      { .name="beam_width",       .target = &param->recursion.beam.width,       .dflt=0,          .minval=0,      .maxval=RECURSION_HEAP_SIZE_MAX },  // default 0=off
-      { .name="beam_offset",      .target = &param->recursion.beam.offset,      .dflt=0,          .minval=-128,   .maxval=128 },                      // default 0=constant
-      { .name="beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=RECURSION_HEAP_SIZE_MAX },
-      { .name="beam_max",         .target = &param->recursion.beam.max_width,   .dflt=1024,       .minval=1,      .maxval=RECURSION_HEAP_SIZE_MAX },
+      { .name="beam_width",       .target = &param->recursion.beam.width,       .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=off
+      { .name="beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },
+      { .name="beam_max",         .target = &param->recursion.beam.max_width,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=auto
       {0}
     };
 
     struct s_dbl_config dbl_config[] = {
       { .name = "skip_probability", .target = &param->recursion.visit.skip_probability,     .dflt=0.0,  .minval=0.0,  .maxval=1.0 },    // default 0.0=no skipping
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,  .minval=0.0,  .maxval=2.0 },    // default 1.0=constant
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,  .minval=0.0,  .maxval=1.0 },    // default 1.0=constant
       { .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },    // default 1.0=never apply arc lsh filter
       {0}
     };
 
     struct s_bool_config bool_config[] = {
-      { .name = "reset_state",      .target = &param->recursion.visit.reset_state,      .dflt=true },
+      { .name = "reset_metrics",    .target = &param->recursion.visit.reset_metrics,    .dflt=true },
+      { .name = "reset_map",        .target = &param->recursion.visit.reset_map,        .dflt=true },
+      { .name = "adaptive_taper",   .target = &param->recursion.beam.adaptive_taper,    .dflt=true },
       {0}
     };
 
@@ -296,11 +295,11 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     else if( py_recursion == Py_False ) {
       param->recursion.mode = VGX_RECURSION_MODE_NONE;
     }
-    // Auto-config heap size as multiplier of hits
+    // Auto-config heap shadow
     else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
-      param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
+      //param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
     }
-    // { "heap_size": 256, "frontier_limit": 1024, ... }
+    // { "heap_shadow": 256, "frontier_limit": 1024, ... }
     else if( PyDict_Check( py_recursion) ) {
       Py_ssize_t pos = 0;
       PyObject *py_key, *py_value;
@@ -395,10 +394,12 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x00C );
     }
           
+    /*
     if( param->recursion.heap.size > 0 && param->recursion.heap.multiplier > 0 ) {
       PyErr_Format( PyExc_TypeError, "recursive search heap_size and heap_multiplier cannot be specified at the same time" );
       THROW_SILENT( CXLIB_ERR_API, 0x00D );
     }
+    */
 
     // Switch to beam mode
     if( param->recursion.beam.width > 0 ) {

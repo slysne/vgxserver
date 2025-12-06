@@ -6009,16 +6009,23 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   CQwordList_t *cstringref;
   // Q1.8
   CQwordList_t *vectorref;
-  // Q1.7-8
-  QWORD __rsv_1_7;
-  QWORD __rsv_1_8;
+  // Q1.7
+  vgx_Vector_t *probe;
+  // Q1.8
+  double threshold;
   // ==== CL2 ====
   // Q2.1-4
   vgx_ExpressEvalDWordSet_t dwset;
   // Q2.5
-  vgx_Vector_t *probe;
+  struct {
+    float running;
+    float previous;
+  } top_score;
   // Q2.6
-  double threshold;
+  struct {
+    uint32_t counter;
+    uint32_t unimproved;
+  } visit_window;
   // Q2.7-8 
   struct {
     uint32_t c1;
@@ -6742,6 +6749,20 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
 
 
 
+/*******************************************************************//**
+ *
+ *
+ *
+ ***********************************************************************
+ */
+typedef struct s_vgx_ExpansionShadowTrail_t {
+  double threshold;
+  float *wp;
+  float *end;
+  float *queue;
+} vgx_ExpansionShadowTrail_t;
+
+
 
 /*******************************************************************//**
  *
@@ -6768,11 +6789,14 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
   int64_t sz_refmap;                          \
   vgx_recursion_mode_t recursion_mode;        \
   int64_t recursion_depth;                    \
+  vgx_ExpansionShadowTrail_t shadow_trail;    \
   vgx_FrontierQueue_t *frontier;              \
   int64_t max_frontier;                       \
   Cm256iHeap_t *beam_heap;                    \
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
+  bool use_dynamic_taper;                     \
+  double dynamic_taper;                       \
   double current_cos_difficulty;              \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \

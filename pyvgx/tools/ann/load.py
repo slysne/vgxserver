@@ -5,6 +5,7 @@ import random
 import time
 import struct
 import base64
+import threading
 
 
 def vertex(g, J, fname):
@@ -213,38 +214,95 @@ def QMINIT(g):
         memory = M_PRUNE,
         filter = "cosine(r1, next.vector) > next.arc.value"
     )
-    M_FIND = g.Memory(4)
+    M_FIND = g.Memory(32)
     Q_FIND = g.NewNeighborhoodQuery(
                 memory  =   M_FIND,
                 arc     =   D_OUT,
-                filter  =   "anncollect()",
+                filter  =   "anncollect( 0.0 )",
                 collect =   C_SCAN,
-                sortby  =   S_VAL,
+                sortby  =   S_RVAL,
                 fields  =   F_VAL | F_ID,
                 result  =   R_LIST,
                 recursion = {
-                    'heap_size'         : 150,
-                    'beam_width'        : 150,
-                    'beam_curve'        : 0.8,
-                    'reset_state'       : False
+                    'heap_size'         : 130,
+                    'heap_shadow'       : 39,
+                    'frontier_limit'    : 390,
+                    'beam_width'        : 390,
+                    'beam_curve'        : 0.6,
+                    'beam_min'          : 16,
+                    'reset_map'         : False,
+                    'reset_metrics'     : True
                 }
     )
 
 
 
+  
 
-def repair_with_lsh32(g):
-    n = 0 
-    for node in g.VerticesType('item'):
+def robust_enhance(g, min_hub_odeg=78, max_hubs=15000, robust_arcs=10, sortdir=S_ASC ):
+    connect_attempts = 0
+    connected = 0
+    sz_hop2 = []
+    for hub in g.Vertices( condition={'type':'item', 'outdegree':(V_GTE,min_hub_odeg)}, hits=max_hubs, sortby=S_ODEG ):
+        # hub="6e9bf722-90ad-4934-815c-b089ff93d25c"
+        hop2 = g.Neighborhood(
+            hub,
+            hits=robust_arcs,
+            collect=C_NONE,
+            sortby=S_RVAL|sortdir,
+            neighbor={
+                'collect': C_SCAN,
+                'traverse': {
+                    'arc': D_OUT,
+                    'filter': f"""
+                        require( next.id != "{hub}" );
+                        require( vset.add(next)==1 );
+                        s=cosine(prev.vector, next.vector);
+                        collect(s)
+                        """
+                }
+            },
+            fields=F_VAL|F_ID,
+            result=R_LIST
+        )
+        H = g.OpenVertex(hub)
+        lsh32 = H.GetVector().LSH32()
+        for score, farnode in hop2:
+            connect_attempts += 1
+            F = g.OpenVertex(farnode)
+            r = g.Connect( F, ('lsh32', M_LSH|M_FWDONLY, lsh32), H )
+            if r > 0:
+                connected += 1
+            F.Close()
+        H.Close()
+    return connect_attempts, connected
+
+
+
+
+def rescue_remotes(g, cutoff_ideg=6, max_rescue_degree=20 ):
+    remotes = g.Vertices( condition={'type':'item', 'indegree':(V_LTE,cutoff_ideg)} )
+    N = len(remotes)
+    if N == 0:
+        return 0
+    n = 0
+    for remote in remotes:
         n += 1
-        fixed = [(term,g[term].GetVector().LSH32()) for term in g.Neighborhood( node )]
-        g.Disconnect( node, D_OUT )
-        for term, lsh32 in fixed:
-            g.Connect( node, ('lsh32', M_LSH|M_FWDONLY, lsh32), term )
-        if not n % 1000:
-            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
-    print( "100.0%" )
-        
+        R = g.OpenVertex( remote )
+        ideg_boost = max_rescue_degree - R.ideg
+        probe = R.GetVector()
+        lsh32 = probe.LSH32()
+        for true_neighbor, score in execscan(g, probe, k=ideg_boost):
+            T = g.OpenVertex( true_neighbor )
+            g.Connect( T, ('lsh32', M_LSH|M_FWDONLY, lsh32), R )
+            T.Close()
+        R.Close()
+        print( f"{n}/{N} {100*n/N:0.2f}%", end="\r", flush=1 )
+    print( f"{n}/{N} {100*n/N:0.2f}%" )
+    return N
+
+
+
 
 
 
@@ -257,7 +315,7 @@ def prune_RNG_neighborhood(g, A):
             continue
         B = g.OpenVertex(c)
         Q_PRUNE.id = A
-        M_PRUNE.R1 = B.GetVector() # WARNING!!! This accumulates vector objects until we Reset() the mem object!!!
+        M_PRUNE.vector = B.GetVector()
         # c too close to existing neighbor of, skip
         if Q_PRUNE.Execute():
             B.Close()
@@ -265,7 +323,7 @@ def prune_RNG_neighborhood(g, A):
         # c accepted
         g.Connect( A, ('asim', M_FLT|M_FWDONLY, asim), B )
         B.Close()
-        if A.odeg >= 32:
+        if A.odeg >= 40:
             return
 
 
@@ -281,19 +339,19 @@ def connect_RNG_candidates(g, A, C):
             continue
         B = g.OpenVertex(c)
         Q_PRUNE.id = A
-        M_PRUNE.R1 = B.GetVector() # WARNING!!! This accumulates vector objects until we Reset() the mem object!!!
+        M_PRUNE.vector = B.GetVector()
         # c too close to existing neighbor of, skip
         if Q_PRUNE.Execute():
             B.Close()
             continue
         # c accepted
-        asim = 1.1 * (score-1) # alpha * (cos+1-1)
+        asim = 1.2 * (score-1) # alpha * (cos+1-1)
         g.Connect( A, ('asim', M_FLT|M_FWDONLY, asim), B )
         g.Connect( B, ('asim', M_FLT|M_FWDONLY, asim), A )
-        if B.odeg > 64:
+        if B.odeg > 80:
             prune_RNG_neighborhood(g, B)
         B.Close()
-        if A.odeg >= 32:
+        if A.odeg >= 40:
             return
 
 
@@ -302,13 +360,10 @@ def connect_RNG_candidates(g, A, C):
 def find_candidates(g, A, roots):
     C = []
     M_FIND.Reset()
-    M_FIND.R1 = A.GetVector() # WARNING!!! This accumulates vector objects until we Reset() the mem object!!!
-    M_FIND.R4 = 1.1 # ham filter score activation
-    #M_FIND.ClearSet()
+    M_FIND.vector = A.GetVector()
     for root in roots:
-        M_FIND.R2 = 0.0 # min score threshold init
         Q_FIND.id = root
-        C.extend( Q_FIND.Execute( hits=32 ) ) # Keep the vset since reset_state is True
+        C.extend( Q_FIND.Execute( hits=40 ) ) # Keep the vset since reset_state is True
     return sorted(C, reverse=1)
 
 
@@ -317,7 +372,7 @@ def process_node(g, node, medoid, random_roots):
     A = g.OpenVertex(node)
     probe = A.GetVector()
     selected_roots = [medoid]
-    selected_roots.extend( random.sample( random_roots, 4 ) )
+    selected_roots.extend( random.sample( random_roots, 5 ) )
     C = find_candidates(g, A, selected_roots)
     connect_RNG_candidates(g, A, C)
     A.Close()
@@ -356,8 +411,8 @@ def populate(g):
     for node in process_list:
         if n >= refresh_roots_at_n:
             medoid = sample_medoid(g,100000)
-            random_roots = get_random_roots(g, 128)
-            refresh_roots_at_n += N//10
+            random_roots = get_random_roots(g, 256)
+            refresh_roots_at_n += N//8
         process_node(g, node, medoid, random_roots)
         n += 1
         if not n % 100:
@@ -378,6 +433,63 @@ def build_proximity_graph(g):
 def clear_links(g):
     for node in g.Vertices():
         g.Disconnect(node)
+
+
+
+def repair_with_lsh32(g):
+    n = 0 
+    for node in g.VerticesType('item'):
+        n += 1
+        fixed = [(term,g[term].GetVector().LSH32()) for term in g.Neighborhood( node )]
+        g.Disconnect( node, D_OUT )
+        for term, lsh32 in fixed:
+            g.Connect( node, ('lsh32', M_LSH|M_FWDONLY, lsh32), term )
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
+      
+
+
+def topstar(g, maxcand=8000, maxcos=0.4, mindeg=75 ):
+    ENTRIES = g.Vertices( hits=maxcand, sortby=S_RANDOM, condition={'type':'item', 'outdegree':(V_GT,mindeg)} )
+    TOO_CLOSE = set()
+    for i in range(len(ENTRIES)-1):
+        for k in range(i+1,len(ENTRIES)):
+            if g.sim.Cosine( g[ENTRIES[i]], g[ENTRIES[k]] ) > maxcos:
+                TOO_CLOSE.add(ENTRIES[k])
+    SPREAD = list( set(ENTRIES) - TOO_CLOSE )
+    sz = len(SPREAD)
+    mc = f"0{maxcos*10:0.1f}".replace(".","")
+    name = f"entry_{sz}_{mc}"
+    A = g.NewVertex( name, type="entry" )
+    for node in SPREAD:
+        lsh32 = g[node].GetVector().LSH32()
+        r = g.Connect( A, ('lsh32', M_LSH|M_FWDONLY, lsh32), node )
+    A.Close()
+    return name, sz
+
+
+def superstar(g):
+    A = g.NewVertex( "super", type="super" )
+    for node in g.VerticesType( "entry" ):
+        g.Connect( A, ('lsh32', M_LSH|M_FWDONLY, 0), node )
+    A.Close()
+
+
+
+def entry_centroid( init ):
+    assert g[init].type == "entry"
+    V = []
+    for term in g.Neighborhood( init ):
+        T = g.OpenVertex(init, 'r')
+        V.append( T.GetVector() )
+        T.Close()
+    C = g.sim.NewCentroid( V )
+    A = g.OpenVertex( init )
+    A.SetVector(C)
+    A.Close()
+
+
 
 
 
@@ -454,7 +566,245 @@ def check(g):
 
 
 
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, bmin=16 ):
+    MEM = graph.Memory(32)
+    Q = graph.NewNeighborhoodQuery(
+                                memory  =   MEM,
+                                #arc     =   ('lsh32', D_OUT, M_LSH, V_LTE, (0,0)),
+                                arc     =   ('lsh32', D_OUT),
+                                filter  =   "anncollect( 0.0 )",
+                                collect =   C_SCAN,
+                                sortby  =   S_RVAL,
+                                fields  =   F_VAL | F_ID,
+                                result  =   R_LIST,
+                                recursion = {
+                                    'heap_size': h,
+                                    'heap_shadow': shw,
+                                    'frontier_limit': f,
+                                    'beam_width': bw,
+                                    'beam_curve': bc,
+                                    'beam_min': bmin,
+                                    'beam_max': 1024,
+                                    'adaptive_taper': True,
+                                    'arclsh_mincos': 1.0
+                                }
+    )       
+    return MEM, Q
 
+
+
+
+
+def search( MEM, Q, graph, probe, k, start):
+    MEM.vector = probe
+    #Q.arclsh = (probe.LSH32(), 0)
+    Q.id = start
+    return Q.Execute( hits=k )
+
+
+
+
+
+def ptest(MEM, Q, graph, probe, k=10, root=None, recall=False, recall_only=False, recall_with_timing=False, fname=None ):
+    start = root if root is not None else graph[ROOT].Terminals()[0]
+    if type(probe) is not Vector:
+        raise TypeError("probe must be vector")
+    t0 = time.perf_counter_ns()
+    result = search( MEM, Q, graph, probe, k, start=start )
+    t1 = time.perf_counter_ns()
+    t_ms = (t1-t0)/1000000.0
+    if not recall and not recall_only:
+        for score, id in result:
+            print( f"{score:0.3f}  {graph[id]['title']}" )
+    else:
+        fname = fname if fname is not None else graph[result[0][1]]['fname']
+        scan_result = scan(graph, probe, k=k, fname=fname)
+        scanned = set([ id for id, score in scan_result ])
+        searched = set([ id for score, id in result ])
+        n = 0
+        if not recall_only:
+            for id, score in scan_result:
+                n += 1
+                if id in searched:
+                    print( f"{n:3d}. [{graph[id]['dist']}]   {score:0.3f}   {id}  {graph[id]['title']}" )
+                else:
+                    print( f"{n:3d}. [{graph[id]['dist']}]   {score:0.3f} ! {id} ({graph[id]['title']})" )
+        r = (len(scanned) - len(scanned - searched)) / len(scanned)
+        if not recall_only:
+            print( f"RECALL={100*r:0.1f}" )
+    if recall_only:
+        if recall_with_timing:
+            return r, t_ms
+        else:
+            return r
+    else:
+        print( f"{t_ms:0.5f} ms" )
+
+
+
+
+
+SCAN_CACHE = {}
+
+def scan(g, probe, k=10, sortdir=S_DESC, fname=None):
+    key = f"{probe.ident}_{k}"
+    result = SCAN_CACHE.get( key )
+    if result is not None:
+        return result
+    SCAN_CACHE[key] = execscan(g, probe, k, sortdir, fname)
+    return SCAN_CACHE[key]
+    #####
+    mem = g.Memory(4)
+    mem.R1 = probe.internal if type(probe) is Vector else graph.sim.NewVector(probe).internal
+    cond = f"!isnan(vertex.property('dist'))"
+    if fname:
+        cond += f" && vertex.property('fname') == '{fname}'"
+    result = g.Vertices(
+        memory = mem,
+        condition = { 'filter': cond },
+        sortby = S_RANK|sortdir,
+        rank = "1 + cos_pi8( r1, vertex.vector)",
+        hits = k,
+        fields = F_ID|F_RANK,
+        result = R_LIST
+    )
+    SCAN_CACHE[key] = result
+    return result
+
+
+
+def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
+    mem = g.Memory(4)
+    mem.vector = probe if type(probe) is Vector else graph.sim.NewVector(probe)
+    cond = f"!isnan(vertex.property('dist'))"
+    if fname:
+        cond += f" && vertex.property('fname') == '{fname}'"
+    result = g.Vertices(
+        memory = mem,
+        condition = { 'type':'item', 'filter': cond },
+        sortby = S_RANK|sortdir,
+        rank = "1 + cosine( M.vector, vertex.vector)",
+        hits = k,
+        fields = F_ID|F_RANK,
+        result = R_LIST
+    )
+    return result
+
+
+
+
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, r_result, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, bmin=8)
+    testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
+
+
+
+
+
+
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc ):
+    T = []
+    sz = len(PROBES) // N
+    i = 0
+    for n in range(N):
+        sample = PROBES[i:i+sz]
+        r_result = {}
+        args = (g, sample, entry, k, h, shw, f, bw, bc, r_result)
+        t = threading.Thread( target=work, args=args )
+        T.append( (t, r_result) )
+        i += sz
+    t0 = time.perf_counter()
+    for t,_ in T:
+        t.start()
+    alive = len(T)
+    while alive:
+        alive = sum([1 for t,_ in T if t.is_alive()])
+        time.sleep(0.001)
+    t1 = time.perf_counter()
+    for t,_ in T:
+        t.join(timeout=1.0) # just in case
+    total_queries = sum([r_result['count'] for _, r_result in T])
+    wall_time = t1 - t0
+    avg_thread_exec_time = sum([r_result['thread_exec_time'] for _, r_result in T]) / len(T)
+    total_sum_latency_ms = sum([r_result['sum_latency_ms'] for _, r_result in T])
+    total_sum_latency_seconds = total_sum_latency_ms / 1000.0
+    avg_sum_latency_seconds = total_sum_latency_seconds / len(T)
+    recall = sum([r_result['avg_recall'] for _, r_result in T]) / len(T)
+    avg_latency_ms = total_sum_latency_ms / total_queries
+    avg_thread_overhead_sec = avg_thread_exec_time - avg_sum_latency_seconds
+    qps = total_queries / (wall_time - avg_thread_overhead_sec)
+    qps_wall = total_queries / wall_time
+    total_sum_evals = sum([r_result['sum_evals'] for _, r_result in T])
+    total_sum_accepts = sum([r_result['sum_accepts'] for _, r_result in T])
+    epq = total_sum_evals // total_queries
+    apq = total_sum_accepts // total_queries
+    evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
+    acceptrate = 100*apq/epq
+    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc}"
+    result = f"qps={qps:0.1f} recall={recall:0.3f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
+    print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
+
+
+
+def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, ffactor=32, bwfactor=3/4, bcs=None ):
+    if heaps is None:
+        heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
+    if bcs is None:
+        bcs = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]
+    for h in heaps:
+        shw = int(shwfactor * h)
+        f = int(ffactor * h)
+        bw = int(bwfactor * h)
+        for bc in bcs:
+            r_PROBES = random.sample( PROBES, len(PROBES) )
+            threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc ) 
+
+
+
+def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_result=None ):
+    t0 = time.perf_counter()
+    R = []
+    T = []
+    T_OVER = []
+    cnt = 0
+    tot_neval = 0
+    tot_nhampass = 0
+    tot_nsimpass = 0
+    fname = g[g[ROOT].Terminals()[0]]['fname']
+    for p in P:
+        cnt += 1
+        r, t_ms = ptest(MEM, Q, g, p, k=k, root=entry, recall_only=1, recall_with_timing=1, fname=fname)
+        R.append(r)
+        T.append(t_ms)
+        neval, nhampass, nsimpass, _ = MEM.counters
+        tot_neval += neval
+        tot_nhampass += nhampass
+        tot_nsimpass += nsimpass
+        if show:
+            eval_per_query = tot_neval // cnt
+            pct_hampass = 100.0*tot_nhampass / tot_neval
+            pct_simpass = 100.0*tot_nsimpass / tot_neval
+            avg_recall = sum(R) / cnt
+            avg_latency = sum(T) / cnt
+            print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_hampass:0.1f}%h/e {pct_simpass:0.1f}%s/q    ", end="\r", flush=1 )
+    if show:
+        print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_hampass:0.1f}%h/e {pct_simpass:0.1f}%s/q    " )
+    else:
+        sum_latency_ms = sum(T)
+        avg_latency_ms = sum_latency_ms / cnt
+        avg_recall = sum(R) / cnt
+        if r_result is None:
+            return f"recall={avg_recall:0.3f}@{k} latency={avg_latency:0.2f}ms"
+        if type(r_result) is dict:
+            r_result['count'] = cnt
+            r_result['avg_recall'] = avg_recall
+            r_result['avg_latency_ms'] = avg_latency_ms
+            r_result['sum_latency_ms'] = sum_latency_ms
+            r_result['sum_evals'] = tot_neval
+            r_result['sum_accepts'] = tot_nsimpass
+            t1 = time.perf_counter()
+            r_result['thread_exec_time'] = t1 - t0
+            return cnt, avg_recall, avg_latency_ms
 
 
 
@@ -462,7 +812,23 @@ def check(g):
 
 system.Initialize( "annindex", http=9000 )
 g = Graph("ann")
+
 QMINIT(g)
+
+    
+MEM, Q = INIT(g)
+ 
+
+PROBES100k = [ g.sim.NewVector(p, cosine_mode=1) for p in g['cache']['probes100k'] ]
+
+SCAN_CACHE = g['cache']['SCAN_CACHE']
+
+ENTRIES = ['entry']*len(PROBES) 
+
+
+ROOT = "root-part1.dump"
+medoid = g[ROOT].Terminals()[0] # 4fa8ff21-6154-4485-b539-8a1ebf8fac00
+
 
 
 #if __name__ == "__main__":

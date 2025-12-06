@@ -1020,6 +1020,8 @@ DLL_HIDDEN extern int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_Bas
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_tail_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_OPEN( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
+DLL_HIDDEN extern double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, double score );
+DLL_HIDDEN extern double _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *difficulty );
 
 
 

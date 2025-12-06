@@ -322,11 +322,42 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  *
  ***********************************************************************
  */
-static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width ) {
-  // next = width * curve + offset
-  int64_t next = (int64_t)round( current_beam_width * recursion->beam.curve + recursion->beam.offset );
-  // clamp 
+static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width, double dynamic_taper ) {
+  // next = width * curve * dynamic_taper
+  int64_t next = (int64_t)round( current_beam_width * recursion->beam.curve * dynamic_taper );
+  // clamp, never allow increasing width and never below minimum
   return clamp_value( next, recursion->beam.max_width, recursion->beam.min_width );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector ) {
+  // We will transfer Frontier -> Beam
+  Cm256iHeap_t *B = collector->beam_heap;
+  vgx_FrontierQueue_t *F = collector->frontier;
+  vgx_CollectorItem_t frontier = {0};
+  while( CALLABLE(F)->Next(F, &frontier.item) ) {
+    vgx_Graph_t *locked_graph = NULL;
+    vgx_CollectorItem_t discarded = {0};
+    if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item) == NULL ) {
+      // Inferior item
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &locked_graph );
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &locked_graph );
+    }
+    else if( discarded.headref->refcnt > 0 ) {
+      // Discarded from beam
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, discarded.tailref, &locked_graph );
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, discarded.headref, &locked_graph );
+    }
+
+    // TODO: Should we batch so we don't go in and out of graph CS for every item?
+    GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  } 
 }
 
 
@@ -365,10 +396,8 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
  *
  ***********************************************************************
  */
-static void __initialize_next_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector ) {
+static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector ) {
   Cm256iHeap_t *B = collector->beam_heap;
-  // Adjust beam width
-  collector->beam_width = __next_beam_width( recursion, collector->beam_width );
   // Initialize beam heap
   CALLABLE(B)->Clear(B);
   // We have already guaranteed internal allocation is large enough for all beam widths computed above
@@ -386,10 +415,14 @@ static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_Base
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
-    // Transfer sorted beam item to frontier queue
+    // Step 1: Prepare beam
+    __initialize_beam( recursion, collector );
+    // Step 2: Populate beam heap from frontier gathered during previous expansion
+    __transfer_frontier_to_beam( collector );
+    // Step 3: Sort beam and transfer back to frontier queue
     int64_t sz_frontier = __transfer_beam_to_frontier( collector );
-    // Prepare new beam for next level
-    __initialize_next_beam( recursion, collector );
+    // Step 4: Reduce beam width in preparation for future use
+    collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
     return sz_frontier;
   }
   case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
@@ -423,7 +456,7 @@ static void __discard_beam_CS( vgx_BaseCollector_context_t *collector ) {
  *
  ***********************************************************************
  */
-static void __discard_queue_CS( vgx_BaseCollector_context_t *collector ) {
+static void __discard_frontier_queue_CS( vgx_BaseCollector_context_t *collector ) {
   vgx_CollectorItem_t frontier = {0};
   vgx_FrontierQueue_t *F = collector->frontier;
   while( CALLABLE(F)->Next(F, &frontier.item) > 0 ) {
@@ -440,16 +473,7 @@ static void __discard_queue_CS( vgx_BaseCollector_context_t *collector ) {
  */
 static void __discard_frontier( vgx_BaseCollector_context_t *collector ) {
   GRAPH_LOCK( collector->graph ) {
-    switch( collector->recursion_mode ) {
-    case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
-      __discard_beam_CS( collector );
-      break;
-    case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
-      __discard_queue_CS( collector );
-      break;
-    default:
-      break;
-    }
+    __discard_frontier_queue_CS( collector );
   } GRAPH_RELEASE;
 }
 
@@ -484,15 +508,23 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       match = VGX_ARC_FILTER_MATCH_MISS;
       XBREAK;
     }
-    if( recursion->visit.reset_state ) {
+    if( recursion->visit.reset_map || recursion->visit.reset_metrics ) {
       vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
       if( E ) {
-        iEvaluator.ClearDWordSet( E->context.memory );
-        E->context.memory->threshold = 0.0;
-        E->context.memory->counter.c1 = 0;
-        E->context.memory->counter.c2 = 0;
-        E->context.memory->counter.c3 = 0;
-        E->context.memory->counter.c4 = 0;
+        if( recursion->visit.reset_map ) {
+          iEvaluator.ClearDWordSet( E->context.memory );
+        }
+        if( recursion->visit.reset_metrics ) {
+          E->context.memory->threshold = 0.0;
+          E->context.memory->top_score.running = -1.0f;
+          E->context.memory->top_score.previous = -1.0f;
+          E->context.memory->visit_window.counter = 0;
+          E->context.memory->visit_window.unimproved = 0;
+          E->context.memory->counter.c1 = 0;
+          E->context.memory->counter.c2 = 0;
+          E->context.memory->counter.c3 = 0;
+          E->context.memory->counter.c4 = 0;
+        }
       }
     }
     
@@ -516,7 +548,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
     // Initialize difficulty to none
     vgx_CollectorItem_t difficulty = {0};
-    CALLABLE(main_heap)->HeapTop(main_heap, &difficulty.item);
+    _vxquery_collector__get_current_threshold( collector, &difficulty );
 
     vgx_CollectorItem_t frontier = {0};
 
@@ -552,7 +584,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          CALLABLE(main_heap)->HeapTop(main_heap, &difficulty.item);
+          _vxquery_collector__get_current_threshold( collector, &difficulty );
         }
 
         // Used item from frontier must be closed here

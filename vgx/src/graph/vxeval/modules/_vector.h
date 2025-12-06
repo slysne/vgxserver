@@ -279,6 +279,51 @@ ham(-0.9) -> 59
 ham(-1.0) -> 64
 */
 
+
+__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, double score ) {
+
+#define VISIT_WINDOW_CHECKPOINT 96
+#define VISIT_WINDOW_UNIMPROVED_MAX 84
+#define DYNAMIC_TAPER_LOOSEN_FACTOR 1.08
+#define DYNAMIC_TAPER_TIGHTEN_FACTOR 0.965
+#define DYNAMIC_TAPER_UPPER 2.8
+#define DYNAMIC_TAPER_LOWER 0.38
+#define MIN_COSINE_GAIN 0.018f
+
+  // Maintain running top score
+  if( score > mem->top_score.running ) {
+    mem->top_score.running = (float)score;
+    mem->visit_window.unimproved = 0;
+  }
+  else {
+    mem->visit_window.unimproved++;
+  }
+
+  if( ++mem->visit_window.counter >= VISIT_WINDOW_CHECKPOINT ) {
+    // Current taper
+    double taper = collector->dynamic_taper;
+    // We're not improving the top score, loosen taper
+    if( mem->visit_window.unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
+      taper *= DYNAMIC_TAPER_LOOSEN_FACTOR;
+      collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER, DYNAMIC_TAPER_LOWER );
+    }
+    // We are improving at a good rate, tighten taper
+    else if( mem->top_score.running > mem->top_score.previous + MIN_COSINE_GAIN ) {
+      taper *= DYNAMIC_TAPER_TIGHTEN_FACTOR;
+      collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER, DYNAMIC_TAPER_LOWER );
+    }
+
+    // Update score at checkpoint
+    mem->top_score.previous = mem->top_score.running;
+    
+    // Reset window
+    mem->visit_window.counter = 0;
+    mem->visit_window.unimproved = 0;
+  }
+}
+
+
+
 /*******************************************************************//**
  * Assume cosine similarity sim in range [0.0, 1.0], then:
  * cos_to_hamdist_1_5_sigma[ int(sim * 127) ] -> hamdist
@@ -376,13 +421,18 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
     cosine = vxeval_bytearray_cosine(A, B, len);
   }
 
+  // Dynamic taper enabled
+  if( ctx->collector->use_dynamic_taper ) {
+    __dynamic_taper( ctx->collector, mem, cosine );
+  }
+
   double score = cosine + 1.0; // [0.0 - 2.0]
 
   // Require sufficient cosine score
   if( score <= mem->threshold ) {
     STACK_RETURN_REAL( self, 0.0 ); // not collected
   }
-   
+
   // Checkpoint 3
   mem->counter.c3++;
 
@@ -397,16 +447,11 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
   
   // Refresh running threshold
   if( ctx->collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
-    Cm256iHeap_t *heap = ctx->collector->container.sequence.heap;
-    vgx_CollectorItem_t difficulty;
-    CALLABLE(heap)->HeapTop(heap, &difficulty.item);
     // Update running difficulty (0.0 = 2.0)
-    mem->threshold = difficulty.sort.flt64.value;
+    vgx_CollectorItem_t difficulty;
+    mem->threshold = _vxquery_collector__get_current_threshold( ctx->collector, &difficulty );
     // Update running cosine difficulty (-1.0 - 1.0)
-    if( self->context.collector ) {
-      self->context.collector->current_cos_difficulty = cosine;
-    }
-
+    self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
   }
 
   STACK_RETURN_REAL( self, score );

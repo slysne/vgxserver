@@ -25,7 +25,7 @@ def INIT(graph, h=300, bw=300, bc=1.0, bmin=100 ):
                                 fields  =   F_VAL | F_ID,
                                 result  =   R_LIST,
                                 recursion = {
-                                    'heap_size': h,
+                                    'heap_shadow': h,
                                     'beam_width': bw,
                                     'beam_curve': bc,
                                     'beam_min': bmin,
@@ -33,6 +33,7 @@ def INIT(graph, h=300, bw=300, bc=1.0, bmin=100 ):
                                 }
     )
     return MEM, Q
+
 
 
 
@@ -164,6 +165,21 @@ UNINDEXED_VECTORS = [g2[g2.GetVertexID()].GetVector() for i in range(5000)]
 PROBES = [ g.sim.NewVector(v.external, cosine_mode=1)  for v in UNINDEXED_VECTORS]
 
 
+def fillcache( g, probes ):
+    fname = g[g[ROOT].Terminals()[0]]['fname']
+    N = len(probes)
+    n = 0
+    for p in probes:
+        n += 1
+        scan(g, p, fname=fname)
+        if not n % 100:
+            print( f"{100*n/N:.1f}%", end="\r", flush=1 )
+    print( f"{100:.1f}%" )
+
+
+
+
+
 PROBES = [ g.sim.NewVector(p, cosine_mode=1) for p in g['cache']['probes'] ]
 
 SCAN_CACHE = g['cache']['SCAN_CACHE']
@@ -185,7 +201,6 @@ PROBES = [ v for v in RANDOM_ITEMS ]
 
 
 
-ENTRIES = g.Vertices( hits=len(PROBES), sortby=S_RANDOM, condition={'type':'item', 'outdegree':(V_GT,63)} )
 
 
 import threading
@@ -196,7 +211,7 @@ def workall(g, PROBES):
         for bc in [1.0, 0.9, 0.8, 0.7]:
             MEM, Q = INIT(g, h=h, bw=bw, bc=bc, bmin=8)
             result, qps = testrecall(MEM, Q, g, k=10, P=PROBES, V=ENTRIES, show=False)
-            print( f"heap_size={h} beam_width={bw} beam_taper={bc} --> {result}" )
+            print( f"heap_shadow={h} beam_width={bw} beam_taper={bc} --> {result}" )
             print( "-----------------------------------------" )
 
 
@@ -231,7 +246,7 @@ def threadwork( g, N, PROBES, k, h, bw, bc ):
     accepts = sum([r_result['accepts'] for _, r_result in T]) // len(T)
     evalrate = (evals / (latency/1000)) / 1000000
     acceptrate = 100*accepts/evals
-    config = f"threads={N} heap_size={h} beam_width={bw} beam_taper={bc}"
+    config = f"threads={N} heap_shadow={h} beam_width={bw} beam_taper={bc}"
     result = f"qps@{N}={qps:0.1f} recall={recall:0.3f}@{k} latency={latency:0.2f}ms evals={evals} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={accepts} ({acceptrate:0.1f}%)"
     print( f"{config} --> {result}" )
 
@@ -249,6 +264,7 @@ def threadtest( g, N, PROBES, heaps=None, bwfactor=3/4, bcs=None ):
 
 
 
+ENTRIES = g.Vertices( hits=len(PROBES), sortby=S_RANDOM, condition={'type':'item', 'outdegree':(V_GT,63)} )
 
 TOO_CLOSE = set()
 for i in range(len(ENTRIES)-1):
@@ -266,7 +282,6 @@ for node in SPREAD:
 
 A.Close()
 
-ENTRIES = ['entry']*len(PROBES)
 
 
 """

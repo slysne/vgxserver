@@ -4015,7 +4015,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .mode                     = recursion_config->mode,
       .heap = {
         .size                   = recursion_config->heap.size,
-        .multiplier             = recursion_config->heap.multiplier
+        .shadow                 = recursion_config->heap.shadow
+        //.multiplier             = recursion_config->heap.multiplier
       },
       .limit = {
         .frontier               = recursion_config->limit.frontier,
@@ -4025,16 +4026,17 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .visit                  = recursion_config->limit.visit
       },
       .visit = {
-        .reset_state            = recursion_config->visit.reset_state,
+        .reset_metrics          = recursion_config->visit.reset_metrics,
+        .reset_map              = recursion_config->visit.reset_map,
         .skip_probability       = recursion_config->visit.skip_probability,
         .arclsh_cos_threshold   = recursion_config->visit.arclsh_cos_threshold
       },
       .beam = {
         .width                  = recursion_config->beam.width,
-        .offset                 = recursion_config->beam.offset,
         .min_width              = recursion_config->beam.min_width,
         .max_width              = recursion_config->beam.max_width,
-        .curve                  = recursion_config->beam.curve
+        .curve                  = recursion_config->beam.curve,
+        .adaptive_taper         = recursion_config->beam.adaptive_taper
       }
     }
   };

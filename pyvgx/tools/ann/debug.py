@@ -14,7 +14,7 @@ M.Reset();g.Neighborhood( nodes[0], hits=5, memory=M, sortby=S_VAL, fields=F_ID|
 
 
 M.R1 = g[nodes[1234]].GetVector()
-M.R2=0.0;M.ClearSet();g.Neighborhood( nodes[0], hits=5, memory=M, sortby=S_VAL, fields=F_ID|F_VAL|F_DEPTH, result=R_LIST, collect=C_SCAN, filter="anncollect()", recursion={'heap_size': 512, 'depth_limit':300, 'beam_width':100 } )
+M.R2=0.0;M.ClearSet();g.Neighborhood( nodes[0], hits=5, memory=M, sortby=S_VAL, fields=F_ID|F_VAL|F_DEPTH, result=R_LIST, collect=C_SCAN, filter="anncollect()", recursion={'heap_shadow': 512, 'depth_limit':300, 'beam_width':100 } )
 
 
 def make(g, N=10000, R=32):
