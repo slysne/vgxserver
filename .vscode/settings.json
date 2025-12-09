@@ -30,7 +30,8 @@
         "_vgx.h": "c",
         "_vxarcvector.h": "c",
         "_vxeval.h": "c",
-        "eval.h": "c"
+        "eval.h": "c",
+        "_comlibsequence_m256i_ops.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }

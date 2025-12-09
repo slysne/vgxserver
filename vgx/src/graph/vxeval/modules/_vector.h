@@ -459,5 +459,82 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
 }
 
 
+/*******************************************************************//**
+ * anncollect( )
+ ***********************************************************************
+ */
+static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
+  if( probe == NULL || target == NULL ) {
+    return 0.0;
+  }
+
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+
+  // c1 = evals
+  mem->counter.c1++;
+
+  // Extract probe vector bytes
+  BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
+  int32_t lenA = probe->metas.vlen;
+
+  // Extract target vector bytes
+  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
+  int32_t lenB = target->metas.vlen;
+
+  // Safeguard
+  int32_t len = minimum_value( lenA, lenB );
+
+  // -------------------
+  // COMPUTE COSINE(A,B)
+  // -------------------
+  // Faster when both vectors are cosine_mode
+  double cosine;
+  if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
+    double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
+    double min_cosine = mem->threshold - 1.0;
+    cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
+  }
+  else {
+    cosine = vxeval_bytearray_cosine(A, B, len);
+  }
+
+  // Dynamic taper enabled
+  if( self->context.collector->use_dynamic_taper ) {
+    __dynamic_taper( self->context.collector, mem, cosine );
+  }
+
+  double score = cosine + 1.0; // [0.0 - 2.0]
+
+  // Require sufficient cosine score
+  if( score <= mem->threshold ) {
+    return 0.0; // not collected
+  }
+
+  // Checkpoint 3
+  mem->counter.c3++;
+
+  // Collect
+  // [ . . . _]
+  //     SP^
+  vgx_EvalStackItem_t score_arc = {
+    .type = STACK_ITEM_TYPE_REAL,
+    .real = score,
+  };
+  __collect( self, &score_arc );
+  
+  // Refresh running threshold
+  if( self->context.collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
+    // Update running difficulty (0.0 = 2.0)
+    vgx_CollectorItem_t difficulty;
+    mem->threshold = _vxquery_collector__get_current_threshold( self->context.collector, &difficulty );
+    // Update running cosine difficulty (-1.0 - 1.0)
+    self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
+  }
+
+  return score;
+  
+}
+
+
 
 #endif

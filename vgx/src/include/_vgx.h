@@ -1017,6 +1017,7 @@ DLL_HIDDEN extern IGraphCollector_t iGraphCollector;
 DLL_HIDDEN extern vgx_VertexRef_t * _vxquery_collector__add_vertex_reference( vgx_BaseCollector_context_t *collector, vgx_Vertex_t *vertex, vgx_VertexRefLock_t *ext_lock );
 DLL_HIDDEN extern int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref, vgx_Graph_t **locked_graph );
 DLL_HIDDEN extern int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref );
+DLL_HIDDEN extern void _vxquery_collector__del_collector_item_references_OPEN( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *item );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_tail_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_OPEN( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );

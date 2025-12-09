@@ -416,6 +416,20 @@ DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_BaseCollec
   return refcnt;
 }
 
+
+
+/*******************************************************************//**
+ *
+ * 
+ ***********************************************************************
+ */
+DLL_HIDDEN void _vxquery_collector__del_collector_item_references_OPEN( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *item ) {
+  vgx_Graph_t *graph = NULL;
+  _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, item->tailref, &graph );
+  _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, item->headref, &graph );
+  GRAPH_LEAVE_CRITICAL_SECTION( &graph );
+}
+
  
 
 /*******************************************************************//**

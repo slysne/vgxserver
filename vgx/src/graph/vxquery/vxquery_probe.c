@@ -265,7 +265,7 @@ static int __configure_new_ranking_context_from_condition( vgx_Graph_t *self, bo
 
     // Create the aggregate condition filter
     // TODO ------------- ADD advanced filter to the aggregate condition ---------------------------------------------------v
-    if( ((*ranking_context)->postfilter_context = iArcFilter.New( self, readonly_graph, ranking_condition->aggregate_condition_set, NULL, NULL, timing_budget )) == NULL ) {
+    if( ((*ranking_context)->postfilter_context = iArcFilter.New( self, readonly_graph, ranking_condition->aggregate_condition_set, NULL, NULL, NULL, timing_budget )) == NULL ) {
       // error
       __delete_ranking_context( ranking_context );
       return -1;
@@ -1202,7 +1202,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
     // C * T = C + T
     //
     if( has_cfilter || !has_tfilter ) {
-      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, timing_budget )) == NULL ) {
+      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, recursion, timing_budget )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x645 );
       }
       // Set the filter's current tail vertex (will be NULL for all but the first neighborhood, i.e. recursive traversal MUST UPDATE THIS FOR EACH RECURSIVE NEIGHBORHOOD!
@@ -1211,7 +1211,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
 
     // TRAVERSING arc filter [6 8]
     if( is_forked_path && has_tfilter ) {
-      if( (probe->traversing.arcfilter = iArcFilter.New( self, readonly_graph, traversing->arc_condition_set, probe->traversing.vertex_probe, probe->traversing.evaluator, timing_budget )) == NULL ) {
+      if( (probe->traversing.arcfilter = iArcFilter.New( self, readonly_graph, traversing->arc_condition_set, probe->traversing.vertex_probe, probe->traversing.evaluator, NULL, timing_budget )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x647 );
       }
       // Set the filter's current tail vertex (will be NULL for all but the first neighborhood, i.e. recursive traversal MUST UPDATE THIS FOR EACH RECURSIVE NEIGHBORHOOD!
@@ -1231,21 +1231,9 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.override = probe->conditional.override;
     }
 
-    // Patch in mapping function to prevent re-visiting nodes
-    if( __is_recursion_enabled( recursion ) ) {
-      // Must have evaluator since we need its memory object to track visited nodes
-      if( probe->traversing.arcfilter->traversing_evaluator ) {
-        probe->traversing.arcfilter->unvisited = vxeval_vertex_unvisited;
-        probe->traversing.arcfilter->max_visited = recursion->limit.visit;
-        probe->traversing.arcfilter->p_skip = recursion->visit.skip_probability;
-        probe->traversing.arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
-        probe->traversing.arcfilter->lsh_cos = -1.0; //
-      }
-    }
-
     // 5. Create collector filter for this neighborhood level
     // TODO ---------------------------- ADD advanced filter to collector filter ----------------v
-    if( (probe->collect_filter_context = iArcFilter.New( self, readonly_graph, collect_arc_condition_set, NULL, NULL, timing_budget )) == NULL ) {
+    if( (probe->collect_filter_context = iArcFilter.New( self, readonly_graph, collect_arc_condition_set, NULL, NULL, NULL, timing_budget )) == NULL ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x647 );
     }
     // If we had empty specification for collect filter, have it follow traversing arcfilter

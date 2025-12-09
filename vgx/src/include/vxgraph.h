@@ -5443,6 +5443,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   f_vgx_VertexUnvisited unvisited;                            \
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
+  /* If > 0, filter arcs below threshold */                   \
+  double recursion_arc_prune_score;                           \
   /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
   double p_skip;  /* 0.0 - 1.0*/                              \
   /* For M_LSH: Apply arc lsh hamming distance filter when lsh_cos is above this threshold */ \
@@ -7075,6 +7077,8 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter RelationshipFilter;
   f_vgx_ArcFilter ModifierFilter;
   f_vgx_ArcFilter ValueFilter;
+  f_vgx_ArcFilter MinIntValueFilter;
+  f_vgx_ArcFilter MinFloatValueFilter;
   f_vgx_ArcFilter HamDistFilter;
   f_vgx_ArcFilter SpecificFilter;
   f_vgx_ArcFilter RelationshipValueFilter;
@@ -7084,6 +7088,7 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter SpecificValueFilter;
   f_vgx_ArcFilter SpecificHamDistFilter;
   f_vgx_ArcFilter EvaluatorFilter;
+  f_vgx_ArcFilter ANNFilter;
   f_vgx_ArcFilter GenericArcFilter;
   f_vgx_ArcFilter GenPredLocEvalVertexArcFilter;
   f_vgx_ArcFilter GenLocEvalVertexArcFilter;
@@ -7147,7 +7152,7 @@ typedef struct s_vgx_VertexMatchFunction_t {
  ***********************************************************************
  */
 typedef struct s_vgx_IArcFilter_t {
-  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget );
+  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget );
   vgx_virtual_ArcFilter_context_t * (*Clone)( const vgx_virtual_ArcFilter_context_t *other );
   void (*Delete)( vgx_virtual_ArcFilter_context_t **filter );
   vgx_boolean_logic (*LogicFromPredicators)( const vgx_predicator_t predicator1, vgx_predicator_t const predicator2 );
@@ -7156,6 +7161,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
+DLL_HIDDEN bool vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 
 
 /*******************************************************************//**

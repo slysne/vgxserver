@@ -2893,6 +2893,16 @@ DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visi
  *
  ***********************************************************************
  */
+DLL_HIDDEN bool vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
+  return __fast_anncollect( self, probe, target );
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
 static void __initialize_dummy_vertex( void ) {
   memset( &_aV_dummy, 0, sizeof( vgx_AllocatedVertex_t ) );
   vgx_Vertex_t *V = (vgx_Vertex_t*)&_aV_dummy.object;

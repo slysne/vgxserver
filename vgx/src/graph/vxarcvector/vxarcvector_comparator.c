@@ -502,12 +502,23 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
   if( discarded ) {
     _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded->tailref, &locked_graph );
     _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded->headref, &locked_graph );
-    if( base->shadow_trail.queue ) {
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, discarded->sort.flt64.value );
-    }
   }
 
   GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  
+  // We have secondary threshold in a shadow queue
+  if( base->shadow_trail.queue ) {
+    vgx_ExpansionShadowTrail_t *shadow = &base->shadow_trail;
+    if( discarded ) {
+      _vxquery_collector__push_shadow_trail( shadow, discarded->sort.flt64.value );
+    }
+    else if( inserted ) {
+      double score = inserted->sort.flt64.value;
+      if( score > shadow->threshold ) {
+        _vxquery_collector__push_shadow_trail( shadow, score );
+      }
+    }
+  }
 
   return updated;
 }
@@ -996,7 +1007,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   main_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &main_heap_discarded.item );
 
   // Normal non-recursive (no frontier) - or frontier is full
-  if( F == NULL || ComlibSequenceLength(F) >= base->max_frontier ) {
+  if( F == NULL ) {
 main_heap_only:
     // Nothing collected
     if( main_heap_location == NULL ) {
@@ -1007,12 +1018,17 @@ main_heap_only:
   }
 
   // Recursive mode with frontier
-  vgx_CollectorItem_t frontier_difficulty;
-  _vxquery_collector__get_current_threshold( base, &frontier_difficulty );
+  vgx_CollectorItem_t frontier_entry;
+  _vxquery_collector__get_current_threshold( base, &frontier_entry );
 
   // Item not good enough to be added
-  if( heap->_cmp( &frontier_difficulty.item, &collected.item ) <= 0 ) { // notice the cmp direction ("less-than" semantics reversed for min-heap compare)
+  if( heap->_cmp( &frontier_entry.item, &collected.item ) <= 0 ) { // notice the cmp direction ("less-than" semantics reversed for min-heap compare)
     goto main_heap_only;
+  }
+
+  while( ComlibSequenceLength(F) >= base->max_frontier ) {
+    CALLABLE(F)->Next(F, &frontier_entry.item);
+    _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier_entry );
   }
 
   // Crucual: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier

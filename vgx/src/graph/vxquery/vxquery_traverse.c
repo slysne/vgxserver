@@ -346,17 +346,12 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
     vgx_CollectorItem_t discarded = {0};
     if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item) == NULL ) {
       // Inferior item
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &locked_graph );
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &locked_graph );
+      _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
     }
     else if( discarded.headref->refcnt > 0 ) {
       // Discarded from beam
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, discarded.tailref, &locked_graph );
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, discarded.headref, &locked_graph );
+      _vxquery_collector__del_collector_item_references_OPEN( collector, &discarded );
     }
-
-    // TODO: Should we batch so we don't go in and out of graph CS for every item?
-    GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
   } 
 }
 
@@ -396,12 +391,12 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
  *
  ***********************************************************************
  */
-static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector ) {
+static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector, int64_t width ) {
   Cm256iHeap_t *B = collector->beam_heap;
   // Initialize beam heap
   CALLABLE(B)->Clear(B);
   // We have already guaranteed internal allocation is large enough for all beam widths computed above
-  CALLABLE(B)->Initialize(B, &collector->empty.item, collector->beam_width);
+  CALLABLE(B)->Initialize(B, &collector->empty.item, width);
 }
 
 
@@ -411,18 +406,28 @@ static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollec
  *
  ***********************************************************************
  */
-static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector ) {
+static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, int64_t beam_sz_override ) {
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
     // Step 1: Prepare beam
-    __initialize_beam( recursion, collector );
+    int64_t width = collector->beam_width;
+    if( beam_sz_override > 0 ) {
+      width = minimum_value( beam_sz_override, recursion->beam.max_width );
+    }
+    __initialize_beam( recursion, collector, width );
     // Step 2: Populate beam heap from frontier gathered during previous expansion
     __transfer_frontier_to_beam( collector );
     // Step 3: Sort beam and transfer back to frontier queue
     int64_t sz_frontier = __transfer_beam_to_frontier( collector );
     // Step 4: Reduce beam width in preparation for future use
     collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
+    // Step 5: If pruning enabled, reset arc filter to all-pass filter when depth reached
+    if( recursion->arc_prune.until > 0 && filter_context->recursion_arc_prune_score > 0.0 ) {
+      if( collector->recursion_depth > recursion->arc_prune.until ) {
+        filter_context->recursion_arc_prune_score = 0.0;
+      }
+    }
     return sz_frontier;
   }
   case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
@@ -444,6 +449,7 @@ static void __discard_beam_CS( vgx_BaseCollector_context_t *collector ) {
   vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)B->_buffer;
   vgx_CollectorItem_t *end = cursor + B->_size;
   while( cursor < end ) {
+    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
     _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
     ++cursor;
   }
@@ -460,6 +466,7 @@ static void __discard_frontier_queue_CS( vgx_BaseCollector_context_t *collector 
   vgx_CollectorItem_t frontier = {0};
   vgx_FrontierQueue_t *F = collector->frontier;
   while( CALLABLE(F)->Next(F, &frontier.item) > 0 ) {
+    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &collector->graph );
     _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &collector->graph );
   }
 }
@@ -488,6 +495,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
   vgx_BaseCollector_context_t *collector = search->collector;
   vgx_recursion_config_t *recursion = &search->recursion;
+  vgx_virtual_ArcFilter_context_t *filter_context = search->probe->traversing.arcfilter;
 
   vgx_FrontierQueue_t *F = collector->frontier;
   Cm256iHeap_t *main_heap = collector->container.sequence.heap;
@@ -544,7 +552,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     }
     
     // Number of nodes in initial neighborhood to expand
-    int64_t level_size = __prepare_next_level( recursion, collector );
+    int64_t level_size = __prepare_next_level( recursion, filter_context, collector, recursion->init.select );
 
     // Initialize difficulty to none
     vgx_CollectorItem_t difficulty = {0};
@@ -588,17 +596,17 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         }
 
         // Used item from frontier must be closed here
-        _vxquery_collector__del_vertex_reference_OPEN( collector, frontier.headref );
+        _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
       }
 
-      level_size = __prepare_next_level( recursion, collector );
+      level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
     }
 
     // The initial match only since this determines the overall whether anything was found at all
     XBREAK;
 
   terminate_inner:
-    _vxquery_collector__del_vertex_reference_OPEN( collector, frontier.headref );
+    _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
 
   terminate_outer:
     __discard_frontier( collector );

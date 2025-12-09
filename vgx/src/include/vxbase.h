@@ -3480,6 +3480,13 @@ typedef struct s_vgx_recursion_config_t {
     double curve;
     bool adaptive_taper;
   } beam;
+  struct {
+    int64_t select;
+  } init;
+  struct {
+    double score;
+    int64_t until;
+  } arc_prune;
   
 } vgx_recursion_config_t;
 
@@ -3802,7 +3809,10 @@ typedef enum e_vgx_ArcFilter_type {
   VGX_ARC_FILTER_TYPE_RELATIONSHIP_VALUE        = 0x0100,
   VGX_ARC_FILTER_TYPE_MODIFIER_VALUE            = 0x0200,
   VGX_ARC_FILTER_TYPE_SPECIFIC_VALUE            = 0x0300,
-  VGX_ARC_FILTER_TYPE_EVALUATOR                 = 0x0C00,
+  
+  VGX_ARC_FILTER_TYPE_RECURSION_DYNAMIC         = 0x0400,
+  
+  VGX_ARC_FILTER_TYPE_EVALUATOR                 = 0x0800,
   
   VGX_ARC_FILTER_TYPE_GEN_NONE                  = 0x0F00,
   VGX_ARC_FILTER_TYPE_GEN_PRED                  = 0x0F10,

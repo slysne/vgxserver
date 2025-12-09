@@ -39,6 +39,8 @@ static int __stop_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context,
 static int __relationship_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __modifier_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
+static int __min_int_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
+static int __min_float_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __specific_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __relationship_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
@@ -48,6 +50,7 @@ static int __modifier_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_
 static int __specific_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __specific_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
+static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __generic_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __generic_pred_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __generic_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
@@ -117,7 +120,7 @@ static int __arcvector_vertex_condition_match_generic( const vgx_virtual_ArcFilt
  * 
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget );
+static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget );
 static vgx_virtual_ArcFilter_context_t * __clone_arc_filter( const vgx_virtual_ArcFilter_context_t *other );
 static void __delete_arc_filter( vgx_virtual_ArcFilter_context_t **filter );
 static vgx_boolean_logic __logic_from_predicators( const vgx_predicator_t predicator1, vgx_predicator_t const predicator2 );
@@ -144,15 +147,16 @@ static void __delete_vertex_filter( vgx_VertexFilter_context_t **filter );
  */
 
 static vgx_virtual_ArcFilter_context_t * __new_wildcard_arc_filter( bool pass );
-static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator );
-static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readonly_graph, bool positive, vgx_Evaluator_t *traversing_evaluator );
-static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_predicator_t predicator1, const vgx_predicator_t predicator2, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget );
+static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readonly_graph, bool positive, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion );
+static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_predicator_t predicator1, const vgx_predicator_t predicator2, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget );
 
 static vgx_VertexFilter_context_t * __new_evaluator_vertex_filter( vgx_vertex_probe_t *vertex_probe, vgx_ExecutionTimingBudget_t *timing_budget );
 static vgx_VertexFilter_context_t * __new_generic_vertex_filter( vgx_vertex_probe_t *vertex_probe, vgx_ExecutionTimingBudget_t *timing_budget );
@@ -170,6 +174,8 @@ DLL_EXPORT vgx_ArcFilterFunction_t arcfilterfunc = {
   .RelationshipFilter             = __relationship_arcfilter,
   .ModifierFilter                 = __modifier_arcfilter,
   .ValueFilter                    = __value_arcfilter,
+  .MinIntValueFilter              = __min_int_value_arcfilter,
+  .MinFloatValueFilter            = __min_float_value_arcfilter,
   .HamDistFilter                  = __hamming_distance_arcfilter,
   .SpecificFilter                 = __specific_arcfilter,
   .RelationshipValueFilter        = __relationship_value_arcfilter,
@@ -179,6 +185,7 @@ DLL_EXPORT vgx_ArcFilterFunction_t arcfilterfunc = {
   .SpecificValueFilter            = __specific_value_arcfilter,
   .SpecificHamDistFilter          = __specific_hamming_distance_arcfilter,
   .EvaluatorFilter                = __evaluator_arcfilter,
+  .ANNFilter                      = __ann_arcfilter,
   .GenericArcFilter               = __generic_arcfilter,
   .GenPredLocEvalVertexArcFilter  = __generic_pred_loceval_vertex_arcfilter,
   .GenLocEvalVertexArcFilter      = __generic_loceval_vertex_arcfilter,
@@ -261,6 +268,11 @@ DLL_EXPORT vgx_IVertexFilter_t iVertexFilter = {
   .Clone          = __clone_vertex_filter,
   .Delete         = __delete_vertex_filter
 };
+
+
+
+#define NON_EMPTY_EVALUATOR( Evaluator ) ((Evaluator) && (Evaluator)->rpn_program.length > 0)
+#define EMPTY_EVALUATOR( Evaluator ) ((Evaluator) && (Evaluator)->rpn_program.length == 0)
 
 
 
@@ -954,7 +966,6 @@ static __inline int __arcvector_vertex_condition_match_identifier_list( vgx_vert
 }
 
 
-#define NON_EMPTY_EVALUATOR( Evaluator ) ((Evaluator) && (Evaluator)->rpn_program.length > 0)
 
 /*******************************************************************//**
  * 
@@ -1287,6 +1298,50 @@ static int __value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context
 
 
 /*******************************************************************//**
+ * Special internal filter for fast integer compare when we require
+ * target arc to be >= the probe threshold, and we know the arc values
+ * are ints.
+ ***********************************************************************
+ */
+static int __min_int_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
+  vgx_GenericArcFilter_context_t *val_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
+  int probe = val_arc_filter->pred_condition1.val.integer;
+  int target = larc->head.predicator.val.integer;
+  if( target >= probe ) {
+    *match = VGX_ARC_FILTER_MATCH_HIT;
+    return 1;
+  }
+  else {
+    *match = VGX_ARC_FILTER_MATCH_MISS;
+    return 0;
+  }
+}
+
+
+
+/*******************************************************************//**
+ * Special internal filter for fast float compare when we require
+ * target arc to be >= the probe threshold, and we know the arc values
+ * are floats.
+ ***********************************************************************
+ */
+static int __min_float_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
+  vgx_GenericArcFilter_context_t *val_arc_filter = (vgx_GenericArcFilter_context_t*)arcfilter_context;
+  float probe = val_arc_filter->pred_condition1.val.real;
+  float target = larc->head.predicator.val.real;
+  if( target >= probe ) {
+    *match = VGX_ARC_FILTER_MATCH_HIT;
+    return 1;
+  }
+  else {
+    *match = VGX_ARC_FILTER_MATCH_MISS;
+    return 0;
+  }
+}
+
+
+
+/*******************************************************************//**
  * 
  * 
  ***********************************************************************
@@ -1447,6 +1502,58 @@ static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_con
       }
       return 0;
     }
+  }
+
+  // PASS!
+  *match = VGX_ARC_FILTER_MATCH_HIT;
+  return 1; // pass
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ * 
+ ***********************************************************************
+ */
+static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
+
+  if( arcfilter_context->recursion_arc_prune_score > 0.0 ) {
+    if( _vgx_predicator_value_is_float( larc->head.predicator ) ) {
+      if( larc->head.predicator.val.real < arcfilter_context->recursion_arc_prune_score ) {
+        *match = VGX_ARC_FILTER_MATCH_MISS;
+        return 0;
+      }
+    }
+    else {
+      if( larc->head.predicator.val.integer < (int32_t)arcfilter_context->recursion_arc_prune_score ) {
+        *match = VGX_ARC_FILTER_MATCH_MISS;
+        return 0;
+      }
+    }
+  }
+
+  vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
+  vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
+ 
+  //
+  // SECURE THE ARC HEAD AS NEEDED
+  //
+  if( __filter_acquire_lockable_arc_head( arcfilter_context, larc ) < 0 ) {
+    *match = __arcfilter_error();
+    return 0; // vertex not readable ==> miss
+  }
+
+  // Head safe when here - either locked or no locking required
+  const vgx_Vector_t *probe = evaluator->context.memory->probe;
+  const vgx_Vector_t *target = larc->head.vertex->vector;
+
+  evaluator->context.larc = larc;
+  double score = vxeval_fast_anncollect( evaluator, probe, target );
+  if( score < 0.0 ) {
+    *match = VGX_ARC_FILTER_MATCH_MISS;
+    return 0;
   }
 
   // PASS!
@@ -2436,7 +2543,7 @@ static int __configure_predicators_from_arc_condition_set( vgx_Graph_t *self, co
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget ) {
+static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget ) {
   
   vgx_virtual_ArcFilter_context_t *filter_context = NULL;
 
@@ -2469,12 +2576,12 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
             // VALUE
             if( _vgx_predicator_has_val( pred1 ) ) {
               // REL,MOD,VAL
-              filter_context = __new_specific_value_arc_filter( pred1 );
+              filter_context = __new_specific_value_arc_filter( pred1, recursion );
             }
             // VAL=*
             else {
               // REL,MOD,*
-              filter_context = __new_specific_arc_filter( pred1 );
+              filter_context = __new_specific_arc_filter( pred1, recursion );
             }
           }
           // MOD=*
@@ -2482,12 +2589,12 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
             // VALUE
             if( _vgx_predicator_has_val( pred1 ) ) {
               // REL,*,VAL
-              filter_context = __new_relationship_value_arc_filter( pred1 );
+              filter_context = __new_relationship_value_arc_filter( pred1, recursion );
             }
             // VAL=*
             else {
               // REL,*,*
-              filter_context = __new_relationship_arc_filter( pred1 );
+              filter_context = __new_relationship_arc_filter( pred1, recursion );
             }
           }
         }
@@ -2498,12 +2605,12 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
             // VALUE
             if( _vgx_predicator_has_val( pred1 ) ) {
               // *,MOD,VAL
-              filter_context = __new_modifier_value_arc_filter( pred1 );
+              filter_context = __new_modifier_value_arc_filter( pred1, recursion );
             }
             // VAL=*
             else {
               // *,MOD,*
-              filter_context = __new_modifier_arc_filter( pred1 );
+              filter_context = __new_modifier_arc_filter( pred1, recursion );
             }
           }
           // MOD=*
@@ -2511,7 +2618,7 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
             // VALUE
             if( _vgx_predicator_has_val( pred1 ) ) {
               // *,*,VAL
-              filter_context = __new_value_arc_filter( pred1 );
+              filter_context = __new_value_arc_filter( pred1, recursion );
             }
             // VAL=*
             else {
@@ -2521,17 +2628,23 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
           }
         }
       }
+      
+      // Special: recursion with no arc filter and no expression filter: Optimized ANN filter w/collect
+      else if( _vgx_predicator_full_wildcard( pred1 ) && __is_recursion_enabled( recursion ) && EMPTY_EVALUATOR( traversing_evaluator ) ) {
+        filter_context = __new_ann_arc_filter( readonly_graph, traversing_evaluator, recursion );
+      }
+
       // At this point: No vertex probe, no predicator filter, only an evaluator instance
       else if( _vgx_predicator_full_wildcard( pred1 ) && traversing_evaluator != NULL ) {
         bool positive = _vgx_predicator_eph_is_positive( pred1 );
-        filter_context = __new_evaluator_arc_filter( readonly_graph, positive, traversing_evaluator );
+        filter_context = __new_evaluator_arc_filter( readonly_graph, positive, traversing_evaluator, recursion );
       }
     }
   }
 
   // Fallback to a generic filter if no optimized filter was selected above
   if( filter_context == NULL ) {
-    filter_context = __new_generic_arc_filter( self, readonly_graph, pred1, pred2, vertex_probe, traversing_evaluator, timing_budget );
+    filter_context = __new_generic_arc_filter( self, readonly_graph, pred1, pred2, vertex_probe, traversing_evaluator, recursion, timing_budget );
   }
   // Assign timing budget to simple filter
   else {
@@ -2646,7 +2759,7 @@ static vgx_virtual_ArcFilter_context_t * __new_wildcard_arc_filter( bool pass ) 
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *rel_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( rel_filter ) {
     // Base
@@ -2667,16 +2780,34 @@ static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vg
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *mod_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( mod_filter ) {
-    // Base
-    mod_filter->type = VGX_ARC_FILTER_TYPE_MODIFIER;
-    mod_filter->positive_match = _vgx_predicator_eph_is_positive( predicator ); // extract filter's accept/reject sign from predicator's eph.neg flag
-    mod_filter->filter = arcfilterfunc.ModifierFilter;
-    // Generic
-    mod_filter->pred_condition1 = predicator;
-    mod_filter->logic = VGX_LOGICAL_NO_LOGIC;
+    // Special treatment for early pruning with recursive search
+    if( recursion && recursion->arc_prune.until > 0 ) {
+      mod_filter->type = VGX_ARC_FILTER_TYPE_RECURSION_DYNAMIC;
+      mod_filter->positive_match = true;
+      mod_filter->pred_condition1 = predicator;
+      mod_filter->logic = VGX_LOGICAL_NO_LOGIC;
+      if( _vgx_predicator_value_is_float( predicator ) ) {
+        mod_filter->filter = arcfilterfunc.MinFloatValueFilter;
+        mod_filter->pred_condition1.val.real = recursion->arc_prune.score;
+      }
+      else {
+        mod_filter->filter = arcfilterfunc.MinIntValueFilter;
+        mod_filter->pred_condition1.val.integer = (int32_t)recursion->arc_prune.score;
+      }
+    }
+    // Normal
+    else {
+      // Base
+      mod_filter->type = VGX_ARC_FILTER_TYPE_MODIFIER;
+      mod_filter->positive_match = _vgx_predicator_eph_is_positive( predicator ); // extract filter's accept/reject sign from predicator's eph.neg flag
+      mod_filter->filter = arcfilterfunc.ModifierFilter;
+      // Generic
+      mod_filter->pred_condition1 = predicator;
+      mod_filter->logic = VGX_LOGICAL_NO_LOGIC;
+    }
   }
   return (vgx_virtual_ArcFilter_context_t*)mod_filter;
 }
@@ -2688,7 +2819,7 @@ static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_pr
  * NOTE: No value ranges
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *val_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( val_filter ) {
     // Base
@@ -2714,7 +2845,7 @@ static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predi
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relmod_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relmod_filter ) {
     // Base
@@ -2735,7 +2866,7 @@ static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_pr
  * NOTE: No value ranges
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relval_filter ) {
     // Base
@@ -2761,7 +2892,7 @@ static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( co
  * NOTE: No value ranges
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *modval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( modval_filter ) {
     // Base
@@ -2787,7 +2918,7 @@ static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const 
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator ) {
+static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relmodval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relmodval_filter ) {
     // Base
@@ -2886,7 +3017,47 @@ static void __delete_arc_filter( vgx_virtual_ArcFilter_context_t **arcfilter ) {
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readonly_graph, bool positive, vgx_Evaluator_t *traversing_evaluator ) {
+static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion ) {
+  vgx_virtual_ArcFilter_context_t *arcfilter = NULL;
+  vgx_GenericArcFilter_context_t *evaluator_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
+  if( evaluator_filter ) {
+    arcfilter = (vgx_virtual_ArcFilter_context_t*)evaluator_filter;
+    // Base
+    arcfilter->type = VGX_ARC_FILTER_TYPE_EVALUATOR;
+    arcfilter->positive_match = true;
+    arcfilter->arcfilter_locked_head_access = false; // Maybe set later
+    arcfilter->eval_synarc = false;
+    arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
+
+    arcfilter->unvisited = vxeval_vertex_unvisited;
+    arcfilter->max_visited = recursion->limit.visit;
+    arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+    arcfilter->p_skip = recursion->visit.skip_probability;
+    arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+    arcfilter->lsh_cos = -1.0; //
+
+    arcfilter->filter = arcfilterfunc.ANNFilter;
+
+    // Head vertex must be locked whenever dereferenced, unless graph is
+    // readonly and then we acquire another graph readonly lock while lasts
+    // until the filter is destroyed.
+    if( readonly_graph == false ) {
+      if( __vertex_probe_head_access( NULL, traversing_evaluator ) ) {
+        arcfilter->arcfilter_locked_head_access = true;
+      }
+    }
+  }
+  return arcfilter;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readonly_graph, bool positive, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion ) {
   vgx_virtual_ArcFilter_context_t *arcfilter = NULL;
   vgx_GenericArcFilter_context_t *evaluator_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( evaluator_filter ) {
@@ -2897,11 +3068,24 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     arcfilter->arcfilter_locked_head_access = false; // Maybe set later
     arcfilter->eval_synarc = false; // Maybe set later
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
-    arcfilter->unvisited = NULL;        // Configure later
-    arcfilter->max_visited = 0;         // Configure later
-    arcfilter->p_skip = 0.0;            // Configure later
-    arcfilter->lsh_cos_threshold = 1.0; // Configure later
-    arcfilter->lsh_cos = 0.0;           // Configure later
+
+    if( __is_recursion_enabled( recursion ) ) {
+      arcfilter->unvisited = vxeval_vertex_unvisited;
+      arcfilter->max_visited = recursion->limit.visit;
+      arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+      arcfilter->p_skip = recursion->visit.skip_probability;
+      arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+      arcfilter->lsh_cos = -1.0; //
+    }
+    else {
+      arcfilter->unvisited = NULL;
+      arcfilter->max_visited = 0;
+      arcfilter->recursion_arc_prune_score = 0.0;
+      arcfilter->p_skip = 0.0;
+      arcfilter->lsh_cos_threshold = 1.0;
+      arcfilter->lsh_cos = 0.0;
+    }
+
     arcfilter->filter = arcfilterfunc.EvaluatorFilter;
 
     // Synthetic arc eval?
@@ -2928,7 +3112,7 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_predicator_t predicator1, const vgx_predicator_t predicator2, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget ) {
+static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_predicator_t predicator1, const vgx_predicator_t predicator2, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget ) {
   vgx_virtual_ArcFilter_context_t *arcfilter = NULL;
   vgx_GenericArcFilter_context_t *generic_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( generic_filter ) {
@@ -2971,13 +3155,23 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
       arcfilter->type = VGX_ARC_FILTER_TYPE_GENERIC; 
     }
 
-    // Configure later
-    arcfilter->unvisited = NULL;
-    arcfilter->max_visited = 0;
-    arcfilter->p_skip = 0.0;
-    arcfilter->lsh_cos_threshold = 1.0;
-    arcfilter->lsh_cos = 0.0;
-
+    // Recursive search
+    if( __is_recursion_enabled( recursion ) && traversing_evaluator ) {
+      arcfilter->unvisited = vxeval_vertex_unvisited;
+      arcfilter->max_visited = recursion->limit.visit;
+      arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+      arcfilter->p_skip = recursion->visit.skip_probability;
+      arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+      arcfilter->lsh_cos = -1.0; //
+    }
+    else {
+      arcfilter->unvisited = NULL;
+      arcfilter->max_visited = 0;
+      arcfilter->recursion_arc_prune_score = 0.0;
+      arcfilter->p_skip = 0.0;
+      arcfilter->lsh_cos_threshold = 1.0;
+      arcfilter->lsh_cos = 0.0;
+    }
 
     // Evaluator
     if( traversing_evaluator ) {

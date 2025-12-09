@@ -4037,6 +4037,13 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .max_width              = recursion_config->beam.max_width,
         .curve                  = recursion_config->beam.curve,
         .adaptive_taper         = recursion_config->beam.adaptive_taper
+      },
+      .init = {
+        .select                 = recursion_config->init.select
+      },
+      .arc_prune = {
+        .score                  = recursion_config->arc_prune.score,
+        .until                  = recursion_config->arc_prune.until
       }
     }
   };
