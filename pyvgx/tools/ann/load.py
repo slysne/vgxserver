@@ -237,19 +237,64 @@ def QMINIT(g):
 
 
 
-  
 
-def robust_enhance(g, min_hub_odeg=78, max_hubs=15000, robust_arcs=10, sortdir=S_ASC ):
+def get_hubs(g, min_ideg=200, max_hubs=15000 ):
+    hubs = g.Vertices(
+            condition={
+                'type':'item',
+                'indegree':(V_GTE,min_ideg)
+            },
+            hits=max_hubs,
+            sortby=S_IDEG )
+    return hubs
+
+
+
+def neighbor_diversity(g, node):
+    M = g.Memory(4)
+    n = g[node].odeg
+    M.vector = g[node].GetVector()
+    neighbor_cos = g.Neighborhood(
+        node,
+        memory  = M,
+        collect = C_SCAN,
+        filter  = "s=cosine(M.vector, next.vector); collect(s); true;",
+        fields  = F_VAL,
+        result  = R_SIMPLE
+    )
+    mean = sum( neighbor_cos ) / n
+    stdev = sum( [(x-mean)**2 for x in neighbor_cos] ) / (n-1)
+    return (mean, stdev)
+
+
+
+def robust_enhance_2hop(g, min_hub_ideg=150, max_hubs=5000, robust_arcs=10, simulate=False ):
     connect_attempts = 0
     connected = 0
     sz_hop2 = []
-    for hub in g.Vertices( condition={'type':'item', 'outdegree':(V_GTE,min_hub_odeg)}, hits=max_hubs, sortby=S_ODEG ):
-        # hub="6e9bf722-90ad-4934-815c-b089ff93d25c"
+    n = 0
+    hubs = get_hubs(g, min_hub_ideg, max_hubs)
+    M = g.Memory(4)
+    # For all nodes in graph with high indegree (i.e. hubs) 
+    for hub in hubs:
+        M.Reset()
+        n += 1
+        H = g.OpenVertex(hub)
+        M.vector = H.GetVector()
+        mean_neighbor_cos, stdev_neighbor_cos = neighbor_diversity(g, hub)
+        mean_neighbor_cos = sum( neighbor_cos ) / len( neighbor_cos )
+        min_cos_robust = max(0.05, mean_neighbor_cos - 0.2)
+        max_cos_robust = min(0.90, mean_neighbor_cos + 0.2)
+        # Find the top-n neighbors' neighbors for this hub (i.e. two hops away) 
+        # Return as list of tuples (cosine, id)
+        M.R1 = min_cos_robust
+        M.R2 = max_cos_robust
         hop2 = g.Neighborhood(
             hub,
-            hits=robust_arcs,
-            collect=C_NONE,
-            sortby=S_RVAL|sortdir,
+            memory  = M,
+            hits    = robust_arcs, # default 10
+            collect = C_SCAN,
+            sortby  = S_RVAL|S_ASC, # Ascending sort, i.e. we want top-n least similar 2-hop neighbors
             neighbor={
                 'collect': C_SCAN,
                 'traverse': {
@@ -257,24 +302,100 @@ def robust_enhance(g, min_hub_odeg=78, max_hubs=15000, robust_arcs=10, sortdir=S
                     'filter': f"""
                         require( next.id != "{hub}" );
                         require( vset.add(next)==1 );
-                        s=cosine(prev.vector, next.vector);
+                        s=cosine(M.vector, next.vector);
+                        require(s < r2);
+                        require(s > r1);
                         collect(s)
                         """
                 }
             },
-            fields=F_VAL|F_ID,
-            result=R_LIST
+            fields = F_VAL|F_ID,
+            result = R_LIST
         )
-        H = g.OpenVertex(hub)
-        lsh32 = H.GetVector().LSH32()
+        # Reverse-connect the least similar 2-hop neighbors back to the hub node
         for score, farnode in hop2:
             connect_attempts += 1
             F = g.OpenVertex(farnode)
-            r = g.Connect( F, ('lsh32', M_LSH|M_FWDONLY, lsh32), H )
-            if r > 0:
-                connected += 1
+            cos = g.sim.Cosine(H, F) 
+            if simulate:
+                print( f"{farnode} -({cos:0.4f})-> {hub}" )
+            else:
+                r = g.Connect( F, ('cos', M_FLT|M_FWDONLY, cos), H )
+                if r > 0:
+                    connected += 1
             F.Close()
         H.Close()
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
+    return connect_attempts, connected
+
+
+
+def robust_enhance_3hop(g, min_hub_ideg=200, max_hubs=500, robust_arcs=3, simulate=False ):
+    connect_attempts = 0
+    connected = 0
+    sz_hop2 = []
+    n = 0
+    hubs = get_hubs(g, min_hub_ideg, max_hubs)
+    M = g.Memory(4)
+    # For all nodes in graph with high indegree (i.e. hubs) 
+    for hub in hubs:
+        M.Reset()
+        n += 1
+        H = g.OpenVertex(hub)
+        M.vector = H.GetVector()
+        mean_neighbor_cos, stdev_neighbor_cos = neighbor_diversity(g, hub)
+        mean_neighbor_cos = sum( neighbor_cos ) / len( neighbor_cos )
+        min_cos_robust3 = max(0.05, mean_neighbor_cos - 0.2)
+        max_cos_robust3 = min(0.90, mean_neighbor_cos + 0.2)
+        # Find the top-n neighbors' neighbors' neighbors for this hub (i.e. three hops away) 
+        # Return as list of tuples (cosine, id)
+        M.R1 = min_cos_robust3
+        M.R2 = max_cos_robust3
+        hop3 = g.Neighborhood(
+            hub,
+            memory  = M,
+            hits    = robust_arcs, # default 10
+            collect = C_SCAN,
+            sortby  = S_RVAL|S_ASC, # Ascending sort, i.e. we want top-n least similar 3-hop neighbors
+            neighbor= { 'traverse': {
+                'collect': C_SCAN,
+                'arc': D_OUT,
+                'filter': "require( vset.add(next)==1 )",
+                'neighbor': { 'traverse': {
+                    'collect': C_SCAN,
+                    'arc': D_OUT,
+                    'filter': f"""
+                        require( next.id != "{hub}" );
+                        require( vset.add(next)==1 );
+                        s=cosine(M.vector, next.vector);
+                        require(s < r2);
+                        require(s > r1);
+                        collect(s)
+                        """
+                }}
+                
+            }},
+            fields = F_VAL|F_ID,
+            result = R_LIST
+        )
+        # Reverse-connect the least similar 3-hop neighbors back to the hub node
+        for score, farnode in hop3:
+            connect_attempts += 1
+            F = g.OpenVertex(farnode)
+            cos = g.sim.Cosine(H, F) 
+            if simulate:
+                print( f"{farnode} -({cos:0.4f})-> {hub}" )
+            else:
+                r = g.Connect( F, ('cos', M_FLT|M_FWDONLY, cos), H )
+                if r > 0:
+                    connected += 1
+            F.Close()
+        H.Close()
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
     return connect_attempts, connected
 
 
@@ -286,19 +407,21 @@ def rescue_remotes(g, cutoff_ideg=6, max_rescue_degree=20 ):
     if N == 0:
         return 0
     n = 0
+    c = 0
     for remote in remotes:
         n += 1
         R = g.OpenVertex( remote )
         ideg_boost = max_rescue_degree - R.ideg
         probe = R.GetVector()
-        lsh32 = probe.LSH32()
         for true_neighbor, score in execscan(g, probe, k=ideg_boost):
             T = g.OpenVertex( true_neighbor )
-            g.Connect( T, ('lsh32', M_LSH|M_FWDONLY, lsh32), R )
+            cos = g.sim.Cosine(R, T)
+            g.Connect( T, ('cos', M_FLT|M_FWDONLY, cos), R )
+            c += 1
             T.Close()
         R.Close()
-        print( f"{n}/{N} {100*n/N:0.2f}%", end="\r", flush=1 )
-    print( f"{n}/{N} {100*n/N:0.2f}%" )
+        print( f"{n}/{N} {100*n/N:0.2f}% {c}", end="\r", flush=1 )
+    print( f"{n}/{N} {100*n/N:0.2f}% {c}" )
     return N
 
 
@@ -447,32 +570,82 @@ def repair_with_lsh32(g):
         if not n % 1000:
             print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
     print( "100.0%" )
-      
 
 
-def topstar(g, maxcand=8000, maxcos=0.4, mindeg=75 ):
-    ENTRIES = g.Vertices( hits=maxcand, sortby=S_RANDOM, condition={'type':'item', 'outdegree':(V_GT,mindeg)} )
-    TOO_CLOSE = set()
-    for i in range(len(ENTRIES)-1):
-        for k in range(i+1,len(ENTRIES)):
-            if g.sim.Cosine( g[ENTRIES[i]], g[ENTRIES[k]] ) > maxcos:
-                TOO_CLOSE.add(ENTRIES[k])
-    SPREAD = list( set(ENTRIES) - TOO_CLOSE )
-    sz = len(SPREAD)
-    mc = f"0{maxcos*10:0.1f}".replace(".","")
-    name = f"entry_{sz}_{mc}"
-    A = g.NewVertex( name, type="entry" )
-    for node in SPREAD:
-        lsh32 = g[node].GetVector().LSH32()
-        r = g.Connect( A, ('lsh32', M_LSH|M_FWDONLY, lsh32), node )
-    A.Close()
-    return name, sz
+
+def repair_with_cosarcs(g):
+    n = 0 
+    for node in g.VerticesType('item'):
+        A = g.OpenVertex( node )
+        V = A.GetVector()
+        n += 1
+        terminals = g.Neighborhood( A, vector=V, fields=F_VAL|F_ID, result=R_LIST, collect=C_SCAN, filter="c=cosine(vector, next.vector); collect(c);" )
+        g.Disconnect( A, D_OUT )
+        for cos, term in terminals:
+            T = g.OpenVertex( term )
+            g.Connect( A, ('cos', M_FLT|M_FWDONLY, cos), T )
+            T.Close()
+        A.Close()
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
 
 
-def superstar(g):
-    A = g.NewVertex( "super", type="super" )
-    for node in g.VerticesType( "entry" ):
-        g.Connect( A, ('lsh32', M_LSH|M_FWDONLY, 0), node )
+
+def check_terminal_sim(g):
+    buckets = [0] * 201
+    n = 0 
+    for node in g.VerticesType('item'):
+        A = g.OpenVertex( node )
+        V = A.GetVector()
+        n += 1
+        sims = g.Neighborhood( A, vector=V, fields=F_VAL, result=R_SIMPLE, collect=C_SCAN, filter="c=cosine(vector, next.vector); collect(c);" )
+        for cos in sims:
+            b = int(round(cos, 2) * 100) + 100
+            buckets[b] += 1
+        A.Close()
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
+    return buckets
+    
+
+
+
+
+
+
+
+def get_entry_nodes(g, maxcand=1500000, starsize=500, max_mutual_cos=0.38, min_odeg=32 ):
+    # Get neighbor diversity (stdev of neighbors' similarity to node)
+    C = [ (neighbor_diversity(g,c)[1], c) for c in g.Vertices( condition={'type':'item', 'outdegree':(V_GTE,min_odeg)}, sortby=S_RANDOM, hits=maxcand ) ]
+    C.sort( reverse=1 ) # sort by stdev so the best candidates are likely to make it into star
+    # Now build up the diverse star from the collected candidates
+    S = []
+    for _, cand in C:
+        # Compare candidate with all others accepted into star
+        accepted = True # bold assumption
+        for node in S:
+            if g.sim.Cosine( g[cand], g[node] ) > max_mutual_cos:
+                accepted = False
+                break
+        # Canidate too similar to others in star, skip
+        if not accepted:
+            continue
+        # We made it
+        S.append( cand )
+        if len(S) >= starsize:
+            break
+    return S
+
+
+
+
+def topstar(g, maxcand=1500000, starsize=500, max_mutual_cos=0.38, min_odeg=32 ):
+    E = get_entry_nodes(g, maxcand, starsize, max_mutual_cos, min_odeg)
+    A = g.NewVertex( "entry", type="entry" )
+    for entry in E:
+        g.Connect( A, ('cos', M_FLT|M_FWDONLY, 0.0), entry )
     A.Close()
 
 
@@ -566,14 +739,11 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, bmin=16 ):
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=16 ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
-                                #arc     =   ('lsh32', D_OUT, M_LSH, V_LTE, (0,0)),
-                                arc     =   ('lsh32', D_OUT),
-                                filter  =   "anncollect( 0.0 )",
-                                collect =   C_SCAN,
+                                arc     =   D_OUT,
                                 sortby  =   S_RVAL,
                                 fields  =   F_VAL | F_ID,
                                 result  =   R_LIST,
@@ -585,8 +755,8 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, bmin=16 ):
                                     'beam_curve': bc,
                                     'beam_min': bmin,
                                     'beam_max': 1024,
-                                    'adaptive_taper': True,
-                                    'arclsh_mincos': 1.0
+                                    'init_select': init,
+                                    'adaptive_taper': True
                                 }
     )       
     return MEM, Q
@@ -597,7 +767,6 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, bmin=16 ):
 
 def search( MEM, Q, graph, probe, k, start):
     MEM.vector = probe
-    #Q.arclsh = (probe.LSH32(), 0)
     Q.id = start
     return Q.Execute( hits=k )
 
@@ -626,9 +795,9 @@ def ptest(MEM, Q, graph, probe, k=10, root=None, recall=False, recall_only=False
             for id, score in scan_result:
                 n += 1
                 if id in searched:
-                    print( f"{n:3d}. [{graph[id]['dist']}]   {score:0.3f}   {id}  {graph[id]['title']}" )
+                    print( f"{n:3d}. {score:0.3f}   {id}  {graph[id]['title']}" )
                 else:
-                    print( f"{n:3d}. [{graph[id]['dist']}]   {score:0.3f} ! {id} ({graph[id]['title']})" )
+                    print( f"{n:3d}. {score:0.3f} ! {id} ({graph[id]['title']})" )
         r = (len(scanned) - len(scanned - searched)) / len(scanned)
         if not recall_only:
             print( f"RECALL={100*r:0.1f}" )
@@ -656,12 +825,12 @@ def scan(g, probe, k=10, sortdir=S_DESC, fname=None):
     #####
     mem = g.Memory(4)
     mem.R1 = probe.internal if type(probe) is Vector else graph.sim.NewVector(probe).internal
-    cond = f"!isnan(vertex.property('dist'))"
+    cond = "true"
     if fname:
         cond += f" && vertex.property('fname') == '{fname}'"
     result = g.Vertices(
         memory = mem,
-        condition = { 'filter': cond },
+        condition = { 'type':'item', 'filter': cond },
         sortby = S_RANK|sortdir,
         rank = "1 + cos_pi8( r1, vertex.vector)",
         hits = k,
@@ -676,7 +845,7 @@ def scan(g, probe, k=10, sortdir=S_DESC, fname=None):
 def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
     mem = g.Memory(4)
     mem.vector = probe if type(probe) is Vector else graph.sim.NewVector(probe)
-    cond = f"!isnan(vertex.property('dist'))"
+    cond = "true"
     if fname:
         cond += f" && vertex.property('fname') == '{fname}'"
     result = g.Vertices(
@@ -693,8 +862,8 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, r_result, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, bmin=8)
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, r_result, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=8)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
@@ -702,14 +871,14 @@ def work(g, PROBES, entry, k, h, shw, f, bw, bc, r_result, show=False):
 
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc ):
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init ):
     T = []
     sz = len(PROBES) // N
     i = 0
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, r_result)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, r_result)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -740,24 +909,28 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc ):
     apq = total_sum_accepts // total_queries
     evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
     acceptrate = 100*apq/epq
-    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc}"
+    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc} init={init}"
     result = f"qps={qps:0.1f} recall={recall:0.3f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
     print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, ffactor=32, bwfactor=3/4, bcs=None ):
+def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfactor=0.75, bcs=None, inits=None ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     if bcs is None:
-        bcs = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5]
+        bcs = [0.75]
+    if inits is None:
+        inits = [8]
     for h in heaps:
         shw = int(shwfactor * h)
-        f = int(ffactor * h)
-        bw = int(bwfactor * h)
-        for bc in bcs:
-            r_PROBES = random.sample( PROBES, len(PROBES) )
-            threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc ) 
+        if fronts is None:
+            fronts = [int(h*1.33)]
+        for f in fronts:
+            bw = int(bwfactor * h)
+            for bc in bcs:
+                r_PROBES = random.sample( PROBES, len(PROBES) )
+                threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init ) 
 
 
 
