@@ -1026,7 +1026,7 @@ main_heap_only:
     goto main_heap_only;
   }
 
-  while( ComlibSequenceLength(F) >= base->max_frontier ) {
+  while( ComlibSequenceLength(F) >= base->max_frontier && ComlibSequenceLength(F) > 0 ) {
     CALLABLE(F)->Next(F, &frontier_entry.item);
     _vxquery_collector__del_collector_item_references_OPEN( base, &frontier_entry );
   }

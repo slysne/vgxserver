@@ -1028,7 +1028,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     }
 
     // Recursive search
-    if( recursion ) {
+    if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
       if( recursion->heap.shadow > 0 ) {
         if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->heap.shadow ) < 0 ) {
