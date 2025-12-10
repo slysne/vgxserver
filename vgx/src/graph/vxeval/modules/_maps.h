@@ -290,7 +290,7 @@ typedef enum __e_maps__keymode {
 } __maps__keymode;
 
 
-#define __maps__SZ_MIN_MASK   12
+#define __maps__SZ_MIN_MASK   13
 #define __maps__MIN_MASK      ((1 << __maps__SZ_MIN_MASK) - 1)
 #define __maps__EXPAND_SHIFT  2
 #define __maps__EXPAND_MASK   ((1 << __maps__EXPAND_SHIFT) - 1)
@@ -487,21 +487,25 @@ __inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, 
   DWORD item;
   __maps_vset_key_item( vertex, &key, &item );
 
+  /*
   if( item == __maps__EMPTY ) {
     return true; // Pretend unvisited (conservative)
   }
+  */
 
   vgx_ExpressEvalDWordSet_t *dwset = &evalmem->dwset;
 
   int n;
   do {
 
+    /*
     // Sampling enabled
     if( p_skip > 0.0 ) {
       if( xrandom( ++(dwset->counter) ) < p_skip ) {
         return false; // Pretend visited
       }
     }
+    */
 
     // Map size limit reached
     if( dwset->sz >= max_visited ) {

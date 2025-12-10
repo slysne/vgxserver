@@ -3029,10 +3029,10 @@ static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_gra
     arcfilter->eval_synarc = false;
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
 
-    arcfilter->unvisited = vxeval_vertex_unvisited;
+    arcfilter->track_visited = true;
     arcfilter->max_visited = recursion->limit.visit;
     arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
-    arcfilter->p_skip = recursion->visit.skip_probability;
+    //arcfilter->p_skip = recursion->visit.skip_probability;
     arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
     arcfilter->lsh_cos = -1.0; //
 
@@ -3070,15 +3070,15 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     arcfilter->traversing_evaluator = traversing_evaluator; // BORROW!
 
     if( __is_recursion_enabled( recursion ) ) {
-      arcfilter->unvisited = vxeval_vertex_unvisited;
+      arcfilter->track_visited = true;
       arcfilter->max_visited = recursion->limit.visit;
       arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
-      arcfilter->p_skip = recursion->visit.skip_probability;
+      //arcfilter->p_skip = recursion->visit.skip_probability;
       arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
       arcfilter->lsh_cos = -1.0; //
     }
     else {
-      arcfilter->unvisited = NULL;
+      arcfilter->track_visited = false;
       arcfilter->max_visited = 0;
       arcfilter->recursion_arc_prune_score = 0.0;
       arcfilter->p_skip = 0.0;
@@ -3157,15 +3157,15 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
 
     // Recursive search
     if( __is_recursion_enabled( recursion ) && traversing_evaluator ) {
-      arcfilter->unvisited = vxeval_vertex_unvisited;
+      arcfilter->track_visited = true;
       arcfilter->max_visited = recursion->limit.visit;
       arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
-      arcfilter->p_skip = recursion->visit.skip_probability;
+      //arcfilter->p_skip = recursion->visit.skip_probability;
       arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
       arcfilter->lsh_cos = -1.0; //
     }
     else {
-      arcfilter->unvisited = NULL;
+      arcfilter->track_visited = false;
       arcfilter->max_visited = 0;
       arcfilter->recursion_arc_prune_score = 0.0;
       arcfilter->p_skip = 0.0;

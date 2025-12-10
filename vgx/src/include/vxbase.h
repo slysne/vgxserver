@@ -3470,7 +3470,7 @@ typedef struct s_vgx_recursion_config_t {
   struct {
     bool reset_metrics;
     bool reset_map;
-    double skip_probability;
+    //double skip_probability;
     double arclsh_cos_threshold;
   } visit;
   struct {

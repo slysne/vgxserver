@@ -5439,8 +5439,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   bool eval_synarc;                                           \
   /* Advanced filter */                                       \
   struct s_vgx_Evaluator_t *traversing_evaluator;             \
-  /* Recursive node visitation tracker */                     \
-  f_vgx_VertexUnvisited unvisited;                            \
+  /* Recursive node visitation tracking? */                   \
+  bool track_visited;                                         \
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
   /* If > 0, filter arcs below threshold */                   \

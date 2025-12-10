@@ -1028,7 +1028,7 @@ main_heap_only:
 
   while( ComlibSequenceLength(F) >= base->max_frontier ) {
     CALLABLE(F)->Next(F, &frontier_entry.item);
-    _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier_entry );
+    _vxquery_collector__del_collector_item_references_OPEN( base, &frontier_entry );
   }
 
   // Crucual: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
