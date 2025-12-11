@@ -613,6 +613,71 @@ def check_terminal_sim(g):
 
 
 
+def diversity( g, idlist, threshold=0.4 ):
+    D = []
+    S = [ (g[id].GetVector(), id) for id in idlist ]
+    for candidate_vector, candidate in S:
+        for diverse_vector, diverse_candidate in D:
+            if g.sim.Cosine( candidate_vector, diverse_vector ) > threshold:
+                candidate = None
+                break
+        if candidate:
+            D.append( (candidate_vector, candidate) )
+    return [node for _,node in D]
+
+
+
+def get_diverse_subset( g, node ):
+    odeg = 55
+    threshold = 0.5
+    while True:
+        D = diversity( g, g.Neighborhood( node, sortby=S_ODEG, neighbor={'outdegree':(V_GTE,odeg)}, hits=16 ), threshold )
+        if len(D) >= 8:
+            break
+        odeg -= 1
+        threshold += 0.05
+        if threshold >= 1.0:
+            break
+    if len(D) < 8:
+        D = g.Neighborhood( node, sortby=S_ODEG, hits=8 )
+    return D
+
+
+
+
+def reconnect_with_diverse_subset( g, node ):
+    T = g.Terminals(node)
+    D = get_diverse_subset(g, node)
+    Nset = set(T) - set(D)
+    A = g.OpenVertex(node)
+    g.Disconnect(A, D_OUT)
+    try: 
+        for diverse in D:
+            B = g.OpenVertex(diverse)
+            g.Connect( A, ('to', M_INT|M_FWDONLY, B.odeg), B )
+            B.Close()
+        for normal in Nset:
+            g.Connect( A, ('to', M_INT|M_FWDONLY, 1), normal )
+    except:
+        for term in T:
+            g.Connect( A, ('to', M_INT|M_FWDONLY, 1), term )
+    finally:
+        A.Close()
+    
+    
+        
+def repair_with_diverse_subset( g ):
+    n = 0
+    for node in g.VerticesType('item'):
+        n += 1
+        reconnect_with_diverse_subset(g, node)
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
+        
+        
+        
+
 
 
 
@@ -739,11 +804,18 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=16 ):
+
+
+
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, adaptive=True ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
+                                #arc     =   ('to', D_OUT, M_INT, V_GTE, 1),
+                                #arc     =   ('*', D_OUT, M_INT),
                                 arc     =   D_OUT,
+                                #filter  =   "anncollect( 0.0 )",
+                                #collect =   C_SCAN,
                                 sortby  =   S_RVAL,
                                 fields  =   F_VAL | F_ID,
                                 result  =   R_LIST,
@@ -754,12 +826,30 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=16 ):
                                     'beam_width': bw,
                                     'beam_curve': bc,
                                     'beam_min': bmin,
-                                    'beam_max': 1024,
-                                    'init_select': init,
-                                    'adaptive_taper': True
+                                    'beam_max': 2048,
+                                    'adaptive_taper': adaptive,
+                                    #'arc_prune_until': 2,
+                                    #'arc_prune_score': 5.0,
+                                    'init_select': init
                                 }
-    )       
+    )
     return MEM, Q
+
+
+            
+                
+#MEM, Q = INIT(g); ptest( MEM, Q, g, PROBES100k[123], root="entry_320_036", recall=1 )
+
+#e="entry_510_038"; threadtest( g, 1, PROBES100k[:2000], entry=e, heaps=[81], shwfactor=0, fronts=[170], bwfactor=0.2, bcs=[0.9], inits=[8], adaptive=True )
+
+#['entry_107_031', 'entry_699_038', 'entry_100_030', 'entry_017_020', 'entry_040_818', 'entry_233_034', 'entry_320_036', 'entry_510_038', 'entry_476_038', 'entry_146_032', 'entry_688_040', 'entry_278_035', 'entry_1474_045', 'entry_414_037', 'entry_179_033']
+
+x=32
+while x < 5000:
+    threadtest( g, 12, PROBES100k[:36000], 'entry_510_038', heaps=[x], shwfactor=0.0, fronts=[int(x*1.5)], bwfactor=0.2, bcs=[0.65], inits=[6], adaptive=True )
+    x = int(round(x*(2**0.5))) if x >= 16 else x+1
+
+
 
 
 
@@ -861,20 +951,21 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, r_result, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=8)
+
+
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, r_result, adaptive=True, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=8, adaptive=adaptive)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init ):
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, adaptive=True ):
     T = []
     sz = len(PROBES) // N
     i = 0
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, r_result)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, r_result, adaptive)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -905,13 +996,15 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init ):
     apq = total_sum_accepts // total_queries
     evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
     acceptrate = 100*apq/epq
-    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc} init={init}"
-    result = f"qps={qps:0.1f} recall={recall:0.3f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
+    is_adaptive_taper = "(a)" if adaptive else ""
+    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc}{is_adaptive_taper} init={init}"
+    result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
     print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfactor=0.75, bcs=None, inits=None ):
+
+def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfactor=0.75, bcs=None, inits=None, adaptive=True ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     if bcs is None:
@@ -927,7 +1020,7 @@ def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfac
             for init in inits:
                 for bc in bcs:
                     r_PROBES = random.sample( PROBES, len(PROBES) )
-                    threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init ) 
+                    threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, adaptive=adaptive ) 
 
 
 
@@ -975,6 +1068,33 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
             t1 = time.perf_counter()
             r_result['thread_exec_time'] = t1 - t0
             return cnt, avg_recall, avg_latency_ms
+
+
+
+def out2test( output, N=1, np=-1 ):
+    import re
+    #e=entry_510_038 t=1 heap=1536 shadow=0 front=2000 beam=300 taper=0.9 --> qps=114.9 recall=0.997@10 latency=8.70ms evals=43686 (5.0M/s/t 5.0M/s) accepts=7372 (16.9%) qps_wall=114.8
+    #('entry_510_038', '1536', '0', '2000', '300', '0.9')
+    entry, sheap, sshadow, sfront, sbeam, staper = re.search( r"e=(\S+).+heap=(\d+)\s+shadow=(\d+)\s+front=(\d+)\s+beam=(\d+)\s+taper=([0-9\.]+).*", output ).groups()
+    heap = int(sheap)
+    shw = round( int(sshadow) / heap, 2 )
+    front = int(sfront)
+    bw = round( int(sbeam) / front, 2 )
+    bc = float(staper)
+    runthis = f"threadtest( g, {N}, PROBES100k[:{np}], '{entry}', heaps=[{heap}], shwfactor={shw}, fronts=[{front}], bwfactor={bw}, bcs=[{bc}], adaptive=True )"
+    return runthis
+
+
+
+def out2perf( output ):
+    import re
+    #e=entry_233_034 t=16 heap=10 shadow=0 front=3 beam=0 taper=0.5(a) --> qps=101589.6 recall=0.015@10 latency=0.15ms evals=277 (1.9M/s/t 30.1M/s) accepts=41 (14.8%) qps_wall=79497.0
+    st, sqps, srecall = re.search( r"\.*t=(\d+)[^q]+qps=([0-9.]+)\s+recall=([0-9.]+)", output ).groups()
+    t = int(st)
+    qps = int(round(float(sqps)))
+    recall = round(float(srecall), 4)
+    print( recall, qps, t )
+
 
 
 
