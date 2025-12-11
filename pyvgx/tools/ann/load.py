@@ -861,13 +861,9 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-
 def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, r_result, show=False):
     MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=8)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
-
-
-
 
 
 
@@ -928,9 +924,10 @@ def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfac
             fronts = [int(h*1.33)]
         for f in fronts:
             bw = int(bwfactor * h)
-            for bc in bcs:
-                r_PROBES = random.sample( PROBES, len(PROBES) )
-                threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init ) 
+            for init in inits:
+                for bc in bcs:
+                    r_PROBES = random.sample( PROBES, len(PROBES) )
+                    threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init ) 
 
 
 
