@@ -3452,17 +3452,20 @@ static PyObject * PyVGX_Vertex__Descriptor( PyVGX_Vertex *pyvertex ) {
     return NULL;
   }
 
+  static CStringQueue_t *output = NULL;
+  static CStringQueue_vtable_t *ioutput = NULL;
+  if( output == NULL ) {
+    if( (output = COMLIB_OBJECT_NEW_DEFAULT( CStringQueue_t )) == NULL ) {
+      PyErr_SetNone( PyExc_MemoryError );
+      return NULL;
+    }
+    ioutput = CALLABLE(output);
+  }
+
   BEGIN_PYVGX_THREADS {
 
     char *data = NULL;
     XTRY {
-      static CStringQueue_t *output = NULL;
-      static CStringQueue_vtable_t *ioutput = NULL;
-
-      if( output == NULL ) {
-        output = COMLIB_OBJECT_NEW_DEFAULT( CStringQueue_t );
-        ioutput = CALLABLE(output);
-      }
 
       if( CALLABLE( __vertex )->Descriptor( __vertex, output ) == NULL ) {
         PyVGXError_SetString( PyExc_Exception, "Internal error" );

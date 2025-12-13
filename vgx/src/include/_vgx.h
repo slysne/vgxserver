@@ -375,7 +375,7 @@ static CString_t * __set_error_string_from_reason( CString_t **CSTR__error, cons
  ******************************************************************************
  */
 static CString_t * __set_error_string_from_errcode( CString_t **CSTR__error, int errcode, const char *message ) {
-  static char codebuf[512] = {0};
+  static __THREAD char codebuf[512] = {0};
 #define FORMAT_ERROR_CODE( Message, Errcode ) \
 
   int msg_sub = cxlib_exc_subtype( errcode );

@@ -327,7 +327,7 @@ typedef union __u_x_vgx_partial__entry_key {
       double dval;
       int64_t ival;
       int64_t offset;
-      void *ptr;
+      const void *ptr;
       QWORD bits;
     } sortkey;
     union {

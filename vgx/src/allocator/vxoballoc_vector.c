@@ -613,7 +613,7 @@ static void __vxoballoc_vector__delete_allocator( cxmalloc_family_t **allocator 
  ***********************************************************************
  */
 static const char * __simple_vector_id( vgx_Vector_t *vector ) {
-  static char buffer[512];
+  char buffer[512];
   const char *simple = buffer;
   sprintf( buffer, "vgx_Vector_t (len=%u mag=%#g type=%02x)", vector->metas.vlen, CALLABLE( vector )->Magnitude( vector ), vector->metas.type );
   return simple;
@@ -844,10 +844,10 @@ static vgx_Vector_t * __vxoballoc_vector__new_vector( vgx_Similarity_t *simobj, 
   if( ecl_mode ) {
     #if defined CXPLAT_ARCH_X64
     // Min SIMD width is 32 (AVX2 minimum)
-    static int mask = 0x1f;
+    static const int mask = 0x1f;
     #elif defined CXPLAT_ARCH_ARM64
     // NEON width is 16
-    static int mask = 0x0f;
+    static const int mask = 0x0f;
     #else
     #error "Unsupported architecture"
     #endif

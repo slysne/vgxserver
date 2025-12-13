@@ -6794,6 +6794,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   vgx_ExpansionShadowTrail_t shadow_trail;    \
   vgx_FrontierQueue_t *frontier;              \
   int64_t max_frontier;                       \
+  bool pure_beam;                             \
   Cm256iHeap_t *beam_heap;                    \
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \

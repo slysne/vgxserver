@@ -31,7 +31,8 @@
         "_vxarcvector.h": "c",
         "_vxeval.h": "c",
         "eval.h": "c",
-        "_comlibsequence_m256i_ops.h": "c"
+        "_comlibsequence_m256i_ops.h": "c",
+        "cxid.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }

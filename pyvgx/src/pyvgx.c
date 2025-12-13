@@ -2002,7 +2002,7 @@ RESUME_WARNINGS
  */
 static int compat_check( void ) {
 #if defined CXPLAT_ARCH_X64
-    static int build_avx = 
+    static const int build_avx = 
 #ifdef __cxlib_AVX512_MINIMUM__
       512;
 #elif defined __AVX2__

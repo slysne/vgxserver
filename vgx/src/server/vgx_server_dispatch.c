@@ -136,7 +136,7 @@ DLL_HIDDEN void vgx_server_dispatch__dispose_and_disconnect_TCS( comlib_task_t *
  ***********************************************************************
  */
 DLL_HIDDEN float vgx_server_dispatch__drain_pct( comlib_task_t *self ) {
-  static int64_t pseudo_max = 100;
+  static const int64_t pseudo_max = 100;
 
   vgx_VGXServer_t *server = COMLIB_TASK__GetData( self );
 
@@ -894,9 +894,9 @@ DLL_HIDDEN vgx_VGXServerClient_t * vgx_server_dispatch__fetch( vgx_VGXServer_t *
  */
 DLL_HIDDEN int vgx_server_dispatch__return( vgx_VGXServer_t *server, vgx_VGXServerClient_t *client ) {
 #ifdef VGXSERVER_USE_LINUX_EVENTFD
-  static uint64_t noop = 1;
+  static const uint64_t noop = 1;
 #else
-  static char noop[1] = {1};
+  static const char noop[1] = {1};
 #endif
 
   // Pass the completed client back to the I/O loop via the completion queue

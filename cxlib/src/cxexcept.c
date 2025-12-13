@@ -418,8 +418,8 @@ static void __fprintf_critical( FILE *ostream, const char *tbuf, int msg_typ, in
  */
 int cxlib_exc( int code, const char *msg, ... ) {
   static __THREAD char t_msgbuf[ SZ_MSGBUF ] = { '\0' };
-  static int64_t last_digest = 0;
-  static int64_t msg_repeat = 1;
+  static int64_t last_digest_LCK = 0;
+  static int64_t msg_repeat_LCK = 1;
   int msg_typ;
   int msg_sub;
   int msg_mod;
@@ -498,28 +498,28 @@ int cxlib_exc( int code, const char *msg, ... ) {
 #define __LIMITED_FPRINTF( MessageType ) \
 do {                                    \
   int64_t d = strhash64( (const unsigned char*)t_msgbuf );    \
-  if( d == last_digest ) {              \
-    ++msg_repeat;                       \
+  if( d == last_digest_LCK ) {              \
+    ++msg_repeat_LCK;                       \
   }                                     \
   else {                                \
-    if( msg_repeat > MAX_MSG_REP ) {    \
+    if( msg_repeat_LCK > MAX_MSG_REP ) {    \
       char *tmp = calloc( SZ_MSGBUF, 1 ); \
       if( tmp ) {                       \
         memcpy( tmp, t_msgbuf, SZ_MSGBUF ); \
-        snprintf( t_msgbuf, SZ_MSGBUF-1, "... previous message repeated %lld times", msg_repeat ); \
+        snprintf( t_msgbuf, SZ_MSGBUF-1, "... previous message repeated %lld times", msg_repeat_LCK ); \
         __FPRINTF( MessageType );       \
         memcpy( t_msgbuf, tmp, SZ_MSGBUF ); \
         free( tmp );                    \
       }                                 \
     }                                   \
-    msg_repeat = 1;                     \
-    last_digest = d;                    \
+    msg_repeat_LCK = 1;                     \
+    last_digest_LCK = d;                    \
   }                                     \
-  if( msg_repeat == MAX_MSG_REP ) {     \
+  if( msg_repeat_LCK == MAX_MSG_REP ) {     \
     snprintf( t_msgbuf, SZ_MSGBUF-1, "..." ); \
     __FPRINTF( MessageType );           \
   }                                     \
-  else if( msg_repeat < MAX_MSG_REP ) { \
+  else if( msg_repeat_LCK < MAX_MSG_REP ) { \
     __FPRINTF( MessageType );           \
   }                                     \
 } WHILE_ZERO
@@ -653,55 +653,12 @@ void cxlib_ostream_release( void ) {
  *
  ***********************************************************************
  */
-int XXX_cxlib_ostream( const char *msg, ... ) {
-  static char buf[1024] = {'\0'};
-  static int sz_indent = 4;
-  va_list args;
-  FILE *ostream;
-  
-  if( g_context != NULL && msg ) {
-
-    if( g_context->mute ) {
-      return 0;
-    }
-
-    ostream = g_context->ostream ? g_context->ostream : stderr;
-
-    SYNCHRONIZE_ON( g_context->lock ) {
-      int rem = 1023;
-      char *p = buf;
-      int indent = g_context->recursion - 1;
-      while( indent > 0 && rem > sz_indent ) {
-        for( int i=0; i<sz_indent; i++ ) {
-          *p++ = ' ';
-          --rem;
-        }
-        --indent;
-      }
-      va_start( args, msg );
-      vsnprintf( p, rem, msg, args );
-      va_end( args );
-      fprintf( ostream, "%s", buf );
-    } RELEASE;
-
-    fflush( ostream );
-  }
-
-  return 0;
-}
-
-
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
 int cxlib_ostream( const char *msg, ... ) {
 
   static __THREAD char _buf[512] = {'\0'};
 
   char *buf = _buf; // optimistic
-  static int sz_indent = 4;
+  static const int sz_indent = 4;
   va_list args;
   FILE *ostream;
   

@@ -180,7 +180,7 @@ static int64_t __measure_spinfactor( void ) {
  ***********************************************************************
  */
 DLL_EXPORT void COMLIB__Spin( int microseconds ) {
-  static int64_t spin_factor = -1;
+  static __THREAD int64_t spin_factor = -1;
   static __THREAD int64_t x = 1;
   if( spin_factor < 0 ) {
     spin_factor = __measure_spinfactor();

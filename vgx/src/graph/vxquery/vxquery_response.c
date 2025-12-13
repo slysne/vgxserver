@@ -102,7 +102,7 @@ static void _vxquery_response__delete_properties( vgx_Graph_t *self, vgx_SelectP
 static void _vxquery_response__format_results_to_stream( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
 static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
 static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
-static char * __prepare_select_statement( const char *select_statement, CString_t **CSTR__error );
+static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
 
 /*******************************************************************//**
  * IGrapResponse_t
@@ -2113,7 +2113,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
 
   XTRY {
 
-    if( (expression = __prepare_select_statement( select_statement, CSTR__error )) == NULL ) {
+    if( (expression = __prepare_select_statement( graph, select_statement, CSTR__error )) == NULL ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x001 );
     }
 
@@ -2159,7 +2159,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
  *
  ******************************************************************************
  */
-static char * __prepare_select_statement( const char *select_statement, CString_t **CSTR__error ) {
+static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error ) {
   // Return value
   char *expression = NULL;
 
@@ -2176,9 +2176,15 @@ static char * __prepare_select_statement( const char *select_statement, CString_
 
   // Create the tokenizer if needed
   static CTokenizer_t *tokenizer = NULL;
+
   if( tokenizer == NULL ) {
-    tokenizer = __new_generic_tokenizer();
+    GRAPH_LOCK(graph) {
+      if( tokenizer == NULL ) {
+        tokenizer = __new_generic_tokenizer();
+      }
+    } GRAPH_RELEASE;
   }
+
   tokenmap_t *tokenmap = NULL;
   const char *current_token = NULL;
 

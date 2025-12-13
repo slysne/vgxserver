@@ -865,7 +865,7 @@ bool cxpollfd_writable( const struct pollfd *pfd ) {
  ***********************************************************************
  */
 bool cxpollfd_exception( const struct pollfd *pfd ) {
-  static short mask = POLLHUP | POLLERR | POLLNVAL;
+  static const short mask = POLLHUP | POLLERR | POLLNVAL;
   return (pfd->revents & mask) != 0;
 }
 

@@ -461,7 +461,7 @@ __inline static int __arcvector_predicator_match_value( const vgx_predicator_t p
  ***********************************************************************
  */
 __inline static int __arcvector_predicator_match_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
-  static BYTE cos_to_ham32_1_0_sigma[] = {
+  static const BYTE cos_to_ham32_1_0_sigma[] = {
     19, 19, 19, 18, 18, 18, 18, 18, 18, 17, 17, 17, 17, 17, 17, 16,
     16, 16, 16, 16, 15, 15, 15, 15, 15, 15, 14, 14, 14, 14, 14, 13,
     13, 13, 13, 13, 12, 12, 12, 12, 12, 11, 11, 11, 11, 10, 10, 10,

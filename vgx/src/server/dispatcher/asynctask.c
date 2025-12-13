@@ -105,10 +105,10 @@ static void __asynctask__log_address_error( const vgx_VGXServerDispatcherReplica
  ***********************************************************************
  */
 static void __asynctask__resolve_replica( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXServerDispatcherReplica_t *replica ) {
-  static char HC_REQUEST[] = "GET /vgx/hc HTTP/1.1" CRLF CRLF;
-  static int64_t SZ_HC_REQUEST = sizeof(HC_REQUEST) - 1;
-  static char HC_RESPONSE[] = VGX_SERVER_HEADER;
-  static int64_t SZ_HC_RESPONSE = sizeof(HC_RESPONSE) - 1;
+  static const char HC_REQUEST[] = "GET /vgx/hc HTTP/1.1" CRLF CRLF;
+  static const int64_t SZ_HC_REQUEST = sizeof(HC_REQUEST) - 1;
+  static const char HC_RESPONSE[] = VGX_SERVER_HEADER;
+  static const int64_t SZ_HC_RESPONSE = sizeof(HC_RESPONSE) - 1;
 
   CXSOCKET socket = {0};
   cxsocket_invalidate( &socket );

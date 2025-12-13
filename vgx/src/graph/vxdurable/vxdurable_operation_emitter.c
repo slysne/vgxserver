@@ -706,8 +706,8 @@ static void __system_sleep_OPEN( vgx_TransactionalProducers_t *producers, int64_
  ***********************************************************************
  */
 static void __throttle_commit_OPEN( vgx_TransactionalProducers_t *producers, int64_t tms, int64_t max_pending, int64_t max_bytes ) {
-  static int minlog = 1;
-  static int logcnt = 0;
+  static __THREAD int minlog = 1;
+  static __THREAD int logcnt = 0;
 
   int sleep_ms;
 
