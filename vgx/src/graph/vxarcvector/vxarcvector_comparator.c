@@ -416,49 +416,7 @@ DLL_HIDDEN vgx_VertexStager_t _iStageVertex = {
 };
 
 
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
-/*
-static void __update_frontier( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_Graph_t **locked_graph ) {
-  switch( base->recursion_mode ) {
-  case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
-    {
-      Cm256iHeap_t *B = base->beam_heap;
-      vgx_CollectorItem_t discarded = {0};
-      if( CALLABLE(B)->HeapPushTopK(B, &inserted->item, &discarded.item) == NULL ) {
-        return; // item not good enough for beam
-      }
-      // Item discarded from the beam must be decref'ed (dummy items no-op is handled)
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded.headref, locked_graph );
-      // TODO: Why are we not also discarding the tailref here ?
-    }
-    break;
-  case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
-    {
-      Cm256iBuffer_t *F = base->frontier;
-      if( ComlibSequenceLength(F) >= base->max_frontier ) {
-        return; // Frontier queue full
-      }
-      if( CALLABLE(F)->Append(F, &inserted->item) < 1 ) {
-        return; // ?
-      }
-    }
-    break;
-  default:
-    return;
-  }
-    
-  // Frontier owns another reference
-  inserted->headref->refcnt++; // <- slot inside refmap directly incref'ed
-  // TODO: Why are we not also increfing the tailref here ?
-}
-*/
-
-
-
+ 
 /*******************************************************************//**
  *
  ***********************************************************************
@@ -476,12 +434,6 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
         if( (inserted->tailref = _vxquery_collector__add_vertex_reference( base, larc->tail, &larc->acquired.tail_lock )) != NULL ) {
           if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
             if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
-              /*
-              if( base->recursion_mode != VGX_RECURSION_MODE_NONE ) {
-                // Head is queued as anchor for future recursive traversal
-                __update_frontier( base, inserted, &locked_graph );
-              }
-              */
               inserted->headref->slot.depth = base->recursion_depth;
               inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
               // SUCCESS
@@ -506,20 +458,6 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
 
   GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
   
-  // We have secondary threshold in a shadow queue
-  if( base->shadow_trail.queue ) {
-    vgx_ExpansionShadowTrail_t *shadow = &base->shadow_trail;
-    if( discarded ) {
-      _vxquery_collector__push_shadow_trail( shadow, discarded->sort.flt64.value );
-    }
-    else if( inserted ) {
-      double score = inserted->sort.flt64.value;
-      if( score > shadow->threshold ) {
-        _vxquery_collector__push_shadow_trail( shadow, score );
-      }
-    }
-  }
-
   return updated;
 }
 
@@ -991,6 +929,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   Cm256iHeap_t *heap = collector->container.sequence.heap;
   vgx_BaseCollector_context_t *base = (vgx_BaseCollector_context_t*)collector;
   Cm256iBuffer_t *F = base->frontier;
+  Cm256iHeap_t *B = base->beam_heap;
   
   vgx_VertexRef_t sort_tailref = { .vertex = larc->tail };
   vgx_VertexRef_t sort_headref = { .vertex = larc->head.vertex };
@@ -1000,56 +939,117 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     .predicator = larc->head.predicator,
     .sort       = sort
   };
-  vgx_CollectorItem_t main_heap_discarded;
-  vgx_CollectorItem_t *main_heap_location;
+  vgx_CollectorItem_t result_heap_discarded;
+  vgx_CollectorItem_t *result_heap_location;
+  int refmap_updated;
   
-  // Collect item into result heap (if good enough for main heap)
-  main_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &main_heap_discarded.item );
-
-  // Normal non-recursive (no frontier) - or frontier is full
-  if( F == NULL ) {
-main_heap_only:
+  // Try to collect item into result heap
+  result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+    
+  // ------------------------------------------------------------
+  // Normal non-recursive (or sort not good enough for recursion)
+  // ------------------------------------------------------------
+  if( F == NULL || sort.flt64.value <= base->shadow_trail.threshold ) {
     // Nothing collected
-    if( main_heap_location == NULL ) {
+    if( result_heap_location == NULL ) {
       return 0;
     }
     // Collected item's actual heap location must be updated with new refmap slot references which we now add
-    return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, main_heap_location, &main_heap_discarded, larc, NULL );
+    return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, result_heap_location, &result_heap_discarded, larc, NULL );
+  }
+  
+  // ------------------------------------------
+  // Recursive search
+  // ------------------------------------------
+
+  // ------------------------------------------
+  // Pure beam mode
+  // ------------------------------------------
+  if( base->pure_beam ) {
+    vgx_CollectorItem_t *beam_heap_location;
+    vgx_CollectorItem_t beam_heap_discarded;
+    // Try to push item to beam heap
+    beam_heap_location = (vgx_CollectorItem_t*)CALLABLE(B)->HeapPushTopK(B, &collected.item, &beam_heap_discarded.item);
+
+    // Item not good enough for result
+    if( result_heap_location == NULL ) {
+      // Update shadow with current item's score
+      _vxquery_collector__push_shadow_trail( &base->shadow_trail, sort.flt64.value );
+      // Not good enough for beam either
+      if( beam_heap_location == NULL ) {
+        return 0;
+      }
+      // Item was pushed to beam only
+      return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
+    }
+
+    // Update shadow with result heap _discard_ score
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, result_heap_discarded.sort.flt64.value );
+    
+    // Item was pushed to result only
+    if( beam_heap_location == NULL ) {
+      return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, result_heap_location, &result_heap_discarded, larc, NULL );
+    }
+    
+    // Item was pushed to both result and beam
+
+    // Remove references to discarded beam item
+    _vxquery_collector__del_collector_item_references_OPEN( base, &beam_heap_discarded );
+
+    // Populate the collected item with refmap slots, then we manually update the two heap locations
+    if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, &collected, &result_heap_discarded, larc, NULL )) > 0 ) {
+      // Add one more ownership sice the call above only handles single owner
+      collected.tailref->refcnt++; //
+      collected.headref->refcnt++; //
+      // Update result heap's item location with the allocated refmap slots
+      result_heap_location->tailref = collected.tailref;
+      result_heap_location->headref = collected.headref;
+      // Update beam heap's item location with the allocated refmap slots
+      beam_heap_location->tailref = collected.tailref;
+      beam_heap_location->headref = collected.headref;
+    }
+    return refmap_updated;
   }
 
-  // Recursive mode with frontier
-  vgx_CollectorItem_t frontier_entry;
-  _vxquery_collector__get_current_threshold( base, &frontier_entry );
+  // ------------------------------------------
+  // Frontier queue mode
+  // ------------------------------------------
 
-  // Item not good enough to be added
-  if( heap->_cmp( &frontier_entry.item, &collected.item ) <= 0 ) { // notice the cmp direction ("less-than" semantics reversed for min-heap compare)
-    goto main_heap_only;
-  }
-
+  // Item will be pushed on frontier  
+  // First evict oldest frontier item when frontier is already full
   while( ComlibSequenceLength(F) >= base->max_frontier && ComlibSequenceLength(F) > 0 ) {
+    vgx_CollectorItem_t frontier_entry;
     CALLABLE(F)->Next(F, &frontier_entry.item);
     _vxquery_collector__del_collector_item_references_OPEN( base, &frontier_entry );
   }
 
   // Crucual: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
-  //          and at the same time ensure we track anything discarded from the main heap at the same time
+  //          and at the same time ensure we track anything discarded from the main heap
   // We also inserted into main heap, track both frontier refmap additions AND main heap discarad
-  int refmap_updated;
   vgx_CollectorItem_t *frontier_collectable = &collected; // prepare to add to frontier
-  if( main_heap_location ) {
-    if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &main_heap_discarded, larc, NULL )) > 0 ) {
-      // Update main heap location with refmap slots and account for dual ownership
-      main_heap_location->tailref = frontier_collectable->tailref;
-      main_heap_location->tailref->refcnt++;
-      main_heap_location->headref = frontier_collectable->headref;
-      main_heap_location->headref->refcnt++;
+
+  // Item to frontier only (was not pushed to result)
+  if( result_heap_location == NULL ) {
+    // Update shadow with current item's score
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, sort.flt64.value );
+    refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
+  }
+  // Item to frontier and was also pushed to result
+  else {
+    // Update shadow with result heap _discard_ score
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, result_heap_discarded.sort.flt64.value );
+    // Populate the frontier-collectable item with refmap slot, and manage result discard
+    if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &result_heap_discarded, larc, NULL )) > 0 ) {
+      // Add one more ownership sice the call above only handles single owner
+      frontier_collectable->tailref->refcnt++;
+      frontier_collectable->headref->refcnt++;
+      // Update result heap's item location with the allocated refmap slots
+      result_heap_location->tailref = frontier_collectable->tailref;
+      result_heap_location->headref = frontier_collectable->headref;
     }
   }
-  // We only need to track frontier refmap additions (no discards tracked)
-  else {
-    refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL );
-  }
 
+  // Refmap updates went well, push to frontier
   if( refmap_updated > 0 ) {
     // Append to fronter, item already populated with refmap slot references
     CALLABLE(F)->Append(F, &frontier_collectable->item);

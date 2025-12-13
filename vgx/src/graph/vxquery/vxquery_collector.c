@@ -515,6 +515,12 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, double score ) {
+#define shadow_alpha (1.0/64.0)
+  // No queue, just moving average
+  if( shadow_trail->queue == NULL ) {
+    return shadow_trail->threshold = (1.0 - shadow_alpha) * shadow_trail->threshold + shadow_alpha * score;
+  }
+
   // Write latest score
   *shadow_trail->wp++ = (float)score;
   // Ring buffer wrap
@@ -524,7 +530,8 @@ DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrai
 
   // Update threshold with tail of ring buffer if it holds a real score
   if( *shadow_trail->wp > 0.0f ) {
-    return shadow_trail->threshold = *shadow_trail->wp;
+    float oldest = *shadow_trail->wp;
+    return shadow_trail->threshold = (1.0 - shadow_alpha) * shadow_trail->threshold + shadow_alpha * oldest;
   }
 
   // Initialize threshold to first encountered real score
@@ -543,6 +550,23 @@ DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrai
  ***********************************************************************
  */
 DLL_HIDDEN double _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *difficulty ) {
+  if( collector->shadow_trail.queue ) {
+    difficulty->sort.flt64.value = collector->shadow_trail.threshold;
+  }
+  else {
+    CALLABLE( collector->container.sequence.heap )->HeapTop( collector->container.sequence.heap, &difficulty->item );
+  }
+  return difficulty->sort.flt64.value;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+DLL_HIDDEN double _vxquery_collector__get_robust_threshold( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *difficulty ) {
   if( collector->shadow_trail.queue ) {
     difficulty->sort.flt64.value = collector->shadow_trail.threshold;
   }
@@ -754,7 +778,7 @@ static void __delete_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t **q
  */
 static vgx_FrontierQueue_t * __new_frontier_queue( int64_t size ) {
   Cm256iBuffer_constructor_args_t queue_args = {
-    .element_capacity = size * 4  // heuristic: init size 4x heap size
+    .element_capacity = size
   };
   return COMLIB_OBJECT_NEW( Cm256iBuffer_t, NULL, &queue_args );
 }
@@ -939,9 +963,12 @@ static int64_t __get_recursion_frontier_limit( const vgx_recursion_config_t *rec
   if( recursion->limit.frontier > 0 ) {
     frontier_limit = recursion->limit.frontier;
   }
-  // Auto select frontier limit based on heap size
+  // Auto: Frontier limit to max beam if beam is used
+  else if( recursion->beam.max_width > 0 ) {
+    frontier_limit = recursion->beam.max_width;
+  }
+  // Auto: Frontier limit to 32x heap if no beam
   else {
-    // Roughly 32 x heap size as default (should be generous for good recall in relation to what the heap size enables)
     frontier_limit = 32 * heap_size;
   }
 
@@ -990,6 +1017,11 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
         if( comparator == (f_Cm256iHeap_comparator_t)_iArcMinComparator.cmp_archead_double_rank ) {
           recursion->heap.shadow = __get_recursion_heap_shadow( recursion, heap_size );
         }
+      
+        // Auto-set max beam to beam width if needed
+        if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE && recursion->beam.max_width < recursion->beam.width ) {
+          recursion->beam.max_width = recursion->beam.width;
+        }
         
         // Size of frontier
         recursion->limit.frontier = __get_recursion_frontier_limit( recursion, heap_size );
@@ -1012,7 +1044,11 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     }
 
     // Create vertex reference map
-    int64_t sz_refmap = maximum_value( heap_size, recursion->limit.frontier );
+    int64_t sz_refmap = heap_size; // at least this
+    if( __is_recursion_enabled( recursion ) ) {
+      int64_t max_front = maximum_value( recursion->beam.max_width, recursion->limit.frontier );
+      sz_refmap = maximum_value( heap_size, max_front );
+    }
     if( (refmap = __new_vertex_reference_map( sz_refmap, &top_k_collector->sz_refmap )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x323 );
     }
@@ -1035,18 +1071,15 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
         }
       }
-      // Always a frontier queue
-      if( (frontier = __new_frontier_queue( recursion->limit.frontier ) ) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x327 );
-      }
-      // Also beam if beam mode
+      // Beam if enabled
       if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
-        if( recursion->beam.max_width < recursion->beam.width ) {
-          recursion->beam.max_width = recursion->beam.width; // auto
-        }
         if( (beam_heap = __new_beam_heap( recursion->beam.max_width, comparator )) == NULL ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x328 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x327 );
         }
+      }
+      // Frontier queue
+      if( (frontier = __new_frontier_queue( recursion->limit.frontier ) ) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x328 );
       }
     }
 
@@ -1065,6 +1098,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->recursion_depth          = 0;
     top_k_collector->frontier                 = frontier;
     top_k_collector->max_frontier             = recursion ? recursion->limit.frontier : 0;
+    top_k_collector->pure_beam                = recursion ? recursion->limit.frontier == recursion->beam.max_width : false;
     top_k_collector->beam_heap                = beam_heap;
     top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
@@ -1174,6 +1208,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->shadow_trail.wp          = NULL;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
+    collector->pure_beam                = false;
     collector->beam_heap                = NULL;
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
@@ -1296,6 +1331,7 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->shadow_trail.wp              = NULL;
     map_collector->frontier                     = NULL;
     map_collector->max_frontier                 = 0;
+    map_collector->pure_beam                    = false;
     map_collector->beam_heap                    = NULL;
     map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
@@ -1369,6 +1405,7 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->shadow_trail.wp    = NULL;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
+    collector->pure_beam          = false;
     collector->beam_heap          = NULL;
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
@@ -1479,6 +1516,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->shadow_trail.wp          = NULL;
     top_k_collector->frontier                 = NULL;
     top_k_collector->max_frontier             = 0;
+    top_k_collector->pure_beam                = false;
     top_k_collector->beam_heap                = NULL;
     top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
@@ -1585,6 +1623,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->shadow_trail.wp          = NULL;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
+    collector->pure_beam                = false;
     collector->beam_heap                = NULL;
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
@@ -1654,6 +1693,7 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->shadow_trail.wp    = NULL;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
+    collector->pure_beam          = false;
     collector->beam_heap          = NULL;
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
