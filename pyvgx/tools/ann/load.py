@@ -229,7 +229,7 @@ def QMINIT(g):
                     'frontier_limit'    : 390,
                     'beam_width'        : 390,
                     'beam_curve'        : 0.6,
-                    'beam_min'          : 16,
+                    'beam_min'          : 6,
                     'reset_map'         : False,
                     'reset_metrics'     : True
                 }
@@ -665,7 +665,9 @@ def reconnect_with_diverse_subset( g, node ):
         A.Close()
     
     
-        
+
+
+
 def repair_with_diverse_subset( g ):
     n = 0
     for node in g.VerticesType('item'):
@@ -807,7 +809,7 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, adaptive=True ):
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, adaptive=True ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -826,7 +828,7 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, adaptive=True
                                     'beam_width': bw,
                                     'beam_curve': bc,
                                     'beam_min': bmin,
-                                    'beam_max': 2048,
+                                    'beam_max': bmax,
                                     'adaptive_taper': adaptive,
                                     #'arc_prune_until': 2,
                                     #'arc_prune_score': 5.0,
@@ -840,16 +842,16 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, adaptive=True
                 
 #MEM, Q = INIT(g); ptest( MEM, Q, g, PROBES100k[123], root="entry_320_036", recall=1 )
 
-#e="entry_510_038"; threadtest( g, 1, PROBES100k[:2000], entry=e, heaps=[81], shwfactor=0, fronts=[170], bwfactor=0.2, bcs=[0.9], inits=[8], adaptive=True )
+#e="entry_510_038"; threadtest( g, 1, PROBES100k[:2000], entry=e, heaps=[81], shwfactor=0, fronts=[170], beam=[100], bcs=[0.9], inits=[8], adaptive=True )
 
 #['entry_107_031', 'entry_699_038', 'entry_100_030', 'entry_017_020', 'entry_040_818', 'entry_233_034', 'entry_320_036', 'entry_510_038', 'entry_476_038', 'entry_146_032', 'entry_688_040', 'entry_278_035', 'entry_1474_045', 'entry_414_037', 'entry_179_033']
 
-x=32
-while x < 5000:
-    threadtest( g, 12, PROBES100k[:36000], 'entry_510_038', heaps=[x], shwfactor=0.0, fronts=[int(x*1.5)], bwfactor=0.2, bcs=[0.65], inits=[6], adaptive=True )
-    x = int(round(x*(2**0.5))) if x >= 16 else x+1
+#x=32
+#while x < 5000:
+#    threadtest( g, 12, PROBES100k[:36000], 'entry_510_038', heaps=[x], shwfactor=0.0, fronts=[int(x*1.5)], beam=[4+int(x/10)], bcs=[0.65], inits=[6], adaptive=True )
+#    x = int(round(x*(2**0.5))) if x >= 16 else x+1
 
-
+#for h in range(16,17): threadtest( g, 1, PROBES100k[:1000], 'entry', heaps=[h], shwfactor=32.0, fronts=[int(10*h)], beam=[int(2*h)], bcs=[0.5], inits=[4], bmin=4, bmax=32, adaptive=True )
 
 
 
@@ -953,19 +955,25 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, r_result, adaptive=True, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=8, adaptive=adaptive)
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, r_result, adaptive=True, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, adaptive=adaptive)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, adaptive=True ):
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, adaptive=True ):
+    if bmax < bmin:
+        bmax = bmin
+    if bw < bmin:
+        bw = bmin
+    elif bw > bmax:
+        bw = bmax
     T = []
     sz = len(PROBES) // N
     i = 0
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, r_result, adaptive)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, r_result, adaptive)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -997,30 +1005,44 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, adaptive=True )
     evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
     acceptrate = 100*apq/epq
     is_adaptive_taper = "(a)" if adaptive else ""
-    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} taper={bc}{is_adaptive_taper} init={init}"
+    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init}"
     result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
     print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
 
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shwfactor=0, fronts=None, bwfactor=0.75, bcs=None, inits=None, adaptive=True ):
+def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, adaptive=True ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
+    auto_shadows = []
+    if shadows is None:
+        auto_shadows = [2*h for h in heaps]
+    auto_fronts = []
+    if fronts is None:
+        auto_fronts = [int(1.2*h*(1+shwfactor)) for h in heaps]
+    auto_beams = []
+    if beams is None:
+        auto_beams = [max(int(0.5*f), 1) for f in fronts]
     if bcs is None:
         bcs = [0.75]
     if inits is None:
         inits = [8]
-    for h in heaps:
-        shw = int(shwfactor * h)
-        if fronts is None:
-            fronts = [int(h*1.33)]
-        for f in fronts:
-            bw = int(bwfactor * h)
-            for init in inits:
-                for bc in bcs:
-                    r_PROBES = random.sample( PROBES, len(PROBES) )
-                    threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, adaptive=adaptive ) 
+    for i in range(len(heaps)):
+        h = heaps[i]
+        if auto_shadows:
+            shadows = auto_shadows[i:i+1]        
+        for shw in shadows:
+            if auto_fronts:
+                fronts = auto_fronts[i:i+1]
+            for f in fronts:
+                if auto_beams:
+                    beams = auto_beams[i:i+1]
+                for bw in beams:
+                    for bc in bcs:
+                        for init in inits:
+                            r_PROBES = random.sample( PROBES, len(PROBES) )
+                            threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, adaptive=adaptive ) 
 
 
 
@@ -1073,15 +1095,17 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
 
 def out2test( output, N=1, np=-1 ):
     import re
-    #e=entry_510_038 t=1 heap=1536 shadow=0 front=2000 beam=300 taper=0.9 --> qps=114.9 recall=0.997@10 latency=8.70ms evals=43686 (5.0M/s/t 5.0M/s) accepts=7372 (16.9%) qps_wall=114.8
+    #e=entry_510_038 t=1 heap=1536 shadow=0 front=2000 beam=300 range=(8-512) taper=0.9 --> qps=114.9 recall=0.997@10 latency=8.70ms evals=43686 (5.0M/s/t 5.0M/s) accepts=7372 (16.9%) qps_wall=114.8
     #('entry_510_038', '1536', '0', '2000', '300', '0.9')
-    entry, sheap, sshadow, sfront, sbeam, staper = re.search( r"e=(\S+).+heap=(\d+)\s+shadow=(\d+)\s+front=(\d+)\s+beam=(\d+)\s+taper=([0-9\.]+).*", output ).groups()
+    entry, sheap, sshadow, sfront, sbeam, sbmin, sbmax, staper = re.search( r"e=(\S+).+heap=(\d+)\s+shadow=(\d+)\s+front=(\d+)\s+beam=(\d+)\s+range=\((\d+)-(\d+)\)\s+taper=([0-9\.]+).*", output ).groups()
     heap = int(sheap)
     shw = round( int(sshadow) / heap, 2 )
     front = int(sfront)
-    bw = round( int(sbeam) / front, 2 )
+    beam = int(sbeam)
+    bmin = int(sbmin)
+    bmax = int(sbmax)
     bc = float(staper)
-    runthis = f"threadtest( g, {N}, PROBES100k[:{np}], '{entry}', heaps=[{heap}], shwfactor={shw}, fronts=[{front}], bwfactor={bw}, bcs=[{bc}], adaptive=True )"
+    runthis = f"threadtest( g, {N}, PROBES100k[:{np}], '{entry}', heaps=[{heap}], shwfactor={shw}, fronts=[{front}], beams=[{beam}], bcs=[{bc}], bmin={bmin}, bmax={bmax}, adaptive=True )"
     return runthis
 
 
