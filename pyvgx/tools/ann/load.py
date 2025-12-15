@@ -809,7 +809,7 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, adaptive=True ):
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, toffset=0.0, adaptive=True ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -829,6 +829,7 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, ada
                                     'beam_curve': bc,
                                     'beam_min': bmin,
                                     'beam_max': bmax,
+                                    'threshold_offset': toffset,
                                     'adaptive_taper': adaptive,
                                     #'arc_prune_until': 2,
                                     #'arc_prune_score': 5.0,
@@ -851,8 +852,8 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, ada
 #    threadtest( g, 12, PROBES100k[:36000], 'entry_510_038', heaps=[x], shwfactor=0.0, fronts=[int(x*1.5)], beam=[4+int(x/10)], bcs=[0.65], inits=[6], adaptive=True )
 #    x = int(round(x*(2**0.5))) if x >= 16 else x+1
 
-#for h in range(16,17): threadtest( g, 1, PROBES100k[:1000], 'entry', heaps=[h], shwfactor=32.0, fronts=[int(10*h)], beam=[int(2*h)], bcs=[0.5], inits=[4], bmin=4, bmax=32, adaptive=True )
-
+#for h in range(16,17): threadtest( g, 1, PROBES100k[:1000], 'entry', heaps=[h], shadows=[10*h], fronts=[int(10*h)], beams=[int(2*h)], bcs=[0.5], inits=[4], bmin=4, bmax=32, adaptive=True )
+#threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[x for n in range(4,14) for x in (2**n, 2**n+2**(n-1)) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, adaptive=True, perfonly=1 )
 
 
 
@@ -955,25 +956,22 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, r_result, adaptive=True, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, adaptive=adaptive)
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, r_result, adaptive=True, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, toffset=toffset, adaptive=adaptive)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, adaptive=True ):
-    if bmax < bmin:
-        bmax = bmin
-    if bw < bmin:
-        bw = bmin
-    elif bw > bmax:
-        bw = bmax
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, adaptive=True, perfonly=False ):
+    if bmax < bmin: bmax = bmin
+    if bw < bmin: bw = bmin
+    elif bw > bmax: bw = bmax
     T = []
     sz = len(PROBES) // N
     i = 0
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, r_result, adaptive)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, r_result, adaptive)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -1005,14 +1003,18 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, ada
     evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
     acceptrate = 100*apq/epq
     is_adaptive_taper = "(a)" if adaptive else ""
-    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init}"
-    result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
-    print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
+    if not perfonly:
+        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} toffset={toffset}"
+        result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
+        print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
+    else:
+        print( f"{recall:0.4f} {qps:0.1f} {epq} {apq} {apq/epq:0.4f}" )
+    return recall, qps
 
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, adaptive=True ):
+def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, toffset=0.0, adaptive=True, perfonly=False ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     auto_shadows = []
@@ -1042,7 +1044,7 @@ def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beam
                     for bc in bcs:
                         for init in inits:
                             r_PROBES = random.sample( PROBES, len(PROBES) )
-                            threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, adaptive=adaptive ) 
+                            recall, qps = threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, toffset=toffset, adaptive=adaptive, perfonly=perfonly )
 
 
 
@@ -1095,17 +1097,19 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
 
 def out2test( output, N=1, np=-1 ):
     import re
-    #e=entry_510_038 t=1 heap=1536 shadow=0 front=2000 beam=300 range=(8-512) taper=0.9 --> qps=114.9 recall=0.997@10 latency=8.70ms evals=43686 (5.0M/s/t 5.0M/s) accepts=7372 (16.9%) qps_wall=114.8
+    #e=entry t=1 heap=10 shadow=0 front=7 beam=8 range=(3-12) taper=0.5 init=3 --> qps=11358.9 recall=0.5389@10 latency=0.09ms evals=1117 (12.7M/s/t 12.7M/s) accepts=100 (9.0%) qps_wall=11074.0
     #('entry_510_038', '1536', '0', '2000', '300', '0.9')
-    entry, sheap, sshadow, sfront, sbeam, sbmin, sbmax, staper = re.search( r"e=(\S+).+heap=(\d+)\s+shadow=(\d+)\s+front=(\d+)\s+beam=(\d+)\s+range=\((\d+)-(\d+)\)\s+taper=([0-9\.]+).*", output ).groups()
+    entry, sheap, sshadow, sfront, sbeam, sbmin, sbmax, staper, sadaptive, sinit = re.search( r"e=(\S+).+heap=(\d+)\s+shadow=(\d+)\s+front=(\d+)\s+beam=(\d+)\s+range=\((\d+)-(\d+)\)\s+taper=([0-9\.]+)(\(a\))?\s+init=(\d+).*", output ).groups()
     heap = int(sheap)
-    shw = round( int(sshadow) / heap, 2 )
+    shw =  int(sshadow)
     front = int(sfront)
     beam = int(sbeam)
     bmin = int(sbmin)
     bmax = int(sbmax)
+    init = int(sinit)
     bc = float(staper)
-    runthis = f"threadtest( g, {N}, PROBES100k[:{np}], '{entry}', heaps=[{heap}], shwfactor={shw}, fronts=[{front}], beams=[{beam}], bcs=[{bc}], bmin={bmin}, bmax={bmax}, adaptive=True )"
+    adaptive = True if sadaptive == "(a)" else False
+    runthis = f"threadtest( g, {N}, PROBES100k[:{np}], '{entry}', heaps=[{heap}], shadows=[{shw}], fronts=[{front}], beams=[{beam}], bcs=[{bc}], inits=[{init}], bmin={bmin}, bmax={bmax}, adaptive={adaptive} )"
     return runthis
 
 
