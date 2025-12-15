@@ -346,11 +346,11 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
     vgx_CollectorItem_t discarded = {0};
     if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item) == NULL ) {
       // Inferior item
-      _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
+      _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
     }
     else if( discarded.headref->refcnt > 0 ) {
       // Discarded from beam
-      _vxquery_collector__del_collector_item_references_OPEN( collector, &discarded );
+      _vxquery_collector__del_collector_item_headref_OPEN( collector, &discarded );
     }
   } 
 }
@@ -386,7 +386,7 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
     GRAPH_LOCK( collector->graph ) {
       while( cursor < beam_end ) {
         if( cursor->headref->refcnt > 0 ) {
-          _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
+          //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
           _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
         }
         ++cursor;
@@ -443,12 +443,14 @@ static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virt
     collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
     __initialize_beam( recursion, collector );
 
+    /*
     // If arc pruning enabled, reset arc filter to all-pass filter when depth reached
     if( recursion->arc_prune.until > 0 && filter_context->recursion_arc_prune_score > 0.0 ) {
       if( collector->recursion_depth > recursion->arc_prune.until ) {
         filter_context->recursion_arc_prune_score = 0.0;
       }
     }
+    */
 
     // Number of expansions to perform
     return sz_frontier;
@@ -472,7 +474,7 @@ static void __discard_beam_CS( vgx_BaseCollector_context_t *collector ) {
   vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)B->_buffer;
   vgx_CollectorItem_t *end = cursor + B->_size;
   while( cursor < end ) {
-    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
+    //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
     _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
     ++cursor;
   }
@@ -490,7 +492,7 @@ static void __discard_frontier_queue_CS( vgx_BaseCollector_context_t *collector 
   if( F ) {
     vgx_CollectorItem_t frontier = {0};
     while( CALLABLE(F)->Next(F, &frontier.item) > 0 ) {
-      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &collector->graph );
+      //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &collector->graph );
       _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &collector->graph );
     }
   }
@@ -581,7 +583,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
     // Get the initial difficulty
     vgx_CollectorItem_t difficulty = {0};
-    _vxquery_collector__get_current_threshold( collector, &difficulty );
+    double threshold = _vxquery_collector__get_current_threshold( collector, &difficulty );
 
     vgx_CollectorItem_t frontier = {0};
 
@@ -597,11 +599,12 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
         }
         
+        /*
         // We perform the expansion if using pure beam, or if frontier item score compares high enough against current difficulty
         // (heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked)
         bool perform_expansion = collector->pure_beam || (main_heap->_cmp( &difficulty.item, &frontier.item ) > 0);
-
-        if( perform_expansion ) {
+        */
+        if( frontier.sort.flt64.value > threshold + recursion->beam.threshold_offset ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
@@ -620,11 +623,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          _vxquery_collector__get_current_threshold( collector, &difficulty );
+          threshold = _vxquery_collector__get_current_threshold( collector, &difficulty );
         }
 
         // Used item from frontier must be closed here
-        _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
+        _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
       }
 
       level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
@@ -634,7 +637,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     XBREAK;
 
   terminate_inner:
-    _vxquery_collector__del_collector_item_references_OPEN( collector, &frontier );
+    _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
 
   terminate_outer:
     __discard_frontier( collector );

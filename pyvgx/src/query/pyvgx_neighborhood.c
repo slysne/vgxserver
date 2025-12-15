@@ -250,15 +250,16 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },
       { .name = "beam_max",         .target = &param->recursion.beam.max_width,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=auto
       { .name = "init_select",      .target = &param->recursion.init.select,      .dflt=0,          .minval=0,      .maxval=1024 },                         // default 0=off
-      { .name = "arc_prune_until",  .target = &param->recursion.arc_prune.until,  .dflt=0,          .minval=0,      .maxval=16 },                           // default 0=off
+      //{ .name = "arc_prune_until",  .target = &param->recursion.arc_prune.until,  .dflt=0,          .minval=0,      .maxval=16 },                           // default 0=off
       {0}
     };
 
     struct s_dbl_config dbl_config[] = {
       //{ .name = "skip_probability", .target = &param->recursion.visit.skip_probability,     .dflt=0.0,  .minval=0.0,  .maxval=1.0 },      // default 0.0=no skipping
       { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,  .minval=0.0,  .maxval=1.0 },      // default 1.0=constant
-      { .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },      // default 1.0=never apply arc lsh filter
-      { .name = "arc_prune_score",  .target = &param->recursion.arc_prune.score,            .dflt=0.0,  .minval=0.0,  .maxval=FLT_MAX },  // default 0.0=off
+      { .name = "threshold_offset", .target = &param->recursion.beam.threshold_offset,      .dflt=0.0,  .minval=-1.0, .maxval=1.0 },      // default 0.0
+      //{ .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },      // default 1.0=never apply arc lsh filter
+      //{ .name = "arc_prune_score",  .target = &param->recursion.arc_prune.score,            .dflt=0.0,  .minval=0.0,  .maxval=FLT_MAX },  // default 0.0=off
       {0}
     };
 

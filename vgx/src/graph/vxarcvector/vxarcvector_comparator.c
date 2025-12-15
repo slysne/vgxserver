@@ -467,6 +467,45 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
  *
  ***********************************************************************
  */
+static int __update_refmap_head( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_CollectorItem_t *discarded, vgx_LockableArc_t *larc, vgx_predicator_t *pred_ovr ) {
+  vgx_Graph_t *locked_graph = NULL;
+  int updated = 0;
+
+  // Insert references
+  if( inserted ) {
+    do {
+      inserted->headref = NULL;
+      if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
+        if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
+          inserted->headref->slot.depth = base->recursion_depth;
+          inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
+          // SUCCESS
+          updated = 1;
+          break;
+        }
+      }
+      // ERROR
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, inserted->headref, &locked_graph );
+      updated = -1;
+    } WHILE_ZERO;
+  }
+
+  // Discard references
+  if( discarded ) {
+    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded->headref, &locked_graph );
+  }
+
+  GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  
+  return updated;
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
 static int __update_refmap_vertex( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_CollectorItem_t *discarded, vgx_LockableArc_t *larc ) {
   vgx_Graph_t *locked_graph = NULL;
   int updated = -1;
@@ -921,6 +960,18 @@ __inline static int __arc_collect_into_aggregating_product_map( vgx_ArcCollector
 
 
 
+static vgx_VertexRef_t dummy_ref = {
+  .vertex = NULL,
+  .refcnt = -1,
+  .slot = {
+   .locked = 0,
+   .state = 0,
+   .depth = 0 
+  }
+};
+
+
+
 /*******************************************************************//**
  * __push_arc
  ***********************************************************************
@@ -934,8 +985,8 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   vgx_VertexRef_t sort_tailref = { .vertex = larc->tail };
   vgx_VertexRef_t sort_headref = { .vertex = larc->head.vertex };
   vgx_CollectorItem_t collected = {
-    .tailref    = &sort_tailref, // overwrite with managed reference from refmap if collected
-    .headref    = &sort_headref, // overwrite with managed reference from refmap if collected
+    .tailref    = &dummy_ref, // overwrite with managed reference from refmap if collected
+    .headref    = &dummy_ref, // overwrite with managed reference from refmap if collected
     .predicator = larc->head.predicator,
     .sort       = sort
   };
@@ -965,7 +1016,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   // ------------------------------------------
   // Pure beam mode
   // ------------------------------------------
-  if( base->pure_beam ) {
+  if( base->pure_beam || (B && base->beam_width <= 16) ) {
     vgx_CollectorItem_t *beam_heap_location;
     vgx_CollectorItem_t beam_heap_discarded;
     // Try to push item to beam heap
@@ -980,7 +1031,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
         return 0;
       }
       // Item was pushed to beam only
-      return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
+      return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
 
     // Update shadow with result heap _discard_ score
@@ -994,18 +1045,18 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     // Item was pushed to both result and beam
 
     // Remove references to discarded beam item
-    _vxquery_collector__del_collector_item_references_OPEN( base, &beam_heap_discarded );
+    _vxquery_collector__del_collector_item_headref_OPEN( base, &beam_heap_discarded );
 
     // Populate the collected item with refmap slots, then we manually update the two heap locations
     if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, &collected, &result_heap_discarded, larc, NULL )) > 0 ) {
-      // Add one more ownership sice the call above only handles single owner
-      collected.tailref->refcnt++; //
+      // Add one more headref ownership sice the call above only handles single owner
+      //collected.tailref->refcnt++; //
       collected.headref->refcnt++; //
       // Update result heap's item location with the allocated refmap slots
       result_heap_location->tailref = collected.tailref;
       result_heap_location->headref = collected.headref;
-      // Update beam heap's item location with the allocated refmap slots
-      beam_heap_location->tailref = collected.tailref;
+      // Update beam heap's item location with the allocated refmap slot for headref only
+      //beam_heap_location->tailref = collected.tailref;
       beam_heap_location->headref = collected.headref;
     }
     return refmap_updated;
@@ -1020,7 +1071,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   while( ComlibSequenceLength(F) >= base->max_frontier && ComlibSequenceLength(F) > 0 ) {
     vgx_CollectorItem_t frontier_entry;
     CALLABLE(F)->Next(F, &frontier_entry.item);
-    _vxquery_collector__del_collector_item_references_OPEN( base, &frontier_entry );
+    _vxquery_collector__del_collector_item_headref_OPEN( base, &frontier_entry );
   }
 
   // Crucual: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
@@ -1032,7 +1083,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   if( result_heap_location == NULL ) {
     // Update shadow with current item's score
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, sort.flt64.value );
-    refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
+    refmap_updated = __update_refmap_head( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
   }
   // Item to frontier and was also pushed to result
   else {
@@ -1041,11 +1092,13 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     // Populate the frontier-collectable item with refmap slot, and manage result discard
     if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &result_heap_discarded, larc, NULL )) > 0 ) {
       // Add one more ownership sice the call above only handles single owner
-      frontier_collectable->tailref->refcnt++;
+      //frontier_collectable->tailref->refcnt++;
       frontier_collectable->headref->refcnt++;
       // Update result heap's item location with the allocated refmap slots
       result_heap_location->tailref = frontier_collectable->tailref;
       result_heap_location->headref = frontier_collectable->headref;
+      // Fronter tailref back to dummy
+      frontier_collectable->tailref = &dummy_ref;
     }
   }
 

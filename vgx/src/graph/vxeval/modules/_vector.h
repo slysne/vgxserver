@@ -280,40 +280,61 @@ ham(-1.0) -> 64
 */
 
 
-__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, double score ) {
+__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, double cosine ) {
 
-#define VISIT_WINDOW_CHECKPOINT 96
-#define VISIT_WINDOW_UNIMPROVED_MAX 84
-#define DYNAMIC_TAPER_LOOSEN_FACTOR 1.08
-#define DYNAMIC_TAPER_TIGHTEN_FACTOR 0.965
-#define DYNAMIC_TAPER_UPPER 2.8
-#define DYNAMIC_TAPER_LOWER 0.38
-#define MIN_COSINE_GAIN 0.018f
+#define VISIT_WINDOW_CHECKPOINT 128               //
+#define VISIT_WINDOW_UNIMPROVED_MAX 112           // 87.5% of checkpoint window
+#define VISIT_WINDOW_UNIMPROVED_MIN 96            // 75%% of checkpoint window
+#define DYNAMIC_TAPER_MAX_LOOSEN_FACTOR 1.0625    // 1 + 1/16
+#define DYNAMIC_TAPER_MIN_LOOSEN_FACTOR 1.03125   // 1 + 1/32
+#define DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR 0.96875  // 1 - 1/32
+#define DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR 0.9375   // 1 - 1/16
+#define DYNAMIC_TAPER_UPPER_BOUND 2.875           // 3 - 1/8
+#define DYNAMIC_TAPER_LOWER_BOUND 0.3125          // 1/4 + 1/16
+#define HIGH_COSINE_GAIN 0.015f                   //
+#define LOW_COSINE_GAIN 0.005f                    //
+#define RUNNING_TOP_SCORE_ALPHA 1.0f             //
 
-  // Maintain running top score
-  if( score > mem->top_score.running ) {
-    mem->top_score.running = (float)score;
-    mem->visit_window.unimproved = 0;
+  // Maintain running top cosine
+  if( cosine > mem->top_score.running ) {
+    mem->top_score.running = RUNNING_TOP_SCORE_ALPHA * (float)cosine + (1 - RUNNING_TOP_SCORE_ALPHA) * mem->top_score.previous  ;
+    mem->visit_window.unimproved /= 2; // forget half of the count since we beat top score
   }
   else {
     mem->visit_window.unimproved++;
   }
 
+  // Evaluate our progress
   if( ++mem->visit_window.counter >= VISIT_WINDOW_CHECKPOINT ) {
-    // Current taper
-    double taper = collector->dynamic_taper;
-    // We're not improving the top score, loosen taper
+    double factor;
+    // -- LOOSEN --
+    // We're decidedly not improving the running top cosine, loosen taper
     if( mem->visit_window.unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
-      taper *= DYNAMIC_TAPER_LOOSEN_FACTOR;
-      collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER, DYNAMIC_TAPER_LOWER );
+      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
     }
-    // We are improving at a good rate, tighten taper
-    else if( mem->top_score.running > mem->top_score.previous + MIN_COSINE_GAIN ) {
-      taper *= DYNAMIC_TAPER_TIGHTEN_FACTOR;
-      collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER, DYNAMIC_TAPER_LOWER );
+    // We're mostly not improving the top cosine, loosen taper a bit
+    else if( mem->visit_window.unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
+      factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
+    }
+    // -- TIGHTEN --
+    // We are improving at a decent rate, tighten taper a bit
+    else if( mem->top_score.running > mem->top_score.previous + LOW_COSINE_GAIN ) {
+      factor =  DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
+    }
+    // We are improving at a very good rate, tighten taper
+    else if( mem->top_score.running > mem->top_score.previous + HIGH_COSINE_GAIN ) {
+      factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
+    }
+    // -- STEADY --
+    else {
+      factor = 1.0;
     }
 
-    // Update score at checkpoint
+    // New taper
+    double taper = factor * collector->dynamic_taper;
+    collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER_BOUND, DYNAMIC_TAPER_LOWER_BOUND );
+
+    // Update cosine at checkpoint
     mem->top_score.previous = mem->top_score.running;
     
     // Reset window
@@ -450,13 +471,26 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
     // Update running difficulty (0.0 = 2.0)
     vgx_CollectorItem_t difficulty;
     mem->threshold = _vxquery_collector__get_current_threshold( ctx->collector, &difficulty );
+    /*
     // Update running cosine difficulty (-1.0 - 1.0)
     self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
+    */
   }
 
   STACK_RETURN_REAL( self, score );
   
 }
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+__inline static double __worst_heap_flt64_score( Cm256iHeap_t *heap ) {
+  return ((vgx_CollectorItem_t*)heap->_buffer)->sort.flt64.value;
+}
+
 
 
 /*******************************************************************//**
@@ -497,17 +531,28 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   else {
     cosine = vxeval_bytearray_cosine(A, B, len);
   }
+  
+  vgx_BaseCollector_context_t *base = self->context.collector;
 
   // Dynamic taper enabled
-  if( self->context.collector->use_dynamic_taper ) {
-    __dynamic_taper( self->context.collector, mem, cosine );
+  if( base->use_dynamic_taper ) {
+    __dynamic_taper( base, mem, cosine );
   }
 
   double score = cosine + 1.0; // [0.0 - 2.0]
 
-  // Require sufficient cosine score
+  // Require sufficient cosine score for this item to participate in the search
   if( score <= mem->threshold ) {
     return 0.0; // not collected
+  }
+
+  // Item's score can help inform search progress but is not good enough to be collected
+  if( score < __worst_heap_flt64_score( base->container.sequence.heap ) &&
+      (base->beam_heap == NULL || score < __worst_heap_flt64_score( base->beam_heap )) )
+  {
+    // No collect, just update threshold and return
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+    return 0.0;
   }
 
   // Checkpoint 3
@@ -527,8 +572,10 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
     // Update running difficulty (0.0 = 2.0)
     vgx_CollectorItem_t difficulty;
     mem->threshold = _vxquery_collector__get_current_threshold( self->context.collector, &difficulty );
+    /*
     // Update running cosine difficulty (-1.0 - 1.0)
     self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
+    */
   }
 
   return score;

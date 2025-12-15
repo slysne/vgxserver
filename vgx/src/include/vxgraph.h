@@ -5419,7 +5419,8 @@ typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *contex
 
 typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 
-typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
+//typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
+typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, const vgx_Vertex_t *vertex );
 
 
 
@@ -5444,13 +5445,13 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
   /* If > 0, filter arcs below threshold */                   \
-  double recursion_arc_prune_score;                           \
+  /*double recursion_arc_prune_score;*/                           \
   /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
-  double p_skip;  /* 0.0 - 1.0*/                              \
+  /*double p_skip;*/  /* 0.0 - 1.0*/                              \
   /* For M_LSH: Apply arc lsh hamming distance filter when lsh_cos is above this threshold */ \
-  double lsh_cos_threshold;                                   \
+  /*double lsh_cos_threshold; */                                  \
   /* For M_LSH: Current cosine difficulty */                  \
-  double lsh_cos;                                             \
+  /*double lsh_cos;*/                                             \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -6800,7 +6801,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t max_beam_width;                     \
   bool use_dynamic_taper;                     \
   double dynamic_taper;                       \
-  double current_cos_difficulty;              \
+  /*double current_cos_difficulty;*/              \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \
@@ -7161,7 +7162,8 @@ typedef struct s_vgx_IArcFilter_t {
 } vgx_IArcFilter_t;
 
 
-DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
+//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, const vgx_Vertex_t *vertex );
 DLL_HIDDEN bool vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 
 

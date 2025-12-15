@@ -469,6 +469,7 @@ __inline static int __arcvector_predicator_match_value_hamming_distance( const v
   };
 
 
+  /*
   // Use dynamically adjusted threshold
   if( context && context->lsh_cos_threshold < 1.0 ) {
     // Not filter yet
@@ -482,6 +483,7 @@ __inline static int __arcvector_predicator_match_value_hamming_distance( const v
     // (probe.NEG inverts logic if 1)
     return !( (ham > max_ham) ^ probe.mod.probe.NEG );
   }
+  */
 
   // Use normal static threshold
   unsigned ham = POPCNT32( target.val.bits ^ probe.val.bits );
@@ -1519,6 +1521,7 @@ static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_con
  */
 static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
 
+  /*
   if( arcfilter_context->recursion_arc_prune_score > 0.0 ) {
     if( _vgx_predicator_value_is_float( larc->head.predicator ) ) {
       if( larc->head.predicator.val.real < arcfilter_context->recursion_arc_prune_score ) {
@@ -1533,6 +1536,7 @@ static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, 
       }
     }
   }
+ */
 
   vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
@@ -2783,6 +2787,7 @@ static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vg
 static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *mod_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( mod_filter ) {
+    /*
     // Special treatment for early pruning with recursive search
     if( recursion && recursion->arc_prune.until > 0 ) {
       mod_filter->type = VGX_ARC_FILTER_TYPE_RECURSION_DYNAMIC;
@@ -2801,13 +2806,14 @@ static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_pr
     // Normal
     else {
       // Base
+    */
       mod_filter->type = VGX_ARC_FILTER_TYPE_MODIFIER;
       mod_filter->positive_match = _vgx_predicator_eph_is_positive( predicator ); // extract filter's accept/reject sign from predicator's eph.neg flag
       mod_filter->filter = arcfilterfunc.ModifierFilter;
       // Generic
       mod_filter->pred_condition1 = predicator;
       mod_filter->logic = VGX_LOGICAL_NO_LOGIC;
-    }
+    /*}*/
   }
   return (vgx_virtual_ArcFilter_context_t*)mod_filter;
 }
@@ -3031,10 +3037,10 @@ static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_gra
 
     arcfilter->track_visited = true;
     arcfilter->max_visited = recursion->limit.visit;
-    arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+    //arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
     //arcfilter->p_skip = recursion->visit.skip_probability;
-    arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
-    arcfilter->lsh_cos = -1.0; //
+    //arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+    //arcfilter->lsh_cos = -1.0; //
 
     arcfilter->filter = arcfilterfunc.ANNFilter;
 
@@ -3072,18 +3078,18 @@ static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readon
     if( __is_recursion_enabled( recursion ) ) {
       arcfilter->track_visited = true;
       arcfilter->max_visited = recursion->limit.visit;
-      arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+      //arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
       //arcfilter->p_skip = recursion->visit.skip_probability;
-      arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
-      arcfilter->lsh_cos = -1.0; //
+      //arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+      //arcfilter->lsh_cos = -1.0; //
     }
     else {
       arcfilter->track_visited = false;
       arcfilter->max_visited = 0;
-      arcfilter->recursion_arc_prune_score = 0.0;
-      arcfilter->p_skip = 0.0;
-      arcfilter->lsh_cos_threshold = 1.0;
-      arcfilter->lsh_cos = 0.0;
+      //arcfilter->recursion_arc_prune_score = 0.0;
+      //arcfilter->p_skip = 0.0;
+      //arcfilter->lsh_cos_threshold = 1.0;
+      //arcfilter->lsh_cos = 0.0;
     }
 
     arcfilter->filter = arcfilterfunc.EvaluatorFilter;
@@ -3159,18 +3165,18 @@ static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *
     if( __is_recursion_enabled( recursion ) && traversing_evaluator ) {
       arcfilter->track_visited = true;
       arcfilter->max_visited = recursion->limit.visit;
-      arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
+      //arcfilter->recursion_arc_prune_score = recursion->arc_prune.score;
       //arcfilter->p_skip = recursion->visit.skip_probability;
-      arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
-      arcfilter->lsh_cos = -1.0; //
+      //arcfilter->lsh_cos_threshold = recursion->visit.arclsh_cos_threshold;
+      //arcfilter->lsh_cos = -1.0; //
     }
     else {
       arcfilter->track_visited = false;
       arcfilter->max_visited = 0;
-      arcfilter->recursion_arc_prune_score = 0.0;
-      arcfilter->p_skip = 0.0;
-      arcfilter->lsh_cos_threshold = 1.0;
-      arcfilter->lsh_cos = 0.0;
+      //arcfilter->recursion_arc_prune_score = 0.0;
+      //arcfilter->p_skip = 0.0;
+      //arcfilter->lsh_cos_threshold = 1.0;
+      //arcfilter->lsh_cos = 0.0;
     }
 
     // Evaluator

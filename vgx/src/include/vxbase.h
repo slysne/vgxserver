@@ -3471,22 +3471,25 @@ typedef struct s_vgx_recursion_config_t {
     bool reset_metrics;
     bool reset_map;
     //double skip_probability;
-    double arclsh_cos_threshold;
+    //double arclsh_cos_threshold;
   } visit;
   struct {
     int64_t width;
     int64_t min_width;
     int64_t max_width;
     double curve;
+    double threshold_offset;
     bool adaptive_taper;
   } beam;
   struct {
     int64_t select;
   } init;
+  /*
   struct {
     double score;
     int64_t until;
   } arc_prune;
+  */
   
 } vgx_recursion_config_t;
 

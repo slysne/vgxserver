@@ -2883,8 +2883,10 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
  *
  ***********************************************************************
  */
-DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
-  return __maps_vertex_unvisited( self->context.memory, max_visited, p_skip, vertex );
+//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, const vgx_Vertex_t *vertex ) {
+  return __maps_vertex_unvisited( self->context.memory, max_visited, vertex );
+  //return __maps_vertex_unvisited( self->context.memory, max_visited, p_skip, vertex );
 }
 
 

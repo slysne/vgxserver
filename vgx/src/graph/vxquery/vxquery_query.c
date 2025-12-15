@@ -4027,24 +4027,25 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       },
       .visit = {
         .reset_metrics          = recursion_config->visit.reset_metrics,
-        .reset_map              = recursion_config->visit.reset_map,
+        .reset_map              = recursion_config->visit.reset_map
         //.skip_probability       = recursion_config->visit.skip_probability,
-        .arclsh_cos_threshold   = recursion_config->visit.arclsh_cos_threshold
+        //.arclsh_cos_threshold   = recursion_config->visit.arclsh_cos_threshold
       },
       .beam = {
         .width                  = recursion_config->beam.width,
         .min_width              = recursion_config->beam.min_width,
         .max_width              = recursion_config->beam.max_width,
         .curve                  = recursion_config->beam.curve,
+        .threshold_offset       = recursion_config->beam.threshold_offset,
         .adaptive_taper         = recursion_config->beam.adaptive_taper
       },
       .init = {
         .select                 = recursion_config->init.select
-      },
+      }/*,
       .arc_prune = {
         .score                  = recursion_config->arc_prune.score,
         .until                  = recursion_config->arc_prune.until
-      }
+      }*/
     }
   };
   return COMLIB_OBJECT_NEW( vgx_NeighborhoodQuery_t, NULL, &args );

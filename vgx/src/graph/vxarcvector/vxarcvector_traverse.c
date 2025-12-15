@@ -124,10 +124,12 @@ __inline static void __update_output( __arcvector_virtual_input_context_t *conte
   if( n_traversed > 0 ) {
     // Inc neighbor vertex count if any arc was followed
     output->n_vertices++;
+    /*
     // Update running cosine difficulty for as applicable for recursive queries special case
     if( output->collector ) {
       context->traverse_filter->lsh_cos = output->collector->current_cos_difficulty;
     }
+    */
     // Neighborhood match yet?
     if( output->neighborhood_match == VGX_ARC_FILTER_MATCH_MISS ) {
       output->neighborhood_match = output->arc_match;

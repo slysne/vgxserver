@@ -977,7 +977,8 @@ __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_co
   // (P(explored) = 1 - p^k
   // where p = skip probability, k = number of independent paths from start to node X)
   // True if unvistied node (it is added to map for future), false if already visited or map full
-  return vxeval_vertex_unvisited( afc->traversing_evaluator, afc->max_visited, afc->p_skip, afc->current_head->vertex );
+  //return vxeval_vertex_unvisited( afc->traversing_evaluator, afc->max_visited, afc->p_skip, afc->current_head->vertex );
+  return vxeval_vertex_unvisited( afc->traversing_evaluator, afc->max_visited, afc->current_head->vertex );
 }
 
 
