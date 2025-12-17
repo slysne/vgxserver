@@ -594,12 +594,14 @@ SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static PyObject * __PyVGX_Memory__get_counters( PyVGX_Memory *pymem, void *closure ) {
   ASSERT_PARENT_GRAPH( pymem )
   vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
-  PyObject *py_counters = PyTuple_New( 4 );
+  PyObject *py_counters = PyTuple_New( 6 );
   if( py_counters ) {
     PyTuple_SET_ITEM( py_counters, 0, PyLong_FromLong(mem->counter.c1) );
     PyTuple_SET_ITEM( py_counters, 1, PyLong_FromLong(mem->counter.c2) );
     PyTuple_SET_ITEM( py_counters, 2, PyLong_FromLong(mem->counter.c3) );
     PyTuple_SET_ITEM( py_counters, 3, PyLong_FromLong(mem->counter.c4) );
+    PyTuple_SET_ITEM( py_counters, 4, PyLong_FromLong(mem->dwset.sz) );
+    PyTuple_SET_ITEM( py_counters, 5, PyLong_FromLong(mem->dwset.hits) );
   }
   return py_counters;
 }

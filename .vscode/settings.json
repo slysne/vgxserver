@@ -32,7 +32,9 @@
         "_vxeval.h": "c",
         "eval.h": "c",
         "_comlibsequence_m256i_ops.h": "c",
-        "cxid.h": "c"
+        "cxid.h": "c",
+        "_vxprivate.h": "c",
+        "_vxgraph.h": "c"
     },
     "cSpell.configFile": "./.config/cspell.json"
 }

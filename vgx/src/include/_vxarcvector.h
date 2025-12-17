@@ -967,18 +967,35 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
  *
  ***********************************************************************
  */
-__inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context ) {
+__inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context, const framehash_cell_t *fh_cell ) {
   vgx_virtual_ArcFilter_context_t *afc = context->traverse_filter;
   // We don't track visited nodes
   if( afc->track_visited == false ) {
     return true;
   }
-  // Probabilistic BFS:
-  // (P(explored) = 1 - p^k
-  // where p = skip probability, k = number of independent paths from start to node X)
+  // Assume we will need vertex. (Pollutes lower levels if already visited, but reduce latency when it's needed)
+  vgx_ExpressEvalDWordSet_t *dwset = &afc->traversing_evaluator->context.memory->dwset;
+  vgx_Vertex_t *vertex = afc->current_head->vertex;
+  // Early phase, likely unvisited, prefetch to L2
+  if( dwset->sz < 8192 ) {
+    __prefetch_L2( vertex );
+  }
+  // Late phase, likely visited, prefetch to L3 to avoid L2 pollution
+  else {
+    __prefetch_L3( vertex );
+  }
+
+  /* 
+  // Speculatively also prefetch the next cell's vertex if cell is valid
+  const framehash_cell_t *fh_next = fh_cell + 1;
+  if( _ITEM_IS_VALID( fh_next ) ) {        
+    __prefetch_L3( (char*)APTR_AS_ANNOTATION( fh_next ) );
+  }
+    ^^^^^ interesting idea but hurts multi-threaded performance
+  */
+
   // True if unvistied node (it is added to map for future), false if already visited or map full
-  //return vxeval_vertex_unvisited( afc->traversing_evaluator, afc->max_visited, afc->p_skip, afc->current_head->vertex );
-  return vxeval_vertex_unvisited( afc->traversing_evaluator, afc->max_visited, afc->current_head->vertex );
+  return vxeval_vertex_unvisited( dwset, vertex );
 }
 
 
@@ -989,7 +1006,7 @@ __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_co
     framehash_cell_t * const __cell__ = ArcArrayCell;                         \
     __arcvector_set_archead_vertex( __context__, __cell__ );                  \
     vgx_LockableArc_t *__larc__ = __context__->larc;                          \
-    if( __arcvector_archead_unvisited( __context__ ) )
+    if( __arcvector_archead_unvisited( __context__, __cell__ ) )
 
 
 #define __end_safe_traversal_context          \

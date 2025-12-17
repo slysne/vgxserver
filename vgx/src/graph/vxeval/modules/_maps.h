@@ -53,14 +53,14 @@ static void __eval_maps_xsetini( vgx_Evaluator_t *self );
  *
  ***********************************************************************
  */
-static int __maps__dwset_add( vgx_ExpressEvalMemory_t *mem, uint32_t key, DWORD item ) {
-  if( mem->dwset.slots == NULL ) {
+static int __maps__dwset_add( vgx_ExpressEvalDWordSet_t *dwset, uint32_t key, DWORD item ) {
+  if( dwset->slots == NULL ) {
     return -1;
   }
-  uint32_t index = key & mem->dwset.mask;
+  uint32_t index = key & dwset->mask;
 
   // Use index to locate slot
-  DWORD *cursor = mem->dwset.slots[ index ].entries;
+  DWORD *cursor = dwset->slots[ index ].entries;
   DWORD *end = cursor + VGX_EXPRESS_EVAL_INTEGER_SET_SLOT_SIZE;
 
   // Put value into available entry
@@ -303,22 +303,22 @@ typedef enum __e_maps__keymode {
  *        -1: OOM or rehash error
  ***********************************************************************
  */
-static int __maps__dwset_expand( vgx_ExpressEvalMemory_t *mem, __maps__keymode mode ) {
+static int __maps__dwset_expand( vgx_ExpressEvalDWordSet_t *dwset, __maps__keymode mode ) {
 
-  vgx_ExpressEvalDWordSetSlot_t *old_slots = mem->dwset.slots;
-  uint32_t old_mask = mem->dwset.mask;
-  mem->dwset.mask = old_mask != 0 ? ((old_mask << __maps__EXPAND_SHIFT) | __maps__EXPAND_MASK) : __maps__MIN_MASK;
+  vgx_ExpressEvalDWordSetSlot_t *old_slots = dwset->slots;
+  uint32_t old_mask = dwset->mask;
+  dwset->mask = old_mask != 0 ? ((old_mask << __maps__EXPAND_SHIFT) | __maps__EXPAND_MASK) : __maps__MIN_MASK;
 
   // Allocate next set
-  uint32_t nslots = (mem->dwset.mask+1);
-  PALIGNED_ARRAY( mem->dwset.slots, vgx_ExpressEvalDWordSetSlot_t, nslots );
-  if( mem->dwset.slots == NULL ) {
+  uint32_t nslots = (dwset->mask+1);
+  PALIGNED_ARRAY( dwset->slots, vgx_ExpressEvalDWordSetSlot_t, nslots );
+  if( dwset->slots == NULL ) {
     goto error;
   }
 
 #if __AVX2__
   __m256i E = _mm256_set1_epi32( (int)__maps__EMPTY );
-  __m256i *p256 = (__m256i*)mem->dwset.slots->entries;
+  __m256i *p256 = (__m256i*)dwset->slots->entries;
   for( uint32_t i=0; i<nslots; ++i ) {
     _mm256_stream_si256( p256++, E );
     _mm256_stream_si256( p256++, E );
@@ -330,7 +330,7 @@ static int __maps__dwset_expand( vgx_ExpressEvalMemory_t *mem, __maps__keymode m
                 __maps__EMPTY, __maps__EMPTY, __maps__EMPTY, __maps__EMPTY,
                 __maps__EMPTY, __maps__EMPTY, __maps__EMPTY, __maps__EMPTY }
   };
-  cacheline_t *p = &mem->dwset.slots->data;
+  cacheline_t *p = &dwset->slots->data;
   for( uint32_t i=0; i<nslots; ++i ) {
     *p++ = E;
   }
@@ -352,7 +352,7 @@ static int __maps__dwset_expand( vgx_ExpressEvalMemory_t *mem, __maps__keymode m
       case MAPS_KEYMODE__INTEGER:
         while( cursor < end && *cursor != __maps__EMPTY ) {
           uint32_t key = (uint32_t)ihash64( *cursor );
-          if( __maps__dwset_add( mem, key, *cursor ) != 1 ) {
+          if( __maps__dwset_add( dwset, key, *cursor ) != 1 ) {
             goto error;
           }
           ++cursor;
@@ -361,7 +361,7 @@ static int __maps__dwset_expand( vgx_ExpressEvalMemory_t *mem, __maps__keymode m
       case MAPS_KEYMODE__VERTEX:
         while( cursor < end && *cursor != __maps__EMPTY ) {
           uint32_t key = ((*cursor) << __maps__SZ_MIN_MASK) | i;
-          if( __maps__dwset_add( mem, key, *cursor ) != 1 ) {
+          if( __maps__dwset_add( dwset, key, *cursor ) != 1 ) {
             goto error;
           }
           ++cursor;
@@ -382,11 +382,11 @@ static int __maps__dwset_expand( vgx_ExpressEvalMemory_t *mem, __maps__keymode m
   return 0;
 
 error:
-  if( mem->dwset.slots ) {
-    ALIGNED_FREE( mem->dwset.slots );
+  if( dwset->slots ) {
+    ALIGNED_FREE( dwset->slots );
   }
-  mem->dwset.slots = old_slots;
-  mem->dwset.mask = old_mask;
+  dwset->slots = old_slots;
+  dwset->mask = old_mask;
   return -1;
 
 }
@@ -409,16 +409,16 @@ static void __maps__xsetadd( vgx_Evaluator_t *self, uint32_t key, DWORD item, __
   int n = 0;
 
   // Set is allocated and we add object to set
-  if( mem->dwset.slots && (n = __maps__dwset_add( mem, key, item )) >= 0 ) {
+  if( mem->dwset.slots && (n = __maps__dwset_add( &mem->dwset, key, item )) >= 0 ) {
     goto added;
   }
 
   // Either no set or set full, initialize or expand
-  if( __maps__dwset_expand( mem, mode ) < 0 ) {
+  if( __maps__dwset_expand( &mem->dwset, mode ) < 0 ) {
     STACK_RETURN_INTEGER( self, -1 );
   }
 
-  n = __maps__dwset_add( mem, key, item );
+  n = __maps__dwset_add( &mem->dwset, key, item );
 added:
   mem->dwset.sz += n;
   STACK_RETURN_INTEGER( self, n );
@@ -483,51 +483,36 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
  ***********************************************************************
  */
 //__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
-__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, const vgx_Vertex_t *vertex ) {
+//__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, const vgx_Vertex_t *vertex ) {
+__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex ) {
   uint32_t key;
   DWORD item;
   __maps_vset_key_item( vertex, &key, &item );
 
-  /*
-  if( item == __maps__EMPTY ) {
-    return true; // Pretend unvisited (conservative)
-  }
-  */
-
-  vgx_ExpressEvalDWordSet_t *dwset = &evalmem->dwset;
-
   int n;
+  
   do {
 
-    /*
-    // Sampling enabled
-    if( p_skip > 0.0 ) {
-      if( xrandom( ++(dwset->counter) ) < p_skip ) {
-        return false; // Pretend visited
-      }
-    }
-    */
-
-    // Map size limit reached
-    if( dwset->sz >= max_visited ) {
-      return false; // Pretend visited to prevent use of this vertex
-    }
-
     // Try to add object to set (1:Added, 0:Already Exists, -1:Out of room)
-    n = __maps__dwset_add( evalmem, key, item );
+    n = __maps__dwset_add( dwset, key, item );
     
-    // Already exists
-    if( n == 0 ) {
+    // Already exists (or ignore due to missin vector)
+    if( n == 0 || vertex->vector == NULL ) {
+      dwset->hits++;
       return false; // Visited
     }
     // Added
     if( n > 0 ) {
+      // Demand-load vector since we'll need it soon
+      __prefetch_L1( (char*)vertex->vector );
+      __prefetch_L2( (char*)vertex->vector + 32 ); // start of first data cacheline
+      __prefetch_L2( (char*)vertex->vector + 96 ); // start of second data cacheline
       dwset->sz++;
       return true; // Unvisited
     }
 
     // Either no set or set full, initialize or expand
-    if( __maps__dwset_expand( evalmem, MAPS_KEYMODE__VERTEX ) < 0 ) {
+    if( __maps__dwset_expand( dwset, MAPS_KEYMODE__VERTEX ) < 0 ) {
       break;
     }
   } while( n < 0 );
@@ -711,7 +696,7 @@ static void __eval_maps_xsetini( vgx_Evaluator_t *self ) {
 
   int mag = imag2( 2 * x->integer / VGX_EXPRESS_EVAL_INTEGER_SET_SLOT_SIZE );
   mem->dwset.mask = (1 << mag) - 1;
-  if( __maps__dwset_expand( mem, MAPS_KEYMODE__INTEGER ) < 0 ) {
+  if( __maps__dwset_expand( &mem->dwset, MAPS_KEYMODE__INTEGER ) < 0 ) {
     STACK_RETURN_INTEGER( self, -1 );
   }
 

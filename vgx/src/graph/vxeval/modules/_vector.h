@@ -501,6 +501,8 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   if( probe == NULL || target == NULL ) {
     return 0.0;
   }
+  //__prefetch_nta( B );
+  //__prefetch_nta( B+64 );
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
@@ -512,8 +514,8 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   int32_t lenA = probe->metas.vlen;
 
   // Extract target vector bytes
-  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
   int32_t lenB = target->metas.vlen;
+  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
 
   // Safeguard
   int32_t len = minimum_value( lenA, lenB );
@@ -546,11 +548,11 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
     return 0.0; // not collected
   }
 
-  // Item's score can help inform search progress but is not good enough to be collected
+  // Item is not collectable to result or beam
   if( score < __worst_heap_flt64_score( base->container.sequence.heap ) &&
       (base->beam_heap == NULL || score < __worst_heap_flt64_score( base->beam_heap )) )
   {
-    // No collect, just update threshold and return
+    // Score is good enough to help define the new threshold
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
     return 0.0;
   }
@@ -567,16 +569,18 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   };
   __collect( self, &score_arc );
   
+  mem->threshold = base->shadow_trail.threshold;
+  
+  /*
   // Refresh running threshold
   if( self->context.collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
     // Update running difficulty (0.0 = 2.0)
     vgx_CollectorItem_t difficulty;
     mem->threshold = _vxquery_collector__get_current_threshold( self->context.collector, &difficulty );
-    /*
-    // Update running cosine difficulty (-1.0 - 1.0)
-    self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
-    */
+    // // Update running cosine difficulty (-1.0 - 1.0)
+    // self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
   }
+  */
 
   return score;
   

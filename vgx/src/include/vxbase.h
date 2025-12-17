@@ -3458,8 +3458,12 @@ typedef struct s_vgx_recursion_config_t {
   vgx_recursion_mode_t mode;
   struct {
     int64_t size;
-    int64_t shadow;
   } heap;
+  struct {
+    int64_t size;
+    double alpha;
+    double beta;
+  } shadow;
   struct {
     int64_t frontier;
     int64_t expansion;

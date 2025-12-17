@@ -4015,8 +4015,12 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .mode                     = recursion_config->mode,
       .heap = {
         .size                   = recursion_config->heap.size,
-        .shadow                 = recursion_config->heap.shadow
         //.multiplier             = recursion_config->heap.multiplier
+      },
+      .shadow = {
+        .size                   = recursion_config->shadow.size,
+        .alpha                  = recursion_config->shadow.alpha,
+        .beta                   = recursion_config->shadow.beta
       },
       .limit = {
         .frontier               = recursion_config->limit.frontier,

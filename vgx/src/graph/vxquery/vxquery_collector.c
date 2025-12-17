@@ -515,23 +515,29 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, double score ) {
-#define shadow_alpha (1.0/64.0)
+//#define shadow_alpha (1.0/64.0)
+//#define shadow_beta (0.0)
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = (1.0 - shadow_alpha) * shadow_trail->threshold + shadow_alpha * score;
+    return shadow_trail->threshold = (1.0 - shadow_trail->alpha) * shadow_trail->threshold + shadow_trail->alpha * score;
   }
 
   // Write latest score
   *shadow_trail->wp++ = (float)score;
   // Ring buffer wrap
-  if( shadow_trail->wp == shadow_trail->end ) {
+  if( shadow_trail->wp >= shadow_trail->end ) {
     shadow_trail->wp = shadow_trail->queue;
+  }
+  // Wrap 75th point
+  if( ++(shadow_trail->tap75) >= shadow_trail->end ) {
+    shadow_trail->tap75 = shadow_trail->queue;
   }
 
   // Update threshold with tail of ring buffer if it holds a real score
   if( *shadow_trail->wp > 0.0f ) {
     float oldest = *shadow_trail->wp;
-    return shadow_trail->threshold = (1.0 - shadow_alpha) * shadow_trail->threshold + shadow_alpha * oldest;
+    float tap75 = *shadow_trail->tap75;
+    return shadow_trail->threshold = (1.0 - shadow_trail->alpha - shadow_trail->beta) * shadow_trail->threshold + shadow_trail->alpha * oldest + shadow_trail->beta * tap75;
   }
 
   // Initialize threshold to first encountered real score
@@ -646,6 +652,7 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
   }
   shadow_trail->threshold = -1.0f;
   shadow_trail->wp = shadow_trail->queue;
+  shadow_trail->tap75 = shadow_trail->queue + ((shadow_trail->end - shadow_trail->queue) / 4);
 }
 
 
@@ -716,6 +723,7 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
     shadow_trail->queue = NULL;
     shadow_trail->end = NULL;
     shadow_trail->wp = NULL;
+    shadow_trail->tap75 = NULL;
   }
 }
 
@@ -726,13 +734,16 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  *
  ***********************************************************************
  */
-static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow ) {
+static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double alpha, double beta ) {
   if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
     return -1;
   }
   shadow_trail->threshold = -1.0f;
   shadow_trail->wp = shadow_trail->queue;
+  shadow_trail->tap75 = shadow_trail->queue + (heap_shadow / 4);
   shadow_trail->end = shadow_trail->queue + heap_shadow;
+  shadow_trail->alpha = (float)alpha;
+  shadow_trail->beta = (float)beta;
   return 0;
 }
 
@@ -915,8 +926,8 @@ static int64_t __get_recursion_heap_shadow( const vgx_recursion_config_t *recurs
   int64_t heap_shadow;
 
   // Heap shadow already provided
-  if( recursion->heap.shadow >= 0 ) {
-    heap_shadow = recursion->heap.shadow;
+  if( recursion->shadow.size >= 0 ) {
+    heap_shadow = recursion->shadow.size;
   }
   // Auto select heap shadow based on heap size
   else {
@@ -998,7 +1009,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
         // Size of heap shadow queue, only applicable for float-sorted descending
         if( comparator == (f_Cm256iHeap_comparator_t)_iArcMinComparator.cmp_archead_double_rank ) {
-          recursion->heap.shadow = __get_recursion_heap_shadow( recursion, heap_size );
+          recursion->shadow.size = __get_recursion_heap_shadow( recursion, heap_size );
         }
       
         // Auto-set max beam to beam width if needed
@@ -1049,8 +1060,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     // Recursive search
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
-      if( recursion->heap.shadow > 0 ) {
-        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->heap.shadow ) < 0 ) {
+      if( recursion->shadow.size > 0 ) {
+        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->shadow.alpha, recursion->shadow.beta ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
         }
       }

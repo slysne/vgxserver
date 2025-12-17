@@ -5990,8 +5990,8 @@ typedef struct s_vgx_ExpressEvalDWordSet_t {
   vgx_ExpressEvalDWordSetSlot_t *slots;
   uint32_t mask;
   uint32_t sz;
-  int64_t counter;
-  int64_t _rsv;
+  int64_t hits; // count number of times item already in map when probed
+  int64_t _rsv2;
 } vgx_ExpressEvalDWordSet_t;
 
 
@@ -6761,8 +6761,11 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
 typedef struct s_vgx_ExpansionShadowTrail_t {
   double threshold;
   float *wp;
+  float *tap75;
   float *end;
   float *queue;
+  float alpha;
+  float beta;
 } vgx_ExpansionShadowTrail_t;
 
 
@@ -7163,7 +7166,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 //DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
-DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, const vgx_Vertex_t *vertex );
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
 DLL_HIDDEN bool vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 
 

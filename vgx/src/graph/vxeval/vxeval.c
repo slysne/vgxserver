@@ -1177,8 +1177,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dwset.slots = NULL;
     mem->dwset.mask = 0;
     mem->dwset.sz = 0;
-    mem->dwset.counter = 0;
-    mem->dwset._rsv = 0;
+    mem->dwset.hits = 0;
+    mem->dwset._rsv2 = 0;
 
     // Dedicated variables for ann search
     mem->probe = NULL;
@@ -1257,8 +1257,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dwset.slots = NULL;
     clone->dwset.mask = 0;
     clone->dwset.sz = 0;
-    clone->dwset.counter = 0;
-    clone->dwset._rsv = 0;
+    clone->dwset.hits = 0;
+    clone->dwset._rsv2 = 0;
 
     // Probe vector for ann search
     if( (clone->probe = other->probe) != NULL ) {
@@ -1620,8 +1620,8 @@ static int64_t _vxeval__clear_dwset( vgx_ExpressEvalMemory_t *memory ) {
   }
   memory->dwset.mask = 0;
   memory->dwset.sz = 0;
-  memory->dwset.counter = 0;
-  memory->dwset._rsv = 0;
+  memory->dwset.hits = 0;
+  memory->dwset._rsv2 = 0;
   return sz;
 }
 
@@ -2884,8 +2884,8 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
  ***********************************************************************
  */
 //DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
-DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, const vgx_Vertex_t *vertex ) {
-  return __maps_vertex_unvisited( self->context.memory, max_visited, vertex );
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex ) {
+  return __maps_vertex_unvisited( dwset, vertex );
   //return __maps_vertex_unvisited( self->context.memory, max_visited, p_skip, vertex );
 }
 
