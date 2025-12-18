@@ -496,7 +496,7 @@ __inline static bool __maps_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, 
     // Try to add object to set (1:Added, 0:Already Exists, -1:Out of room)
     n = __maps__dwset_add( dwset, key, item );
     
-    // Already exists (or ignore due to missin vector)
+    // Already exists (or ignore due to missing vector)
     if( n == 0 || vertex->vector == NULL ) {
       dwset->hits++;
       return false; // Visited

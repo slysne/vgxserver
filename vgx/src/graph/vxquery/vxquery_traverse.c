@@ -524,9 +524,10 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   vgx_recursion_config_t *recursion = &search->recursion;
   vgx_virtual_ArcFilter_context_t *filter_context = search->probe->traversing.arcfilter;
 
+  vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
   vgx_FrontierQueue_t *F = collector->frontier;
   Cm256iHeap_t *main_heap = collector->container.sequence.heap;
-  if( F == NULL || main_heap == NULL ) {
+  if( E == NULL || F == NULL || main_heap == NULL ) {
     return VGX_ARC_FILTER_MATCH_ERROR;
   }
 
@@ -538,28 +539,27 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
   XTRY {
 
+    vgx_ExpressEvalMemory_t *mem = E->context.memory;
+
     // Handle edge case
     if( expansion_limit < 1 || depth_limit < 1 ) {
       match = VGX_ARC_FILTER_MATCH_MISS;
       XBREAK;
     }
     if( recursion->visit.reset_map || recursion->visit.reset_metrics ) {
-      vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
-      if( E ) {
-        if( recursion->visit.reset_map ) {
-          iEvaluator.ClearDWordSet( E->context.memory );
-        }
-        if( recursion->visit.reset_metrics ) {
-          E->context.memory->threshold = 0.0;
-          E->context.memory->top_score.running = -1.0f;
-          E->context.memory->top_score.previous = -1.0f;
-          E->context.memory->visit_window.counter = 0;
-          E->context.memory->visit_window.unimproved = 0;
-          E->context.memory->counter.c1 = 0;
-          E->context.memory->counter.c2 = 0;
-          E->context.memory->counter.c3 = 0;
-          E->context.memory->counter.c4 = 0;
-        }
+      if( recursion->visit.reset_map ) {
+        iEvaluator.ClearDWordSet( mem );
+      }
+      if( recursion->visit.reset_metrics ) {
+        mem->threshold = 0.0;
+        mem->dynamic_taper.running_best = -1.0f;
+        mem->dynamic_taper.previous_best = -1.0f;
+        mem->dynamic_taper.visit_counter = 0;
+        mem->dynamic_taper.visit_unimproved = 0;
+        mem->counter.c1 = 0;
+        mem->counter.c2 = 0;
+        mem->counter.c3 = 0;
+        mem->counter.c4 = 0;
       }
     }
     

@@ -1183,10 +1183,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     // Dedicated variables for ann search
     mem->probe = NULL;
     mem->threshold = 0.0;
-    mem->top_score.running = -1.0f;
-    mem->top_score.previous = -1.0f;
-    mem->visit_window.counter = 0;
-    mem->visit_window.unimproved = 0;
+    mem->dynamic_taper.running_best = -1.0f;
+    mem->dynamic_taper.previous_best = -1.0f;
+    mem->dynamic_taper.visit_counter = 0;
+    mem->dynamic_taper.visit_unimproved = 0;
 
   }
   return mem;
@@ -1265,10 +1265,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
       CALLABLE( clone->probe )->Incref( clone->probe );
     }
     clone->threshold = 0.0;
-    clone->top_score.running = -1.0f;
-    clone->top_score.previous = -1.0f;
-    clone->visit_window.counter = 0;
-    clone->visit_window.unimproved = 0;
+    clone->dynamic_taper.running_best = -1.0f;
+    clone->dynamic_taper.previous_best = -1.0f;
+    clone->dynamic_taper.visit_counter = 0;
+    clone->dynamic_taper.visit_unimproved = 0;
 
 
     // One owner
@@ -1448,10 +1448,10 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   }
   // ANN var reset implied
   memory->threshold = 0.0;
-  memory->top_score.running = -1.0f;
-  memory->top_score.previous = -1.0f;
-  memory->visit_window.counter = 0;
-  memory->visit_window.unimproved = 0;
+  memory->dynamic_taper.running_best = -1.0f;
+  memory->dynamic_taper.previous_best = -1.0f;
+  memory->dynamic_taper.visit_counter = 0;
+  memory->dynamic_taper.visit_unimproved = 0;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {

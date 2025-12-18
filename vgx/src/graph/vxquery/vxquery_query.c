@@ -4040,6 +4040,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .min_width              = recursion_config->beam.min_width,
         .max_width              = recursion_config->beam.max_width,
         .curve                  = recursion_config->beam.curve,
+        .gamma                  = recursion_config->beam.gamma,
         .threshold_offset       = recursion_config->beam.threshold_offset,
         .adaptive_taper         = recursion_config->beam.adaptive_taper
       },

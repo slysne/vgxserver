@@ -973,8 +973,10 @@ __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_co
   if( afc->track_visited == false ) {
     return true;
   }
+
   // Assume we will need vertex. (Pollutes lower levels if already visited, but reduce latency when it's needed)
-  vgx_ExpressEvalDWordSet_t *dwset = &afc->traversing_evaluator->context.memory->dwset;
+  vgx_ExpressEvalMemory_t *mem = afc->traversing_evaluator->context.memory;
+  vgx_ExpressEvalDWordSet_t *dwset = &mem->dwset;
   vgx_Vertex_t *vertex = afc->current_head->vertex;
   // Early phase, likely unvisited, prefetch to L2
   if( dwset->sz < 8192 ) {

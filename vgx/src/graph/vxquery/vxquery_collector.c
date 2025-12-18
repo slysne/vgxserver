@@ -1098,7 +1098,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
     top_k_collector->use_dynamic_taper        = recursion ? recursion->beam.adaptive_taper : false;
     top_k_collector->dynamic_taper            = 1.0;
-    //top_k_collector->current_cos_difficulty   = -1.0;
+    top_k_collector->dynamic_taper_gamma      = recursion ? (float)recursion->beam.gamma : 1.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1208,7 +1208,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->max_beam_width           = 0;
     collector->use_dynamic_taper        = false;
     collector->dynamic_taper            = 1.0;
-    //collector->current_cos_difficulty   = -1.0;
+    collector->dynamic_taper_gamma      = 1.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1331,7 +1331,7 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->max_beam_width               = 0;
     map_collector->use_dynamic_taper            = false;
     map_collector->dynamic_taper                = 1.0;
-    //map_collector->current_cos_difficulty       = -1.0;
+    map_collector->dynamic_taper_gamma          = 1.0f;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->empty                        = empty;
@@ -1405,7 +1405,7 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->max_beam_width     = 0;
     collector->use_dynamic_taper  = false;
     collector->dynamic_taper      = 1.0;
-    //collector->current_cos_difficulty = -1.0;
+    collector->dynamic_taper_gamma = 1.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1516,7 +1516,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->max_beam_width           = 0;
     top_k_collector->use_dynamic_taper        = false;
     top_k_collector->dynamic_taper            = 1.0;
-    //top_k_collector->current_cos_difficulty   = -1.0;
+    top_k_collector->dynamic_taper_gamma      = 1.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1623,7 +1623,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->max_beam_width           = 0;
     collector->use_dynamic_taper        = false;
     collector->dynamic_taper            = 1.0;
-    //collector->current_cos_difficulty   = -1.0;
+    collector->dynamic_taper_gamma      = 1.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1693,7 +1693,7 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->max_beam_width     = 0;
     collector->use_dynamic_taper  = false;
     collector->dynamic_taper      = 1.0;
-    //collector->current_cos_difficulty = -1.0;
+    collector->dynamic_taper_gamma = 1.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;

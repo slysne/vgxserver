@@ -280,7 +280,7 @@ ham(-1.0) -> 64
 */
 
 
-__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, double cosine ) {
+__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float cosine ) {
 
 #define VISIT_WINDOW_CHECKPOINT 128               //
 #define VISIT_WINDOW_UNIMPROVED_MAX 112           // 87.5% of checkpoint window
@@ -291,38 +291,42 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR 0.9375   // 1 - 1/16
 #define DYNAMIC_TAPER_UPPER_BOUND 2.875           // 3 - 1/8
 #define DYNAMIC_TAPER_LOWER_BOUND 0.3125          // 1/4 + 1/16
-#define HIGH_COSINE_GAIN 0.015f                   //
-#define LOW_COSINE_GAIN 0.005f                    //
-#define RUNNING_TOP_SCORE_ALPHA 1.0f             //
+#define HIGH_COSINE_GAIN 0.018f                   //
+#define LOW_COSINE_GAIN 0.009f                    //
 
   // Maintain running top cosine
-  if( cosine > mem->top_score.running ) {
-    mem->top_score.running = RUNNING_TOP_SCORE_ALPHA * (float)cosine + (1 - RUNNING_TOP_SCORE_ALPHA) * mem->top_score.previous  ;
-    mem->visit_window.unimproved /= 2; // forget half of the count since we beat top score
+  if( cosine > mem->dynamic_taper.running_best ) {
+    // gamma rule: moving average smoothing factor
+    float inv_gamma = 1.0f - collector->dynamic_taper_gamma;
+    mem->dynamic_taper.running_best = collector->dynamic_taper_gamma * cosine + inv_gamma * mem->dynamic_taper.previous_best  ;
+    // gamma rule: anything <1.0 does not fully reset the unimproved counter 
+    mem->dynamic_taper.visit_unimproved = (uint32_t)(mem->dynamic_taper.visit_unimproved * inv_gamma * inv_gamma); // <- reduction by factor (1-G)**2
+    // NOTE: gamma less than one makes it easier to beat the running best,
+    //       hence we don't get rewarded by a full reset of unimproved counter
   }
   else {
-    mem->visit_window.unimproved++;
+    mem->dynamic_taper.visit_unimproved++;
   }
 
   // Evaluate our progress
-  if( ++mem->visit_window.counter >= VISIT_WINDOW_CHECKPOINT ) {
+  if( ++mem->dynamic_taper.visit_counter >= VISIT_WINDOW_CHECKPOINT ) {
     double factor;
     // -- LOOSEN --
     // We're decidedly not improving the running top cosine, loosen taper
-    if( mem->visit_window.unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
+    if( mem->dynamic_taper.visit_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
       factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
     }
     // We're mostly not improving the top cosine, loosen taper a bit
-    else if( mem->visit_window.unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
+    else if( mem->dynamic_taper.visit_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
       factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
     }
     // -- TIGHTEN --
     // We are improving at a decent rate, tighten taper a bit
-    else if( mem->top_score.running > mem->top_score.previous + LOW_COSINE_GAIN ) {
+    else if( mem->dynamic_taper.running_best > mem->dynamic_taper.previous_best + LOW_COSINE_GAIN ) {
       factor =  DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
     }
     // We are improving at a very good rate, tighten taper
-    else if( mem->top_score.running > mem->top_score.previous + HIGH_COSINE_GAIN ) {
+    else if( mem->dynamic_taper.running_best > mem->dynamic_taper.previous_best + HIGH_COSINE_GAIN ) {
       factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
     }
     // -- STEADY --
@@ -335,11 +339,11 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
     collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER_BOUND, DYNAMIC_TAPER_LOWER_BOUND );
 
     // Update cosine at checkpoint
-    mem->top_score.previous = mem->top_score.running;
+    mem->dynamic_taper.previous_best = mem->dynamic_taper.running_best;
     
     // Reset window
-    mem->visit_window.counter = 0;
-    mem->visit_window.unimproved = 0;
+    mem->dynamic_taper.visit_counter = 0;
+    mem->dynamic_taper.visit_unimproved = 0;
   }
 }
 
@@ -444,7 +448,7 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
 
   // Dynamic taper enabled
   if( ctx->collector->use_dynamic_taper ) {
-    __dynamic_taper( ctx->collector, mem, cosine );
+    __dynamic_taper( ctx->collector, mem, (float)cosine );
   }
 
   double score = cosine + 1.0; // [0.0 - 2.0]
@@ -506,7 +510,7 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
-  // c1 = evals
+  // c1 = Evals
   mem->counter.c1++;
 
   // Extract probe vector bytes
@@ -533,7 +537,7 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   else {
     cosine = vxeval_bytearray_cosine(A, B, len);
   }
-  
+
   vgx_BaseCollector_context_t *base = self->context.collector;
 
   // Dynamic taper enabled
@@ -547,6 +551,9 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   if( score <= mem->threshold ) {
     return 0.0; // not collected
   }
+  
+  // c3 = Contribute to threshold
+  mem->counter.c3++;
 
   // Item is not collectable to result or beam
   if( score < __worst_heap_flt64_score( base->container.sequence.heap ) &&
@@ -557,8 +564,8 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
     return 0.0;
   }
 
-  // Checkpoint 3
-  mem->counter.c3++;
+  // c4 = Accepted for collection
+  mem->counter.c4++;
 
   // Collect
   // [ . . . _]

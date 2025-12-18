@@ -5444,8 +5444,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   bool track_visited;                                         \
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
-  /* If > 0, filter arcs below threshold */                   \
-  /*double recursion_arc_prune_score;*/                           \
+  /*  */                   \
+  double xxx;                           \
   /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
   /*double p_skip;*/  /* 0.0 - 1.0*/                              \
   /* For M_LSH: Apply arc lsh hamming distance filter when lsh_cos is above this threshold */ \
@@ -6013,22 +6013,16 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // Q1.8
   CQwordList_t *vectorref;
   // Q1.7
-  vgx_Vector_t *probe;
+  QWORD __rsv_1_7;
   // Q1.8
-  double threshold;
+  QWORD __rsv_1_8;
   // ==== CL2 ====
   // Q2.1-4
   vgx_ExpressEvalDWordSet_t dwset;
   // Q2.5
-  struct {
-    float running;
-    float previous;
-  } top_score;
+  vgx_Vector_t *probe;
   // Q2.6
-  struct {
-    uint32_t counter;
-    uint32_t unimproved;
-  } visit_window;
+  double threshold;
   // Q2.7-8 
   struct {
     uint32_t c1;
@@ -6036,9 +6030,24 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t c3;
     uint32_t c4;
   } counter;
-  // ==== CL3+4 ====
-  // Q3.1-8
+  // ==== CL3 ====
+  // Q3.1-2
+  struct {
+    float running_best;         // current top score
+    float previous_best;        // previous top score
+    uint32_t visit_counter;     // window counter
+    uint32_t visit_unimproved;  // count times in a row we're not beating running top score 
+  } dynamic_taper;
+  // Q3.3-8
+  QWORD __rsv_3_3;
+  QWORD __rsv_3_4;
+  QWORD __rsv_3_5;
+  QWORD __rsv_3_6;
+  QWORD __rsv_3_7;
+  QWORD __rsv_3_8;
+  // ==== CL4+5 ====
   // Q4.1-8
+  // Q51-8
   vgx_EvalStackItem_t __data[ 1<<VGX_EXPRESS_EVAL_MEMORY_OSTATIC ];
 
 } vgx_ExpressEvalMemory_t;
@@ -6804,7 +6813,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t max_beam_width;                     \
   bool use_dynamic_taper;                     \
   double dynamic_taper;                       \
-  /*double current_cos_difficulty;*/              \
+  float dynamic_taper_gamma;                  \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \
