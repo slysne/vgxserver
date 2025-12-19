@@ -37,7 +37,6 @@ static void __eval_binary_euclidean( vgx_Evaluator_t *self );
 static void __eval_binary_sim( vgx_Evaluator_t *self );
 static void __eval_binary_cosine( vgx_Evaluator_t *self );
 static void __eval_binary_jaccard( vgx_Evaluator_t *self );
-static void __eval_ternary_anncollect( vgx_Evaluator_t *self );
 static void __eval_unary_anncollect( vgx_Evaluator_t *self );
 
 
@@ -137,113 +136,6 @@ static void __eval_binary_jaccard( vgx_Evaluator_t *self ) {
 
 
 
-/*******************************************************************//**
- * anncollect( vector_slot, minscore_slot, score_slot )
- ***********************************************************************
- */
-static void __eval_ternary_anncollect( vgx_Evaluator_t *self ) {
-  /*
-  """ anncollect :=
-        score = 1+cos_pi8(r1, next.vector);
-        require( score > r2 );
-        require( vset.add(next) > 0 );
-        store(R3, score);
-        collect();
-  """
-  */
-
-  
-  // Arguments are in memory locations
-  // [ . . . v t s ]
-  //             ^----- score mem location
-  //         SP^
-  vgx_EvalStackItem_t *mscore = POP_PITEM( self );
-  int64_t idx_score = mscore->integer;
-  // [ . . . v t s ]
-  //           ^------- threshold mem location
-  //       SP^
-  vgx_EvalStackItem_t *mthres = POP_PITEM( self );
-  int64_t idx_thres = mthres->integer;
-  // [ . . . v t s]
-  //         ^--------- probe mem location
-  //     SP^
-  vgx_EvalStackItem_t *mvector = POP_PITEM( self );
-  int64_t idx_vector = mvector->integer;
-
-  // Must have next vertex
-  if( self->context.HEAD == NULL || self->context.HEAD->vector == NULL ) {
-    STACK_RETURN_INTEGER( self, 0 );
-  }
- 
-  // Require next unvisited
-  // [ . . . x t s]
-  //         ^--------- 1 if already visited, else 0
-  //       SP^
-  __maps_vsethas( self, self->context.HEAD );
-  //     SP^
-  vgx_EvalStackItem_t *pvisited = POP_PITEM( self );
-  if( pvisited->integer != 0 ) {
-    STACK_RETURN_INTEGER( self, 0 );
-  }
-
-  // Get argument objects from memory locations
-  vgx_ExpressEvalMemory_t *mem = self->context.memory;
-  uint64_t mask = mem->mask;
-  vgx_EvalStackItem_t *data = mem->data;
-  vgx_EvalStackItem_t *pscore = &data[ idx_score & mask ]; // s
-  vgx_EvalStackItem_t *pthres = &data[ idx_thres & mask ]; // t
-  double min_score = pthres->type == STACK_ITEM_TYPE_REAL ? pthres->real : pthres->type == STACK_ITEM_TYPE_INTEGER ? pthres->integer : 0.0;
-  vgx_EvalStackItem_t *pvector = &data[ idx_vector & mask ]; // v
-
-  // Vectors for cosine eval will be pushed on stack
-  // [ . . . A t s]
-  //         ^--------- probe vector object
-  //       SP^
-  vgx_EvalStackItem_t *pa = NEXT_PITEM( self );
-  *pa = *pvector;
-
-  vgx_EvalStackItem_t *pb = NEXT_PITEM( self );
-  // [ . . . A B s]
-  //           ^------ target vector object
-  //         SP^
-  pb->vector = self->context.HEAD->vector;
-  pb->type = STACK_ITEM_TYPE_VECTOR; 
-  
-  // Compute cosine(A,B)
-  // [ . . . c B s]
-  //         ^-------- cosine score value (-1.0 - 1.0)
-  //       SP^
-  f_cos_pi8( self );
-
-  // Require sufficient cosine score
-  // [ . . . c B s]
-  //         ^-------- cosine score value (-1.0 - 1.0)
-  //     SP^
-  vgx_EvalStackItem_t *psim = POP_PITEM( self );
-  double sim = psim->real + 1; // (0.0 - 2.0)
-  if( sim <= min_score ) {
-    STACK_RETURN_INTEGER( self, 0 ); // not collected
-  }
-
-  // Mark as visited
-  // [ . . . m B s]
-  //         ^-------- 1 (next marked as visited)
-  //       SP^
-  __maps_vsetadd( self, self->context.HEAD );
-
-  // Write sim score to memory location
-  SET_REAL_PITEM_VALUE( pscore, sim );
-
-  // Collect
-  // [ . . . m B s]
-  //         ^-------- Already 1 from above (assume collect successful below)
-  //       SP^
-  __collect( self, pscore );
-}
-
-
-
-
 /*
 def ham(sim, sigma=1.5):
   p = acos(sim)/pi
@@ -279,6 +171,26 @@ ham(-0.9) -> 59
 ham(-1.0) -> 64
 */
 
+__inline static void __dynamic_prune( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float beam_j_th ) {
+  // Maintain j-th score tracker for pruning control
+  if( beam_j_th > mem->dynamic_prune.beam_j_th ) {
+    // New delta between this j-th score and previous j-th score
+    mem->dynamic_prune.beam_j_th_delta = beam_j_th - mem->dynamic_prune.beam_j_th;
+    // Update j-th score
+    mem->dynamic_prune.beam_j_th = beam_j_th;
+    // Update max delta if this new delta is bigger
+    if( mem->dynamic_prune.beam_j_th_delta > mem->dynamic_prune.max_beam_j_th_delta ) {
+      mem->dynamic_prune.max_beam_j_th_delta = mem->dynamic_prune.beam_j_th_delta;
+    }
+    // Count the improvement event
+    mem->dynamic_prune.improved_beam_j_th_counter++;
+  }
+  // No improvement to j-th score
+  else {
+    mem->dynamic_prune.unimproved_beam_j_th_counter++;
+  }
+}
+
 
 __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float cosine ) {
 
@@ -294,39 +206,34 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define HIGH_COSINE_GAIN 0.018f                   //
 #define LOW_COSINE_GAIN 0.009f                    //
 
-  // Maintain running top cosine
-  if( cosine > mem->dynamic_taper.running_best ) {
-    // gamma rule: moving average smoothing factor
-    float inv_gamma = 1.0f - collector->dynamic_taper_gamma;
-    mem->dynamic_taper.running_best = collector->dynamic_taper_gamma * cosine + inv_gamma * mem->dynamic_taper.previous_best  ;
-    // gamma rule: anything <1.0 does not fully reset the unimproved counter 
-    mem->dynamic_taper.visit_unimproved = (uint32_t)(mem->dynamic_taper.visit_unimproved * inv_gamma * inv_gamma); // <- reduction by factor (1-G)**2
-    // NOTE: gamma less than one makes it easier to beat the running best,
-    //       hence we don't get rewarded by a full reset of unimproved counter
+  // Maintain running top cosine for beam taper
+  if( cosine > mem->dynamic_taper.top_1_best ) {
+    mem->dynamic_taper.top_1_best = cosine;
+    mem->dynamic_taper.window_top_1_unimproved = 0;
   }
   else {
-    mem->dynamic_taper.visit_unimproved++;
+    mem->dynamic_taper.window_top_1_unimproved++;
   }
 
   // Evaluate our progress
-  if( ++mem->dynamic_taper.visit_counter >= VISIT_WINDOW_CHECKPOINT ) {
+  if( ++mem->dynamic_taper.window_counter >= VISIT_WINDOW_CHECKPOINT ) {
     double factor;
     // -- LOOSEN --
     // We're decidedly not improving the running top cosine, loosen taper
-    if( mem->dynamic_taper.visit_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
+    if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
       factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
     }
     // We're mostly not improving the top cosine, loosen taper a bit
-    else if( mem->dynamic_taper.visit_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
+    else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
       factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
     }
     // -- TIGHTEN --
     // We are improving at a decent rate, tighten taper a bit
-    else if( mem->dynamic_taper.running_best > mem->dynamic_taper.previous_best + LOW_COSINE_GAIN ) {
+    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_COSINE_GAIN ) {
       factor =  DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
     }
     // We are improving at a very good rate, tighten taper
-    else if( mem->dynamic_taper.running_best > mem->dynamic_taper.previous_best + HIGH_COSINE_GAIN ) {
+    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_COSINE_GAIN ) {
       factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
     }
     // -- STEADY --
@@ -339,11 +246,11 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
     collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER_BOUND, DYNAMIC_TAPER_LOWER_BOUND );
 
     // Update cosine at checkpoint
-    mem->dynamic_taper.previous_best = mem->dynamic_taper.running_best;
+    mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
     
     // Reset window
-    mem->dynamic_taper.visit_counter = 0;
-    mem->dynamic_taper.visit_unimproved = 0;
+    mem->dynamic_taper.window_counter = 0;
+    mem->dynamic_taper.window_top_1_unimproved = 0;
   }
 }
 
@@ -366,124 +273,6 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
   20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15,
   14, 14, 13, 13, 13, 12, 12, 11, 10, 10,  9,  8,  7,  6,  5,  0
 };
-
-
-/*******************************************************************//**
- * anncollect( hamfilter_above_score )
- ***********************************************************************
- */
-static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
-
-  // Arguments are in memory locations
-  // [ . . . H ]
-  //         ^----- hamfilter_above_sim
-  //     SP^
-  vgx_EvalStackItem_t *p_minscore_ham = POP_PITEM( self );
-  double hamfilter_above_score = p_minscore_ham->real;
-
-  vgx_ExpressEvalContext_t *ctx = &self->context;
-  const vgx_Vertex_t *head = ctx->HEAD;
-
-
-  // Must have vector
-  vgx_Vector_t *target = head->vector;
-
-  // Verify vectors exist
-  vgx_ExpressEvalMemory_t *mem = ctx->memory;
-  if( target == NULL || mem->probe == NULL ) {
-    //SET_INTEGER_PITEM_VALUE( pexitat, 2 );
-    STACK_RETURN_REAL( self, 0.0 );
-  }
-
-  // Checkpoint 1
-  mem->counter.c1++;
-
-  // Extract probe vector bytes
-  BYTE *A = (BYTE*)CALLABLE( mem->probe )->Elements( mem->probe );
-  int32_t lenA = mem->probe->metas.vlen;
-
-  // Extract target vector bytes
-  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
-  int32_t lenB = target->metas.vlen;
-
-  // Safeguard
-  int32_t len = minimum_value( lenA, lenB );
-
-  // Hamming distance filter enabled when > 1.0
-  if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
-    FP_t lshA = mem->probe->fp;
-    FP_t lshB = target->fp;
-    double min_cos = mem->threshold - 1.0;
-    int idx = (int)(min_cos * 127) & 0x7F;
-    int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
-    // LSH Hamming distance filter progressively stricter with higher thresholds
-    if( hamdist64( lshA, lshB ) > max_ham ) {
-      STACK_RETURN_REAL( self, 0.0 );
-    }
-  }
-  
-  // Checkpoint 2
-  mem->counter.c2++;
-
-  // -------------------
-  // COMPUTE COSINE(A,B)
-  // -------------------
-  // Faster when both vectors are cosine_mode
-  double cosine;
-  if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
-    double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    double min_cosine = mem->threshold - 1.0;
-    cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
-    /*
-    double dp = vxeval_bytearray_dot_product(A, B, len);
-    cosine = dp * invnormprod;
-    if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-      cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-    }
-    */
-  }
-  else {
-    cosine = vxeval_bytearray_cosine(A, B, len);
-  }
-
-  // Dynamic taper enabled
-  if( ctx->collector->use_dynamic_taper ) {
-    __dynamic_taper( ctx->collector, mem, (float)cosine );
-  }
-
-  double score = cosine + 1.0; // [0.0 - 2.0]
-
-  // Require sufficient cosine score
-  if( score <= mem->threshold ) {
-    STACK_RETURN_REAL( self, 0.0 ); // not collected
-  }
-
-  // Checkpoint 3
-  mem->counter.c3++;
-
-  // Collect
-  // [ . . . _]
-  //     SP^
-  vgx_EvalStackItem_t score_arc = {
-    .type = STACK_ITEM_TYPE_REAL,
-    .real = score,
-  };
-  __collect( self, &score_arc );
-  
-  // Refresh running threshold
-  if( ctx->collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
-    // Update running difficulty (0.0 = 2.0)
-    vgx_CollectorItem_t difficulty;
-    mem->threshold = _vxquery_collector__get_current_threshold( ctx->collector, &difficulty );
-    /*
-    // Update running cosine difficulty (-1.0 - 1.0)
-    self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
-    */
-  }
-
-  STACK_RETURN_REAL( self, score );
-  
-}
 
 
 
@@ -510,8 +299,8 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
-  // c1 = Evals
-  mem->counter.c1++;
+  // Eval counter
+  mem->counter.eval++;
 
   // Extract probe vector bytes
   BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
@@ -524,6 +313,21 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   // Safeguard
   int32_t len = minimum_value( lenA, lenB );
 
+  /*
+  // Hamming distance filter enabled when > 1.0
+  if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
+    FP_t lshA = mem->probe->fp;
+    FP_t lshB = target->fp;
+    double min_cos = mem->threshold - 1.0;
+    int idx = (int)(min_cos * 127) & 0x7F;
+    int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
+    // LSH Hamming distance filter progressively stricter with higher thresholds
+    if( hamdist64( lshA, lshB ) > max_ham ) {
+      STACK_RETURN_REAL( self, 0.0 );
+    }
+  }
+  */  
+
   // -------------------
   // COMPUTE COSINE(A,B)
   // -------------------
@@ -531,8 +335,9 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   double cosine;
   if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
     double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    double min_cosine = mem->threshold - 1.0;
-    cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
+    cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
+    //double min_cosine = mem->threshold - 1.0;
+    //cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
   }
   else {
     cosine = vxeval_bytearray_cosine(A, B, len);
@@ -540,32 +345,38 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
 
   vgx_BaseCollector_context_t *base = self->context.collector;
 
-  // Dynamic taper enabled
-  if( base->use_dynamic_taper ) {
+  float top_k_th = __worst_heap_flt64_score( base->container.sequence.heap );
+  float beam_j_th = base->beam_heap != NULL ? __worst_heap_flt64_score( base->beam_heap ) : 0.0f;
+
+  // Adaptive search enabled
+  if( base->adaptive_recursion ) {
+    __dynamic_prune( base, mem, beam_j_th );
     __dynamic_taper( base, mem, cosine );
   }
 
   double score = cosine + 1.0; // [0.0 - 2.0]
 
-  // Require sufficient cosine score for this item to participate in the search
-  if( score <= mem->threshold ) {
-    return 0.0; // not collected
-  }
-  
-  // c3 = Contribute to threshold
-  mem->counter.c3++;
-
   // Item is not collectable to result or beam
-  if( score < __worst_heap_flt64_score( base->container.sequence.heap ) &&
-      (base->beam_heap == NULL || score < __worst_heap_flt64_score( base->beam_heap )) )
-  {
-    // Score is good enough to help define the new threshold
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+  if( score <= top_k_th && score <= beam_j_th ) {
+    // Score is good enough to help redefine the baseline threshold
+    if( score > base->shadow_trail.threshold ) { 
+      // Contribute to threshold
+      mem->counter.contrib++;
+      _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+    }
     return 0.0;
   }
 
-  // c4 = Accepted for collection
-  mem->counter.c4++;
+  // Contribute to threshold
+  // Accepted for collection
+  mem->counter.contrib++;
+  
+  if( score > beam_j_th ) {
+    mem->counter.frontier++;
+  }
+  if( score > top_k_th ) {
+    mem->counter.accept++;
+  }
 
   // Collect
   // [ . . . _]
@@ -576,7 +387,7 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   };
   __collect( self, &score_arc );
   
-  mem->threshold = base->shadow_trail.threshold;
+  //mem->threshold = base->shadow_trail.threshold;
   
   /*
   // Refresh running threshold
@@ -591,6 +402,23 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
 
   return score;
   
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+  double score = 0.0;
+  if( px->type == STACK_ITEM_TYPE_VECTOR ) {
+    const vgx_Vector_t *probe = px->vector;
+    const vgx_Vector_t *target = self->context.HEAD->vector;
+    score = __fast_anncollect( self, probe, target );
+  }
+  SET_REAL_PITEM_VALUE( px, score );
 }
 
 

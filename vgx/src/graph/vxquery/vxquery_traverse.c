@@ -513,6 +513,204 @@ static void __discard_frontier( vgx_BaseCollector_context_t *collector ) {
 
 
 
+typedef enum _e_control_phase {
+  PHASE_EARLY = 0,
+  PHASE_MID = 1,
+  PHASE_LATE = 2
+} control_phase;
+
+
+// --------------------------------
+// Control setup
+//
+typedef struct _s_control_vector_t {
+  struct {
+    unsigned total_eval;
+    unsigned total_contrib;
+    unsigned total_frontier;
+  } state;
+  struct {
+    float contrib;  // contrib / eval
+    float frontier; // frontier / eval
+  } yield;
+  struct {
+    float count_ratio;  // improved_count / (evals + epsilon)
+    float delta_ratio;  // top_k_th_delta / (max_top_k_th_delta + epsilon)
+  } progress;
+  struct {
+    float count_ratio;  // unimproved_count / (evals + epsilon)
+  } stagnation;
+  control_phase phase;  // EARLY, MID, LATE
+  float baseline_threshold;
+  float current_gain;
+  int level;
+  int local_expansions;
+  int total_expansions;
+} control_vector_t;
+
+ 
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static void __init_control( control_vector_t *control ) {
+  control->state.total_eval = 0;
+  control->state.total_contrib = 0;
+  control->state.total_frontier = 0;
+  control->yield.contrib = 1.0f;
+  control->yield.frontier = 1.0f;
+  control->progress.count_ratio = 1.0f;
+  control->progress.delta_ratio = 1.0f;
+  control->stagnation.count_ratio = 0.0f;
+  control->phase = PHASE_EARLY;
+  control->baseline_threshold = 0.0f;
+  control->current_gain = 1.0f;
+  control->level = 0;
+  control->local_expansions = 0;
+  control->total_expansions = 0;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static int __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  // Reset dynamic pruning counters
+  mem->dynamic_prune.improved_beam_j_th_counter = 0;
+  mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
+  mem->dynamic_prune.beam_j_th_delta = 0.0f;
+  mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
+  // Start global counts at their current values
+  control->state.total_eval = mem->counter.eval;
+  control->state.total_contrib = mem->counter.contrib;
+  control->state.total_frontier = mem->counter.frontier;
+  // Reset yield to max
+  control->yield.contrib = 1.0f;
+  control->yield.frontier = 1.0f;
+  // Reset progress to max
+  control->progress.count_ratio = 1.0f;
+  control->progress.delta_ratio = 1.0f;
+  // Reset stagnation to none
+  control->stagnation.count_ratio = 0.0f;
+  // Reest gain to nominal
+  control->current_gain = 1.0f;
+  // Reset local expansion
+  control->local_expansions = 0;
+  // Inc level and return
+  control->level++;
+  return control->level;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static float __update_marginal_gain( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  #define progress_count_epsilon    1.0f
+  #define progress_delta_epsilon    1e-4f
+  #define stagnation_count_epsilon  4.0f
+  #define weight_yield_contrib      0.15f /* */
+  #define weight_yield_frontier     0.35f /* frontiers are first priority */
+  #define weight_progress_count     0.30f /* improving top1 is second priority */
+  #define weight_progress_delta     0.20f /* */
+  #define stagnation_penalty_gamma  1.5f
+  #define delta_ratio_early         0.4f
+  #define delta_ratio_mid           0.1f
+  #define count_ratio_early         0.2f
+  #define count_ratio_mid           0.05f
+  #define alpha_delta_ratio         0.25f
+
+  // Global counters minus state at beginning of level
+  unsigned eval = mem->counter.eval - control->state.total_eval;
+  unsigned contrib = mem->counter.contrib - control->state.total_contrib;
+  unsigned frontier = mem->counter.frontier - control->state.total_frontier;
+  // Pruning signals
+  unsigned improved = mem->dynamic_prune.improved_beam_j_th_counter;
+  unsigned unimproved = mem->dynamic_prune.unimproved_beam_j_th_counter;
+  float max_delta = mem->dynamic_prune.max_beam_j_th_delta;
+  float delta = mem->dynamic_prune.beam_j_th_delta;
+  // Yield
+  control->yield.contrib = (float)contrib / (float)eval;
+  control->yield.frontier = (float)frontier / (float)eval;
+  // Progress
+  control->progress.count_ratio = (float)improved / ((float)eval + progress_count_epsilon);
+  float instant_delta_ratio = max_delta > 0.0f ? delta / (max_delta + progress_delta_epsilon) : 0.0f;
+  control->progress.delta_ratio = alpha_delta_ratio * instant_delta_ratio + (1.0f - alpha_delta_ratio) * control->progress.delta_ratio;
+  // Stagnation
+  control->stagnation.count_ratio = (float)unimproved / ((float)eval + stagnation_count_epsilon);
+  // Phase detection
+  if( control->progress.delta_ratio > delta_ratio_early && control->progress.count_ratio > count_ratio_early ) {
+    control->phase = PHASE_EARLY;
+  }
+  else if( control->progress.delta_ratio > delta_ratio_mid && control->progress.count_ratio > count_ratio_mid ) {
+    control->phase = PHASE_MID;
+  }
+  else {
+    control->phase = PHASE_LATE;
+  }
+  // Compute productivity
+  float productivity = weight_yield_contrib * control->yield.contrib +
+                       weight_yield_frontier * control->yield.frontier +
+                       weight_progress_count * control->progress.count_ratio +
+                       weight_progress_delta * control->progress.delta_ratio;
+  // Final marginal gain with stagnation penalty
+  control->current_gain = productivity * pow(1 - control->stagnation.count_ratio, stagnation_penalty_gamma);
+
+  return control->current_gain;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static bool __expand_next_check( control_vector_t *control, float score, vgx_ExpressEvalMemory_t *mem ) {
+  #define GAIN_THRESHOLD_MID  0.12f
+  #define GAIN_THRESHOLD_LATE 0.03f
+  // Never expand if score is below baseline
+  if( score < control->baseline_threshold ) {
+    return false;
+  }
+  // Never terminate until at least 3 local expansions
+  if( control->local_expansions > 12000000 ) {
+    switch( control->phase ) {
+    // Aggressively expand during early phase
+    case PHASE_EARLY:
+      break;
+    // Expect steady progress during mid phase
+    case PHASE_MID:
+      if( control->current_gain > GAIN_THRESHOLD_MID ) {
+        break;
+      }
+      return false;
+    // Prevent wasted work during late phase
+    case PHASE_LATE:
+      if( control->current_gain > GAIN_THRESHOLD_LATE ) {
+        break;
+      }
+      return false;
+    default:
+      return false; // ???
+    }
+  }
+  control->local_expansions++;
+  control->total_expansions++;
+  mem->dynamic_prune.beam_j_th_delta = 0.0f; // <-- asymetric signal, must reset for each expansion
+  return true;
+}
+
+
+
 /*******************************************************************//**
  *
  *
@@ -551,30 +749,41 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         iEvaluator.ClearDWordSet( mem );
       }
       if( recursion->visit.reset_metrics ) {
-        mem->threshold = 0.0;
-        mem->dynamic_taper.running_best = -1.0f;
-        mem->dynamic_taper.previous_best = -1.0f;
-        mem->dynamic_taper.visit_counter = 0;
-        mem->dynamic_taper.visit_unimproved = 0;
-        mem->counter.c1 = 0;
-        mem->counter.c2 = 0;
-        mem->counter.c3 = 0;
-        mem->counter.c4 = 0;
+        //mem->threshold = 0.0;
+        mem->dynamic_prune.beam_j_th = 0;
+        mem->dynamic_prune.improved_beam_j_th_counter = 0;
+        mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
+        mem->dynamic_prune.beam_j_th_delta = 0.0f;
+        mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
+        mem->dynamic_taper.top_1_best = -1.0f;
+        mem->dynamic_taper.previous_window_best = -1.0f;
+        mem->dynamic_taper.window_counter = 0;
+        mem->dynamic_taper.window_top_1_unimproved = 0;
+        mem->counter.eval = 0;
+        mem->counter.contrib = 0;
+        mem->counter.frontier = 0;
+        mem->counter.accept = 0;
       }
     }
     
+    // Initialize control vector after the first expansion.
+    control_vector_t control = {0};
+    __init_control( &control );
+
     int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
     int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
 
     // Initial neighborhood traversal
-    int64_t expansions = 1;   // initial query implied
-    collector->recursion_depth = 1; // initial neighborhood implied
+    control.level = 1;
+    control.local_expansions = 1;
+    control.total_expansions = 1;
+    collector->recursion_depth = control.level; // initial neighborhood implied
     if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
     }
 
     // Limits reached after initial traversal
-    if( expansions >= expansion_limit || collector->recursion_depth >= depth_limit ) {
+    if( control.total_expansions >= expansion_limit || control.level >= depth_limit ) {
       XBREAK;
     }
     
@@ -583,15 +792,20 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
     // Get the initial difficulty
     vgx_CollectorItem_t difficulty = {0};
-    double threshold = _vxquery_collector__get_current_threshold( collector, &difficulty );
+    control.baseline_threshold = (float)_vxquery_collector__get_current_threshold( collector, &difficulty );
 
     vgx_CollectorItem_t frontier = {0};
 
     while( level_size > 0 ) {
+
       // Max depth reached
-      if( ++collector->recursion_depth > depth_limit ) {
+      if( __next_level_control(&control, mem) > depth_limit ) {
         goto terminate_outer;
       }
+
+      // Collector needs level info in case we collect depth field
+      collector->recursion_depth = control.level;
+
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
       for( int64_t i=0; i<level_size; ++i ) {
 
@@ -604,7 +818,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         // (heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked)
         bool perform_expansion = collector->pure_beam || (main_heap->_cmp( &difficulty.item, &frontier.item ) > 0);
         */
-        if( frontier.sort.flt64.value > threshold + recursion->beam.threshold_offset ) {
+        if( __expand_next_check( &control, (float)frontier.sort.flt64.value, mem) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
@@ -612,8 +826,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
             goto terminate_inner;
           }
 
+          // Compute gain from previous expansion
+          __update_marginal_gain( &control, mem );
+
           // Early termination if queue limit reached
-          if( ++expansions >= expansion_limit ) {
+          if( control.total_expansions >= expansion_limit ) {
             goto terminate_inner;
           }
 
@@ -623,7 +840,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          threshold = _vxquery_collector__get_current_threshold( collector, &difficulty );
+          control.baseline_threshold = (float)_vxquery_collector__get_current_threshold( collector, &difficulty );
         }
 
         // Used item from frontier must be closed here

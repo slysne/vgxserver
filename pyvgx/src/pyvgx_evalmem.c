@@ -596,10 +596,10 @@ static PyObject * __PyVGX_Memory__get_counters( PyVGX_Memory *pymem, void *closu
   vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
   PyObject *py_counters = PyTuple_New( 6 );
   if( py_counters ) {
-    PyTuple_SET_ITEM( py_counters, 0, PyLong_FromLong(mem->counter.c1) );
-    PyTuple_SET_ITEM( py_counters, 1, PyLong_FromLong(mem->counter.c2) );
-    PyTuple_SET_ITEM( py_counters, 2, PyLong_FromLong(mem->counter.c3) );
-    PyTuple_SET_ITEM( py_counters, 3, PyLong_FromLong(mem->counter.c4) );
+    PyTuple_SET_ITEM( py_counters, 0, PyLong_FromLong(mem->counter.eval) );
+    PyTuple_SET_ITEM( py_counters, 1, PyLong_FromLong(mem->counter.contrib) );
+    PyTuple_SET_ITEM( py_counters, 2, PyLong_FromLong(mem->counter.frontier) );
+    PyTuple_SET_ITEM( py_counters, 3, PyLong_FromLong(mem->counter.accept) );
     PyTuple_SET_ITEM( py_counters, 4, PyLong_FromLong(mem->dwset.sz) );
     PyTuple_SET_ITEM( py_counters, 5, PyLong_FromLong(mem->dwset.hits) );
   }
@@ -1024,11 +1024,11 @@ static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyOb
     iEvaluator.ClearVectors( mem );
     iEvaluator.ClearDWordSet( mem );
     iEvaluator.SetProbeVector( mem, NULL );
-    mem->threshold = 0.0;
-    mem->counter.c1 = 0;
-    mem->counter.c2 = 0;
-    mem->counter.c3 = 0;
-    mem->counter.c4 = 0;
+    //mem->threshold = 0.0;
+    mem->counter.eval = 0;
+    mem->counter.contrib = 0;
+    mem->counter.frontier = 0;
+    mem->counter.accept = 0;
   } END_PYVGX_THREADS;
 
   // Reset stack pointer to right below register R4

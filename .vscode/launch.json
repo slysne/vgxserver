@@ -10,7 +10,7 @@
       "MIMode": "lldb",
       "stopOnEntry": true,
       "sourceFileMap": {
-        "~/data/working/build-pyvgx": "${workspaceFolder}"
+        "/Users/music/data/working/build-pyvgx": "${workspaceFolder}"
       }
     }
   ]

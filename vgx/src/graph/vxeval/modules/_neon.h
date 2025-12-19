@@ -45,24 +45,8 @@ static void __eval_neon_cos_pi8( vgx_Evaluator_t *self );
  *
  ***********************************************************************
  */
-__inline static float __horizontal_sum( float32x4_t f32x4 ) {
-  return vaddvq_f32( f32x4 );
-  /*
-  // Horizontal sum of final float32x4_t accumulator
-  float32x2_t sum2 = vadd_f32( vget_low_f32(f32x4), vget_high_f32(f32x4) );
-  float result = vget_lane_f32(sum2, 0) + vget_lane_f32(sum2, 1);
-  return result;
-  */
-}
-
-
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
 __inline static float __sqrt_horizontal_sum( float32x4_t f32x4 ) {
-  float32x2_t vhsum = vdup_n_f32( __horizontal_sum( f32x4 ) );
+  float32x2_t vhsum = vdup_n_f32( vaddvq_f32( f32x4 ) );
   float32x2_t vsqrt = vsqrt_f32( vhsum );
   return vget_lane_f32(vsqrt, 0); 
 }
@@ -76,7 +60,7 @@ __inline static float __sqrt_horizontal_sum( float32x4_t f32x4 ) {
 __inline static float __rsqrt_horizontal_sum( float32x4_t f32x4 ) {
   // Use one round of Newton-Raphson refinement since the baseline neon precision is poor
   // y1 = y0 * (3 - x * y0^2) / 2
-  float32x2_t x = vdup_n_f32( __horizontal_sum( f32x4 ) );
+  float32x2_t x = vdup_n_f32( vaddvq_f32( f32x4 ) );
   float32x2_t y0 = vrsqrte_f32( x ); // Initial approx
 
   // One Newton-Raphson refinement:
@@ -228,7 +212,7 @@ static double __neon_ssq_pi8( const BYTE *A, int len ) {
   }
 
   // Horizontal sum of final float32x4_t accumulator
-  return __horizontal_sum( acc );
+  return vaddvq_f32( acc );
 }
 
 
@@ -299,9 +283,26 @@ static double __neon_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   float32x4_t float_acc = vcvtq_f32_s32(acc);
 
   // Horizontal sum of final float32x4_t accumulator
-  return __horizontal_sum( float_acc );
+  return vaddvq_f32( float_acc );
 }
 
+
+
+/*******************************************************************//**
+ * Cosine( A, B, invnorm_prod )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product
+ *
+ ***********************************************************************
+ */
+static double __neon_dp_cos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) {
+  double cosine = __neon_dp_pi8(A, B, len) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
+}
+ 
 
 
 /*******************************************************************//**
@@ -335,7 +336,7 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   float32x4_t float_dpacc = vcvtq_f32_s32(dp_acc);
 
   // Horizontal sum of final float32x4_t accumulator
-  double dp = __horizontal_sum( float_dpacc );
+  double dp = vaddvq_f32( float_dpacc );
 
   // Reciprocal norms
   double rnorm_a = __rsqrt_horizontal_sum( ssq_a );
@@ -354,7 +355,7 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
  * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
  * and must have equal length.
  *
- * Compute cosine as dot product multipled by supplied invers norms product,
+ * Compute cosine as dot product multiplied by supplied invers norms product,
  * and return -1.0 if the cosine computation cannot exceeed min_cos.
  *
  ***********************************************************************

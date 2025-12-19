@@ -156,6 +156,24 @@ __inline static double __scalar_cosine_clamp( double value ) {
 }
 
 
+
+/*******************************************************************//**
+ * Cosine( A, B, invnorm_prod )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product
+ *
+ ***********************************************************************
+ */
+static double __scalar_dp_cos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) {
+  double cosine = __scalar_dp_pi8(A, B, len) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
+}
+
+
+
 /*******************************************************************//**
  * Cosine( A, B )
  *
@@ -310,9 +328,8 @@ static void __eval_scalar_cos_pi8( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
     if( invnorm ) {
-      double a_invnorm = a_meta;
-      double b_invnorm = b_meta;
-      px->real = __scalar_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+      double invnormprod = a_meta * b_meta;
+      px->real = __scalar_dp_cos_pi8( a_data, b_data, len, invnormprod );
     }
     else {
       px->real = __scalar_cos_pi8( a_data, b_data, len );

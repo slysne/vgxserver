@@ -3483,7 +3483,6 @@ typedef struct s_vgx_recursion_config_t {
     int64_t max_width;
     double curve;
     double gamma;
-    double threshold_offset;
     bool adaptive_taper;
   } beam;
   struct {

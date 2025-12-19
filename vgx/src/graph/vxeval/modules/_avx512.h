@@ -492,6 +492,23 @@ static double __avx512_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
 
 
 /*******************************************************************//**
+ * Cosine( A, B, invnorm_prod )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product
+ *
+ ***********************************************************************
+ */
+static double __avx512_dp_cos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) {
+  double cosine = __avx512_dp_pi8(A, B, len) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
+}
+
+
+
+/*******************************************************************//**
  * Cosine( A, B )
  *
  * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)

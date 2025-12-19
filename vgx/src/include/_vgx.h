@@ -934,6 +934,7 @@ DLL_HIDDEN extern double (*vxeval_bytearray_sum_squares)( const BYTE *A, int len
 DLL_HIDDEN extern double (*vxeval_bytearray_rsqrt_ssq)( const BYTE *A, int len );
 DLL_HIDDEN extern double (*vxeval_bytearray_dot_product)( const BYTE *A, const BYTE *B, int len );
 DLL_HIDDEN extern double (*vxeval_bytearray_cosine)( const BYTE *A, const BYTE *B, int len );
+DLL_HIDDEN extern double (*vxeval_bytearray_dp_cosine)( const BYTE *A, const BYTE *B, int len, double invnorm_prod );
 DLL_HIDDEN extern double (*vxeval_bytearray_dp_cosine_with_threshold)( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos );
 
 

@@ -44,6 +44,7 @@ DLL_HIDDEN double (*vxeval_bytearray_sum_squares)( const BYTE *A, int len ) = NU
 DLL_HIDDEN double (*vxeval_bytearray_rsqrt_ssq)( const BYTE *A, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_dot_product)( const BYTE *A, const BYTE *B, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_cosine)( const BYTE *A, const BYTE *B, int len ) = NULL;
+DLL_HIDDEN double (*vxeval_bytearray_dp_cosine)( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_dp_cosine_with_threshold)( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) = NULL;
 
 
@@ -324,6 +325,7 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __scalar_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __scalar_dp_pi8;
     vxeval_bytearray_cosine = __scalar_cos_pi8;
+    vxeval_bytearray_dp_cosine = __scalar_dp_cos_pi8;
     vxeval_bytearray_dp_cosine_with_threshold = __scalar_dp_mincos_pi8;
 
 #if defined CXPLAT_ARCH_HASFMA
@@ -341,6 +343,7 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx512_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx512_dp_pi8;
         vxeval_bytearray_cosine = __avx512_cos_pi8;
+        vxeval_bytearray_dp_cosine = __avx512_dp_cos_pi8;
         vxeval_bytearray_dp_cosine_with_threshold = __avx512_dp_mincos_pi8;
       }
       else if( fma_feature && avx_version == 2 ) {
@@ -354,6 +357,7 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx2_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx2_dp_pi8;
         vxeval_bytearray_cosine = __avx2_cos_pi8;
+        vxeval_bytearray_dp_cosine = __avx2_dp_cos_pi8;
         vxeval_bytearray_dp_cosine_with_threshold = __avx2_dp_mincos_pi8;
       }
     }
@@ -369,6 +373,7 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __neon_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __neon_dp_pi8;
     vxeval_bytearray_cosine = __neon_cos_pi8;
+    vxeval_bytearray_dp_cosine = __neon_dp_cos_pi8;
     vxeval_bytearray_dp_cosine_with_threshold = __neon_dp_mincos_pi8;
 
 
@@ -1182,11 +1187,19 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
 
     // Dedicated variables for ann search
     mem->probe = NULL;
-    mem->threshold = 0.0;
-    mem->dynamic_taper.running_best = -1.0f;
-    mem->dynamic_taper.previous_best = -1.0f;
-    mem->dynamic_taper.visit_counter = 0;
-    mem->dynamic_taper.visit_unimproved = 0;
+
+    mem->dynamic_prune.beam_j_th = 0.0f;
+    mem->dynamic_prune.improved_beam_j_th_counter = 0;
+    mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
+    mem->dynamic_prune.beam_j_th_delta = 0.0f;
+    mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
+    mem->dynamic_prune._rsv = 0.0f;
+    mem->dynamic_taper.top_1_best = -1.0f;
+    mem->dynamic_taper.previous_window_best = -1.0f;
+    mem->dynamic_taper.window_counter = 0;
+    mem->dynamic_taper.window_top_1_unimproved = 0;
+
+
 
   }
   return mem;
@@ -1264,11 +1277,17 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     if( (clone->probe = other->probe) != NULL ) {
       CALLABLE( clone->probe )->Incref( clone->probe );
     }
-    clone->threshold = 0.0;
-    clone->dynamic_taper.running_best = -1.0f;
-    clone->dynamic_taper.previous_best = -1.0f;
-    clone->dynamic_taper.visit_counter = 0;
-    clone->dynamic_taper.visit_unimproved = 0;
+  
+    clone->dynamic_prune.beam_j_th = 0.0f;
+    clone->dynamic_prune.improved_beam_j_th_counter = 0;
+    clone->dynamic_prune.unimproved_beam_j_th_counter = 0;
+    clone->dynamic_prune.beam_j_th_delta = 0.0f;
+    clone->dynamic_prune.max_beam_j_th_delta = 0.0f;
+    clone->dynamic_prune._rsv = 0.0f;
+    clone->dynamic_taper.top_1_best = -1.0f;
+    clone->dynamic_taper.previous_window_best = -1.0f;
+    clone->dynamic_taper.window_counter = 0;
+    clone->dynamic_taper.window_top_1_unimproved = 0;
 
 
     // One owner
@@ -1447,11 +1466,16 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
     CALLABLE( memory->probe )->Decref( memory->probe );
   }
   // ANN var reset implied
-  memory->threshold = 0.0;
-  memory->dynamic_taper.running_best = -1.0f;
-  memory->dynamic_taper.previous_best = -1.0f;
-  memory->dynamic_taper.visit_counter = 0;
-  memory->dynamic_taper.visit_unimproved = 0;
+  memory->dynamic_prune.beam_j_th = 0.0f;
+  memory->dynamic_prune.improved_beam_j_th_counter = 0;
+  memory->dynamic_prune.unimproved_beam_j_th_counter = 0;
+  memory->dynamic_prune.beam_j_th_delta = 0.0f;
+  memory->dynamic_prune.max_beam_j_th_delta = 0.0f;
+  memory->dynamic_prune._rsv = 0.0f;
+  memory->dynamic_taper.top_1_best = -1.0f;
+  memory->dynamic_taper.previous_window_best = -1.0f;
+  memory->dynamic_taper.window_counter = 0;
+  memory->dynamic_taper.window_top_1_unimproved = 0;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {

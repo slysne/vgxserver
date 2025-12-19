@@ -258,7 +258,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       //{ .name = "skip_probability", .target = &param->recursion.visit.skip_probability,     .dflt=0.0,  .minval=0.0,  .maxval=1.0 },        // default 0.0=no skipping
       { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,  .maxval=1.0 },        // default 1.0=constant
       { .name = "beam_gamma",       .target = &param->recursion.beam.gamma,                 .dflt=1.0,    .minval=0.0,  .maxval=1.0 },        // default 1.0
-      { .name = "threshold_offset", .target = &param->recursion.beam.threshold_offset,      .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0
       { .name = "shadow_alpha",     .target = &param->recursion.shadow.alpha,               .dflt=1.0/64, .minval=1e-6, .maxval=1.0 },        // default 1.0/64 
       { .name = "shadow_beta",      .target = &param->recursion.shadow.beta,                .dflt=0.0,    .minval=0.0,  .maxval=1.0 },        // default 1.0
       //{ .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },        // default 1.0=never apply arc lsh filter

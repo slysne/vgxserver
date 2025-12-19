@@ -6022,26 +6022,33 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // Q2.5
   vgx_Vector_t *probe;
   // Q2.6
-  double threshold;
+  //double threshold;
+  double __rsv_2_6;
   // Q2.7-8 
   struct {
-    uint32_t c1;
-    uint32_t c2;
-    uint32_t c3;
-    uint32_t c4;
+    uint32_t eval;
+    uint32_t contrib;
+    uint32_t frontier;
+    uint32_t accept;
   } counter;
   // ==== CL3 ====
-  // Q3.1-2
+  // Q3.1-3
   struct {
-    float running_best;         // current top score
-    float previous_best;        // previous top score
-    uint32_t visit_counter;     // window counter
-    uint32_t visit_unimproved;  // count times in a row we're not beating running top score 
+    float beam_j_th;
+    uint32_t improved_beam_j_th_counter;   // number of times a score beat the j-th best score in current beam
+    uint32_t unimproved_beam_j_th_counter; // number of times a score did not beat the j-th best score in current beam
+    float beam_j_th_delta;                 // most recent j-th best score improvement
+    float max_beam_j_th_delta;             // track best j-th improvement seen
+    float _rsv;
+  } dynamic_prune;
+  // Q3.4-5
+  struct {
+    float top_1_best;                 // current top score
+    float previous_window_best;       // top score recorded in previous window
+    uint32_t window_counter;          // window counter
+    uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score 
   } dynamic_taper;
-  // Q3.3-8
-  QWORD __rsv_3_3;
-  QWORD __rsv_3_4;
-  QWORD __rsv_3_5;
+  // Q3.6-8
   QWORD __rsv_3_6;
   QWORD __rsv_3_7;
   QWORD __rsv_3_8;
@@ -6811,7 +6818,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   Cm256iHeap_t *beam_heap;                    \
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
-  bool use_dynamic_taper;                     \
+  bool adaptive_recursion;                    \
   double dynamic_taper;                       \
   float dynamic_taper_gamma;                  \
   vgx_CollectorStage_t *stage;                \

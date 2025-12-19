@@ -162,7 +162,7 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 
     # General optimization and architecture flags
     set(CC_FLAGS "-fPIC -arch arm64 -mcpu=${CLANG_OPTION_MCPU}")  # or apple-m2, etc.
-    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4")
+    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4 -fno-inline -fno-omit-frame-pointer")
 
     # C++ standard and flags (note: macOS supports C++11+ by default)
     set(CXX_FLAGS "-std=c++11")
