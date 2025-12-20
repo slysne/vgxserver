@@ -1022,9 +1022,19 @@ DLL_HIDDEN extern void _vxquery_collector__del_collector_item_headref_OPEN( vgx_
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_tail_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_OPEN( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
-DLL_HIDDEN extern double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, double score );
-DLL_HIDDEN extern double _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *difficulty );
 
+DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score );
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector ) {
+  return collector->shadow_trail.threshold;
+}
 
 
 

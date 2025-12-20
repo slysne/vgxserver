@@ -290,12 +290,10 @@ __inline static double __worst_heap_flt64_score( Cm256iHeap_t *heap ) {
  * anncollect( )
  ***********************************************************************
  */
-static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
+static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
   if( probe == NULL || target == NULL ) {
-    return 0.0;
+    return 0.0f;
   }
-  //__prefetch_nta( B );
-  //__prefetch_nta( B+64 );
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
@@ -332,15 +330,15 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
   // COMPUTE COSINE(A,B)
   // -------------------
   // Faster when both vectors are cosine_mode
-  double cosine;
+  float cosine;
   if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
     double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
+    cosine = (float)vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
     //double min_cosine = mem->threshold - 1.0;
     //cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
   }
   else {
-    cosine = vxeval_bytearray_cosine(A, B, len);
+    cosine = (float)vxeval_bytearray_cosine(A, B, len);
   }
 
   vgx_BaseCollector_context_t *base = self->context.collector;
@@ -354,26 +352,29 @@ static double __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *prob
     __dynamic_taper( base, mem, cosine );
   }
 
-  double score = cosine + 1.0; // [0.0 - 2.0]
+  float score = cosine + 1.0f; // [0.0 - 2.0]
+  float threshold = _vxquery_collector__get_current_threshold( base );
 
-  // Item is not collectable to result or beam
+  // Ignore everything below the running threshold
+  if( score < threshold ) {
+    return 0.0f;
+  }
+  
+  // Score is good enough to help refine the baseline threshold
+  mem->counter.contrib++;
+
+  // Item is not collectable to result or beam, update threshold queue with inferior score
   if( score <= top_k_th && score <= beam_j_th ) {
-    // Score is good enough to help redefine the baseline threshold
-    if( score > base->shadow_trail.threshold ) { 
-      // Contribute to threshold
-      mem->counter.contrib++;
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
-    }
-    return 0.0;
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+    return 0.0f;
   }
 
-  // Contribute to threshold
-  // Accepted for collection
-  mem->counter.contrib++;
-  
+  // Frontier contribution 
   if( score > beam_j_th ) {
     mem->counter.frontier++;
   }
+
+  // Result contribution
   if( score > top_k_th ) {
     mem->counter.accept++;
   }

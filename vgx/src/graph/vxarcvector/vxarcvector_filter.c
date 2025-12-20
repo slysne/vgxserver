@@ -1554,8 +1554,8 @@ static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, 
   const vgx_Vector_t *target = larc->head.vertex->vector;
 
   evaluator->context.larc = larc;
-  double score = vxeval_fast_anncollect( evaluator, probe, target );
-  if( score < 0.0 ) {
+  float score = vxeval_fast_anncollect( evaluator, probe, target );
+  if( score < 0.0f ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }

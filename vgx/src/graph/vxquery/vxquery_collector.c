@@ -514,16 +514,16 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  *
  ***********************************************************************
  */
-DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, double score ) {
+DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
 //#define shadow_alpha (1.0/64.0)
 //#define shadow_beta (0.0)
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = (1.0 - shadow_trail->alpha) * shadow_trail->threshold + shadow_trail->alpha * score;
+    return shadow_trail->threshold = (1.0f - shadow_trail->alpha) * shadow_trail->threshold + shadow_trail->alpha * score;
   }
 
   // Write latest score
-  *shadow_trail->wp++ = (float)score;
+  *shadow_trail->wp++ = score;
   // Ring buffer wrap
   if( shadow_trail->wp >= shadow_trail->end ) {
     shadow_trail->wp = shadow_trail->queue;
@@ -537,32 +537,15 @@ DLL_HIDDEN double _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrai
   if( *shadow_trail->wp > 0.0f ) {
     float oldest = *shadow_trail->wp;
     float tap75 = *shadow_trail->tap75;
-    return shadow_trail->threshold = (1.0 - shadow_trail->alpha - shadow_trail->beta) * shadow_trail->threshold + shadow_trail->alpha * oldest + shadow_trail->beta * tap75;
+    return shadow_trail->threshold = (1.0f - shadow_trail->alpha - shadow_trail->beta) * shadow_trail->threshold + shadow_trail->alpha * oldest + shadow_trail->beta * tap75;
   }
 
   // Initialize threshold to first encountered real score
-  if( shadow_trail->threshold <= 0.0 && score > 0.0 ) {
+  if( shadow_trail->threshold <= 0.0f && score > 0.0f ) {
     shadow_trail->threshold = score;
   }
 
   return shadow_trail->threshold;
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-DLL_HIDDEN double _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *difficulty ) {
-  if( collector->shadow_trail.queue ) {
-    difficulty->sort.flt64.value = collector->shadow_trail.threshold;
-  }
-  else {
-    CALLABLE( collector->container.sequence.heap )->HeapTop( collector->container.sequence.heap, &difficulty->item );
-  }
-  return difficulty->sort.flt64.value;
 }
 
 

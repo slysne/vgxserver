@@ -6775,7 +6775,7 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  ***********************************************************************
  */
 typedef struct s_vgx_ExpansionShadowTrail_t {
-  double threshold;
+  float threshold;
   float *wp;
   float *tap75;
   float *end;
@@ -7183,7 +7183,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 //DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
-DLL_HIDDEN bool vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
+DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 
 
 /*******************************************************************//**

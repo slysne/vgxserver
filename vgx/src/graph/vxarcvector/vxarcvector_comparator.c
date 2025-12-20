@@ -1000,7 +1000,8 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   // ------------------------------------------------------------
   // Normal non-recursive (or sort not good enough for recursion)
   // ------------------------------------------------------------
-  if( F == NULL || sort.flt64.value <= base->shadow_trail.threshold ) {
+
+  if( F == NULL || (float)sort.flt64.value <= _vxquery_collector__get_current_threshold( base ) ) {
     // Nothing collected
     if( result_heap_location == NULL ) {
       return 0;
@@ -1025,7 +1026,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     // Item not good enough for result
     if( result_heap_location == NULL ) {
       // Update shadow with current item's score
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, sort.flt64.value );
+      _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)sort.flt64.value );
       // Not good enough for beam either
       if( beam_heap_location == NULL ) {
         return 0;
@@ -1035,7 +1036,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     }
 
     // Update shadow with result heap _discard_ score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, result_heap_discarded.sort.flt64.value );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)result_heap_discarded.sort.flt64.value );
     
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {
@@ -1082,13 +1083,13 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   // Item to frontier only (was not pushed to result)
   if( result_heap_location == NULL ) {
     // Update shadow with current item's score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, sort.flt64.value );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)sort.flt64.value );
     refmap_updated = __update_refmap_head( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
   }
   // Item to frontier and was also pushed to result
   else {
     // Update shadow with result heap _discard_ score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, result_heap_discarded.sort.flt64.value );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)result_heap_discarded.sort.flt64.value );
     // Populate the frontier-collectable item with refmap slot, and manage result discard
     if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &result_heap_discarded, larc, NULL )) > 0 ) {
       // Add one more ownership sice the call above only handles single owner

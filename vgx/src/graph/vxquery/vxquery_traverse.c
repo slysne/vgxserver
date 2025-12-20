@@ -324,7 +324,14 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  */
 static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width, double dynamic_taper ) {
   // next = width * curve * dynamic_taper
-  int64_t next = (int64_t)round( current_beam_width * recursion->beam.curve * dynamic_taper );
+  double next_d = current_beam_width * recursion->beam.curve * dynamic_taper;
+  int next;
+  if( current_beam_width < 10 ) {
+    next = (int64_t)( dynamic_taper <= 0.0 ? floor(next_d) : ceil(next_d) );
+  }
+  else {
+    next = (int64_t)round( current_beam_width * recursion->beam.curve * dynamic_taper );
+  }
   // clamp, never allow increasing width and never below minimum
   return clamp_value( next, recursion->beam.max_width, recursion->beam.min_width );
 }
@@ -524,6 +531,7 @@ typedef enum _e_control_phase {
 // Control setup
 //
 typedef struct _s_control_vector_t {
+  bool enable;
   struct {
     unsigned total_eval;
     unsigned total_contrib;
@@ -539,13 +547,28 @@ typedef struct _s_control_vector_t {
   } progress;
   struct {
     float count_ratio;  // unimproved_count / (evals + epsilon)
+    bool unimproved_current_level;
+    int unimproved_levels;
   } stagnation;
-  control_phase phase;  // EARLY, MID, LATE
-  float baseline_threshold;
-  float current_gain;
-  int level;
-  int local_expansions;
-  int total_expansions;
+  struct {
+    float previous;
+    float current;
+    float momentum;
+  } productivity;
+  struct {
+    int level;
+    int level_size;
+    control_phase phase;  // EARLY, MID, LATE, EXHAUSTION
+    int early_limit;
+    int mid_limit;
+  } evolution;
+  struct {
+    int local;
+    int total;
+  } expansions;
+  struct {
+    float baseline;
+  } threshold;
 } control_vector_t;
 
  
@@ -556,20 +579,64 @@ typedef struct _s_control_vector_t {
  ***********************************************************************
  */
 __inline static void __init_control( control_vector_t *control ) {
+  static const int early_phase_init = 1024;
+  static const int mid_phase_init = 4096;
+
+  control->enable = false;
+  // state
   control->state.total_eval = 0;
   control->state.total_contrib = 0;
   control->state.total_frontier = 0;
+  // yield
   control->yield.contrib = 1.0f;
   control->yield.frontier = 1.0f;
+  // progress
   control->progress.count_ratio = 1.0f;
   control->progress.delta_ratio = 1.0f;
+  // stagnation
   control->stagnation.count_ratio = 0.0f;
-  control->phase = PHASE_EARLY;
-  control->baseline_threshold = 0.0f;
-  control->current_gain = 1.0f;
-  control->level = 0;
-  control->local_expansions = 0;
-  control->total_expansions = 0;
+  control->stagnation.unimproved_current_level = true; // prove it false
+  control->stagnation.unimproved_levels = 0;
+  // productivity
+  control->productivity.previous = 0.0f;
+  control->productivity.current = 1.0f;
+  control->productivity.momentum = 0.5f;
+  // evolution
+  control->evolution.level = 0;
+  control->evolution.level_size = 0;
+  control->evolution.phase = PHASE_EARLY;
+  control->evolution.early_limit = early_phase_init;
+  control->evolution.mid_limit = mid_phase_init;
+  // expansions
+  control->expansions.local = 0;
+  control->expansions.total = 0;
+  // threshold
+  control->threshold.baseline = 0.0f;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static bool __phase_transition( control_vector_t *control, vgx_ExpressEvalMemory_t *mem, int *limit, int phase_min, int phase_max ) {
+  // Still within phase limit
+  if( mem->counter.eval <= *limit ) {
+    return false; // no transition
+  }
+  // Compute adaptive limit exactly once per level
+  if( *limit <= phase_min ) {
+    float a = clamp_value( control->productivity.previous, 1.0f, 0.0f );
+    *limit = 1 + (int)floorf( phase_min + a * (phase_max - phase_min ) );
+    // Still in same phase after adaptive limit adjustment
+    if( mem->counter.eval < *limit ) {
+      return false; // no transition
+    }
+  }
+  // Transition to next level
+  return true;
 }
 
 
@@ -580,30 +647,85 @@ __inline static void __init_control( control_vector_t *control ) {
  ***********************************************************************
  */
 __inline static int __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  #define early_phase_min           (1024)      // stay early at least this long
+  #define early_phase_max           (2048+512)  // and possible all the way here
+  #define mid_phase_min             (4096)      // stay mid at least this long
+  #define mid_phase_max             (4096+2048) // and possibly all the way here
+  #define stagnation_levels_max     12
+  #define delta_ratio_early         0.16f
+  #define count_ratio_early         0.08f
+  #define delta_ratio_mid           0.06f
+  #define count_ratio_mid           0.03f
+  #define momentum_beta             0.3f
+
+  // Inc level and return
+  control->evolution.level++;
+  if( control->enable == false ) {
+    return control->evolution.level;
+  }
+  
+  // evolution
+  // Phase transition detection
+  switch( control->evolution.phase ) {
+  case PHASE_EARLY:
+    if( !__phase_transition( control, mem, &control->evolution.early_limit, early_phase_min, early_phase_max ) || 
+        (control->progress.delta_ratio > delta_ratio_early && control->progress.count_ratio > count_ratio_early) ) {
+      break;
+    }
+    // Beyond adaptive early limit: transition to mid
+    control->evolution.phase = PHASE_MID;
+    /* FALLTHRU */
+  case PHASE_MID:
+    if( !__phase_transition( control, mem, &control->evolution.mid_limit, mid_phase_min, mid_phase_max ) ||
+        (control->progress.delta_ratio > delta_ratio_mid && control->progress.count_ratio > count_ratio_mid) ) {
+      break;
+    }
+    // Beyond adaptive mid limit: transition to late
+    control->evolution.phase = PHASE_LATE;
+    /* FALLTHRU */
+  case PHASE_LATE:
+    break;
+  }
+ 
   // Reset dynamic pruning counters
   mem->dynamic_prune.improved_beam_j_th_counter = 0;
   mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
   mem->dynamic_prune.beam_j_th_delta = 0.0f;
   mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
+  // state
   // Start global counts at their current values
   control->state.total_eval = mem->counter.eval;
   control->state.total_contrib = mem->counter.contrib;
   control->state.total_frontier = mem->counter.frontier;
+  // yield
   // Reset yield to max
   control->yield.contrib = 1.0f;
   control->yield.frontier = 1.0f;
+  // progress
   // Reset progress to max
   control->progress.count_ratio = 1.0f;
   control->progress.delta_ratio = 1.0f;
-  // Reset stagnation to none
+  // stagnation
   control->stagnation.count_ratio = 0.0f;
-  // Reest gain to nominal
-  control->current_gain = 1.0f;
-  // Reset local expansion
-  control->local_expansions = 0;
-  // Inc level and return
-  control->level++;
-  return control->level;
+  // A run of N completely unimproved levels shuts off the pruning controller
+  if( control->stagnation.unimproved_current_level ) {
+    if( ++control->stagnation.unimproved_levels > stagnation_levels_max ) {
+      control->enable = false;
+    }
+  }
+  else {
+    control->stagnation.unimproved_levels = 0;
+  }
+  control->stagnation.unimproved_current_level = true; // prove it false
+  // productivity
+  control->productivity.momentum = momentum_beta * (control->productivity.current - control->productivity.previous) +
+                                   (1.0f - momentum_beta) * control->productivity.momentum;
+  control->productivity.previous = control->productivity.current;
+  control->productivity.current = 1.0f;
+  // expansions
+  control->expansions.local = 0;
+  //
+  return control->evolution.level;
 }
 
 
@@ -614,19 +736,18 @@ __inline static int __next_level_control( control_vector_t *control, vgx_Express
  ***********************************************************************
  */
 __inline static float __update_marginal_gain( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  if( control->enable == false ) {
+    return 1.0f;
+  }
   #define progress_count_epsilon    1.0f
   #define progress_delta_epsilon    1e-4f
-  #define stagnation_count_epsilon  4.0f
-  #define weight_yield_contrib      0.15f /* */
-  #define weight_yield_frontier     0.35f /* frontiers are first priority */
-  #define weight_progress_count     0.30f /* improving top1 is second priority */
-  #define weight_progress_delta     0.20f /* */
-  #define stagnation_penalty_gamma  1.5f
-  #define delta_ratio_early         0.4f
-  #define delta_ratio_mid           0.1f
-  #define count_ratio_early         0.2f
-  #define count_ratio_mid           0.05f
-  #define alpha_delta_ratio         0.25f
+  //#define stagnation_count_epsilon  4.0f
+  #define weight_yield_contrib      0.15f /* ability to contribute to baseline threshold */
+  #define weight_yield_frontier     0.35f /* ability to add to beam */
+  #define weight_progress_count     0.35f /* number of times we immprove beam */
+  #define weight_progress_delta     0.15f /* beam improvement evolution for level */
+  //#define stagnation_penalty_gamma  3.0f
+  #define alpha_delta_ratio         0.25f /* progress delta smoothing factor */
 
   // Global counters minus state at beginning of level
   unsigned eval = mem->counter.eval - control->state.total_eval;
@@ -645,26 +766,18 @@ __inline static float __update_marginal_gain( control_vector_t *control, vgx_Exp
   float instant_delta_ratio = max_delta > 0.0f ? delta / (max_delta + progress_delta_epsilon) : 0.0f;
   control->progress.delta_ratio = alpha_delta_ratio * instant_delta_ratio + (1.0f - alpha_delta_ratio) * control->progress.delta_ratio;
   // Stagnation
-  control->stagnation.count_ratio = (float)unimproved / ((float)eval + stagnation_count_epsilon);
-  // Phase detection
-  if( control->progress.delta_ratio > delta_ratio_early && control->progress.count_ratio > count_ratio_early ) {
-    control->phase = PHASE_EARLY;
-  }
-  else if( control->progress.delta_ratio > delta_ratio_mid && control->progress.count_ratio > count_ratio_mid ) {
-    control->phase = PHASE_MID;
-  }
-  else {
-    control->phase = PHASE_LATE;
+  //control->stagnation.count_ratio = (float)unimproved / ((float)eval + stagnation_count_epsilon);
+  if( improved > 0 ) {
+    control->stagnation.unimproved_current_level = false;
   }
   // Compute productivity
   float productivity = weight_yield_contrib * control->yield.contrib +
                        weight_yield_frontier * control->yield.frontier +
                        weight_progress_count * control->progress.count_ratio +
                        weight_progress_delta * control->progress.delta_ratio;
-  // Final marginal gain with stagnation penalty
-  control->current_gain = productivity * pow(1 - control->stagnation.count_ratio, stagnation_penalty_gamma);
-
-  return control->current_gain;
+  //float stagnation_penalty = pow(1 - control->stagnation.count_ratio, stagnation_penalty_gamma);
+  control->productivity.current = productivity; // * stagnation_penalty;
+  return control->productivity.current;
 }
 
 
@@ -675,27 +788,31 @@ __inline static float __update_marginal_gain( control_vector_t *control, vgx_Exp
  ***********************************************************************
  */
 __inline static bool __expand_next_check( control_vector_t *control, float score, vgx_ExpressEvalMemory_t *mem ) {
-  #define GAIN_THRESHOLD_MID  0.12f
-  #define GAIN_THRESHOLD_LATE 0.03f
+  #define GAIN_THRESHOLD_MID  0.15f
+  #define MOMENTUM_THRESHOLD_MID  0.05f
+  #define GAIN_THRESHOLD_LATE 0.05f
+  #define MOMENTUM_THRESHOLD_LATE 0.02f
+  #define MIN_EXPANSIONS 8
+  #define EXPAND_FULL_FRONTIER_MAX (2*MIN_EXPANSIONS)
   // Never expand if score is below baseline
-  if( score < control->baseline_threshold ) {
+  if( score < control->threshold.baseline ) {
     return false;
   }
-  // Never terminate until at least 3 local expansions
-  if( control->local_expansions > 12000000 ) {
-    switch( control->phase ) {
+  // Never perform termination checks until at least N local expansions and the frontier is large
+  if( control->enable && control->expansions.local > MIN_EXPANSIONS && control->evolution.level_size > EXPAND_FULL_FRONTIER_MAX ) {
+    switch( control->evolution.phase ) {
     // Aggressively expand during early phase
     case PHASE_EARLY:
       break;
     // Expect steady progress during mid phase
     case PHASE_MID:
-      if( control->current_gain > GAIN_THRESHOLD_MID ) {
+      if( control->productivity.current > GAIN_THRESHOLD_MID || control->productivity.momentum > MOMENTUM_THRESHOLD_MID ) {
         break;
       }
       return false;
     // Prevent wasted work during late phase
     case PHASE_LATE:
-      if( control->current_gain > GAIN_THRESHOLD_LATE ) {
+      if( control->productivity.current > GAIN_THRESHOLD_LATE || control->productivity.momentum > MOMENTUM_THRESHOLD_LATE) {
         break;
       }
       return false;
@@ -703,8 +820,8 @@ __inline static bool __expand_next_check( control_vector_t *control, float score
       return false; // ???
     }
   }
-  control->local_expansions++;
-  control->total_expansions++;
+  control->expansions.local++;
+  control->expansions.total++;
   mem->dynamic_prune.beam_j_th_delta = 0.0f; // <-- asymetric signal, must reset for each expansion
   return true;
 }
@@ -774,29 +891,32 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
 
     // Initial neighborhood traversal
-    control.level = 1;
-    control.local_expansions = 1;
-    control.total_expansions = 1;
-    collector->recursion_depth = control.level; // initial neighborhood implied
+
+    // Number of nodes in initial neighborhood
+    __prepare_next_level( recursion, filter_context, collector, 0 );
+
+    control.evolution.level = 1;
+    control.expansions.local = 1;
+    control.expansions.total = 1;
+    collector->recursion_depth = control.evolution.level; // initial neighborhood implied
     if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
     }
 
     // Limits reached after initial traversal
-    if( control.total_expansions >= expansion_limit || control.level >= depth_limit ) {
+    if( control.expansions.total >= expansion_limit || control.evolution.level >= depth_limit ) {
       XBREAK;
     }
     
-    // Number of nodes in initial neighborhood to expand
-    int64_t level_size = __prepare_next_level( recursion, filter_context, collector, recursion->init.select );
+    // After the very first neighborhood (global entrypoint) we optionally select a small set of the best candidates
+    control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, recursion->init.select );
 
     // Get the initial difficulty
-    vgx_CollectorItem_t difficulty = {0};
-    control.baseline_threshold = (float)_vxquery_collector__get_current_threshold( collector, &difficulty );
+    control.threshold.baseline = _vxquery_collector__get_current_threshold( collector );
 
     vgx_CollectorItem_t frontier = {0};
 
-    while( level_size > 0 ) {
+    while( control.evolution.level_size > 0 ) {
 
       // Max depth reached
       if( __next_level_control(&control, mem) > depth_limit ) {
@@ -804,10 +924,10 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       }
 
       // Collector needs level info in case we collect depth field
-      collector->recursion_depth = control.level;
+      collector->recursion_depth = control.evolution.level;
 
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
-      for( int64_t i=0; i<level_size; ++i ) {
+      for( int64_t i=0; i<control.evolution.level_size; ++i ) {
 
         if( CALLABLE(F)->Next(F, &frontier.item) < 1 || frontier.headref->vertex == NULL ) {
           THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
@@ -818,7 +938,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         // (heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked)
         bool perform_expansion = collector->pure_beam || (main_heap->_cmp( &difficulty.item, &frontier.item ) > 0);
         */
-        if( __expand_next_check( &control, (float)frontier.sort.flt64.value, mem) ) {
+        if( __expand_next_check( &control, (float)frontier.sort.flt64.value, mem ) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
@@ -830,7 +950,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           __update_marginal_gain( &control, mem );
 
           // Early termination if queue limit reached
-          if( control.total_expansions >= expansion_limit ) {
+          if( control.expansions.total >= expansion_limit ) {
             goto terminate_inner;
           }
 
@@ -840,14 +960,14 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          control.baseline_threshold = (float)_vxquery_collector__get_current_threshold( collector, &difficulty );
+          control.threshold.baseline = _vxquery_collector__get_current_threshold( collector );
         }
 
         // Used item from frontier must be closed here
         _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
       }
 
-      level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
+      control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
     }
 
     // The initial match only since this determines the overall whether anything was found at all
