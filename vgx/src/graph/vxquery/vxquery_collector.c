@@ -515,37 +515,25 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
-//#define shadow_alpha (1.0/64.0)
-//#define shadow_beta (0.0)
+  // Never negative cosine (score is [0.0, 2.0] )
+  score = fmaxf( 1.0f, score );
+
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = (1.0f - shadow_trail->alpha) * shadow_trail->threshold + shadow_trail->alpha * score;
+    return shadow_trail->threshold = shadow_trail->alpha * score + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
   }
 
   // Write latest score
   *shadow_trail->wp++ = score;
+
   // Ring buffer wrap
   if( shadow_trail->wp >= shadow_trail->end ) {
     shadow_trail->wp = shadow_trail->queue;
   }
-  // Wrap 75th point
-  if( ++(shadow_trail->tap75) >= shadow_trail->end ) {
-    shadow_trail->tap75 = shadow_trail->queue;
-  }
 
-  // Update threshold with tail of ring buffer if it holds a real score
-  if( *shadow_trail->wp > 0.0f ) {
-    float oldest = *shadow_trail->wp;
-    float tap75 = *shadow_trail->tap75;
-    return shadow_trail->threshold = (1.0f - shadow_trail->alpha - shadow_trail->beta) * shadow_trail->threshold + shadow_trail->alpha * oldest + shadow_trail->beta * tap75;
-  }
-
-  // Initialize threshold to first encountered real score
-  if( shadow_trail->threshold <= 0.0f && score > 0.0f ) {
-    shadow_trail->threshold = score;
-  }
-
-  return shadow_trail->threshold;
+  float oldest = *shadow_trail->wp;
+  
+  return shadow_trail->threshold = shadow_trail->alpha * oldest + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
 }
 
 
@@ -633,9 +621,12 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
     int64_t sz = shadow_trail->end - shadow_trail->queue;
     memset( shadow_trail->queue, 0, sizeof(float) * sz );
   }
-  shadow_trail->threshold = -1.0f;
+  shadow_trail->threshold = 0.0f;
+  shadow_trail->recent = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->tap75 = shadow_trail->queue + ((shadow_trail->end - shadow_trail->queue) / 4);
+  shadow_trail->init_tap = shadow_trail->queue;
+  shadow_trail->length = 0;
+  //shadow_trail->tap75 = shadow_trail->queue + ((shadow_trail->end - shadow_trail->queue) / 4);
 }
 
 
@@ -706,7 +697,9 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
     shadow_trail->queue = NULL;
     shadow_trail->end = NULL;
     shadow_trail->wp = NULL;
-    shadow_trail->tap75 = NULL;
+    //shadow_trail->tap75 = NULL;
+    shadow_trail->init_tap = NULL;
+    shadow_trail->length = 0;
   }
 }
 
@@ -718,13 +711,20 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  ***********************************************************************
  */
 static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double alpha, double beta ) {
+  //#define init_min_score 0.9999f // -> cos=-0.0001 since score in [0.0, 2.0]
+  #define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
     return -1;
   }
-  shadow_trail->threshold = -1.0f;
+  shadow_trail->threshold = init_min_score;
+  shadow_trail->recent = init_min_score;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->tap75 = shadow_trail->queue + (heap_shadow / 4);
   shadow_trail->end = shadow_trail->queue + heap_shadow;
+  for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
+    *p++ = init_min_score;
+  }
+  shadow_trail->init_tap = shadow_trail->queue;
+  shadow_trail->length = shadow_trail->end - shadow_trail->queue;
   shadow_trail->alpha = (float)alpha;
   shadow_trail->beta = (float)beta;
   return 0;

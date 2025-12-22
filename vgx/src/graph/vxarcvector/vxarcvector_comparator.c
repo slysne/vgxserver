@@ -1025,18 +1025,19 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
 
     // Item not good enough for result
     if( result_heap_location == NULL ) {
-      // Update shadow with current item's score
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)sort.flt64.value );
       // Not good enough for beam either
       if( beam_heap_location == NULL ) {
         return 0;
       }
+      // Update shadow with beam's new worst score
+      _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)collected.sort.flt64.value );
+
       // Item was pushed to beam only
       return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
 
-    // Update shadow with result heap _discard_ score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)result_heap_discarded.sort.flt64.value );
+    // Update shadow with result heap's new worst score
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)_vxquery_collector__worst_heap_flt64_score( heap ) );
     
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {

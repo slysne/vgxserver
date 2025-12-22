@@ -6034,13 +6034,13 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // ==== CL3 ====
   // Q3.1-3
   struct {
-    float beam_j_th;
-    uint32_t improved_beam_j_th_counter;   // number of times a score beat the j-th best score in current beam
-    uint32_t unimproved_beam_j_th_counter; // number of times a score did not beat the j-th best score in current beam
-    float beam_j_th_delta;                 // most recent j-th best score improvement
-    float max_beam_j_th_delta;             // track best j-th improvement seen
-    float _rsv;
-  } dynamic_prune;
+    float last_top_k_th_margin;
+    int unimproved_count;
+    bool heap_stalled;
+    int _rsv1;
+    int _rsv2;
+    int _rsv3;
+  } stall_check;
   // Q3.4-5
   struct {
     float top_1_best;                 // current top score
@@ -6776,9 +6776,11 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  */
 typedef struct s_vgx_ExpansionShadowTrail_t {
   float threshold;
+  float recent;
   float *wp;
-  float *tap75;
   float *end;
+  float *init_tap;
+  int length;
   float *queue;
   float alpha;
   float beta;

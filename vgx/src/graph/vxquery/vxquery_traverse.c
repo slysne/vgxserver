@@ -333,7 +333,7 @@ static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t cur
     next = (int64_t)round( current_beam_width * recursion->beam.curve * dynamic_taper );
   }
   // clamp, never allow increasing width and never below minimum
-  return clamp_value( next, recursion->beam.max_width, recursion->beam.min_width );
+  return clamp_value( next, recursion->beam.min_width, recursion->beam.max_width );
 }
 
 
@@ -363,6 +363,15 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
 }
 
 
+static int beam_item_comparator_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  return (a->sort.flt64.value > b->sort.flt64.value) - (a->sort.flt64.value < b->sort.flt64.value);
+}
+
+
+static int beam_item_comparator_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  return (a->sort.flt64.value < b->sort.flt64.value) - (a->sort.flt64.value > b->sort.flt64.value);
+}
+
 
 /*******************************************************************//**
  *
@@ -374,15 +383,29 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
   vgx_FrontierQueue_t *F = collector->frontier;
   // We will transfer Beam -> Frontier
   // Sort beam buffer in place
+  
   vgx_CollectorItem_t *beam = (vgx_CollectorItem_t*)B->_buffer;
-  qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))B->_cmp );
+  
+  //qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))B->_cmp );
+  // Early or small beams sorted best to worst
+  if( n_transfer < 16 || collector->recursion_depth < 8 ) {
+    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_desc );
+  }
+  // Late and large beams sorted worst to best
+  else {
+    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_asc );
+  }
+
   vgx_CollectorItem_t *cursor = beam;
   vgx_CollectorItem_t *push_end = cursor + minimum_value( n_transfer, B->_size );
   vgx_CollectorItem_t *beam_end = cursor + B->_size;
 
   // Push sorted beam buffer to frontier
-  while( cursor < push_end ) {
-    if( cursor->headref->refcnt > 0 ) {
+  while( cursor < push_end && cursor < beam_end ) {
+    if( cursor->headref->refcnt <= 0 ) { // <- asc sort, empty item ignored
+      push_end++; // extend
+    }
+    else {
       CALLABLE(F)->Append(F, &cursor->item);
     }
     ++cursor;
@@ -393,7 +416,6 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
     GRAPH_LOCK( collector->graph ) {
       while( cursor < beam_end ) {
         if( cursor->headref->refcnt > 0 ) {
-          //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
           _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
         }
         ++cursor;
@@ -520,47 +542,16 @@ static void __discard_frontier( vgx_BaseCollector_context_t *collector ) {
 
 
 
-typedef enum _e_control_phase {
-  PHASE_EARLY = 0,
-  PHASE_MID = 1,
-  PHASE_LATE = 2
-} control_phase;
-
-
 // --------------------------------
 // Control setup
 //
 typedef struct _s_control_vector_t {
-  bool enable;
   struct {
-    unsigned total_eval;
-    unsigned total_contrib;
-    unsigned total_frontier;
-  } state;
-  struct {
-    float contrib;  // contrib / eval
-    float frontier; // frontier / eval
-  } yield;
-  struct {
-    float count_ratio;  // improved_count / (evals + epsilon)
-    float delta_ratio;  // top_k_th_delta / (max_top_k_th_delta + epsilon)
-  } progress;
-  struct {
-    float count_ratio;  // unimproved_count / (evals + epsilon)
-    bool unimproved_current_level;
-    int unimproved_levels;
-  } stagnation;
-  struct {
-    float previous;
-    float current;
-    float momentum;
-  } productivity;
+    int window;
+  } config;
   struct {
     int level;
     int level_size;
-    control_phase phase;  // EARLY, MID, LATE, EXHAUSTION
-    int early_limit;
-    int mid_limit;
   } evolution;
   struct {
     int local;
@@ -578,35 +569,11 @@ typedef struct _s_control_vector_t {
  *
  ***********************************************************************
  */
-__inline static void __init_control( control_vector_t *control ) {
-  static const int early_phase_init = 1024;
-  static const int mid_phase_init = 4096;
-
-  control->enable = false;
-  // state
-  control->state.total_eval = 0;
-  control->state.total_contrib = 0;
-  control->state.total_frontier = 0;
-  // yield
-  control->yield.contrib = 1.0f;
-  control->yield.frontier = 1.0f;
-  // progress
-  control->progress.count_ratio = 1.0f;
-  control->progress.delta_ratio = 1.0f;
-  // stagnation
-  control->stagnation.count_ratio = 0.0f;
-  control->stagnation.unimproved_current_level = true; // prove it false
-  control->stagnation.unimproved_levels = 0;
-  // productivity
-  control->productivity.previous = 0.0f;
-  control->productivity.current = 1.0f;
-  control->productivity.momentum = 0.5f;
+__inline static void __init_control( control_vector_t *control, int window ) {
+  control->config.window = window;
   // evolution
   control->evolution.level = 0;
   control->evolution.level_size = 0;
-  control->evolution.phase = PHASE_EARLY;
-  control->evolution.early_limit = early_phase_init;
-  control->evolution.mid_limit = mid_phase_init;
   // expansions
   control->expansions.local = 0;
   control->expansions.total = 0;
@@ -621,110 +588,16 @@ __inline static void __init_control( control_vector_t *control ) {
  *
  ***********************************************************************
  */
-__inline static bool __phase_transition( control_vector_t *control, vgx_ExpressEvalMemory_t *mem, int *limit, int phase_min, int phase_max ) {
-  // Still within phase limit
-  if( mem->counter.eval <= *limit ) {
-    return false; // no transition
+ __inline static int __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  #define MIN_TERMINATE_EVAL 2000
+  #define MIN_TERMINATE_EVAL_MULTIPLIER 2
+
+  // Stall reported after search has matured
+  if( mem->stall_check.heap_stalled && mem->counter.eval > MIN_TERMINATE_EVAL && mem->counter.eval > control->config.window * MIN_TERMINATE_EVAL_MULTIPLIER ) {
+    return INT_MAX; // Terminate due to heap stall
   }
-  // Compute adaptive limit exactly once per level
-  if( *limit <= phase_min ) {
-    float a = clamp_value( control->productivity.previous, 1.0f, 0.0f );
-    *limit = 1 + (int)floorf( phase_min + a * (phase_max - phase_min ) );
-    // Still in same phase after adaptive limit adjustment
-    if( mem->counter.eval < *limit ) {
-      return false; // no transition
-    }
-  }
-  // Transition to next level
-  return true;
-}
 
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-__inline static int __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
-  #define early_phase_min           (1024)      // stay early at least this long
-  #define early_phase_max           (2048+512)  // and possible all the way here
-  #define mid_phase_min             (4096)      // stay mid at least this long
-  #define mid_phase_max             (4096+2048) // and possibly all the way here
-  #define stagnation_levels_max     12
-  #define delta_ratio_early         0.16f
-  #define count_ratio_early         0.08f
-  #define delta_ratio_mid           0.06f
-  #define count_ratio_mid           0.03f
-  #define momentum_beta             0.3f
-
-  // Inc level and return
   control->evolution.level++;
-  if( control->enable == false ) {
-    return control->evolution.level;
-  }
-  
-  // evolution
-  // Phase transition detection
-  switch( control->evolution.phase ) {
-  case PHASE_EARLY:
-    if( !__phase_transition( control, mem, &control->evolution.early_limit, early_phase_min, early_phase_max ) || 
-        (control->progress.delta_ratio > delta_ratio_early && control->progress.count_ratio > count_ratio_early) ) {
-      break;
-    }
-    // Beyond adaptive early limit: transition to mid
-    control->evolution.phase = PHASE_MID;
-    /* FALLTHRU */
-  case PHASE_MID:
-    if( !__phase_transition( control, mem, &control->evolution.mid_limit, mid_phase_min, mid_phase_max ) ||
-        (control->progress.delta_ratio > delta_ratio_mid && control->progress.count_ratio > count_ratio_mid) ) {
-      break;
-    }
-    // Beyond adaptive mid limit: transition to late
-    control->evolution.phase = PHASE_LATE;
-    /* FALLTHRU */
-  case PHASE_LATE:
-    break;
-  }
- 
-  // Reset dynamic pruning counters
-  mem->dynamic_prune.improved_beam_j_th_counter = 0;
-  mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
-  mem->dynamic_prune.beam_j_th_delta = 0.0f;
-  mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
-  // state
-  // Start global counts at their current values
-  control->state.total_eval = mem->counter.eval;
-  control->state.total_contrib = mem->counter.contrib;
-  control->state.total_frontier = mem->counter.frontier;
-  // yield
-  // Reset yield to max
-  control->yield.contrib = 1.0f;
-  control->yield.frontier = 1.0f;
-  // progress
-  // Reset progress to max
-  control->progress.count_ratio = 1.0f;
-  control->progress.delta_ratio = 1.0f;
-  // stagnation
-  control->stagnation.count_ratio = 0.0f;
-  // A run of N completely unimproved levels shuts off the pruning controller
-  if( control->stagnation.unimproved_current_level ) {
-    if( ++control->stagnation.unimproved_levels > stagnation_levels_max ) {
-      control->enable = false;
-    }
-  }
-  else {
-    control->stagnation.unimproved_levels = 0;
-  }
-  control->stagnation.unimproved_current_level = true; // prove it false
-  // productivity
-  control->productivity.momentum = momentum_beta * (control->productivity.current - control->productivity.previous) +
-                                   (1.0f - momentum_beta) * control->productivity.momentum;
-  control->productivity.previous = control->productivity.current;
-  control->productivity.current = 1.0f;
-  // expansions
-  control->expansions.local = 0;
-  //
   return control->evolution.level;
 }
 
@@ -735,94 +608,14 @@ __inline static int __next_level_control( control_vector_t *control, vgx_Express
  *
  ***********************************************************************
  */
-__inline static float __update_marginal_gain( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
-  if( control->enable == false ) {
-    return 1.0f;
-  }
-  #define progress_count_epsilon    1.0f
-  #define progress_delta_epsilon    1e-4f
-  //#define stagnation_count_epsilon  4.0f
-  #define weight_yield_contrib      0.15f /* ability to contribute to baseline threshold */
-  #define weight_yield_frontier     0.35f /* ability to add to beam */
-  #define weight_progress_count     0.35f /* number of times we immprove beam */
-  #define weight_progress_delta     0.15f /* beam improvement evolution for level */
-  //#define stagnation_penalty_gamma  3.0f
-  #define alpha_delta_ratio         0.25f /* progress delta smoothing factor */
-
-  // Global counters minus state at beginning of level
-  unsigned eval = mem->counter.eval - control->state.total_eval;
-  unsigned contrib = mem->counter.contrib - control->state.total_contrib;
-  unsigned frontier = mem->counter.frontier - control->state.total_frontier;
-  // Pruning signals
-  unsigned improved = mem->dynamic_prune.improved_beam_j_th_counter;
-  unsigned unimproved = mem->dynamic_prune.unimproved_beam_j_th_counter;
-  float max_delta = mem->dynamic_prune.max_beam_j_th_delta;
-  float delta = mem->dynamic_prune.beam_j_th_delta;
-  // Yield
-  control->yield.contrib = (float)contrib / (float)eval;
-  control->yield.frontier = (float)frontier / (float)eval;
-  // Progress
-  control->progress.count_ratio = (float)improved / ((float)eval + progress_count_epsilon);
-  float instant_delta_ratio = max_delta > 0.0f ? delta / (max_delta + progress_delta_epsilon) : 0.0f;
-  control->progress.delta_ratio = alpha_delta_ratio * instant_delta_ratio + (1.0f - alpha_delta_ratio) * control->progress.delta_ratio;
-  // Stagnation
-  //control->stagnation.count_ratio = (float)unimproved / ((float)eval + stagnation_count_epsilon);
-  if( improved > 0 ) {
-    control->stagnation.unimproved_current_level = false;
-  }
-  // Compute productivity
-  float productivity = weight_yield_contrib * control->yield.contrib +
-                       weight_yield_frontier * control->yield.frontier +
-                       weight_progress_count * control->progress.count_ratio +
-                       weight_progress_delta * control->progress.delta_ratio;
-  //float stagnation_penalty = pow(1 - control->stagnation.count_ratio, stagnation_penalty_gamma);
-  control->productivity.current = productivity; // * stagnation_penalty;
-  return control->productivity.current;
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
 __inline static bool __expand_next_check( control_vector_t *control, float score, vgx_ExpressEvalMemory_t *mem ) {
-  #define GAIN_THRESHOLD_MID  0.15f
-  #define MOMENTUM_THRESHOLD_MID  0.05f
-  #define GAIN_THRESHOLD_LATE 0.05f
-  #define MOMENTUM_THRESHOLD_LATE 0.02f
-  #define MIN_EXPANSIONS 8
-  #define EXPAND_FULL_FRONTIER_MAX (2*MIN_EXPANSIONS)
-  // Never expand if score is below baseline
+  
   if( score < control->threshold.baseline ) {
     return false;
   }
-  // Never perform termination checks until at least N local expansions and the frontier is large
-  if( control->enable && control->expansions.local > MIN_EXPANSIONS && control->evolution.level_size > EXPAND_FULL_FRONTIER_MAX ) {
-    switch( control->evolution.phase ) {
-    // Aggressively expand during early phase
-    case PHASE_EARLY:
-      break;
-    // Expect steady progress during mid phase
-    case PHASE_MID:
-      if( control->productivity.current > GAIN_THRESHOLD_MID || control->productivity.momentum > MOMENTUM_THRESHOLD_MID ) {
-        break;
-      }
-      return false;
-    // Prevent wasted work during late phase
-    case PHASE_LATE:
-      if( control->productivity.current > GAIN_THRESHOLD_LATE || control->productivity.momentum > MOMENTUM_THRESHOLD_LATE) {
-        break;
-      }
-      return false;
-    default:
-      return false; // ???
-    }
-  }
+
   control->expansions.local++;
   control->expansions.total++;
-  mem->dynamic_prune.beam_j_th_delta = 0.0f; // <-- asymetric signal, must reset for each expansion
   return true;
 }
 
@@ -867,11 +660,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       }
       if( recursion->visit.reset_metrics ) {
         //mem->threshold = 0.0;
-        mem->dynamic_prune.beam_j_th = 0;
-        mem->dynamic_prune.improved_beam_j_th_counter = 0;
-        mem->dynamic_prune.unimproved_beam_j_th_counter = 0;
-        mem->dynamic_prune.beam_j_th_delta = 0.0f;
-        mem->dynamic_prune.max_beam_j_th_delta = 0.0f;
+
+        mem->stall_check.last_top_k_th_margin = 0.0f;
+        mem->stall_check.unimproved_count = 0;
+        mem->stall_check.heap_stalled = false;
+
         mem->dynamic_taper.top_1_best = -1.0f;
         mem->dynamic_taper.previous_window_best = -1.0f;
         mem->dynamic_taper.window_counter = 0;
@@ -885,7 +678,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     
     // Initialize control vector after the first expansion.
     control_vector_t control = {0};
-    __init_control( &control );
+    __init_control( &control, (int)recursion->shadow.size );
 
     int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
     int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
@@ -946,9 +739,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
             goto terminate_inner;
           }
 
-          // Compute gain from previous expansion
-          __update_marginal_gain( &control, mem );
-
           // Early termination if queue limit reached
           if( control.expansions.total >= expansion_limit ) {
             goto terminate_inner;
@@ -960,7 +750,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          control.threshold.baseline = _vxquery_collector__get_current_threshold( collector );
+          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector );
         }
 
         // Used item from frontier must be closed here

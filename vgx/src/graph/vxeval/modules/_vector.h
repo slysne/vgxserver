@@ -171,23 +171,20 @@ ham(-0.9) -> 59
 ham(-1.0) -> 64
 */
 
-__inline static void __dynamic_prune( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float beam_j_th ) {
-  // Maintain j-th score tracker for pruning control
-  if( beam_j_th > mem->dynamic_prune.beam_j_th ) {
-    // New delta between this j-th score and previous j-th score
-    mem->dynamic_prune.beam_j_th_delta = beam_j_th - mem->dynamic_prune.beam_j_th;
-    // Update j-th score
-    mem->dynamic_prune.beam_j_th = beam_j_th;
-    // Update max delta if this new delta is bigger
-    if( mem->dynamic_prune.beam_j_th_delta > mem->dynamic_prune.max_beam_j_th_delta ) {
-      mem->dynamic_prune.max_beam_j_th_delta = mem->dynamic_prune.beam_j_th_delta;
-    }
-    // Count the improvement event
-    mem->dynamic_prune.improved_beam_j_th_counter++;
+__inline static void __stall_detect( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
+  // Detect result heap stall
+  if( score > mem->stall_check.last_top_k_th_margin ) {
+    mem->stall_check.unimproved_count = 0;
+    // pretent recorded top-k is a little bit worse to prevent stall when running scores are still pretty good
+    mem->stall_check.last_top_k_th_margin = score - collector->dynamic_taper_gamma;
+    mem->stall_check.heap_stalled = false;
   }
-  // No improvement to j-th score
   else {
-    mem->dynamic_prune.unimproved_beam_j_th_counter++;
+    int W = collector->shadow_trail.length;
+    // heap stalled
+    if( ++mem->stall_check.unimproved_count > W ) {
+      mem->stall_check.heap_stalled = true;
+    }
   }
 }
 
@@ -243,7 +240,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 
     // New taper
     double taper = factor * collector->dynamic_taper;
-    collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_UPPER_BOUND, DYNAMIC_TAPER_LOWER_BOUND );
+    collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
 
     // Update cosine at checkpoint
     mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
@@ -273,16 +270,6 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
   20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15,
   14, 14, 13, 13, 13, 12, 12, 11, 10, 10,  9,  8,  7,  6,  5,  0
 };
-
-
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
-__inline static double __worst_heap_flt64_score( Cm256iHeap_t *heap ) {
-  return ((vgx_CollectorItem_t*)heap->_buffer)->sort.flt64.value;
-}
 
 
 
@@ -343,12 +330,12 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
   vgx_BaseCollector_context_t *base = self->context.collector;
 
-  float top_k_th = __worst_heap_flt64_score( base->container.sequence.heap );
-  float beam_j_th = base->beam_heap != NULL ? __worst_heap_flt64_score( base->beam_heap ) : 0.0f;
+  float top_k_th = _vxquery_collector__worst_heap_flt64_score( base->container.sequence.heap );
+  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_flt64_score( base->beam_heap ) : 0.0f;
 
   // Adaptive search enabled
   if( base->adaptive_recursion ) {
-    __dynamic_prune( base, mem, beam_j_th );
+    //__stall_detect( base, mem, top_k_th );
     __dynamic_taper( base, mem, cosine );
   }
 
@@ -357,17 +344,22 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
   // Ignore everything below the running threshold
   if( score < threshold ) {
+    // Inject running threshold to keep delay line ticking
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
     return 0.0f;
   }
-  
-  // Score is good enough to help refine the baseline threshold
-  mem->counter.contrib++;
 
   // Item is not collectable to result or beam, update threshold queue with inferior score
   if( score <= top_k_th && score <= beam_j_th ) {
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+    // Score is good enough to help refine the baseline threshold
+    mem->counter.contrib++;
+    //_vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score );
     return 0.0f;
   }
+      
+  // Score is good enough to help refine the baseline threshold
+  mem->counter.contrib++;
 
   // Frontier contribution 
   if( score > beam_j_th ) {
