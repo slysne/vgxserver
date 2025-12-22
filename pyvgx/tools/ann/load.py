@@ -850,7 +850,7 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, toffset=0.0, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True ):
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -873,7 +873,6 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, tof
                                     'beam_gamma': gamma,
                                     'beam_min': bmin,
                                     'beam_max': bmax,
-                                    'threshold_offset': toffset,
                                     'adaptive_taper': adaptive,
                                     #'arc_prune_until': 2,
                                     #'arc_prune_score': 5.0,
@@ -1000,12 +999,12 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, alpha, beta, gamma, r_result, adaptive=True, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, toffset=toffset, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive)
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, r_result, adaptive=True, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, alpha, beta, gamma, adaptive=True, perfonly=False ):
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, adaptive=True, perfonly=False ):
     if bmax < bmin: bmax = bmin
     if bw < bmin: bw = bmin
     elif bw > bmax: bw = bmax
@@ -1015,7 +1014,7 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, tof
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, toffset, alpha, beta, gamma, r_result, adaptive)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, r_result, adaptive)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -1042,12 +1041,15 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, tof
     qps_wall = total_queries / wall_time
     total_sum_evals = sum([r_result['sum_evals'] for _, r_result in T])
     total_sum_contributes = sum([r_result['sum_contributes'] for _, r_result in T])
+    total_sum_frontiers = sum([r_result['sum_frontiers'] for _, r_result in T])
     total_sum_accepts = sum([r_result['sum_accepts'] for _, r_result in T])
     epq = total_sum_evals // total_queries
     cpq = total_sum_contributes // total_queries
+    fpq = total_sum_frontiers // total_queries
     apq = total_sum_accepts // total_queries
     evalrate = (epq / (avg_latency_ms/1000)) / 1000000 # million evals per second
     contributerate = 100*cpq/epq
+    frontierrate = 100*fpq/epq
     acceptrate = 100*apq/epq
     is_adaptive_taper = "(a)" if adaptive else ""
     total_sum_already = sum([r_result['sum_already'] for _, r_result in T ])
@@ -1055,18 +1057,18 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, tof
     vpq = total_sum_visited // total_queries
     hpq = total_sum_already // total_queries
     if not perfonly:
-        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} toffset={toffset} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f}"
+        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f}"
         #result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
-        result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms ev={epq} con={cpq} acc={apq} stop={hpq} visit={vpq}"
+        result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms ev={epq} con={cpq} fr={fpq} acc={apq} stop={hpq} visit={vpq}"
         print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
     else:
-        print( f"{recall:0.4f} {qps:0.1f} {epq} {cpq} {apq}" )
+        print( f"{recall:0.4f} {qps:0.1f} {epq} {cpq} {fpq} {apq}" )
     return recall, qps
 
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, toffset=0.0, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True, perfonly=False ):
+def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True, perfonly=False ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     auto_shadows = []
@@ -1096,7 +1098,7 @@ def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beam
                     for bc in bcs:
                         for init in inits:
                             r_PROBES = random.sample( PROBES, len(PROBES) )
-                            recall, qps = threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, toffset=toffset, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive, perfonly=perfonly )
+                            recall, qps = threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive, perfonly=perfonly )
 
 
 
@@ -1108,6 +1110,7 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
     cnt = 0
     tot_neval = 0
     tot_ncontribute = 0
+    tot_nfrontier = 0
     tot_naccept = 0
     tot_nalready = 0
     tot_nvisited = 0
@@ -1117,21 +1120,23 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
         r, t_ms = ptest(MEM, Q, g, p, k=k, root=entry, recall_only=1, recall_with_timing=1, fname=fname)
         R.append(r)
         T.append(t_ms)
-        neval, _, ncontribute, naccept, nvisited, nalready = MEM.counters
+        neval, ncontribute, nfrontier, naccept, nvisited, nalready = MEM.counters
         tot_neval += neval
         tot_ncontribute += ncontribute
+        tot_nfrontier += nfrontier
         tot_naccept += naccept
         tot_nalready += nalready
         tot_nvisited += nvisited
         if show:
             eval_per_query = tot_neval // cnt
             pct_contribute = 100.0*tot_ncontribute / tot_neval
+            pct_frontier = 100.0*tot_nfrontier / tot_neval
             pct_accept = 100.0*tot_naccept / tot_neval
             avg_recall = sum(R) / cnt
             avg_latency = sum(T) / cnt
-            print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_contribute:0.1f}%c/e {pct_accept:0.1f}%a/e    ", end="\r", flush=1 )
+            print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_contribute:0.1f}%c/e  {pct_frontier:0.1f}%f/e  {pct_accept:0.1f}%a/e    ", end="\r", flush=1 )
     if show:
-        print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_contribute:0.1f}%h/e {pct_accept:0.1f}%a/e    " )
+        print( f"{cnt}/{len(P)} {r:0.3f} {t_ms:0.2f}ms  avg:{avg_recall:0.3f} {avg_latency:0.2f}ms  {eval_per_query}e/q  {pct_contribute:0.1f}%c/e {pct_frontier:0.1f}%f/e  {pct_accept:0.1f}%a/e    " )
     else:
         sum_latency_ms = sum(T)
         avg_latency_ms = sum_latency_ms / cnt
@@ -1145,6 +1150,7 @@ def testrecall( MEM, Q, g, k=25, N=1500, P=None, entry="entry", show=True, r_res
             r_result['sum_latency_ms'] = sum_latency_ms
             r_result['sum_evals'] = tot_neval
             r_result['sum_contributes'] = tot_ncontribute
+            r_result['sum_frontiers'] = tot_nfrontier
             r_result['sum_accepts'] = tot_naccept
             r_result['sum_already'] = tot_nalready
             r_result['sum_visited'] = tot_nvisited
@@ -1212,7 +1218,9 @@ medoid = g[ROOT].Terminals()[0] # 4fa8ff21-6154-4485-b539-8a1ebf8fac00
 #    fname = sys.argv[1]
 #    run( fname )
 
-#INIT(g, h=10, shw=4096, f=0, bw=3, bc=1.0, init=3, bmin=3, bmax=512, toffset=0.0, alpha=1/14, beta=1/28, adaptive=True )
+#MEM, Q = INIT(g, h=10, shw=600, f=0, bw=3, bc=1.0, init=3, bmin=3, bmax=256, alpha=1/18, beta=0.0, gamma=0.0, adaptive=True )
+
+#ptest( MEM, Q, g, PROBES100k[0], root='entry' )
 
 #threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[ int(2**(x/3)) for x in range(4,40) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, alpha=1/18, beta=1/180, gamma=1.0, adaptive=True, perfonly=1 )
 
