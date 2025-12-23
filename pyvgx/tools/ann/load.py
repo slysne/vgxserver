@@ -850,7 +850,7 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True ):
+def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -865,17 +865,16 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, alp
                                 recursion = {
                                     'heap_size': h,
                                     'shadow_size': shw,
-                                    'shadow_alpha': alpha,
-                                    'shadow_beta': beta,
                                     'frontier_limit': f,
                                     'beam_width': bw,
                                     'beam_curve': bc,
-                                    'beam_gamma': gamma,
                                     'beam_min': bmin,
                                     'beam_max': bmax,
                                     'adaptive_taper': adaptive,
-                                    #'arc_prune_until': 2,
-                                    #'arc_prune_score': 5.0,
+                                    'alpha' : alpha,
+                                    'beta' : beta,
+                                    'gamma' : gamma,
+                                    'delta' : delta,
                                     'init_select': init
                                 }
     )
@@ -999,12 +998,12 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None):
 
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, r_result, adaptive=True, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive)
+def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, delta, r_result, adaptive=True, show=False):
+    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, delta=delta, adaptive=adaptive)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, adaptive=True, perfonly=False ):
+def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, delta, adaptive=True, perfonly=False ):
     if bmax < bmin: bmax = bmin
     if bw < bmin: bw = bmin
     elif bw > bmax: bw = bmax
@@ -1014,7 +1013,7 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alp
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, r_result, adaptive)
+        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alpha, beta, gamma, delta, r_result, adaptive)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -1057,7 +1056,7 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alp
     vpq = total_sum_visited // total_queries
     hpq = total_sum_already // total_queries
     if not perfonly:
-        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f}"
+        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f} d={delta:0.4f}"
         #result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms evals={epq} ({evalrate:0.1f}M/s/t {N*evalrate:0.1f}M/s) accepts={apq} ({acceptrate:0.1f}%)"
         result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms ev={epq} con={cpq} fr={fpq} acc={apq} stop={hpq} visit={vpq}"
         print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
@@ -1068,7 +1067,7 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, alp
 
 
 
-def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, alpha=1.0/64, beta=0.0, gamma=1.0, adaptive=True, perfonly=False ):
+def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True, perfonly=False ):
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     auto_shadows = []
@@ -1098,7 +1097,7 @@ def threadtest( g, N, PROBES, entry, heaps=None, shadows=None, fronts=None, beam
                     for bc in bcs:
                         for init in inits:
                             r_PROBES = random.sample( PROBES, len(PROBES) )
-                            recall, qps = threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, adaptive=adaptive, perfonly=perfonly )
+                            recall, qps = threadwork( g, N, PROBES, entry, k=10, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, alpha=alpha, beta=beta, gamma=gamma, delta=delta, adaptive=adaptive, perfonly=perfonly )
 
 
 
@@ -1218,11 +1217,11 @@ medoid = g[ROOT].Terminals()[0] # 4fa8ff21-6154-4485-b539-8a1ebf8fac00
 #    fname = sys.argv[1]
 #    run( fname )
 
-#MEM, Q = INIT(g, h=10, shw=600, f=0, bw=3, bc=1.0, init=3, bmin=3, bmax=256, alpha=1/18, beta=0.0, gamma=0.0, adaptive=True )
+#MEM, Q = INIT(g, h=10, shw=600, f=0, bw=3, bc=1.0, init=3, bmin=3, bmax=256, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True )
 
 #ptest( MEM, Q, g, PROBES100k[0], root='entry' )
 
-#threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[ int(2**(x/3)) for x in range(4,40) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, alpha=1/18, beta=1/180, gamma=1.0, adaptive=True, perfonly=1 )
+#threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[ int(2**(x/3)) for x in range(4,40) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True, perfonly=1 )
 
 
 
