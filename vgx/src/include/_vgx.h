@@ -1053,11 +1053,22 @@ __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollect
  *
  ***********************************************************************
  */
-__inline static float _vxquery_collector__get_discounted_threshold( vgx_BaseCollector_context_t *collector ) {
+__inline static float _vxquery_collector__get_discounted_threshold( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   #define DISCOUNT_LEVEL_PIVOT (1.0f/40)
-  #define MIN_DISCOUNT 0.7f
-  #define MAX_DISCOUNT 1.3f
-  float discount = 1.0f - collector->shadow_trail.beta * collector->recursion_depth * DISCOUNT_LEVEL_PIVOT;
+  #define MIN_DISCOUNT 0.9f
+  #define MAX_DISCOUNT 1.1f
+
+  #define delta_10000 -0.002f
+  #define delta_50000 0.005f
+  #define delta_a ((delta_50000 - delta_10000) / 40000)
+  #define delta_b (delta_10000 - delta_a*10000)
+  static const float da = delta_a;
+  static const float db = delta_b;
+
+  float delta = delta_a * mem->counter.eval + delta_b;
+
+  //float discount = 1.0f - collector->delta * collector->recursion_depth * DISCOUNT_LEVEL_PIVOT;
+  float discount = 1.0f - delta * collector->recursion_depth * DISCOUNT_LEVEL_PIVOT;
   // beta=0.1 -> discount 20:0.95, 40:0.9, 60:0.85, ... -> thresholds bias towards easy as we go deeper
   // beta=-0.1 -> discount 20:1.05, 40:1.10, 60:1:15, ... -> thresholds bias towards difficult as we go deeper
   return _vxquery_collector__get_current_threshold(collector) * clamp_value( discount, MIN_DISCOUNT, MAX_DISCOUNT );

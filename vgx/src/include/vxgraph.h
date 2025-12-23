@@ -6032,23 +6032,19 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t accept;
   } counter;
   // ==== CL3 ====
-  // Q3.1-3
-  struct {
-    float last_top_k_th_margin;
-    int unimproved_count;
-    bool heap_stalled;
-    int _rsv1;
-    int _rsv2;
-    int _rsv3;
-  } stall_check;
-  // Q3.4-5
+  // Q3.1-4
   struct {
     float top_1_best;                 // current top score
     float previous_window_best;       // top score recorded in previous window
     uint32_t window_counter;          // window counter
-    uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score 
+    uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score
+    float alpha;
+    float beta;
+    float gamma;
+    float delta;
   } dynamic_taper;
-  // Q3.6-8
+  // Q3.5-8
+  QWORD __rsv_3_5;
   QWORD __rsv_3_6;
   QWORD __rsv_3_7;
   QWORD __rsv_3_8;
@@ -6776,14 +6772,9 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  */
 typedef struct s_vgx_ExpansionShadowTrail_t {
   float threshold;
-  float recent;
   float *wp;
   float *end;
-  float *init_tap;
-  int length;
   float *queue;
-  float alpha;
-  float beta;
 } vgx_ExpansionShadowTrail_t;
 
 
@@ -6822,7 +6813,10 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t max_beam_width;                     \
   bool adaptive_recursion;                    \
   double dynamic_taper;                       \
-  float dynamic_taper_gamma;                  \
+  float alpha;                                \
+  float beta;                                 \
+  float gamma;                                \
+  float delta;                                \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \

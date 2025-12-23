@@ -4015,12 +4015,9 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .mode                     = recursion_config->mode,
       .heap = {
         .size                   = recursion_config->heap.size,
-        //.multiplier             = recursion_config->heap.multiplier
       },
       .shadow = {
-        .size                   = recursion_config->shadow.size,
-        .alpha                  = recursion_config->shadow.alpha,
-        .beta                   = recursion_config->shadow.beta
+        .size                   = recursion_config->shadow.size
       },
       .limit = {
         .frontier               = recursion_config->limit.frontier,
@@ -4032,24 +4029,23 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       .visit = {
         .reset_metrics          = recursion_config->visit.reset_metrics,
         .reset_map              = recursion_config->visit.reset_map
-        //.skip_probability       = recursion_config->visit.skip_probability,
-        //.arclsh_cos_threshold   = recursion_config->visit.arclsh_cos_threshold
       },
       .beam = {
         .width                  = recursion_config->beam.width,
         .min_width              = recursion_config->beam.min_width,
         .max_width              = recursion_config->beam.max_width,
         .curve                  = recursion_config->beam.curve,
-        .gamma                  = recursion_config->beam.gamma,
         .adaptive_taper         = recursion_config->beam.adaptive_taper
+      },
+      .tune = {
+        .alpha                  = recursion_config->tune.alpha,
+        .beta                   = recursion_config->tune.beta,
+        .gamma                  = recursion_config->tune.gamma,
+        .delta                  = recursion_config->tune.delta
       },
       .init = {
         .select                 = recursion_config->init.select
-      }/*,
-      .arc_prune = {
-        .score                  = recursion_config->arc_prune.score,
-        .until                  = recursion_config->arc_prune.until
-      }*/
+      }
     }
   };
   return COMLIB_OBJECT_NEW( vgx_NeighborhoodQuery_t, NULL, &args );

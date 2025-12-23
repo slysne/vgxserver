@@ -171,25 +171,8 @@ ham(-0.9) -> 59
 ham(-1.0) -> 64
 */
 
-__inline static void __stall_detect( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
-  // Detect result heap stall
-  if( score > mem->stall_check.last_top_k_th_margin ) {
-    mem->stall_check.unimproved_count = 0;
-    // pretent recorded top-k is a little bit worse to prevent stall when running scores are still pretty good
-    mem->stall_check.last_top_k_th_margin = score - collector->dynamic_taper_gamma;
-    mem->stall_check.heap_stalled = false;
-  }
-  else {
-    int W = collector->shadow_trail.length;
-    // heap stalled
-    if( ++mem->stall_check.unimproved_count > W ) {
-      mem->stall_check.heap_stalled = true;
-    }
-  }
-}
 
-
-__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float cosine ) {
+__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
 
 #define VISIT_WINDOW_CHECKPOINT 128               //
 #define VISIT_WINDOW_UNIMPROVED_MAX 112           // 87.5% of checkpoint window
@@ -200,12 +183,32 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR 0.9375   // 1 - 1/16
 #define DYNAMIC_TAPER_UPPER_BOUND 2.875           // 3 - 1/8
 #define DYNAMIC_TAPER_LOWER_BOUND 0.3125          // 1/4 + 1/16
-#define HIGH_COSINE_GAIN 0.018f                   //
-#define LOW_COSINE_GAIN 0.009f                    //
+#define HIGH_SCORE_GAIN 0.018f                    //
+#define LOW_SCORE_GAIN 0.009f                     //
 
-  // Maintain running top cosine for beam taper
-  if( cosine > mem->dynamic_taper.top_1_best ) {
-    mem->dynamic_taper.top_1_best = cosine;
+
+#define alpha_4000  0.0f
+#define beta_4000 0.03f
+#define alpha_10000 -0.005f
+#define beta_10000 0.062f
+
+#define alpha_a ((alpha_10000 - alpha_4000) / 6000)
+#define alpha_b (alpha_4000 - alpha_a*4000)
+
+#define beta_a ((beta_10000 - beta_4000) / 6000)
+#define beta_b (beta_4000 - beta_a*4000)
+
+static const float aa = alpha_a;
+static const float ab = alpha_b;
+static const float ba = beta_a;
+static const float bb = beta_b;
+
+  float alpha = alpha_a * mem->counter.eval + alpha_b;
+
+  // Maintain running top score for beam taper
+  //if( score > mem->dynamic_taper.top_1_best * (1+mem->dynamic_taper.alpha) ) {
+  if( score > mem->dynamic_taper.top_1_best * (1+alpha) ) {
+    mem->dynamic_taper.top_1_best = score;
     mem->dynamic_taper.window_top_1_unimproved = 0;
   }
   else {
@@ -214,25 +217,33 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 
   // Evaluate our progress
   if( ++mem->dynamic_taper.window_counter >= VISIT_WINDOW_CHECKPOINT ) {
+    float beta = beta_a * mem->counter.eval + beta_b;
+
+  //if( ++mem->dynamic_taper.window_counter >= collector->beam_width * 4 ) {
     double factor;
     // -- LOOSEN --
-    // We're decidedly not improving the running top cosine, loosen taper
+    // We're decidedly not improving the running top score, loosen taper
     if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
-      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
+      //factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR * (1 + mem->dynamic_taper.beta);
+      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR * (1 + beta);
     }
-    // We're mostly not improving the top cosine, loosen taper a bit
+    // We're mostly not improving the top score, loosen taper a bit
     else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
-      factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
+      //factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR * (1 + mem->dynamic_taper.beta);
+      factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR * (1 + beta);
     }
     // -- TIGHTEN --
     // We are improving at a decent rate, tighten taper a bit
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_COSINE_GAIN ) {
-      factor =  DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
+    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_SCORE_GAIN * (1 + mem->dynamic_taper.gamma) ) {
+      //factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR * (1 + mem->dynamic_taper.beta);
+      factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR * (1 + beta);
     }
     // We are improving at a very good rate, tighten taper
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_COSINE_GAIN ) {
-      factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
+    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_SCORE_GAIN * (1 + mem->dynamic_taper.gamma) ) {
+      //factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR * (1 + mem->dynamic_taper.beta);
+      factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR * (1 + beta);
     }
+    
     // -- STEADY --
     else {
       factor = 1.0;
@@ -242,7 +253,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
     double taper = factor * collector->dynamic_taper;
     collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
 
-    // Update cosine at checkpoint
+    // Update score at checkpoint
     mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
     
     // Reset window
@@ -333,13 +344,13 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   float top_k_th = _vxquery_collector__worst_heap_flt64_score( base->container.sequence.heap );
   float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_flt64_score( base->beam_heap ) : 0.0f;
 
+  float score = cosine + 1.0f; // [0.0 - 2.0]
+
   // Adaptive search enabled
   if( base->adaptive_recursion ) {
-    //__stall_detect( base, mem, top_k_th );
-    __dynamic_taper( base, mem, cosine );
+    __dynamic_taper( base, mem, score );
   }
 
-  float score = cosine + 1.0f; // [0.0 - 2.0]
   float threshold = _vxquery_collector__get_current_threshold( base );
 
   // Ignore everything below the running threshold

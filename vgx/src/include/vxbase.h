@@ -3461,8 +3461,6 @@ typedef struct s_vgx_recursion_config_t {
   } heap;
   struct {
     int64_t size;
-    double alpha;
-    double beta;
   } shadow;
   struct {
     int64_t frontier;
@@ -3474,26 +3472,23 @@ typedef struct s_vgx_recursion_config_t {
   struct {
     bool reset_metrics;
     bool reset_map;
-    //double skip_probability;
-    //double arclsh_cos_threshold;
   } visit;
   struct {
     int64_t width;
     int64_t min_width;
     int64_t max_width;
     double curve;
-    double gamma;
     bool adaptive_taper;
   } beam;
   struct {
+    double alpha;
+    double beta;
+    double gamma;
+    double delta;
+  } tune;
+  struct {
     int64_t select;
   } init;
-  /*
-  struct {
-    double score;
-    int64_t until;
-  } arc_prune;
-  */
   
 } vgx_recursion_config_t;
 

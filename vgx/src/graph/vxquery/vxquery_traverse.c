@@ -588,17 +588,8 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  *
  ***********************************************************************
  */
- __inline static int __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
-  #define MIN_TERMINATE_EVAL 2000
-  #define MIN_TERMINATE_EVAL_MULTIPLIER 2
-
-  // Stall reported after search has matured
-  if( mem->stall_check.heap_stalled && mem->counter.eval > MIN_TERMINATE_EVAL && mem->counter.eval > control->config.window * MIN_TERMINATE_EVAL_MULTIPLIER ) {
-    return INT_MAX; // Terminate due to heap stall
-  }
-
-  control->evolution.level++;
-  return control->evolution.level;
+ __inline static int64_t __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  return ++control->evolution.level;
 }
 
 
@@ -659,12 +650,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         iEvaluator.ClearDWordSet( mem );
       }
       if( recursion->visit.reset_metrics ) {
-        //mem->threshold = 0.0;
-
-        mem->stall_check.last_top_k_th_margin = 0.0f;
-        mem->stall_check.unimproved_count = 0;
-        mem->stall_check.heap_stalled = false;
-
         mem->dynamic_taper.top_1_best = -1.0f;
         mem->dynamic_taper.previous_window_best = -1.0f;
         mem->dynamic_taper.window_counter = 0;
@@ -674,6 +659,10 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         mem->counter.frontier = 0;
         mem->counter.accept = 0;
       }
+      mem->dynamic_taper.alpha = collector->alpha;
+      mem->dynamic_taper.beta = collector->beta;
+      mem->dynamic_taper.gamma = collector->gamma;
+      mem->dynamic_taper.delta= collector->delta;
     }
     
     // Initialize control vector after the first expansion.
@@ -712,7 +701,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     while( control.evolution.level_size > 0 ) {
 
       // Max depth reached
-      if( __next_level_control(&control, mem) > depth_limit ) {
+      if( __next_level_control(&control, mem) >= depth_limit ) {
         goto terminate_outer;
       }
 
@@ -750,7 +739,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector );
+          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
         }
 
         // Used item from frontier must be closed here

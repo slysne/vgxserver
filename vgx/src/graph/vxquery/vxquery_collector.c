@@ -515,12 +515,13 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
+  #define trail_alpha (1.0f/18)
   // Never negative cosine (score is [0.0, 2.0] )
   score = fmaxf( 1.0f, score );
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = shadow_trail->alpha * score + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
+    return shadow_trail->threshold = trail_alpha * score + (1.0f - trail_alpha) * shadow_trail->threshold;
   }
 
   // Write latest score
@@ -532,8 +533,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
   }
 
   float oldest = *shadow_trail->wp;
-  
-  return shadow_trail->threshold = shadow_trail->alpha * oldest + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
+  return shadow_trail->threshold = trail_alpha * oldest + (1.0f - trail_alpha) * shadow_trail->threshold;
 }
 
 
@@ -622,11 +622,7 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
     memset( shadow_trail->queue, 0, sizeof(float) * sz );
   }
   shadow_trail->threshold = 0.0f;
-  shadow_trail->recent = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->init_tap = shadow_trail->queue;
-  shadow_trail->length = 0;
-  //shadow_trail->tap75 = shadow_trail->queue + ((shadow_trail->end - shadow_trail->queue) / 4);
 }
 
 
@@ -697,9 +693,6 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
     shadow_trail->queue = NULL;
     shadow_trail->end = NULL;
     shadow_trail->wp = NULL;
-    //shadow_trail->tap75 = NULL;
-    shadow_trail->init_tap = NULL;
-    shadow_trail->length = 0;
   }
 }
 
@@ -710,23 +703,17 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  *
  ***********************************************************************
  */
-static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double alpha, double beta ) {
-  //#define init_min_score 0.9999f // -> cos=-0.0001 since score in [0.0, 2.0]
+static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow ) {
   #define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
     return -1;
   }
   shadow_trail->threshold = init_min_score;
-  shadow_trail->recent = init_min_score;
   shadow_trail->wp = shadow_trail->queue;
   shadow_trail->end = shadow_trail->queue + heap_shadow;
   for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
     *p++ = init_min_score;
   }
-  shadow_trail->init_tap = shadow_trail->queue;
-  shadow_trail->length = shadow_trail->end - shadow_trail->queue;
-  shadow_trail->alpha = (float)alpha;
-  shadow_trail->beta = (float)beta;
   return 0;
 }
 
@@ -1044,7 +1031,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
       if( recursion->shadow.size > 0 ) {
-        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->shadow.alpha, recursion->shadow.beta ) < 0 ) {
+        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
         }
       }
@@ -1081,7 +1068,10 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
     top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
     top_k_collector->dynamic_taper            = 1.0;
-    top_k_collector->dynamic_taper_gamma      = recursion ? (float)recursion->beam.gamma : 1.0f;
+    top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
+    top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
+    top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
+    top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1191,7 +1181,10 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
     collector->dynamic_taper            = 1.0;
-    collector->dynamic_taper_gamma      = 1.0f;
+    collector->alpha                    = 0.0f;
+    collector->beta                     = 0.0f;
+    collector->gamma                    = 0.0f;
+    collector->delta                    = 0.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1314,7 +1307,10 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->max_beam_width               = 0;
     map_collector->adaptive_recursion           = false;
     map_collector->dynamic_taper                = 1.0;
-    map_collector->dynamic_taper_gamma          = 1.0f;
+    map_collector->alpha                        = 0.0f;
+    map_collector->beta                         = 0.0f;
+    map_collector->gamma                        = 0.0f;
+    map_collector->delta                        = 0.0f;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->empty                        = empty;
@@ -1388,7 +1384,10 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
     collector->dynamic_taper      = 1.0;
-    collector->dynamic_taper_gamma = 1.0f;
+    collector->alpha              = 0.0f;
+    collector->beta               = 0.0f;
+    collector->gamma              = 0.0f;
+    collector->delta              = 0.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1499,7 +1498,10 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->max_beam_width           = 0;
     top_k_collector->adaptive_recursion       = false;
     top_k_collector->dynamic_taper            = 1.0;
-    top_k_collector->dynamic_taper_gamma      = 1.0f;
+    top_k_collector->alpha                    = 0.0f;
+    top_k_collector->beta                     = 0.0f;
+    top_k_collector->gamma                    = 0.0f;
+    top_k_collector->delta                    = 0.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1606,7 +1608,10 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
     collector->dynamic_taper            = 1.0;
-    collector->dynamic_taper_gamma      = 1.0f;
+    collector->alpha                    = 0.0f;
+    collector->beta                     = 0.0f;
+    collector->gamma                    = 0.0f;
+    collector->delta                    = 0.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1676,7 +1681,10 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
     collector->dynamic_taper      = 1.0;
-    collector->dynamic_taper_gamma = 1.0f;
+    collector->alpha              = 0.0f;
+    collector->beta               = 0.0f;
+    collector->gamma              = 0.0f;
+    collector->delta              = 0.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;

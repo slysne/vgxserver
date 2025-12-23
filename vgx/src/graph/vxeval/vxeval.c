@@ -1188,14 +1188,14 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     // Dedicated variables for ann search
     mem->probe = NULL;
 
-    mem->stall_check.last_top_k_th_margin = 0.0f;
-    mem->stall_check.unimproved_count = 0;
-    mem->stall_check.heap_stalled = false;
-    
     mem->dynamic_taper.top_1_best = -1.0f;
     mem->dynamic_taper.previous_window_best = -1.0f;
     mem->dynamic_taper.window_counter = 0;
     mem->dynamic_taper.window_top_1_unimproved = 0;
+    mem->dynamic_taper.alpha = 0.0f;
+    mem->dynamic_taper.beta = 0.0f;
+    mem->dynamic_taper.gamma = 0.0f;
+    mem->dynamic_taper.delta = 0.0f;
 
   }
   return mem;
@@ -1274,14 +1274,14 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
       CALLABLE( clone->probe )->Incref( clone->probe );
     }
   
-    clone->stall_check.last_top_k_th_margin = 0.0f;
-    clone->stall_check.unimproved_count = 0;
-    clone->stall_check.heap_stalled = false;
-
     clone->dynamic_taper.top_1_best = -1.0f;
     clone->dynamic_taper.previous_window_best = -1.0f;
     clone->dynamic_taper.window_counter = 0;
     clone->dynamic_taper.window_top_1_unimproved = 0;
+    clone->dynamic_taper.alpha = 0.0f;
+    clone->dynamic_taper.beta = 0.0f;
+    clone->dynamic_taper.gamma = 0.0f;
+    clone->dynamic_taper.delta = 0.0f;
 
 
     // One owner
@@ -1460,14 +1460,14 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
     CALLABLE( memory->probe )->Decref( memory->probe );
   }
   // ANN var reset implied
-  memory->stall_check.last_top_k_th_margin = 0.0f;
-  memory->stall_check.unimproved_count = 0;
-  memory->stall_check.heap_stalled = false;
-  
   memory->dynamic_taper.top_1_best = -1.0f;
   memory->dynamic_taper.previous_window_best = -1.0f;
   memory->dynamic_taper.window_counter = 0;
   memory->dynamic_taper.window_top_1_unimproved = 0;
+  memory->dynamic_taper.alpha = 0.0f;
+  memory->dynamic_taper.beta = 0.0f;
+  memory->dynamic_taper.gamma = 0.0f;
+  memory->dynamic_taper.delta = 0.0f;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {

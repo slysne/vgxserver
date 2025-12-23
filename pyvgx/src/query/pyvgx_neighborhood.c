@@ -250,18 +250,16 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },
       { .name = "beam_max",         .target = &param->recursion.beam.max_width,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=auto
       { .name = "init_select",      .target = &param->recursion.init.select,      .dflt=0,          .minval=0,      .maxval=1024 },                         // default 0=off
-      //{ .name = "arc_prune_until",  .target = &param->recursion.arc_prune.until,  .dflt=0,          .minval=0,      .maxval=16 },                           // default 0=off
       {0}
     };
 
     struct s_dbl_config dbl_config[] = {
       //{ .name = "skip_probability", .target = &param->recursion.visit.skip_probability,     .dflt=0.0,  .minval=0.0,  .maxval=1.0 },        // default 0.0=no skipping
       { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,  .maxval=1.0 },        // default 1.0=constant
-      { .name = "beam_gamma",       .target = &param->recursion.beam.gamma,                 .dflt=0.05,   .minval=0.0,  .maxval=1.0 },        // default 0.05 (heap_topk_margin)
-      { .name = "shadow_alpha",     .target = &param->recursion.shadow.alpha,               .dflt=1.0/64, .minval=1e-6, .maxval=1.0 },        // default 1.0/64 (slow_EMA)
-      { .name = "shadow_beta",      .target = &param->recursion.shadow.beta,                .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0 (discount)
-      //{ .name = "arclsh_mincos",    .target = &param->recursion.visit.arclsh_cos_threshold, .dflt=1.0,  .minval=0.0,  .maxval=1.0 },        // default 1.0=never apply arc lsh filter
-      //{ .name = "arc_prune_score",  .target = &param->recursion.arc_prune.score,            .dflt=0.0,  .minval=0.0,  .maxval=FLT_MAX },  // default 0.0=off
+      { .name = "alpha",            .target = &param->recursion.tune.alpha,                 .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0 (improvement difficulty)
+      { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0 (taper factor multiplier offset)
+      { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0 (score gain factor multiplier offset)
+      { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-1.0, .maxval=1.0 },        // default 0.0 (depth discount)
       {0}
     };
 
