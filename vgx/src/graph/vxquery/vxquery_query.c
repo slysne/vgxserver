@@ -1162,7 +1162,7 @@ static vgx_NeighborhoodQuery_t * NeighborhoodQuery_constructor( const void *iden
     self->collector_mode = args->collector_mode;
 
     // 8. Set the recursion mode
-    self->recursion = args->recursion;
+    self->recursion_config = args->recursion;
 
     // 9. Set (steal) the collect condition
     if( args->collect_arc_condition_set && *args->collect_arc_condition_set ) {
@@ -4307,7 +4307,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__clone_neighborhood_query( const
   }
 
   // Create query clone without anchor. It will be set when we copy adjacency query.
-  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, &other->recursion, CSTR__error );
+  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, &other->recursion_config, CSTR__error );
   if( self ) {
 
     // 1. copy adjacency part

@@ -1639,7 +1639,8 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
   __vgx_ResultSetQuery_members                      \
   vgx_ArcConditionSet_t *collect_arc_condition_set; \
   vgx_collector_mode_t collector_mode;              \
-  vgx_recursion_config_t recursion;
+  vgx_recursion_config_t recursion_config;          \
+  vgx_recursion_config_t effective_recursion_config;
 
 #define __vgx_NeighborhoodQuery_args                  \
   __vgx_AdjacencyQuery_args                           \

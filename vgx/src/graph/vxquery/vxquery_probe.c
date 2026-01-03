@@ -1449,8 +1449,11 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
   int retcode = 1;
   XTRY {
 
-    // Recursion requires evaluator memory to track visited nodes
-    if( __is_recursion_enabled( &query->recursion ) ) {
+    // Recursion enabled
+    if( __is_recursion_enabled( &query->recursion_config ) ) {
+      // Copy config to effective config which may be modified
+      query->effective_recursion_config = query->recursion_config;
+      // Recursion requires evaluator memory to track visited nodes
       // We'll need a dummy evaluator if we don't have one
       if( query->CSTR__vertex_filter == NULL ) {
         query->CSTR__vertex_filter = CStringNew("");
@@ -1518,8 +1521,10 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
       THROW_ERROR( CXLIB_ERR_API, 0x675 );
     }
 
-    // Recursion mode
-    search->recursion = query->recursion;
+    // Effective recursion config after collector creation
+    if( __is_recursion_enabled( &query->effective_recursion_config ) ) {
+      search->recursion = query->effective_recursion_config;
+    }
 
     // 3.
     // -- ADJACENCY --

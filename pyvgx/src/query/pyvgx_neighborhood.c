@@ -1186,7 +1186,7 @@ static PyObject * _pyvgx_Neighborhood__perform( __neighborhood_query_args *param
       XDO {
 
         // Require positive hits for recursive search
-        if( __is_recursion_enabled( &query->recursion ) && query->hits <= 0 ) {
+        if( __is_recursion_enabled( &query->recursion_config ) && query->hits <= 0 ) {
           PyVGXError_SetString( PyExc_ValueError, "recursive search requires non-negative hits parameter" );
           XBREAK;
         }

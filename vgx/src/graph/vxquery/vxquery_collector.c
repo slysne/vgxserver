@@ -554,7 +554,7 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
 
   bool recursive = false;
-  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_recursion_enabled( &((vgx_NeighborhoodQuery_t*)query)->recursion ) ) {
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_recursion_enabled( &((vgx_NeighborhoodQuery_t*)query)->effective_recursion_config ) ) {
     recursive = true;
   }
 
@@ -972,7 +972,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     // Recursive query?
     if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
       vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
-      recursion = &neighborhood_query->recursion;
+      recursion = &neighborhood_query->effective_recursion_config;
       if( __is_recursion_enabled( recursion) ) {
         // Get appropriate heap size from recursion config
         heap_size = recursion->heap.size = __get_recursion_heap_size( recursion, size );
