@@ -171,8 +171,8 @@ def build_seed(g, sz=10000, R=32, ham=15):
     i = 0
     j = 0
     R_max = 2*R
-    cos_min = 0.3
-    cos_target = 0.8
+    cos_min = 0.35
+    cos_target = 0.75
     for node in nodes:
         i += 1
         A = g.OpenVertex( node )
@@ -206,18 +206,18 @@ def build_seed(g, sz=10000, R=32, ham=15):
                 C = g.OpenVertex(already)
                 cosine = g.sim.Cosine( B, C )
                 C.Close()
-                if cosine > 0.8:
+                if cosine > 0.5:
                     keep = False
                     break
             if keep:
                 cosine = g.sim.Cosine( probe, B.GetVector() )
-                if cosine > 0.15 and cosine < 0.45:
+                if cosine > 0.15 and cosine < 0.35:
                     j += 1
                     added_nav.add(nav)
                     g.Connect( A, ("nav", M_FLT|M_FWDONLY, cosine), B )
                     g.Connect( B, ("nav", M_FLT|M_FWDONLY, cosine), A )
             B.Close()
-            if len(added_nav) >= 4:
+            if len(added_nav) >= R_node // 32:
                 break
         A.Close()
         print( f"\r{i}  ", end="", flush=True )
@@ -517,8 +517,8 @@ def rescue_remotes(g, cutoff_ideg=6, max_rescue_indegree=12):
                 fields  =   F_VAL|F_ID,
                 result  =   R_LIST,
                 recursion = {
-                    'heap_size'         : 100,
-                    'shadow_size'       : 100,
+                    'heap_size'         : max_rescue_indegree,
+                    'shadow_size'       : 10*max_rescue_indegree,
                     'beam_width'        : 100,
                     'reset_map'         : False,
                     'reset_metrics'     : True
@@ -976,25 +976,25 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     build_seed(g, sz=seedsize, R=d, ham=15)
     skeletons = 40 # just a number, no reason
     sk = 0
-    # Another 6% via non-seed subsampling and crude ANN
+    # Another 8% via non-seed subsampling and crude ANN
     seed_set = set(g.Neighborhood( "seedroot", arc=D_OUT, fields=F_ADDR, result=R_SIMPLE ))
     full_set = set(g.Vertices( condition={'type':'item'}, fields=F_ADDR, result=R_SIMPLE ))
     nonseed_set = full_set - seed_set
     skeleton_set = set()
     while sk < skeletons:
         sk += 1
-        d, a, s = 3*degree, 0.8, 0.06/skeletons
+        d, a, s = int(3*degree), 0.7, 0.08/skeletons
         print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, s={s})" )
-        populate(g, degree=d, alpha=a, qshadow=2*d, qbw=100, qbc=0.9, qdepth=10, qadaptive=False, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
+        populate(g, degree=d, alpha=a, qshadow=d, qbw=100, qbc=0.9, qdepth=8, qadaptive=False, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
     print( "Removing seed information" )
     destroy_seed(g)
     del nonseed_set
     base_set = skeleton_set.union( seed_set )
     del skeleton_set
     del seed_set
-    d, a = int(5*degree / 3), 0.9
+    d, a = int(5*degree/3), 0.8
     print( f"Refining base graph (o={len(base_set)}, d={d}, a={a})" )
-    populate(g, degree=d, alpha=a, qshadow=5*d, qbw=3, qbc=1.0, qadaptive=True, process_set=base_set)
+    populate(g, degree=d, alpha=a, qshadow=4*d, qbw=3, qbc=1.0, qadaptive=True, process_set=base_set)
     t1 = time.time()
     print( f"t={int(t1-t0)}" )
     # ----
@@ -1002,31 +1002,32 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     phase += 1
     rest_set = full_set - base_set
     del base_set
-    d, a = int(4*degree / 3), alpha
+    d, a = int(4*degree/3), 0.9
     print( f"Adding full population to graph (o={len(rest_set)}, d={d}, a={a})" )
-    populate(g, degree=d, alpha=a, qshadow=2*d, qbw=100, qbc=0.9, qdepth=10, qadaptive=False, process_set=rest_set)
+    populate(g, degree=d, alpha=a, qshadow=d, qbw=100, qbc=0.9, qdepth=8, qadaptive=False, process_set=rest_set)
     print( "Rescuing remotes" )
     rescue_remotes(g, cutoff_ideg=10, max_rescue_indegree=16 )
     t2 = time.time()
     print( f"t={int(t2-t0)}" )
-    g.CloseAll() # !!!
-    g.Save()     # !!!
     # ----
     print( "=== ROUND 2 ===" )
     phase += 1
-    d, a = int(8*degree / 7), alpha
+    d, a = int(8*degree/7), alpha
     print( f"Populating graph (d={d}, a={a})" )
-    populate(g, degree=d, alpha=a, qshadow=5*d, qbw=3, qbc=1.0, qadaptive=True, process_set=full_set)
+    populate(g, degree=d, alpha=a, qshadow=4*d, qbw=3, qbc=1.0, qadaptive=True, process_set=full_set)
     print( "Rescuing remotes" )
     rescue_remotes(g, cutoff_ideg=10, max_rescue_indegree=16 )
     t3 = time.time()
     print( f"t={int(t3-t0)}" )
     # ----
     print( "=== FINALIZE ===" )
+    g.CloseAll() # !!!
+    g.Save()     # !!!
     phase += 1
-    pdepth = 5
+    pdepth = 4
     print( f"Pruning graph (d={degree}, a={alpha}, depth={pdepth})" )
     prune_all(g, degree, alpha, depth=pdepth)
+    rescue_remotes(g, cutoff_ideg=10, max_rescue_indegree=16 )
     print( "Creating entry point" )
     topstar(g, min_odeg=int(1.5*degree))
     enhance_star(g, entry='entry', R=int(1.5*degree), a=0.9)
@@ -1483,7 +1484,8 @@ def out2perf( output ):
 system.Initialize( "annindex", http=9000 )
 g = Graph("ann")
 
-QMINIT(g)
+
+M_PRUNE, Q_PRUNE, M_FIND, Q_FIND, Q_IMMED = QMINIT(g)
 
     
 MEM, Q = INIT(g)
@@ -1514,7 +1516,7 @@ medoid = g[ROOT].Terminals()[0] # 4fa8ff21-6154-4485-b539-8a1ebf8fac00
 #g.SetGraphReadonly()
 
 
-#threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[ int(2**(x/3)) for x in range(4,40) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True, perfonly=1 )
+#threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[ int(2**(x/3)) for x in range(4,48) ], fronts=[0], beams=[3], bcs=[1.0], inits=[3], bmin=3, bmax=256, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True, perfonly=1 )
 
 
 
