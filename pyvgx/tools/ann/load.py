@@ -6,6 +6,7 @@ import time
 import struct
 import base64
 import threading
+from copy import deepcopy
 
 
 def vertex(g, J, fname):
@@ -539,6 +540,7 @@ def rescue_remotes(g, cutoff_ideg=6, max_rescue_indegree=12):
         R = g.OpenVertex( remote )
         ideg_boost = max_rescue_indegree - R.ideg
         if ideg_boost > 0:
+            R.SetProperty('remote', ideg_boost)
             MEM.Reset()
             MEM.vector = R.GetVector()
             roots = random.sample( all_roots, 3 )
@@ -813,7 +815,12 @@ def populate(g, degree, alpha, entry=None, qshadow=-1, qbw=3, qbc=1.0, qdepth=1<
 
 def clear_links(g):
     for node in g.Vertices():
-        g.Disconnect(node)
+        A = g.OpenVertex(node)
+        for delprop in ['remote']:
+            if A.HasProperty(delprop):
+                A.RemoveProperty(delptop)
+        g.Disconnect(A)
+        A.Close()
 
 
 
@@ -935,13 +942,101 @@ def repair_with_diverse_subset( g ):
             print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
     print( "100.0%" )
         
+
+
+
+
+
+
         
-        
+def new_vicinity_mem_query(g):
+    M = g.Memory(4)
+    Q = g.NewAdjacencyQuery(
+            memory   = M,
+            arc      = D_OUT,
+            filter   = "next.address == r1"
+        )
+    return M, Q 
+
+
+
+def is_vertex_in_vicinity(g, M, Q, node, probe_node):
+    M.Reset()
+    Q.id = node
+    M.R1 = g[probe_node].address
+    if Q.Execute():
+        return True
+    for term in g.Terminals(node):
+        if Q.Execute():
+            return True
+    return False
 
 
 
 
-
+def add_tail_escape_navigation(g, rate=0.005):
+    # top 99th percentile outdegree 
+    cutoff_odeg = g.Vertices( condition={ 'type':'item' }, sortby=S_ODEG, hits=1, offset=g.order//100, fields=F_ODEG, result=R_SIMPLE )[0]
+    # Get all high-outdegree nodes sorted by indegree
+    hubs = g.Vertices(
+                    condition = {'type':'item', 'outdegree':(V_GTE,cutoff_odeg) },
+                    sortby    = S_IDEG|S_ASC,
+                    fields    = F_ADDR,
+                    result    = R_SIMPLE
+                )
+    # Find remote rescues with the highest combination of rescue degree and outdegree
+    remotes = g.Vertices( 
+                    condition = { 'type':'item', 'property':{'remote':(V_GT,0)} },
+                    rank      = "vertex.property('remote') * vertex.odeg",
+                    sortby    = S_RANK,
+                    fields    = F_ADDR,
+                    result    = R_SIMPLE
+              )
+    # Find diverse set with low mutual similarity
+    hubs_set = set(hubs)
+    remotes_set = set(remotes)
+    candidates_set = hubs_set.union(remotes_set)
+    diverse_set = set()
+    MAX_DIVERSE_SET = 2048
+    MAX_DIVERSE_SIM = 0.4
+    MAX_RESCUED_REMOTES = 1024
+    for candidate in candidates_set:
+        A = g.OpenVertex(candidate)
+        keep = True
+        for div in diverse_set:
+            D = g.OpenVertex(div)
+            sim = g.sim.Cosine(A,D)
+            D.Close()
+            if sim > MAX_DIVERSE_SIM:
+                keep = False # too similar, not a diverse hub
+                break
+        if keep:
+            diverse_set.add(candidate)
+        A.Close()
+        if len(diverse_set) >= MAX_DIVERSE_SET:
+            break
+    diverse_list = list(diverse_set)
+    # Navigation escape points random selection
+    navpoints = g.Vertices( condition={'type':'item', 'filter':f'random() < {rate}'}, sortby=S_RANDOM )
+    VM, VQ = new_vicinity_mem_query(g)
+    MAX_NAV_LEVEL = 5
+    for nav in navpoints:
+        nav_level = 0
+        A = g.OpenVertex(nav)
+        for escape in random.sample( diverse_list, 500 ):
+            # Escape node already in neighborhood, skip
+            if is_vertex_in_vicinity(g, VM, VQ, nav, escape ):
+                continue
+            #
+            B = g.OpenVertex(escape)
+            escape_sim = g.sim.Cosine( A, B )
+            if escape_sim > 0.1 and escape_sim < 0.3:
+                nav_level += 1
+                g.Connect( A, ('nav', M_UINT|M_FWDONLY, nav_level), B )
+            B.Close()
+            if nav_level >= MAX_NAV_LEVEL:
+                break
+        A.Close()
 
 
 
