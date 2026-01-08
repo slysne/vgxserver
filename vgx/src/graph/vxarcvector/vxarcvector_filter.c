@@ -1538,9 +1538,29 @@ static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, 
   }
  */
 
+  static const vgx_predicator_t uint_pred = { VGX_PREDICATOR_EPH_TYPE_NONE, { VGX_ARCDIR_ANY, VGX_PREDICATOR_REL_RELATED }, VGX_PREDICATOR_MOD_UNSIGNED, 0 };
+
+  //larc->head.predicator.mod.stored;
+
+  //if( _vgx_predicator_value_is_float( larc->head.predicator ) ) {
+  //}
+  //arcfilter_context->xxx;
+
   vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
  
+  // Integer arc (rare) may be navigational arc to follow at high eval count
+  if( __arcvector_predicator_match_modifier( arcfilter_context, uint_pred, larc->head.predicator ) ) {
+    uint32_t nav_level = larc->head.predicator.val.uinteger;
+    // Weighted eval count too low to follow this navigational arc
+    // Arcs with larger nav_level value require more evals before they are followed.
+    // Purpose: escape local traps in the long tail
+    if( arcfilter_context->xxx * evaluator->context.memory->counter.eval < nav_level ) {
+      *match = VGX_ARC_FILTER_MATCH_MISS;
+      return 0;
+    }
+  }
+
   //
   // SECURE THE ARC HEAD AS NEEDED
   //
