@@ -88,7 +88,7 @@ __inline static vgx_VertexSortValue_t __arc_compute_rank_as_simscore( vgx_Ranker
     sort.flt64.value = value->similarity;
   }
   else if( ranker->probe && arc->head.vertex->vector ) {
-    sort.flt64.value = isim->Similarity( sim, ranker->probe, arc->head.vertex->vector );
+    sort.flt64.value = isim->Similarity( sim, ranker->probe, arc->head.vertex->vector, -1.0f );
   }
   else {
     sort.flt64.value = 0.0;
@@ -162,7 +162,7 @@ __inline static vgx_VertexSortValue_t __vertex_compute_rank_as_simscore( vgx_Ran
     sort.flt64.value = value->similarity;
   }
   else if( ranker->probe && vertex->vector ) {
-    sort.flt64.value = isim->Similarity( sim, ranker->probe, vertex->vector );
+    sort.flt64.value = isim->Similarity( sim, ranker->probe, vertex->vector, -1.0f );
   }
   else {
     sort.flt64.value = 0.0;

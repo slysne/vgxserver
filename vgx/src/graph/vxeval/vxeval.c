@@ -44,6 +44,8 @@ DLL_HIDDEN double (*vxeval_bytearray_sum_squares)( const BYTE *A, int len ) = NU
 DLL_HIDDEN double (*vxeval_bytearray_rsqrt_ssq)( const BYTE *A, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_dot_product)( const BYTE *A, const BYTE *B, int len ) = NULL;
 DLL_HIDDEN double (*vxeval_bytearray_cosine)( const BYTE *A, const BYTE *B, int len ) = NULL;
+DLL_HIDDEN double (*vxeval_bytearray_dp_cosine)( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) = NULL;
+DLL_HIDDEN double (*vxeval_bytearray_dp_cosine_with_threshold)( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) = NULL;
 
 
 
@@ -91,6 +93,7 @@ static int _vxeval__store_cstring( vgx_Evaluator_t *self, const CString_t *CSTR_
 static int64_t _vxeval__clear_cstrings( vgx_ExpressEvalMemory_t *memory );
 static int _vxeval__store_vector( vgx_Evaluator_t *self, const vgx_Vector_t *vector );
 static int64_t _vxeval__clear_vectors( vgx_ExpressEvalMemory_t *memory );
+static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector );
 static int _vxeval__local_auto_scope_object( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
 static void _vxeval__clear_local_scope( vgx_Evaluator_t *self );
 static void _vxeval__delete_local_scope( vgx_Evaluator_t *self );
@@ -130,6 +133,7 @@ DLL_EXPORT vgx_IEvaluator_t iEvaluator = {
   .ClearCStrings        = _vxeval__clear_cstrings,
   .StoreVector          = _vxeval__store_vector,
   .ClearVectors         = _vxeval__clear_vectors,
+  .SetProbeVector       = _vxeval__set_probe_vector,
   .LocalAutoScopeObject = _vxeval__local_auto_scope_object,
   .ClearLocalScope      = _vxeval__clear_local_scope,
   .DeleteLocalScope     = _vxeval__delete_local_scope,
@@ -321,6 +325,8 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __scalar_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __scalar_dp_pi8;
     vxeval_bytearray_cosine = __scalar_cos_pi8;
+    vxeval_bytearray_dp_cosine = __scalar_dp_cos_pi8;
+    vxeval_bytearray_dp_cosine_with_threshold = __scalar_dp_mincos_pi8;
 
 #if defined CXPLAT_ARCH_HASFMA
     int fma_feature = iVGXProfile.CPU.HasFeatureFMA();
@@ -337,6 +343,8 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx512_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx512_dp_pi8;
         vxeval_bytearray_cosine = __avx512_cos_pi8;
+        vxeval_bytearray_dp_cosine = __avx512_dp_cos_pi8;
+        vxeval_bytearray_dp_cosine_with_threshold = __avx512_dp_mincos_pi8;
       }
       else if( fma_feature && avx_version == 2 ) {
         f_ecld_pi8 = __eval_avx2_ecld_pi8;
@@ -349,6 +357,8 @@ static int _vxeval__initialize( void ) {
         vxeval_bytearray_rsqrt_ssq = __avx2_rsqrtssq_pi8;
         vxeval_bytearray_dot_product = __avx2_dp_pi8;
         vxeval_bytearray_cosine = __avx2_cos_pi8;
+        vxeval_bytearray_dp_cosine = __avx2_dp_cos_pi8;
+        vxeval_bytearray_dp_cosine_with_threshold = __avx2_dp_mincos_pi8;
       }
     }
 #elif defined CXPLAT_ARCH_ARM64
@@ -363,6 +373,8 @@ static int _vxeval__initialize( void ) {
     vxeval_bytearray_rsqrt_ssq = __neon_rsqrtssq_pi8;
     vxeval_bytearray_dot_product = __neon_dp_pi8;
     vxeval_bytearray_cosine = __neon_cos_pi8;
+    vxeval_bytearray_dp_cosine = __neon_dp_cos_pi8;
+    vxeval_bytearray_dp_cosine_with_threshold = __neon_dp_mincos_pi8;
 
 
 #endif
@@ -1162,13 +1174,28 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     // Stack pointer
     mem->sp = __EXPRESS_EVAL_MEM_SPTOP;
 
-    // CString reference list defaults to empty, allocate as needed.
+    // CString and vector reference lists default to empty, allocate as needed.
     mem->cstringref = NULL;
+    mem->vectorref = NULL;
 
     // Integer set defaults to empty, allocate as needed.
     mem->dwset.slots = NULL;
     mem->dwset.mask = 0;
     mem->dwset.sz = 0;
+    mem->dwset.hits = 0;
+    mem->dwset._rsv2 = 0;
+
+    // Dedicated variables for ann search
+    mem->probe = NULL;
+
+    mem->dynamic_taper.top_1_best = -1.0f;
+    mem->dynamic_taper.previous_window_best = -1.0f;
+    mem->dynamic_taper.window_counter = 0;
+    mem->dynamic_taper.window_top_1_unimproved = 0;
+    mem->dynamic_taper.alpha = 0.0f;
+    mem->dynamic_taper.beta = 0.0f;
+    mem->dynamic_taper.gamma = 0.0f;
+    mem->dynamic_taper.delta = 0.0f;
 
   }
   return mem;
@@ -1239,6 +1266,23 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dwset.slots = NULL;
     clone->dwset.mask = 0;
     clone->dwset.sz = 0;
+    clone->dwset.hits = 0;
+    clone->dwset._rsv2 = 0;
+
+    // Probe vector for ann search
+    if( (clone->probe = other->probe) != NULL ) {
+      CALLABLE( clone->probe )->Incref( clone->probe );
+    }
+  
+    clone->dynamic_taper.top_1_best = -1.0f;
+    clone->dynamic_taper.previous_window_best = -1.0f;
+    clone->dynamic_taper.window_counter = 0;
+    clone->dynamic_taper.window_top_1_unimproved = 0;
+    clone->dynamic_taper.alpha = 0.0f;
+    clone->dynamic_taper.beta = 0.0f;
+    clone->dynamic_taper.gamma = 0.0f;
+    clone->dynamic_taper.delta = 0.0f;
+
 
     // One owner
     clone->refc = 1;
@@ -1248,6 +1292,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     if( clone ) {
       __delete_cstringrefs( &clone->cstringref );
       __delete_vectorrefs( &clone->vectorref );
+      if( clone->probe ) {
+        CALLABLE(clone->probe)->Decref(clone->probe);
+      }
       free( clone );
     }
   }
@@ -1274,6 +1321,10 @@ static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
       __delete_vectorrefs( &(*mem)->vectorref );
 
       _vxeval__clear_dwset( *mem );
+
+      if( (*mem)->probe ) {
+        CALLABLE( (*mem)->probe )->Decref( (*mem)->probe );
+      }
 
       free( *mem );
     }
@@ -1394,6 +1445,35 @@ static int _vxeval__store_vector( vgx_Evaluator_t *self, const vgx_Vector_t *vec
  */
 static int64_t _vxeval__clear_vectors( vgx_ExpressEvalMemory_t *memory ) {
   return __delete_vectorrefs( &memory->vectorref );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector ) {
+  // Discard any previous vector
+  if( memory->probe ) {
+    CALLABLE( memory->probe )->Decref( memory->probe );
+  }
+  // ANN var reset implied
+  memory->dynamic_taper.top_1_best = -1.0f;
+  memory->dynamic_taper.previous_window_best = -1.0f;
+  memory->dynamic_taper.window_counter = 0;
+  memory->dynamic_taper.window_top_1_unimproved = 0;
+  memory->dynamic_taper.alpha = 0.0f;
+  memory->dynamic_taper.beta = 0.0f;
+  memory->dynamic_taper.gamma = 0.0f;
+  memory->dynamic_taper.delta = 0.0f;
+
+  // Assign new vector and own reference
+  if( (memory->probe = vector) != NULL ) {
+    return (int)CALLABLE( memory->probe )->Incref( memory->probe );
+  }
+  return 0;
 }
 
 
@@ -1556,6 +1636,8 @@ static int64_t _vxeval__clear_dwset( vgx_ExpressEvalMemory_t *memory ) {
   }
   memory->dwset.mask = 0;
   memory->dwset.sz = 0;
+  memory->dwset.hits = 0;
+  memory->dwset._rsv2 = 0;
   return sz;
 }
 
@@ -1867,8 +1949,7 @@ static vgx_StringList_t * _vxeval__get_rpn_definitions( void ) {
             case (OP_REAL_OPERAND & CCta):
               p = write_chars( p, "real" );
               break;
-            case (OP_ARC_DIR_ENUM_OPERAND & CCta):
-            case (OP_ARC_MOD_ENUM_OPERAND & CCta):
+            case (OP_ENUM_OPERAND & CCta):
               p = write_chars( p, "enum" );
               break;
           }
@@ -2810,6 +2891,28 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
 
   // Return top of stack after completion
   return GET_PITEM( self );
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex ) {
+  return __maps_vertex_unvisited( dwset, vertex );
+  //return __maps_vertex_unvisited( self->context.memory, max_visited, p_skip, vertex );
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
+  return __fast_anncollect( self, probe, target );
 }
 
 

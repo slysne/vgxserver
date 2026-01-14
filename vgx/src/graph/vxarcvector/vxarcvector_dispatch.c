@@ -160,7 +160,7 @@ DLL_HIDDEN vgx_ArcHead_t * _vxarcvector_dispatch__get_arc( framehash_dynamic_t *
       break;
     }
 
-    if( predmatchfunc.Generic( probe->predicator, pred ) ) {
+    if( predmatchfunc.Generic( NULL, probe->predicator, pred ) ) {
       ret->predicator.data = pred.data;
       ret->vertex = probe->vertex;
       arc = ret;
@@ -185,7 +185,7 @@ static int __array_delete_simple_arc( framehash_dynamic_t *dynamic, vgx_ArcVecto
   // Conditional delete
   if( !_vgx_predicator_full_wildcard( probe_arc->head.predicator ) ) {
     // Cancel deletion if stored arc we're trying to delete does not match our condition
-    if( !predmatchfunc.Generic( probe_arc->head.predicator, __arcvector_as_predicator( SAC ) ) ) {
+    if( !predmatchfunc.Generic( NULL, probe_arc->head.predicator, __arcvector_as_predicator( SAC ) ) ) {
       return 0; // arc's predicator did not match probe arc, zero arcs removed
     }
   }

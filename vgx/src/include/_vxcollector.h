@@ -372,6 +372,15 @@ static f_vgx_ArcComparator __get_arc_comparator( const vgx_ranking_context_t *ra
     case VGX_SORTBY_MEMADDRESS:
       lowest->sort.uint64.value = sort_ascending ? ULLONG_MAX : 0;
       return icomparator.cmp_archead_uint64_rank;
+    
+    case VGX_SORTBY_REAL_PREDICATOR:
+      if( pmin ) {
+        lowest->sort.flt64.value = -DBL_MAX;
+      }
+      if( pmax ) {
+        lowest->sort.flt64.value = DBL_MAX;
+      }
+      return icomparator.cmp_archead_double_rank;
 
     case VGX_SORTBY_ANCHOR_OBID:
       lowest->sort.internalid_H = ((objectid_t*)COMLIB_OBJECT_GETID( V ))->H;
@@ -572,6 +581,10 @@ static void __get_arc_collector_functions_by_sortspec( const vgx_sortspec_t sort
     *stagef   =   _iStageArc.to_sort_by_memaddress;
     *collectf = _iCollectArc.to_sort_by_memaddress;
     return;
+  case VGX_SORTBY_REAL_PREDICATOR:
+    *stagef = _iStageArc.to_sort_by_real_predicator;
+    *collectf = _iCollectArc.to_sort_by_real_predicator;
+    return;
   case VGX_SORTBY_INTERNALID:
     *stagef   =   _iStageArc.to_sort_by_internalid;
     *collectf = _iCollectArc.to_sort_by_internalid;
@@ -753,6 +766,8 @@ static f_vgx_RankScoreFromItem __get_rank_score_from_item_function( const vgx_so
     return _iRankScoreFromItem.from_none;
   case VGX_SORTBY_PREDICATOR:
     return _iRankScoreFromItem.from_predicator;
+  case VGX_SORTBY_REAL_PREDICATOR:
+    return _iRankScoreFromItem.from_real_predicator;
   case VGX_SORTBY_TMC:
   case VGX_SORTBY_TMM:
   case VGX_SORTBY_TMX:

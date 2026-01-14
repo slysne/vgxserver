@@ -2245,8 +2245,8 @@ record_string_offset:
  ******************************************************************************
  */
 static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t sz_buffer ) {
-  static int64_t KSZ = sizeof( x_vgx_partial__entry_key );
-  static int64_t HSZ = sizeof( x_vgx_partial__header );
+  static const int64_t KSZ = sizeof( x_vgx_partial__entry_key );
+  static const int64_t HSZ = sizeof( x_vgx_partial__header );
 
   PyVGX_PluginResponse *py_plugres = NULL;
 

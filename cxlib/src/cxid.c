@@ -954,7 +954,7 @@ void objectid_destroy_longstring( objectid_t *obid ) {
  ***********************************************************************
  */
 objectid_t new_subid( void ) {
-  static char buf[33];
+  static __THREAD char buf[33];
   static uint64_t counter = 0;
   static CS_LOCK lock;
   objectid_t subid;

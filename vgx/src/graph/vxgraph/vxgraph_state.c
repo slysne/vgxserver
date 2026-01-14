@@ -915,10 +915,10 @@ static bool __match_target( vgx_Graph_t *self, const vgx_ArcVector_cell_t *arcve
     return __predicator_has_relationship( target );
   case VGX_LOGICAL_AND:
     // hit = A * B 
-    return __predicator_has_relationship( target ) && predmatchfunc.Generic( probeB, target );
+    return __predicator_has_relationship( target ) && predmatchfunc.Generic( NULL, probeB, target );
   case VGX_LOGICAL_OR:
     // hit = A + B
-    return __predicator_has_relationship( target ) || predmatchfunc.Generic( probeB, target );
+    return __predicator_has_relationship( target ) || predmatchfunc.Generic( NULL, probeB, target );
   default:
     return false; // unsupported logic error, miss
   }

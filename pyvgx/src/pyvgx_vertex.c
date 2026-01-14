@@ -1424,7 +1424,7 @@ static PyObject * PyVGX_Vertex__ArcLSH( PyVGX_Vertex *pyvertex, PyObject *py_lsh
  ******************************************************************************
  */
 PyDoc_STRVAR( SetVector__doc__,
-  "SetVector( [data [,alpha]] ) -> None\n"
+  "SetVector( [data[, alpha[, cosine_mode]]] ) -> None\n"
 );
 
 /**************************************************************************//**
@@ -1441,20 +1441,22 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
   static const char *kwlist[] = {
     "data",
     "alpha",
+    "cosine_mode",
     NULL
   };
 
   typedef union u_vector_args {
-    PyObject *_args[2];
+    PyObject *_args[3];
     struct {
       PyObject *py_data;
       PyObject *py_alpha;
+      PyObject *py_cosine_mode;
     };
   } vector_args;
 
   vector_args vcargs = {0};
 
-  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 2, vcargs._args ) < 0 ) {
+  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 3, vcargs._args ) < 0 ) {
     return NULL;
   }
 
@@ -1464,7 +1466,7 @@ static PyObject * PyVGX_Vertex__SetVector( PyVGX_Vertex *pyvertex, PyObject *con
   if( iV->Writable(vertex) ) {
     vgx_Graph_t *graph = iV->Parent(vertex);
     // Create a persistent vector
-    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, vcargs.py_data, vcargs.py_alpha, false );
+    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, vcargs.py_data, vcargs.py_alpha, vcargs.py_cosine_mode, false );
     // Set the vector on the vertex
     if( vector != NULL ) {
       BEGIN_PYVGX_THREADS {
@@ -1557,7 +1559,7 @@ static PyObject * PyVGX_Vertex__GetVector( PyVGX_Vertex *pyvertex ) {
   if( vector == NULL ) {
     BEGIN_PYVGX_THREADS {
       vgx_Similarity_t *sim = vertex->graph->similarity;
-      vector = CALLABLE( sim )->NewInternalVector( sim, NULL, 1.0f, 0, true );
+      vector = CALLABLE( sim )->NewInternalVector( sim, NULL, 1.0f, 0, false, true );
     } END_PYVGX_THREADS;
     if( vector == NULL ) {
       PyErr_SetString( PyExc_Exception, "internal error" );
@@ -3450,17 +3452,20 @@ static PyObject * PyVGX_Vertex__Descriptor( PyVGX_Vertex *pyvertex ) {
     return NULL;
   }
 
+  static CStringQueue_t *output = NULL;
+  static CStringQueue_vtable_t *ioutput = NULL;
+  if( output == NULL ) {
+    if( (output = COMLIB_OBJECT_NEW_DEFAULT( CStringQueue_t )) == NULL ) {
+      PyErr_SetNone( PyExc_MemoryError );
+      return NULL;
+    }
+    ioutput = CALLABLE(output);
+  }
+
   BEGIN_PYVGX_THREADS {
 
     char *data = NULL;
     XTRY {
-      static CStringQueue_t *output = NULL;
-      static CStringQueue_vtable_t *ioutput = NULL;
-
-      if( output == NULL ) {
-        output = COMLIB_OBJECT_NEW_DEFAULT( CStringQueue_t );
-        ioutput = CALLABLE(output);
-      }
 
       if( CALLABLE( __vertex )->Descriptor( __vertex, output ) == NULL ) {
         PyVGXError_SetString( PyExc_Exception, "Internal error" );

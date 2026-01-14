@@ -98,18 +98,22 @@ set(LINKFLAGS)
 # Define platform-specific settings
 set(C_FLAGS)
 set(C_FLAGS_DEBUG)
+set(C_FLAGS_DEBUGREL)
 set(C_FLAGS_RELEASE)
 
 set(CC_FLAGS)
 set(CC_FLAGS_DEBUG)
+set(CC_FLAGS_DEBUGREL)
 set(CC_FLAGS_RELEASE)
 
 set(CXX_FLAGS)
 set(CXX_FLAGS_DEBUG)
+set(CXX_FLAGS_DEBUGREL)
 set(CXX_FLAGS_RELEASE)
 
 set(CPP_DEFINES)
 set(CPP_DEFINES_DEBUG)
+set(CPP_DEFINES_DEBUGREL)
 set(CPP_DEFINES_RELEASE)
 
 # Setup platform-specific settings
@@ -158,13 +162,16 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 
     # General optimization and architecture flags
     set(CC_FLAGS "-fPIC -arch arm64 -mcpu=${CLANG_OPTION_MCPU}")  # or apple-m2, etc.
-    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4")
+    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4 -fno-inline -fno-omit-frame-pointer")
 
     # C++ standard and flags (note: macOS supports C++11+ by default)
     set(CXX_FLAGS "-std=c++11")
 
     # Preprocessor defines for macOS
     set(CPP_DEFINES "_DARWIN;APPLE")
+    set(CPP_DEFINES_DEBUG "NDEBUG;VGX_CONSISTENCY_CHECK")
+    set(CPP_DEFINES_DEBUGREL "NDEBUG")
+    set(CPP_DEFINES_RELEASE "NDEBUG")
 
     # Python linkage — macOS doesn’t need -lrt or pthread explicitly, just link Python
     #set(LIBS "python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
@@ -173,7 +180,7 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     #set(LINKFLAGS "-Wl,-rpath,@loader_path")
 
 else()
-    message(FATAl_ERROR "CMake is running on unsupported host: ${CMAKE_HOST_SYSTEM_NAME}")
+    message(FATAL_ERROR "CMake is running on unsupported host: ${CMAKE_HOST_SYSTEM_NAME}")
 endif()
 
 # Append version info to cpp_defines
@@ -185,11 +192,16 @@ list(APPEND CPP_DEFINES "CXLIB_VERSION=${VERSION}"
                         "PYVGX_VERSION=${VERSION}"
                         "VGX_VERSION=${VERSION}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(C_FLAGS "${C_FLAGS};${C_FLAGS_DEBUG}")
     set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_DEBUG}")
     set(CXX_FLAGS "${CXX_FLAGS};${CXX_FLAGS_DEBUG}")
     set(CPP_DEFINES "${CPP_DEFINES};${CPP_DEFINES_DEBUG}")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(C_FLAGS "${C_FLAGS};${C_FLAGS_DEBUGREL}")
+    set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_DEBUGREL}")
+    set(CXX_FLAGS "${CXX_FLAGS};${CXX_FLAGS_DEBUGREL}")
+    set(CPP_DEFINES "${CPP_DEFINES};${CPP_DEFINES_DEBUGREL}")
 else()
     set(C_FLAGS "${C_FLAGS};${C_FLAGS_RELEASE}")
     set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_RELEASE}")

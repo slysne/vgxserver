@@ -164,7 +164,8 @@ static PyObject * _ipyvgx_builder__build_internal_vector( vgx_Vector_t *vector )
     BEGIN_PYVGX_THREADS {
       vgx_VectorContext_t *vector_context = CALLABLE( vector )->Context( vector );
       vgx_Similarity_t *sim = vector_context->simobj;
-      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, true, &CSTR__error );
+      bool cosmode = vector->metas.flags.cos;
+      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, cosmode, true, &CSTR__error );
       if( vint ) {
         if( igraphfactory.EuclideanVectors() ) {
           py_internal = __build_internal_euclidean_vector( vint );
@@ -235,7 +236,8 @@ static PyObject * _ipyvgx_builder__build_internal_vector_array( vgx_Vector_t *ve
     BEGIN_PYVGX_THREADS {
       vgx_VectorContext_t *vector_context = CALLABLE( vector )->Context( vector );
       vgx_Similarity_t *sim = vector_context->simobj;
-      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, true, &CSTR__error );
+      bool cosmode = vector->metas.flags.cos;
+      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, cosmode, true, &CSTR__error );
       if( vint ) {
         if( igraphfactory.EuclideanVectors() ) {
           py_internal_array = __build_internal_euclidean_vector_array( vint );

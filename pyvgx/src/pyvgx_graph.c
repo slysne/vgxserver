@@ -475,7 +475,7 @@ static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, P
 
   vgx_Vector_t *vector = NULL;
   if( py_vector ) {
-    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, true )) == NULL ) {
+    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, false, true )) == NULL ) {
       return NULL;
     }
   }
@@ -2950,6 +2950,7 @@ DLL_HIDDEN PyObject * pyvgx__enumerator_as_dict(
     int64_t refc;
   } *enum_list = NULL;
 
+  int err = 0;
   BEGIN_PYVGX_THREADS {
     XTRY {
       if( GetStrings( graph, &CSTR__list ) < 0 ) {
@@ -2987,11 +2988,16 @@ DLL_HIDDEN PyObject * pyvgx__enumerator_as_dict(
     }
     XCATCH( errcode ) {
       PyVGX_SetPyErr( errcode );
+      err = -1;
     }
     XFINALLY {
 
     }
   } END_PYVGX_THREADS;
+
+  if( err < 0 ) {
+    return NULL;
+  }
 
   PyObject *py_tuple;
   PyObject *py_val;

@@ -1103,7 +1103,7 @@ static framehash_cell_t * __get_internal_chaincell( const framehash_context_t * 
  ***********************************************************************
  */
 __inline static int __get_loadfactor( const framehash_cell_t * const self ) {
-  static int factor = 100 / FRAMEHASH_CELLS_PER_SLOT;
+  static const int factor = 100 / FRAMEHASH_CELLS_PER_SLOT;
   framehash_metas_t *self_metas = CELL_GET_FRAME_METAS(self);
   int p = self_metas->order;
   if( self_metas->nactive == 0 || p == 0 ) {

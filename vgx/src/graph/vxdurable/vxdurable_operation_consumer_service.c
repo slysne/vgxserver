@@ -3312,7 +3312,10 @@ static int __backlog_query( vgx_TransactionalConsumerService_t *consumer_service
     // )
 
     // Create query object
-    if( (query = iGraphQuery.NewNeighborhoodQuery( SYSTEM, SYS_TX_ROOT, NULL, VGX_COLLECTOR_MODE_COLLECT_ARCS, &CSTR__error )) == NULL ) {
+    vgx_recursion_config_t recursion = {
+      .mode = VGX_RECURSION_MODE_NONE
+    };
+    if( (query = iGraphQuery.NewNeighborhoodQuery( SYSTEM, SYS_TX_ROOT, NULL, VGX_COLLECTOR_MODE_COLLECT_ARCS, &recursion, &CSTR__error )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
     }
 

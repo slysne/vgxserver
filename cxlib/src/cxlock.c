@@ -227,7 +227,7 @@ int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t *mutex,
  ***********************************************************************
  */
 int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t *mutex, DWORD milliseconds ) {
-  static useconds_t default_usleep = 10;
+  static const useconds_t default_usleep = 10;
 
   // Total max nanoseconds to wait
   int64_t wait_ns = milliseconds * 1000000LL;

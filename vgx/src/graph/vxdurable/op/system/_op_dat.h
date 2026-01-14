@@ -138,8 +138,8 @@ static int __parse_op_system_send_raw_data( vgx_OperationParser_t *parser ) {
 static int __execute_op_system_send_raw_data( vgx_OperationParser_t *parser ) {
   // TODO: Implement correctly
   //       For now we assume single execution thread, and no overlapping messages
-  static objectid_t cmd_id = {0};
-  static vgx_StringList_t *cmd_data = NULL;
+  static __THREAD objectid_t cmd_id = {0};
+  static __THREAD vgx_StringList_t *cmd_data = NULL;
 
   BEGIN_GRAPH_OPERATOR( op_system_send_raw_data, parser ) {
 

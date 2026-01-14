@@ -8,7 +8,10 @@
       "program": "${env:HOME}/venv312/bin/python",
       "processId": "${command:pickProcess}",
       "MIMode": "lldb",
-      "stopOnEntry": true
+      "stopOnEntry": true,
+      "sourceFileMap": {
+        "/Users/music/data/working/build-pyvgx": "${workspaceFolder}"
+      }
     }
   ]
 }

@@ -2562,6 +2562,14 @@ Return a new list object from the memory object's data. Other ways to achieve th
 
 ___
 
+==== ClearSet
+
+[[memory_object_clearset]]`<<evaluator/evaluator.adoc#evaluatormemory, *ClearSet*>>()`::
+Clear the contents of any <<evaluator/evaluator.adoc#evaluator_mappingsets, vset or iset>> in the memory object.
+
+___
+
+
 ==== DualInt
 
 [[memory_object_dualint]]`*DualInt*( _a_**[**, _b_**]** )`::

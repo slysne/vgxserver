@@ -840,6 +840,7 @@ typedef struct __s_neighborhood_query_args {
   vgx_ArcConditionSet_t *collect_arc_condition_set;
   int nest;
   int64_t nested_hits;
+  vgx_recursion_config_t recursion;
 } __neighborhood_query_args;
 
 
@@ -1409,7 +1410,7 @@ typedef struct s_IPyVGXParser {
   vgx_ExpressEvalMemory_t * (*NewExpressEvalMemory)( vgx_Graph_t *graph, PyObject *py_object );
   int (*ExternalMapElements)( PyObject *py_elements, ext_vector_feature_t **parsed_elements );
   int (*ExternalEuclideanElements)( PyObject *py_elements, float **parsed_elements );
-  vgx_Vector_t * (*InternalVectorFromPyObject)( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool ephemeral );
+  vgx_Vector_t * (*InternalVectorFromPyObject)( vgx_Similarity_t *simcontext, PyObject *py_object, PyObject *py_alpha, bool cosine_mode, bool ephemeral );
   vgx_StringList_t * (*NewStringListFromVertexPyList)( PyObject *py_list );
 } IPyVGXParser;
 
@@ -1554,7 +1555,7 @@ DLL_HIDDEN extern int64_t pyvgx__enumerator_size( vgx_Graph_t *graph, int64_t (*
 
 
 
-typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B );
+typedef float (*f_similarity_method)( vgx_Similarity_t *sim, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
 
 
 /******************************************************************************
@@ -1783,7 +1784,7 @@ __inline static PyObject * __PyVGX__comparable_from_pyobject( PyObject *py_obj, 
     py_parent = py_obj;
   }
   else {
-    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_obj, NULL, true );
+    vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_obj, NULL, false, true );
     if( vector ) {
       *pC = (vgx_Comparable_t)vector;
     }
@@ -1801,9 +1802,10 @@ __inline static PyObject * __PyVGX__comparable_from_pyobject( PyObject *py_obj, 
 static PyObject * __PyVGX__compare_vectors( PyObject *args, vgx_Similarity_t *simcontext, f_similarity_method method ) {
   PyObject *py_sim = NULL;
   PyObject *py_A, *py_B;
+  double threshold = -1.0;
   vgx_Comparable_t A = NULL, B = NULL;
   
-  if( !PyArg_ParseTuple( args, "OO", &py_A, &py_B ) ) {
+  if( !PyArg_ParseTuple( args, "OO|d", &py_A, &py_B, &threshold ) ) {
     return NULL;
   }
 
@@ -1814,7 +1816,7 @@ static PyObject * __PyVGX__compare_vectors( PyObject *args, vgx_Similarity_t *si
   if( A && B ) {
     float sim;
     BEGIN_PYVGX_THREADS {
-      sim = method( simcontext, A, B );
+      sim = method( simcontext, A, B, (float)threshold );
     } END_PYVGX_THREADS;
     py_sim = PyFloat_FromDouble( sim );
   }

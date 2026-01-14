@@ -247,7 +247,7 @@ int64_t OLD_strhash64( const unsigned char *data ) {
  *
  ***********************************************************************
  */
-__inline uint64_t ihash64( uint64_t n ) {
+uint64_t ihash64( uint64_t n ) {
   uint64_t h = n ^ __M1; // initial scramble
   uint64_t b = n & 0x1FFFF; // extract 17 LSB
   b *= __M2;        // expand and mix extracted bits
@@ -269,7 +269,7 @@ __inline uint64_t ihash64( uint64_t n ) {
  *
  ***********************************************************************
  */
-__inline static uint64_t ihash64v2(uint64_t n) {
+uint64_t ihash64v2(uint64_t n) {
   uint64_t h = n ^ __M1;
   uint64_t a = n * __M2;
   a ^= ROTR(a,47);
@@ -290,7 +290,7 @@ __inline static uint64_t ihash64v2(uint64_t n) {
  *
  ***********************************************************************
  */
-__inline static uint64_t ihash64v3(uint64_t n) {
+uint64_t ihash64v3(uint64_t n) {
   uint64_t h = n ^ __N1;
   uint64_t a = n * __N2;
   a ^= ROTL(a,41);
@@ -301,6 +301,17 @@ __inline static uint64_t ihash64v3(uint64_t n) {
   h *= __N4;
   h ^= ROTL(h,19);
   return h;
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+double xrandom( uint64_t state ) {
+  static const double r = 1.0/18446744073709551615.0;
+  return (double)ihash64v2( state ) * r;
 }
 
 

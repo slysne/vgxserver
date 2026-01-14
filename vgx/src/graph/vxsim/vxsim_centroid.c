@@ -366,17 +366,23 @@ static vgx_Vector_constructor_args_t * __euclidean_centroid( vgx_Vector_construc
       V = vectors[n];
       const char *elem = CALLABLE(V)->Elements(V);
       const char *e_end = elem + V->metas.vlen;
-      double factor = V->metas.scalar.factor; 
       double *a = aggr;
-      while( elem < e_end ) {
-        *a++ += __decode_char_to_double( *elem++, factor );
+      if( V->metas.flags.cos ) {
+        while( elem < e_end ) {
+          *a++ += (double)*elem++;
+        }
+      }
+      else {
+        double scale = V->metas.scalar.alpha;
+        while( elem < e_end ) {
+          *a++ += __decode_char_to_double( *elem++, scale );
+        }
       }
     }
-
-    // Scaling factor
-    double factor = __euclidean_scaling_factor_dbl( aggr, vlen );
-    cargs->scale = (float)factor;
-    double inv_scale = factor > 0.0 ? 1.0/factor : 0.0;
+    
+    // Scaling factor from aggregated data <= 1.0
+    double scale = __euclidean_scaling_factor_dbl( aggr, vlen );
+    double inv_scale = scale > 0.0 ? 1.0/scale : 0.0;
 
     // Convert to internal
     double *src = aggr;
@@ -389,6 +395,12 @@ static vgx_Vector_constructor_args_t * __euclidean_centroid( vgx_Vector_construc
     ALIGNED_FREE( aggr );
 
     cargs->elements = data;
+    if( cargs->cosmode ) {
+      cargs->alpha = 1.0f;
+    }
+    else {
+      cargs->alpha = (float)scale;
+    }
   }
 
   return cargs;

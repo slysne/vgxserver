@@ -2368,6 +2368,10 @@ g.Neighborhood(
 |Return a list representing memory object data
 
 |{counter:cmm}
+|<<reference.adoc#memory_object_clearset, pyvgx.Memory.ClearSet()>>
+|Clear contents of iset or vset
+
+|{counter:cmm}
 |<<reference.adoc#memory_object_dualint, pyvgx.Memory.DualInt()>>
 |Convert between packed and unpacked integer tuple 
 

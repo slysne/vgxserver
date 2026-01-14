@@ -66,6 +66,7 @@ static void __stack_push_constant_order( vgx_Evaluator_t *self );
 static void __stack_push_constant_size( vgx_Evaluator_t *self );
 static void __stack_push_constant_opcnt( vgx_Evaluator_t *self );
 static void __stack_push_constant_vector( vgx_Evaluator_t *self );
+static void __stack_push_constant_Mvector( vgx_Evaluator_t *self );
 static void __stack_push_constant_T_NEVER( vgx_Evaluator_t *self );
 static void __stack_push_constant_T_MIN( vgx_Evaluator_t *self );
 static void __stack_push_constant_T_MAX( vgx_Evaluator_t *self );
@@ -311,6 +312,24 @@ static void __stack_push_constant_vector( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *item = NEXT_PITEM( self );
   if( self->current.vector ) {
     item->vector = self->current.vector;
+  }
+  else {
+    item->vector = self->graph->similarity->nullvector;
+  }
+  item->type = STACK_ITEM_TYPE_VECTOR;
+}
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static void __stack_push_constant_Mvector( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *item = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  if( mem->probe ) {
+    item->vector = mem->probe;
   }
   else {
     item->vector = self->graph->similarity->nullvector;

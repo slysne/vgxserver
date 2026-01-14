@@ -479,7 +479,7 @@ static vgx_predicator_t __api_arcvector_get_arc_value( framehash_dynamic_t *dyna
   case VGX_ARCVECTOR_SIMPLE_ARC:
     if( __arcvector_get_vertex( V ) == arc_head->vertex ) {
       vgx_predicator_t pred = __arcvector_as_predicator( V );
-      if( predmatchfunc.Generic( arc_head->predicator, pred ) ) {
+      if( predmatchfunc.Generic( NULL, arc_head->predicator, pred ) ) {
         match.predicator.data = pred.data;
         match.vertex = arc_head->vertex;
       }

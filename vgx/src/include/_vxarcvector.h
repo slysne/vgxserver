@@ -692,7 +692,7 @@ __inline static void __arcvector_context_prepare_multipred( __arcvector_virtual_
  * 
  ***********************************************************************
  */
-typedef int (*__f_match_pred)( const vgx_predicator_t A, const vgx_predicator_t B );
+typedef int (*__f_match_pred)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t A, const vgx_predicator_t B );
 
 
 
@@ -962,18 +962,60 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
 }
 
 
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+__inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context, const framehash_cell_t *fh_cell ) {
+  vgx_virtual_ArcFilter_context_t *afc = context->traverse_filter;
+  // We don't track visited nodes
+  if( afc->track_visited == false ) {
+    return true;
+  }
+
+  // Assume we will need vertex. (Pollutes lower levels if already visited, but reduce latency when it's needed)
+  vgx_ExpressEvalMemory_t *mem = afc->traversing_evaluator->context.memory;
+  vgx_ExpressEvalDWordSet_t *dwset = &mem->dwset;
+  vgx_Vertex_t *vertex = afc->current_head->vertex;
+  // Early phase, likely unvisited, prefetch to L2
+  if( dwset->sz < 8192 ) {
+    __prefetch_L2( vertex );
+  }
+  // Late phase, likely visited, prefetch to L3 to avoid L2 pollution
+  else {
+    __prefetch_L3( vertex );
+  }
+
+  /* 
+  // Speculatively also prefetch the next cell's vertex if cell is valid
+  const framehash_cell_t *fh_next = fh_cell + 1;
+  if( _ITEM_IS_VALID( fh_next ) ) {        
+    __prefetch_L3( (char*)APTR_AS_ANNOTATION( fh_next ) );
+  }
+    ^^^^^ interesting idea but hurts multi-threaded performance
+  */
+
+  // True if unvistied node (it is added to map for future), false if already visited or map full
+  return vxeval_vertex_unvisited( dwset, vertex );
+}
+
+
+
 #define __begin_safe_traversal_context( VirtualInputContext, ArcArrayCell  )  \
   do {                                                                        \
     __arcvector_virtual_input_context_t *__context__ = VirtualInputContext;   \
     framehash_cell_t * const __cell__ = ArcArrayCell;                         \
     __arcvector_set_archead_vertex( __context__, __cell__ );                  \
-    vgx_LockableArc_t *__larc__ = __context__->larc;
+    vgx_LockableArc_t *__larc__ = __context__->larc;                          \
+    if( __arcvector_archead_unvisited( __context__, __cell__ ) )
 
 
 #define __end_safe_traversal_context          \
     __release_lockable_archead( __larc__ );   \
     __arcvector_clear_archead( __context__ ); \
   } WHILE_ZERO
+
 
 
 

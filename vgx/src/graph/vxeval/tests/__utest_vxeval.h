@@ -636,8 +636,8 @@ static int __populate_graph( vgx_Graph_t *graph ) {
          1.1f,  1.2f,  1.3f,  1.4f,  1.5f,  1.6f,  1.7f,  1.8f,  1.9f,  2.0f,  2.1f,  2.2f,  2.3f,  2.4f,  2.5f,  2.6f
       };
 
-      head_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, head_elements, 32, true, NULL );
-      tail_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, tail_elements, 32, true, NULL );
+      head_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, head_elements, 32, false, true, NULL );
+      tail_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, tail_elements, 32, false, true, NULL );
     }
     else {
       ext_vector_feature_t head_elements[] = {
@@ -649,7 +649,7 @@ static int __populate_graph( vgx_Graph_t *graph ) {
         {0}
       };
       uint16_t sz_head_elements = ivectoralloc.CountExternalElements( head_elements );
-      head_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, head_elements, sz_head_elements, true, NULL );
+      head_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, head_elements, sz_head_elements, false, true, NULL );
       ext_vector_feature_t tail_elements[] = {
         { .weight=0.8f, .term="second_dim" },
         { .weight=0.6f, .term="third_dim" },
@@ -657,7 +657,7 @@ static int __populate_graph( vgx_Graph_t *graph ) {
         {0}
       };
       uint16_t sz_tail_elements = ivectoralloc.CountExternalElements( tail_elements );
-      tail_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, tail_elements, sz_tail_elements, true, NULL );
+      tail_vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, tail_elements, sz_tail_elements, false, true, NULL );
     }
 
     if( head_vector == NULL ) {
@@ -1149,7 +1149,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
       {0}
     };
     uint16_t sz_elements = ivectoralloc.CountExternalElements( elements );
-    vgx_Vector_t *vector = CALLABLE( graph->similarity )->NewInternalVectorFromExternal( graph->similarity, elements, sz_elements, true, NULL );
+    vgx_Vector_t *vector = CALLABLE( graph->similarity )->NewInternalVectorFromExternal( graph->similarity, elements, sz_elements, false, true, NULL );
     __test test7 = {
       .expression  =  "vectorfunc := sim( vector, next.vector ) > 0.9999 && sim( vertex.vector, vector ) in range( 0.3, 0.9 )",
       .result = { .type = STACK_ITEM_TYPE_INTEGER, .integer = 1 },

@@ -448,8 +448,8 @@ static int __new_aggregation_structs( const x_vgx_partial__header *header, int64
 #define REP256X(X) REP128X(X), REP128X(X)
 
 
-  static char BYTES_LOW[] =  { 1, 0, 0, 0, 0 };             // [0]\0
-  static char BYTES_HIGH[] = { 0, 1, 0, 0, REP256X(255) };  // [256]yyy...y   (where y=255)
+  static const char BYTES_LOW[] =  { 1, 0, 0, 0, 0 };             // [0]\0
+  static const char BYTES_HIGH[] = { 0, 1, 0, 0, REP256X(255) };  // [256]yyy...y   (where y=255)
 
   Cm128iHeap_constructor_args_t heap_args = {
     .element_capacity = sz
@@ -530,8 +530,8 @@ static int __new_aggregation_structs( const x_vgx_partial__header *header, int64
  ***********************************************************************
  */
 DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerClient_t *client, CString_t **CSTR__error ) {
-  static int64_t HSZ = sizeof( x_vgx_partial__header );
-  static int64_t KSZ = sizeof( x_vgx_partial__entry_key );
+  static const int64_t HSZ = sizeof( x_vgx_partial__header );
+  static const int64_t KSZ = sizeof( x_vgx_partial__entry_key );
 
   int ret = 0;
 

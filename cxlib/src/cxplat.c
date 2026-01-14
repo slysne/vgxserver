@@ -946,10 +946,7 @@ int get_cpu_cores( int *cores, int *threads ) {
     *threads = core_count;
     return 0;
   }
-  else {
-    return -1;
-  }
-  return 0;
+  return -1;
 }
 #elif defined CXPLAT_ARCH_ARM64
 
@@ -1758,7 +1755,7 @@ write_tlb_info:
 #endif
   // Finally, page size
   if( remain > 32 ) {
-    used = snprintf( p, remain, "PAGE : %5d kiB\n", pageSize >> 10 );
+    used = snprintf( p, remain, "PAGE : %5d kiB\n", (int)(pageSize >> 10) );
     remain -= used;
     p += used;
   }

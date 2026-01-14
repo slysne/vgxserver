@@ -481,7 +481,7 @@ static int THREAD_START( cxlib_thread_t *hThread, uint32_t *thread_id, f_cxlib_t
  ******************************************************************************
  */
 static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
-  static int priority_map[] = {
+  static const int priority_map[] = {
     THREAD_PRIORITY_LOWEST,
     THREAD_PRIORITY_BELOW_NORMAL,
     THREAD_PRIORITY_NORMAL,
@@ -641,7 +641,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   * sudo setcap cap_sys_nice=eip /usr/local/bin/python3.12
   * 
   */
-  static int nice_map[] = {
+  static const int nice_map[] = {
     10,   // LOWEST
     5,    // BELOW NORMAL
     0,    // NORMAL
@@ -694,7 +694,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   //       it will set priority relative to previous 
   //       setting.
 
-  static int priority_map[] = {
+  static const int priority_map[] = {
       -10,  // LOWEST
       -5,   // BELOW NORMAL
       0,    // NORMAL

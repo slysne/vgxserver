@@ -1194,9 +1194,9 @@ static int _vxdurable_operation__assert_state( void ) {
  ***********************************************************************
  */
 DLL_HIDDEN int64_t _vxdurable_operation__emitter_checkpoint_CS( vgx_Graph_t *graph, cxmalloc_object_processing_context_t *sync_context, int64_t obj_cnt ) {
-  static int64_t chkmask = (1LL << 17) - 1LL;
-  static int64_t emitter_oplim = 1LL << 12;
-  static int64_t output_szlim = __TX_MAX_SIZE;
+  static const int64_t chkmask = (1LL << 17) - 1LL;
+  static const int64_t emitter_oplim = 1LL << 12;
+  static const int64_t output_szlim = __TX_MAX_SIZE;
   int64_t ret = 0;
   *(int64_t*)sync_context->input += obj_cnt;
   int64_t obj = *(int64_t*)sync_context->input;
