@@ -363,14 +363,35 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
 }
 
 
-static int beam_item_comparator_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+static int beam_item_comparator_score_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
   return (a->sort.flt64.value > b->sort.flt64.value) - (a->sort.flt64.value < b->sort.flt64.value);
 }
 
 
-static int beam_item_comparator_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+static int beam_item_comparator_score_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
   return (a->sort.flt64.value < b->sort.flt64.value) - (a->sort.flt64.value > b->sort.flt64.value);
 }
+
+
+static int beam_item_comparator_address_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  uint64_t a_addr = (uint64_t)a->headref->vertex;
+  uint64_t b_addr = (uint64_t)b->headref->vertex;
+  return (a_addr > b_addr) - (a_addr < b_addr);
+}
+
+
+static int beam_item_comparator_indegree_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  int64_t a_ideg = iarcvector.Degree( &a->headref->vertex->inarcs );
+  int64_t b_ideg = iarcvector.Degree( &b->headref->vertex->inarcs );
+  return (a_ideg < b_ideg) - (a_ideg > b_ideg);
+}
+
+
+static int beam_item_comparator_random( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  double r = randfloat();
+  return (r < 0.5) - (r > 0.5);
+}
+
 
 
 /*******************************************************************//**
@@ -386,14 +407,18 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
   
   vgx_CollectorItem_t *beam = (vgx_CollectorItem_t*)B->_buffer;
   
-  //qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))B->_cmp );
-  // Early or small beams sorted best to worst
-  if( n_transfer < 16 || collector->recursion_depth < 8 ) {
-    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_desc );
+  // Small beam, sort by score high to low
+  if( n_transfer <= 5 ) {
+    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
   }
-  // Late and large beams sorted worst to best
   else {
-    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_asc );
+    // Alternate asc/desc per level
+    if( collector->recursion_depth & 1 ) {
+      qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_asc );
+    }
+    else {
+      qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
+    }
   }
 
   vgx_CollectorItem_t *cursor = beam;
@@ -607,6 +632,7 @@ __inline static bool __expand_next_check( control_vector_t *control, float score
 
   control->expansions.local++;
   control->expansions.total++;
+  mem->counter.expand++;
   return true;
 }
 
@@ -658,6 +684,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         mem->counter.contrib = 0;
         mem->counter.frontier = 0;
         mem->counter.accept = 0;
+        mem->counter.depth = 0;
+        mem->counter.expand = 0;
       }
       mem->dynamic_taper.alpha = collector->alpha;
       mem->dynamic_taper.beta = collector->beta;
@@ -707,6 +735,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
       // Collector needs level info in case we collect depth field
       collector->recursion_depth = control.evolution.level;
+      mem->counter.depth = control.evolution.level;
 
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
       for( int64_t i=0; i<control.evolution.level_size; ++i ) {
@@ -739,7 +768,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
+          // control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
+          control.threshold.baseline = _vxquery_collector__get_current_threshold( collector ) - 0.0006f * collector->recursion_depth;
         }
 
         // Used item from frontier must be closed here

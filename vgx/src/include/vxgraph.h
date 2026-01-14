@@ -5445,14 +5445,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   bool track_visited;                                         \
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
-  /*  */                   \
-  double xxx;                           \
-  /* Degree-robust, path-multiplicity-robust probabilistic BFS */ \
-  /*double p_skip;*/  /* 0.0 - 1.0*/                              \
-  /* For M_LSH: Apply arc lsh hamming distance filter when lsh_cos is above this threshold */ \
-  /*double lsh_cos_threshold; */                                  \
-  /* For M_LSH: Current cosine difficulty */                  \
-  /*double lsh_cos;*/                                             \
+  /*  */                                                      \
+  double xxx;                                                 \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -6022,15 +6016,14 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   vgx_ExpressEvalDWordSet_t dwset;
   // Q2.5
   vgx_Vector_t *probe;
-  // Q2.6
-  //double threshold;
-  double __rsv_2_6;
-  // Q2.7-8 
+  // Q2.6-8 
   struct {
     uint32_t eval;
     uint32_t contrib;
     uint32_t frontier;
     uint32_t accept;
+    uint32_t depth;
+    uint32_t expand;
   } counter;
   // ==== CL3 ====
   // Q3.1-4
@@ -6776,6 +6769,8 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float *wp;
   float *end;
   float *queue;
+  float alpha;
+  unsigned count;
 } vgx_ExpansionShadowTrail_t;
 
 

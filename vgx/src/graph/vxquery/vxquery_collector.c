@@ -531,8 +531,16 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
   if( shadow_trail->wp >= shadow_trail->end ) {
     shadow_trail->wp = shadow_trail->queue;
   }
-
+  
   float oldest = *shadow_trail->wp;
+
+  /*
+  shadow_trail->count++;
+  double dyn_alpha = trail_base_alpha - (1.0/100000) * shadow_trail->count * shadow_trail->alpha;
+  float effective_alpha = (float)clamp_value( dyn_alpha, 0.01, 0.99 );
+  return shadow_trail->threshold = effective_alpha * oldest + (1.0f - effective_alpha) * shadow_trail->threshold;
+  */
+
   return shadow_trail->threshold = trail_alpha * oldest + (1.0f - trail_alpha) * shadow_trail->threshold;
 }
 
@@ -623,6 +631,8 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
   }
   shadow_trail->threshold = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
+  shadow_trail->alpha = 0.0f;
+  shadow_trail->count = 0;
 }
 
 
@@ -714,6 +724,8 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
   for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
     *p++ = init_min_score;
   }
+  shadow_trail->alpha = 1.0f;
+  shadow_trail->count = 0;
   return 0;
 }
 
