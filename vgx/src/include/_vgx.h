@@ -1171,11 +1171,11 @@ DLL_HIDDEN extern void                      _vxvertex_property__free_select_prop
 DLL_HIDDEN extern void                      _vxvertex_property__clear_select_property_CS( vgx_Graph_t *self, vgx_VertexProperty_t *selectprop );
 
 DLL_HIDDEN extern void                      _vxvertex_property__virtual_properties_close( vgx_Graph_t *graph );
-DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase );
+DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase, bool load_counters );
 DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_move( vgx_Graph_t *graph, const char *tmpbase );
 DLL_HIDDEN extern int64_t                   _vxvertex_property__virtual_properties_commit( vgx_Graph_t *graph );
 DLL_HIDDEN extern void                      _vxvertex_property__virtual_properties_destroy( vgx_Graph_t *graph );
-DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph );
+DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph, bool load_counters );
 DLL_HIDDEN extern CString_t *               _vxvertex_property__read_virtual_property( vgx_Graph_t *graph, int64_t offset, CString_t *CSTR__buffer, int64_t *rsz );
 
 

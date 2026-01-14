@@ -1467,7 +1467,7 @@ static int64_t _vxdurable_serialization__bulk_serialize( vgx_Graph_t *self, vgx_
             VXDURABLE_SERIALIZATION_REASON( self, 0xB26, "Directory rename failed (%s), will overwrite existing: %s", strerror(errno), path );
             tmpbase = NULL;
           }
-          if( _vxvertex_property__virtual_properties_open( self, tmpbase ) < 0 ) {
+          if( _vxvertex_property__virtual_properties_open( self, tmpbase, true ) < 0 ) {
             VXDURABLE_SERIALIZATION_CRITICAL( self, 0xB27, "Failed to reopen virtual properties file!" );
           }
         }

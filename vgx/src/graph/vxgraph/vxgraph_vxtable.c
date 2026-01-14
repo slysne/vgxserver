@@ -1994,7 +1994,7 @@ DLL_HIDDEN int64_t _vxgraph_vxtable__truncate_noeventproc_CS( vgx_Graph_t *self,
     // -----------------
     // Destroy and re-initialize to truncate vprop file back to commit point
     _vxvertex_property__virtual_properties_destroy( self );
-    if( _vxvertex_property__virtual_properties_init( self) < 0 ) {
+    if( _vxvertex_property__virtual_properties_init( self, false ) < 0 ) {
       THROW_SILENT( CXLIB_ERR_SEMAPHORE, 0xD86 );
     }
 

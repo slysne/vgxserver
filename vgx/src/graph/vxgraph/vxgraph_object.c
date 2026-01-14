@@ -672,7 +672,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     }
    
     // [Q13-14] Virtual Properties
-    if( _vxvertex_property__virtual_properties_init( self ) < 0 ) {
+    if( _vxvertex_property__virtual_properties_init( self, true ) < 0 ) {
       THROW_ERROR_MESSAGE( CXLIB_ERR_GENERAL, 0x5D7, "Failed initialize virtual properties" );
     }
 
