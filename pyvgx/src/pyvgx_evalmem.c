@@ -596,14 +596,14 @@ static PyObject * __PyVGX_Memory__get_counters( PyVGX_Memory *pymem, void *closu
   vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
   PyObject *py_counters = PyTuple_New( 8 );
   if( py_counters ) {
-    PyTuple_SET_ITEM( py_counters, 0, PyLong_FromLong(mem->counter.eval) );
-    PyTuple_SET_ITEM( py_counters, 1, PyLong_FromLong(mem->counter.contrib) );
-    PyTuple_SET_ITEM( py_counters, 2, PyLong_FromLong(mem->counter.frontier) );
-    PyTuple_SET_ITEM( py_counters, 3, PyLong_FromLong(mem->counter.accept) );
-    PyTuple_SET_ITEM( py_counters, 4, PyLong_FromLong(mem->counter.depth) );
-    PyTuple_SET_ITEM( py_counters, 5, PyLong_FromLong(mem->counter.expand) );
-    PyTuple_SET_ITEM( py_counters, 6, PyLong_FromLong(mem->dwset.sz) );
-    PyTuple_SET_ITEM( py_counters, 7, PyLong_FromLong(mem->dwset.hits) );
+    PyTuple_SET_ITEM( py_counters, 0, PyLong_FromUnsignedLong(mem->counter.eval) );
+    PyTuple_SET_ITEM( py_counters, 1, PyLong_FromUnsignedLong(mem->counter.contrib) );
+    PyTuple_SET_ITEM( py_counters, 2, PyLong_FromUnsignedLong(mem->counter.frontier) );
+    PyTuple_SET_ITEM( py_counters, 3, PyLong_FromUnsignedLong(mem->counter.accept) );
+    PyTuple_SET_ITEM( py_counters, 4, PyLong_FromUnsignedLong(mem->counter.depth) );
+    PyTuple_SET_ITEM( py_counters, 5, PyLong_FromUnsignedLong(mem->counter.expand) );
+    PyTuple_SET_ITEM( py_counters, 6, PyLong_FromUnsignedLong(mem->dwset.sz) );
+    PyTuple_SET_ITEM( py_counters, 7, PyLong_FromLongLong(mem->dwset.hits) );
   }
   return py_counters;
 }

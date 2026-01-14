@@ -613,9 +613,9 @@ static void __vxoballoc_vector__delete_allocator( cxmalloc_family_t **allocator 
  ***********************************************************************
  */
 static const char * __simple_vector_id( vgx_Vector_t *vector ) {
-  char buffer[512];
+  __THREAD static char buffer[64];
   const char *simple = buffer;
-  sprintf( buffer, "vgx_Vector_t (len=%u mag=%#g type=%02x)", vector->metas.vlen, CALLABLE( vector )->Magnitude( vector ), vector->metas.type );
+  snprintf( buffer, 64, "vgx_Vector_t (len=%u mag=%#g type=%02x)", vector->metas.vlen, CALLABLE( vector )->Magnitude( vector ), vector->metas.type );
   return simple;
 }
 
