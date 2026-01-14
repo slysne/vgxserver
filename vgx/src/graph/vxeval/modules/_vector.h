@@ -327,23 +327,21 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   // COMPUTE COSINE(A,B)
   // -------------------
   // Faster when both vectors are cosine_mode
-  float cosine;
+  double cosine;
   if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
     double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    cosine = (float)vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
-    //double min_cosine = mem->threshold - 1.0;
-    //cosine = vxeval_bytearray_dp_cosine_with_threshold( A, B, len, invnormprod, min_cosine );
+    cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
   }
   else {
-    cosine = (float)vxeval_bytearray_cosine(A, B, len);
+    cosine = vxeval_bytearray_cosine(A, B, len);
   }
 
   vgx_BaseCollector_context_t *base = self->context.collector;
 
-  float top_k_th = _vxquery_collector__worst_heap_flt64_score( base->container.sequence.heap );
-  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_flt64_score( base->beam_heap ) : 0.0f;
+  float top_k_th = (float)_vxquery_collector__worst_heap_flt64_score( base->container.sequence.heap );
+  float beam_j_th = base->beam_heap != NULL ? (float)_vxquery_collector__worst_heap_flt64_score( base->beam_heap ) : 0.0f;
 
-  float score = cosine + 1.0f; // [0.0 - 2.0]
+  float score = (float)cosine + 1.0f; // [0.0 - 2.0]
 
   // Adaptive search enabled
   if( base->adaptive_recursion ) {

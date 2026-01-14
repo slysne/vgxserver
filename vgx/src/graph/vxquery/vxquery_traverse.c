@@ -325,7 +325,7 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
 static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width, double dynamic_taper ) {
   // next = width * curve * dynamic_taper
   double next_d = current_beam_width * recursion->beam.curve * dynamic_taper;
-  int next;
+  int64_t next;
   if( current_beam_width < 10 ) {
     next = (int64_t)( dynamic_taper <= 0.0 ? floor(next_d) : ceil(next_d) );
   }
@@ -475,11 +475,11 @@ static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollec
  *
  ***********************************************************************
  */
-static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, int64_t beam_sz_override ) {
+static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, int64_t beam_sz_override ) {
+  int64_t sz = 0;
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
-    
     // Frontier is populated, transfer to beam
     if( ComlibSequenceLength(collector->frontier) > 0 ) {
       // Populate beam heap from frontier gathered during previous expansion
@@ -497,23 +497,14 @@ static int64_t __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virt
     collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
     __initialize_beam( recursion, collector );
 
-    /*
-    // If arc pruning enabled, reset arc filter to all-pass filter when depth reached
-    if( recursion->arc_prune.until > 0 && filter_context->recursion_arc_prune_score > 0.0 ) {
-      if( collector->recursion_depth > recursion->arc_prune.until ) {
-        filter_context->recursion_arc_prune_score = 0.0;
-      }
-    }
-    */
-
     // Number of expansions to perform
-    return sz_frontier;
+    sz = sz_frontier;
   }
   case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
-    return ComlibSequenceLength(collector->frontier);
-  default:
-    return 0;
+    sz = ComlibSequenceLength(collector->frontier);
   }
+
+  return (int)sz;
 }
 
 

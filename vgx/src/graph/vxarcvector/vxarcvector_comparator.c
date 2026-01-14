@@ -434,7 +434,7 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
         if( (inserted->tailref = _vxquery_collector__add_vertex_reference( base, larc->tail, &larc->acquired.tail_lock )) != NULL ) {
           if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
             if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
-              inserted->headref->slot.depth = base->recursion_depth;
+              inserted->headref->slot.depth = (uint16_t)(base->recursion_depth & 0xFFFF);
               inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
               // SUCCESS
               updated = 1;
@@ -477,7 +477,7 @@ static int __update_refmap_head( vgx_BaseCollector_context_t *base, vgx_Collecto
       inserted->headref = NULL;
       if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
         if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
-          inserted->headref->slot.depth = base->recursion_depth;
+          inserted->headref->slot.depth = (uint16_t)(base->recursion_depth & 0xFFFF);
           inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
           // SUCCESS
           updated = 1;
