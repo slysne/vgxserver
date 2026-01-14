@@ -476,7 +476,7 @@ static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollec
  ***********************************************************************
  */
 static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, int64_t beam_sz_override ) {
-  int64_t sz = 0;
+  int64_t sz;
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
@@ -502,6 +502,8 @@ static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_
   }
   case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
     sz = ComlibSequenceLength(collector->frontier);
+  default:
+    sz = 0;
   }
 
   return (int)sz;
