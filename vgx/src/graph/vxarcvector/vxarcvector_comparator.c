@@ -982,11 +982,19 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   Cm256iBuffer_t *F = base->frontier;
   Cm256iHeap_t *B = base->beam_heap;
   
-  vgx_VertexRef_t sort_tailref = { .vertex = larc->tail };
-  vgx_VertexRef_t sort_headref = { .vertex = larc->head.vertex };
+  vgx_VertexRef_t sort_tailref = {
+    .vertex = larc->tail,
+    .refcnt = -1,
+    .slot = {0}
+  };
+  vgx_VertexRef_t sort_headref = {
+    .vertex = larc->head.vertex,
+    .refcnt = -1,
+    .slot = {0}
+  };
   vgx_CollectorItem_t collected = {
-    .tailref    = &dummy_ref, // overwrite with managed reference from refmap if collected
-    .headref    = &dummy_ref, // overwrite with managed reference from refmap if collected
+    .tailref    = &sort_tailref, // overwrite with managed reference from refmap if collected
+    .headref    = &sort_headref, // overwrite with managed reference from refmap if collected
     .predicator = larc->head.predicator,
     .sort       = sort
   };
