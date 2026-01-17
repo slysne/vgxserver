@@ -1044,9 +1044,11 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
       return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
 
-    // Update shadow with result heap's new worst score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)_vxquery_collector__worst_heap_flt64_score( heap ) );
-    
+    // Update shadow with result heap's new worst score (2x for extra weight)
+    float evicted_result_score = (float)_vxquery_collector__worst_heap_flt64_score( heap );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, evicted_result_score );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, evicted_result_score );
+
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {
       return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, result_heap_location, &result_heap_discarded, larc, NULL );

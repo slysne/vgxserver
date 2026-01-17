@@ -254,11 +254,11 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     };
 
     struct s_dbl_config dbl_config[] = {
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,      .maxval=1.0 },        // default 1.0=constant
-      { .name = "alpha",            .target = &param->recursion.tune.alpha,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 1.0 ()
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,         .maxval=1.0 },          // default 1.0=constant
+      { .name = "alpha",            .target = &param->recursion.tune.alpha,                 .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (depth discount for expansion threshold)
+      { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
+      { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
+      { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       {0}
     };
 

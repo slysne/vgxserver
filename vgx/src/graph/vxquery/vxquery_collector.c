@@ -534,13 +534,6 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
   
   float oldest = *shadow_trail->wp;
 
-  /*
-  shadow_trail->count++;
-  double dyn_alpha = trail_base_alpha - (1.0/100000) * shadow_trail->count * shadow_trail->alpha;
-  float effective_alpha = (float)clamp_value( dyn_alpha, 0.01, 0.99 );
-  return shadow_trail->threshold = effective_alpha * oldest + (1.0f - effective_alpha) * shadow_trail->threshold;
-  */
-
   return shadow_trail->threshold = trail_alpha * oldest + (1.0f - trail_alpha) * shadow_trail->threshold;
 }
 

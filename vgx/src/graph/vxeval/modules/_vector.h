@@ -186,27 +186,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define HIGH_SCORE_GAIN 0.040f                    //
 #define LOW_SCORE_GAIN 0.020f                     //
 
-/*
-#define alpha_4000  0.0f
-#define beta_4000 0.03f
-#define alpha_10000 -0.005f
-#define beta_10000 0.062f
-
-#define alpha_a ((alpha_10000 - alpha_4000) / 6000)
-#define alpha_b (alpha_4000 - alpha_a*4000)
-
-#define beta_a ((beta_10000 - beta_4000) / 6000)
-#define beta_b (beta_4000 - beta_a*4000)
-
-  static const float aa = alpha_a;
-  static const float ab = alpha_b;
-  static const float ba = beta_a;
-  static const float bb = beta_b;
-  //float alpha = alpha_a * mem->counter.eval + alpha_b;
-*/
-
   // Maintain running top score for beam taper
-  //if( score > mem->dynamic_taper.top_1_best * (1+alpha) ) {
   if( score > mem->dynamic_taper.top_1_best ) {
     mem->dynamic_taper.top_1_best = score;
     mem->dynamic_taper.window_top_1_unimproved = 0;
@@ -217,48 +197,54 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
   else {
     mem->dynamic_taper.window_top_1_unimproved++;
   }
+  
+  // Keep counting
+  if( ++mem->dynamic_taper.window_counter < VISIT_WINDOW_CHECKPOINT ) {
+    return;
+  }
 
   // Evaluate our progress
-  if( ++mem->dynamic_taper.window_counter >= VISIT_WINDOW_CHECKPOINT ) {
-    //float beta = beta_a * mem->counter.eval + beta_b;
-    double factor;
-    // -- LOOSEN --
-    // We're decidedly not improving the running top score, loosen taper
+  double factor;
+  // -- LOOSEN --
+  // We're decidedly not improving the running top score, loosen taper
     if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
-      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR; // * (1 + beta * collector->beta);
-    }
-    // We're mostly not improving the top score, loosen taper a bit
-    else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
-      factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR; // * (1 + beta * collector->beta);
-    }
-    // -- TIGHTEN --
-    // We are improving at a decent rate, tighten taper a bit
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_SCORE_GAIN ) {
-      factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR; // * (1 + beta * collector->gamma);
-      factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
-    }
-    // We are improving at a very good rate, tighten taper
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_SCORE_GAIN ) {
-      factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR; // * (1 + beta * collector->gamma);
-      factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
-    }
-    
-    // -- STEADY --
-    else {
-      factor = 1.0;
-    }
-
-    // New taper
-    double taper = factor * collector->dynamic_taper;
-    collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
-
-    // Update score at checkpoint
-    mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
-    
-    // Reset window
-    mem->dynamic_taper.window_counter = 0;
-    mem->dynamic_taper.window_top_1_unimproved = 0;
+      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
   }
+  // We're mostly not improving the top score, loosen taper a bit
+  else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
+    factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
+  }
+  // -- TIGHTEN --
+  // We are improving at a decent rate, tighten taper a bit
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_SCORE_GAIN ) {
+    factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
+  }
+  // We are improving at a very good rate, tighten taper
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_SCORE_GAIN ) {
+    factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
+  }
+  
+  // -- STEADY --
+  else {
+    factor = 1.0;
+  }
+
+  // delta: reactivity control -> >0.0 expand, <0.0 limit, -1.0 turn controller off
+  factor += collector->delta * (factor - 1.0);
+
+  // New taper
+  double taper = factor * collector->dynamic_taper;
+  collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
+
+  // Update score at checkpoint
+  mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
+  
+  // Reset window
+  mem->dynamic_taper.window_counter = 0;
+  mem->dynamic_taper.window_top_1_unimproved = 0;
+
 }
 
 
@@ -368,6 +354,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
       
   // Score is good enough to help refine the baseline threshold
   mem->counter.contrib++;
+  //_vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
 
   // Frontier contribution 
   if( score > beam_j_th ) {

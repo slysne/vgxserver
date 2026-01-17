@@ -324,9 +324,9 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  */
 static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width, double dynamic_taper ) {
   // next = width * curve * dynamic_taper
-  double next_d = current_beam_width * recursion->beam.curve * dynamic_taper;
   int64_t next;
   if( current_beam_width < 10 ) {
+    double next_d = current_beam_width * recursion->beam.curve * dynamic_taper;
     next = (int64_t)( dynamic_taper <= 0.0 ? floor(next_d) : ceil(next_d) );
   }
   else {
@@ -718,14 +718,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
 
     while( control.evolution.level_size > 0 ) {
 
-      // Max depth reached
-      if( __next_level_control(&control, mem) >= depth_limit ) {
-        goto terminate_outer;
-      }
-
       // Collector needs level info in case we collect depth field
-      collector->recursion_depth = control.evolution.level;
-      mem->counter.depth = control.evolution.level;
+      mem->counter.depth = collector->recursion_depth = control.evolution.level;
 
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
       for( int64_t i=0; i<control.evolution.level_size; ++i ) {
@@ -758,12 +752,16 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           }
 
           // Update min score to increase difficulty after heap refinement
-          // control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
-          control.threshold.baseline = _vxquery_collector__get_current_threshold( collector ) - 0.0006f * collector->recursion_depth;
+          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
         }
 
         // Used item from frontier must be closed here
         _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
+      }
+      
+      // Max depth reached
+      if( __next_level_control(&control, mem) >= depth_limit ) {
+        goto terminate_outer;
       }
 
       control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
