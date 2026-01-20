@@ -393,6 +393,15 @@ static int beam_item_comparator_random( vgx_CollectorItem_t *a, vgx_CollectorIte
 }
 
 
+static int beam_item_comparator_priority( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  float coherence_a = vgx_RankGetC0( &a->headref->vertex->rank );
+  float coherence_b = vgx_RankGetC0( &b->headref->vertex->rank );
+  float score_a = (float)a->sort.flt64.value * (1.0f - coherence_a);
+  float score_b = (float)b->sort.flt64.value * (1.0f - coherence_b);
+  return (score_a < score_b) - (score_a > score_b);
+}
+
+
 
 /*******************************************************************//**
  *
@@ -407,6 +416,9 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
   
   vgx_CollectorItem_t *beam = (vgx_CollectorItem_t*)B->_buffer;
   
+  qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_priority );
+
+  /*
   // Small beam, sort by score high to low
   if( n_transfer <= 5 ) {
     qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
@@ -420,6 +432,7 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
       qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
     }
   }
+  */
 
   vgx_CollectorItem_t *cursor = beam;
   vgx_CollectorItem_t *push_end = cursor + minimum_value( n_transfer, B->_size );
@@ -575,6 +588,9 @@ typedef struct _s_control_vector_t {
   struct {
     float baseline;
   } threshold;
+  struct {
+    float baseline;
+  } coherence;
 } control_vector_t;
 
  
@@ -594,6 +610,8 @@ __inline static void __init_control( control_vector_t *control, int window ) {
   control->expansions.total = 0;
   // threshold
   control->threshold.baseline = 0.0f;
+  // coherence
+  control->coherence.baseline = 1.0f;
 }
 
 
@@ -614,8 +632,15 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  *
  ***********************************************************************
  */
-__inline static bool __expand_next_check( control_vector_t *control, float score, vgx_ExpressEvalMemory_t *mem ) {
-  
+__inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+  float score = (float)frontier_node->sort.flt64.value;
+  /*
+  float coherence = vgx_RankGetC0( &frontier_node->headref->vertex->rank );
+  float excess_coherence = maximum_value(0.0f, coherence - control->coherence.baseline);
+  float effective_score = score / (1.0f + collector->lambda * excess_coherence);
+
+  if( effective_score < control->threshold.baseline ) {
+  */
   if( score < control->threshold.baseline ) {
     return false;
   }
@@ -680,7 +705,9 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       mem->dynamic_taper.alpha = collector->alpha;
       mem->dynamic_taper.beta = collector->beta;
       mem->dynamic_taper.gamma = collector->gamma;
-      mem->dynamic_taper.delta= collector->delta;
+      mem->dynamic_taper.delta = collector->delta;
+      mem->dynamic_taper.epsilon = collector->epsilon;
+      mem->dynamic_taper.lambda = collector->lambda;
     }
     
     // Initialize control vector after the first expansion.
@@ -695,6 +722,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     // Number of nodes in initial neighborhood
     __prepare_next_level( recursion, filter_context, collector, 0 );
 
+    control.coherence.baseline = vgx_RankGetC0( &vertex_RO->rank );
     control.evolution.level = 1;
     control.expansions.local = 1;
     control.expansions.total = 1;
@@ -733,7 +761,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         // (heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked)
         bool perform_expansion = collector->pure_beam || (main_heap->_cmp( &difficulty.item, &frontier.item ) > 0);
         */
-        if( __expand_next_check( &control, (float)frontier.sort.flt64.value, mem ) ) {
+        if( __expand_next_check( &control, &frontier, collector, mem ) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {

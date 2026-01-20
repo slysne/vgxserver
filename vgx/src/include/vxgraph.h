@@ -6026,7 +6026,7 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t expand;
   } counter;
   // ==== CL3 ====
-  // Q3.1-4
+  // Q3.1-5
   struct {
     float top_1_best;                 // current top score
     float previous_window_best;       // top score recorded in previous window
@@ -6036,9 +6036,10 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     float beta;
     float gamma;
     float delta;
+    float epsilon;
+    float lambda;
   } dynamic_taper;
-  // Q3.5-8
-  QWORD __rsv_3_5;
+  // Q3.6-8
   QWORD __rsv_3_6;
   QWORD __rsv_3_7;
   QWORD __rsv_3_8;
@@ -6813,6 +6814,8 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float beta;                                 \
   float gamma;                                \
   float delta;                                \
+  float epsilon;                              \
+  float lambda;                               \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \

@@ -1077,6 +1077,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
     top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
     top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
+    top_k_collector->epsilon                  = recursion ? (float)recursion->tune.epsilon : 0.0f;
+    top_k_collector->lambda                   = recursion ? (float)recursion->tune.lambda : 0.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1190,6 +1192,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->beta                     = 0.0f;
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->lambda                   = 0.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1316,6 +1320,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->beta                         = 0.0f;
     map_collector->gamma                        = 0.0f;
     map_collector->delta                        = 0.0f;
+    map_collector->epsilon                      = 0.0f;
+    map_collector->lambda                       = 0.0f;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->empty                        = empty;
@@ -1393,6 +1399,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->beta               = 0.0f;
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->lambda             = 0.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1507,6 +1515,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->beta                     = 0.0f;
     top_k_collector->gamma                    = 0.0f;
     top_k_collector->delta                    = 0.0f;
+    top_k_collector->epsilon                  = 0.0f;
+    top_k_collector->lambda                   = 0.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1617,6 +1627,8 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->beta                     = 0.0f;
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->lambda                   = 0.0f;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1690,6 +1702,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->beta               = 0.0f;
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->lambda             = 0.0f;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;

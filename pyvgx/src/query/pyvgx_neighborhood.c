@@ -259,6 +259,8 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
       { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
       { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
+      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,               .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
+      { .name = "lambda",           .target = &param->recursion.tune.lambda,                .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          // default 0.0
       {0}
     };
 

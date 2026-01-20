@@ -4041,7 +4041,9 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .alpha                  = recursion_config->tune.alpha,
         .beta                   = recursion_config->tune.beta,
         .gamma                  = recursion_config->tune.gamma,
-        .delta                  = recursion_config->tune.delta
+        .delta                  = recursion_config->tune.delta,
+        .epsilon                = recursion_config->tune.epsilon,
+        .lambda                 = recursion_config->tune.lambda
       },
       .init = {
         .select                 = recursion_config->init.select
