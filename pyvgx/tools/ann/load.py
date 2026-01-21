@@ -321,11 +321,11 @@ def QMINIT(g, shadow=10, bw=64, bc=1.0, depth=1<<30, adaptive=False):
                     'shadow_size'       : shadow,
                     'frontier_limit'    : 0,
                     'depth_limit'       : depth,
-                    'init_select'       : 12,
+                    'init_select'       : 0,
                     'beam_width'        : bw,
                     'beam_curve'        : bc,
-                    'beam_min'          : 12,
-                    'beam_max'          : 256,
+                    'beam_min'          : 1,
+                    'beam_max'          : 120,
                     'adaptive_taper'    : adaptive,
                     'reset_map'         : False,
                     'reset_metrics'     : True
@@ -339,8 +339,8 @@ def QMINIT(g, shadow=10, bw=64, bc=1.0, depth=1<<30, adaptive=False):
                 result  =   R_LIST,
                 recursion = {
                     'depth_limit'       : 3, # <-- nearby surroundings
-                    'shadow_size'       : 512,
-                    'beam_width'        : 100,
+                    'shadow_size'       : 64,
+                    'beam_width'        : 64,
                     'adaptive_taper'    : False,
                     'reset_map'         : False,
                     'reset_metrics'     : True
@@ -369,7 +369,7 @@ def get_hubs(g, min_ideg=200, max_hubs=15000 ):
 
 def neighbor_coherence(g, node):
     max_neighbor = g.Neighborhood( node, fields=F_VAL, result=R_SIMPLE, sortby=S_VAL )[0]
-    vectors = [g[term].GetVector() for term in g.Terminals( node )]
+    vectors = [g[term].GetVector() for term in g.Neighborhood( node, fields=F_ADDR, result=R_SIMPLE )]
     d = len(vectors)
     if d < 2:
         return (1.0, max_neighbor)
@@ -383,8 +383,9 @@ def neighbor_coherence(g, node):
 
 
 
-def update_node_stats(g):
-    all_nodes = g.VerticesType('item')
+def update_node_stats(g, all_nodes=None):
+    if all_nodes is None:
+        all_nodes = g.VerticesType('item')
     print( f"Computing node coherence for {len(all_nodes)} nodes" )
     n = 0
     coherence_list = []
@@ -406,6 +407,15 @@ def update_node_stats(g):
     c_baseline = c_median + KAPPA * (c_max - c_median)
     return c_baseline
 
+
+
+def reset_node_coherence(g):
+    for node in g.VerticesType('item'):
+        A = g.OpenVertex(node)
+        A.c0 = 0.0
+        A.c1 = 1.0
+        A.Close()
+    
 
 
 def get_coherence_baseline(g):
@@ -603,8 +613,10 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
                 result  =   R_LIST,
                 recursion = {
                     'heap_size'         : degree,
-                    'shadow_size'       : 10*degree,
+                    'shadow_size'       : 256,
                     'beam_width'        : 100,
+                    'beam_curve'        : 0.8,
+                    'adaptive_taper'    : False,
                     'reset_map'         : False,
                     'reset_metrics'     : True
                 }
@@ -624,7 +636,7 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
     for remote_addr in low_inways:
         n += 1
         R = g.OpenVertex( remote_addr )
-        ideg_boost = R.odeg + (cutoff_ideg - R.odeg)//2
+        ideg_boost = R.ideg + (cutoff_ideg - R.ideg)//2
         R.SetProperty('remote', ideg_boost)
         MEM.Reset()
         MEM.vector = R.GetVector()
@@ -656,40 +668,44 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
 
 
 
-def prune_RNG_neighborhood(g, C, degree, alpha, depth=1, max_odeg_ratio=1.5, recursion=1):
+def defunct_prune_RNG_neighborhood(g, C, degree, alpha, depth=1, max_odeg_ratio=1.5, recursion=1):
     if depth > 1:
-        M = g.Memory(4)
-        M.vector = C.GetVector()
+        #M = g.Memory(4)
+        #M.vector = C.GetVector()
+        M_FIND.Reset()
+        M_FIND.vector = C.GetVector()
         g.Evaluate( "vset.add(vertex)", tail=C )
-        extended = g.Neighborhood(
-                    id      =   C,
-                    arc     =   D_OUT,
-                    hits    =   2*degree,
-                    memory  =   M,
-                    sortby  =   S_RVAL,
-                    fields  =   F_VAL | F_IDEG | F_ADDR,
-                    result  =   R_LIST,
-                    recursion = {
-                        'depth_limit'       : depth, # <-- immediate surroundings only
-                        'shadow_size'       : 512,
-                        'beam_width'        : 100,
-                        'adaptive_taper'    : False,
-                        'reset_map'         : False
-                    }
-        )
-        scored_neighbors = [ (score, addr) for score, ideg, addr in extended ]
-        vulnerable_neighbors = set([ addr for score, ideg, addr in extended if ideg < degree//16 ])
+        Q_IMMED.id = C.id
+        scored_neighbors = Q_IMMED.Execute( hits=int(max_odeg_ratio*degree) )
+        #extended = g.Neighborhood(
+        #            id      =   C,
+        #            arc     =   D_OUT,
+        #            hits    =   int(max_odeg_ratio*degree),
+        #            memory  =   M,
+        #            sortby  =   S_RVAL,
+        #            fields  =   F_VAL | F_IDEG | F_ADDR,
+        #            result  =   R_LIST,
+        #            recursion = {
+        #                'depth_limit'       : depth, # <-- immediate surroundings only
+        #                'shadow_size'       : 64,
+        #                'beam_width'        : 64,
+        #                'adaptive_taper'    : False,
+        #                'reset_map'         : False
+        #            }
+        #        }
+        #)
+        #scored_neighbors = [ (score, addr) for score, ideg, addr in extended ]
+        #vulnerable_neighbors = set([ addr for score, ideg, addr in extended if ideg < degree//16 ])
     else:
         neighbors = g.Neighborhood(C, arc=D_OUT, vector=C, fields=F_IDEG|F_SIM|F_ADDR, result=R_LIST, sortby=S_SIM) 
         scored_neighbors = [ (cosine+1, addr) for ideg, cosine, addr in neighbors ]
         vulnerable_neighbors = set([ addr for ideg, cosine, addr in neighbors if ideg < degree//16 ])
     g.Disconnect( C, D_OUT )
     connect_RNG_candidates(g, C, scored_neighbors, vulnerable_neighbors, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion)
-    
-    
 
 
-def connect_RNG_candidates(g, A, candidate_addr_list, vulnerable_set, degree, alpha, max_odeg_ratio=1.5, recursion=1):
+
+def defunct_connect_RNG_candidates(g, A, candidate_addr_list, vulnerable_set, degree, alpha, max_odeg_ratio=1.5, recursion=1):
     ODEG_CUTOFF = int(max_odeg_ratio * degree)
     n = 0
     M_PRUNE.Reset()
@@ -729,6 +745,50 @@ def connect_RNG_candidates(g, A, candidate_addr_list, vulnerable_set, degree, al
 
 
 
+def prune_RNG_neighborhood(g, C, degree, alpha, max_odeg_ratio=1.5, recursion=1):
+    M_FIND.Reset()
+    M_FIND.vector = C.GetVector()
+    g.Evaluate( "vset.add(vertex)", tail=C )
+    Q_IMMED.id = C.id
+    scored_neighbors = Q_IMMED.Execute( hits=2*degree )
+    g.Disconnect( C, D_OUT )
+    connect_RNG_candidates(g, C, scored_neighbors, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion)
+    
+
+
+def connect_RNG_candidates(g, A, candidate_addr_list, degree, alpha, max_odeg_ratio=1.5, recursion=1):
+    ODEG_CUTOFF = int(max_odeg_ratio * degree)
+    MIN_PRUNE = degree // 4 # keep top 1/4 un-pruned (allow infinite alpha)
+    n = 0
+    M_PRUNE.Reset()
+    M_PRUNE.R1 = alpha
+    for score, candidate_addr in candidate_addr_list:
+        if candidate_addr == A.address: # Fix this in the query generating candidate_addr_list
+            continue
+        C = g.OpenVertex(candidate_addr)
+        # Pruning filter after half filled
+        if n > MIN_PRUNE and M_PRUNE.R1 < 2:
+            Q_PRUNE.id = A
+            M_PRUNE.vector = C.GetVector()
+            # candidate too close to existing neighbor of, skip
+            if Q_PRUNE.Execute():
+                C.Close()
+                continue
+        n += 1
+        # candidate accepted
+        cosine = score - 1
+        g.Connect( A, ('cos', M_FLT|M_FWDONLY, cosine), C )
+        if C.odeg >= ODEG_CUTOFF and recursion > 0:
+            prune_RNG_neighborhood(g, C, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion-1)
+        g.Connect( C, ('cos', M_FLT|M_FWDONLY, cosine), A )
+        C.Close()
+        M_PRUNE.R1 += 0.05 # experiment with increasing alpha
+        if n >= degree:
+            break
+    return n
+
+
+
 def measure_candidates_recall(g, A, test_result):
     scan_result = scan(g, A.GetVector(), k=len(test_result), exclude=A.address, usecache=False )
     scanned = set([ id for id, score in scan_result ])
@@ -747,12 +807,12 @@ def find_candidates(g, A, roots, target_hits, recall=False):
     C = []
     if A.odeg >= 4:
         Q_IMMED.id = A.id
-        ann = Q_IMMED.Execute( hits=2*target_hits )
+        ann = Q_IMMED.Execute( hits=target_hits )
         C.extend(ann)
     # Extend candidates by searching via other paths (same mem/vset, no duplicates possible)
     for root in roots:
         Q_FIND.id = root
-        ann = Q_FIND.Execute( hits=2*target_hits ) # Keep the vset since reset_state is True
+        ann = Q_FIND.Execute( hits=target_hits ) # Keep the vset since reset_state is True
         C.extend(ann)
     # Sort by score, highest to lowest
     C.sort( reverse=1 )
@@ -777,16 +837,17 @@ def process_node(g, A, entry, degree, alpha, max_odeg_ratio, random_roots, nrand
     if nrandom_roots > 0:
         for _, root in sorted([ (g.sim.Cosine(A,g[r]), r) for r in random_roots ], reverse=1)[:nrandom_roots]:
             selected_roots.append( root )
-        #selected_roots.extend( random.sample( list(random_roots), nrandom_roots ) )
     C = find_candidates(g, A, selected_roots, degree)
     # Fresh start
     if A.odeg > 0:
         g.Disconnect(A, D_OUT)
-    connect_RNG_candidates(g, A, C, None, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
+    #connect_RNG_candidates(g, A, C, None, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
+    connect_RNG_candidates(g, A, C, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
          
 
 
-def prune_all(g, degree, alpha, depth=1, prunable_mindegree=-1, max_odeg_ratio=1.5, prune_recursion=1):
+def prune_all(g, degree, alpha, prunable_mindegree=-1, max_odeg_ratio=1.5):
+    reset_node_coherence(g)
     if prunable_mindegree < 0:
         prunable_mindegree = degree
     prunable = g.Vertices( condition={'type':'item', 'outdegree':(V_GTE,prunable_mindegree)}, fields=F_ADDR, result=R_SIMPLE )
@@ -794,10 +855,14 @@ def prune_all(g, degree, alpha, depth=1, prunable_mindegree=-1, max_odeg_ratio=1
     n = 0
     if N == 0:
         return
+    coherence_baseline = update_node_stats(g, all_nodes=prunable)
     for node in sorted(prunable):
         n += 1
         A = g.OpenVertex(node)
-        prune_RNG_neighborhood(g, A, degree, alpha, depth, max_odeg_ratio=max_odeg_ratio, recursion=prune_recursion)
+        if A.c0 > coherence_baseline:
+            prune_RNG_neighborhood(g, A, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
+        elif A.c0 > coherence_baseline-0.1:
+            prune_RNG_neighborhood(g, A, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=0)
         A.Close()
         print( f"{n}/{N} {100*n/N:0.2f}%", end="\r", flush=1 )
     print( f"{n}/{N} {100*n/N:0.2f}%    " )
@@ -995,26 +1060,28 @@ def populate(g, degree, alpha, max_odeg_ratio=1.5, entry=None, qshadow=-1, qbw=3
                 node_degree = degree
             else:
                 node_degree = A.odeg
+            if n >= refresh_roots_at_n:
+                medoid = sample_medoid(g, sz=100000, degree=degree)
+                random_roots = set()
+                nindexed = len( g.Vertices(condition={'type':'item', 'outdegree':(V_GT,0)}, fields=F_ADDR) )
+                # top 10%th odeg
+                rdeg = g.Vertices( condition={'type':'item', 'outdegree':(V_GT,0)}, sortby=S_ODEG, hits=1, offset=nindexed//10, fields=F_ODEG, result=R_SIMPLE )[0]
+                E = set()
+                remain_iter = 5
+                while len(random_roots) < 256 and rdeg > 4 and remain_iter > 0:
+                    remain_iter -= 1
+                    rdeg -= 4
+                    cutoff = 0.35
+                    max_cutoff = 0.421
+                    while cutoff <= max_cutoff:
+                        E_cut = get_entry_nodes(g, maxcand=10000, starsize=64, max_mutual_cos=cutoff, min_odeg=rdeg)
+                        E.update( E_cut )
+                        cutoff += 0.01
+                    random_roots = E
+                refresh_roots_at_n += 50000
             if entry is None:
-                if n >= refresh_roots_at_n:
-                    medoid = sample_medoid(g, sz=100000, degree=degree)
-                    random_roots = set()
-                    rdeg = int(2*degree)
-                    while len(random_roots) < 256 and rdeg > 2:
-                        rdeg -= 2
-                        E = set()
-                        cutoff = 0.22
-                        max_cutoff = 0.381
-                        while cutoff <= max_cutoff:
-                            E_cut = get_entry_nodes(g, maxcand=100000, starsize=200, max_mutual_cos=cutoff, min_odeg=rdeg)
-                            E.update( E_cut )
-                            cutoff += 0.01
-                        random_roots = E
-                    refresh_roots_at_n += 50000
-                entry = medoid if A.odeg < 4 else None
-                process_node(g, A, entry, node_degree, alpha, max_odeg_ratio, random_roots, nrandom_roots=3)
-            else:
-                process_node(g, A, entry, node_degree, alpha, max_odeg_ratio, set(), 1)
+                entry = medoid if A.odeg == 0 else None # <- use medoid if A is not yet connected
+            process_node(g, A, entry, node_degree, alpha, max_odeg_ratio, random_roots, nrandom_roots=2)
             A.Close()
             n += 1
             if not n % 100:
@@ -1032,7 +1099,7 @@ def clear_links(g):
     for node in g.Vertices():
         A = g.OpenVertex(node)
         A.c0 = 0.0 # neighborhood coherence
-        A.c1 = 0.0 # max neighbor cosine
+        A.c1 = 1.0 # max neighbor cosine
         for delprop in ['remote']:
             if A.HasProperty(delprop):
                 A.RemoveProperty(delprop)
@@ -1273,7 +1340,8 @@ def enhance_star(g, entry='entry', R=96, a=1.0, recursion=1):
         true_neighborhood = execscan(g, A.GetVector(), k=15*R, use_address_as_id=True)
         Rx5_all = [(score,true_neighbor_addr) for score, true_neighbor_addr in true_neighborhood if true_neighbor_addr != A.address]
         g.Disconnect( A, D_OUT )
-        connect_RNG_candidates(g, A, candidate_addr_list=Rx5_all, vulnerable_set=None, degree=R, alpha=a, max_odeg_ratio=1.5, recursion=1)
+        #connect_RNG_candidates(g, A, candidate_addr_list=Rx5_all, vulnerable_set=None, degree=R, alpha=a, max_odeg_ratio=1.5, recursion=1)
+        connect_RNG_candidates(g, A, candidate_addr_list=Rx5_all, degree=R, alpha=a, max_odeg_ratio=1.5, recursion=1)
         prune_RNG_neighborhood(g, A, degree=R, alpha=a, depth=4, max_odeg_ratio=1.5, recursion=recursion)
         A.Close()
         print( f"{100*n/N:0.1f}%", end="\r", flush=1 )
@@ -1287,25 +1355,24 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     print( "=== INITIALIZE ===" )
     print( f"Clearing existing graph" )
     clear_links(g)
-    # 4% seed via brute force
-    seedsize = g.Order("item") // 25 # 4%
-    d = 6*degree
+    # 2% seed via brute force
+    seedsize = g.Order("item") // 50 # 2%
+    d = 3*degree
     print( f"Creating seed graph (o={seedsize}, d={d})" )
     destroy_seed(g)
     build_seed(g, sz=seedsize, R=d, ham=15)
     skeletons = 20 # just a number, no reason
     sk = 0
-    # Another 8% via non-seed subsampling and crude ANN
+    # Another 5% via non-seed subsampling and crude ANN
     seed_set = set(g.Neighborhood( "seedroot", arc=D_OUT, fields=F_ADDR, result=R_SIMPLE ))
     full_set = set(g.Vertices( condition={'type':'item'}, fields=F_ADDR, result=R_SIMPLE ))
     nonseed_set = full_set - seed_set
     skeleton_set = set()
     while sk < skeletons:
         sk += 1
-        d, a, nR, s = int(2*degree), 0.85, 2, 0.08/skeletons
+        d, a, nR, s = int(2*degree), 0.8, 2, 0.05/skeletons
         print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, nR={nR}, s={s})" )
-        topstar(g, degree=int(1.5*d))
-        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry='entry', qshadow=256, qbw=12, qbc=1.0, qadaptive=False, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
+        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=100, qbw=100, qbc=0.7, qadaptive=False, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
         base_set = skeleton_set.union( seed_set )
         rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
     print( "Removing seed information" )
@@ -1313,10 +1380,9 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     del nonseed_set
     del skeleton_set
     del seed_set
-    d, a, nR = int(1.666*degree), 0.9, 1.7
+    d, a, nR = int(1.666*degree), 0.9, 1.8
     print( f"Refining base graph (o={len(base_set)}, d={d}, a={a}, nR={nR})" )
-    topstar(g, degree=int(1.5*d))
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry='entry', qshadow=256, qbw=12, qbc=1.0, qadaptive=False, process_set=base_set)
+    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=200, qbw=3, qbc=1.0, qadaptive=True, process_set=base_set)
     rescue_remotes(g, degree=d, cutoff_ideg=11, process_set=base_set )
     t1 = time.time()
     print( f"t={int(t1-t0)}" )
@@ -1324,10 +1390,9 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     print( "=== ROUND 1 ===" )
     rest_set = full_set - base_set
     del base_set
-    d, a, nR = int(1.333*degree), 0.94, 1.6
+    d, a, nR = int(1.333*degree), alpha, 1.7
     print( f"Adding full population to graph (o={len(rest_set)}, d={d}, a={a}, nR={nR})" )
-    topstar(g, degree=int(1.5*d))
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry='entry', qshadow=256, qbw=12, qbc=1.0, qadaptive=False, process_set=rest_set)
+    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=150, qbw=100, qbc=0.9, qadaptive=False, process_set=rest_set)
     print( "Rescuing remotes" )
     rescue_remotes(g, degree=d, cutoff_ideg=10 )
     t2 = time.time()
@@ -1336,10 +1401,9 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     g.Save()     # !!!
     # ----
     print( "=== ROUND 2 ===" )
-    d, a, nR = int(1.2*degree), 0.98, 1.5
+    d, a, nR = int(1.2*degree), alpha * 1.05, 1.6
     print( f"Populating graph (d={d}, a={a}, nR={nR})" )
-    topstar(g, degree=int(1.5*d))
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry='entry', qshadow=512, qbw=12, qbc=1.0, qadaptive=True, process_set=full_set )
+    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=300, qbw=3, qbc=1.0, qadaptive=True, process_set=full_set )
     rescue_remotes(g, degree=d, cutoff_ideg=9)
     t3 = time.time()
     print( f"t={int(t3-t0)}" )
@@ -1347,84 +1411,13 @@ def build_proximity_graph(g, degree=48, alpha=1.0):
     g.Save()     # !!!
     # ----
     print( "=== FINALIZE ===" )
-    pdepth = 2
-    precursion = 1
-    nR = 1.4
-    print( f"Pruning graph (d={degree}, a={alpha}, nR={nR}, depth={pdepth}, recursion={precursion})" )
-    prune_all(g, degree, alpha, depth=pdepth, prunable_mindegree=degree//2, max_odeg_ratio=nR, prune_recursion=precursion)
+    nR = 1.5
+    print( f"Pruning graph (d={degree}, a={alpha}, nR={nR}, depth={pdepth})" )
+    prune_all(g, degree, alpha, prunable_mindegree=degree//2, max_odeg_ratio=nR)
     rescue_remotes(g, degree=degree, cutoff_ideg=8)
     print( "Creating entry point" )
-    topstar(g, degree=int(1.5*degree))
+    topstar(g, degree=int((nR-0.1)*degree))
     #enhance_star(g, entry='entry', R=int(3*degree), a=0.95)
-    if ROOT:
-        medoid = sample_medoid(g, sz=10000, degree=degree)
-        g.Connect(ROOT, ("to",M_STAT|M_FWDONLY), medoid)
-    t6 = time.time()
-    print( f"t={int(t6-t0)}" )
-    print( "=== COMPLETE ===" )
-
-
-
-def build_proximity_graph_quick(g, degree=48, alpha=1.0):
-    t0 = time.time()
-    # ----
-    print( "=== INITIALIZE ===" )
-    print( f"Clearing existing graph" )
-    clear_links(g)
-    # 2% seed via brute force
-    seedsize = g.Order("item") // 50 # 2%
-    d = 2*degree
-    print( f"Creating seed graph (o={seedsize}, d={d})" )
-    destroy_seed(g)
-    build_seed(g, sz=seedsize, R=d, ham=15)
-    skeletons = 16 # just a number, no reason
-    sk = 0
-    # Another 3% via non-seed subsampling and crude ANN
-    seed_set = set(g.Neighborhood( "seedroot", arc=D_OUT, fields=F_ADDR, result=R_SIMPLE ))
-    full_set = set(g.Vertices( condition={'type':'item'}, fields=F_ADDR, result=R_SIMPLE ))
-    nonseed_set = full_set - seed_set
-    skeleton_set = set()
-    while sk < skeletons:
-        sk += 1
-        d, a, nR, s = int(1.5*degree), 0.8, 1.8, 0.03/skeletons
-        print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, nR={nR}, s={s})" )
-        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, qshadow=d, qbw=100, qbc=1.0, qdepth=24, qadaptive=False, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
-        base_set = skeleton_set.union( seed_set )
-        rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
-    print( "Removing seed information" )
-    destroy_seed(g)
-    del nonseed_set
-    del skeleton_set
-    del seed_set
-    d, a, nR = int(1.5*degree), 0.9, 1.7
-    print( f"Refining base graph (o={len(base_set)}, d={d}, a={a}, nR={nR})" )
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, qshadow=2*d, qbw=16, qbc=1.0,qadaptive=True, process_set=base_set)
-    rescue_remotes(g, degree=d, cutoff_ideg=11, process_set=base_set )
-    t1 = time.time()
-    print( f"t={int(t1-t0)}" )
-    # ----
-    print( "=== ROUND 1 ===" )
-    rest_set = full_set - base_set
-    del base_set
-    d, a, nR = int(1.2*degree), alpha, 1.6
-    print( f"Adding full population to graph (o={len(rest_set)}, d={d}, a={a}, nR={nR})" )
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, qshadow=d, qbw=16, qbc=1.0, qadaptive=True, process_set=rest_set)
-    print( "Rescuing remotes" )
-    rescue_remotes(g, degree=d, cutoff_ideg=10 )
-    t2 = time.time()
-    print( f"t={int(t2-t0)}" )
-    g.CloseAll() # !!!
-    g.Save()     # !!!
-    # ----
-    print( "=== FINALIZE ===" )
-    pdepth = 2
-    precursion = 1
-    nR = 1.4
-    print( f"Pruning graph (d={degree}, a={alpha}, nR={nR}, depth={pdepth}, recursion={precursion})" )
-    prune_all(g, degree, alpha, depth=pdepth, prunable_mindegree=degree//2, max_odeg_ratio=nR, prune_recursion=precursion)
-    rescue_remotes(g, degree=degree, cutoff_ideg=8)
-    print( "Creating entry point" )
-    topstar(g, degree=int(2*degree))
     if ROOT:
         medoid = sample_medoid(g, sz=10000, degree=degree)
         g.Connect(ROOT, ("to",M_STAT|M_FWDONLY), medoid)
@@ -1634,7 +1627,7 @@ SCAN_CACHE = {}
 
 def scan(g, probe, k=10, sortdir=S_DESC, fname=None, exclude=None, usecache=True):
     if usecache:
-        key = f"{probe.ident}_100" if k <= 100 else f"{probe.ident}_{k}"
+        key = f"{probe.ident}_10" if k <= 10 else f"{probe.ident}_{k}"
         result = SCAN_CACHE.get( key )
         if result is not None:
             return result[:k]
