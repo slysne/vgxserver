@@ -559,30 +559,32 @@ static vgx_ArcFilter_match __api_arcvector_get_arcs( const vgx_ArcVector_cell_t 
     vgx_ArcFilter_match filter_match = VGX_ARC_FILTER_MATCH_MISS;
     vgx_ArcHead_t archead = __arcvector_init_archead_from_cell( V );
     __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_SIMPLE_ARC, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, traverse_filter->timing_budget, &filter_match ) {
-      const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
-      _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
-      vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
-        __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
-          __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
-            if( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
-              vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)neighborhood_probe->common_collector;
-              vgx_virtual_ArcFilter_context_t *collect_filter = neighborhood_probe->collect_filter_context;
-              vgx_ArcFilter_match collect_match = VGX_ARC_FILTER_MATCH_MISS;
-              __begin_arcvector_filter_collect_arc( collect_filter, &LARC, &collect_match ) {
-                if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
-                  collect_match = __arcfilter_error();
+      // TODO: vvvvv Add this for other simple arc traversals!!
+      if( __arcvector_archead_unvisited( traverse_filter ) ) {
+        const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
+        _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
+        vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
+        __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+          __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
+            __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
+              if( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
+                vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)neighborhood_probe->common_collector;
+                vgx_virtual_ArcFilter_context_t *collect_filter = neighborhood_probe->collect_filter_context;
+                vgx_ArcFilter_match collect_match = VGX_ARC_FILTER_MATCH_MISS;
+                __begin_arcvector_filter_collect_arc( collect_filter, &LARC, &collect_match ) {
+                  if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
+                    collect_match = __arcfilter_error();
+                  }
+                } __end_arcvector_filter_collect_arc;
+                if( __is_arcfilter_error( collect_match ) ) {
+                  filter_match = __arcfilter_error();
                 }
-              } __end_arcvector_filter_collect_arc;
-              if( __is_arcfilter_error( collect_match ) ) {
-                filter_match = __arcfilter_error();
+                collector->n_neighbors++;
               }
-              collector->n_neighbors++;
-            }
-          } __end_arcvector_filter_accept_arc;
-        } __post_arc_visit( true );
-
-      } __end_arc_evaluator_context;
+            } __end_arcvector_filter_accept_arc;
+          } __post_arc_visit( true );
+        } __end_arc_evaluator_context;
+      }
     } __end_lockable_arc_context;
     return __arcfilter_THRU( recursive, filter_match );
   }

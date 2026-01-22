@@ -967,8 +967,7 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
  *
  ***********************************************************************
  */
-__inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_context_t *context, const framehash_cell_t *fh_cell ) {
-  vgx_virtual_ArcFilter_context_t *afc = context->traverse_filter;
+__inline static bool __arcvector_archead_unvisited( vgx_virtual_ArcFilter_context_t *afc ) {
   // We don't track visited nodes
   if( afc->track_visited == false ) {
     return true;
@@ -987,15 +986,6 @@ __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_co
     __prefetch_L3( vertex );
   }
 
-  /* 
-  // Speculatively also prefetch the next cell's vertex if cell is valid
-  const framehash_cell_t *fh_next = fh_cell + 1;
-  if( _ITEM_IS_VALID( fh_next ) ) {        
-    __prefetch_L3( (char*)APTR_AS_ANNOTATION( fh_next ) );
-  }
-    ^^^^^ interesting idea but hurts multi-threaded performance
-  */
-
   // True if unvistied node (it is added to map for future), false if already visited or map full
   return vxeval_vertex_unvisited( dwset, vertex );
 }
@@ -1008,7 +998,7 @@ __inline static bool __arcvector_archead_unvisited( __arcvector_virtual_input_co
     framehash_cell_t * const __cell__ = ArcArrayCell;                         \
     __arcvector_set_archead_vertex( __context__, __cell__ );                  \
     vgx_LockableArc_t *__larc__ = __context__->larc;                          \
-    if( __arcvector_archead_unvisited( __context__, __cell__ ) )
+    if( __arcvector_archead_unvisited( __context__->traverse_filter ) )
 
 
 #define __end_safe_traversal_context          \
