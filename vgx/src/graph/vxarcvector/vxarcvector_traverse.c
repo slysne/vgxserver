@@ -640,7 +640,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_traverse__traverse_arcarray( const v
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current->timing_budget, &output.neighborhood_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current, &output.neighborhood_match ) {
     vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
     __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &output.neighborhood_match ) {
       __arcvector_traversal_input_context_t input = {
@@ -879,7 +879,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_traverse__traverse_arcarray_bidirect
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current->timing_budget, &output.neighborhood_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current, &output.neighborhood_match ) {
     vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
     __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &output.neighborhood_match ) {
       __arcvector_bidirectional_traversal_input_context_t input = {

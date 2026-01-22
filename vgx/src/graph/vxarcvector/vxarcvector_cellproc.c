@@ -213,7 +213,7 @@ static int64_t __collect_as_vertex( framehash_processing_context_t * const proce
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter->timing_budget, &filter_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter, &filter_match ) {
     // GREEN    Multiple Arc: FRAME
     if( __arcvector_fhash_is_multiple_arc( fh_cell ) ) {
       // Multiple Arc: FRAME
@@ -313,7 +313,7 @@ static int64_t __collect_as_vertex_bidirectional( framehash_processing_context_t
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter->timing_budget, &filter_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter, &filter_match ) {
 
     // GREEN    Multiple Arc: FRAME
     if( __arcvector_fhash_is_multiple_arc( fh_cell ) ) {

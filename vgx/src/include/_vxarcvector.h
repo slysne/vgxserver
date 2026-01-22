@@ -814,24 +814,29 @@ static void __timing_budget_exhausted( vgx_ExecutionTimingBudget_t *timing_budge
  * 
  ***********************************************************************
  */
-#define __begin_lockable_arc_context( LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, TimingBudget, MatchPtr ) \
-  do {                                                      \
-    vgx_ExecutionTimingBudget_t *__tb__ = TimingBudget;     \
-    vgx_ArcFilter_match *__match__ = MatchPtr;              \
-    if( _vgx_is_execution_limit_exceeded( __tb__ ) ) {      \
-      __timing_budget_exhausted( __tb__, __match__ );       \
-      break;                                                \
-    }                                                       \
-    vgx_LockableArc_t LockableArcName;                      \
+#define __begin_lockable_arc_context( LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, TraverseFilter, MatchPtr ) \
+  do {                                                            \
+    vgx_virtual_ArcFilter_context_t *__tf__ = TraverseFilter;     \
+    vgx_ExecutionTimingBudget_t *__tb__ = __tf__->timing_budget;  \
+    vgx_ArcFilter_match *__match__ = MatchPtr;                    \
+    if( _vgx_is_execution_limit_exceeded( __tb__ ) ) {            \
+      __timing_budget_exhausted( __tb__, __match__ );             \
+      break;                                                      \
+    }                                                             \
+    vgx_LockableArc_t LockableArcName;                            \
     vgx_LockableArc_t *__larc__ = __init_lockable_arc( &LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, __tb__, __match__ );  \
-    if( __larc__ == NULL ) {                                \
-      break;                                                \
-    }                                                       \
-    else
+    if( __larc__ == NULL ) {                                      \
+      break;                                                      \
+    }                                                             \
+    __tf__->current_head = &__larc__->head;                       \
+    do
+    
 
 
-#define __end_lockable_arc_context                          \
-    __release_lockable_arc( __larc__, __tb__ );             \
+#define __end_lockable_arc_context                                \
+    WHILE_ZERO;                                                   \
+    __release_lockable_arc( __larc__, __tb__ );                   \
+    __tf__->current_head = NULL;                                  \
   } WHILE_ZERO
 
 
