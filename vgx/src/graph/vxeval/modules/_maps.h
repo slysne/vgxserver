@@ -482,8 +482,6 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
  * 
  ***********************************************************************
  */
-//__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
-//__inline static bool __maps_vertex_unvisited( vgx_ExpressEvalMemory_t *evalmem, int64_t max_visited, const vgx_Vertex_t *vertex ) {
 __inline static bool __maps_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex ) {
   uint32_t key;
   DWORD item;

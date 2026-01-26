@@ -717,7 +717,9 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
     int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
 
-    // Initial neighborhood traversal
+    // Mark start node as visited
+    vgx_ExpressEvalDWordSet_t *dwset = &mem->dwset;
+    vxeval_vertex_unvisited( dwset, vertex_RO );
 
     // Number of nodes in initial neighborhood
     __prepare_next_level( recursion, filter_context, collector, 0 );

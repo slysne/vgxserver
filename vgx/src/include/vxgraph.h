@@ -6285,6 +6285,7 @@ typedef struct s_vgx_IEvaluator_t {
   int (*LocalAutoScopeObject)( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
   void (*ClearLocalScope)( vgx_Evaluator_t *self );
   void (*DeleteLocalScope)( vgx_Evaluator_t *self );
+  bool (*VSetAdd)( vgx_ExpressEvalMemory_t *memory, const vgx_Vertex_t *vertex );
   int64_t (*ClearDWordSet)( vgx_ExpressEvalMemory_t *memory );
   vgx_StringList_t * (*GetRpnDefinitions)( void );
 } vgx_IEvaluator_t;
@@ -7176,7 +7177,6 @@ typedef struct s_vgx_IArcFilter_t {
 } vgx_IArcFilter_t;
 
 
-//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
 DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 

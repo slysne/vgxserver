@@ -538,10 +538,10 @@ static int _ipyvgx_parser__get_vertex_id( PyVGX_Graph *py_graph, PyObject *py_ve
   }
   else {
     if( context ) {
-      PyErr_Format( PyExc_ValueError, "%s: must be a string, bytes-like object, or vertex instance", context );
+      PyErr_Format( PyExc_ValueError, "%s: must be a string, bytes-like object, address, or vertex instance", context );
     }
     else {
-      PyErr_SetString( PyExc_ValueError, "Vertex identifier must be a string, bytes-like object, or vertex instance" );
+      PyErr_SetString( PyExc_ValueError, "Vertex identifier must be a string, bytes-like object, address, or vertex instance" );
     }
   }
 
