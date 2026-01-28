@@ -196,6 +196,61 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
 
 
 
+typedef struct s_int_config_param {
+  const char *name;
+  int64_t *target;
+  const int64_t dflt;
+  const int64_t minval;
+  const int64_t maxval;
+} int_config_param;
+
+
+
+typedef struct s_dbl_config_param {
+  const char *name;
+  double *target;
+  const double dflt;
+  const double minval;
+  const double maxval;
+} dbl_config_param;
+
+
+
+typedef struct s_bool_config_param {
+  const char *name;
+  bool dflt;
+  bool *target;
+} bool_config_param;
+ 
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *auto_params ) {
+
+  double b = clamp_value( search_bias, -1.0, 1.0 );
+
+  // shadow_size
+  // Length of delay line for threshold EMA tap
+
+  // Map search_bias:
+  // 
+  //
+  exp2( 8 + 8*search_bias );
+  
+
+  auto_params->shadow.size;
+
+
+
+
+}
+
+
+
 /******************************************************************************
  *
  *
@@ -216,29 +271,13 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x002 );
     }
 
-    struct s_int_config {
-      const char *name;
-      int64_t *target;
-      const int64_t dflt;
-      const int64_t minval;
-      const int64_t maxval;
-    };
+ 
 
-    struct s_dbl_config {
-      const char *name;
-      double *target;
-      const double dflt;
-      const double minval;
-      const double maxval;
-    };
+    // Meta parameter (master knob) trading recall for QPS.
+    // Range -100.0 - 100.0 where negative values boost QPS and positive values boost recall.
+    double search_bias = 0.0;
 
-    struct s_bool_config {
-      const char *name;
-      bool dflt;
-      bool *target;
-    };
-  
-    struct s_int_config int_config[] = {
+    int_config_param int_config[] = {
       { .name = "heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 0=auto
       { .name = "shadow_size",      .target = &param->recursion.shadow.size,      .dflt=-1,         .minval=-1,     .maxval=VGX_RECURSION_HEAP_SHADOW_MAX },  // default -1=auto
       { .name = "frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_FRONTIER_SIZE_MAX },  // default 0=auto
@@ -253,44 +292,58 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       {0}
     };
 
-    struct s_dbl_config dbl_config[] = {
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,         .maxval=1.0 },          // default 1.0=constant
-      { .name = "alpha",            .target = &param->recursion.tune.alpha,                 .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (depth discount for expansion threshold)
-      { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
-      { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
-      { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
-      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,               .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
-      { .name = "lambda",           .target = &param->recursion.tune.lambda,                .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          // default 0.0
+    dbl_config_param dbl_config[] = {
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=1.0,    .minval=0.0,         .maxval=1.0 },          // default 1.0=constant
+      { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (depth discount for expansion threshold)
+      { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
+      { .name = "gamma",            .target = &param->recursion.tune.gamma,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
+      { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
+      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
+      { .name = "lambda",           .target = &param->recursion.tune.lambda,      .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          // default 0.0
       {0}
     };
 
-    struct s_bool_config bool_config[] = {
+    bool_config_param bool_config[] = {
       { .name = "reset_metrics",    .target = &param->recursion.visit.reset_metrics,    .dflt=true },
       { .name = "reset_map",        .target = &param->recursion.visit.reset_map,        .dflt=true },
       { .name = "adaptive_taper",   .target = &param->recursion.beam.adaptive_taper,    .dflt=true },
       {0}
     };
 
+    PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
+    if( py_bias ) {
+      if( !PyFloat_Check( py_bias ) || fabs(PyFloat_AS_DOUBLE(py_bias)) > 100.0) {
+        PyErr_Format( PyExc_ValueError, "recursive search invalid bias: float in range -100.0 to +100.0 required" );
+        THROW_SILENT( CXLIB_ERR_API, 0x00C );
+      }
+      search_bias = PyFloat_AS_DOUBLE(py_bias) / 100.0; // now range -1.0 to +1.0
+    }
+
+    
+    __recursion_auto_param( search_bias, &param->recursion );
+
+
     // Set defaults
     param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
 
-    struct s_int_config *int_cursor = int_config;
+    int_config_param *int_cursor = int_config;
     while( int_cursor->name ) {
       *int_cursor->target = int_cursor->dflt;
       ++int_cursor;
     }
 
-    struct s_dbl_config *dbl_cursor = dbl_config;
+    dbl_config_param *dbl_cursor = dbl_config;
     while( dbl_cursor->name ) {
       *dbl_cursor->target = dbl_cursor->dflt;
       ++dbl_cursor;
     }
 
-    struct s_bool_config *bool_cursor = bool_config;
+    bool_config_param *bool_cursor = bool_config;
     while( bool_cursor->name ) {
       *bool_cursor->target = bool_cursor->dflt;
       ++bool_cursor;
     }
+
 
     // Simple auto-config
     if( py_recursion == Py_True ) {
@@ -392,6 +445,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
         PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
         THROW_SILENT( CXLIB_ERR_API, 0x00B );
       }
+
     }
     // unsupported
     else {
@@ -399,13 +453,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x00C );
     }
           
-    /*
-    if( param->recursion.heap.size > 0 && param->recursion.heap.multiplier > 0 ) {
-      PyErr_Format( PyExc_TypeError, "recursive search heap_size and heap_multiplier cannot be specified at the same time" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00D );
-    }
-    */
-
     // Switch to beam mode
     if( param->recursion.beam.width > 0 ) {
       param->recursion.mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
