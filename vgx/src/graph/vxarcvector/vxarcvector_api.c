@@ -643,75 +643,78 @@ static vgx_ArcFilter_match __api_arcvector_get_arcs_bidirectional( const vgx_Arc
       {
         vgx_ArcHead_t archead = __arcvector_init_archead_from_cell( V1 );
         __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_SIMPLE_ARC, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, traverse_filter, &filter_match ) {
-          const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
-          _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
-          vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-          __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
-            __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
-              // Filter condition1 : arc must match the (only) entry in the first arcvector
-              __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
-                // Filter condition 2: and also exist in the second arcvector
-                // Create a separate arc filter context for the second arcvector test so we can specify the exact head vertex
-                if( (arcfilter_V2 = iArcFilter.Clone( traverse_filter )) == NULL ) {
-                  filter_match = __arcfilter_error();
-                }
-                else {
-                  vgx_GenericArcFilter_context_t *generic_filter_V2 = (vgx_GenericArcFilter_context_t*)arcfilter_V2;
-                  // HEAD: the opposing V2 arc has to terminate at the same vertex as the V1 arc
-                  generic_filter_V2->terminal.current = LARC.head.vertex;
-                  generic_filter_V2->terminal.logic = VGX_LOGICAL_AND;
-                  // PREDICATOR CONDITION: the opposing V2 relationship and modifier should match the V1 arc
-                  generic_filter_V2->pred_condition1 = _vgx_predicator_merge_inherit_key( generic_filter_V2->pred_condition1, LARC.head.predicator );
-                  generic_filter_V2->pred_condition2 = _vgx_predicator_merge_inherit_key( generic_filter_V2->pred_condition2, LARC.head.predicator );
-                  __arcvector_probe_push_conditional( neighborhood_probe, arcfilter_V2, recursive->vertex_probe, recursive->arcdir, recursive->evaluator ) {
-                    vgx_Arc_t hasarc2 = {0};
-                    if( (filter_match = __api_arcvector_has_arc( V2, recursive, neighborhood_probe, &hasarc2 )) == VGX_ARC_FILTER_MATCH_HIT ) {
-                      _vgx_arc_set_distance( &hasarc2, neighborhood_probe->distance ); // set distance from anchor
-                      switch( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) ) {
-                      case VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST:
-                        break;
-                      case VGX_COLLECTOR_MODE_COLLECT_ARCS:
-                        {
-                          // TODO: Support different collect_arc and sortby_arc
-                          vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)neighborhood_probe->common_collector;
-                          // !!! WARNING !!!
-                          // The collect filter does not support the bi-directional condition.
-                          // Exact predicator data match: Collapse fwd and rec arcs to a single bi-directional arc 
-                          if( _vgx_predicator_data_match( hasarc2.head.predicator, LARC.head.predicator ) ) {
-                            LARC.head.predicator.rel.dir = VGX_ARCDIR_BOTH;
-                            if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
-                              filter_match = __arcfilter_error();
+          // TODO: vvvvv Add this for other simple arc traversals!!
+          if( __arcvector_archead_unvisited( traverse_filter ) ) {
+            const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
+            _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
+            vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
+            __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+              __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
+                // Filter condition1 : arc must match the (only) entry in the first arcvector
+                __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
+                  // Filter condition 2: and also exist in the second arcvector
+                  // Create a separate arc filter context for the second arcvector test so we can specify the exact head vertex
+                  if( (arcfilter_V2 = iArcFilter.Clone( traverse_filter )) == NULL ) {
+                    filter_match = __arcfilter_error();
+                  }
+                  else {
+                    vgx_GenericArcFilter_context_t *generic_filter_V2 = (vgx_GenericArcFilter_context_t*)arcfilter_V2;
+                    // HEAD: the opposing V2 arc has to terminate at the same vertex as the V1 arc
+                    generic_filter_V2->terminal.current = LARC.head.vertex;
+                    generic_filter_V2->terminal.logic = VGX_LOGICAL_AND;
+                    // PREDICATOR CONDITION: the opposing V2 relationship and modifier should match the V1 arc
+                    generic_filter_V2->pred_condition1 = _vgx_predicator_merge_inherit_key( generic_filter_V2->pred_condition1, LARC.head.predicator );
+                    generic_filter_V2->pred_condition2 = _vgx_predicator_merge_inherit_key( generic_filter_V2->pred_condition2, LARC.head.predicator );
+                    __arcvector_probe_push_conditional( neighborhood_probe, arcfilter_V2, recursive->vertex_probe, recursive->arcdir, recursive->evaluator ) {
+                      vgx_Arc_t hasarc2 = {0};
+                      if( (filter_match = __api_arcvector_has_arc( V2, recursive, neighborhood_probe, &hasarc2 )) == VGX_ARC_FILTER_MATCH_HIT ) {
+                        _vgx_arc_set_distance( &hasarc2, neighborhood_probe->distance ); // set distance from anchor
+                        switch( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) ) {
+                        case VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST:
+                          break;
+                        case VGX_COLLECTOR_MODE_COLLECT_ARCS:
+                          {
+                            // TODO: Support different collect_arc and sortby_arc
+                            vgx_ArcCollector_context_t *collector = (vgx_ArcCollector_context_t*)neighborhood_probe->common_collector;
+                            // !!! WARNING !!!
+                            // The collect filter does not support the bi-directional condition.
+                            // Exact predicator data match: Collapse fwd and rec arcs to a single bi-directional arc 
+                            if( _vgx_predicator_data_match( hasarc2.head.predicator, LARC.head.predicator ) ) {
+                              LARC.head.predicator.rel.dir = VGX_ARCDIR_BOTH;
+                              if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
+                                filter_match = __arcfilter_error();
+                              }
+                              else {
+                                collector->n_neighbors++;
+                              }
                             }
+                            // Fw/rev arcs have different data, collect individually
                             else {
-                              collector->n_neighbors++;
-                            }
-                          }
-                          // Fw/rev arcs have different data, collect individually
-                          else {
-                            if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
-                              filter_match = __arcfilter_error();
-                            }
-                            else {
-                              collector->n_neighbors++;
-                              if( collector->n_remain > 0 ) {
-                                LARC.head.predicator = hasarc2.head.predicator;
-                                if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
-                                  filter_match = __arcfilter_error();
+                              if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
+                                filter_match = __arcfilter_error();
+                              }
+                              else {
+                                collector->n_neighbors++;
+                                if( collector->n_remain > 0 ) {
+                                  LARC.head.predicator = hasarc2.head.predicator;
+                                  if( __arcvector_collect_arc( collector, &LARC, 0.0, NULL ) < 0 ) {
+                                    filter_match = __arcfilter_error();
+                                  }
                                 }
                               }
                             }
                           }
+                          break;
+                        default:
+                          break;
                         }
-                        break;
-                      default:
-                        break;
                       }
-                    }
-                  } __arcvector_probe_pop_conditional;
-                }
-              } __end_arcvector_filter_accept_arc;
-            } __post_arc_visit( true );
-          } __end_arc_evaluator_context;
+                    } __arcvector_probe_pop_conditional;
+                  }
+                } __end_arcvector_filter_accept_arc;
+              } __post_arc_visit( true );
+            } __end_arc_evaluator_context;
+          }
         } __end_lockable_arc_context;
       }
       break;
