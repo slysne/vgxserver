@@ -756,6 +756,7 @@ def prune_RNG_neighborhood(g, C, degree, alpha, max_odeg_ratio=1.5, recursion=1)
     R = degree
     nprune = C.GetProperty('nprune', 0)
     s = max(0, min(1, (nprune - 2) / 16))
+    k = 0.75
     targetR = round(R + s * k * R)
     modalpha = alpha - 0.02 * log2( targetR / R )
     connect_RNG_candidates(g, C, scored_neighbors, degree=targetR, alpha=modalpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion)
@@ -1222,7 +1223,6 @@ def reset_phase_counters(g):
             A.SetProperty( 'nprune', nprune//2 )
         if A.HasProperty( 'ntouched' ):
             A.SetProperty( 'ntouched', 0 )
-        g.Disconnect(A)
         A.Close()
 
 
@@ -1471,7 +1471,7 @@ def enhance_star(g, entry='entry', R=96, a=1.0, recursion=1):
 
 
 
-def build_proximity_graph(g, degree=48, alpha=1.0, skip_refine=False):
+def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
     global n_Q_IMMED
     global n_Q_NEAR
     global n_Q_RNG
@@ -1559,7 +1559,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_refine=False):
     g.CloseAll() # !!!
     g.Save()     # !!!
     # ----
-    if not skip_refine:
+    if not skip_polish:
         print( "=== ROUND 2 ===" )
         print( "Creating entry point" )
         topname = topstar(g, degree=round( nR*d ))
@@ -1567,7 +1567,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_refine=False):
         d, a = round(1.1*degree), alpha
         print( f"Populating graph (d={d}, a={a}, nR={nR})" )
         reset_phase_counters(g)
-        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=topname, qshadow=5*d, qbw=d//2, qbc=0.95, qadaptive=True, process_set=full_set )
+        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=topname, qshadow=5*d, qbw=d//2, qbc=0.95, qadaptive=True, process_set=full_set, polish=True )
         rescue_remotes(g, degree=d, cutoff_ideg=12)
         t3 = time.perf_counter()
         print( f"t={int(t3-t0)}" )
@@ -2214,7 +2214,15 @@ def out2perf( output ):
 
 
 
-system.Initialize( "annindex", http=9000 )
+if not system.IsInitialized():
+    if sys.platform.startswith("win"):
+        system.Initialize( r"H:/TEMP/dump/annindex", http=9000 )
+    else:
+        system.Initialize( "annindex", http=9000 )
+
+if system.ServerPorts()['base'] < 0:
+    system.StartHTTP( 9000 )
+
 g = Graph("ann")
 
 
@@ -2228,11 +2236,10 @@ PROBES100k = [ g.sim.NewVector(p, cosine_mode=1) for p in g['cache']['probes100k
 
 SCAN_CACHE = g['cache']['SCAN_CACHE']
 
-ENTRIES = ['entry']*len(PROBES) 
-
 
 ROOT = "root-part1.dump"
-medoid = g[ROOT].Terminals()[0] # 4fa8ff21-6154-4485-b539-8a1ebf8fac00
+medoid = sample_medoid(g, sz=10000, degree=32)
+g.Connect(ROOT, ("to",M_STAT|M_FWDONLY), medoid)
 
 
 
