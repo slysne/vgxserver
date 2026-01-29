@@ -235,14 +235,48 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *a
 
   // shadow_size
   // Length of delay line for threshold EMA tap
-
-  // Map search_bias:
-  // 
-  //
-  exp2( 8 + 8*search_bias );
+  /*
+  Map search_bias:
   
+       0.0 - 1.0:  2 ** (1+b2**2)
+      -1.0 - 0.0:  2 ** (1-b2**2)
+  
+   Log plot: flat around 0.0->256 and steeper around -1.0->1 and +1.0->65536
+   Linear plot (-1.0 to 0.0 range): gentle S-curve
+  
+     b   shadow_size
+    -1.0 1
+    -0.9 3
+    -0.8 7
+    -0.7 17
+    -0.6 35
+    -0.5 64
+    -0.4 105
+    -0.3 155
+    -0.2 205
+    -0.1 242
+     0.0 256
+     0.1 271
+     0.2 320
+     0.3 422
+     0.4 622
+     0.5 1024
+     0.6 1885
+     0.7 3875
+     0.8 8903
+     0.9 22851
+     1.0 65536
+  */
 
-  auto_params->shadow.size;
+  // Shadow size is the main tuning knob
+  auto_params->shadow.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
+
+  // Result heap will be set to hits=k in the collector
+  auto_params->heap.size = 1;
+
+  // Collector will 
+  auto_params->limit.frontier = 0;
+
 
 
 
@@ -320,7 +354,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     }
 
     
-    __recursion_auto_param( search_bias, &param->recursion );
+    //__recursion_auto_param( search_bias, &param->recursion );
 
 
     // Set defaults

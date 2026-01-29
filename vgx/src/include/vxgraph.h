@@ -7106,6 +7106,7 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter SpecificHamDistFilter;
   f_vgx_ArcFilter EvaluatorFilter;
   f_vgx_ArcFilter ANNFilter;
+  f_vgx_ArcFilter ANNArcFilter;
   f_vgx_ArcFilter GenericArcFilter;
   f_vgx_ArcFilter GenPredLocEvalVertexArcFilter;
   f_vgx_ArcFilter GenLocEvalVertexArcFilter;
