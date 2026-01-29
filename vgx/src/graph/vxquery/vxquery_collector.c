@@ -1067,7 +1067,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->recursion_depth          = 0;
     top_k_collector->frontier                 = frontier;
     top_k_collector->max_frontier             = recursion ? recursion->limit.frontier : 0;
-    top_k_collector->pure_beam                = recursion ? recursion->limit.frontier == recursion->beam.max_width : false;
+    top_k_collector->pure_beam                = recursion ? (beam_heap && (recursion->limit.frontier == recursion->beam.max_width)) : false;
     top_k_collector->beam_heap                = beam_heap;
     top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
