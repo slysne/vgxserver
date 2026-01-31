@@ -1,9 +1,9 @@
 [build-system]
 requires = [
-    "setuptools>=78",
-    "wheel",
-    "cmake",
-    "build"
+    "setuptools>=78,<80",
+    "wheel>=0.42.0,<0.45",
+    "cmake>=3.10",
+    "build>=1.0.0,<2.0"
 ]
 
 build-backend = "setuptools.build_meta"
@@ -21,4 +21,25 @@ vgxadmin = "pyvgx_scripts.vgxadmin:main"
 
 [tool.setuptools]
 script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.cmd", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
+
+[tool.cibuildwheel]
+# Build for Python 3.9+
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+
+# Skip 32-bit builds and musllinux (Alpine Linux)
+skip = "*-musllinux_* *-manylinux_i686"
+
+# Use manylinux2014 for maximum compatibility
+manylinux-x86_64-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
+
+# Linux settings - target both x86_64 and aarch64
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+before-build = "yum install -y clang llvm-devel cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+# Test the built wheels
+test-command = "python -c 'import pyvgx; import vgxadmin; import vgxinstance; print(\"✓ Import tests passed\")' && vgxadmin --version"
+test-skip = ""
 

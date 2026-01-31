@@ -613,7 +613,7 @@ static void __vxoballoc_vector__delete_allocator( cxmalloc_family_t **allocator 
  ***********************************************************************
  */
 static const char * __simple_vector_id( vgx_Vector_t *vector ) {
-  __THREAD static char buffer[64];
+  static __THREAD char buffer[64];
   const char *simple = buffer;
   snprintf( buffer, 64, "vgx_Vector_t (len=%u mag=%#g type=%02x)", vector->metas.vlen, CALLABLE( vector )->Magnitude( vector ), vector->metas.type );
   return simple;

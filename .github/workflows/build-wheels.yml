@@ -1,0 +1,108 @@
+name: Build Wheels
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [published, created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (leave empty to use VERSION file + dev timestamp)'
+        required: false
+        default: ''
+      python_versions:
+        description: 'Python versions to build (e.g., cp311-* cp312-*)'
+        required: false
+        default: 'cp39-* cp310-* cp311-* cp312-* cp313-*'
+      architectures:
+        description: 'Architectures to build (x86_64, aarch64, or both)'
+        required: false
+        default: 'x86_64'
+        type: choice
+        options:
+          - 'x86_64 aarch64'
+          - 'x86_64'
+          - 'aarch64'
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel==2.16.5
+      
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: "${{ github.event.inputs.python_versions || 'cp39-* cp310-* cp311-* cp312-* cp313-*' }}"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
+          
+          # Linux-specific settings
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          CIBW_ARCHS_LINUX: "${{ github.event.inputs.architectures || 'x86_64 aarch64' }}"
+          
+          # Install dependencies before build
+          CIBW_BEFORE_BUILD_LINUX: >
+            yum install -y clang llvm-devel cmake3 &&
+            ln -sf /usr/bin/cmake3 /usr/bin/cmake &&
+            pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'
+          
+          # Set version from environment or tag
+          # When not set, setup.py reads VERSION file and appends .dev0+timestamp
+          CIBW_ENVIRONMENT: >
+            PROJECT_VERSION=${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name || '') }}
+            CMAKE_PRESET=release
+          
+          # Test command
+          CIBW_TEST_COMMAND: "python -c \"import pyvgx; print(pyvgx.__version__ if hasattr(pyvgx, '__version__') else 'OK')\""
+          CIBW_TEST_SKIP: "*-macosx_arm64"
+      
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
+          retention-days: 30
+  
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Build sdist
+        run: |
+          pip install build
+          python -m build --sdist
+        env:
+          # When not set, setup.py reads VERSION file and appends .dev0+timestamp
+          PROJECT_VERSION: "${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name || '') }}"
+      
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          retention-days: 30

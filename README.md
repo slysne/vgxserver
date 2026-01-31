@@ -177,6 +177,119 @@ A few quick links:
 
 Recommendation: Read the [Tutorial](https://slysne.github.io/vgxserver/pyvgx/tutorial.html) first. It covers some of the graph basics without going too deep.
 
+## Building from Source
+
+If you want to build PyVGX from source or contribute to development:
+
+### Prerequisites
+
+- **Python 3.9-3.13**: Required for building and testing
+- **Docker**: Required for manylinux builds (Linux wheels)
+- **C Compiler**: clang (automatically installed in Docker for manylinux builds)
+
+### Quick Build
+
+```bash
+# Clone the repository
+git clone https://github.com/slysne/vgxserver.git
+cd vgxserver
+
+# Set version (optional - reads from VERSION file if not specified)
+echo "3.6.0" > VERSION
+
+# Build a local wheel for your platform
+make build-local
+
+# Or specify version explicitly
+make build-local VERSION=3.6.0
+```
+
+### Building Manylinux Wheels (Linux)
+
+The project supports building portable Linux wheels (x86_64 and ARM64) using pypa/manylinux Docker images:
+
+```bash
+# Build for x86_64 (all Python versions 3.9-3.13)
+./build-manylinux.sh 3.6.0
+
+# Build for specific Python versions
+./build-manylinux.sh 3.6.0 "cp311-cp311 cp312-cp312"
+
+# Build and test in one command
+./build-manylinux.sh 3.6.0 --test
+
+# Build for ARM64/aarch64 (requires ARM host or QEMU)
+./build-manylinux-aarch64.sh 3.6.0
+
+# Using Makefile (reads VERSION file automatically)
+make build-manylinux
+make build-manylinux-arm64
+
+# Build both architectures
+make build-all-manylinux
+```
+
+### Testing Wheels
+
+```bash
+# Test all built wheels (auto-detects Python version from filename)
+./test-wheels.sh
+
+# Or via Makefile
+make test
+
+# Test wheels from specific directory
+./test-wheels.sh dist/
+```
+
+The test script runs 6 comprehensive tests per wheel:
+1. Import pyvgx module
+2. Version consistency check
+3. vgxadmin CLI command
+4. vgxadmin module import
+5. vgxinstance module import  
+6. vgxdemoservice functionality
+
+### Advanced Build Options
+
+```bash
+# Using cibuildwheel (install first: pip install cibuildwheel)
+make cibuildwheel VERSION=3.6.0
+
+# Build specific Python version and architecture
+make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
+
+# Clean build artifacts
+make clean
+```
+
+For detailed build instructions and troubleshooting:
+- [Manylinux Build Guide](docs/MANYLINUX_BUILD.md) - Comprehensive build documentation
+- [Quick Reference](docs/MANYLINUX_QUICKREF.md) - Common commands and workflows
+- [Setup Guide](docs/MANYLINUX_SETUP.md) - Initial setup documentation
+
+### GitHub Actions Build & Release
+
+**Automated builds triggered by:**
+- Tags (v*) or GitHub Releases → Release version from tag
+- Pull Requests → Test builds with VERSION file + dev timestamp
+- Manual trigger → Optional parameters (version, Python versions, architectures)
+
+**To create a release:**
+1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
+2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
+3. Download wheels from Actions artifacts (30-day retention)
+
+### Development Build
+
+```bash
+# Install in development mode
+pip install -e .
+
+# Run tests
+python -m pytest pyvgx/test/ -v
+```
+
 ## Maintainers
 
 This project was open-sourced by **Rakuten, Inc.** and is currently maintained by:

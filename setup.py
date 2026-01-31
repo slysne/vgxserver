@@ -49,12 +49,20 @@ preset = os.getenv("CMAKE_PRESET", "release")  # default to release
 if preset not in ['release', 'debug', 'relWithDebInfo']:
     raise Exception(f"Unknown cmake preset {preset}")
 
+# Read version from VERSION file or environment variable
+version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
+package_version = os.environ.get('PROJECT_VERSION')
 
-if 'SNAPSHOT' in os.environ.get('PROJECT_VERSION'):
-    package_version = os.environ.get('PROJECT_VERSION').replace("-SNAPSHOT",
-                                                              f".dev0+{calendar.timegm(time.gmtime())}")
-else:
-    package_version = os.environ.get('PROJECT_VERSION')
+if not package_version:
+    # Try to read from VERSION file
+    if os.path.exists(version_file):
+        with open(version_file, 'r') as f:
+            base_version = f.read().strip()
+            # Append dev timestamp to VERSION file content (Maven SNAPSHOT-like)
+            package_version = f"{base_version}.dev0+{calendar.timegm(time.gmtime())}"
+    else:
+        # Fallback to dev version with timestamp
+        package_version = f"0.0.0.dev0+{calendar.timegm(time.gmtime())}"
             
 
 
@@ -111,22 +119,35 @@ class CmakeBuild(build_ext):
         # Make sure the build directory exists
         os.makedirs(cmake_build_dir, exist_ok=True)
 
+        # Determine build type from preset
+        build_type_map = {
+            'release': 'Release',
+            'debug': 'Debug',
+            'relWithDebInfo': 'RelWithDebInfo'
+        }
+        build_type = build_type_map.get(preset, 'Release')
+
         # CMake configuration step — sets up the build system
         cmake_configure_cmd = [
             "cmake",
             cmake_source_dir,  # Path to CMakeLists.txt
-            f"--preset={preset}",
+            f"-DCMAKE_BUILD_TYPE={build_type}",
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",  # Output directory for shared libraries
             f"-DCMAKE_ARCHIVE_OUTPUT_DIRECTORY={extdir}",  # Output directory for static libraries
             f"-DVERSION={package_version}",
             f"-DPython3_EXECUTABLE={find_executable(PYTHON_EXECUTABLE)}",
         ]
 
+        # Enable LTO for release builds
+        if build_type == 'Release':
+            cmake_configure_cmd.append("-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON")
+
         # CMake execute build
         cmake_execute_build = [
             "cmake",
             "--build",
-            f"--preset={preset}",
+            cmake_build_dir,
+            "--config", build_type,
             "--verbose"
         ]
 
@@ -227,21 +248,16 @@ class CmakeBuild(build_ext):
             # Use native VS generator for .sln and MSBuild (overrides Ninja from presets)
             cmake_configure_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])  # For VS 2022, x64 arch
 
-            # For multi-config generators like VS, specify config in build
-            config = 'Release' if preset == 'release' else 'Debug' if preset == 'debug' else 'RelWithDebInfo'
-            cmake_execute_build.extend(['--config', config])            
-
         # Configuration step (generate the build system)
         subprocess.run(
             cmake_configure_cmd,
-            #cwd=cmake_build_dir,
+            cwd=cmake_build_dir,
             check=True
         )
 
         # Execute build
         subprocess.run(
             cmake_execute_build,
-            #cwd=cmake_build_dir,
             check=True
         )
 
