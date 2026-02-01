@@ -3,15 +3,21 @@
   "configurations": [
     {
       "name": "Attach to C Process",
-      "type": "cppdbg",
+      "type": "lldb",
       "request": "attach",
       "program": "${env:HOME}/venv312/bin/python",
-      "processId": "${command:pickProcess}",
-      "MIMode": "lldb",
-      "stopOnEntry": true,
+      "pid": "${command:pickProcess}",
+      "logging": {
+        "engineLogging": true
+      },
       "sourceFileMap": {
         "/Users/music/data/working/build-pyvgx": "${workspaceFolder}"
       }
     }
-  ]
+  ],
+  "logging": {
+    "engineLogging": true,
+    "trace": true,
+    "traceResponse": true
+  }
 }
