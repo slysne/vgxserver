@@ -6,7 +6,7 @@ import time
 import struct
 import base64
 import threading
-from math import log2, sqrt, exp
+from math import log2, sqrt, exp, exp2
 import itertools
 import code
 
@@ -586,6 +586,7 @@ def robust_enhance_2hop(g, min_hub_ideg=150, max_hubs=5000, robust_arcs=10, simu
             if simulate:
                 print( f"{farnode_addr} -({cos:0.4f})-> {hub}" )
             else:
+                assert F.address != H.address
                 r = g.Connect( F, ('cos', M_FLT|M_FWDONLY, cos), H )
                 if r > 0:
                     connected += 1
@@ -653,6 +654,7 @@ def robust_enhance_3hop(g, min_hub_ideg=200, max_hubs=500, robust_arcs=3, simula
             if simulate:
                 print( f"{farnode_addr} -({cos:0.4f})-> {hub}" )
             else:
+                assert F.address != H.address
                 r = g.Connect( F, ('cos', M_FLT|M_FWDONLY, cos), H )
                 if r > 0:
                     connected += 1
@@ -704,6 +706,7 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
         R.SetProperty('remote', ideg_boost)
         MEM.Reset()
         MEM.vector = R.GetVector()
+        MEM.VSetAdd(R)
         roots = random.sample( all_roots, 4 )
         roots.append(medoid)
         initials = []
@@ -714,6 +717,7 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
         for _, init in initials[:ideg_boost]:
             I = g.OpenVertex( init )
             cosine = g.sim.Cosine(R, I)
+            assert I.address != R.address
             g.Connect( I, ('cos', M_FLT|M_FWDONLY, cosine), R )
             c += 1
             I.Close()
@@ -721,6 +725,7 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
         for _, init in initials:
             I = g.OpenVertex( init )
             cosine = g.sim.Cosine(R, I)
+            assert R.address != I.address
             g.Connect( R, ('cos', M_FLT|M_FWDONLY, cosine), I )
             I.Close()
             if R.odeg >= 2*degree:
@@ -741,25 +746,29 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
 def prune_RNG_neighborhood(g, C, degree, alpha, max_odeg_ratio=1.5, recursion=1):
     global n_Q_NEAR
     global t_NEAR
+    #
+    R = degree
+    in_pressure = C.GetProperty('in_pressure', 0)
+    s = max(0, min(1, (in_pressure - 2) / 16))
+    k = 0.75
+    newR = R + round(sqrt(max(0, in_pressure-2)))
+    boostR = newR + round(s * k * newR)
+    tightalpha = alpha - 0.02 * s
+    if newR > R:
+        C.SetProperty('R', newR)
+    #
     t0 = time.perf_counter()
     M_FIND.Reset()
     M_FIND.vector = C.GetVector()
-    #g.Evaluate( "vset.add(vertex)", memory=M_FIND, tail=C )
     Q_NEAR.id = C.id
-    scored_neighbors = Q_NEAR.Execute( hits=5*C.odeg )
+    scored_neighbors = Q_NEAR.Execute( hits=5*boostR )
     t_NEAR += time.perf_counter() - t0
     n_Q_NEAR += 1
     #for v,a in scored_neighbors:
     #    if a == C.address:
     #        raise Exception( f"BUG!  addr={a}" )
     #g.Disconnect( C, D_OUT )
-    R = degree
-    nprune = C.GetProperty('nprune', 0)
-    s = max(0, min(1, (nprune - 2) / 16))
-    k = 0.75
-    targetR = round(R + s * k * R)
-    modalpha = alpha - 0.02 * log2( targetR / R )
-    connect_RNG_candidates(g, C, scored_neighbors, degree=targetR, alpha=modalpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion)
+    connect_RNG_candidates(g, C, scored_neighbors, degree=boostR, alpha=tightalpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion)
     
 
 
@@ -773,7 +782,7 @@ def connect_RNG_candidates(g, A, candidate_addr_list, degree, alpha, max_odeg_ra
     global t_CONNECT
     t0 = time.perf_counter()
     R = degree
-    ODEG_CUTOFF = int(max_odeg_ratio * R)
+    ODEG_MIN_CUTOFF = int(max_odeg_ratio * R)
     candidates = [((score-1.0), g[candidate_addr].GetVector(), candidate_addr) for score, candidate_addr in candidate_addr_list]
     accepted = []
     #V_q = A.GetVector()
@@ -812,16 +821,22 @@ def connect_RNG_candidates(g, A, candidate_addr_list, degree, alpha, max_odeg_ra
     # (Re)connect
     t_ignore = 0.0
     g.Disconnect( A, D_OUT )
+    A.IncProperty('ntouched')
     for cosine, _, addr in accepted:
         B = g.OpenVertex( addr )
+        assert A.address != B.address
         g.Connect( A, ('cos', M_FLT|M_FWDONLY, cosine), B )
         g.Connect( B, ('cos', M_FLT|M_FWDONLY, cosine), A )
-        if B.odeg >= ODEG_CUTOFF and recursion > 0:
-            tp0 = time.perf_counter()
-            n_PRUNE += 1
-            B.IncProperty('nprune')
-            prune_RNG_neighborhood(g, B, R, alpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion-1)
-            t_ignore += time.perf_counter() - tp0
+        if B.odeg >= ODEG_MIN_CUTOFF and recursion > 0:
+            # Effective cutoff is different for in-pressured node with R property (higher than base R)
+            odeg_cutoff = int(max_odeg_ratio * B.GetProperty('R',R))
+            if B.odeg > odeg_cutoff:
+                tp0 = time.perf_counter()
+                n_PRUNE += 1
+                B.IncProperty('in_pressure')
+                prune_RNG_neighborhood(g, B, R, alpha, max_odeg_ratio=max_odeg_ratio, recursion=recursion-1)
+                t_ignore += time.perf_counter() - tp0
+        B.IncProperty('ntouched')
         B.Close()
     t2 = time.perf_counter()
     t_CONNECT += (t2 - t1) - t_ignore
@@ -844,6 +859,12 @@ def VERY_BAD(g, A, roots, C):
     print( f"len(C): {len(C)}" )
     dupes = len(C) - len(set(C))
     print( f"dupes: {dupes}" )
+    print( f"A in C? {A.address in C}" )
+    D = set()
+    for x in C:
+        if x in D:
+            print( f"duplicate: {x}" )
+        D.add(x)
     raise Exception( "error!" )
 
 
@@ -899,35 +920,29 @@ def process_node(g, A, entry, degree, alpha, max_odeg_ratio, random_roots, nrand
         selected_roots.append(entry)
     if nrandom_roots > 0:
         selected_roots.extend( random.sample( random_roots, nrandom_roots ) )
-    if A.odeg > 0:
+    if A.odeg > 0 and A.address not in selected_roots:
         selected_roots.append( A.address )
     C = find_candidates(g, A, selected_roots, degree)
     connect_RNG_candidates(g, A, C, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
 
 
-
+    
 def prune_all(g, degree, alpha, prunable_mindegree=-1, max_odeg_ratio=1.5):
-    #reset_node_coherence(g)
     if prunable_mindegree < 0:
         prunable_mindegree = degree
     prunable = g.Vertices( condition={'type':'item', 'outdegree':(V_GTE,prunable_mindegree)}, fields=F_ADDR, result=R_SIMPLE )
     N = len(prunable)
     n = 0
-    if N == 0:
+    if N == 0: 
         return
-    #coherence_baseline = update_node_stats(g, all_nodes=prunable)
     for node in sorted(prunable):
         n += 1
         A = g.OpenVertex(node)
-        #if A.c0 > coherence_baseline:
-        #    prune_RNG_neighborhood(g, A, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=1)
-        #elif A.c0 > coherence_baseline-0.1:
-        #    prune_RNG_neighborhood(g, A, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=0)
         prune_RNG_neighborhood(g, A, degree, alpha, max_odeg_ratio=max_odeg_ratio, recursion=0)
         A.Close()
         print( f"{n}/{N} {100*n/N:0.2f}%", end="\r", flush=1 )
     print( f"{n}/{N} {100*n/N:0.2f}%    " )
-
+        
 
 
 def get_random_roots(g, n, degree):
@@ -1152,10 +1167,10 @@ def populate(g, degree, alpha, max_odeg_ratio=1.5, entry=None, qshadow=-1, qbw=3
         for node in process_list:
             perform = True
             A = g.OpenVertex(node)
-            #nprune = A.GetProperty('nprune', 0)
-            #ntouched = A.GetProperty('ntouched', 0)
-            #if polish:
-            #    perform = True if (nprune > 0 or A.odeg > ) else False           
+            ntouched = A.GetProperty('ntouched', 0)
+            if polish:
+                # Process only if not already involved in processing a few times during this phase
+                perform = True if ntouched < 3 else False
             if perform:
                 if keepdegree is False:
                     node_degree = degree
@@ -1207,7 +1222,7 @@ def clear_links(g):
         A = g.OpenVertex(node)
         A.c0 = 0.0 # neighborhood coherence
         A.c1 = 1.0 # max neighbor cosine
-        for delprop in ['remote', 'nprune']:
+        for delprop in ['remote', 'in_pressure', 'R']:
             if A.HasProperty(delprop):
                 A.RemoveProperty(delprop)
         g.Disconnect(A)
@@ -1215,15 +1230,81 @@ def clear_links(g):
 
 
 
-def reset_phase_counters(g):
+def reset_phase_counters(g, degree):
+    PD = {}
+    TD = {}
+    RD = {}
     for node in g.Vertices( condition={'type':'item'} ):
         A = g.OpenVertex(node)
-        nprune = A.GetProperty('nprune', 0)
-        if nprune > 0:
-            A.SetProperty( 'nprune', nprune//2 )
-        if A.HasProperty( 'ntouched' ):
+        in_pressure = A.GetProperty('in_pressure', 0)
+        if in_pressure > 0:
+            A.SetProperty( 'in_pressure', in_pressure//2 )
+        ntouched = A.GetProperty('ntouched', 0)
+        if ntouched > 0:
             A.SetProperty( 'ntouched', 0 )
+        newR = A.GetProperty('R', 0)
+        if newR > degree:
+            newR = degree + 2 # Start slightly elevated in the next phase
+            A.SetProperty('R', newR) # because A saw elevated in-pressure in previous phase
         A.Close()
+        # pressure
+        if in_pressure not in PD:
+            PD[in_pressure] = 0
+        PD[in_pressure] += 1
+        # touched
+        if ntouched not in TD:
+            TD[ntouched] = 0
+        TD[ntouched] += 1
+        # R
+        if newR not in RD:
+            RD[newR] = 0
+        RD[newR] += 1
+    pressure = sorted( [(p,freq) for p,freq in PD.items()], reverse=1 )
+    touched = sorted( [(t,freq) for t,freq in TD.items()], reverse=1 )
+    elevated = sorted( [(e,freq) for e,freq in RD.items()], reverse=1 )
+    pstr = ", ".join( [f"{p}: {freq}" for p,freq in pressure] )
+    tstr = ", ".join( [f"{t}: {freq}" for t,freq in touched] )
+    estr = ", ".join( [f"{e}: {freq}" for e,freq in elevated] )
+    print( f"In-pressure distribution: {pstr}" )
+    print( f"Touched distribution: {tstr}" )
+    print( f"Elevated-R distribution: {estr}" )
+            
+           
+
+
+
+def finalize_arcs(g, entry):
+    Q = g.NewNeighborhoodQuery( sortby=S_VAL, fields=F_ADDR, result=R_SIMPLE )
+    A = g.OpenVertex(entry)
+    Q.id = A.address 
+    neighbors = Q.Execute()    
+    T = g.OpenVertices( neighbors )
+    g.Disconnect(A, D_OUT)
+    for B in T:
+        assert A.address != B.address
+        g.Connect(A, ('rank', M_INT|M_FWDONLY, 1), B)
+    g.CloseVertices(T)
+    A.Close()
+    n = 0
+    for node in g.Vertices( condition={'type':'item'} ):
+        n += 1
+        A = g.OpenVertex(node)
+        Q.id = A.address
+        neighbors = Q.Execute()
+        T = g.OpenVertices( neighbors )
+        g.Disconnect(A, D_OUT)
+        i = 0
+        for B in T:
+            i += 1
+            assert A.address != B.address
+            g.Connect(A, ('rank', M_INT|M_FWDONLY, i), B)
+        g.CloseVertices(T)
+        A.Close()
+        if not n % 1000:
+            print( f"{100*n/g.order:0.1f}%", end="\r", flush=1 )
+    print( "100.0%" )
+
+
 
 
 
@@ -1471,7 +1552,7 @@ def enhance_star(g, entry='entry', R=96, a=1.0, recursion=1):
 
 
 
-def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
+def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=False):
     global n_Q_IMMED
     global n_Q_NEAR
     global n_Q_RNG
@@ -1526,8 +1607,9 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
         sk += 1
         nR = 2.0
         d, a, s = round(3*degree), 0.8*alpha, 0.07/skeletons
-        print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, nR={nR}, s={s})" )
-        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=2*d, qbw=d//4, qbc=0.95, qadaptive=True, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
+        shw = round(2*quality*d)
+        print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, nR={nR}, s={s} shw={shw})" )
+        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//4, qbc=0.95, qadaptive=True, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
         base_set = skeleton_set.union( seed_set )
         rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
     print( "Removing seed information" )
@@ -1535,11 +1617,12 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
     del nonseed_set
     del skeleton_set
     del seed_set
-    nR = 2.5
+    nR = 3.0
     d, a = round(1.5*degree), 0.9*alpha
-    print( f"Refining base graph (o={len(base_set)}, d={d}, a={a}, nR={nR})" )
-    reset_phase_counters(g)
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=3*d, qbw=d//4, qbc=0.95, qadaptive=True, process_set=base_set)
+    shw = round(3*quality*d)
+    print( f"Refining base graph (o={len(base_set)}, d={d}, a={a}, nR={nR} shw={shw})" )
+    reset_phase_counters(g, d)
+    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//4, qbc=0.95, qadaptive=True, process_set=base_set)
     rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
     t1 = time.perf_counter()
     print( f"t={int(t1-t0)}" )
@@ -1549,9 +1632,10 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
     del base_set
     nR = 2.5
     d, a = round(1.333*degree), 1.0*alpha
-    print( f"Adding full population to graph (o={len(rest_set)}, d={d}, a={a}, nR={nR})" )
-    reset_phase_counters(g)
-    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=2*d, qbw=d//2, qbc=0.95, qadaptive=True, process_set=rest_set)
+    shw = round(2*quality*d)
+    print( f"Adding full population to graph (o={len(rest_set)}, d={d}, a={a}, nR={nR} shw={shw})" )
+    reset_phase_counters(g, d)
+    populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//2, qbc=0.95, qadaptive=True, process_set=rest_set)
     print( "Rescuing remotes" )
     rescue_remotes(g, degree=d, cutoff_ideg=12 )
     t2 = time.perf_counter()
@@ -1565,9 +1649,10 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
         topname = topstar(g, degree=round( nR*d ))
         nR = 2.0
         d, a = round(1.1*degree), alpha
-        print( f"Populating graph (d={d}, a={a}, nR={nR})" )
-        reset_phase_counters(g)
-        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=topname, qshadow=5*d, qbw=d//2, qbc=0.95, qadaptive=True, process_set=full_set, polish=True )
+        shw = round(5*quality*d)
+        print( f"Populating graph (d={d}, a={a}, nR={nR} shw={shw})" )
+        reset_phase_counters(g, d)
+        populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=topname, qshadow=shw, qbw=d//2, qbc=0.95, qadaptive=True, process_set=full_set, polish=True )
         rescue_remotes(g, degree=d, cutoff_ideg=12)
         t3 = time.perf_counter()
         print( f"t={int(t3-t0)}" )
@@ -1575,13 +1660,15 @@ def build_proximity_graph(g, degree=48, alpha=1.0, skip_polish=False):
         g.Save()     # !!!
     # ----
     print( "=== FINALIZE ===" )
-    nR = 1.8
+    nR = 2.0
     print( f"Pruning graph (d={degree}, a={alpha}, nR={nR})" )
-    reset_phase_counters(g)
+    reset_phase_counters(g, degree)
     prune_all(g, degree, alpha, prunable_mindegree=degree//2, max_odeg_ratio=nR)
     rescue_remotes(g, degree=degree, cutoff_ideg=12)
     print( "Creating entry point" )
-    topstar(g, degree=round( nR*degree ))
+    topname = topstar(g, degree=round( nR*degree ))
+    print( "Finalizing arcs" )
+    finalize_arcs(g, entry=topname)
     #enhance_star(g, entry='entry', R=int(3*degree), a=0.95)
     if ROOT:
         medoid = sample_medoid(g, sz=10000, degree=degree)
@@ -1685,7 +1772,8 @@ def check(g):
 
 
 
-def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, depth=(1<<31)-1, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, lambd=0.0, adaptive=True ):
+#def INIT(graph, bias=0.0, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, depth=(1<<31)-1, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True ):
+def INIT(graph, bias=0.0, expansion=(1<<30), depth=(1<<30), visit=(1<<30) ):
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -1698,23 +1786,31 @@ def INIT(graph, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, dep
                                 fields  =   F_VAL | F_ID | F_DEPTH,
                                 result  =   R_LIST,
                                 recursion = {
-                                    'heap_size': h,
-                                    'shadow_size': shw,
-                                    'frontier_limit': f,
-                                    'depth_limit': depth,
-                                    'beam_width': bw,
-                                    'beam_curve': bc,
-                                    'beam_min': bmin,
-                                    'beam_max': bmax,
-                                    'adaptive_taper': adaptive,
-                                    'alpha' : alpha,
-                                    'beta' : beta,
-                                    'gamma' : gamma,
-                                    'delta' : delta,
-                                    'epsilon' : epsilon,
-                                    'lambda': lambd,
-                                    'init_select': init
+                                    'bias': bias
+                                    #'expansion_limit': expansion,
+                                    #'depth_limit': depth,
+                                    #'visit_limit': visit
                                 }
+                                #recursion = {
+                                #    'heap_size': h,
+                                #    'shadow_size': shw,
+                                #    'frontier_limit': f,
+                                #    'depth_limit': depth,
+                                #    'beam_width': bw,
+                                #    'beam_curve': bc,
+                                #    'beam_min': bmin,
+                                #    'beam_max': bmax,
+                                #    'adaptive_taper': adaptive,
+                                #    'alpha' : alpha,
+                                #    'beta' : beta,
+                                #    'gamma' : gamma,
+                                #    'delta' : delta,
+                                #    'epsilon' : epsilon,
+                                #    'zeta' : zeta,
+                                #    'kappa': kappa,
+                                #    'lambda': lambd,
+                                #    'init_select': init
+                                #}
     )
     return MEM, Q
 
@@ -1958,6 +2054,59 @@ shadow recall qps evals score_contrib beam_accepts result_accepts neighbor_expan
 2048 0.999 260.3 36001 5441 1967 118 954 5.91 16.01 2.80%
 """
 
+
+RAW_PERF_REFERENCE = """
+shadow recall qps evals score_contrib beam_accepts result_accepts neighbor_expands topk_depth query_depth
+1 0.71140 9092.3 1284 112 50 97 17 6.65 7.79 -0.2% -0.2%
+2 0.71325 9346.8 1297 115 51 98 17 6.66 7.82 0.1% -0.1%
+4 0.72605 8896.2 1348 125 52 99 18 6.74 7.97 -0.1% -0.1%
+6 0.74200 8248.0 1407 134 54 100 20 6.85 8.16 0.3% -0.0%
+8 0.75285 7722.0 1455 144 56 101 20 6.93 8.31 0.4% 0.1%
+9 0.75840 7613.4 1481 148 57 101 21 6.98 8.39 -0.1% 0.0%
+10 0.76360 7438.4 1509 153 58 102 22 7.03 8.48 0.0% 0.0%
+12 0.77425 7653.5 1561 162 60 103 22 7.13 8.65 -0.1% 0.0%
+13 0.77895 7071.3 1587 167 61 103 23 7.18 8.74 -0.2% 0.0%
+16 0.79155 7208.2 1663 181 64 104 24 7.31 8.97 0.3% 0.0%
+18 0.80195 6528.3 1717 190 65 104 25 7.42 9.15 0.1% 0.0%
+21 0.81565 6400.9 1792 204 68 104 27 7.54 9.38 -0.6% -0.0%
+24 0.82700 6124.4 1866 218 71 105 28 7.62 9.59 -0.7% -0.1%
+27 0.83335 5811.7 1930 232 73 105 30 7.67 9.72 0.1% -0.1%
+32 0.84935 5481.6 2057 254 78 105 32 7.87 10.10 -0.8% -0.1%
+36 0.85895 5075.2 2178 273 82 105 35 7.95 10.35 -0.2% -0.1%
+42 0.88625 4352.5 2531 305 102 107 41 7.19 9.74 -0.7% -0.2%
+48 0.89585 4101.3 2697 332 108 107 45 7.24 9.97 -0.1% -0.1%
+55 0.90850 3834.9 2921 365 115 107 49 7.33 10.25 0.9% -0.1%
+64 0.91990 3464.1 3191 406 125 107 55 7.34 10.48 0.4% -0.0%
+73 0.93650 3014.3 3693 453 151 108 65 6.75 9.99 -0.4% -0.1%
+84 0.94540 2722.2 4064 503 166 108 73 6.66 10.13 -0.4% -0.1%
+97 0.95185 2460.3 4476 561 183 108 81 6.65 10.32 -0.1% -0.1%
+111 0.96100 2117.5 5179 634 219 109 96 6.20 9.91 0.2% -0.1%
+128 0.96605 1923.5 5688 710 243 109 107 6.11 10.06 1.3% 0.0%
+147 0.97220 1748.6 6194 791 265 109 118 6.15 10.31 0.1% 0.1%
+168 0.97655 1601.1 6726 878 290 109 130 6.13 10.53 -1.0% -0.0%
+194 0.98135 1421.9 7570 998 339 110 149 5.85 10.36 -0.9% -0.1%
+222 0.98375 1308.7 8198 1118 369 110 163 5.83 10.54 1.3% 0.0%
+256 0.98690 1199.6 8910 1254 404 110 180 5.88 10.82 1.0% 0.1%
+294 0.98965 1088.2 9793 1413 457 110 200 5.70 10.82 -4.0% -0.3%
+337 0.99030 1008.3 10523 1560 493 110 216 5.72 11.20 -0.1% -0.3%
+388 0.99140 939.0 11283 1727 531 110 234 5.80 11.70 2.0% -0.1%
+445 0.99320 879.2 12089 1906 574 110 252 5.91 12.21 -0.5% -0.1%
+512 0.99420 803.1 13067 2131 639 111 275 5.79 12.26 -0.6% -0.1%
+588 0.99505 746.8 14043 2355 697 111 298 5.86 12.67 -3.8% -0.4%
+675 0.99515 684.3 15198 2598 763 111 326 5.93 13.30 3.5% -0.1%
+776 0.99660 616.9 16763 2915 861 111 364 5.80 13.34 2.7% 0.1%
+891 0.99705 558.6 18403 3235 953 111 404 5.80 13.61 3.7% 0.4%
+1024 0.99730 515.5 19762 3592 1051 111 439 5.81 13.94 4.1% 0.7%
+1176 0.99735 478.5 21056 3915 1159 111 473 5.85 14.33 10.2% 1.4%
+1351 0.99805 433.3 23037 4370 1315 111 525 5.76 14.36 -5.3% 0.8%
+1552 0.99820 403.3 24513 4755 1442 111 565 5.76 14.59 -3.7% 0.4%
+1782 0.99825 376.4 26022 5190 1591 111 607 5.76 14.98 -0.6% 0.3%
+2048 0.99855 339.4 28245 5784 1797 111 669 5.53 14.65 2.8% 0.5%
+2352 0.99890 319.7 29799 6283 1961 111 711 5.55 15.04 5.2% 0.9%
+2702 0.99900 302.6 31253 6850 2138 111 752 5.55 15.33 1.1% 0.9%
+"""
+
+
 PERF_REFERENCE = []
 
 
@@ -1977,7 +2126,7 @@ init_perf_reference()
 
 
 def perf_reference( recall ):
-    recall = round(recall, 4) # to match rounded raw data
+    recall = round(recall, 5) # to match rounded raw data
     for i in range(len(PERF_REFERENCE)-1):
         r0, e0 = PERF_REFERENCE[i]
         r1, e1 = PERF_REFERENCE[i+1]
@@ -1994,25 +2143,35 @@ def perf_reference( recall ):
         
 
 
+EPQ = 0
+REF_EPQ = 0
 
 
-def work(g, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, lambd, r_result, adaptive=True, show=False):
-    MEM, Q = INIT(g, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, depth=depth, alpha=alpha, beta=beta, gamma=gamma, delta=delta, epsilon=epsilon, lambd=lambd, adaptive=adaptive)
+
+
+#def work(g, PROBES, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, r_result, adaptive=True, show=False):
+    #MEM, Q = INIT(g, bias=bias, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, depth=depth, alpha=alpha, beta=beta, gamma=gamma, delta=delta, epsilon=epsilon, zeta=zeta, kappa=kappa, lambd=lambd, adaptive=adaptive)
+def work(g, PROBES, entry, k, bias, expansion, depth, visit, r_result, show=False):
+    MEM, Q = INIT(g, bias=bias, expansion=expansion, depth=depth, visit=visit)
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
-def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, lambd, adaptive=True, perfonly=False, key=None ):
-    if bw > 0:
-        if bmax < bmin: bmax = bmin
-        if bw < bmin: bw = bmin
-        elif bw > bmax: bw = bmax
+#def threadwork( g, N, PROBES, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, adaptive=True, perfonly=False, key=None ):
+def threadwork( g, N, PROBES, entry, k, bias, expansion=(1<<30), depth=(1<<30), visit=(1<<30), perfonly=False, key=None ):
+    global EPQ
+    global REF_EPQ
+    #if bw > 0:
+    #    if bmax < bmin: bmax = bmin
+    #    if bw < bmin: bw = bmin
+    #    elif bw > bmax: bw = bmax
     T = []
     sz = len(PROBES) // N
     i = 0
     for n in range(N):
         sample = PROBES[i:i+sz]
         r_result = {}
-        args = (g, sample, entry, k, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, lambd, r_result, adaptive)
+        #args = (g, sample, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, r_result, adaptive)
+        args = (g, sample, entry, k, bias, expansion, depth, visit, r_result)
         t = threading.Thread( target=work, args=args )
         T.append( (t, r_result) )
         i += sz
@@ -2055,15 +2214,16 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, dep
     contributerate = 100*cpq/epq
     frontierrate = 100*fpq/epq
     acceptrate = 100*apq/epq
-    is_adaptive_taper = "(a)" if adaptive else ""
+    #is_adaptive_taper = "(a)" if adaptive else ""
     total_sum_already = sum([r_result['sum_already'] for _, r_result in T ])
     total_sum_visited = sum([r_result['sum_visited'] for _, r_result in T ])
     vpq = total_sum_visited // total_queries
     hpq = total_sum_already // total_queries
     if not perfonly:
-        config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f} d={delta:0.4f}"
-        result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms ev={epq} con={cpq} fr={fpq} acc={apq} x={xpq} tkd={tkdpq:0.2f} qd={qdpq:0.2f} stop={hpq} visit={vpq}"
-        print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
+        pass
+    #    config = f"e={entry} t={N} heap={h} shadow={shw} front={f} beam={bw} range=({bmin}-{bmax}) taper={bc}{is_adaptive_taper} init={init} a={alpha:0.4f} b={beta:0.4f} c={gamma:0.4f} d={delta:0.4f}"
+    #    result = f"qps={qps:0.1f} recall={recall:0.4f}@{k} latency={avg_latency_ms:0.2f}ms ev={epq} con={cpq} fr={fpq} acc={apq} x={xpq} tkd={tkdpq:0.2f} qd={qdpq:0.2f} stop={hpq} visit={vpq}"
+    #    print( f"{config} --> {result} qps_wall={qps_wall:0.1f}" )
     else:
         keyval = ""
         if key:
@@ -2074,21 +2234,40 @@ def threadwork( g, N, PROBES, entry, k, h, shw, f, bw, bc, init, bmin, bmax, dep
                 keyval = f"{val:0.4f} "
         ref_evals = perf_reference( recall )
         evals_delta = 100.0 * (epq - ref_evals) / ref_evals
-        print( f"{keyval}{recall:0.4f} {qps:0.1f} {epq} {cpq} {fpq} {apq} {xpq} {tkdpq:0.2f} {qdpq:0.2f} {evals_delta:0.1f}%" )
+        EPQ += epq
+        REF_EPQ += ref_evals
+        total_evals_delta = 100.0 * (EPQ - REF_EPQ) / REF_EPQ
+        print( f"{keyval}{recall:0.5f} {qps:0.1f} {epq} {cpq} {fpq} {apq} {xpq} {tkdpq:0.2f} {qdpq:0.2f} {evals_delta:0.1f}% {total_evals_delta:0.1f}%" )
     return recall, qps
 
 
 
+def threadtest( g, N, PROBES, entry, k=10, bias=0.0, expansion=(1<<30), depth=(1<<30), visit=(1<<30), perfonly=False, key=None ):
+    global EPQ
+    global REF_EPQ
+    if bias < -100.0:
+        EPQ = 0
+        REF_EPQ = 0
+        return
+    r_PROBES = random.sample( PROBES, len(PROBES) )
+    recall, qps = threadwork( g, N, PROBES, entry, k=k, bias=bias, expansion=expansion, depth=depth, visit=visit, perfonly=perfonly, key=key )
 
-def threadtest( g, N, PROBES, entry, k=10, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, depth=(1<<31)-1, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, lambd=0.0, adaptive=True, perfonly=False, key=None ):
+
+
+
+def OLD_threadtest( g, N, PROBES, entry, k=10, bias=0.0, heaps=None, shadows=None, fronts=None, beams=None, bcs=None, inits=None, bmin=8, bmax=512, depth=(1<<31)-1, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True, perfonly=False, key=None ):
+    global EPQ
+    global REF_EPQ
+    if shadows == [-1]:
+        EPQ = 0
+        REF_EPQ = 0
+        return
     if heaps is None:
         heaps = [1024, 768, 512, 384, 256, 192, 128, 96, 64, 48, 32, 24]
     auto_shadows = []
     if shadows is None:
         auto_shadows = [2*h for h in heaps]
     auto_fronts = []
-    if fronts is None:
-        auto_fronts = [int(1.2*h*(1+shwfactor)) for h in heaps]
     auto_beams = []
     if beams is None:
         auto_beams = [max(int(0.5*f), 1) for f in fronts]
@@ -2110,7 +2289,7 @@ def threadtest( g, N, PROBES, entry, k=10, heaps=None, shadows=None, fronts=None
                     for bc in bcs:
                         for init in inits:
                             r_PROBES = random.sample( PROBES, len(PROBES) )
-                            recall, qps = threadwork( g, N, PROBES, entry, k=k, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, depth=depth, alpha=alpha, beta=beta, gamma=gamma, delta=delta, epsilon=epsilon, lambd=lambd, adaptive=adaptive, perfonly=perfonly, key=key )
+                            recall, qps = threadwork( g, N, PROBES, entry, k=k, bias=bias, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, depth=depth, alpha=alpha, beta=beta, gamma=gamma, delta=delta, epsilon=epsilon, zeta=zeta, kappa=kappa, lambd=lambd, adaptive=adaptive, perfonly=perfonly, key=key )
 
 
 
@@ -2263,8 +2442,13 @@ g.Connect(ROOT, ("to",M_STAT|M_FWDONLY), medoid)
 #
 #for shw, bsz in [ (y, int(3+round(log2( y-256 if y > 256 else 1 )))) for y in [ int(2**(x/3)) for x in range(4,38) ]]: threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[shw], fronts=[0], beams=[bsz], bcs=[1.0], inits=[bsz], bmin=bsz, bmax=256, depth=1000000, alpha=0.0, beta=0.0, gamma=0.0, delta=1.0, adaptive=True, perfonly=1, key="shw" )
 
+def bias2s( bias ):
+    return round( exp2( 8 + 8 * bias * abs(bias) ) )
+
+
 def s2bw(s):
-    bw = int(round(log2(s**sqrt(2))))-5
+    if s < 1: return 2
+    bw = int(round( sqrt(2) * log2(s)))-5
     return bw if bw > 2 else 2
 
 
@@ -2273,8 +2457,8 @@ def clamp( x, lo, hi):
 
 
 
-def sh2delta(s):
-    s0 = 145
+def sh2delta(s, s0=175):
+    if s < 1: return -0.7
     w = 2
     A = 1.6
     B = 0.6
@@ -2289,6 +2473,21 @@ def sh2delta(s):
 #
 # for shw in [ int(2**(x/3)) for x in range(4,48) ]: threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[shw], fronts=[0], beams=[s2bw(shw)], bcs=[1.0], inits=[3], bmin=1, bmax=10*s2bw(shw), depth=1000000, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, adaptive=True, perfonly=1, key="shw" )
 #
-#for shw in [1,1,2,3,4,5,6,7,8] + [ int(2**(x/5)) for x in range(16,76) ]: threadtest( g, 1, PROBES100k[:2000], 'entry', heaps=[10], shadows=[shw], fronts=[0], beams=[s2bw(shw)], bcs=[0.99], inits=[s2bw(shw)], bmin=2, bmax=(4+s2bw(shw))**2, depth=100000, alpha=-0.7, beta=0.0, gamma=0.0, delta=sh2delta(shw), epsilon=0.0, lambd=0.05, adaptive=True, perfonly=1, key="shw" )
+#for shw in [1,1,2,3,4,5,6,7,8] + [ int(2**(x/5)) for x in range(16,76) ]: threadtest( g, 1, PROBES100k[:2000], 'entry', bias=0.0, heaps=[10], shadows=[shw], fronts=[0], beams=[s2bw(shw)], bcs=[0.99], inits=[s2bw(shw)], bmin=2, bmax=(4+s2bw(shw))**2, depth=100000, alpha=-0.7, beta=0.0, gamma=0.0, delta=sh2delta(shw), epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True, perfonly=1, key="shw" )
 #ok2
+
+#
+#>>> for i in range(2): threadtest( g, 1, PROBES100k[:5000], 'entry', k=10, heaps=[1], shadows=[1], fronts=[2], beams=[0], bcs=[0.99], inits=[2], bmin=2, bmax=256, depth=100000, alpha=-0.5, beta=0.0, gamma=0.0, delta=0.5, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True, perfonly=1, key="shw" )
+#... 
+#1 0.52774 5629.1 1917 271 271 112 32 15.31 17.36 107.5%
+#1 0.52774 5703.1 1917 271 271 112 32 15.31 17.36 107.5%
+#>>> 
+#>>> for i in range(2): threadtest( g, 1, PROBES100k[:5000], 'entry', k=10, heaps=[1], shadows=[0], fronts=[0], beams=[0], bcs=[0.99], inits=[1], bmin=2, bmax=256, depth=100000, alpha=-0.5, beta=0.0, gamma=0.0, delta=0.5, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True, perfonly=1, key="shw" )
+#... 
+#Segmentation fault: 11
+#  D={};work(g, PROBES100k[:1], 'entry', k=10, h=1, shw=0, f=1, bw=0, bc=1.0, init=1, bmin=1, bmax=1, depth=1000, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, r_result=D, adaptive=True, show=False)
+
+# for bias in [-200] + list(range(-100,100,1)): threadtest( g, 1, PROBES100k[:2000], 'entry', bias=bias, perfonly=1, key="bias" )
+ 
+
 
