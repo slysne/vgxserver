@@ -223,13 +223,48 @@ typedef struct s_bool_config_param {
 } bool_config_param;
  
 
+ 
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static int64_t __recursion_s2bw( int64_t shadow_size ) { 
+#define sqrt_2 1.4142135623730951
+  int64_t bw = round( sqrt_2 * log2( (double)shadow_size ) ) - 5;
+  return maximum_value( bw, 2 );
+}
+
+
+ 
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __recursion_s2delta( int64_t shadow_size ) { 
+#define s2delta_s0    175.0
+#define s2delta_w     2.0
+#define s2delta_A     1.6
+#define s2delta_B     0.6 
+#define s2delta_d_min -0.7
+#define s2delta_d_max 1.0
+    
+  double x = log2((double)shadow_size) - log2(s2delta_s0);
+  double x2 = x * x;
+  double delta = s2delta_A * exp( -x2 / s2delta_w ) - s2delta_B;
+
+  return clamp_value(delta, s2delta_d_min, s2delta_d_max);
+}
+
+
 
 /******************************************************************************
  *
  *
  ******************************************************************************
  */
-static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *auto_params ) {
+static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
 
   double b = clamp_value( search_bias, -1.0, 1.0 );
 
@@ -268,19 +303,50 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *a
      1.0 65536
   */
 
-  // Shadow size is the main tuning knob
-  auto_params->shadow.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
 
-  // Result heap will be set to hits=k in the collector
-  auto_params->heap.size = 1;
+  // Normal recall regime
+  if( b > -0.9 ) {
+    // Shadow size is the main tuning knob
+    config->shadow.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
 
-  // Collector will 
-  auto_params->limit.frontier = 0;
+    // Limit depth to avoid runaway recursion in pathological graphs
+    config->limit.depth = 1024;
+  
+    // Beam width grows slowly from min=2 and up
+    config->beam.width = __recursion_s2bw( config->shadow.size );
+    config->beam.min_width = config->beam.width;
+    config->beam.max_width = 16 * config->beam.width * config->beam.width;
+    config->init.select = config->beam.width;
 
+    // Beam controller most sensitive in the low-mid recall regime, less sensitive for junk (low) recall and extreme (high) recall
+    config->tune.delta = __recursion_s2delta( config->shadow.size );
+  }
+  // Junk recall regime (-1.0 to -0.9)
+  else {
+    // shadow: 0 - 5
+    config->shadow.size = (int64_t)round( 50.0 * fabs(1.0 + b) );
+    
+    // depth: 4 - 9
+    config->limit.depth = 4 + config->shadow.size;
 
+    // visits: 64 - 6464
+    config->limit.visit = 64 + (int64_t)round( 64000.0 * fabs(1.0 + b) );
 
+    // Fixed beam
+    config->beam.width = 2;
+    config->beam.min_width = 2;
+    config->beam.min_width = 2;
+    config->beam.adaptive_taper = false;
+    config->init.select = 2;
 
+    // EMA alpha: 0.5 - 0.2
+    config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
+  }  
 
+  // Set to beam mode
+  config->mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
+
+  return 0;
 }
 
 
@@ -312,7 +378,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     double search_bias = 0.0;
 
     int_config_param int_config[] = {
-      { .name = "heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 0=auto
+      { .name = "heap_size",        .target = &param->recursion.heap.size,        .dflt=1,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 1=follow hits
       { .name = "shadow_size",      .target = &param->recursion.shadow.size,      .dflt=-1,         .minval=-1,     .maxval=VGX_RECURSION_HEAP_SHADOW_MAX },  // default -1=auto
       { .name = "frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_FRONTIER_SIZE_MAX },  // default 0=auto
       { .name = "expansion_limit",  .target = &param->recursion.limit.expansion,  .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
@@ -323,17 +389,19 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },
       { .name = "beam_max",         .target = &param->recursion.beam.max_width,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=auto
       { .name = "init_select",      .target = &param->recursion.init.select,      .dflt=0,          .minval=0,      .maxval=1024 },                         // default 0=off
+      { .name = "kappa",            .target = &param->recursion.tune.kappa,       .dflt=0,          .minval=0,      .maxval=256 },          // default 0
+      { .name = "lambda",           .target = &param->recursion.tune.lambda,      .dflt=0,          .minval=0,      .maxval=256 },          // default 0
       {0}
     };
 
     dbl_config_param dbl_config[] = {
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=1.0,    .minval=0.0,         .maxval=1.0 },          // default 1.0=constant
-      { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (depth discount for expansion threshold)
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=0.99,   .minval=0.0,         .maxval=1.0 },          // default 0.99=gentle taper
+      { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=-0.32,  .minval=-10.0,       .maxval=10.0 },         // default -0.32 (depth discount for expansion threshold)
       { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
       { .name = "gamma",            .target = &param->recursion.tune.gamma,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
-      { .name = "lambda",           .target = &param->recursion.tune.lambda,      .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          // default 0.0
+      { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=1e-4,        .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
       {0}
     };
 
@@ -344,20 +412,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       {0}
     };
 
-    PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
-    if( py_bias ) {
-      if( !PyFloat_Check( py_bias ) || fabs(PyFloat_AS_DOUBLE(py_bias)) > 100.0) {
-        PyErr_Format( PyExc_ValueError, "recursive search invalid bias: float in range -100.0 to +100.0 required" );
-        THROW_SILENT( CXLIB_ERR_API, 0x00C );
-      }
-      search_bias = PyFloat_AS_DOUBLE(py_bias) / 100.0; // now range -1.0 to +1.0
-    }
-
-    
-    //__recursion_auto_param( search_bias, &param->recursion );
-
-
-    // Set defaults
+    // Set base defaults
     param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
 
     int_config_param *int_cursor = int_config;
@@ -378,6 +433,22 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       ++bool_cursor;
     }
 
+    // Single meta parameter 'bias' contols smart defaults
+    PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
+    if( py_bias ) {
+      double value = -1e6;
+      if( PyNumber_Check(py_bias) ) {
+        value = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
+      }
+      if( fabs(value) > 100.0 ) {
+        PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
+        THROW_SILENT( CXLIB_ERR_API, 0x003 );
+      }
+      search_bias = value / 100.0; // now range -1.0 to +1.0
+    }
+
+    // Auto config
+    __recursion_auto_param( search_bias, &param->recursion );
 
     // Simple auto-config
     if( py_recursion == Py_True ) {
@@ -387,10 +458,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     else if( py_recursion == Py_False ) {
       param->recursion.mode = VGX_RECURSION_MODE_NONE;
     }
-    // Auto-config heap shadow
-    else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
-      //param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
-    }
     // { "heap_shadow": 256, "frontier_limit": 1024, ... }
     else if( PyDict_Check( py_recursion) ) {
       Py_ssize_t pos = 0;
@@ -398,9 +465,13 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
         if( !PyUnicode_Check( py_key ) ) {
           PyErr_Format( PyExc_TypeError, "recursive search invalid parameter name: %R (string required)", py_key );
-          THROW_SILENT( CXLIB_ERR_API, 0x003 );
+          THROW_SILENT( CXLIB_ERR_API, 0x004 );
         }
         const char *key = PyUnicode_AsUTF8( py_key );
+        if( CharsEqualsConst( key, "bias" ) ) {
+          continue; // already handled
+        }
+
         bool found = false;
         // Integer parameter ?
         int_cursor = int_config;
@@ -408,14 +479,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           if( CharsEqualsConst( key, int_cursor->name ) ) {
             if( !PyLong_Check(py_value) ) {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x006 );
+              THROW_SILENT( CXLIB_ERR_API, 0x005 );
             }
             int64_t value = PyLong_AsLongLong( py_value );
             if( value > int_cursor->maxval || value < int_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x007 );
+              THROW_SILENT( CXLIB_ERR_API, 0x006 );
             }
             *int_cursor->target = value;
             found = true;
@@ -431,16 +502,16 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
         dbl_cursor = dbl_config;
         while( dbl_cursor->name ) {
           if( CharsEqualsConst( key, dbl_cursor->name ) ) {
-            if( !PyFloat_Check(py_value) ) {
-              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (float required)", dbl_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x008 );
+            if( !PyNumber_Check(py_value) ) {
+              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", dbl_cursor->name, py_value );
+              THROW_SILENT( CXLIB_ERR_API, 0x007 );
             }
-            double value = PyFloat_AsDouble( py_value );
+            double value = PyFloat_Check(py_value) ? PyFloat_AsDouble( py_value ) : (double)PyLong_AsLongLong(py_value);
             if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x009 );
+              THROW_SILENT( CXLIB_ERR_API, 0x008 );
             }
             *dbl_cursor->target = value;
             found = true;
@@ -464,7 +535,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
             }
             else {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x00A );
+              THROW_SILENT( CXLIB_ERR_API, 0x009 );
             }
             found = true;
             break;
@@ -477,14 +548,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
 
         // Unknown config parameter
         PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
-        THROW_SILENT( CXLIB_ERR_API, 0x00B );
+        THROW_SILENT( CXLIB_ERR_API, 0x00A );
       }
 
     }
     // unsupported
     else {
       PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool, int or dict" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+      THROW_SILENT( CXLIB_ERR_API, 0x00B );
     }
           
     // Switch to beam mode

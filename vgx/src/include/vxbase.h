@@ -3486,7 +3486,9 @@ typedef struct s_vgx_recursion_config_t {
     double gamma;
     double delta;
     double epsilon;
-    double lambda;
+    double zeta;
+    int64_t kappa;
+    int64_t lambda;
   } tune;
   struct {
     int64_t select;

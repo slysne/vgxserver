@@ -515,13 +515,12 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
-  #define trail_alpha (1.0f/18)
   // Never negative cosine (score is [0.0, 2.0] )
   score = fmaxf( 1.0f, score );
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = trail_alpha * score + (1.0f - trail_alpha) * shadow_trail->threshold;
+    return shadow_trail->threshold = 0.3f * score + 0.7f * shadow_trail->threshold;
   }
 
   // Write latest score
@@ -534,7 +533,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
   
   float oldest = *shadow_trail->wp;
 
-  return shadow_trail->threshold = trail_alpha * oldest + (1.0f - trail_alpha) * shadow_trail->threshold;
+  return shadow_trail->threshold = shadow_trail->alpha * oldest + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
 }
 
 
@@ -706,7 +705,7 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  *
  ***********************************************************************
  */
-static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow ) {
+static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
   #define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
     return -1;
@@ -717,7 +716,7 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
   for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
     *p++ = init_min_score;
   }
-  shadow_trail->alpha = 1.0f;
+  shadow_trail->alpha = (float)zeta;
   shadow_trail->count = 0;
   return 0;
 }
@@ -1036,7 +1035,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
       if( recursion->shadow.size > 0 ) {
-        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size ) < 0 ) {
+        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
         }
       }
@@ -1078,7 +1077,9 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
     top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
     top_k_collector->epsilon                  = recursion ? (float)recursion->tune.epsilon : 0.0f;
-    top_k_collector->lambda                   = recursion ? (float)recursion->tune.lambda : 0.0f;
+    top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
+    top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
+    top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1193,7 +1194,9 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
     collector->epsilon                  = 0.0f;
-    collector->lambda                   = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1321,7 +1324,9 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->gamma                        = 0.0f;
     map_collector->delta                        = 0.0f;
     map_collector->epsilon                      = 0.0f;
-    map_collector->lambda                       = 0.0f;
+    map_collector->zeta                         = 0.0f;
+    map_collector->kappa                        = 0;
+    map_collector->lambda                       = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
     map_collector->empty                        = empty;
@@ -1400,7 +1405,9 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
     collector->epsilon            = 0.0f;
-    collector->lambda             = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
@@ -1516,7 +1523,9 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->gamma                    = 0.0f;
     top_k_collector->delta                    = 0.0f;
     top_k_collector->epsilon                  = 0.0f;
-    top_k_collector->lambda                   = 0.0f;
+    top_k_collector->zeta                     = 0.0f;
+    top_k_collector->kappa                    = 0;
+    top_k_collector->lambda                   = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty                    = empty;
@@ -1628,7 +1637,9 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
     collector->epsilon                  = 0.0f;
-    collector->lambda                   = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
     collector->empty                    = empty;
@@ -1703,7 +1714,9 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
     collector->epsilon            = 0.0f;
-    collector->lambda             = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;

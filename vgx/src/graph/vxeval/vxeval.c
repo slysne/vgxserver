@@ -1197,6 +1197,11 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dynamic_taper.beta = 0.0f;
     mem->dynamic_taper.gamma = 0.0f;
     mem->dynamic_taper.delta = 0.0f;
+    mem->dynamic_taper.epsilon = 0.0f;
+    mem->dynamic_taper.zeta = 0.0f;
+    mem->dynamic_taper.kappa = 0;
+    mem->dynamic_taper.lambda = 0;
+
 
   }
   return mem;
@@ -1283,6 +1288,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dynamic_taper.beta = 0.0f;
     clone->dynamic_taper.gamma = 0.0f;
     clone->dynamic_taper.delta = 0.0f;
+    clone->dynamic_taper.epsilon = 0.0f;
+    clone->dynamic_taper.zeta = 0.0f;
+    clone->dynamic_taper.kappa = 0;
+    clone->dynamic_taper.lambda = 0;
 
 
     // One owner
@@ -1469,6 +1478,10 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   memory->dynamic_taper.beta = 0.0f;
   memory->dynamic_taper.gamma = 0.0f;
   memory->dynamic_taper.delta = 0.0f;
+  memory->dynamic_taper.epsilon = 0.0f;
+  memory->dynamic_taper.zeta = 0.0f;
+  memory->dynamic_taper.kappa = 0;
+  memory->dynamic_taper.lambda = 0;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {

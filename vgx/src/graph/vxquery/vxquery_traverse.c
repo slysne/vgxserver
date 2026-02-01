@@ -675,6 +675,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   int64_t frontier_limit = recursion->limit.frontier;
   int64_t expansion_limit = recursion->limit.expansion;
   int64_t depth_limit = recursion->limit.depth;
+  int64_t visit_limit = recursion->limit.visit;
   int64_t exec_nanosec_limit = recursion->limit.exec_ms * 1000000LL;
 
   XTRY {
@@ -707,6 +708,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       mem->dynamic_taper.gamma = collector->gamma;
       mem->dynamic_taper.delta = collector->delta;
       mem->dynamic_taper.epsilon = collector->epsilon;
+      mem->dynamic_taper.zeta = collector->zeta;
+      mem->dynamic_taper.kappa = collector->kappa;
       mem->dynamic_taper.lambda = collector->lambda;
     }
     
@@ -771,8 +774,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
             goto terminate_inner;
           }
 
-          // Early termination if queue limit reached
-          if( control.expansions.total >= expansion_limit ) {
+          // Early termination if max expansions or node visits limit reached
+          if( control.expansions.total >= expansion_limit || dwset->sz >= visit_limit ) {
             goto terminate_inner;
           }
 

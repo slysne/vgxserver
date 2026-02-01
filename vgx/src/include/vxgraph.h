@@ -5420,8 +5420,6 @@ typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *contex
 
 typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 
-//typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
-typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, const vgx_Vertex_t *vertex );
 
 
 
@@ -5446,7 +5444,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
   /*  */                                                      \
-  double xxx;                                                 \
+  int kappa;                                                  \
+  int lambda;                                                 \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -6026,7 +6025,7 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t expand;
   } counter;
   // ==== CL3 ====
-  // Q3.1-5
+  // Q3.1-6
   struct {
     float top_1_best;                 // current top score
     float previous_window_best;       // top score recorded in previous window
@@ -6037,10 +6036,11 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     float gamma;
     float delta;
     float epsilon;
-    float lambda;
+    float zeta;
+    int kappa;
+    int lambda;
   } dynamic_taper;
-  // Q3.6-8
-  QWORD __rsv_3_6;
+  // Q3.7-8
   QWORD __rsv_3_7;
   QWORD __rsv_3_8;
   // ==== CL4+5 ====
@@ -6816,7 +6816,9 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float gamma;                                \
   float delta;                                \
   float epsilon;                              \
-  float lambda;                               \
+  float zeta;                                 \
+  int kappa;                                  \
+  int lambda;                                 \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   vgx_CollectorItem_t empty;                  \

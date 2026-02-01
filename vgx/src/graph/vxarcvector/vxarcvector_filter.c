@@ -1561,14 +1561,26 @@ static int __ann_filter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx
 static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
   vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
 
-  double target = larc->head.predicator.val.real;
+  int target = larc->head.predicator.val.integer;
 
-  if( target < GAF->xxx ) {
-    *match = VGX_ARC_FILTER_MATCH_MISS;
-    return 0;
+  // Never filter out the best arcs with rank better than kappa (lower is better)
+  if( target < GAF->kappa ) {
+    return __ann_filter( arcfilter_context, larc, match );
   }
 
-  return __ann_filter( arcfilter_context, larc, match );
+  // Keep some arcs according to thinning rule
+  // lambda=0 keep nothing
+  // lambda=1 keep every other
+  // lambda=2 keep one skip three
+  // lambda=3 keep one skip seven
+  // etc.
+  if( GAF->lambda && ((target ^ GAF->lambda) & ((1 << GAF->lambda)-1)) == 0 ) {
+    return __ann_filter( arcfilter_context, larc, match );
+  }
+
+  // Skip this arc
+  *match = VGX_ARC_FILTER_MATCH_MISS;
+  return 0;
 }
 
 
@@ -3046,9 +3058,10 @@ static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_gra
 
     arcfilter->track_visited = true;
     arcfilter->max_visited = recursion->limit.visit;
-    arcfilter->xxx = recursion->tune.gamma;
+    arcfilter->kappa = (int)recursion->tune.kappa;    // keep only arcs with rank > kappa
+    arcfilter->lambda = (int)recursion->tune.lambda;  // thinning more with higher lambda
 
-    if( arcfilter->xxx > 0.0 ) {
+    if( arcfilter->kappa > 0 || arcfilter->lambda > 0 ) {
       arcfilter->filter = arcfilterfunc.ANNArcFilter;
     }
     else {
