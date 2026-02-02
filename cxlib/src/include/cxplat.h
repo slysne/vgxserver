@@ -451,6 +451,11 @@ PUSH_WARNING_LEVEL( 0 )
 #include <mach/mach.h>
 #include <mach/mach_host.h>
 #endif
+
+// CPU yield instruction for ARM64
+#ifndef __yield
+#define __yield() __asm__ __volatile__("yield")
+#endif
 #endif
 
 
