@@ -126,7 +126,14 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
     # Define compiler flags
     set(C_FLAGS "-fno-strict-aliasing;-Wstrict-prototypes;-Wno-format")
 
-    set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    # Architecture-specific flags
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+        set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+        set(CC_FLAGS "-pthread;-fPIC")
+    else()
+        set(CC_FLAGS "-pthread;-fPIC")
+    endif()
     # set(CC_FLAGS_DEBUG "-g")
     # set(CC_FLAGS_RELEASE "-O3")
 
