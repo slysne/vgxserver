@@ -13,16 +13,15 @@ help:
 	@echo "  build-local          - Build wheel locally (current platform)"
 	@echo "  build-manylinux      - Build manylinux wheels (x86_64) using Docker"
 	@echo "  build-manylinux-arm64 - Build manylinux wheels (aarch64) using Docker"
-	@echo "  build-macos-arm64    - Build macOS ARM64 wheels (requires Apple Silicon)"
 	@echo "  test                 - Test wheels in wheelhouse/"
 	@echo "  cibuildwheel         - Build wheels using cibuildwheel (auto-detects platform)"
 	@echo ""
 	@echo "Environment variables:"
-	@echo "  VERSION              - Package version (default: read from VERSION file or 0.0.0.dev0)"
+	@echo "  VERSION              - Package version (default: read from VERSION file)"
 	@echo "  CMAKE_PRESET         - Build type: release|debug|relWithDebInfo (default: release)"
 	@echo "  PYVER                - Python version for cibuildwheel: 39|310|311|312|313|all (default: all)"
-	@echo "  ARCH                 - Architecture: x86_64|aarch64|arm64|'x86_64 aarch64' (default: auto)"
-	@echo "  CIBW_PLATFORM        - Platform override: linux|macos|windows (default: auto-detect)"
+	@echo "  ARCH                 - Architecture for cibuildwheel: x86_64|aarch64|arm64 (default: auto)"
+	@echo "  CIBW_PLATFORM        - Platform override for cibuildwheel: linux|macos|windows (default: auto)"
 
 # Read version from VERSION file if not specified
 VERSION_FILE := VERSION
@@ -57,11 +56,6 @@ build-manylinux:
 build-manylinux-arm64:
 	@echo "Building manylinux ARM64 wheels for version $(VERSION)"
 	./build-manylinux-aarch64.sh $(VERSION)
-	@echo "Wheels built in wheelhouse/"
-
-build-macos-arm64:
-	@echo "Building macOS ARM64 wheels for version $(VERSION)"
-	./build-macos-arm64.sh $(VERSION)
 	@echo "Wheels built in wheelhouse/"
 
 build-all-manylinux: build-manylinux build-manylinux-arm64
@@ -110,10 +104,18 @@ cibuildwheel:
 	if [ -n "$(ARCH)" ]; then \
 		export CIBW_ARCHS="$(ARCH)"; \
 	fi && \
-	if [ -n "$(VERSION_EXPLICIT)" ]; then \
-		export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)"; \
+	if [ "$$(uname)" = "Darwin" ]; then \
+		if [ -n "$(VERSION_EXPLICIT)" ]; then \
+			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
+		else \
+			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
+		fi; \
 	else \
-		export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET)"; \
+		if [ -n "$(VERSION_EXPLICIT)" ]; then \
+			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)"; \
+		else \
+			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET)"; \
+		fi; \
 	fi && \
 	cibuildwheel --output-dir wheelhouse
 	@echo "Wheels built in wheelhouse/"
