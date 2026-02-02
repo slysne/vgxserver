@@ -87,6 +87,16 @@ cibuildwheel:
 		echo "  or: pip3 install cibuildwheel"; \
 		exit 1; \
 	}
+	@# Prevent x86_64 → aarch64 cross-compilation (QEMU is unreliable)
+	@if [ "$(ARCH)" = "aarch64" ] && [ "$$(uname -m)" = "x86_64" ]; then \
+		echo "ERROR: Cross-compilation aarch64 on x86_64 is not supported (QEMU segfaults)."; \
+		echo ""; \
+		echo "For aarch64 builds, use either:"; \
+		echo "  1. Build on ARM64 hardware (M1/M2/M3 Mac, or ARM64 server)"; \
+		echo "  2. GitHub Actions (uses native ARM64 runners)"; \
+		echo ""; \
+		exit 1; \
+	fi
 	@if [ "$(PYVER)" != "all" ]; then \
 		export CIBW_BUILD="cp$(PYVER)-*"; \
 	fi && \

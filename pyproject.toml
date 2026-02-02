@@ -36,7 +36,7 @@ manylinux-aarch64-image = "manylinux2014"
 # Linux settings - target both x86_64 and aarch64
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
-before-build = "yum install -y clang llvm-devel cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
+before-build = "yum install -y clang llvm-devel && (yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake || yum install -y cmake) && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 # Test the built wheels
