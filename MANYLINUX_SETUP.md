@@ -19,7 +19,8 @@ Added comprehensive manylinux build support using pypa/manylinux Docker images a
 ### 2. Local Build Scripts
 - **build-manylinux.sh**: Build x86_64 manylinux wheels using Docker
 - **build-manylinux-aarch64.sh**: Build ARM64 manylinux wheels using Docker
-- **test-wheels.sh**: Test built wheels in clean Docker environments
+- **test-wheels.py**: Test built wheels in clean Docker environments (Linux) or virtual environments (macOS)
+- **test_wheel_validate.py**: Validation script that runs inside test environments
 - All scripts are self-contained and include help text
 
 ### 3. Build Configuration
@@ -33,9 +34,11 @@ Added comprehensive manylinux build support using pypa/manylinux Docker images a
   - `make build-manylinux VERSION=3.6.0` - Manylinux x86_64 build
   - `make build-manylinux-arm64 VERSION=3.6.0` - Manylinux ARM64 build
   - `make test` - Run comprehensive tests on built wheels
-  - `make cibuildwheel VERSION=3.6.0 PYVER=311 ARCH=x86_64` - Build with cibuildwheel
+  - `make cibuildwheel VERSION=3.6.0 PYVER=312` - Build with cibuildwheel (ARCH auto-detects)
+  - `make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64` - Build specific architecture
   - `make clean` - Clean build artifacts
   - Auto-reads version from VERSION file if not specified
+  - ARCH defaults to auto-detection via `uname -m`
 
 ### 4. Documentation
 - **docs/MANYLINUX_BUILD.md**: Comprehensive guide covering:

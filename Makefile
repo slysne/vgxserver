@@ -4,8 +4,12 @@
 VERSION_FILE := VERSION
 VERSION ?= $(shell [ -f $(VERSION_FILE) ] && cat $(VERSION_FILE) || echo "0.0.0.dev0")
 
-# Track if VERSION was explicitly set by user
-VERSION_EXPLICIT := $(filter VERSION=%,$(MAKEFLAGS))
+# Track if VERSION was explicitly set by user (check if it came from command line or environment)
+ifeq ($(filter command line environment,$(origin VERSION)),)
+VERSION_EXPLICIT :=
+else
+VERSION_EXPLICIT := true
+endif
 
 help:
 	@echo "Available targets:"
@@ -23,14 +27,10 @@ help:
 	@echo "  ARCH                 - Architecture for cibuildwheel: x86_64|aarch64|arm64 (default: auto)"
 	@echo "  CIBW_PLATFORM        - Platform override for cibuildwheel: linux|macos|windows (default: auto)"
 
-# Read version from VERSION file if not specified
-VERSION_FILE := VERSION
-VERSION ?= $(shell [ -f $(VERSION_FILE) ] && cat $(VERSION_FILE) || echo "0.0.0.dev0")
-
 CMAKE_PRESET ?= release
 PYTHON ?= python3
 PYVER ?= all
-ARCH ?= x86_64 aarch64
+ARCH ?= $(shell uname -m)
 
 clean:
 	rm -rf build/ dist/ wheelhouse/ *.egg-info
@@ -73,7 +73,7 @@ test:
 		exit 1; \
 	fi
 	@echo "Testing wheels in wheelhouse/"
-	@./test-wheels.sh wheelhouse || { \
+	@./test-wheels.py wheelhouse || { \
 		echo ""; \
 		echo "Tests failed. Check output above for details."; \
 		exit 1; \

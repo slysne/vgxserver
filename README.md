@@ -233,13 +233,13 @@ make build-all-manylinux
 
 ```bash
 # Test all built wheels (auto-detects Python version from filename)
-./test-wheels.sh
+./test-wheels.py
 
 # Or via Makefile
 make test
 
 # Test wheels from specific directory
-./test-wheels.sh dist/
+./test-wheels.py dist/
 ```
 
 The test script runs 6 comprehensive tests per wheel:
@@ -247,14 +247,20 @@ The test script runs 6 comprehensive tests per wheel:
 2. Version consistency check
 3. vgxadmin CLI command
 4. vgxadmin module import
-5. vgxinstance module import  
+5. vgxinstance module import
 6. vgxdemoservice functionality
+
+Tests run in isolated Docker containers (Linux) or virtual environments (macOS).
 
 ### Advanced Build Options
 
 ```bash
 # Using cibuildwheel (install first: pip install cibuildwheel)
+# Builds for all Python versions, auto-detected architecture
 make cibuildwheel VERSION=3.6.0
+
+# Build specific Python version (ARCH auto-detects from uname -m)
+make cibuildwheel VERSION=3.6.0 PYVER=312
 
 # Build specific Python version and architecture
 make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
@@ -262,6 +268,12 @@ make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
 # Clean build artifacts
 make clean
 ```
+
+**Build Parameters:**
+- `VERSION` - Package version (default: reads from VERSION file)
+- `PYVER` - Python version: 39|310|311|312|313|all (default: all)
+- `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected via uname -m)
+- `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
 
 For detailed build instructions and troubleshooting:
 - [Manylinux Build Guide](docs/MANYLINUX_BUILD.md) - Comprehensive build documentation

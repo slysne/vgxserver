@@ -45,14 +45,17 @@ pip install cibuildwheel
 
 ### Build with Makefile (recommended)
 ```bash
-# All Python versions, both architectures
+# All Python versions, auto-detected architecture
 make cibuildwheel VERSION=3.6.0
 
+# Specific Python version (ARCH auto-detects from uname -m)
+make cibuildwheel VERSION=3.6.0 PYVER=312
+
 # Specific Python version and architecture
-make cibuildwheel VERSION=3.6.0 PYVER=311 ARCH=x86_64
+make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
 make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=aarch64
 
-# All Python versions, x86_64 only
+# All Python versions, specific architecture
 make cibuildwheel VERSION=3.6.0 ARCH=x86_64
 ```
 
@@ -76,14 +79,14 @@ python -m cibuildwheel --output-dir wheelhouse
 
 ### Test all wheels (auto-detects Python version from filename)
 ```bash
-./test-wheels.sh
+./test-wheels.py
 # Or via Makefile:
 make test
 ```
 
 ### Test specific wheelhouse
 ```bash
-./test-wheels.sh dist/
+./test-wheels.py dist/
 ```
 
 ### What the test does
@@ -127,8 +130,11 @@ git push origin v3.6.0
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PROJECT_VERSION` | Package version | `0.0.0.dev0` |
+| `VERSION` | Package version | Read from VERSION file |
+| `PROJECT_VERSION` | Package version (build) | `0.0.0.dev0` |
 | `CMAKE_PRESET` | Build type | `release` |
+| `PYVER` | Python version for cibuildwheel | `all` |
+| `ARCH` | Architecture for cibuildwheel | Auto-detected via `uname -m` |
 | `COMPILER_OPTION_MCPU` | CPU target (macOS) | `native` |
 | `MACOSX_DEPLOYMENT_TARGET` | macOS minimum version | `11.0` |
 
@@ -159,13 +165,16 @@ vgxserver/
 │       └── build-wheels.yml          # GitHub Actions workflow
 ├── build-manylinux.sh                # Local x86_64 build script
 ├── build-manylinux-aarch64.sh        # Local ARM64 build script
-├── test-wheels.sh                    # Wheel testing script
+├── test-wheels.py                    # Wheel testing script (main)
+├── test_wheel_validate.py            # Wheel validation script
 ├── pyproject.toml                    # Build configuration
 ├── setup.py                          # Build logic
 ├── Makefile                          # Common tasks
+├── VERSION                           # Version file
 └── docs/
     ├── MANYLINUX_BUILD.md            # Detailed documentation
-    └── MANYLINUX_QUICKREF.md         # This file
+    ├── MANYLINUX_QUICKREF.md         # This file
+    └── MANYLINUX_SETUP.md            # Setup documentation
 ```
 
 ## Useful Commands

@@ -45,8 +45,9 @@ export PROJECT_VERSION=3.6.0
 export CMAKE_PRESET=release
 python -m cibuildwheel --platform linux --output-dir wheelhouse
 
-# Using Makefile for easier syntax:
-make cibuildwheel VERSION=3.6.0 PYVER=311 ARCH=x86_64
+# Using Makefile for easier syntax (ARCH auto-detects from uname -m):
+make cibuildwheel VERSION=3.6.0 PYVER=312
+make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
 ```
 
 ## Configuration
@@ -111,10 +112,10 @@ Test built wheels using the test script:
 
 ```bash
 # Test all wheels in wheelhouse/
-./test-wheels.sh
+./test-wheels.py
 
 # Test wheels in a specific directory
-./test-wheels.sh dist/
+./test-wheels.py dist/
 
 # Or via Makefile
 make test
@@ -129,7 +130,7 @@ The test script:
   4. vgxadmin module import
   5. vgxinstance module import
   6. vgxdemoservice functionality (start, verify 6 instances, stop)
-- Tests in isolated Docker containers
+- Tests in isolated Docker containers (Linux) or virtual environments (macOS)
 - Shows command output for debugging
 
 ## Wheel Naming
