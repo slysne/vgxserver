@@ -1,6 +1,10 @@
 #!/bin/bash
-# Test script to verify manylinux wheels
+# Test script to verify built wheels (manylinux, macOS, etc.)
 # Usage: ./test-wheels.sh [wheelhouse_dir]
+#
+# - Linux wheels (manylinux): Tested in Docker containers
+# - macOS wheels: Tested natively on macOS, skipped on other platforms
+# - Windows wheels: Skipped (not supported by this script)
 
 WHEELHOUSE=${1:-"wheelhouse"}
 
@@ -23,23 +27,97 @@ echo -e "${GREEN}Found ${WHEEL_COUNT} wheel(s) to test${NC}"
 # Test each wheel
 SUCCESS=0
 FAILED=0
+SKIPPED=0
 
 for wheel in ${WHEELHOUSE}/*.whl; do
     WHEEL_NAME=$(basename "$wheel")
     echo ""
     echo -e "${YELLOW}Testing: ${WHEEL_NAME}${NC}"
-    
+
+    # Detect platform from wheel filename
+    if [[ $WHEEL_NAME =~ manylinux ]]; then
+        WHEEL_PLATFORM="linux"
+    elif [[ $WHEEL_NAME =~ macosx ]]; then
+        WHEEL_PLATFORM="macos"
+    elif [[ $WHEEL_NAME =~ win ]]; then
+        WHEEL_PLATFORM="windows"
+    else
+        WHEEL_PLATFORM="unknown"
+    fi
+
+    # Check host platform
+    HOST_PLATFORM=$(uname -s | tr '[:upper:]' '[:lower:]')
+
+    # Skip platform-incompatible wheels
+    if [[ $WHEEL_PLATFORM == "macos" && $HOST_PLATFORM != "darwin" ]]; then
+        echo -e "  ${YELLOW}⊘ Skipping macOS wheel on non-macOS host${NC}"
+        ((SKIPPED++))
+        continue
+    elif [[ $WHEEL_PLATFORM == "windows" ]]; then
+        echo -e "  ${YELLOW}⊘ Skipping Windows wheel (not supported by this test script)${NC}"
+        ((SKIPPED++))
+        continue
+    elif [[ $WHEEL_PLATFORM == "unknown" ]]; then
+        echo -e "  ${YELLOW}⊘ Skipping wheel with unknown platform${NC}"
+        ((SKIPPED++))
+        continue
+    fi
+
     # Detect Python version from wheel filename (e.g., cp312 -> 3.12)
     if [[ $WHEEL_NAME =~ cp([0-9])([0-9]+) ]]; then
         PY_MAJOR="${BASH_REMATCH[1]}"
         PY_MINOR="${BASH_REMATCH[2]}"
-        TEST_IMAGE="python:${PY_MAJOR}.${PY_MINOR}-slim"
-        echo -e "  Using Docker image: ${TEST_IMAGE}"
+        PYTHON_VERSION="${PY_MAJOR}.${PY_MINOR}"
     else
-        TEST_IMAGE="python:3.11-slim"
-        echo -e "  ${YELLOW}Warning: Could not detect Python version, using default ${TEST_IMAGE}${NC}"
+        PYTHON_VERSION=""
+        echo -e "  ${YELLOW}Warning: Could not detect Python version from wheel name${NC}"
     fi
     
+    # Test based on platform
+    if [[ $WHEEL_PLATFORM == "macos" ]]; then
+        # Test natively on macOS
+        if [[ -n "$PYTHON_VERSION" ]]; then
+            echo -e "  Testing natively on macOS (Python ${PYTHON_VERSION})"
+            # Check if python version is available
+            PYTHON_CMD="python${PYTHON_VERSION}"
+            if ! command -v $PYTHON_CMD &> /dev/null; then
+                PYTHON_CMD="python3"
+                echo -e "  ${YELLOW}Warning: python${PYTHON_VERSION} not found, using python3${NC}"
+            fi
+        else
+            echo -e "  Testing natively on macOS (using system python3)"
+            PYTHON_CMD="python3"
+        fi
+
+        # Create temporary virtual environment
+        TEMP_VENV="/tmp/test_wheel_venv_$$"
+        $PYTHON_CMD -m venv "$TEMP_VENV"
+        source "$TEMP_VENV/bin/activate"
+
+        # Install wheel and run tests
+        if pip install -q "$wheel" && python /tmp/test_wheel.py; then
+            echo -e "${GREEN}✓ ${WHEEL_NAME} passed all tests${NC}"
+            ((SUCCESS++))
+        else
+            echo -e "${RED}✗ ${WHEEL_NAME} failed${NC}"
+            ((FAILED++))
+        fi
+
+        # Cleanup
+        deactivate
+        rm -rf "$TEMP_VENV"
+        continue
+    fi
+
+    # For Linux wheels, use Docker
+    if [[ -n "$PYTHON_VERSION" ]]; then
+        TEST_IMAGE="python:${PYTHON_VERSION}-slim"
+    else
+        TEST_IMAGE="python:3-slim"
+        echo -e "  ${YELLOW}Using generic Python 3 image${NC}"
+    fi
+    echo -e "  Using Docker image: ${TEST_IMAGE}"
+
     # Create comprehensive test script (merged from test_pip_package.sh)
     cat > /tmp/test_wheel.py << 'EOF'
 #!/usr/bin/env python3
@@ -165,11 +243,14 @@ echo -e "${GREEN}Test Summary${NC}"
 echo "=========================================================="
 echo -e "Total wheels: ${WHEEL_COUNT}"
 echo -e "${GREEN}Passed: ${SUCCESS}${NC}"
+if [ ${SKIPPED} -gt 0 ]; then
+    echo -e "${YELLOW}Skipped: ${SKIPPED}${NC}"
+fi
 if [ ${FAILED} -gt 0 ]; then
     echo -e "${RED}Failed: ${FAILED}${NC}"
     exit 1
 else
     echo -e "Failed: 0"
-    echo -e "\n${GREEN}All wheels passed tests!${NC}"
+    echo -e "\n${GREEN}All testable wheels passed!${NC}"
     exit 0
 fi
