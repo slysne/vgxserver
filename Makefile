@@ -13,6 +13,7 @@ help:
 	@echo "  build-local          - Build wheel locally (current platform)"
 	@echo "  build-manylinux      - Build manylinux wheels (x86_64) using Docker"
 	@echo "  build-manylinux-arm64 - Build manylinux wheels (aarch64) using Docker"
+	@echo "  build-macos-arm64    - Build macOS ARM64 wheels (requires Apple Silicon)"
 	@echo "  test                 - Test wheels in wheelhouse/"
 	@echo "  cibuildwheel         - Build using cibuildwheel (includes tests)"
 	@echo ""
@@ -55,6 +56,11 @@ build-manylinux:
 build-manylinux-arm64:
 	@echo "Building manylinux ARM64 wheels for version $(VERSION)"
 	./build-manylinux-aarch64.sh $(VERSION)
+	@echo "Wheels built in wheelhouse/"
+
+build-macos-arm64:
+	@echo "Building macOS ARM64 wheels for version $(VERSION)"
+	./build-macos-arm64.sh $(VERSION)
 	@echo "Wheels built in wheelhouse/"
 
 build-all-manylinux: build-manylinux build-manylinux-arm64
