@@ -106,3 +106,49 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
           retention-days: 30
+  
+  test_wheels:
+    name: Test wheels (${{ matrix.arch }})
+    needs: build_wheels
+    runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.optional }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            pattern: "*x86_64*.whl"
+            optional: false
+          - arch: aarch64
+            runner: ubuntu-24.04-arm64
+            pattern: "*aarch64*.whl"
+            optional: true
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: wheelhouse
+          merge-multiple: true
+      
+      - name: Filter wheels for ${{ matrix.arch }}
+        id: filter
+        run: |
+          mkdir -p wheelhouse-test
+          find wheelhouse -name "${{ matrix.pattern }}" -exec cp {} wheelhouse-test/ \; 2>/dev/null || true
+          WHEEL_COUNT=$(ls wheelhouse-test/*.whl 2>/dev/null | wc -l)
+          echo "Found $WHEEL_COUNT ${{ matrix.arch }} wheels to test"
+          echo "count=$WHEEL_COUNT" >> $GITHUB_OUTPUT
+      
+      - name: Run comprehensive tests
+        if: steps.filter.outputs.count != '0'
+        run: |
+          chmod +x test-wheels.sh
+          ./test-wheels.sh wheelhouse-test
+      
+      - name: Skip message
+        if: steps.filter.outputs.count == '0'
+        run: echo "No ${{ matrix.arch }} wheels found, skipping tests"
