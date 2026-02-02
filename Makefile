@@ -4,6 +4,9 @@
 VERSION_FILE := VERSION
 VERSION ?= $(shell [ -f $(VERSION_FILE) ] && cat $(VERSION_FILE) || echo "0.0.0.dev0")
 
+# Track if VERSION was explicitly set by user
+VERSION_EXPLICIT := $(filter VERSION=%,$(MAKEFLAGS))
+
 help:
 	@echo "Available targets:"
 	@echo "  clean                - Remove build artifacts"
@@ -88,6 +91,10 @@ cibuildwheel:
 		export CIBW_BUILD="cp$(PYVER)-*"; \
 	fi && \
 	export CIBW_ARCHS_LINUX="$(ARCH)" && \
-	export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)" && \
+	if [ -n "$(VERSION_EXPLICIT)" ]; then \
+		export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)"; \
+	else \
+		export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET)"; \
+	fi && \
 	cibuildwheel --output-dir wheelhouse
 	@echo "Wheels built in wheelhouse/"
