@@ -50,19 +50,32 @@ if preset not in ['release', 'debug', 'relWithDebInfo']:
     raise Exception(f"Unknown cmake preset {preset}")
 
 # Read version from VERSION file or environment variable
+# Note: Version caching is used to prevent timestamp mismatches when build tools
+# (like cibuildwheel) invoke setup.py multiple times during a single build.
 version_file = os.path.join(os.path.dirname(__file__), 'VERSION')
+cached_version_file = os.path.join(os.path.dirname(__file__), 'build', '.version_cache')
 package_version = os.environ.get('PROJECT_VERSION')
 
 if not package_version:
-    # Try to read from VERSION file
-    if os.path.exists(version_file):
-        with open(version_file, 'r') as f:
-            base_version = f.read().strip()
-            # Append dev timestamp to VERSION file content (Maven SNAPSHOT-like)
-            package_version = f"{base_version}.dev0+{calendar.timegm(time.gmtime())}"
+    # Check for cached version first (to ensure consistency across multiple setup.py invocations)
+    if os.path.exists(cached_version_file):
+        with open(cached_version_file, 'r') as f:
+            package_version = f.read().strip()
     else:
-        # Fallback to dev version with timestamp
-        package_version = f"0.0.0.dev0+{calendar.timegm(time.gmtime())}"
+        # Try to read from VERSION file
+        if os.path.exists(version_file):
+            with open(version_file, 'r') as f:
+                base_version = f.read().strip()
+                # Append dev timestamp to VERSION file content (Maven SNAPSHOT-like)
+                package_version = f"{base_version}.dev0+{calendar.timegm(time.gmtime())}"
+        else:
+            # Fallback to dev version with timestamp
+            package_version = f"0.0.0.dev0+{calendar.timegm(time.gmtime())}"
+
+        # Cache the generated version for subsequent setup.py invocations
+        os.makedirs(os.path.dirname(cached_version_file), exist_ok=True)
+        with open(cached_version_file, 'w') as f:
+            f.write(package_version)
             
 
 
