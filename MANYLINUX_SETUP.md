@@ -1,57 +1,49 @@
-# Manylinux Build System Setup
+# Multi-Platform Build System Setup
 
 ## Summary
 
-Added comprehensive manylinux build support using pypa/manylinux Docker images and cibuildwheel for building portable Linux wheels.
+Added comprehensive build support using cibuildwheel for building portable wheels for all major platforms (Linux, macOS, Windows).
 
 ## What was added
 
 ### 1. GitHub Actions Workflow
 - **File**: `.github/workflows/build-wheels.yml`
-- Automated wheel building for Linux:
-  - x86_64 architecture
-  - aarch64/ARM64 architecture
-  - Uses manylinux2014 base image
+- Automated wheel building for all platforms:
+  - **Linux**: x86_64, aarch64 (manylinux2014)
+  - **macOS**: arm64 only - Apple Silicon/M1+
+  - **Windows**: AMD64
 - Python versions: 3.9, 3.10, 3.11, 3.12, 3.13
 - Automatic PyPI publishing on tagged releases
-- Wheel testing after build
+- Comprehensive wheel testing after build (all platforms)
 
-### 2. Local Build Scripts
-- **build-manylinux.sh**: Build x86_64 manylinux wheels using Docker
-- **build-manylinux-aarch64.sh**: Build ARM64 manylinux wheels using Docker
-- **test-wheels.py**: Test built wheels in clean Docker environments (Linux) or virtual environments (macOS)
-- **test_wheel_validate.py**: Validation script that runs inside test environments
-- All scripts are self-contained and include help text
+### 2. Testing Script
+- **test_pip_package.py**: Cross-platform wheel testing script
+  - Tests module imports, version consistency, and script availability
+  - Automatically run by cibuildwheel after building each wheel
+  - Can be run manually for local testing
 
 ### 3. Build Configuration
 - **pyproject.toml**: Added `[tool.cibuildwheel]` configuration
-  - Specifies Python versions to build
-  - Platform-specific settings
+  - Specifies Python versions to build (3.9-3.13)
+  - Platform-specific settings (Linux, macOS, Windows)
   - Pre-build dependency installation
-  - Test commands
-- **Makefile**: Added convenience targets with CLI parameter control:
-  - `make build-local VERSION=3.6.0` - Local wheel build
-  - `make build-manylinux VERSION=3.6.0` - Manylinux x86_64 build
-  - `make build-manylinux-arm64 VERSION=3.6.0` - Manylinux ARM64 build
-  - `make test` - Run comprehensive tests on built wheels
-  - `make cibuildwheel VERSION=3.6.0 PYVER=312` - Build with cibuildwheel (ARCH auto-detects)
-  - `make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64` - Build specific architecture
-  - `make clean` - Clean build artifacts
-  - Auto-reads version from VERSION file if not specified
-  - ARCH defaults to auto-detection via `uname -m`
+  - Test commands for all platforms
 
 ### 4. Documentation
-- **docs/MANYLINUX_BUILD.md**: Comprehensive guide covering:
-  - Overview of manylinux system
+- **MANYLINUX_BUILD.md**: Comprehensive multi-platform build guide
+  - cibuildwheel usage and configuration
   - Build process details
-  - Configuration options
-  - Troubleshooting
+  - Testing and troubleshooting
   - Publishing to PyPI
-- **docs/MANYLINUX_QUICKREF.md**: Quick reference for developers
-  - Common commands
+- **MANYLINUX_QUICKREF.md**: Quick reference for developers
+  - Common cibuildwheel commands
   - Environment variables
   - Issue resolutions
-- **README.md**: Added "Building from Source" section
+- **WINDOWS_BUILD.md**: Windows-specific build instructions
+  - Visual Studio Build Tools setup
+  - cibuildwheel on Windows
+  - Windows-specific troubleshooting
+- **README.md**: Updated "Building from Source" section
 
 ### 5. Updated .gitignore
 - Already contains `wheelhouse/` for manylinux build artifacts
@@ -59,27 +51,24 @@ Added comprehensive manylinux build support using pypa/manylinux Docker images a
 ## Usage
 
 ### For end users
-No changes needed - wheels will be automatically published to PyPI on release.
+No changes needed - wheels are automatically published to PyPI on release.
 
 ### For developers (local builds)
 ```bash
-# Set version in VERSION file (Maven-like)
-echo "3.6.0" > VERSION
+# Install cibuildwheel
+pip install cibuildwheel
 
-# Quick local build (reads VERSION file)
-make build-local
+# Build wheels using Makefile
+make cibuildwheel                                        # Auto-read VERSION file, all Python versions
+make cibuildwheel VERSION=3.7.0                          # Explicit version, all Python versions
+make cibuildwheel VERSION=3.7.0 PYVER=312               # Python 3.12 only
+make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 only
 
-# Or specify version explicitly
-make build-local VERSION=3.6.0
-
-# Manylinux build (requires Docker)
-make build-manylinux
-
-# Build and test in one command
-./build-manylinux.sh 3.6.0 --test
-
-# Test wheels separately
-make test
+# Test a built wheel manually
+python -m venv test-env
+source test-env/bin/activate  # On Windows: test-env\Scripts\activate
+pip install wheelhouse/pyvgx-*.whl
+python test_pip_package.py
 ```
 
 ### For CI/CD

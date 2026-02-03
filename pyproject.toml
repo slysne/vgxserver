@@ -33,13 +33,29 @@ skip = "*-musllinux_* *-manylinux_i686"
 manylinux-x86_64-image = "manylinux2014"
 manylinux-aarch64-image = "manylinux2014"
 
+# Build verbosity (1 = show commands)
+build-verbosity = 1
+
 # Linux settings - target both x86_64 and aarch64
 [tool.cibuildwheel.linux]
 archs = ["x86_64", "aarch64"]
 before-build = "yum install -y clang llvm-devel && (yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake || yum install -y cmake) && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
-
-# Test the built wheels
-test-command = "python -c 'import pyvgx; import vgxadmin; import vgxinstance; print(\"✓ Import tests passed\")' && vgxadmin --version"
+test-command = "python {project}/test_pip_package.py"
 test-skip = ""
 
+# macOS settings - target arm64 only (Apple Silicon/M1+)
+[tool.cibuildwheel.macos]
+archs = ["arm64"]
+before-build = "pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80' 'delocate>=0.10.0'"
+repair-wheel-command = "delocate-wheel -w {dest_dir} {wheel}"
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+test-command = "python {project}/test_pip_package.py"
+test-skip = ""
+
+# Windows settings - target x86_64 only
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+before-build = "pip install \"build>=1.0.0,<2.0\" \"wheel>=0.42.0,<0.45\" \"setuptools>=78,<80\""
+test-command = "python {project}/test_pip_package.py"
+test-skip = ""

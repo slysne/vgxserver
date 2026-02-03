@@ -1,37 +1,20 @@
-# Manylinux Build Setup
+# Multi-Platform Build Setup
 
-This directory contains configuration and scripts for building manylinux-compatible Python wheels using pypa/manylinux Docker images.
+This directory contains configuration and scripts for building portable Python wheels for all major platforms using cibuildwheel.
 
 ## Overview
 
-The project uses two approaches for building manylinux wheels for Linux:
+The project uses cibuildwheel for building wheels across all platforms:
 
-1. **GitHub Actions (CI/CD)** - Automated builds via `.github/workflows/build-wheels.yml`
-2. **Local Docker builds** - Manual builds using `build-manylinux.sh` scripts
+1. **GitHub Actions (CI/CD)** - Automated builds via `.github/workflows/build-wheels.yml` for all platforms
+2. **Local builds** - Manual builds using cibuildwheel
 
-Both x86_64 and ARM64/aarch64 architectures are supported.
+**Supported Platforms:**
+- **Linux**: x86_64, aarch64 (manylinux2014)
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Windows**: AMD64
 
 ## Quick Start
-
-### Local Build (x86_64)
-
-```bash
-# Build wheels for all supported Python versions
-./build-manylinux.sh 3.6.0
-
-# Build for specific Python versions
-./build-manylinux.sh 3.6.0 "cp311-cp311 cp312-cp312"
-
-# Build and test in one command
-./build-manylinux.sh 3.6.0 "cp311-cp311 cp312-cp312" --test
-```
-
-### Local Build (ARM64/aarch64)
-
-```bash
-# Requires ARM64 host or QEMU emulation
-./build-manylinux-aarch64.sh 3.6.0
-```
 
 ### Using cibuildwheel
 
@@ -39,16 +22,15 @@ Both x86_64 and ARM64/aarch64 architectures are supported.
 # Install cibuildwheel
 pip install cibuildwheel
 
-# Build wheels (uses pyproject.toml configuration)
-# Version is read from VERSION file by default, or set explicitly:
-export PROJECT_VERSION=3.6.0
-export CMAKE_PRESET=release
-python -m cibuildwheel --platform linux --output-dir wheelhouse
-
-# Using Makefile for easier syntax (ARCH auto-detects from uname -m):
-make cibuildwheel VERSION=3.6.0 PYVER=312
-make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
+# Build wheels using Makefile
+make cibuildwheel                                        # Auto-read VERSION file, all Python versions
+make cibuildwheel VERSION=3.7.0                          # Explicit version, all Python versions
+make cibuildwheel VERSION=3.7.0 PYVER=312               # Python 3.12 only
+make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 only
+make cibuildwheel VERSION=3.7.0 ARCH=aarch64            # Specific architecture
 ```
+
+Wheels will be created in the `wheelhouse/` directory.
 
 ## Configuration
 
@@ -56,28 +38,44 @@ make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
 
 The `[tool.cibuildwheel]` section configures:
 - Python versions to build (3.9-3.13)
-- Platform-specific settings
+- Platform-specific settings (Linux, macOS, Windows)
 - Pre-build dependencies
 - Test commands
 
 ### GitHub Actions
 
 The workflow `.github/workflows/build-wheels.yml`:
-- Builds wheels for Linux x86_64 and aarch64
+- Builds wheels for all platforms:
+  - Linux: x86_64, aarch64
+  - macOS: arm64 only (Apple Silicon/M1+)
+  - Windows: AMD64
 - Automatically publishes to PyPI on tagged releases
-- Runs tests on built wheels
+- Runs tests on all built wheels
 
-## Manylinux Images
+## Build Environments
+
+### Linux (Manylinux Images)
 
 This project uses **manylinux2014** which provides:
 - GCC 10+ compiler toolchain
 - Compatible with most Linux distributions from ~2014+
 - RHEL/CentOS 7 base
 
-### Available Images:
+Available images:
 - `manylinux2014_x86_64` - Intel/AMD 64-bit
 - `manylinux2014_aarch64` - ARM 64-bit
-- `manylinux2014_i686` - Intel/AMD 32-bit (not used)
+
+### macOS
+
+- Minimum deployment target: macOS 11.0 (Big Sur)
+- Target: arm64 only (Apple Silicon/M1+)
+- Uses delocate for wheel repair
+
+### Windows
+
+- Target: Windows AMD64
+- Uses MSVC compiler toolchain
+- No special repair needed (native DLL handling)
 
 ## Dependencies
 
@@ -91,93 +89,106 @@ These are automatically installed by the `before-build` scripts.
 
 ## Build Process
 
-1. **Docker container starts** with manylinux image
-2. **Install build dependencies** (clang, llvm, cmake)
+cibuildwheel orchestrates the build process:
+
+1. **Docker container starts** with manylinux image (Linux) or native environment (macOS/Windows)
+2. **Install build dependencies** (clang, llvm, cmake on Linux; platform-specific tools on macOS/Windows)
 3. **For each Python version:**
    - Install Python build tools (pip, build, setuptools, wheel)
-   - Run `python -m build --wheel` which triggers:
-     - setup.py execution
-     - CMake configuration
+   - Run setup.py to build the wheel:
+     - CMake configuration with appropriate compiler and flags
      - C extension compilation
      - Wheel packaging
-4. **Repair wheels** with `auditwheel`:
-   - Bundles required shared libraries
-   - Adds manylinux platform tags
-   - Verifies ABI compatibility
-5. **Output wheels** to `wheelhouse/` directory
+4. **Repair wheels**:
+   - Linux: `auditwheel` bundles shared libraries and adds manylinux platform tags
+   - macOS: `delocate` bundles dylib dependencies
+   - Windows: Native DLL handling, no repair needed
+5. **Run tests** using `test_pip_package.py` in clean environments
+6. **Output wheels** to `wheelhouse/` directory
 
 ## Testing Wheels
 
-Test built wheels using the test script:
+cibuildwheel automatically runs tests after building each wheel using the test script configured in `pyproject.toml`.
+
+### Manual Testing
+
+To manually test a built wheel:
 
 ```bash
-# Test all wheels in wheelhouse/
-./test-wheels.py
+# Create a test environment
+python -m venv test-env
+source test-env/bin/activate  # On Windows: test-env\Scripts\activate
 
-# Test wheels in a specific directory
-./test-wheels.py dist/
+# Install the wheel
+pip install wheelhouse/pyvgx-*.whl
 
-# Or via Makefile
-make test
+# Run tests
+python test_pip_package.py
 ```
 
-The test script:
-- **Auto-detects Python version** from wheel filename (e.g., cp312 → python:3.12-slim)
-- Runs 6 comprehensive tests per wheel:
-  1. Import pyvgx module
-  2. Version consistency check
-  3. vgxadmin CLI command availability
-  4. vgxadmin module import
-  5. vgxinstance module import
-  6. vgxdemoservice functionality (start, verify 6 instances, stop)
-- Tests in isolated Docker containers (Linux) or virtual environments (macOS)
-- Shows command output for debugging
+The test script runs 4 comprehensive tests:
+1. Module version check (pyvgx module version matches package version)
+2. Script availability (vgxadmin command is available in PATH)
+3. Module imports (vgxadmin, vgxinstance modules import successfully)
+4. vgxdemoservice functionality (Linux/macOS x86_64/amd64 only - automatically skipped on Windows and ARM architectures)
 
 ## Wheel Naming
 
 Built wheels follow PEP 427 naming:
+
+**Release build (explicit VERSION):**
 ```
 pyvgx-3.6.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 └─────┘ └───┘ └──────────┘ └──────────────────────────────────────────┘
   name  version   python          platform tags
 ```
 
+**Development build (auto-read VERSION file):**
+```
+pyvgx-3.7.0.dev0+1770090416-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+└─────┘ └─────────────────┘ └──────────┘ └────────────────────────────────────────────────┘
+  name   version+timestamp    python               platform tags
+```
+
+**Version format:**
+- Release: `3.6.0` - Set explicitly via `VERSION=3.6.0`
+- Development: `3.7.0.dev0+1770090416` - Auto-read from VERSION file (3.7.0) + dev timestamp
+
+**Python tags:**
 - `cp311-cp311` - CPython 3.11 with stable ABI
+- `cp312-cp312` - CPython 3.12 with stable ABI
+
+**Platform tags:**
 - `manylinux_2_17` - Requires glibc 2.17+
 - `manylinux2014` - Compatible with CentOS 7+
 
 ## Troubleshooting
 
-### Build fails with "clang: not found"
+### Build fails with "clang: not found" (Linux)
 
-The before-build script should install clang automatically. If it fails:
-```bash
-docker run -it --rm quay.io/pypa/manylinux2014_x86_64 bash
-yum install -y clang llvm-devel
-```
+The before-build script in `pyproject.toml` should install clang automatically. If it fails, check that the manylinux image has yum access to install packages. cibuildwheel handles this automatically.
 
-### Wheel is not manylinux compatible
+### Wheel is not manylinux compatible (Linux)
 
-Check `auditwheel` output:
-```bash
-auditwheel show wheelhouse/your-wheel.whl
-```
+cibuildwheel automatically runs `auditwheel repair` to ensure compatibility. If you encounter issues, check the build logs for external shared library dependencies that couldn't be bundled.
 
-Look for external shared library dependencies that need bundling.
-
-### ARM64 build is very slow
+### ARM64 build is slow
 
 This is expected when building ARM64 wheels on x86_64 hosts (QEMU emulation). Consider:
 - Using a native ARM64 host
-- Using GitHub Actions (free ARM64 runners)
-- Building overnight
+- Using GitHub Actions (ubuntu-24.04-arm64 runners)
+- Reducing the number of Python versions built
 
 ### CMake configuration fails
 
 Check that:
-- Python executable is found correctly
-- CMAKE_PRESET environment variable is set
-- PROJECT_VERSION environment variable is set
+- Python development headers are available (automatically installed in cibuildwheel environments)
+- CMAKE_PRESET environment variable is set (default: release)
+- PROJECT_VERSION environment variable is set (default: reads from VERSION file + dev timestamp)
+
+### Visual Studio not found (Windows)
+
+Ensure Visual Studio Build Tools 2022 with C++ workload is installed. See [WINDOWS_BUILD.md](WINDOWS_BUILD.md) for detailed instructions.
 
 ## Publishing to PyPI
 

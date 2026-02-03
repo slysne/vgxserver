@@ -184,118 +184,94 @@ If you want to build PyVGX from source or contribute to development:
 ### Prerequisites
 
 - **Python 3.9-3.13**: Required for building and testing
-- **Docker**: Required for manylinux builds (Linux wheels)
-- **C Compiler**: clang (automatically installed in Docker for manylinux builds)
+- **cibuildwheel**: For building portable wheels (`pip install cibuildwheel`)
+- **CMake**: Build system (automatically provided by Visual Studio on Windows)
+- **C/C++ Compiler**:
+  - **Linux**: GCC/Clang (auto-installed by cibuildwheel in manylinux containers)
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+  - **Windows**: Visual Studio Build Tools 2022 with C++ workload (see below)
 
-### Quick Build
+#### Windows-Specific Requirements
+
+Windows builds require Visual Studio Build Tools 2022 with C++ workload. See the **[Windows Build Guide](WINDOWS_BUILD.md)** for:
+- Detailed installation instructions
+- Troubleshooting common issues
+- Environment configuration
+- Development setup
+
+Quick install (PowerShell as Administrator):
+```powershell
+winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+```
+
+### Building with cibuildwheel
+
+The project uses cibuildwheel to build portable wheels for all platforms:
+
+```bash
+# Install cibuildwheel
+pip install cibuildwheel
+
+# Build wheels using Makefile
+make cibuildwheel                                        # Auto-read VERSION file, all Python versions
+make cibuildwheel VERSION=3.7.0                          # Explicit version, all Python versions
+make cibuildwheel VERSION=3.7.0 PYVER=312               # Python 3.12 only
+make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 only
+```
+
+**Supported Platforms:**
+- **Linux**: x86_64, aarch64 (manylinux2014)
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Windows**: AMD64
+
+**Makefile Parameters:**
+- `VERSION` - Package version (default: reads from VERSION file, appends `.dev0+<timestamp>` for dev builds)
+- `PYVER` - Python version: 39|310|311|312|313|all (default: all)
+- `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected from `uname -m`)
+- `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
+
+**Platform-Specific Guides:**
+- **Windows**: See [Windows Build Guide](WINDOWS_BUILD.md) for detailed instructions and troubleshooting
+
+### Testing Built Wheels
+
+After building, test your wheels using the cross-platform test script:
+
+```bash
+# Test wheels from wheelhouse directory
+python test_pip_package.py
+
+# Or use the comprehensive test script that tests all wheels
+python test-wheels.py wheelhouse/
+```
+
+### GitHub Actions Build & Release
+
+**Automated builds for all platforms:**
+- **Linux**: x86_64, aarch64 (manylinux2014)
+- **macOS**: arm64 only - Apple Silicon/M1+
+- **Windows**: AMD64
+
+**Automated builds triggered by:**
+- Tags (v*) or GitHub Releases → Release version from tag
+- Pull Requests → Test builds with VERSION file + dev timestamp
+- Manual trigger → Optional parameters (version, Python versions, platforms)
+
+**To create a release:**
+1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
+2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
+3. Wheels for all platforms automatically built and available in Actions artifacts (30-day retention)
+
+### Development Build
+
+For local development (requires compiler toolchain installed):
 
 ```bash
 # Clone the repository
 git clone https://github.com/slysne/vgxserver.git
 cd vgxserver
 
-# Set version (optional - reads from VERSION file if not specified)
-echo "3.6.0" > VERSION
-
-# Build a local wheel for your platform
-make build-local
-
-# Or specify version explicitly
-make build-local VERSION=3.6.0
-```
-
-### Building Manylinux Wheels (Linux)
-
-The project supports building portable Linux wheels (x86_64 and ARM64) using pypa/manylinux Docker images:
-
-```bash
-# Build for x86_64 (all Python versions 3.9-3.13)
-./build-manylinux.sh 3.6.0
-
-# Build for specific Python versions
-./build-manylinux.sh 3.6.0 "cp311-cp311 cp312-cp312"
-
-# Build and test in one command
-./build-manylinux.sh 3.6.0 --test
-
-# Build for ARM64/aarch64 (requires ARM host or QEMU)
-./build-manylinux-aarch64.sh 3.6.0
-
-# Using Makefile (reads VERSION file automatically)
-make build-manylinux
-make build-manylinux-arm64
-
-# Build both architectures
-make build-all-manylinux
-```
-
-### Testing Wheels
-
-```bash
-# Test all built wheels (auto-detects Python version from filename)
-./test-wheels.py
-
-# Or via Makefile
-make test
-
-# Test wheels from specific directory
-./test-wheels.py dist/
-```
-
-The test script runs 6 comprehensive tests per wheel:
-1. Import pyvgx module
-2. Version consistency check
-3. vgxadmin CLI command
-4. vgxadmin module import
-5. vgxinstance module import
-6. vgxdemoservice functionality
-
-Tests run in isolated Docker containers (Linux) or virtual environments (macOS).
-
-### Advanced Build Options
-
-```bash
-# Using cibuildwheel (install first: pip install cibuildwheel)
-# Builds for all Python versions, auto-detected architecture
-make cibuildwheel VERSION=3.6.0
-
-# Build specific Python version (ARCH auto-detects from uname -m)
-make cibuildwheel VERSION=3.6.0 PYVER=312
-
-# Build specific Python version and architecture
-make cibuildwheel VERSION=3.6.0 PYVER=312 ARCH=x86_64
-
-# Clean build artifacts
-make clean
-```
-
-**Build Parameters:**
-- `VERSION` - Package version (default: reads from VERSION file)
-- `PYVER` - Python version: 39|310|311|312|313|all (default: all)
-- `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected via uname -m)
-- `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
-
-For detailed build instructions and troubleshooting:
-- [Manylinux Build Guide](docs/MANYLINUX_BUILD.md) - Comprehensive build documentation
-- [Quick Reference](docs/MANYLINUX_QUICKREF.md) - Common commands and workflows
-- [Setup Guide](docs/MANYLINUX_SETUP.md) - Initial setup documentation
-
-### GitHub Actions Build & Release
-
-**Automated builds triggered by:**
-- Tags (v*) or GitHub Releases → Release version from tag
-- Pull Requests → Test builds with VERSION file + dev timestamp
-- Manual trigger → Optional parameters (version, Python versions, architectures)
-
-**To create a release:**
-1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
-2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
-3. Download wheels from Actions artifacts (30-day retention)
-
-### Development Build
-
-```bash
-# Install in development mode
+# Install in development/editable mode
 pip install -e .
 
 # Run tests

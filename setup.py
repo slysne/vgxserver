@@ -119,6 +119,16 @@ class CmakeBuild(build_ext):
         # Make sure the build directory exists
         os.makedirs(cmake_build_dir, exist_ok=True)
 
+        # Clean CMake cache to avoid generator conflicts
+        cmake_cache = os.path.join(cmake_build_dir, "CMakeCache.txt")
+        cmake_files_dir = os.path.join(cmake_build_dir, "CMakeFiles")
+        if os.path.exists(cmake_cache):
+            os.remove(cmake_cache)
+            print(f"[BuildEnv] Removed CMake cache: {cmake_cache}")
+        if os.path.exists(cmake_files_dir):
+            shutil.rmtree(cmake_files_dir)
+            print(f"[BuildEnv] Removed CMake files: {cmake_files_dir}")
+
         # Determine build type from preset
         build_type_map = {
             'release': 'Release',
@@ -185,68 +195,61 @@ class CmakeBuild(build_ext):
             ])
         elif IS_WINDOWS:
 
-            # Fairly reliable
-            include_dir1 = sysconfig.get_paths()["include"]
-            include_dir2 = None
+            # Python.org installers (including NuGet Python used by cibuildwheel) have a standard structure
+            #
+            # {sys.base_prefix}/
+            # ├── libs/
+            # │   └── python312.lib
+            # └── Include/
+            #     ├── Python.h
+            #     └── pyconfig.h
 
-            # e.g. python312.lib
             python_lib = f"python{PY_MAJOR}{PY_MINOR}.lib"
 
-            # Probably empty
-            python_libdir = sysconfig.get_config_var("LIBDIR")
-            
-            # Will become full path to lib file
-            python_library_path = None
-            
-            # Hint we're in a venv
-            if sys.prefix != sys.base_prefix:
-                home = getattr(sys, "_home", None)
-                if home and os.path.isdir(home):
-                    # Set the correct path containing lib file and verify
-                    python_libdir = home
-                    python_library_path = os.path.join(python_libdir, python_lib)
-                    if not os.path.exists( python_library_path ):
-                        raise EnvironmentError( f"Bad venv, check paths {sys.prefix} and {home}" )
-                # include dirs
-                if os.path.isdir(sys.base_prefix):
-                    if include_dir1 is None:
-                        include_dir1 = os.path.join(sys.base_prefix, "Include")
-                    # decide where pyconfig.h is located
-                    if os.path.exists( os.path.join(sys.base_prefix, "PC", "pyconfig.h") ):
-                        include_dir2 = os.path.join(sys.base_prefix, "PC")
-                    elif python_libdir and os.path.exists( os.path.join(python_libdir, "pyconfig.h") ):
-                        include_dir2 = python_libdir
+            # Standard Python.org structure
+            python_library_path = os.path.join(sys.base_prefix, "libs", python_lib)
+            include_dir = os.path.join(sys.base_prefix, "Include")
 
-            # Verify include path 1 contains Python.h
-            while not include_dir1 or not os.path.exists(include_dir1) or not os.path.exists(os.path.join(include_dir1,"Python.h")):
-                include_dir1 = input( "Enter include directory containing Python.h: " )
+            # Verify files exist
+            if not os.path.exists(python_library_path):
+                raise EnvironmentError(
+                    f"Could not find {python_lib} at {python_library_path}\n"
+                    f"sys.base_prefix: {sys.base_prefix}\n"
+                    f"Ensure Python was installed from python.org with development files included."
+                )
 
-            # Verify include path 2 contains pyconfig.h
-            while not include_dir2 or not os.path.exists(include_dir2) or not os.path.exists(os.path.join(include_dir2,"pyconfig.h")):
-                include_dir2 = input( "Enter include directory containing pyconfig.h: " )
+            if not os.path.exists(os.path.join(include_dir, "Python.h")):
+                raise EnvironmentError(
+                    f"Could not find Python.h at {include_dir}\n"
+                    f"sys.base_prefix: {sys.base_prefix}\n"
+                    f"Ensure Python was installed from python.org with development files included."
+                )
 
-            
-            include_dirs = []
-            include_dirs.append(include_dir1)
-            if include_dir2 != include_dir1:
-                include_dirs.append(include_dir2)
+            if not os.path.exists(os.path.join(include_dir, "pyconfig.h")):
+                raise EnvironmentError(
+                    f"Could not find pyconfig.h at {include_dir}\n"
+                    f"sys.base_prefix: {sys.base_prefix}\n"
+                    f"Ensure Python was installed from python.org with development files included."
+                )
 
-            include_paths = ";".join(include_dirs)
-
-            # Find library path if not already found
-            if python_library_path is None:
-                while not python_libdir or not os.path.exists(python_libdir) or not os.path.exists(os.path.join(python_libdir,python_lib)):
-                    python_libdir = input( f"Enter include directory containing {python_lib}: " )
-                python_library_path = os.path.join(python_libdir, python_lib)
-
+            include_paths = include_dir
 
             cmake_configure_cmd.extend([
                 f"-DPython3_INCLUDE_DIRS={include_paths}",
                 f"-DPython3_LIBRARY={python_library_path}"
             ])
 
-            # Use native VS generator for .sln and MSBuild (overrides Ninja from presets)
-            cmake_configure_cmd.extend(['-G', 'Visual Studio 17 2022', '-A', 'x64'])  # For VS 2022, x64 arch
+            # Select CMake generator for Windows
+            # Windows builds require Visual Studio Build Tools 2022
+            cmake_generator = os.environ.get("CMAKE_GENERATOR", "Visual Studio 17 2022")
+
+            cmake_configure_cmd.extend(['-G', cmake_generator, '-A', 'x64'])
+            print(f"[BuildEnv] Using generator: {cmake_generator}")
+
+            # Provide helpful message if using default generator
+            if "Visual Studio 17 2022" in cmake_generator:
+                print("[BuildEnv] Note: Visual Studio Build Tools 2022 with C++ workload is required")
+                print("[BuildEnv] Install: winget install Microsoft.VisualStudio.2022.BuildTools --override \"--add Microsoft.VisualStudio.Workload.VCTools\"")
 
         # Configuration step (generate the build system)
         subprocess.run(

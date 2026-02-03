@@ -101,21 +101,22 @@ cibuildwheel:
 	@if [ "$(PYVER)" != "all" ]; then \
 		export CIBW_BUILD="cp$(PYVER)-*"; \
 	fi && \
-	if [ -n "$(ARCH)" ]; then \
-		export CIBW_ARCHS="$(ARCH)"; \
-	fi && \
 	if [ "$$(uname)" = "Darwin" ]; then \
 		if [ -n "$(VERSION_EXPLICIT)" ]; then \
 			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
 		else \
 			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
 		fi; \
+		echo "Building on macOS with native architecture..."; \
+		arch -arm64 cibuildwheel --output-dir wheelhouse; \
 	else \
+		export CIBW_ARCHS_LINUX="$(ARCH)"; \
 		if [ -n "$(VERSION_EXPLICIT)" ]; then \
 			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)"; \
 		else \
 			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET)"; \
 		fi; \
-	fi && \
-	cibuildwheel --output-dir wheelhouse
+		echo "Building on Linux for $(ARCH) architecture..."; \
+		cibuildwheel --output-dir wheelhouse; \
+	fi
 	@echo "Wheels built in wheelhouse/"
