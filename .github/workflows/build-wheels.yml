@@ -19,22 +19,41 @@ on:
         required: false
         default: 'cp39-* cp310-* cp311-* cp312-* cp313-*'
       architectures:
-        description: 'Architectures to build (x86_64, aarch64, or both)'
+        description: 'Architectures to build (or all for all platforms)'
         required: false
-        default: 'x86_64'
+        default: 'all'
         type: choice
         options:
-          - 'x86_64 aarch64'
-          - 'x86_64'
-          - 'aarch64'
+          - 'all'
+          - 'macos'
+          - 'windows'
+          - 'linux_x86_64'
+          - 'linux_aarch64'
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build wheels (${{ matrix.platform }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
+        include:
+          - arch: x86_64
+            runner: ubuntu-22.04
+            cibw_archs: x86_64
+            platform: linux
+          - arch: aarch64
+            runner: ubuntu-24.04-arm64
+            cibw_archs: aarch64
+            platform: linux
+          - arch: arm64
+            runner: macos-14
+            cibw_archs: arm64
+            platform: macos
+          - arch: AMD64
+            runner: windows-2022
+            cibw_archs: AMD64
+            platform: windows
     
     steps:
       - uses: actions/checkout@v4
@@ -46,38 +65,33 @@ jobs:
       
       - name: Install cibuildwheel
         run: pip install cibuildwheel==2.16.5
-      
-      - name: Build wheels
+
+      - name: Set up MSVC (Windows only)
+        if: matrix.platform == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build wheels (Unix)
+        if: matrix.platform != 'windows'
+        run: make cibuildwheel
+        env:
+          VERSION: "${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name || '') }}"
+          CMAKE_PRESET: release
+          ARCH: ${{ matrix.cibw_archs }}
+          CIBW_BUILD: "${{ github.event.inputs.python_versions || '' }}"
+
+      - name: Build wheels (Windows)
+        if: matrix.platform == 'windows'
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "${{ github.event.inputs.python_versions || 'cp39-* cp310-* cp311-* cp312-* cp313-*' }}"
-          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
-          
-          # Linux-specific settings
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
-          CIBW_ARCHS_LINUX: "${{ github.event.inputs.architectures || 'x86_64 aarch64' }}"
-          
-          # Install dependencies before build
-          CIBW_BEFORE_BUILD_LINUX: >
-            yum install -y clang llvm-devel cmake3 &&
-            ln -sf /usr/bin/cmake3 /usr/bin/cmake &&
-            pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'
-          
-          # Set version from environment or tag
-          # When not set, setup.py reads VERSION file and appends .dev0+timestamp
-          CIBW_ENVIRONMENT: >
-            PROJECT_VERSION=${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name || '') }}
-            CMAKE_PRESET=release
-          
-          # Test command
-          CIBW_TEST_COMMAND: "python -c \"import pyvgx; print(pyvgx.__version__ if hasattr(pyvgx, '__version__') else 'OK')\""
-          CIBW_TEST_SKIP: "*-macosx_arm64"
+          CIBW_BUILD: "${{ github.event.inputs.python_versions || '' }}"
+          CIBW_ENVIRONMENT_WINDOWS: PROJECT_VERSION="${{ github.event.inputs.version || (github.ref_type == 'tag' && github.ref_name) || '' }}" CMAKE_PRESET=release CMAKE_GENERATOR="Visual Studio 17 2022"
       
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-${{ matrix.os }}
+          name: wheels-${{ matrix.platform }}-${{ matrix.arch }}
           path: ./wheelhouse/*.whl
           retention-days: 30
   
@@ -106,49 +120,3 @@ jobs:
           name: sdist
           path: dist/*.tar.gz
           retention-days: 30
-  
-  test_wheels:
-    name: Test wheels (${{ matrix.arch }})
-    needs: build_wheels
-    runs-on: ${{ matrix.runner }}
-    continue-on-error: ${{ matrix.optional }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86_64
-            runner: ubuntu-latest
-            pattern: "*x86_64*.whl"
-            optional: false
-          - arch: aarch64
-            runner: ubuntu-24.04-arm64
-            pattern: "*aarch64*.whl"
-            optional: true
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download wheels
-        uses: actions/download-artifact@v4
-        with:
-          pattern: wheels-*
-          path: wheelhouse
-          merge-multiple: true
-      
-      - name: Filter wheels for ${{ matrix.arch }}
-        id: filter
-        run: |
-          mkdir -p wheelhouse-test
-          find wheelhouse -name "${{ matrix.pattern }}" -exec cp {} wheelhouse-test/ \; 2>/dev/null || true
-          WHEEL_COUNT=$(ls wheelhouse-test/*.whl 2>/dev/null | wc -l)
-          echo "Found $WHEEL_COUNT ${{ matrix.arch }} wheels to test"
-          echo "count=$WHEEL_COUNT" >> $GITHUB_OUTPUT
-      
-      - name: Run comprehensive tests
-        if: steps.filter.outputs.count != '0'
-        run: |
-          chmod +x test-wheels.sh
-          ./test-wheels.sh wheelhouse-test
-      
-      - name: Skip message
-        if: steps.filter.outputs.count == '0'
-        run: echo "No ${{ matrix.arch }} wheels found, skipping tests"

@@ -277,14 +277,36 @@ The setup.py automatically cleans CMake cache files to prevent generator conflic
 
 ## CI/CD with GitHub Actions
 
-The project is configured to automatically build Windows wheels in GitHub Actions. The workflow:
+The project uses GitHub Actions to automatically build Windows wheels alongside Linux and macOS builds. The workflow provides flexible build options for different scenarios.
 
+**Windows Build Configuration:**
 1. Uses `windows-2022` runner (has Visual Studio 2022 pre-installed)
-2. Sets up MSVC environment with `ilammy/msvc-dev-cmd@v1`
-3. Forces Visual Studio generator via `CMAKE_GENERATOR` environment variable
-4. Builds wheels for Python 3.9-3.13
+2. Sets up MSVC environment with `ilammy/msvc-dev-cmd@v1` action
+3. Uses Visual Studio 17 2022 generator via `CMAKE_GENERATOR` environment variable
+4. Builds wheels for Python 3.9-3.13 (configurable via workflow parameters)
+5. Uses cibuildwheel for portable wheel generation
 
-See [.github/workflows/build-wheels.yml](.github/workflows/build-wheels.yml) for details.
+**Workflow Triggers:**
+- **Tags (v*)**: Automatically builds release version from tag name
+- **Pull Requests (to main)**: Test builds using VERSION file + dev timestamp
+- **Releases (published/created)**: Builds release version from release tag
+- **Manual (workflow_dispatch)**: Custom builds with optional parameters:
+  - `version`: Override default versioning (e.g., "3.7.0")
+  - `python_versions`: Select Python versions (e.g., "cp311-* cp312-*")
+  - `architectures`: Choose platforms (all/windows/linux_x86_64/linux_aarch64/macos)
+
+**Environment Variables (Windows builds):**
+```yaml
+CIBW_BUILD: "${{ github.event.inputs.python_versions || '' }}"  # Python versions
+CIBW_ENVIRONMENT_WINDOWS: PROJECT_VERSION="..." CMAKE_PRESET=release CMAKE_GENERATOR="Visual Studio 17 2022"
+```
+
+**Version Handling:**
+- Manual input version (if provided)
+- Tag name (for tagged releases)
+- VERSION file + .dev0+timestamp (for development builds)
+
+See [.github/workflows/build-wheels.yml](.github/workflows/build-wheels.yml) for complete workflow configuration.
 
 ## Additional Resources
 

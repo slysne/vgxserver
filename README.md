@@ -250,19 +250,28 @@ python test-wheels.py wheelhouse/
 ### GitHub Actions Build & Release
 
 **Automated builds for all platforms:**
-- **Linux**: x86_64, aarch64 (manylinux2014)
-- **macOS**: arm64 only - Apple Silicon/M1+
-- **Windows**: AMD64
+- **Linux**: x86_64 (ubuntu-22.04), aarch64 (ubuntu-24.04-arm64) - manylinux2014
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Windows**: AMD64 (Visual Studio 2022)
 
-**Automated builds triggered by:**
-- Tags (v*) or GitHub Releases → Release version from tag
-- Pull Requests → Test builds with VERSION file + dev timestamp
-- Manual trigger → Optional parameters (version, Python versions, platforms)
+**Workflow triggers:**
+1. **Tags** (v*): Automatically builds release version from tag name
+2. **Pull Requests** (to main): Test builds using VERSION file + dev timestamp
+3. **Releases** (published/created): Builds release version from tag
+4. **Manual** (workflow_dispatch): Flexible builds with optional parameters:
+   - `version`: Custom version (overrides tag/VERSION file)
+   - `python_versions`: Target Python versions (default: cp39-* cp310-* cp311-* cp312-* cp313-*)
+   - `architectures`: Select platforms (all/linux_x86_64/linux_aarch64/macos/windows)
 
 **To create a release:**
 1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
 2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
 3. Wheels for all platforms automatically built and available in Actions artifacts (30-day retention)
+
+**Manual workflow dispatch:**
+- Go to Actions → Build Wheels → Run workflow
+- Customize version, Python versions, or select specific architectures
+- Useful for testing builds or creating custom distribution sets
 
 ### Development Build
 
