@@ -18,16 +18,33 @@ from pathlib import Path
 from typing import Optional
 
 
+# Architecture constants
+ARCH_X86_64 = 'x86_64'
+ARCH_AARCH64 = 'aarch64'
+ARCH_ARM64 = 'arm64'
+ARCH_I686 = 'i686'
+ARCH_AMD64 = 'amd64'
+ARCH_X64 = 'x64'
+ARCH_WIN32 = 'win32'
+
+# Platform constants
+PLATFORM_LINUX = 'linux'
+PLATFORM_MACOS = 'macos'
+PLATFORM_DARWIN = 'darwin'
+PLATFORM_WINDOWS = 'windows'
+PLATFORM_UNKNOWN = 'unknown'
+
+
 def detect_platform_from_wheel(wheel_name: str) -> str:
     """Detect platform from wheel filename."""
     if 'manylinux' in wheel_name:
-        return 'linux'
+        return PLATFORM_LINUX
     elif 'macosx' in wheel_name:
-        return 'macos'
+        return PLATFORM_MACOS
     elif 'win' in wheel_name:
-        return 'windows'
+        return PLATFORM_WINDOWS
     else:
-        return 'unknown'
+        return PLATFORM_UNKNOWN
 
 
 def extract_python_version(wheel_name: str) -> Optional[str]:
@@ -41,9 +58,31 @@ def extract_python_version(wheel_name: str) -> Optional[str]:
 def get_host_platform() -> str:
     """Get the current host platform."""
     system = platform.system().lower()
-    if system == 'darwin':
-        return 'darwin'
+    if system == PLATFORM_DARWIN:
+        return PLATFORM_DARWIN
     return system
+
+
+def get_host_arch() -> str:
+    """Get the current host architecture."""
+    machine = platform.machine().lower()
+    # Normalize architecture names
+    if machine in (ARCH_AMD64, ARCH_X86_64, ARCH_X64):
+        return ARCH_X86_64
+    elif machine in (ARCH_AARCH64, ARCH_ARM64):
+        return ARCH_AARCH64
+    return machine
+
+
+def extract_wheel_arch(wheel_name: str) -> Optional[str]:
+    """Extract architecture from wheel filename."""
+    if ARCH_X86_64 in wheel_name or ARCH_AMD64 in wheel_name:
+        return ARCH_X86_64
+    elif ARCH_AARCH64 in wheel_name or ARCH_ARM64 in wheel_name:
+        return ARCH_AARCH64
+    elif ARCH_I686 in wheel_name or ARCH_WIN32 in wheel_name:
+        return ARCH_I686
+    return None
 
 
 def test_wheel_macos(wheel_path: Path, python_version: Optional[str], validate_script: Path) -> bool:
@@ -146,6 +185,7 @@ def test_wheels(wheelhouse_dir: Path) -> int:
         skipped = 0
 
         host_platform = get_host_platform()
+        host_arch = get_host_arch()
 
         for wheel_path in sorted(wheels):
             wheel_name = wheel_path.name
@@ -153,25 +193,33 @@ def test_wheels(wheelhouse_dir: Path) -> int:
             print(f"Testing: {wheel_name}")
 
             wheel_platform = detect_platform_from_wheel(wheel_name)
+            wheel_arch = extract_wheel_arch(wheel_name)
             python_version = extract_python_version(wheel_name)
 
             if not python_version:
                 print("  Warning: Could not detect Python version from wheel name")
 
-            if wheel_platform == 'macos' and host_platform != 'darwin':
+            # Check platform compatibility
+            if wheel_platform == PLATFORM_MACOS and host_platform != PLATFORM_DARWIN:
                 print("  ⊘ Skipping macOS wheel on non-macOS host")
                 skipped += 1
                 continue
-            elif wheel_platform == 'windows':
+            elif wheel_platform == PLATFORM_WINDOWS:
                 print("  ⊘ Skipping Windows wheel (not supported by this test script)")
                 skipped += 1
                 continue
-            elif wheel_platform == 'unknown':
+            elif wheel_platform == PLATFORM_UNKNOWN:
                 print("  ⊘ Skipping wheel with unknown platform")
                 skipped += 1
                 continue
 
-            if wheel_platform == 'macos':
+            # Check architecture compatibility for Linux wheels
+            if wheel_platform == PLATFORM_LINUX and wheel_arch and wheel_arch != host_arch:
+                print(f"  ⊘ Skipping {wheel_arch} wheel on {host_arch} host (cross-arch testing not supported)")
+                skipped += 1
+                continue
+
+            if wheel_platform == PLATFORM_MACOS:
                 test_passed = test_wheel_macos(wheel_path, python_version, validate_script)
             else:
                 test_passed = test_wheel_docker(wheel_path, python_version, validate_script, wheelhouse_dir)
