@@ -36,9 +36,9 @@ manylinux-aarch64-image = "manylinux2014"
 # Build verbosity (1 = show commands)
 build-verbosity = 1
 
-# Linux settings - target both x86_64 and aarch64
+# Linux settings - architecture controlled by ARCH parameter in Makefile or CIBW_ARCHS env var
 [tool.cibuildwheel.linux]
-archs = ["x86_64", "aarch64"]
+# archs = ["x86_64", "aarch64"]  # Commented out - use ARCH=aarch64 or ARCH=x86_64 with make
 before-build = "yum install -y clang llvm-devel && (yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake || yum install -y cmake) && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 test-command = "python {project}/test_pip_package.py"

@@ -42,6 +42,11 @@ The `[tool.cibuildwheel]` section configures:
 - Pre-build dependencies
 - Test commands
 
+**Note on Linux architectures:** The `archs` setting under `[tool.cibuildwheel.linux]` is commented out to allow dynamic 
+architecture selection via the Makefile's `ARCH` parameter. This enables building for specific architectures without modifying the configuration file:
+- Use `ARCH=x86_64` for Intel/AMD 64-bit
+- Use `ARCH=aarch64` for ARM 64-bit
+
 ### GitHub Actions
 
 The workflow `.github/workflows/build-wheels.yml`:

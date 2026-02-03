@@ -228,6 +228,8 @@ make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 on
 - `VERSION` - Package version (default: reads from VERSION file, appends `.dev0+<timestamp>` for dev builds)
 - `PYVER` - Python version: 39|310|311|312|313|all (default: all)
 - `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected from `uname -m`)
+  - Linux: Use `ARCH=aarch64` for ARM64 or `ARCH=x86_64` for x86_64
+  - Note: The architecture setting in pyproject.toml has been removed to allow dynamic selection via this parameter
 - `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
 
 **Platform-Specific Guides:**

@@ -110,7 +110,7 @@ cibuildwheel:
 		echo "Building on macOS with native architecture..."; \
 		arch -arm64 cibuildwheel --output-dir wheelhouse; \
 	else \
-		export CIBW_ARCHS_LINUX="$(ARCH)"; \
+		export CIBW_ARCHS="$(ARCH)" CIBW_ARCHS_LINUX="$(ARCH)"; \
 		if [ -n "$(VERSION_EXPLICIT)" ]; then \
 			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET)"; \
 		else \
