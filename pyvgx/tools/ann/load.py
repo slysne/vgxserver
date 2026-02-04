@@ -667,7 +667,7 @@ def robust_enhance_3hop(g, min_hub_ideg=200, max_hubs=500, robust_arcs=3, simula
 
 
 
-def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
+def rescue_remotes(g, degree, cutoff_ideg=6, cutoff_odeg=6, process_set=None):
     MEM = g.Memory(32)
     Q = g.NewNeighborhoodQuery(
                 memory  =   MEM,
@@ -688,52 +688,120 @@ def rescue_remotes(g, degree, cutoff_ideg=6, process_set=None):
                 }
     )
     low_inways = set(g.Vertices( condition={'type':'item', 'indegree':(V_LT,cutoff_ideg)}, fields=F_ADDR, result=R_SIMPLE ))
+    low_outways = set(g.Vertices( condition={'type':'item', 'outdegree':(V_LT,cutoff_odeg)}, fields=F_ADDR, result=R_SIMPLE ))
     if process_set is not None:
         low_inways = low_inways.intersection( process_set )
-    N = len(low_inways)
-    if N == 0:
+        low_outways = low_outways.intersection( process_set )
+    if len(low_inways) == 0 and len(low_outways) == 0:
         return 0
-    n = 0
-    c = 0
     good_odeg = g.Vertices( condition={'type':'item'}, sortby=S_ODEG, fields=F_ODEG, result=R_SIMPLE, hits=1, offset=10000 )[0]
     all_roots = get_random_roots(g, 1024, good_odeg)
     medoid = sample_medoid(g, sz=10000)
     # inways
-    for remote_addr in low_inways:
-        n += 1
-        R = g.OpenVertex( remote_addr )
-        ideg_boost = R.ideg + (cutoff_ideg - R.ideg)//2
-        R.SetProperty('remote', ideg_boost)
-        MEM.Reset()
-        MEM.vector = R.GetVector()
-        MEM.VSetAdd(R)
-        roots = random.sample( all_roots, 4 )
-        roots.append(medoid)
-        initials = []
-        for root in roots:
-            Q.id = root
-            initials.extend( Q.Execute( hits=ideg_boost ) )
-        initials.sort(reverse=1)
-        for _, init in initials[:ideg_boost]:
-            I = g.OpenVertex( init )
-            cosine = g.sim.Cosine(R, I)
-            assert I.address != R.address
-            g.Connect( I, ('cos', M_FLT|M_FWDONLY, cosine), R )
-            c += 1
-            I.Close()
-        # Ensure we can also escape the remote node
-        for _, init in initials:
-            I = g.OpenVertex( init )
-            cosine = g.sim.Cosine(R, I)
-            assert R.address != I.address
-            g.Connect( R, ('cos', M_FLT|M_FWDONLY, cosine), I )
-            I.Close()
-            if R.odeg >= 2*degree:
-                break
-        R.Close()
-        print( f"I: {n}/{N} {100*n/N:0.2f}% {c}    ", end="\r", flush=1 )
-    print( f"I: {n}/{N} {100*n/N:0.2f}% {c}    " )
-    return N
+    Nin = len(low_inways)
+    if Nin > 0:
+        n = 0
+        c = 0
+        for remote_addr in low_inways:
+            n += 1
+            R = g.OpenVertex( remote_addr )
+            ideg_boost = R.ideg + (cutoff_ideg - R.ideg)//2
+            R.SetProperty('remote', ideg_boost)
+            MEM.Reset()
+            MEM.vector = R.GetVector()
+            MEM.VSetAdd(R)
+            roots = random.sample( all_roots, 4 )
+            roots.append(medoid)
+            initials = []
+            for root in roots:
+                Q.id = root
+                initials.extend( Q.Execute( hits=ideg_boost ) )
+            initials.sort(reverse=1)
+            for _, init in initials[:ideg_boost]:
+                I = g.OpenVertex( init )
+                cosine = g.sim.Cosine(R, I)
+                assert I.address != R.address
+                if not g.Adjacent( I, D_OUT, R ):
+                    g.Connect( I, ('cos', M_FLT|M_FWDONLY, cosine), R )
+                c += 1
+                I.Close()
+            # Ensure we can also escape the remote node
+            # in case not already included in low_outways already
+            if R.odeg < cutoff_odeg:
+                low_outways.add( remote_addr )
+            R.Close()
+            print( f"I: {n}/{Nin} {100*n/Nin:0.2f}% {c}    ", end="\r", flush=1 )
+        print( f"I: {n}/{Nin} {100*n/Nin:0.2f}% {c}    " )
+    # outways
+    Nout = len(low_outways)
+    if Nout > 0:
+        n = 0
+        c = 0
+        for remote_addr in low_outways:
+            n += 1
+            R = g.OpenVertex( remote_addr )
+            odeg_boost = R.odeg + (cutoff_odeg - R.odeg)//2
+            R.SetProperty('remote', odeg_boost)
+            MEM.Reset()
+            MEM.vector = R.GetVector()
+            MEM.VSetAdd(R)
+            roots = random.sample( all_roots, 4 )
+            roots.append(medoid)
+            terminals = []
+            for root in roots:
+                Q.id = root
+                terminals.extend( Q.Execute( hits=odeg_boost ) )
+            terminals.sort(reverse=1)
+            for _, term in terminals[:odeg_boost]:
+                T = g.OpenVertex( term )
+                cosine = g.sim.Cosine(R, T)
+                assert T.address != R.address
+                if not g.Adjacent( R, D_OUT, T ):
+                    g.Connect( R, ('cos', M_FLT|M_FWDONLY, cosine), T )
+                c += 1
+                T.Close()
+            R.Close()
+            print( f"O: {n}/{Nout} {100*n/Nout:0.2f}% {c}    ", end="\r", flush=1 )
+        print( f"O: {n}/{Nout} {100*n/Nout:0.2f}% {c}    " )
+    return Nin + Nout
+
+
+
+def inject_white_noise(g, N=1, simcut=0.25):
+    for n in range(N):
+        print( f"round {n}" )
+        initials = g.Vertices( condition={'type':'item'}, sortby=S_RANDOM, fields=F_ADDR, result=R_SIMPLE )
+        terminals = g.Vertices( condition={'type':'item'}, sortby=S_RANDOM, fields=F_ADDR, result=R_SIMPLE )
+        assert len(initials) == len(terminals)
+        c_out = 0
+        c_in = 0
+        for i in range(len(initials)):
+            A = g.OpenVertex( initials[i] )
+            B = g.OpenVertex( terminals[i] )
+            sim = g.sim.Cosine( A, B )
+            if sim > simcut:
+                if not g.Adjacent( A, D_OUT, B ):
+                    g.Connect( A, ('noise', M_INT|M_FWDONLY, 9999), B )
+                    c_out += 1
+                if not g.Adjacent( B, D_OUT, A ):
+                    g.Connect( B, ('noise', M_INT|M_FWDONLY, 9999), A )
+                    c_in += 1
+            A.Close()
+            B.Close()
+        print( f"New Out:{c_out} New In:{c_in}" )
+ 
+
+def erase_white_noise(g):
+    all_nodes = g.Vertices( condition={'type':'item'}, fields=F_ADDR, result=R_SIMPLE )
+    for node in all_nodes:
+        A = g.OpenVertex( node )
+        noise = g.Neighborhood( A, arc=('noise', D_OUT), fields=F_ADDR, result=R_SIMPLE )
+        T = g.OpenVertices( noise )
+        for term in T:
+            g.Disconnect( A, D_OUT, term )
+        g.CloseVertices( T )
+        A.Close()    
+
 
 
 #M_FIND.VSetClear()
@@ -1273,7 +1341,7 @@ def reset_phase_counters(g, degree):
 
 
 
-def finalize_arcs(g, entry):
+def finalize_arcs(g, entry, force_dedupe=False):
     Q = g.NewNeighborhoodQuery( sortby=S_VAL, fields=F_ADDR, result=R_SIMPLE )
     A = g.OpenVertex(entry)
     Q.id = A.address 
@@ -1291,6 +1359,8 @@ def finalize_arcs(g, entry):
         A = g.OpenVertex(node)
         Q.id = A.address
         neighbors = Q.Execute()
+        if force_dedupe:
+            neighbors = list(set(neighbors))
         T = g.OpenVertices( neighbors )
         g.Disconnect(A, D_OUT)
         i = 0
@@ -1611,7 +1681,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=Fals
         print( f"Adding skeleton {sk}/{skeletons} (o={int(s*len(nonseed_set))}, d={d}, a={a}, nR={nR}, s={s} shw={shw})" )
         populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//4, qbc=0.95, qadaptive=True, process_set=nonseed_set, sample_population=s, actual_set=skeleton_set, rounds=2)
         base_set = skeleton_set.union( seed_set )
-        rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
+        rescue_remotes(g, degree=d, cutoff_ideg=15, cutoff_odeg=13, process_set=base_set )
     print( "Removing seed information" )
     destroy_seed(g)
     del nonseed_set
@@ -1623,7 +1693,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=Fals
     print( f"Refining base graph (o={len(base_set)}, d={d}, a={a}, nR={nR} shw={shw})" )
     reset_phase_counters(g, d)
     populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//4, qbc=0.95, qadaptive=True, process_set=base_set)
-    rescue_remotes(g, degree=d, cutoff_ideg=12, process_set=base_set )
+    rescue_remotes(g, degree=d, cutoff_ideg=15, cutoff_odeg=13, process_set=base_set )
     t1 = time.perf_counter()
     print( f"t={int(t1-t0)}" )
     # ----
@@ -1637,7 +1707,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=Fals
     reset_phase_counters(g, d)
     populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=None, qshadow=shw, qbw=d//2, qbc=0.95, qadaptive=True, process_set=rest_set)
     print( "Rescuing remotes" )
-    rescue_remotes(g, degree=d, cutoff_ideg=12 )
+    rescue_remotes(g, degree=d, cutoff_ideg=13, cutoff_odeg=11 )
     t2 = time.perf_counter()
     print( f"t={int(t2-t0)}" )
     g.CloseAll() # !!!
@@ -1653,7 +1723,7 @@ def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=Fals
         print( f"Populating graph (d={d}, a={a}, nR={nR} shw={shw})" )
         reset_phase_counters(g, d)
         populate(g, degree=d, alpha=a, max_odeg_ratio=nR, entry=topname, qshadow=shw, qbw=d//2, qbc=0.95, qadaptive=True, process_set=full_set, polish=True )
-        rescue_remotes(g, degree=d, cutoff_ideg=12)
+        rescue_remotes(g, degree=d, cutoff_ideg=13, cutoff_odeg=11 )
         t3 = time.perf_counter()
         print( f"t={int(t3-t0)}" )
         g.CloseAll() # !!!
@@ -1662,9 +1732,9 @@ def build_proximity_graph(g, degree=48, alpha=1.0, quality=1.0, skip_polish=Fals
     print( "=== FINALIZE ===" )
     nR = 2.0
     print( f"Pruning graph (d={degree}, a={alpha}, nR={nR})" )
-    reset_phase_counters(g, degree)
+    #reset_phase_counters(g, degree)
     prune_all(g, degree, alpha, prunable_mindegree=degree//2, max_odeg_ratio=nR)
-    rescue_remotes(g, degree=degree, cutoff_ideg=12)
+    rescue_remotes(g, degree=degree, cutoff_ideg=11, cutoff_odeg=9 )
     print( "Creating entry point" )
     topname = topstar(g, degree=round( nR*degree ))
     print( "Finalizing arcs" )
@@ -1773,7 +1843,11 @@ def check(g):
 
 
 #def INIT(graph, bias=0.0, h=512, shw=0, f=0, bw=256, bc=1.0, init=8, bmin=8, bmax=512, depth=(1<<31)-1, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, adaptive=True ):
-def INIT(graph, bias=0.0, expansion=(1<<30), depth=(1<<30), visit=(1<<30) ):
+def INIT(graph, bias=0.0, tune={} ):
+    recursion = {
+        'bias': bias,
+    }
+    recursion.update( tune )
     MEM = graph.Memory(32)
     Q = graph.NewNeighborhoodQuery(
                                 memory  =   MEM,
@@ -1785,32 +1859,7 @@ def INIT(graph, bias=0.0, expansion=(1<<30), depth=(1<<30), visit=(1<<30) ):
                                 sortby  =   S_RVAL,
                                 fields  =   F_VAL | F_ID | F_DEPTH,
                                 result  =   R_LIST,
-                                recursion = {
-                                    'bias': bias
-                                    #'expansion_limit': expansion,
-                                    #'depth_limit': depth,
-                                    #'visit_limit': visit
-                                }
-                                #recursion = {
-                                #    'heap_size': h,
-                                #    'shadow_size': shw,
-                                #    'frontier_limit': f,
-                                #    'depth_limit': depth,
-                                #    'beam_width': bw,
-                                #    'beam_curve': bc,
-                                #    'beam_min': bmin,
-                                #    'beam_max': bmax,
-                                #    'adaptive_taper': adaptive,
-                                #    'alpha' : alpha,
-                                #    'beta' : beta,
-                                #    'gamma' : gamma,
-                                #    'delta' : delta,
-                                #    'epsilon' : epsilon,
-                                #    'zeta' : zeta,
-                                #    'kappa': kappa,
-                                #    'lambda': lambd,
-                                #    'init_select': init
-                                #}
+                                recursion = recursion
     )
     return MEM, Q
 
@@ -1941,182 +1990,230 @@ def execscan(g, probe, k=10, sortdir=S_DESC, fname=None, use_address_as_id=False
 
 
 
-
 RAW_PERF_REFERENCE = """
-shadow recall qps evals score_contrib beam_accepts result_accepts neighbor_expands topk_depth query_depth
-1 0.7847 7992.2 1374 180 55 105 20 7.23 8.81
-2 0.7877 7992.3 1389 184 55 105 20 7.26 8.86
-3 0.7906 7407.9 1411 188 56 106 20 7.29 8.95
-4 0.7963 7640.5 1435 193 57 106 21 7.35 9.04
-5 0.8021 7715.8 1459 198 57 106 21 7.4 9.11
-6 0.8044 7392 1481 203 58 106 22 7.43 9.18
-8 0.81 7044 1523 212 60 106 22 7.49 9.31
-9 0.8149 6997 1548 216 60 106 23 7.55 9.41
-11 0.821 6947.1 1592 225 62 106 24 7.63 9.54
-13 0.8277 6517.1 1635 234 63 107 24 7.7 9.69
-16 0.8361 6464.3 1703 248 65 107 26 7.79 9.89
-19 0.8438 6250.3 1773 261 68 107 27 7.91 10.12
-22 0.8531 6008.9 1849 274 70 107 28 8.05 10.34
-26 0.8602 5640.7 1941 291 73 107 30 8.13 10.58
-32 0.874 5278.3 2092 316 78 107 33 8.29 10.97
-38 0.8862 4838.7 2277 342 83 108 36 8.3 11.23
-45 0.9126 4093.4 2677 379 105 109 44 7.4 10.34
-53 0.9228 3733.2 2937 413 112 109 49 7.47 10.65
-64 0.9365 3284.2 3323 459 123 109 56 7.47 10.95
-76 0.9494 2746.2 3950 518 154 110 69 6.71 10.27
-90 0.9595 2416.3 4486 578 171 110 80 6.64 10.45
-107 0.9688 2008 5365 659 209 111 98 6.18 10.11
-128 0.9751 1742.3 6136 747 235 111 114 6.17 10.37
-152 0.9793 1503.8 7003 844 265 111 133 6.13 10.71
-181 0.9855 1227.7 8632 1118 351 126 167 5.6 9.99
-215 0.9877 1104.9 9568 1245 388 126 188 5.62 10.38
-256 0.9893 1000.9 10497 1383 427 127 209 5.71 10.92
-304 0.991 867.2 11966 1609 503 128 242 5.48 10.9
-362 0.9923 804.8 12973 1790 547 128 265 5.63 11.55
-430 0.9936 734.8 14124 1990 597 128 291 5.75 12.38
-512 0.9947 650.6 15857 2301 687 129 331 5.63 12.55
-608 0.9955 592.4 17314 2554 761 129 365 5.76 13.47
-724 0.9966 539.9 18910 2828 851 129 404 5.89 14.28
-861 0.9972 473.8 21243 3252 989 131 461 5.73 14.38
-1024 0.9978 435.6 22925 3599 1109 131 503 5.8 15.24
-1217 0.9982 398.3 24748 3988 1252 131 550 5.86 15.84
-1448 0.9984 351.2 27637 4562 1464 131 626 5.69 16.01
-1722 0.9987 317.4 29984 5057 1657 131 688 5.71 16.68
-2048 0.9988 283.7 33295 5778 1936 132 779 5.49 16.78
-2435 0.999 262.2 35595 6409 2159 132 841 5.49 17.4
-2896 0.9989 244.4 37882 7152 2406 132 903 5.49 17.93
-3444 0.9993 218.9 41678 8185 2791 132 1010 5.32 18.27
-4096 0.9995 203.7 44090 9180 3093 132 1076 5.33 18.73
-4870 0.9995 190.4 46983 10378 3442 132 1157 5.33 19.63
-5792 0.9996 173.7 50917 11865 3931 133 1272 5.16 19.56
-6888 0.9996 160.2 54690 13449 4387 133 1379 5.16 20.16
-8192 0.9995 146.7 58864 15241 4868 133 1502 5.16 20.88
-9741 0.9998 132.8 63737 17465 5496 133 1652 5.04 20.72
-11585 0.9996 121.7 68559 19819 6000 133 1802 5.03 21.09
-13777 0.9998 110.9 73968 22661 6534 133 1967 5.03 21.43
-16384 0.9999 104.7 80242 25996 7334 134 2173 4.91 20.83
-19483 0.9997 96.2 86821 29909 7973 134 2372 4.91 20.53
-23170 0.9998 87.4 93828 34244 8885 134 2607 4.81 19.8
-27554 1 79.9 101457 39387 9711 134 2861 4.81 19.44
+bias recall qps evals score_contrib beam_accepts result_accepts neighbor_expands topk_depth query_depth
+-100 0.00780 59808.8 331 145 17 46 1 1.00 1.00 3.2% 3.2%
+-99 0.19120 25384.1 577 25 22 25 4 3.98 4.52 4.5% 3.8%
+-98 0.23260 22944.6 616 27 23 27 5 4.36 5.06 2.3% 3.3%
+-97 0.35065 16739.1 731 39 29 39 7 5.28 6.15 -1.3% 2.0%
+-96 0.37140 17821.1 753 42 30 42 8 5.41 6.33 -1.2% 1.2%
+-95 0.45690 13994.4 842 54 33 54 9 5.84 6.82 -0.9% 0.8%
+-94 0.47420 15572.5 860 57 34 57 9 5.94 6.93 -0.9% 0.5%
+-93 0.49260 15466.8 880 60 35 60 10 6.03 7.02 -0.8% 0.3%
+-92 0.55250 13724.9 948 73 38 72 11 6.33 7.35 -0.9% 0.1%
+-91 0.57070 12341.6 972 78 38 77 11 6.45 7.46 -0.8% 0.0%
+-90 0.61835 12238.9 1039 93 41 88 12 6.76 7.81 -0.2% -0.0%
+-89 0.58520 10594.5 1027 77 42 76 12 6.34 7.36 2.8% 0.3%
+-88 0.58520 10984.1 1027 77 42 76 12 6.34 7.36 2.8% 0.5%
+-87 0.62455 11431.6 1094 85 44 83 13 6.52 7.55 4.3% 0.8%
+-86 0.62455 10292.3 1094 85 44 83 13 6.52 7.55 4.3% 1.1%
+-85 0.65630 10524.8 1154 94 46 89 14 6.63 7.69 4.6% 1.4%
+-84 0.65630 10383.6 1154 94 46 89 14 6.63 7.69 4.6% 1.6%
+-83 0.68070 9781.2 1214 102 48 93 15 6.73 7.83 4.6% 1.8%
+-82 0.68070 9747.0 1214 102 48 93 15 6.73 7.83 4.6% 2.0%
+-81 0.70145 8875.2 1277 110 50 97 17 6.85 7.99 2.6% 2.1%
+-80 0.70145 9438.7 1277 110 50 97 17 6.85 7.99 2.6% 2.1%
+-79 0.71950 8725.3 1334 118 52 99 18 6.95 8.13 1.3% 2.0%
+-78 0.73430 8269.5 1389 126 54 101 18 7.03 8.26 1.0% 2.0%
+-77 0.74630 7481.3 1436 134 55 102 19 7.08 8.35 0.9% 1.9%
+-76 0.74630 8046.0 1436 134 55 102 19 7.08 8.35 0.9% 1.9%
+-75 0.75580 7481.5 1486 141 57 103 20 7.14 8.48 0.7% 1.8%
+-74 0.76670 7306.5 1537 149 59 104 21 7.20 8.58 0.3% 1.7%
+-73 0.77635 7398.4 1587 156 60 105 22 7.27 8.72 0.3% 1.6%
+-72 0.78520 7231.4 1633 164 62 105 23 7.34 8.86 -0.3% 1.5%
+-71 0.79945 6619.4 1720 178 64 106 24 7.42 9.07 -0.6% 1.4%
+-70 0.80710 6328.7 1763 185 66 107 25 7.49 9.17 -1.3% 1.3%
+-69 0.81195 6360.4 1803 192 67 107 26 7.53 9.28 -0.8% 1.2%
+-68 0.82400 5946.2 1886 205 70 107 27 7.62 9.45 -1.4% 1.1%
+-67 0.82890 5938.6 1923 212 71 107 28 7.66 9.55 -1.1% 1.0%
+-66 0.83725 5775.6 1994 225 74 108 29 7.72 9.73 -0.8% 0.9%
+-65 0.84475 5445.9 2067 237 76 108 31 7.82 9.92 -0.6% 0.8%
+-64 0.84770 5328.4 2102 244 77 108 31 7.86 10.01 -0.5% 0.7%
+-63 0.85435 5277.8 2172 256 80 108 32 7.93 10.18 -1.0% 0.7%
+-62 0.86230 5005.6 2251 268 82 108 34 8.02 10.37 -0.7% 0.6%
+-61 0.86975 4806.5 2348 286 85 108 36 8.10 10.58 0.5% 0.6%
+-60 0.87465 4585.4 2421 298 88 109 37 8.15 10.75 0.9% 0.6%
+-59 0.87865 4387.1 2495 310 90 109 38 8.19 10.92 1.3% 0.6%
+-58 0.90380 3895.2 2848 335 110 110 45 7.35 10.06 -1.1% 0.6%
+-57 0.90795 3827.3 2922 347 112 110 46 7.39 10.16 -1.1% 0.5%
+-56 0.91270 3604.9 3037 364 116 110 48 7.44 10.31 -0.8% 0.4%
+-55 0.91700 3471.8 3155 381 119 110 50 7.46 10.44 -0.5% 0.4%
+-54 0.92250 3327.8 3283 398 123 110 53 7.51 10.60 -0.4% 0.4%
+-53 0.92755 3254.9 3395 414 127 110 55 7.48 10.68 -1.1% 0.3%
+-52 0.93085 3087.7 3513 431 131 111 57 7.49 10.77 -0.9% 0.2%
+-51 0.93710 2969.4 3692 453 136 111 61 7.47 10.89 -4.5% 0.0%
+-50 0.94015 2892.2 3811 469 141 111 63 7.47 11.00 -4.0% -0.2%
+-49 0.94815 2586.7 4202 497 162 111 70 6.87 10.34 -1.1% -0.2%
+-48 0.95100 2523.0 4322 513 166 112 73 6.83 10.32 -3.8% -0.4%
+-47 0.95425 2403.0 4501 535 172 112 76 6.82 10.42 -3.2% -0.5%
+-46 0.95710 2304.4 4676 557 178 112 80 6.82 10.51 -2.0% -0.6%
+-45 0.95930 2190.7 4864 578 185 112 84 6.75 10.50 -2.4% -0.6%
+-44 0.96120 2144.6 5033 599 191 112 87 6.72 10.55 -1.0% -0.7%
+-43 0.96420 2060.0 5258 624 199 112 92 6.72 10.62 -2.0% -0.7%
+-42 0.96655 1976.1 5432 645 205 112 95 6.67 10.63 -4.5% -0.9%
+-41 0.96885 1912.8 5625 670 213 112 99 6.65 10.70 -6.3% -1.1%
+-40 0.97050 1856.0 5795 690 219 112 103 6.62 10.70 -6.1% -1.3%
+-39 0.97335 1687.8 6282 725 246 112 112 6.20 10.12 -2.7% -1.4%
+-38 0.97500 1629.1 6496 751 255 113 117 6.16 10.13 -1.4% -1.4%
+-37 0.97640 1580.7 6744 777 266 113 122 6.09 10.09 -0.4% -1.4%
+-36 0.97750 1513.2 6962 803 275 113 126 6.06 10.10 0.5% -1.3%
+-35 0.97910 1468.5 7149 826 282 113 130 6.05 10.16 -0.4% -1.2%
+-34 0.97985 1437.7 7308 849 289 113 134 6.05 10.24 0.6% -1.2%
+-33 0.98050 1403.8 7469 872 296 113 137 6.04 10.28 -0.1% -1.1%
+-32 0.98175 1372.6 7651 896 303 113 141 6.04 10.36 0.7% -1.1%
+-31 0.98235 1345.9 7804 919 310 113 145 6.01 10.38 -0.0% -1.0%
+-30 0.98365 1312.4 7971 943 317 113 148 6.05 10.45 -1.3% -1.0%
+-29 0.98465 1283.7 8167 971 326 113 153 6.01 10.41 -1.4% -1.0%
+-28 0.98570 1253.2 8360 994 334 113 157 6.02 10.49 -3.3% -1.1%
+-27 0.98580 1223.0 8531 1017 341 113 160 6.00 10.52 -1.7% -1.1%
+-26 0.98695 1159.8 8963 1054 371 113 169 5.74 10.07 1.0% -1.1%
+-25 0.98760 1135.3 9131 1077 378 113 173 5.74 10.10 0.1% -1.0%
+-24 0.98800 1118.7 9298 1100 385 113 177 5.73 10.13 0.8% -1.0%
+-23 0.98845 1102.1 9434 1124 393 113 180 5.72 10.21 -0.0% -0.9%
+-22 0.98865 1089.3 9585 1147 399 113 183 5.71 10.23 1.0% -0.9%
+-21 0.98870 1062.8 9732 1167 406 113 186 5.72 10.28 2.4% -0.8%
+-20 0.98950 1050.1 9876 1187 413 113 189 5.72 10.23 -0.3% -0.7%
+-19 0.98955 1035.0 9991 1207 419 113 192 5.71 10.29 0.5% -0.7%
+-18 0.98970 1023.6 10109 1222 424 113 195 5.70 10.30 1.0% -0.7%
+-17 0.99040 1007.3 10251 1238 430 113 198 5.71 10.34 -2.2% -0.7%
+-16 0.99060 1004.1 10327 1253 434 113 200 5.71 10.35 -0.7% -0.7%
+-15 0.99090 988.8 10455 1269 439 113 202 5.72 10.42 -2.5% -0.8%
+-14 0.99120 979.1 10548 1285 445 113 204 5.72 10.43 -1.3% -0.8%
+-13 0.99130 964.0 10634 1297 449 113 206 5.71 10.42 -0.4% -0.8%
+-12 0.99130 963.3 10727 1310 453 113 208 5.70 10.41 0.5% -0.7%
+-11 0.99170 953.6 10825 1322 458 113 211 5.69 10.44 -2.6% -0.8%
+-10 0.99155 946.0 10904 1334 462 113 213 5.68 10.46 2.4% -0.7%
+-9 0.99205 942.2 10997 1345 466 113 215 5.68 10.45 -4.4% -0.8%
+-8 0.99215 922.1 11046 1353 469 113 216 5.68 10.40 -4.4% -0.9%
+-7 0.99180 925.3 11149 1361 472 113 218 5.66 10.46 -0.3% -0.9%
+-6 0.99185 926.6 11140 1366 474 113 218 5.67 10.45 -2.1% -0.9%
+-5 0.99175 925.7 11172 1370 475 113 218 5.67 10.46 -0.9% -0.9%
+-4 0.99190 919.8 11209 1377 477 113 219 5.67 10.44 3.8% -0.8%
+-3 0.99205 915.6 11244 1381 478 113 220 5.67 10.47 -2.2% -0.8%
+-2 0.99205 912.9 11244 1381 478 113 220 5.67 10.47 -2.2% -0.9%
+-1 0.99205 919.1 11271 1384 479 113 221 5.67 10.50 -2.0% -0.9%
+0 0.99205 911.5 11271 1384 479 113 221 5.67 10.50 -2.0% -0.9%
+1 0.99205 914.8 11271 1384 479 113 221 5.67 10.50 -2.0% -0.9%
+2 0.99230 916.4 11291 1388 480 113 221 5.68 10.49 -3.0% -1.0%
+3 0.99230 910.8 11291 1388 480 113 221 5.68 10.49 -3.0% -1.0%
+4 0.99195 914.0 11316 1391 481 113 221 5.68 10.47 1.6% -1.0%
+5 0.99225 904.3 11383 1399 484 113 223 5.68 10.55 -2.0% -1.0%
+6 0.99260 906.2 11398 1402 485 113 223 5.70 10.54 -5.9% -1.1%
+7 0.99260 898.3 11437 1408 487 113 224 5.70 10.60 -5.6% -1.2%
+8 0.99290 893.4 11504 1416 488 113 226 5.71 10.58 -5.2% -1.3%
+9 0.99255 889.6 11536 1426 491 113 227 5.72 10.60 -5.8% -1.4%
+10 0.99300 880.6 11623 1437 494 113 228 5.71 10.62 -4.8% -1.4%
+11 0.99300 877.7 11687 1447 497 113 230 5.73 10.68 -4.3% -1.5%
+12 0.99265 872.8 11747 1457 500 113 231 5.72 10.71 -1.9% -1.5%
+13 0.99310 842.3 12107 1491 527 114 239 5.50 10.34 -1.4% -1.5%
+14 0.99320 836.1 12158 1504 531 114 240 5.51 10.33 -1.5% -1.5%
+15 0.99330 822.9 12317 1523 537 114 244 5.51 10.43 -0.7% -1.5%
+16 0.99375 820.3 12391 1540 540 114 245 5.51 10.44 -3.6% -1.5%
+17 0.99315 811.2 12498 1559 547 114 248 5.52 10.50 1.5% -1.5%
+18 0.99415 789.9 12662 1581 554 114 252 5.53 10.52 -3.8% -1.5%
+19 0.99390 791.6 12785 1604 560 114 254 5.53 10.57 -1.1% -1.5%
+20 0.99435 784.1 12953 1631 567 114 258 5.54 10.59 -3.3% -1.5%
+21 0.99410 770.9 13119 1656 575 114 262 5.53 10.63 0.3% -1.5%
+22 0.99450 764.9 13268 1685 581 114 265 5.55 10.72 -2.0% -1.5%
+23 0.99470 754.0 13412 1713 589 114 268 5.58 10.79 -2.6% -1.5%
+24 0.99480 740.2 13642 1748 599 114 274 5.58 10.87 -1.7% -1.5%
+25 0.99470 730.1 13857 1784 609 114 278 5.56 10.87 0.7% -1.5%
+26 0.99490 717.2 14048 1820 619 114 283 5.54 10.91 1.6% -1.4%
+27 0.99500 705.1 14267 1862 630 114 288 5.56 11.01 1.4% -1.4%
+28 0.99540 698.1 14453 1898 637 114 292 5.59 11.07 -1.8% -1.4%
+29 0.99520 686.4 14679 1943 647 114 297 5.61 11.26 1.2% -1.3%
+30 0.99565 673.6 14908 1990 657 114 302 5.63 11.33 1.4% -1.3%
+31 0.99585 665.5 15102 2036 667 114 306 5.67 11.44 -5.5% -1.4%
+32 0.99620 650.7 15396 2091 682 114 312 5.69 11.54 -2.7% -1.4%
+33 0.99640 625.1 15967 2172 719 114 326 5.50 11.28 1.5% -1.4%
+34 0.99660 614.1 16256 2235 733 114 332 5.51 11.35 -3.9% -1.4%
+35 0.99670 599.1 16621 2299 751 114 341 5.52 11.45 -2.9% -1.4%
+36 0.99710 591.7 16798 2360 763 114 344 5.55 11.58 -4.5% -1.5%
+37 0.99710 579.8 17145 2426 778 114 352 5.62 11.84 -2.5% -1.5%
+38 0.99700 565.0 17506 2501 797 114 360 5.62 11.94 0.0% -1.5%
+39 0.99720 553.4 17792 2576 815 114 367 5.65 12.14 0.6% -1.4%
+40 0.99735 542.2 18227 2659 839 114 377 5.66 12.29 -0.3% -1.4%
+41 0.99720 529.9 18624 2740 859 114 386 5.70 12.46 5.3% -1.3%
+42 0.99745 513.6 19143 2826 882 114 398 5.75 12.69 2.7% -1.2%
+43 0.99800 502.3 19583 2923 909 114 408 5.78 12.82 -1.3% -1.2%
+44 0.99780 481.4 20220 3071 957 114 424 5.60 12.55 -2.4% -1.3%
+45 0.99825 466.8 20859 3177 986 114 438 5.62 12.74 -0.3% -1.2%
+46 0.99805 452.9 21468 3292 1019 114 453 5.65 12.90 7.0% -1.1%
+47 0.99845 436.5 22173 3420 1058 114 470 5.67 13.04 1.1% -1.1%
+48 0.99860 418.2 23015 3552 1099 114 490 5.68 13.19 -0.6% -1.1%
+49 0.99875 403.7 23726 3690 1140 114 507 5.68 13.29 0.1% -1.0%
+50 0.99880 388.0 24639 3853 1192 114 530 5.69 13.46 3.2% -1.0%
+51 0.99900 375.1 25347 4013 1239 114 548 5.72 13.56 -5.9% -1.1%
+52 0.99880 361.2 26103 4174 1296 114 566 5.72 13.76 9.3% -0.9%
+53 0.99885 348.1 26980 4328 1353 114 590 5.74 13.84 7.1% -0.7%
+54 0.99920 334.0 27987 4595 1435 114 615 5.63 13.68 -6.6% -0.9%
+55 0.99915 320.9 28932 4770 1504 114 640 5.65 13.81 -0.6% -0.8%
+56 0.99940 307.4 30058 4959 1583 114 669 5.66 14.01 -9.9% -1.1%
+57 0.99935 293.8 31319 5138 1660 114 704 5.65 14.08 -3.7% -1.1%
+58 0.99945 282.6 32351 5335 1747 114 731 5.67 14.17 -5.4% -1.2%
+59 0.99940 270.7 33498 5551 1839 114 763 5.67 14.16 0.4% -1.2%
+60 0.99940 261.1 34544 5784 1939 114 793 5.67 14.30 3.6% -1.1%
+61 0.99965 247.5 36205 6183 2083 115 838 5.46 13.87 2.7% -1.0%
+62 0.99975 238.4 37412 6444 2201 115 873 5.49 14.04 -15.2% -1.4%
+63 0.99970 227.1 39042 6704 2328 115 919 5.48 14.07 1.5% -1.3%
+64 0.99970 217.6 40559 7005 2473 115 962 5.48 14.23 5.5% -1.2%
+65 0.99980 209.3 42069 7324 2623 115 1006 5.49 14.40 -16.6% -1.6%
+66 0.99980 201.2 43379 7661 2777 115 1046 5.48 14.36 -14.0% -1.9%
+67 0.99980 192.6 44895 8008 2944 115 1091 5.48 14.40 -11.0% -2.2%
+68 0.99980 185.5 46619 8586 3178 115 1143 5.30 14.18 -7.6% -2.3%
+69 0.99980 176.1 48590 8988 3374 115 1201 5.31 14.22 -3.7% -2.3%
+70 0.99980 169.5 50216 9422 3573 115 1252 5.30 14.36 -0.4% -2.3%
+71 0.99975 162.5 52070 9923 3815 115 1309 5.30 14.39 18.0% -1.9%
+72 0.99985 157.3 53388 10428 4044 115 1353 5.30 14.51 -10.2% -2.1%
+73 0.99985 150.3 55011 11011 4326 115 1404 5.31 14.57 -7.5% -2.2%
+74 0.99980 139.5 57144 11791 4648 115 1472 5.13 14.42 13.3% -1.9%
+75 0.99980 135.1 59036 12464 4979 115 1534 5.14 14.51 17.0% -1.5%
+76 0.99980 128.8 60946 13195 5330 115 1594 5.13 14.64 20.8% -1.0%
+77 0.99975 124.1 62888 13979 5685 115 1659 5.13 14.66 42.5% -0.2%
+78 0.99985 118.7 64798 14846 6079 115 1722 5.14 14.63 9.0% 0.0%
+79 0.99985 116.3 66716 15771 6487 115 1789 5.13 14.76 12.2% 0.3%
+80 0.99985 110.0 69115 16931 6990 115 1869 5.01 14.42 16.3% 0.7%
+81 0.99985 106.7 71493 18053 7475 115 1951 5.02 14.58 20.3% 1.1%
+82 0.99985 101.4 73657 19265 8007 115 2027 5.01 14.70 23.9% 1.6%
+83 0.99985 96.6 75597 20615 8613 115 2097 5.01 14.72 27.2% 2.2%
+84 0.99990 94.7 77785 22061 9241 115 2178 5.02 14.72 -0.5% 2.1%
+85 0.99985 91.5 79707 23596 9864 115 2251 5.01 14.69 34.1% 2.7%
+86 0.99990 87.2 82869 25481 10625 115 2363 4.90 14.45 6.0% 2.8%
+87 0.99995 83.0 85071 27327 11387 115 2453 4.91 14.57 -10.0% 2.4%
+88 0.99990 79.7 87663 29394 12255 115 2553 4.90 14.65 12.2% 2.7%
+89 0.99990 77.5 89853 31557 13089 115 2640 4.90 14.56 15.0% 3.0%
+90 0.99990 73.8 93753 34123 14173 115 2801 4.90 14.86 20.0% 3.4%
+91 0.99990 71.0 96741 36963 15354 115 2922 4.81 14.31 23.8% 3.8%
+92 0.99990 66.7 100186 39941 16481 115 3063 4.81 14.37 28.2% 4.4%
+93 0.99995 64.6 103683 43161 17493 115 3211 4.81 14.26 9.7% 4.5%
+94 0.99995 61.6 107237 46785 18634 115 3358 4.81 14.28 13.5% 4.8%
+95 0.99985 58.6 111633 50877 20283 115 3556 4.71 14.03 87.8% 6.1%
+96 0.99990 55.6 116181 55322 21583 115 3778 4.71 14.40 48.7% 7.0%
+97 0.99985 53.0 119699 60106 22938 115 3950 4.71 14.10 101.3% 8.4%
+98 0.99990 50.1 124307 65609 24545 115 4165 4.71 14.08 59.1% 9.4%
+99 0.99995 47.8 128369 71517 26008 115 4398 4.71 14.08 35.9% 10.1%
+100 0.99990 44.3 135012 78552 28589 115 4772 4.63 13.78 72.7% 11.3%
 """
 
-
-
-outRAW_PERF_REFERENCE = """
-shadow recall qps evals score_contrib beam_accepts result_accepts neighbor_expands topk_depth query_depth qps_delta
-1 0.7695 8685.7 1247 180 56 105 20 7.39 8.98 -7.50%
-2 0.7715 8830.7 1257 183 56 105 20 7.41 9.02 -6.90%
-3 0.7748 8287.5 1278 188 57 105 21 7.46 9.11 -5.80%
-4 0.7783 8292.2 1299 193 58 106 21 7.51 9.21 -4.70%
-5 0.7828 8321.4 1320 197 58 106 21 7.56 9.29 -3.70%
-6 0.7877 8188.2 1341 202 59 106 22 7.63 9.38 -3.50%
-7 0.7896 7793.6 1361 206 60 106 22 7.67 9.46 -3.00%
-8 0.7941 7833.8 1382 211 61 106 23 7.71 9.54 -3.10%
-9 0.7993 7649.3 1402 216 61 106 23 7.78 9.63 -3.10%
-10 0.8012 7791 1420 221 62 106 23 7.81 9.7 -2.40%
-12 0.8057 7322.2 1459 229 63 106 24 7.89 9.85 -2.20%
-13 0.8085 7474.7 1477 234 64 106 25 7.92 9.93 -2.30%
-16 0.8194 6886.6 1540 247 66 107 26 8.08 10.15 -2.60%
-18 0.8266 6830.9 1585 256 68 107 27 8.19 10.33 -2.60%
-21 0.8362 6494.7 1653 269 70 107 28 8.31 10.58 -3.00%
-24 0.8441 6238.3 1720 282 73 107 29 8.44 10.81 -3.10%
-27 0.8518 6097 1791 295 75 107 31 8.56 11.04 -2.60%
-32 0.8668 5394.1 1916 316 79 108 33 8.79 11.4 -4.80%
-36 0.8784 5256.1 2037 333 83 108 36 8.85 11.59 -5.60%
-42 0.8988 4561.4 2332 371 103 110 42 7.65 10.51 -5.50%
-48 0.906 4320.2 2494 396 109 110 46 7.75 10.78 -3.20%
-55 0.9151 3942.5 2691 425 115 110 50 7.83 11.06 -1.80%
-64 0.9275 3604 2963 462 124 110 56 7.92 11.41 -3.50%
-73 0.9402 3076.2 3453 514 152 112 66 6.97 10.51 -1.40%
-84 0.9481 2785.5 3813 561 164 112 74 6.97 10.75 -2.00%
-97 0.9568 2506.2 4269 616 180 112 85 6.99 11.05 -1.80%
-111 0.9649 2142.4 4981 695 215 113 101 6.46 10.55 -0.30%
-128 0.9705 1910.7 5556 766 235 113 114 6.42 10.83 -0.30%
-147 0.9758 1714.6 6194 842 258 113 129 6.44 11.11 -1.40%
-168 0.9793 1545.3 6851 919 283 113 145 6.45 11.4 -2.20%
-194 0.9832 1326.7 7913 1038 336 114 171 6.05 11.04 -1.40%
-222 0.9861 1206 8688 1132 365 115 190 6.09 11.38 -2.20%
-256 0.988 1089.7 9571 1245 399 115 212 6.17 11.8 -2.00%
-294 0.9891 964.1 10776 1404 459 116 242 5.9 11.69 3.80%
-337 0.9907 883.4 11770 1545 499 116 266 5.98 12.07 0.90%
-388 0.9924 809.3 12814 1706 544 116 292 6.08 12.63 -1.60%
-445 0.9936 739.8 13914 1873 596 116 320 6.2 13.13 -1.50%
-512 0.9945 653.3 15604 2117 678 116 364 6.02 13.22 -0.10%
-588 0.9952 601.2 17020 2304 744 116 401 6.12 13.86 1.50%
-675 0.9957 549.5 18483 2503 815 116 440 6.25 14.38 5.00%
-776 0.9964 486.5 20703 2817 924 117 501 6.09 14.43 11.60%
-891 0.9965 446.4 22470 3065 1023 117 550 6.14 14.89 19.30%
-1024 0.9971 409.3 24236 3342 1131 117 601 6.21 15.36 15.10%
-1176 0.9975 378.4 26003 3641 1251 117 652 6.25 15.76 17.70%
-1351 0.9982 335.4 28876 4076 1424 117 737 6.08 15.56 16.70%
-1552 0.9984 313.1 30686 4440 1567 117 791 6.09 15.92 14.00%
-1782 0.9986 291.6 32557 4854 1728 117 847 6.11 16.39 11.50%
-2048 0.999 260.3 36001 5441 1967 118 954 5.91 16.01 2.80%
-"""
-
-
-RAW_PERF_REFERENCE = """
-shadow recall qps evals score_contrib beam_accepts result_accepts neighbor_expands topk_depth query_depth
-1 0.71140 9092.3 1284 112 50 97 17 6.65 7.79 -0.2% -0.2%
-2 0.71325 9346.8 1297 115 51 98 17 6.66 7.82 0.1% -0.1%
-4 0.72605 8896.2 1348 125 52 99 18 6.74 7.97 -0.1% -0.1%
-6 0.74200 8248.0 1407 134 54 100 20 6.85 8.16 0.3% -0.0%
-8 0.75285 7722.0 1455 144 56 101 20 6.93 8.31 0.4% 0.1%
-9 0.75840 7613.4 1481 148 57 101 21 6.98 8.39 -0.1% 0.0%
-10 0.76360 7438.4 1509 153 58 102 22 7.03 8.48 0.0% 0.0%
-12 0.77425 7653.5 1561 162 60 103 22 7.13 8.65 -0.1% 0.0%
-13 0.77895 7071.3 1587 167 61 103 23 7.18 8.74 -0.2% 0.0%
-16 0.79155 7208.2 1663 181 64 104 24 7.31 8.97 0.3% 0.0%
-18 0.80195 6528.3 1717 190 65 104 25 7.42 9.15 0.1% 0.0%
-21 0.81565 6400.9 1792 204 68 104 27 7.54 9.38 -0.6% -0.0%
-24 0.82700 6124.4 1866 218 71 105 28 7.62 9.59 -0.7% -0.1%
-27 0.83335 5811.7 1930 232 73 105 30 7.67 9.72 0.1% -0.1%
-32 0.84935 5481.6 2057 254 78 105 32 7.87 10.10 -0.8% -0.1%
-36 0.85895 5075.2 2178 273 82 105 35 7.95 10.35 -0.2% -0.1%
-42 0.88625 4352.5 2531 305 102 107 41 7.19 9.74 -0.7% -0.2%
-48 0.89585 4101.3 2697 332 108 107 45 7.24 9.97 -0.1% -0.1%
-55 0.90850 3834.9 2921 365 115 107 49 7.33 10.25 0.9% -0.1%
-64 0.91990 3464.1 3191 406 125 107 55 7.34 10.48 0.4% -0.0%
-73 0.93650 3014.3 3693 453 151 108 65 6.75 9.99 -0.4% -0.1%
-84 0.94540 2722.2 4064 503 166 108 73 6.66 10.13 -0.4% -0.1%
-97 0.95185 2460.3 4476 561 183 108 81 6.65 10.32 -0.1% -0.1%
-111 0.96100 2117.5 5179 634 219 109 96 6.20 9.91 0.2% -0.1%
-128 0.96605 1923.5 5688 710 243 109 107 6.11 10.06 1.3% 0.0%
-147 0.97220 1748.6 6194 791 265 109 118 6.15 10.31 0.1% 0.1%
-168 0.97655 1601.1 6726 878 290 109 130 6.13 10.53 -1.0% -0.0%
-194 0.98135 1421.9 7570 998 339 110 149 5.85 10.36 -0.9% -0.1%
-222 0.98375 1308.7 8198 1118 369 110 163 5.83 10.54 1.3% 0.0%
-256 0.98690 1199.6 8910 1254 404 110 180 5.88 10.82 1.0% 0.1%
-294 0.98965 1088.2 9793 1413 457 110 200 5.70 10.82 -4.0% -0.3%
-337 0.99030 1008.3 10523 1560 493 110 216 5.72 11.20 -0.1% -0.3%
-388 0.99140 939.0 11283 1727 531 110 234 5.80 11.70 2.0% -0.1%
-445 0.99320 879.2 12089 1906 574 110 252 5.91 12.21 -0.5% -0.1%
-512 0.99420 803.1 13067 2131 639 111 275 5.79 12.26 -0.6% -0.1%
-588 0.99505 746.8 14043 2355 697 111 298 5.86 12.67 -3.8% -0.4%
-675 0.99515 684.3 15198 2598 763 111 326 5.93 13.30 3.5% -0.1%
-776 0.99660 616.9 16763 2915 861 111 364 5.80 13.34 2.7% 0.1%
-891 0.99705 558.6 18403 3235 953 111 404 5.80 13.61 3.7% 0.4%
-1024 0.99730 515.5 19762 3592 1051 111 439 5.81 13.94 4.1% 0.7%
-1176 0.99735 478.5 21056 3915 1159 111 473 5.85 14.33 10.2% 1.4%
-1351 0.99805 433.3 23037 4370 1315 111 525 5.76 14.36 -5.3% 0.8%
-1552 0.99820 403.3 24513 4755 1442 111 565 5.76 14.59 -3.7% 0.4%
-1782 0.99825 376.4 26022 5190 1591 111 607 5.76 14.98 -0.6% 0.3%
-2048 0.99855 339.4 28245 5784 1797 111 669 5.53 14.65 2.8% 0.5%
-2352 0.99890 319.7 29799 6283 1961 111 711 5.55 15.04 5.2% 0.9%
-2702 0.99900 302.6 31253 6850 2138 111 752 5.55 15.33 1.1% 0.9%
-"""
 
 
 PERF_REFERENCE = []
 
 
 def init_perf_reference():
-    low = "0 0.0 1e5 0 0 0 0 0 0.0 0.0"
-    high = "1000000 1.0 0.0 1000000 1000000 1000000 1000000 1000000 1e5 1e5"
+    low = "-100 0.0 1e5 0 0 0 0 0 0.0 0.0"
+    high = "100 1.0 0.0 1000000 1000000 1000000 1000000 1000000 1e5 1e5"
     raw = RAW_PERF_REFERENCE.strip().replace("\t", " ").split("\n")[1:]
     data = [entry.split() for entry in [low] + raw + [high]]
     # recall evals
-    pairs = [ (float(entry[1]), int(entry[3])) for entry in data]
+    mapping = {}
+    for entry in data:
+        key = float(entry[1])
+        val = int(entry[3])
+        if not key in mapping:
+            mapping[key] = val
+    pairs = list(mapping.items())
+    pairs.sort()
     PERF_REFERENCE.clear()
     PERF_REFERENCE.extend( pairs )
  
@@ -2151,13 +2248,13 @@ REF_EPQ = 0
 
 #def work(g, PROBES, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, r_result, adaptive=True, show=False):
     #MEM, Q = INIT(g, bias=bias, h=h, shw=shw, f=f, bw=bw, bc=bc, init=init, bmin=bmin, bmax=bmax, depth=depth, alpha=alpha, beta=beta, gamma=gamma, delta=delta, epsilon=epsilon, zeta=zeta, kappa=kappa, lambd=lambd, adaptive=adaptive)
-def work(g, PROBES, entry, k, bias, expansion, depth, visit, r_result, show=False):
-    MEM, Q = INIT(g, bias=bias, expansion=expansion, depth=depth, visit=visit)
+def work(g, PROBES, entry, k, bias, tune, r_result, show=False):
+    MEM, Q = INIT(g, bias=bias, tune=tune )
     testrecall(MEM, Q, g, k, P=PROBES, entry=entry, show=show, r_result=r_result)
 
 
 #def threadwork( g, N, PROBES, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, adaptive=True, perfonly=False, key=None ):
-def threadwork( g, N, PROBES, entry, k, bias, expansion=(1<<30), depth=(1<<30), visit=(1<<30), perfonly=False, key=None ):
+def threadwork( g, N, PROBES, entry, k, bias, tune, perfonly=False, key=None ):
     global EPQ
     global REF_EPQ
     #if bw > 0:
@@ -2165,26 +2262,33 @@ def threadwork( g, N, PROBES, entry, k, bias, expansion=(1<<30), depth=(1<<30), 
     #    if bw < bmin: bw = bmin
     #    elif bw > bmax: bw = bmax
     T = []
-    sz = len(PROBES) // N
-    i = 0
-    for n in range(N):
-        sample = PROBES[i:i+sz]
-        r_result = {}
-        #args = (g, sample, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, r_result, adaptive)
-        args = (g, sample, entry, k, bias, expansion, depth, visit, r_result)
-        t = threading.Thread( target=work, args=args )
-        T.append( (t, r_result) )
-        i += sz
-    t0 = time.perf_counter()
-    for t,_ in T:
-        t.start()
-    alive = len(T)
-    while alive:
-        alive = sum([1 for t,_ in T if t.is_alive()])
-        time.sleep(0.001)
-    t1 = time.perf_counter()
-    for t,_ in T:
-        t.join(timeout=1.0) # just in case
+    if N > 0:
+        sz = len(PROBES) // N
+        i = 0
+        for n in range(N):
+            sample = PROBES[i:i+sz]
+            r_result = {}
+            #args = (g, sample, entry, k, bias, h, shw, f, bw, bc, init, bmin, bmax, depth, alpha, beta, gamma, delta, epsilon, zeta, kappa, lambd, r_result, adaptive)
+            args = (g, sample, entry, k, bias, tune, r_result)
+            t = threading.Thread( target=work, args=args )
+            T.append( (t, r_result) )
+            i += sz
+        t0 = time.perf_counter()
+        for t,_ in T:
+            t.start()
+        alive = len(T)
+        while alive:
+            alive = sum([1 for t,_ in T if t.is_alive()])
+            time.sleep(0.001)
+        t1 = time.perf_counter()
+        for t,_ in T:
+            t.join(timeout=1.0) # just in case
+    # Run in main thread
+    else:
+        T.append( (None,{}) )
+        t0 = time.perf_counter()
+        work(g, PROBES, entry, k, bias, tune, r_result=T[0][1] )
+        t1 = time.perf_counter()
     total_queries = sum([r_result['count'] for _, r_result in T])
     wall_time = t1 - t0
     avg_thread_exec_time = sum([r_result['thread_exec_time'] for _, r_result in T]) / len(T)
@@ -2242,7 +2346,7 @@ def threadwork( g, N, PROBES, entry, k, bias, expansion=(1<<30), depth=(1<<30), 
 
 
 
-def threadtest( g, N, PROBES, entry, k=10, bias=0.0, expansion=(1<<30), depth=(1<<30), visit=(1<<30), perfonly=False, key=None ):
+def threadtest( g, N, PROBES, entry, k=10, bias=0.0, tune={}, perfonly=False, key=None ):
     global EPQ
     global REF_EPQ
     if bias < -100.0:
@@ -2250,7 +2354,7 @@ def threadtest( g, N, PROBES, entry, k=10, bias=0.0, expansion=(1<<30), depth=(1
         REF_EPQ = 0
         return
     r_PROBES = random.sample( PROBES, len(PROBES) )
-    recall, qps = threadwork( g, N, PROBES, entry, k=k, bias=bias, expansion=expansion, depth=depth, visit=visit, perfonly=perfonly, key=key )
+    recall, qps = threadwork( g, N, PROBES, entry, k=k, bias=bias, tune=tune, perfonly=perfonly, key=key )
 
 
 
@@ -2487,7 +2591,9 @@ def sh2delta(s, s0=175):
 #Segmentation fault: 11
 #  D={};work(g, PROBES100k[:1], 'entry', k=10, h=1, shw=0, f=1, bw=0, bc=1.0, init=1, bmin=1, bmax=1, depth=1000, alpha=0.0, beta=0.0, gamma=0.0, delta=0.0, epsilon=0.0, zeta=1.0/18, kappa=0, lambd=0, r_result=D, adaptive=True, show=False)
 
-# for bias in [-200] + list(range(-100,100,1)): threadtest( g, 1, PROBES100k[:2000], 'entry', bias=bias, perfonly=1, key="bias" )
  
+# for v,a in g.Neighborhood( medoid, memory=M, recursion={ 'init_select':0, 'shadow_size':100000, 'beam_width':0, 'frontier_limit':1000000 }, filter="collect(r1); store(R1,r1-0.00001) ", fields=F_VAL|F_ADDR, sortby=S_RVAL, result=R_LIST, hits=25 ): print(f"{v:0.4f}",g[a]['title'])
+
+# for bias in [-200,-100] + list(range(-100,101,1)): threadtest( g, 1, PROBES100k[:2000], 'entry', bias=bias, tune={}, perfonly=1, key="bias" )
 
 
