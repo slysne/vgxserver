@@ -515,8 +515,9 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
+  #define min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   // Never negative cosine (score is [0.0, 2.0] )
-  score = fmaxf( 1.0f, score );
+  score = fmaxf( min_score, score );
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
@@ -711,15 +712,17 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
     if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
       return -1;
     }
-    shadow_trail->threshold = 0.7f;
+    shadow_trail->threshold = 0.0f;
     shadow_trail->wp = shadow_trail->queue;
     shadow_trail->end = shadow_trail->queue + heap_shadow;
+    /*
     double fillval = 0.7;
     double incval = 0.35 / heap_shadow;
     for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
       *p = (float)fillval; // fill gradually from 0.0 to 1.0
       fillval += incval;
     }
+    */
   }
   else {
     shadow_trail->threshold = -FLT_MAX;;
