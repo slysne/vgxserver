@@ -3,7 +3,8 @@
   "configurations": [
     {
       "name": "Attach to C Process",
-      "type": "lldb",
+      "type": "cppdbg",
+      "MIMode": "lldb",
       "request": "attach",
       "program": "${env:HOME}/venv312/bin/python",
       "pid": "${command:pickProcess}",
