@@ -1001,6 +1001,9 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   vgx_CollectorItem_t result_heap_discarded;
   vgx_CollectorItem_t *result_heap_location;
   int refmap_updated;
+  float recursion_score = larc->head.predicator.val.real;
+  float worst_heap_score;
+  
   
   // Try to collect item into result heap
   result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
@@ -1009,7 +1012,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   // Normal non-recursive (or sort not good enough for recursion)
   // ------------------------------------------------------------
 
-  if( F == NULL || (float)sort.flt64.value <= _vxquery_collector__get_current_threshold( base ) ) {
+  if( F == NULL || recursion_score <= _vxquery_collector__get_current_threshold( base ) ) {
     // Nothing collected
     if( result_heap_location == NULL ) {
       return 0;
@@ -1037,17 +1040,23 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
       if( beam_heap_location == NULL ) {
         return 0;
       }
+      /* 
       // Update shadow with beam's new worst score
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)collected.sort.flt64.value );
+      recursion_score = collected.predicator.val.real;
+      */
+      // Inject beam heap's new worst score, except if beam not yet filled fall back on current item's score
+      worst_heap_score = _vxquery_collector__worst_heap_recursion_score( B );
+      recursion_score = maximum_value( worst_heap_score, recursion_score );
+      _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
 
       // Item was pushed to beam only
       return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
 
-    // Update shadow with result heap's new worst score (2x for extra weight)
-    float evicted_result_score = (float)_vxquery_collector__worst_heap_flt64_score( heap );
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, evicted_result_score );
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, evicted_result_score );
+    // Inject result heap's new worst score, except if result not yet filled fall back on current item's score
+    worst_heap_score = _vxquery_collector__worst_heap_recursion_score( heap );
+    recursion_score = maximum_value( worst_heap_score, recursion_score );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
 
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {
@@ -1094,13 +1103,15 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   // Item to frontier only (was not pushed to result)
   if( result_heap_location == NULL ) {
     // Update shadow with current item's score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)sort.flt64.value );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
     refmap_updated = __update_refmap_head( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
   }
   // Item to frontier and was also pushed to result
   else {
-    // Update shadow with result heap _discard_ score
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, (float)result_heap_discarded.sort.flt64.value );
+    // Update shadow with the new worst result score (2x for extra weight)
+    recursion_score = _vxquery_collector__worst_heap_recursion_score( heap );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
     // Populate the frontier-collectable item with refmap slot, and manage result discard
     if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &result_heap_discarded, larc, NULL )) > 0 ) {
       // Add one more ownership sice the call above only handles single owner

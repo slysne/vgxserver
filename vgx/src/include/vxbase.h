@@ -3456,6 +3456,7 @@ typedef enum e_vgx_recursion_mode_t {
  */
 typedef struct s_vgx_recursion_config_t {
   vgx_recursion_mode_t mode;
+  double bias;
   struct {
     int64_t size;
   } heap;

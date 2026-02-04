@@ -364,12 +364,12 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
 
 
 static int beam_item_comparator_score_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
-  return (a->sort.flt64.value > b->sort.flt64.value) - (a->sort.flt64.value < b->sort.flt64.value);
+  return (a->predicator.val.real > b->predicator.val.real) - (a->predicator.val.real < b->predicator.val.real);
 }
 
 
 static int beam_item_comparator_score_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
-  return (a->sort.flt64.value < b->sort.flt64.value) - (a->sort.flt64.value > b->sort.flt64.value);
+  return (a->predicator.val.real < b->predicator.val.real) - (a->predicator.val.real > b->predicator.val.real);
 }
 
 
@@ -388,16 +388,17 @@ static int beam_item_comparator_indegree_desc( vgx_CollectorItem_t *a, vgx_Colle
 
 
 static int beam_item_comparator_random( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
-  double r = randfloat();
-  return (r < 0.5) - (r > 0.5);
+  uint64_t x = ihash64v2( (uint64_t)a->headref->vertex );
+  uint64_t y = ihash64v2( (uint64_t)b->headref->vertex );
+  return x > y;
 }
 
 
 static int beam_item_comparator_priority( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
   float coherence_a = vgx_RankGetC0( &a->headref->vertex->rank );
   float coherence_b = vgx_RankGetC0( &b->headref->vertex->rank );
-  float score_a = (float)a->sort.flt64.value * (1.0f - coherence_a);
-  float score_b = (float)b->sort.flt64.value * (1.0f - coherence_b);
+  float score_a = (float)a->predicator.val.real * (1.0f - coherence_a);
+  float score_b = (float)b->predicator.val.real * (1.0f - coherence_b);
   return (score_a < score_b) - (score_a > score_b);
 }
 
@@ -416,23 +417,9 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
   
   vgx_CollectorItem_t *beam = (vgx_CollectorItem_t*)B->_buffer;
   
-  qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_priority );
-
-  /*
-  // Small beam, sort by score high to low
-  if( n_transfer <= 5 ) {
-    qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
-  }
-  else {
-    // Alternate asc/desc per level
-    if( collector->recursion_depth & 1 ) {
-      qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_asc );
-    }
-    else {
-      qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
-    }
-  }
-  */
+  // Keep it simple: Sort beam best to worst in all cases
+  // This prevents second guessing the threshold EMA controller
+  qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
 
   vgx_CollectorItem_t *cursor = beam;
   vgx_CollectorItem_t *push_end = cursor + minimum_value( n_transfer, B->_size );
@@ -622,6 +609,7 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  ***********************************************************************
  */
  __inline static int64_t __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  control->expansions.local = 0;
   return ++control->evolution.level;
 }
 
@@ -633,7 +621,7 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  ***********************************************************************
  */
 __inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
-  float score = (float)frontier_node->sort.flt64.value;
+  float score = frontier_node->predicator.val.real;
   /*
   float coherence = vgx_RankGetC0( &frontier_node->headref->vertex->rank );
   float excess_coherence = maximum_value(0.0f, coherence - control->coherence.baseline);
@@ -744,9 +732,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     // After the very first neighborhood (global entrypoint) we optionally select a small set of the best candidates
     control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, recursion->init.select );
 
-    // Get the initial difficulty
-    control.threshold.baseline = _vxquery_collector__get_current_threshold( collector );
-
     vgx_CollectorItem_t frontier = {0};
 
     while( control.evolution.level_size > 0 ) {
@@ -761,11 +746,10 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
         }
         
-        /*
-        // We perform the expansion if using pure beam, or if frontier item score compares high enough against current difficulty
-        // (heap-compare, for min-heaps "root > candidate" means the root is small and will be yanked)
-        bool perform_expansion = collector->pure_beam || (main_heap->_cmp( &difficulty.item, &frontier.item ) > 0);
-        */
+        // Update min score to increase difficulty after heap refinement
+        control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
+
+        // Expand if frontier node score is high enough
         if( __expand_next_check( &control, &frontier, collector, mem ) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
@@ -783,9 +767,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
           if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
             goto terminate_inner;
           }
-
-          // Update min score to increase difficulty after heap refinement
-          control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
         }
 
         // Used item from frontier must be closed here

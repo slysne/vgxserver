@@ -265,8 +265,8 @@ __inline static double __recursion_s2delta( int64_t shadow_size ) {
  ******************************************************************************
  */
 static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
-
-  double b = clamp_value( search_bias, -1.0, 1.0 );
+  double normalized_bias = search_bias / 100.0;
+  double b = clamp_value( normalized_bias, -1.0, 1.0 );
 
   // shadow_size
   // Length of delay line for threshold EMA tap
@@ -324,10 +324,11 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
   // Junk recall regime (-1.0 to -0.9)
   else {
     // shadow: 0 - 5
-    config->shadow.size = (int64_t)round( 50.0 * fabs(1.0 + b) );
+    double fshw =  50.0 * fabs(1.0 + b);
+    config->shadow.size = (int64_t)round( fshw );
     
-    // depth: 4 - 9
-    config->limit.depth = 4 + config->shadow.size;
+    // depth: 4 - 19
+    config->limit.depth = 4 + (int64_t)round(3.0 * fshw);
 
     // visits: 64 - 6464
     config->limit.visit = 64 + (int64_t)round( 64000.0 * fabs(1.0 + b) );
@@ -343,9 +344,6 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
     config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
   }  
 
-  // Set to beam mode
-  config->mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
-
   return 0;
 }
 
@@ -359,6 +357,7 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
 static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
   int ret = 0;
   XTRY {
+
     // Sorting required
     if( _vgx_sortby( param->sortspec ) == VGX_SORTBY_NONE || _vgx_sortspec_dontcare( param->sortspec ) ) {
       PyErr_SetString( PyExc_ValueError, "recursive search requires specific sortby" );
@@ -395,13 +394,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     };
 
     dbl_config_param dbl_config[] = {
+      { .name = "bias",             .target = &param->recursion.bias,             .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 (balanced high recall good QPS)
       { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=0.99,   .minval=0.0,         .maxval=1.0 },          // default 0.99=gentle taper
       { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=-0.32,  .minval=-10.0,       .maxval=10.0 },         // default -0.32 (depth discount for expansion threshold)
       { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
       { .name = "gamma",            .target = &param->recursion.tune.gamma,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
-      { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=1e-4,        .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
+      { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
       {0}
     };
 
@@ -411,9 +411,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "adaptive_taper",   .target = &param->recursion.beam.adaptive_taper,    .dflt=true },
       {0}
     };
-
-    // Set base defaults
-    param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
 
     int_config_param *int_cursor = int_config;
     while( int_cursor->name ) {
@@ -436,15 +433,13 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     // Single meta parameter 'bias' contols smart defaults
     PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
     if( py_bias ) {
-      double value = -1e6;
       if( PyNumber_Check(py_bias) ) {
-        value = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
+        search_bias = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
       }
-      if( fabs(value) > 100.0 ) {
+      if( fabs(search_bias) > 100.0 ) {
         PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
         THROW_SILENT( CXLIB_ERR_API, 0x003 );
       }
-      search_bias = value / 100.0; // now range -1.0 to +1.0
     }
 
     // Auto config
@@ -558,9 +553,17 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x00B );
     }
           
-    // Switch to beam mode
-    if( param->recursion.beam.width > 0 ) {
+    // Beam mode
+    if( param->recursion.limit.frontier == 0 && param->recursion.beam.width > 0 ) {
       param->recursion.mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
+    }
+    // Frontier queue mode
+    else if( param->recursion.limit.frontier > 0 && param->recursion.beam.width <= 0 ) {
+      param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
+    }
+    else {
+      PyErr_Format( PyExc_ValueError, "beam_width or frontier_limit required" );
+      THROW_SILENT( CXLIB_ERR_API, 0x00C );
     }
 
   }
@@ -839,10 +842,16 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       param->result_format |= VGX_RESPONSE_SHOW_AS_STRING;
     }
 
-    // Special handling of sorting if counts are requested
-    if( (param->result_format & VGX_RESPONSE_SHOW_WITH_COUNTS) && param->sortspec == VGX_SORTBY_NONE ) {
-      // IMPORTANT: This needs to be set before we create the ranking condition below!
-      param->sortspec = VGX_SORTBY_MEMADDRESS; // we do this to force deep counts
+    // Special handling of unspecified sorting 
+    // IMPORTANT: This needs to be set before we create the ranking condition below!
+    if( param->sortspec == VGX_SORTBY_NONE ) {
+      if( py_recursion ) {
+        param->sortspec = VGX_SORTBY_REAL_PREDICATOR | VGX_SORT_DIRECTION_DESCENDING;
+      }
+      // Special handling of sorting if counts are requested
+      else if( (param->result_format & VGX_RESPONSE_SHOW_WITH_COUNTS) ) {
+        param->sortspec = VGX_SORTBY_MEMADDRESS; // we do this to force deep counts
+      }
     }
 
     // ----

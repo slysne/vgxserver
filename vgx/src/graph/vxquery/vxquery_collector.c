@@ -520,7 +520,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = 0.3f * score + 0.7f * shadow_trail->threshold;
+    return shadow_trail->threshold = shadow_trail->alpha * score + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
   }
 
   // Write latest score
@@ -706,15 +706,23 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  ***********************************************************************
  */
 static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
-  #define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
-  if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
-    return -1;
+  //#define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
+  if( heap_shadow > 0 ) {
+    if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
+      return -1;
+    }
+    shadow_trail->threshold = 0.7f;
+    shadow_trail->wp = shadow_trail->queue;
+    shadow_trail->end = shadow_trail->queue + heap_shadow;
+    double fillval = 0.7;
+    double incval = 0.35 / heap_shadow;
+    for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
+      *p = (float)fillval; // fill gradually from 0.0 to 1.0
+      fillval += incval;
+    }
   }
-  shadow_trail->threshold = init_min_score;
-  shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->end = shadow_trail->queue + heap_shadow;
-  for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
-    *p++ = init_min_score;
+  else {
+    shadow_trail->threshold = -FLT_MAX;;
   }
   shadow_trail->alpha = (float)zeta;
   shadow_trail->count = 0;
@@ -1034,10 +1042,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     // Recursive search
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
-      if( recursion->shadow.size > 0 ) {
-        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
-        }
+      if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
       }
       // Beam if enabled
       if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {

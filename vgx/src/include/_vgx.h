@@ -1031,8 +1031,8 @@ DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShad
  *
  ***********************************************************************
  */
-__inline static double _vxquery_collector__worst_heap_flt64_score( Cm256iHeap_t *heap ) {
-  return ((vgx_CollectorItem_t*)heap->_buffer)->sort.flt64.value;
+__inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap_t *heap ) {
+  return ((vgx_CollectorItem_t*)heap->_buffer)->predicator.val.real;
 }
 
 
