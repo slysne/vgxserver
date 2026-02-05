@@ -324,9 +324,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
   vgx_BaseCollector_context_t *base = self->context.collector;
 
-  float top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
-  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
-
   float score = (float)cosine + 1.0f; // [0.0 - 2.0]
 
   // Adaptive search enabled
@@ -342,18 +339,27 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
     return 0.0f;
   }
+  
+  // Score is good enough to help refine the baseline threshold
+  mem->counter.contrib++;
+  
+  float top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
+  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
+  float collectable_threshold = fminf( top_k_th, beam_j_th );
 
   // Score is ok but item is not collectable to result or beam. Inject score into shadow queue.
-  if( score <= top_k_th && score <= beam_j_th ) {
-    // Score is good enough to help refine the baseline threshold
-    mem->counter.contrib++;
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score );
+  if( score <= collectable_threshold ) {
+    // TODO: There is something to be gain here.
+    // Current problem is fresh beams get populated by the raw score (in the collector logic)
+    // We need to control better which values get injected when.
+    // Consider moving all the inject logic into this file (out of the collector logic)
+    float top_1 = mem->dynamic_taper.top_1_best;
+    float beta = top_1 / (top_1 + collectable_threshold) - 0.25f;
+    float injection = beta * score + (1.0f - beta) * top_k_th;
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
     return 0.0f;
   }
-      
-  // Score is good enough for frontier and/or result
-  mem->counter.contrib++;
-
+  
   // Frontier contribution 
   if( score > beam_j_th ) {
     mem->counter.frontier++;

@@ -1095,7 +1095,7 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     _vxquery_collector__del_collector_item_headref_OPEN( base, &frontier_entry );
   }
 
-  // Crucual: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
+  // Crucial: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
   //          and at the same time ensure we track anything discarded from the main heap
   // We also inserted into main heap, track both frontier refmap additions AND main heap discarad
   vgx_CollectorItem_t *frontier_collectable = &collected; // prepare to add to frontier
