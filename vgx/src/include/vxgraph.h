@@ -6025,10 +6025,12 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t expand;
   } counter;
   // ==== CL3 ====
-  // Q3.1-6
+  // Q3.1-8
   struct {
-    float top_1_best;                 // current top score
+    float top_1_best;                 // current result top score
     float previous_window_best;       // top score recorded in previous window
+    float beam_1_best;                // current beam's top score
+    float _rsv;
     uint32_t window_counter;          // window counter
     uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score
     float alpha;
@@ -6039,10 +6041,9 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     float zeta;
     int kappa;
     int lambda;
+    int _rsv2;
+    int _rsv3;
   } dynamic_taper;
-  // Q3.7-8
-  QWORD __rsv_3_7;
-  QWORD __rsv_3_8;
   // ==== CL4+5 ====
   // Q4.1-8
   // Q51-8

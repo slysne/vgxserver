@@ -1044,19 +1044,22 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
       // Update shadow with beam's new worst score
       recursion_score = collected.predicator.val.real;
       */
+      /*
       // Inject beam heap's new worst score, except if beam not yet filled fall back on current item's score
       worst_heap_score = _vxquery_collector__worst_heap_recursion_score( B );
       recursion_score = maximum_value( worst_heap_score, recursion_score );
       _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
-
+      */
       // Item was pushed to beam only
       return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
 
+    /*
     // Inject result heap's new worst score, except if result not yet filled fall back on current item's score
     worst_heap_score = _vxquery_collector__worst_heap_recursion_score( heap );
     recursion_score = maximum_value( worst_heap_score, recursion_score );
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
+    */
 
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {

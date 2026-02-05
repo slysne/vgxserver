@@ -458,13 +458,15 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
  *
  ***********************************************************************
  */
-static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector ) {
+static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   if( collector->beam_heap ) {
     Cm256iHeap_t *B = collector->beam_heap;
     // Initialize beam heap
     CALLABLE(B)->Clear(B);
     // We have already guaranteed internal allocation is large enough for all beam width
     CALLABLE(B)->Initialize(B, &collector->empty.item, collector->beam_width);
+    // Reset beam's top score
+    mem->dynamic_taper.beam_1_best = -1.0f;
   }
 }
 
@@ -475,7 +477,7 @@ static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollec
  *
  ***********************************************************************
  */
-static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, int64_t beam_sz_override ) {
+static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, int64_t beam_sz_override ) {
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
@@ -494,7 +496,7 @@ static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_
 
     // Prepare next beam
     collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
-    __initialize_beam( recursion, collector );
+    __initialize_beam( recursion, collector, mem );
 
     // Number of expansions to perform
     return (int)sz_frontier;
@@ -682,6 +684,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       if( recursion->visit.reset_metrics ) {
         mem->dynamic_taper.top_1_best = -1.0f;
         mem->dynamic_taper.previous_window_best = -1.0f;
+        mem->dynamic_taper.beam_1_best = -1.0f;
+        mem->dynamic_taper._rsv = 0.0f;
         mem->dynamic_taper.window_counter = 0;
         mem->dynamic_taper.window_top_1_unimproved = 0;
         mem->counter.eval = 0;
@@ -713,7 +717,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     vxeval_vertex_unvisited( dwset, vertex_RO );
 
     // Number of nodes in initial neighborhood
-    __prepare_next_level( recursion, filter_context, collector, 0 );
+    __prepare_next_level( recursion, filter_context, collector, mem, 0 );
 
     control.coherence.baseline = vgx_RankGetC0( &vertex_RO->rank );
     control.evolution.level = 1;
@@ -730,7 +734,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     }
     
     // After the very first neighborhood (global entrypoint) we optionally select a small set of the best candidates
-    control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, recursion->init.select );
+    control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, recursion->init.select );
 
     vgx_CollectorItem_t frontier = {0};
 
@@ -778,7 +782,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         goto terminate_outer;
       }
 
-      control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, 0 );
+      control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, 0 );
     }
 
     // The initial match only since this determines the overall whether anything was found at all

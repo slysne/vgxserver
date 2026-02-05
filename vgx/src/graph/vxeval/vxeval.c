@@ -1191,6 +1191,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
 
     mem->dynamic_taper.top_1_best = -1.0f;
     mem->dynamic_taper.previous_window_best = -1.0f;
+    mem->dynamic_taper.beam_1_best = -1.0f;
+    mem->dynamic_taper._rsv = 0.0f;
     mem->dynamic_taper.window_counter = 0;
     mem->dynamic_taper.window_top_1_unimproved = 0;
     mem->dynamic_taper.alpha = 0.0f;
@@ -1201,6 +1203,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dynamic_taper.zeta = 0.0f;
     mem->dynamic_taper.kappa = 0;
     mem->dynamic_taper.lambda = 0;
+    mem->dynamic_taper._rsv2 = 0;
+    mem->dynamic_taper._rsv3 = 0;
 
 
   }
@@ -1282,6 +1286,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
   
     clone->dynamic_taper.top_1_best = -1.0f;
     clone->dynamic_taper.previous_window_best = -1.0f;
+    clone->dynamic_taper.beam_1_best = -1.0f;
+    clone->dynamic_taper._rsv = 0.0f;
     clone->dynamic_taper.window_counter = 0;
     clone->dynamic_taper.window_top_1_unimproved = 0;
     clone->dynamic_taper.alpha = 0.0f;
@@ -1292,6 +1298,8 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dynamic_taper.zeta = 0.0f;
     clone->dynamic_taper.kappa = 0;
     clone->dynamic_taper.lambda = 0;
+    clone->dynamic_taper._rsv2 = 0;
+    clone->dynamic_taper._rsv3 = 0;
 
 
     // One owner
@@ -1472,6 +1480,8 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   // ANN var reset implied
   memory->dynamic_taper.top_1_best = -1.0f;
   memory->dynamic_taper.previous_window_best = -1.0f;
+  memory->dynamic_taper.beam_1_best = -1.0f;
+  memory->dynamic_taper._rsv = 0.0f;
   memory->dynamic_taper.window_counter = 0;
   memory->dynamic_taper.window_top_1_unimproved = 0;
   memory->dynamic_taper.alpha = 0.0f;
@@ -1482,6 +1492,8 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   memory->dynamic_taper.zeta = 0.0f;
   memory->dynamic_taper.kappa = 0;
   memory->dynamic_taper.lambda = 0;
+  memory->dynamic_taper._rsv2 = 0;
+  memory->dynamic_taper._rsv3 = 0;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {
