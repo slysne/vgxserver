@@ -264,6 +264,85 @@ __inline static double __recursion_s2delta( int64_t shadow_size ) {
  *
  ******************************************************************************
  */
+__inline static double __old_recursion_b2epsilon( double x ) { 
+#define b2epsilon_x0  -0.75
+#define b2epsilon_x1  0.3
+#define b2epsilon_x2  0.65
+#define b2epsilon_x3  1.0
+#define b2epsilon_y0  0.0
+#define b2epsilon_y1  -0.0014
+#define b2epsilon_y2  -0.0007
+#define b2epsilon_y3  0.001
+#define b2epsilon_a1  ((b2epsilon_y1 - b2epsilon_y0) / (b2epsilon_x1 - b2epsilon_x0))
+#define b2epsilon_a2  ((b2epsilon_y2 - b2epsilon_y1) / (b2epsilon_x2 - b2epsilon_x1))
+#define b2epsilon_a3  ((b2epsilon_y3 - b2epsilon_y2) / (b2epsilon_x3 - b2epsilon_x2))
+#define b2epsilon_b1  (b2epsilon_y1 - b2epsilon_a1 * b2epsilon_x1)
+#define b2epsilon_b2  (b2epsilon_y2 - b2epsilon_a2 * b2epsilon_x2)
+#define b2epsilon_b3  (b2epsilon_y3 - b2epsilon_a3 * b2epsilon_x3)
+
+  static const double a1 = b2epsilon_a1;
+  static const double b1 = b2epsilon_b1;
+
+  static const double a2 = b2epsilon_a2;
+  static const double b2 = b2epsilon_b2;
+
+  static const double a3 = b2epsilon_a3;
+  static const double b3 = b2epsilon_b3;
+
+  // 0th segment
+  if( x < b2epsilon_x0 ) {
+    return b2epsilon_y0;  // 0.0
+  }
+
+  // 1st segment
+  if( x < b2epsilon_x1 ) {
+    return a1 * x + b1;   // -0.00173333 * (-0.3) - 0.0013 = -0.00078
+  }
+
+  // 2nd segment
+  if( x < b2epsilon_x2 ) {
+    return a2 * x + b2;   // 0.0004 * 0.25 - 0.0013 = -0.0012
+  }
+
+  // 3rd segment
+  if( x < b2epsilon_x3 ) {
+    return a3 * x + b3;   // 0.0036 * 0.6 - 0.0029 = -0.00074
+  }
+
+  // End segment
+  return b2epsilon_y3;    // 0.0007
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __recursion_b2epsilon( double x ) { 
+#define b2epsilon_min   -0.00130
+#define b2epsilon_max    0.00100
+#define b2epsilon_a      0.00150
+#define b2epsilon_b      0.00090
+#define b2epsilon_c     -0.00080
+#define b2epsilon_d     -0.00055 
+#define X_3(x) (x*x*x)
+#define X_2(x) (x*x)
+
+  double epsilon = b2epsilon_a * X_3(x) + b2epsilon_b * X_2(x) + b2epsilon_c * x + b2epsilon_d;
+
+  return clamp_value( epsilon, b2epsilon_min, b2epsilon_max );
+
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
 static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
   double normalized_bias = search_bias / 100.0;
   double b = clamp_value( normalized_bias, -1.0, 1.0 );
@@ -320,6 +399,10 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
 
     // Beam controller most sensitive in the low-mid recall regime, less sensitive for junk (low) recall and extreme (high) recall
     config->tune.delta = __recursion_s2delta( config->shadow.size );
+
+    // Score contribution threshold
+    config->tune.epsilon = __recursion_b2epsilon( b );
+
   }
   // Junk recall regime (-1.0 to -0.9)
   else {

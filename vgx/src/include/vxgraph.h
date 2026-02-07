@@ -6771,9 +6771,9 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float threshold;
   float *wp;
   float *end;
+  float *trunc;
   float *queue;
-  float alpha;
-  unsigned count;
+  float zeta;
 } vgx_ExpansionShadowTrail_t;
 
 

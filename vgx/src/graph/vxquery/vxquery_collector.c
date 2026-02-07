@@ -521,7 +521,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = shadow_trail->alpha * score + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
+    return shadow_trail->threshold = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
   }
 
   // Write latest score
@@ -534,7 +534,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
   
   float oldest = *shadow_trail->wp;
 
-  return shadow_trail->threshold = shadow_trail->alpha * oldest + (1.0f - shadow_trail->alpha) * shadow_trail->threshold;
+  return shadow_trail->threshold = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
 }
 
 
@@ -624,8 +624,7 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
   }
   shadow_trail->threshold = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->alpha = 0.0f;
-  shadow_trail->count = 0;
+  shadow_trail->zeta = 0.0f;
 }
 
 
@@ -707,7 +706,6 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  ***********************************************************************
  */
 static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
-  //#define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   if( heap_shadow > 0 ) {
     if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
       return -1;
@@ -715,20 +713,11 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
     shadow_trail->threshold = 0.0f;
     shadow_trail->wp = shadow_trail->queue;
     shadow_trail->end = shadow_trail->queue + heap_shadow;
-    /*
-    double fillval = 0.7;
-    double incval = 0.35 / heap_shadow;
-    for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
-      *p = (float)fillval; // fill gradually from 0.0 to 1.0
-      fillval += incval;
-    }
-    */
   }
   else {
     shadow_trail->threshold = -FLT_MAX;;
   }
-  shadow_trail->alpha = (float)zeta;
-  shadow_trail->count = 0;
+  shadow_trail->zeta = (float)zeta;
   return 0;
 }
 
