@@ -3490,6 +3490,7 @@ typedef struct s_vgx_recursion_config_t {
     double zeta;
     int64_t kappa;
     int64_t lambda;
+    double omega;
   } tune;
   struct {
     int64_t select;

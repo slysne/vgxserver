@@ -425,7 +425,18 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
 
     // EMA alpha: 0.5 - 0.2
     config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
-  }  
+  }
+
+  // Apply gobal optimization weight
+  double omega = config->tune.omega;
+  if( fabs(omega - 1.0) > 1e-6 ) {
+    config->tune.alpha *= omega;
+    config->tune.beta *= omega;
+    config->tune.gamma *= omega;
+    config->tune.delta *= omega;
+    config->tune.epsilon *= omega;
+    config->tune.zeta *= omega;
+  }
 
   return 0;
 }
@@ -483,8 +494,9 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
       { .name = "gamma",            .target = &param->recursion.tune.gamma,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
-      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0
+      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
       { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
+      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=0.7,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
       {0}
     };
 
@@ -521,6 +533,18 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       }
       if( fabs(search_bias) > 100.0 ) {
         PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
+        THROW_SILENT( CXLIB_ERR_API, 0x003 );
+      }
+    }
+    
+    // Optimization weight 'omega'
+    PyObject *py_omega = PyDict_GetItemString( py_recursion, "omega" );
+    if( py_omega ) {
+      if( PyNumber_Check(py_omega) ) {
+        param->recursion.tune.omega = PyFloat_Check(py_omega) ? PyFloat_AsDouble( py_omega ) : (double)PyLong_AsLongLong(py_omega);
+      }
+      if( param->recursion.tune.omega > 2.0 || param->recursion.tune.omega < 0.0 ) {
+        PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
         THROW_SILENT( CXLIB_ERR_API, 0x003 );
       }
     }
