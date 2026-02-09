@@ -1080,7 +1080,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
-    top_k_collector->empty                    = empty;
+    top_k_collector->empty.item               = empty.item;
     top_k_collector->size                     = heap_size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
@@ -1197,7 +1197,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
-    collector->empty                    = empty;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -1327,7 +1327,7 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->lambda                       = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
-    map_collector->empty                        = empty;
+    map_collector->empty.item                   = empty.item;
     map_collector->size                         = size;
     map_collector->n_remain                     = LLONG_MAX;
     map_collector->n_collectable                = 0;
@@ -1409,7 +1409,7 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
-    collector->empty              = empty;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
@@ -1526,7 +1526,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->lambda                   = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
-    top_k_collector->empty                    = empty;
+    top_k_collector->empty.item               = empty.item;
     top_k_collector->size                     = size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
@@ -1640,7 +1640,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
-    collector->empty                    = empty;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -1718,7 +1718,7 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
-    collector->empty              = empty;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
