@@ -264,7 +264,7 @@ def check_single_string_entry( entry, n, F_x ):
     elif F_x == F_RANK:
         Expect( float(entry) == float(n), "%s, got %s" % (n, entry) )
     elif F_x == F_SIM:
-        Expect( int(entry) == -1 )
+        Expect( float(entry) == -1.0 )
     elif F_x == F_HAM:
         Expect( int(entry) == 64 )
     elif F_x == F_DEPTH:
