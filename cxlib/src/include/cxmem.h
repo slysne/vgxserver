@@ -188,6 +188,9 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
 /* define new type with page size alignment requirement */
 #define PALIGNED_TYPE(struct_or_union)            typedef struct_or_union PALIGNED_
 
+/* use this when including aligned types within structs */
+#define ALIGNED_STRUCT_MEMBER( Type, Name )  Type Name _ALIGNED_(__alignof(Type))
+
 
 
 /**************************************************************************//**

@@ -2139,7 +2139,7 @@ CALIGNED_TYPE(union) u_vgx_OperatorCapture_t {
 
     // [5]
     // Q1.5-8
-    vgx_OperationCaptureInheritable_t inheritable;
+    ALIGNED_STRUCT_MEMBER( vgx_OperationCaptureInheritable_t, inheritable );
 
   };
 } vgx_OperatorCapture_t;
@@ -2157,13 +2157,13 @@ CALIGNED_TYPE(union) u_vgx_OperationProcessor_t {
   struct {
 
     // -------- CL 1+2+3 --------
-    vgx_OperationEmitter_t emitter;
+    ALIGNED_STRUCT_MEMBER( vgx_OperationEmitter_t, emitter );
 
     // -------- CL 4+5+6 --------
-    vgx_OperationSystem_t system;
+    ALIGNED_STRUCT_MEMBER( vgx_OperationSystem_t, system );
     
     // -------- CL 7+8+9+10 --------
-    vgx_OperationParser_t parser;
+    ALIGNED_STRUCT_MEMBER( vgx_OperationParser_t, parser );
 
   };
 } vgx_OperationProcessor_t;

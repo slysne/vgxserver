@@ -3961,7 +3961,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
     
     // [Q23-26]
-    vgx_EventProcessor_t EVP;
+    ALIGNED_STRUCT_MEMBER( vgx_EventProcessor_t, EVP );
   };
 
   // ============
@@ -4041,7 +4041,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
 
     // [Q29 - Q38]
-    vgx_OperationProcessor_t OP;
+    ALIGNED_STRUCT_MEMBER( vgx_OperationProcessor_t, OP );
   };
 
   // ============
@@ -5981,7 +5981,7 @@ CALIGNED_TYPE(union) u_vgx_ExpressEvalDWordSetSlot_t {
 
 
 typedef struct s_vgx_ExpressEvalDWordSet_t {
-  vgx_ExpressEvalDWordSetSlot_t *slots;
+  ALIGNED_STRUCT_MEMBER( vgx_ExpressEvalDWordSetSlot_t, *slots );
   uint32_t mask;
   uint32_t sz;
   int64_t hits; // count number of times item already in map when probed
@@ -6822,7 +6822,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int lambda;                                 \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
-  vgx_CollectorItem_t empty;                  \
+  ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty ); \
   int64_t size;                               \
   int64_t n_remain;                           \
   int64_t n_collectable;                      \
