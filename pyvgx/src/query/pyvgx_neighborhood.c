@@ -231,7 +231,7 @@ typedef struct s_bool_config_param {
  */
 __inline static int64_t __recursion_s2bw( int64_t shadow_size ) { 
 #define sqrt_2 1.4142135623730951
-  int64_t bw = round( sqrt_2 * log2( (double)shadow_size ) ) - 5;
+  int64_t bw = (int64_t)round( sqrt_2 * log2( (double)shadow_size ) ) - 5;
   return maximum_value( bw, 2 );
 }
 

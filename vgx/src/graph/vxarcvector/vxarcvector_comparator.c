@@ -960,6 +960,10 @@ __inline static int __arc_collect_into_aggregating_product_map( vgx_ArcCollector
 
 
 
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
 static vgx_VertexRef_t dummy_ref = {
   .vertex = NULL,
   .refcnt = -1,
@@ -1002,7 +1006,6 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
   vgx_CollectorItem_t *result_heap_location;
   int refmap_updated;
   float recursion_score = larc->head.predicator.val.real;
-  float worst_heap_score;
   
   
   // Try to collect item into result heap
@@ -1040,26 +1043,9 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
       if( beam_heap_location == NULL ) {
         return 0;
       }
-      /* 
-      // Update shadow with beam's new worst score
-      recursion_score = collected.predicator.val.real;
-      */
-      /*
-      // Inject beam heap's new worst score, except if beam not yet filled fall back on current item's score
-      worst_heap_score = _vxquery_collector__worst_heap_recursion_score( B );
-      recursion_score = maximum_value( worst_heap_score, recursion_score );
-      _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
-      */
       // Item was pushed to beam only
       return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
     }
-
-    /*
-    // Inject result heap's new worst score, except if result not yet filled fall back on current item's score
-    worst_heap_score = _vxquery_collector__worst_heap_recursion_score( heap );
-    recursion_score = maximum_value( worst_heap_score, recursion_score );
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
-    */
 
     // Item was pushed to result only
     if( beam_heap_location == NULL ) {
@@ -1074,13 +1060,11 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     // Populate the collected item with refmap slots, then we manually update the two heap locations
     if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, &collected, &result_heap_discarded, larc, NULL )) > 0 ) {
       // Add one more headref ownership sice the call above only handles single owner
-      //collected.tailref->refcnt++; //
       collected.headref->refcnt++; //
       // Update result heap's item location with the allocated refmap slots
       result_heap_location->tailref = collected.tailref;
       result_heap_location->headref = collected.headref;
       // Update beam heap's item location with the allocated refmap slot for headref only
-      //beam_heap_location->tailref = collected.tailref;
       beam_heap_location->headref = collected.headref;
     }
     return refmap_updated;

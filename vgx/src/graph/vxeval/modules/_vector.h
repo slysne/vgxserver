@@ -186,12 +186,12 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define HIGH_SCORE_GAIN 0.040f                    //
 #define LOW_SCORE_GAIN 0.020f                     //
 
-  // Maintain running top score for beam taper
+  // Maintain running top score for beam taper 
   if( score > mem->dynamic_taper.top_1_best ) {
     mem->dynamic_taper.top_1_best = score;
     mem->dynamic_taper.window_top_1_unimproved = 0;
   }
-  if( score > mem->dynamic_taper.previous_window_best ) {
+  else if( score > mem->dynamic_taper.previous_1_window_best ) {
     mem->dynamic_taper.window_top_1_unimproved /= 2;
   }
   else {
@@ -207,7 +207,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
   double factor;
   // -- LOOSEN --
   // We're decidedly not improving the running top score, loosen taper
-    if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
+  if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
       factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
   }
   // We're mostly not improving the top score, loosen taper a bit
@@ -216,12 +216,12 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
   }
   // -- TIGHTEN --
   // We are improving at a decent rate, tighten taper a bit
-  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_SCORE_GAIN ) {
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + LOW_SCORE_GAIN ) {
     factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
     factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
   }
   // We are improving at a very good rate, tighten taper
-  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_SCORE_GAIN ) {
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + HIGH_SCORE_GAIN ) {
     factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
     factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
   }
@@ -239,7 +239,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
   collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
 
   // Update score at checkpoint
-  mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
+  mem->dynamic_taper.previous_1_window_best = mem->dynamic_taper.top_1_best;
   
   // Reset window
   mem->dynamic_taper.window_counter = 0;

@@ -1190,9 +1190,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->probe = NULL;
 
     mem->dynamic_taper.top_1_best = -1.0f;
-    mem->dynamic_taper.previous_window_best = -1.0f;
+    mem->dynamic_taper.previous_1_window_best = -1.0f;
+    mem->dynamic_taper.current_window_best = -1.0f;
     mem->dynamic_taper.beam_1_best = -1.0f;
-    mem->dynamic_taper._rsv = 0.0f;
     mem->dynamic_taper.window_counter = 0;
     mem->dynamic_taper.window_top_1_unimproved = 0;
     mem->dynamic_taper.alpha = 0.0f;
@@ -1285,9 +1285,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     }
   
     clone->dynamic_taper.top_1_best = -1.0f;
-    clone->dynamic_taper.previous_window_best = -1.0f;
+    clone->dynamic_taper.previous_1_window_best = -1.0f;
+    clone->dynamic_taper.current_window_best = -1.0f;
     clone->dynamic_taper.beam_1_best = -1.0f;
-    clone->dynamic_taper._rsv = 0.0f;
     clone->dynamic_taper.window_counter = 0;
     clone->dynamic_taper.window_top_1_unimproved = 0;
     clone->dynamic_taper.alpha = 0.0f;
@@ -1479,9 +1479,9 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   }
   // ANN var reset implied
   memory->dynamic_taper.top_1_best = -1.0f;
-  memory->dynamic_taper.previous_window_best = -1.0f;
+  memory->dynamic_taper.previous_1_window_best = -1.0f;
+  memory->dynamic_taper.current_window_best = -1.0f;
   memory->dynamic_taper.beam_1_best = -1.0f;
-  memory->dynamic_taper._rsv = 0.0f;
   memory->dynamic_taper.window_counter = 0;
   memory->dynamic_taper.window_top_1_unimproved = 0;
   memory->dynamic_taper.alpha = 0.0f;

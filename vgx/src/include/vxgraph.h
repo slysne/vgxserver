@@ -6028,9 +6028,9 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   // Q3.1-8
   struct {
     float top_1_best;                 // current result top score
-    float previous_window_best;       // top score recorded in previous window
+    float current_window_best;
+    float previous_1_window_best;     // top score recorded in previous window
     float beam_1_best;                // current beam's top score
-    float _rsv;
     uint32_t window_counter;          // window counter
     uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score
     float alpha;

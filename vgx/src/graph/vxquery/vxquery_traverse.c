@@ -683,9 +683,9 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       }
       if( recursion->visit.reset_metrics ) {
         mem->dynamic_taper.top_1_best = -1.0f;
-        mem->dynamic_taper.previous_window_best = -1.0f;
+        mem->dynamic_taper.current_window_best = -1.0f;
+        mem->dynamic_taper.previous_1_window_best = -1.0f;
         mem->dynamic_taper.beam_1_best = -1.0f;
-        mem->dynamic_taper._rsv = 0.0f;
         mem->dynamic_taper.window_counter = 0;
         mem->dynamic_taper.window_top_1_unimproved = 0;
         mem->counter.eval = 0;
@@ -741,7 +741,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     while( control.evolution.level_size > 0 ) {
 
       // Collector needs level info in case we collect depth field
-      mem->counter.depth = collector->recursion_depth = control.evolution.level;
+      collector->recursion_depth = mem->counter.depth = (unsigned)control.evolution.level;
 
       // Frontier size at the start of this loop is exactly the number of nodes at the current depth
       for( int64_t i=0; i<control.evolution.level_size; ++i ) {
