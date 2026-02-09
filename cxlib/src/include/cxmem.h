@@ -95,6 +95,7 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
     }                                                                     \
   } WHILE_ZERO
 
+
 /* allocate bytes on specified alignment boundary */
 #define ALIGNED_BYTES(memptr, sz, alignment)      _ALIGNED_BYTES(memptr,sz,alignment)
 /* allocate bytes on cache line boundary */
@@ -135,6 +136,15 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
 #define CALIGNED_MALLOC_THROWS(memptr, T, err)                _ALIGNED_ELEMENTS_THROWS(memptr,T,1,CACHE_LINE_SIZE,err)
 /* allocate memory for one element of type T on page boundary */
 #define PALIGNED_MALLOC_THROWS(memptr, T, err)                _ALIGNED_ELEMENTS_THROWS(memptr,T,1,ARCH_PAGE_SIZE,err)
+
+/* allocate zeroed memory for one element of type T on specified alignment boundary */
+#define ALIGNED_CALLOC_THROWS(memptr, T, alignment, err)      _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,alignment,err)
+/* allocate zeroed memory for one element of type T with type alignment */
+#define TALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,__alignof(T),err)
+/* allocate zeroed memory for one element of type T on cache line boundary */
+#define CALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,CACHE_LINE_SIZE,err)
+/* allocate zeroed memory for one element of type T on page boundary */
+#define PALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,ARCH_PAGE_SIZE,err)
 
 /* allocate memory for N elements of type T on specified alignment boundary */
 #define ALIGNED_ARRAY_THROWS(arrayptr, T, N, alignment, err)  _ALIGNED_ELEMENTS_THROWS(arrayptr,T,N,alignment,err)

@@ -996,9 +996,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       }
     }
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x321 );
-    }
+    // Alloocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_ArcCollector_context_t, 0x321 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -1132,9 +1131,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
 
   XTRY {
 
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x331 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x331 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -1243,9 +1241,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (map_collector = calloc( 1, sizeof( vgx_ArcCollector_context_t ) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x341 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( map_collector, vgx_ArcCollector_context_t, 0x341 );
 
     // Create the aggregation map
     framehash_constructor_args_t args = FRAMEHASH_DEFAULT_ARGS;
@@ -1368,9 +1365,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
   vgx_CollectorStage_t *stage = NULL;
   
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x351 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x351 );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
@@ -1463,9 +1459,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
 
     vgx_CollectorItem_t empty = {0};
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x362 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_VertexCollector_context_t, 0x362 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -1575,9 +1570,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     }
 
     // Allocate the context
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x372 );
-    }
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x372 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -1677,9 +1670,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x37A );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x37A );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
@@ -1837,7 +1829,7 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
     }
 
     // Delete the collector
-    free( ctx );
+    ALIGNED_FREE( ctx );
     *collector = NULL;
   }
 }
