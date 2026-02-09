@@ -6832,7 +6832,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   vgx_ExecutionTimingBudget_t *timing_budget;
 
 
-typedef struct s_vgx_BaseCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_BaseCollector_context_t {
   __vgx_BaseCollector_context_HEAD
 } vgx_BaseCollector_context_t;
 
@@ -6844,7 +6844,7 @@ typedef struct s_vgx_BaseCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_ArcCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_ArcCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectArc collect_arc;
   f_vgx_StageArc stage_arc;
@@ -6864,7 +6864,7 @@ typedef struct s_vgx_ArcCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_VertexCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_VertexCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectVertex collect_vertex;
   f_vgx_StageVertex stage_vertex;
