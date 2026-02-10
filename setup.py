@@ -79,6 +79,113 @@ if not package_version:
             
 
 
+def get_windows_default_paths():
+    # Python.org installers (including NuGet Python used by cibuildwheel) have a standard structure
+    #
+    # {sys.base_prefix}/
+    # ├── libs/
+    # │   └── python312.lib
+    # └── Include/
+    #     ├── Python.h
+    #     └── pyconfig.h
+
+    python_lib = f"python{PY_MAJOR}{PY_MINOR}.lib"
+
+    # Standard Python.org structure
+    python_library_path = os.path.join(sys.base_prefix, "libs", python_lib)
+    include_dir = os.path.join(sys.base_prefix, "Include")
+
+    # Verify files exist
+    if not os.path.exists(python_library_path):
+        raise EnvironmentError(
+            f"Could not find {python_lib} at {python_library_path}\n"
+            f"sys.base_prefix: {sys.base_prefix}\n"
+            f"Ensure Python was installed from python.org with development files included."
+        )
+
+    if not os.path.exists(os.path.join(include_dir, "Python.h")):
+        raise EnvironmentError(
+            f"Could not find Python.h at {include_dir}\n"
+            f"sys.base_prefix: {sys.base_prefix}\n"
+            f"Ensure Python was installed from python.org with development files included."
+        )
+
+    if not os.path.exists(os.path.join(include_dir, "pyconfig.h")):
+        raise EnvironmentError(
+            f"Could not find pyconfig.h at {include_dir}\n"
+            f"sys.base_prefix: {sys.base_prefix}\n"
+            f"Ensure Python was installed from python.org with development files included."
+        )
+
+    include_paths = include_dir
+
+    return {
+        'include_paths': include_paths,
+        'python_library_path': python_library_path
+    }
+
+
+
+def get_windows_venv_paths():
+    # Fairly reliable
+    include_dir1 = sysconfig.get_paths()["include"]
+    include_dir2 = None
+
+    # e.g. python312.lib
+    python_lib = f"python{PY_MAJOR}{PY_MINOR}.lib"
+
+    # Probably empty
+    python_libdir = sysconfig.get_config_var("LIBDIR")
+
+    # Will become full path to lib file
+    python_library_path = None
+    
+    # Hint we're in a venv
+    if sys.prefix != sys.base_prefix:
+        home = getattr(sys, "_home", None)
+        if home and os.path.isdir(home):
+            # Set the correct path containing lib file and verify
+            python_libdir = home
+            python_library_path = os.path.join(python_libdir, python_lib)
+            if not os.path.exists( python_library_path ):
+                raise EnvironmentError( f"Bad venv, check paths {sys.prefix} and {home}" )
+        # include dirs
+        if os.path.isdir(sys.base_prefix):
+            if include_dir1 is None:
+                include_dir1 = os.path.join(sys.base_prefix, "Include")
+            # decide where pyconfig.h is located
+            if os.path.exists( os.path.join(sys.base_prefix, "PC", "pyconfig.h") ):
+                include_dir2 = os.path.join(sys.base_prefix, "PC")
+            elif python_libdir and os.path.exists( os.path.join(python_libdir, "pyconfig.h") ):
+                include_dir2 = python_libdir
+
+    # Verify include path 1 contains Python.h
+    while not include_dir1 or not os.path.exists(include_dir1) or not os.path.exists(os.path.join(include_dir1,"Python.h")):
+        include_dir1 = input( "Enter include directory containing Python.h: " )
+    
+    # Verify include path 2 contains pyconfig.h
+    while not include_dir2 or not os.path.exists(include_dir2) or not os.path.exists(os.path.join(include_dir2,"pyconfig.h")):
+        include_dir2 = input( "Enter include directory containing pyconfig.h: " )
+
+    include_dirs = []
+    include_dirs.append(include_dir1)
+    if include_dir2 != include_dir1:
+        include_dirs.append(include_dir2)
+
+    include_paths = ";".join(include_dirs)
+
+    # Find library path if not already found
+    if python_library_path is None:
+        while not python_libdir or not os.path.exists(python_libdir) or not os.path.exists(os.path.join(python_libdir,python_lib)):
+            python_libdir = input( f"Enter include directory containing {python_lib}: " )
+        python_library_path = os.path.join(python_libdir, python_lib)
+
+    return {
+        'include_paths': include_paths,
+        'python_library_path': python_library_path
+    }
+
+
 
 class PyVGX_Extension(Extension):
 
@@ -207,49 +314,17 @@ class CmakeBuild(build_ext):
                 f"-DCMAKE_CXX_COMPILER={find_executable('g++')}"
             ])
         elif IS_WINDOWS:
-
-            # Python.org installers (including NuGet Python used by cibuildwheel) have a standard structure
-            #
-            # {sys.base_prefix}/
-            # ├── libs/
-            # │   └── python312.lib
-            # └── Include/
-            #     ├── Python.h
-            #     └── pyconfig.h
-
-            python_lib = f"python{PY_MAJOR}{PY_MINOR}.lib"
-
-            # Standard Python.org structure
-            python_library_path = os.path.join(sys.base_prefix, "libs", python_lib)
-            include_dir = os.path.join(sys.base_prefix, "Include")
-
-            # Verify files exist
-            if not os.path.exists(python_library_path):
-                raise EnvironmentError(
-                    f"Could not find {python_lib} at {python_library_path}\n"
-                    f"sys.base_prefix: {sys.base_prefix}\n"
-                    f"Ensure Python was installed from python.org with development files included."
-                )
-
-            if not os.path.exists(os.path.join(include_dir, "Python.h")):
-                raise EnvironmentError(
-                    f"Could not find Python.h at {include_dir}\n"
-                    f"sys.base_prefix: {sys.base_prefix}\n"
-                    f"Ensure Python was installed from python.org with development files included."
-                )
-
-            if not os.path.exists(os.path.join(include_dir, "pyconfig.h")):
-                raise EnvironmentError(
-                    f"Could not find pyconfig.h at {include_dir}\n"
-                    f"sys.base_prefix: {sys.base_prefix}\n"
-                    f"Ensure Python was installed from python.org with development files included."
-                )
-
-            include_paths = include_dir
+            try:
+                winpaths = get_windows_default_paths()
+            except EnvironmentError as windefault_ex:
+                try:
+                    winpaths = get_windows_venv_paths()
+                except Exception as winvenv_ex:
+                    raise windefault_ex
 
             cmake_configure_cmd.extend([
-                f"-DPython3_INCLUDE_DIRS={include_paths}",
-                f"-DPython3_LIBRARY={python_library_path}"
+                f"-DPython3_INCLUDE_DIRS={winpaths['include_paths']}",
+                f"-DPython3_LIBRARY={winpaths['python_library_path']}"
             ])
 
             # Select CMake generator for Windows
