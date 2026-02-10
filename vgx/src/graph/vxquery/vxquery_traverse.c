@@ -624,13 +624,6 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  */
 __inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   float score = frontier_node->predicator.val.real;
-  /*
-  float coherence = vgx_RankGetC0( &frontier_node->headref->vertex->rank );
-  float excess_coherence = maximum_value(0.0f, coherence - control->coherence.baseline);
-  float effective_score = score / (1.0f + collector->lambda * excess_coherence);
-
-  if( effective_score < control->threshold.baseline ) {
-  */
   if( score < control->threshold.baseline ) {
     return false;
   }

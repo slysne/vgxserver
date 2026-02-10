@@ -332,6 +332,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   }
 
   float threshold = _vxquery_collector__get_current_threshold( base ) + base->epsilon;
+  float injection;
 
   // Ignore everything below the running threshold
   if( score < threshold ) {
@@ -376,18 +377,20 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
     // Update current beam's best score
     mem->dynamic_taper.beam_1_best = fmaxf( mem->dynamic_taper.beam_1_best, score );
-
-    //
   }
   
   // Inject value into the delay line derived from current score and the current state of search progress
   float top_1 = mem->dynamic_taper.top_1_best;
   float beam_1 = mem->dynamic_taper.beam_1_best;
+  //float short_threshold = _vxquery_collector__get_current_short_threshold( base ); // + base->epsilon;
   float heap_signal = (fmaxf(top_k_th, threshold) + fmaxf(beam_j_th, threshold)) / 2; 
-  float injection;
   
-  // Score too weak for collection
-  if( score <= collectable_threshold ) {
+  // Score beats the (possibly refreshed) worst score on beam or result
+  if( score > collectable_threshold ) {
+    injection = (score + heap_signal ) / 2; 
+  }
+  // Score too weak
+  else {
     // good beam quality -> 0.0 (ignore negative)
     // bad beam quality -> 1.0
     float beam_deficit = (top_k_th - beam_1) / (top_1 - beam_1);
@@ -395,10 +398,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // bad beam ->  less contribution from heap worst values
     float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
     injection = beta * score + (1.0f - beta) * heap_signal;
-  }
-  // Collection occurred
-  else {
-    injection = fmaxf( score, heap_signal ); 
   }
 
   _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
