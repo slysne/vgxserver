@@ -446,9 +446,16 @@ PUSH_WARNING_LEVEL( 0 )
 #elif defined CXPLAT_ARCH_ARM64
 #include <arm_neon.h>
 #include <arm_acle.h>
+#if defined(__APPLE__)
 #include <sys/sysctl.h>
 #include <mach/mach.h>
 #include <mach/mach_host.h>
+#endif
+
+// CPU yield instruction for ARM64
+#ifndef __yield
+#define __yield() __asm__ __volatile__("yield")
+#endif
 #endif
 
 

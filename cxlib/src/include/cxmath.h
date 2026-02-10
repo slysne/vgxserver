@@ -60,7 +60,7 @@ unsigned __int64 __popcnt64( unsigned __int64 value );
 #define POPCNT32(X)  __popcnt( (X) )
 #define POPCNT64(X)  __popcnt64( (X) )
 #else
-#if defined CXPLAT_LINUX_ANY
+#if defined CXPLAT_LINUX_X64
 #pragma GCC target("popcnt,lzcnt,bmi,bmi2")
 #endif
 #define POPCNT16(X)  __builtin_popcount( (X) & 0xFFFF )

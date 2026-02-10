@@ -177,6 +177,118 @@ A few quick links:
 
 Recommendation: Read the [Tutorial](https://slysne.github.io/vgxserver/pyvgx/tutorial.html) first. It covers some of the graph basics without going too deep.
 
+## Building from Source
+
+If you want to build PyVGX from source or contribute to development:
+
+### Prerequisites
+
+- **Python 3.9-3.13**: Required for building and testing
+- **cibuildwheel**: For building portable wheels (`pip install cibuildwheel`)
+- **CMake**: Build system (automatically provided by Visual Studio on Windows)
+- **C/C++ Compiler**:
+  - **Linux**: GCC/Clang (auto-installed by cibuildwheel in manylinux containers)
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+  - **Windows**: Visual Studio Build Tools 2022 with C++ workload (see below)
+
+#### Windows-Specific Requirements
+
+Windows builds require Visual Studio Build Tools 2022 with C++ workload. See the **[Windows Build Guide](WINDOWS_BUILD.md)** for:
+- Detailed installation instructions
+- Troubleshooting common issues
+- Environment configuration
+- Development setup
+
+Quick install (PowerShell as Administrator):
+```powershell
+winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+```
+
+### Building with cibuildwheel
+
+The project uses cibuildwheel to build portable wheels for all platforms:
+
+```bash
+# Install cibuildwheel
+pip install cibuildwheel
+
+# Build wheels using Makefile
+make cibuildwheel                                        # Auto-read VERSION file, all Python versions
+make cibuildwheel VERSION=3.7.0                          # Explicit version, all Python versions
+make cibuildwheel VERSION=3.7.0 PYVER=312               # Python 3.12 only
+make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 only
+```
+
+**Supported Platforms:**
+- **Linux**: x86_64, aarch64 (manylinux2014)
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Windows**: AMD64
+
+**Makefile Parameters:**
+- `VERSION` - Package version (default: reads from VERSION file, appends `.dev0+<timestamp>` for dev builds)
+- `PYVER` - Python version: 39|310|311|312|313|all (default: all)
+- `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected from `uname -m`)
+  - Linux: Use `ARCH=aarch64` for ARM64 or `ARCH=x86_64` for x86_64
+  - Note: The architecture setting in pyproject.toml has been removed to allow dynamic selection via this parameter
+- `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
+
+**Platform-Specific Guides:**
+- **Windows**: See [Windows Build Guide](WINDOWS_BUILD.md) for detailed instructions and troubleshooting
+
+### Testing Built Wheels
+
+After building, test your wheels using the cross-platform test script:
+
+```bash
+# Test wheels from wheelhouse directory
+python test_pip_package.py
+
+# Or use the comprehensive test script that tests all wheels
+python test-wheels.py wheelhouse/
+```
+
+### GitHub Actions Build & Release
+
+**Automated builds for all platforms:**
+- **Linux**: x86_64 (ubuntu-22.04), aarch64 (ubuntu-24.04-arm64) - manylinux2014
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Windows**: AMD64 (Visual Studio 2022)
+
+**Workflow triggers:**
+1. **Tags** (v*): Automatically builds release version from tag name
+2. **Pull Requests** (to main): Test builds using VERSION file + dev timestamp
+3. **Releases** (published/created): Builds release version from tag
+4. **Manual** (workflow_dispatch): Flexible builds with optional parameters:
+   - `version`: Custom version (overrides tag/VERSION file)
+   - `python_versions`: Target Python versions (default: cp39-* cp310-* cp311-* cp312-* cp313-*)
+   - `architectures`: Select platforms (all/linux_x86_64/linux_aarch64/macos/windows)
+
+**To create a release:**
+1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
+2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
+3. Wheels for all platforms automatically built and available in Actions artifacts (30-day retention)
+
+**Manual workflow dispatch:**
+- Go to Actions → Build Wheels → Run workflow
+- Customize version, Python versions, or select specific architectures
+- Useful for testing builds or creating custom distribution sets
+
+### Development Build
+
+For local development (requires compiler toolchain installed):
+
+```bash
+# Clone the repository
+git clone https://github.com/slysne/vgxserver.git
+cd vgxserver
+
+# Install in development/editable mode
+pip install -e .
+
+# Run tests
+python -m pytest pyvgx/test/ -v
+```
+
 ## Maintainers
 
 This project was open-sourced by **Rakuten, Inc.** and is currently maintained by:

@@ -68,7 +68,12 @@ endif()
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
   # we have passed in the variables
   set(Python3_FOUND TRUE CACHE BOOL "")
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+  # On Linux, Python extensions don't link against libpython
+  # Use dynamic symbol lookup at runtime instead
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 else()
+  # macOS
   find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 endif()
 
@@ -121,7 +126,14 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
     # Define compiler flags
     set(C_FLAGS "-fno-strict-aliasing;-Wstrict-prototypes;-Wno-format")
 
-    set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    # Architecture-specific flags
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+        set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+        set(CC_FLAGS "-pthread;-fPIC;-march=armv8.2-a+crc+dotprod")
+    else()
+        set(CC_FLAGS "-pthread;-fPIC")
+    endif()
     # set(CC_FLAGS_DEBUG "-g")
     # set(CC_FLAGS_RELEASE "-O3")
 
@@ -159,6 +171,11 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
 
     # Compiler flags for Clang on Apple Silicon
     set(C_FLAGS "-fno-strict-aliasing -Wstrict-prototypes -Wno-format -fcolor-diagnostics -fansi-escape-codes")
+
+    # Set default MCPU option if not provided
+    if(NOT DEFINED CLANG_OPTION_MCPU)
+        set(CLANG_OPTION_MCPU "native")
+    endif()
 
     # General optimization and architecture flags
     set(CC_FLAGS "-fPIC -arch arm64 -mcpu=${CLANG_OPTION_MCPU}")  # or apple-m2, etc.
@@ -211,7 +228,7 @@ endif()
 
 # Define the include & lib paths
 set(LIBPATH)
-#set(CPPPATH "${Python3_INCLUDE_DIRS}")
+set(CPPPATH "${Python3_INCLUDE_DIRS}")
 
 if(DEFINED ADDITIONAL_INCLUDE_PATHS AND NOT "${ADDITIONAL_INCLUDE_PATHS}" STREQUAL "")
   list(APPEND CPPPATH "${ADDITIONAL_INCLUDE_PATHS}")
