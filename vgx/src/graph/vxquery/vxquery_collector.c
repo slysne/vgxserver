@@ -515,33 +515,34 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  ***********************************************************************
  */
 DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
-  #define trail_alpha (1.0f/18)
+  #define min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   // Never negative cosine (score is [0.0, 2.0] )
-  score = fmaxf( 1.0f, score );
+  score = fmaxf( min_score, score );
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = trail_alpha * score + (1.0f - trail_alpha) * shadow_trail->threshold;
+    return shadow_trail->threshold_long = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_long;
   }
 
   // Write latest score
   *shadow_trail->wp++ = score;
 
-  // Ring buffer wrap
+  // Ring buffer wp wrap
   if( shadow_trail->wp >= shadow_trail->end ) {
     shadow_trail->wp = shadow_trail->queue;
   }
   
+  float middle = *shadow_trail->rp++;
+  shadow_trail->threshold_short = shadow_trail->zeta * middle + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_short;
+
+  // Ring buffer rp wrap
+  if( shadow_trail->rp >= shadow_trail->end ) {
+    shadow_trail->rp = shadow_trail->queue;
+  }
+  
   float oldest = *shadow_trail->wp;
 
-  /*
-  shadow_trail->count++;
-  double dyn_alpha = trail_base_alpha - (1.0/100000) * shadow_trail->count * shadow_trail->alpha;
-  float effective_alpha = (float)clamp_value( dyn_alpha, 0.01, 0.99 );
-  return shadow_trail->threshold = effective_alpha * oldest + (1.0f - effective_alpha) * shadow_trail->threshold;
-  */
-
-  return shadow_trail->threshold = trail_alpha * oldest + (1.0f - trail_alpha) * shadow_trail->threshold;
+  return shadow_trail->threshold_long = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_long;
 }
 
 
@@ -626,13 +627,17 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
   }
 
   if( shadow_trail->queue ) {
-    int64_t sz = shadow_trail->end - shadow_trail->queue;
-    memset( shadow_trail->queue, 0, sizeof(float) * sz );
+    shadow_trail->sz = (int)(shadow_trail->end - shadow_trail->queue);
+    memset( shadow_trail->queue, 0, sizeof(float) * shadow_trail->sz );
   }
-  shadow_trail->threshold = 0.0f;
+  else {
+    shadow_trail->sz = 0;
+  }
+  shadow_trail->threshold_long = 0.0f;
+  shadow_trail->threshold_short = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->alpha = 0.0f;
-  shadow_trail->count = 0;
+  shadow_trail->rp = shadow_trail->queue + (2 * shadow_trail->sz / 4);
+  shadow_trail->zeta = 0.0f;
 }
 
 
@@ -713,19 +718,23 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  *
  ***********************************************************************
  */
-static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow ) {
-  #define init_min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
-  if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
-    return -1;
+static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
+  shadow_trail->sz = (int)maximum_value( heap_shadow, 0 );
+  if( shadow_trail->sz > 0 ) {
+    if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
+      return -1;
+    }
+    shadow_trail->threshold_long = 0.0f;
+    shadow_trail->threshold_short = 0.0f;
+    shadow_trail->wp = shadow_trail->queue;
+    shadow_trail->rp = shadow_trail->queue + (2 * shadow_trail->sz / 4);
+    shadow_trail->end = shadow_trail->queue + heap_shadow;
   }
-  shadow_trail->threshold = init_min_score;
-  shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->end = shadow_trail->queue + heap_shadow;
-  for( float *p=shadow_trail->queue; p<shadow_trail->end; p++ ) {
-    *p++ = init_min_score;
+  else {
+    shadow_trail->threshold_long = -FLT_MAX;;
+    shadow_trail->threshold_short = -FLT_MAX;;
   }
-  shadow_trail->alpha = 1.0f;
-  shadow_trail->count = 0;
+  shadow_trail->zeta = (float)zeta;
   return 0;
 }
 
@@ -1004,9 +1013,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       }
     }
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x321 );
-    }
+    // Alloocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_ArcCollector_context_t, 0x321 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -1042,10 +1050,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     // Recursive search
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
-      if( recursion->shadow.size > 0 ) {
-        if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size ) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
-        }
+      if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
       }
       // Beam if enabled
       if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
@@ -1074,19 +1080,25 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->recursion_depth          = 0;
     top_k_collector->frontier                 = frontier;
     top_k_collector->max_frontier             = recursion ? recursion->limit.frontier : 0;
-    top_k_collector->pure_beam                = recursion ? recursion->limit.frontier == recursion->beam.max_width : false;
+    top_k_collector->pure_beam                = recursion ? (beam_heap && (recursion->limit.frontier == recursion->beam.max_width)) : false;
     top_k_collector->beam_heap                = beam_heap;
     top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
     top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
+    top_k_collector->current_recursion_score  = -FLT_MAX;
+    top_k_collector->last_evals_collected     = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
     top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
     top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
     top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
+    top_k_collector->epsilon                  = recursion ? (float)recursion->tune.epsilon : 0.0f;
+    top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
+    top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
+    top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
-    top_k_collector->empty                    = empty;
+    top_k_collector->empty.item               = empty.item;
     top_k_collector->size                     = heap_size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
@@ -1138,9 +1150,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
 
   XTRY {
 
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x331 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x331 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -1192,14 +1203,20 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
+    collector->current_recursion_score  = -FLT_MAX;
+    collector->last_evals_collected     = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
-    collector->empty                    = empty;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -1245,9 +1262,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (map_collector = calloc( 1, sizeof( vgx_ArcCollector_context_t ) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x341 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( map_collector, vgx_ArcCollector_context_t, 0x341 );
 
     // Create the aggregation map
     framehash_constructor_args_t args = FRAMEHASH_DEFAULT_ARGS;
@@ -1318,14 +1334,20 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
     map_collector->adaptive_recursion           = false;
+    map_collector->current_recursion_score      = -FLT_MAX;
+    map_collector->last_evals_collected         = 0;
     map_collector->dynamic_taper                = 1.0;
     map_collector->alpha                        = 0.0f;
     map_collector->beta                         = 0.0f;
     map_collector->gamma                        = 0.0f;
     map_collector->delta                        = 0.0f;
+    map_collector->epsilon                      = 0.0f;
+    map_collector->zeta                         = 0.0f;
+    map_collector->kappa                        = 0;
+    map_collector->lambda                       = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
-    map_collector->empty                        = empty;
+    map_collector->empty.item                   = empty.item;
     map_collector->size                         = size;
     map_collector->n_remain                     = LLONG_MAX;
     map_collector->n_collectable                = 0;
@@ -1366,9 +1388,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
   vgx_CollectorStage_t *stage = NULL;
   
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x351 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x351 );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
@@ -1395,15 +1416,21 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
+    collector->current_recursion_score  = -FLT_MAX;
+    collector->last_evals_collected     = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
-    collector->empty              = empty;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
@@ -1457,9 +1484,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
 
     vgx_CollectorItem_t empty = {0};
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x362 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_VertexCollector_context_t, 0x362 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -1509,14 +1535,20 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
     top_k_collector->adaptive_recursion       = false;
+    top_k_collector->current_recursion_score  = -FLT_MAX;
+    top_k_collector->last_evals_collected     = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = 0.0f;
     top_k_collector->beta                     = 0.0f;
     top_k_collector->gamma                    = 0.0f;
     top_k_collector->delta                    = 0.0f;
+    top_k_collector->epsilon                  = 0.0f;
+    top_k_collector->zeta                     = 0.0f;
+    top_k_collector->kappa                    = 0;
+    top_k_collector->lambda                   = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
-    top_k_collector->empty                    = empty;
+    top_k_collector->empty.item               = empty.item;
     top_k_collector->size                     = size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
@@ -1565,9 +1597,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     }
 
     // Allocate the context
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x372 );
-    }
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x372 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -1619,14 +1649,20 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
+    collector->current_recursion_score  = -FLT_MAX;
+    collector->last_evals_collected     = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
     collector->gamma                    = 0.0f;
     collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
-    collector->empty                    = empty;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -1663,9 +1699,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x37A );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x37A );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
@@ -1692,15 +1727,21 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
+    collector->current_recursion_score  = -FLT_MAX;
+    collector->last_evals_collected     = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
     collector->gamma              = 0.0f;
     collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
-    collector->empty              = empty;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
@@ -1819,7 +1860,7 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
     }
 
     // Delete the collector
-    free( ctx );
+    ALIGNED_FREE( ctx );
     *collector = NULL;
   }
 }

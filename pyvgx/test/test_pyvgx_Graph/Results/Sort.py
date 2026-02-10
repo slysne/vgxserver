@@ -146,6 +146,35 @@ def TEST_Neighborhood_sorting():
                     Expect( len(values_rank) == hit_arcs,               "all arcs" )
                     Expect( is_sorted_desc( values_rank ),          "values sorted descending" )
 
+                    # S_RVAL
+                    if M_FLT in modifiers:
+                        values = g.Neighborhood( sortby=S_RVAL|S_ASC, arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values = [x[0] for x in values]
+                        Expect( len( values ) == hit_fanout,        "all arcs of mod = M_FLT" )
+                        Expect( is_sorted_asc( values ),            "real values sorted ascending" )
+                        values_rank = g.Neighborhood( sortby=S_RANK|S_ASC, rank="next.arc.value", arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values_rank = [x[0] for x in values_rank]
+                        Expect( len( values_rank ) == hit_fanout,   "all arcs of mod = M_FLT" )
+                        Expect( is_sorted_asc( values_rank ),       "real values sorted ascending" )
+
+                        values = g.Neighborhood( sortby=S_RVAL, arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values = [x[0] for x in values]
+                        Expect( len( values ) == hit_fanout,        "all arcs of mod = M_FLT" )
+                        Expect( is_sorted_desc( values ),           "real values sorted descending" )
+                        values_rank = g.Neighborhood( sortby=S_RANK, rank="next.arc.value", arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values_rank = [x[0] for x in values_rank]
+                        Expect( len( values_rank ) == hit_fanout,   "all arcs of mod = FLT" )
+                        Expect( is_sorted_desc( values_rank ),      "real values sorted descending" )
+
+                        values = g.Neighborhood( sortby=S_RVAL|S_DESC, arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values = [x[0] for x in values]
+                        Expect( len( values ) == hit_fanout,        "all arcs of mod = M_FLT" )
+                        Expect( is_sorted_desc( values ),           "real values sorted descending" )
+                        values_rank = g.Neighborhood( sortby=S_RANK|S_DESC, rank="next.arc.value", arc=("*",D_OUT,M_FLT), fields=F_VAL, **params_LIST )
+                        values_rank = [x[0] for x in values_rank]
+                        Expect( len( values_rank ) == hit_fanout,   "all arcs of mod = M_FLT" )
+                        Expect( is_sorted_desc( values_rank ),      "real values sorted descending" )
+                    
                     # S_ADDR
                     str_addresses = g.Neighborhood( sortby=S_ADDR, fields=F_ADDR, **params_STR )
                     addresses = [int(x) for x in str_addresses]

@@ -1895,7 +1895,7 @@ PyDoc_STRVAR( GetVertex__doc__,
  *
  ******************************************************************************
  */
-static PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
+DLL_HIDDEN PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
     return NULL;

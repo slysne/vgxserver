@@ -186,79 +186,65 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 #define HIGH_SCORE_GAIN 0.040f                    //
 #define LOW_SCORE_GAIN 0.020f                     //
 
-/*
-#define alpha_4000  0.0f
-#define beta_4000 0.03f
-#define alpha_10000 -0.005f
-#define beta_10000 0.062f
-
-#define alpha_a ((alpha_10000 - alpha_4000) / 6000)
-#define alpha_b (alpha_4000 - alpha_a*4000)
-
-#define beta_a ((beta_10000 - beta_4000) / 6000)
-#define beta_b (beta_4000 - beta_a*4000)
-
-  static const float aa = alpha_a;
-  static const float ab = alpha_b;
-  static const float ba = beta_a;
-  static const float bb = beta_b;
-  //float alpha = alpha_a * mem->counter.eval + alpha_b;
-*/
-
-  // Maintain running top score for beam taper
-  //if( score > mem->dynamic_taper.top_1_best * (1+alpha) ) {
+  // Maintain running top score for beam taper 
   if( score > mem->dynamic_taper.top_1_best ) {
     mem->dynamic_taper.top_1_best = score;
     mem->dynamic_taper.window_top_1_unimproved = 0;
   }
-  if( score > mem->dynamic_taper.previous_window_best ) {
+  else if( score > mem->dynamic_taper.previous_1_window_best ) {
     mem->dynamic_taper.window_top_1_unimproved /= 2;
   }
   else {
     mem->dynamic_taper.window_top_1_unimproved++;
   }
+  
+  // Keep counting
+  if( ++mem->dynamic_taper.window_counter < VISIT_WINDOW_CHECKPOINT ) {
+    return;
+  }
 
   // Evaluate our progress
-  if( ++mem->dynamic_taper.window_counter >= VISIT_WINDOW_CHECKPOINT ) {
-    //float beta = beta_a * mem->counter.eval + beta_b;
-    double factor;
-    // -- LOOSEN --
-    // We're decidedly not improving the running top score, loosen taper
-    if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
-      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR; // * (1 + beta * collector->beta);
-    }
-    // We're mostly not improving the top score, loosen taper a bit
-    else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
-      factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR; // * (1 + beta * collector->beta);
-    }
-    // -- TIGHTEN --
-    // We are improving at a decent rate, tighten taper a bit
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + LOW_SCORE_GAIN ) {
-      factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR; // * (1 + beta * collector->gamma);
-      factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
-    }
-    // We are improving at a very good rate, tighten taper
-    else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_window_best + HIGH_SCORE_GAIN ) {
-      factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR; // * (1 + beta * collector->gamma);
-      factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
-    }
-    
-    // -- STEADY --
-    else {
-      factor = 1.0;
-    }
-
-    // New taper
-    double taper = factor * collector->dynamic_taper;
-    collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
-
-    // Update score at checkpoint
-    mem->dynamic_taper.previous_window_best = mem->dynamic_taper.top_1_best;
-    
-    // Reset window
-    mem->dynamic_taper.window_counter = 0;
-    mem->dynamic_taper.window_top_1_unimproved = 0;
+  double factor;
+  // -- LOOSEN --
+  // We're decidedly not improving the running top score, loosen taper
+  if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
+      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
   }
+  // We're mostly not improving the top score, loosen taper a bit
+  else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
+    factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
+  }
+  // -- TIGHTEN --
+  // We are improving at a decent rate, tighten taper a bit
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + LOW_SCORE_GAIN ) {
+    factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
+  }
+  // We are improving at a very good rate, tighten taper
+  else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + HIGH_SCORE_GAIN ) {
+    factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
+  }
+  
+  // -- STEADY --
+  else {
+    factor = 1.0;
+  }
+
+  // delta: reactivity control -> >0.0 expand, <0.0 limit, -1.0 turn controller off
+  factor += collector->delta * (factor - 1.0);
+
+  // New taper
+  double taper = factor * collector->dynamic_taper;
+  collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
+
+  // Update score at checkpoint
+  mem->dynamic_taper.previous_1_window_best = mem->dynamic_taper.top_1_best;
+  
+  // Reset window
+  mem->dynamic_taper.window_counter = 0;
+  mem->dynamic_taper.window_top_1_unimproved = 0;
+
 }
 
 
@@ -338,9 +324,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
   vgx_BaseCollector_context_t *base = self->context.collector;
 
-  float top_k_th = (float)_vxquery_collector__worst_heap_flt64_score( base->container.sequence.heap );
-  float beam_j_th = base->beam_heap != NULL ? (float)_vxquery_collector__worst_heap_flt64_score( base->beam_heap ) : 0.0f;
-
   float score = (float)cosine + 1.0f; // [0.0 - 2.0]
 
   // Adaptive search enabled
@@ -348,7 +331,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     __dynamic_taper( base, mem, score );
   }
 
-  float threshold = _vxquery_collector__get_current_threshold( base );
+  float threshold = _vxquery_collector__get_current_threshold( base ) + base->epsilon;
+  float injection;
 
   // Ignore everything below the running threshold
   if( score < threshold ) {
@@ -356,51 +340,68 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
     return 0.0f;
   }
-
-  // Item is not collectable to result or beam, update threshold queue with inferior score
-  if( score <= top_k_th && score <= beam_j_th ) {
-    // Score is good enough to help refine the baseline threshold
-    mem->counter.contrib++;
-    //_vxquery_collector__push_shadow_trail( &base->shadow_trail, score  );
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, score );
-    return 0.0f;
-  }
-      
+  
   // Score is good enough to help refine the baseline threshold
   mem->counter.contrib++;
-
-  // Frontier contribution 
-  if( score > beam_j_th ) {
-    mem->counter.frontier++;
-  }
-
-  // Result contribution
-  if( score > top_k_th ) {
-    mem->counter.accept++;
-  }
-
-  // Collect
-  // [ . . . _]
-  //     SP^
-  vgx_EvalStackItem_t score_arc = {
-    .type = STACK_ITEM_TYPE_REAL,
-    .real = score,
-  };
-  __collect( self, &score_arc );
   
-  //mem->threshold = base->shadow_trail.threshold;
+  // Extract worst score on the heaps
+  float top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
+  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
+  float collectable_threshold = fminf( top_k_th, beam_j_th ); // <- worst of either beam or heap
   
-  /*
-  // Refresh running threshold
-  if( self->context.collector->type == VGX_COLLECTOR_TYPE_SORTED_ARC_LIST ) {
-    // Update running difficulty (0.0 = 2.0)
-    vgx_CollectorItem_t difficulty;
-    mem->threshold = _vxquery_collector__get_current_threshold( self->context.collector, &difficulty );
-    // // Update running cosine difficulty (-1.0 - 1.0)
-    // self->context.collector->current_cos_difficulty = mem->threshold - 1.0;
-  }
-  */
+  // Score good enough for at least one of the heaps
+  if( score > collectable_threshold ) {
+    // Frontier contribution 
+    if( score > beam_j_th ) {
+      mem->counter.frontier++;
+    }
 
+    // Result contribution
+    if( score > top_k_th ) {
+      mem->counter.accept++;
+    }
+
+    // Collect
+    // [ . . . _]
+    //     SP^
+    vgx_EvalStackItem_t score_arc = {
+      .type = STACK_ITEM_TYPE_REAL,
+      .real = score,
+    };
+    __collect( self, &score_arc );
+
+    // Refresh
+    top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
+    beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
+    collectable_threshold = fminf( top_k_th, beam_j_th );
+
+    // Update current beam's best score
+    mem->dynamic_taper.beam_1_best = fmaxf( mem->dynamic_taper.beam_1_best, score );
+  }
+  
+  // Inject value into the delay line derived from current score and the current state of search progress
+  float top_1 = mem->dynamic_taper.top_1_best;
+  float beam_1 = mem->dynamic_taper.beam_1_best;
+  //float short_threshold = _vxquery_collector__get_current_short_threshold( base ); // + base->epsilon;
+  float heap_signal = (fmaxf(top_k_th, threshold) + fmaxf(beam_j_th, threshold)) / 2; 
+  
+  // Score beats the (possibly refreshed) worst score on beam or result
+  if( score > collectable_threshold ) {
+    injection = (score + heap_signal ) / 2; 
+  }
+  // Score too weak
+  else {
+    // good beam quality -> 0.0 (ignore negative)
+    // bad beam quality -> 1.0
+    float beam_deficit = (top_k_th - beam_1) / (top_1 - beam_1);
+    // good beam -> more contribution from heap worst values
+    // bad beam ->  less contribution from heap worst values
+    float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
+    injection = beta * score + (1.0f - beta) * heap_signal;
+  }
+
+  _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
+  
   return score;
   
 }

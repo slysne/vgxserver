@@ -1031,8 +1031,8 @@ DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShad
  *
  ***********************************************************************
  */
-__inline static double _vxquery_collector__worst_heap_flt64_score( Cm256iHeap_t *heap ) {
-  return ((vgx_CollectorItem_t*)heap->_buffer)->sort.flt64.value;
+__inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap_t *heap ) {
+  return ((vgx_CollectorItem_t*)heap->_buffer)->predicator.val.real;
 }
 
 
@@ -1043,7 +1043,18 @@ __inline static double _vxquery_collector__worst_heap_flt64_score( Cm256iHeap_t 
  ***********************************************************************
  */
 __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector ) {
-  return collector->shadow_trail.threshold;
+  return collector->shadow_trail.threshold_long;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static float _vxquery_collector__get_current_short_threshold( vgx_BaseCollector_context_t *collector ) {
+  return collector->shadow_trail.threshold_short;
 }
 
 
@@ -1054,17 +1065,27 @@ __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollect
  ***********************************************************************
  */
 __inline static float _vxquery_collector__get_discounted_threshold( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
-  #define MIN_DISCOUNT  0.9f
-  #define MAX_DISCOUNT  1.1f
-
-  float discount = 1.0f;
-
-  // Discount kicks in at depth determined by gamma. Smaller gamma requires more depth before discount kicks in
-  //if( collector->recursion_depth * collector->gamma > 1.0 ) {
-  //  discount = 1.0 - collector->beta * (mem->counter.eval * 0.0001f);
-  //}
-
-  return _vxquery_collector__get_current_threshold(collector) * clamp_value( discount, MIN_DISCOUNT, MAX_DISCOUNT );
+  #define DEPTH_DISCOUNT_FACTOR 0.0006f
+  #define EVALS_DISCOUNT_FACTOR 0.0000003f
+  #define OFFSET_SCALE 0.001f
+  // alpha = 0.0 (default) -> slightly more permissive threshold with depth, bias towards exhaustive search when deep
+  // alpha > 0.0 -> increasingly more permissive with depth
+  // alpha < 0.0 -> reduce the discount effect
+  // alpha = -1.0 -> discount is effectively disabled, i.e. naturally evolved threshold at all depths
+  // alpha < -1.0 -> discount is now punishing deeper search to terminate faster
+  // 
+  // beta = 0.0 (default) -> evals have no contribution
+  // beta > 0.0 -> more permissive threshold with higher evals
+  // beta < 0.0 -> stricter than natural threshold with higher evals
+  //
+  // offset = 0.0 (default) -> threshold not modified
+  // offset > 0.0 -> globally more permissive
+  // offset < 0.0 -> globally less permissive
+  //
+  float depth_discount = DEPTH_DISCOUNT_FACTOR * (1.0f + collector->alpha) * mem->counter.depth;
+  float evals_discount = EVALS_DISCOUNT_FACTOR * collector->beta * mem->counter.eval;
+  float offset = OFFSET_SCALE * collector->gamma;
+  return _vxquery_collector__get_current_threshold( collector ) - depth_discount - evals_discount - offset;
 }
 
 

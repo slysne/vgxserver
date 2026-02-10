@@ -196,6 +196,253 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
 
 
 
+typedef struct s_int_config_param {
+  const char *name;
+  int64_t *target;
+  const int64_t dflt;
+  const int64_t minval;
+  const int64_t maxval;
+} int_config_param;
+
+
+
+typedef struct s_dbl_config_param {
+  const char *name;
+  double *target;
+  const double dflt;
+  const double minval;
+  const double maxval;
+} dbl_config_param;
+
+
+
+typedef struct s_bool_config_param {
+  const char *name;
+  bool dflt;
+  bool *target;
+} bool_config_param;
+ 
+
+ 
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static int64_t __recursion_s2bw( int64_t shadow_size ) { 
+#define sqrt_2 1.4142135623730951
+  int64_t bw = (int64_t)round( sqrt_2 * log2( (double)shadow_size ) ) - 5;
+  return maximum_value( bw, 2 );
+}
+
+
+ 
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __recursion_s2delta( int64_t shadow_size ) { 
+#define s2delta_s0    175.0
+#define s2delta_w     2.0
+#define s2delta_A     1.6
+#define s2delta_B     0.6 
+#define s2delta_d_min -0.7
+#define s2delta_d_max 1.0
+    
+  double x = log2((double)shadow_size) - log2(s2delta_s0);
+  double x2 = x * x;
+  double delta = s2delta_A * exp( -x2 / s2delta_w ) - s2delta_B;
+
+  return clamp_value(delta, s2delta_d_min, s2delta_d_max);
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __old_recursion_b2epsilon( double x ) { 
+#define b2epsilon_x0  -0.75
+#define b2epsilon_x1  0.3
+#define b2epsilon_x2  0.65
+#define b2epsilon_x3  1.0
+#define b2epsilon_y0  0.0
+#define b2epsilon_y1  -0.0014
+#define b2epsilon_y2  -0.0007
+#define b2epsilon_y3  0.001
+#define b2epsilon_a1  ((b2epsilon_y1 - b2epsilon_y0) / (b2epsilon_x1 - b2epsilon_x0))
+#define b2epsilon_a2  ((b2epsilon_y2 - b2epsilon_y1) / (b2epsilon_x2 - b2epsilon_x1))
+#define b2epsilon_a3  ((b2epsilon_y3 - b2epsilon_y2) / (b2epsilon_x3 - b2epsilon_x2))
+#define b2epsilon_b1  (b2epsilon_y1 - b2epsilon_a1 * b2epsilon_x1)
+#define b2epsilon_b2  (b2epsilon_y2 - b2epsilon_a2 * b2epsilon_x2)
+#define b2epsilon_b3  (b2epsilon_y3 - b2epsilon_a3 * b2epsilon_x3)
+
+  static const double a1 = b2epsilon_a1;
+  static const double b1 = b2epsilon_b1;
+
+  static const double a2 = b2epsilon_a2;
+  static const double b2 = b2epsilon_b2;
+
+  static const double a3 = b2epsilon_a3;
+  static const double b3 = b2epsilon_b3;
+
+  // 0th segment
+  if( x < b2epsilon_x0 ) {
+    return b2epsilon_y0;  // 0.0
+  }
+
+  // 1st segment
+  if( x < b2epsilon_x1 ) {
+    return a1 * x + b1;   // -0.00173333 * (-0.3) - 0.0013 = -0.00078
+  }
+
+  // 2nd segment
+  if( x < b2epsilon_x2 ) {
+    return a2 * x + b2;   // 0.0004 * 0.25 - 0.0013 = -0.0012
+  }
+
+  // 3rd segment
+  if( x < b2epsilon_x3 ) {
+    return a3 * x + b3;   // 0.0036 * 0.6 - 0.0029 = -0.00074
+  }
+
+  // End segment
+  return b2epsilon_y3;    // 0.0007
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __recursion_b2epsilon( double x ) { 
+#define b2epsilon_min   -0.00130
+#define b2epsilon_max    0.00100
+#define b2epsilon_a      0.00150
+#define b2epsilon_b      0.00090
+#define b2epsilon_c     -0.00080
+#define b2epsilon_d     -0.00055 
+#define X_3(x) (x*x*x)
+#define X_2(x) (x*x)
+
+  double epsilon = b2epsilon_a * X_3(x) + b2epsilon_b * X_2(x) + b2epsilon_c * x + b2epsilon_d;
+
+  return clamp_value( epsilon, b2epsilon_min, b2epsilon_max );
+
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
+  double normalized_bias = search_bias / 100.0;
+  double b = clamp_value( normalized_bias, -1.0, 1.0 );
+
+  // shadow_size
+  // Length of delay line for threshold EMA tap
+  /*
+  Map search_bias:
+  
+       0.0 - 1.0:  2 ** (1+b2**2)
+      -1.0 - 0.0:  2 ** (1-b2**2)
+  
+   Log plot: flat around 0.0->256 and steeper around -1.0->1 and +1.0->65536
+   Linear plot (-1.0 to 0.0 range): gentle S-curve
+  
+     b   shadow_size
+    -1.0 1
+    -0.9 3
+    -0.8 7
+    -0.7 17
+    -0.6 35
+    -0.5 64
+    -0.4 105
+    -0.3 155
+    -0.2 205
+    -0.1 242
+     0.0 256
+     0.1 271
+     0.2 320
+     0.3 422
+     0.4 622
+     0.5 1024
+     0.6 1885
+     0.7 3875
+     0.8 8903
+     0.9 22851
+     1.0 65536
+  */
+
+
+  // Normal recall regime
+  if( b > -0.9 ) {
+    // Shadow size is the main tuning knob
+    config->shadow.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
+
+    // Limit depth to avoid runaway recursion in pathological graphs
+    config->limit.depth = 1024;
+  
+    // Beam width grows slowly from min=2 and up
+    config->beam.width = __recursion_s2bw( config->shadow.size );
+    config->beam.min_width = config->beam.width;
+    config->beam.max_width = 16 * config->beam.width * config->beam.width;
+    config->init.select = config->beam.width;
+
+    // Beam controller most sensitive in the low-mid recall regime, less sensitive for junk (low) recall and extreme (high) recall
+    config->tune.delta = __recursion_s2delta( config->shadow.size );
+
+    // Score contribution threshold
+    config->tune.epsilon = __recursion_b2epsilon( b );
+
+  }
+  // Junk recall regime (-1.0 to -0.9)
+  else {
+    // shadow: 0 - 5
+    double fshw =  50.0 * fabs(1.0 + b);
+    config->shadow.size = (int64_t)round( fshw );
+    
+    // depth: 4 - 19
+    config->limit.depth = 4 + (int64_t)round(3.0 * fshw);
+
+    // visits: 64 - 6464
+    config->limit.visit = 64 + (int64_t)round( 64000.0 * fabs(1.0 + b) );
+
+    // Fixed beam
+    config->beam.width = 2;
+    config->beam.min_width = 2;
+    config->beam.min_width = 2;
+    config->beam.adaptive_taper = false;
+    config->init.select = 2;
+
+    // EMA alpha: 0.5 - 0.2
+    config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
+  }
+
+  // Apply gobal optimization weight
+  double omega = config->tune.omega;
+  if( fabs(omega - 1.0) > 1e-6 ) {
+    config->tune.alpha *= omega;
+    config->tune.beta *= omega;
+    config->tune.gamma *= omega;
+    config->tune.delta *= omega;
+    config->tune.epsilon *= omega;
+    config->tune.zeta *= omega;
+  }
+
+  return 0;
+}
+
+
+
 /******************************************************************************
  *
  *
@@ -204,6 +451,7 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
 static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
   int ret = 0;
   XTRY {
+
     // Sorting required
     if( _vgx_sortby( param->sortspec ) == VGX_SORTBY_NONE || _vgx_sortspec_dontcare( param->sortspec ) ) {
       PyErr_SetString( PyExc_ValueError, "recursive search requires specific sortby" );
@@ -216,30 +464,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       THROW_SILENT( CXLIB_ERR_API, 0x002 );
     }
 
-    struct s_int_config {
-      const char *name;
-      int64_t *target;
-      const int64_t dflt;
-      const int64_t minval;
-      const int64_t maxval;
-    };
+ 
 
-    struct s_dbl_config {
-      const char *name;
-      double *target;
-      const double dflt;
-      const double minval;
-      const double maxval;
-    };
+    // Meta parameter (master knob) trading recall for QPS.
+    // Range -100.0 - 100.0 where negative values boost QPS and positive values boost recall.
+    double search_bias = 0.0;
 
-    struct s_bool_config {
-      const char *name;
-      bool dflt;
-      bool *target;
-    };
-  
-    struct s_int_config int_config[] = {
-      { .name = "heap_size",        .target = &param->recursion.heap.size,        .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 0=auto
+    int_config_param int_config[] = {
+      { .name = "heap_size",        .target = &param->recursion.heap.size,        .dflt=1,          .minval=0,      .maxval=VGX_RECURSION_HEAP_SIZE_MAX },  // default 1=follow hits
       { .name = "shadow_size",      .target = &param->recursion.shadow.size,      .dflt=-1,         .minval=-1,     .maxval=VGX_RECURSION_HEAP_SHADOW_MAX },  // default -1=auto
       { .name = "frontier_limit",   .target = &param->recursion.limit.frontier,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_FRONTIER_SIZE_MAX },  // default 0=auto
       { .name = "expansion_limit",  .target = &param->recursion.limit.expansion,  .dflt=INT_MAX,    .minval=0,      .maxval=INT_MAX },
@@ -250,45 +482,75 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "beam_min",         .target = &param->recursion.beam.min_width,   .dflt=1,          .minval=1,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },
       { .name = "beam_max",         .target = &param->recursion.beam.max_width,   .dflt=0,          .minval=0,      .maxval=VGX_RECURSION_BEAM_SIZE_MAX },  // default 0=auto
       { .name = "init_select",      .target = &param->recursion.init.select,      .dflt=0,          .minval=0,      .maxval=1024 },                         // default 0=off
+      { .name = "kappa",            .target = &param->recursion.tune.kappa,       .dflt=0,          .minval=0,      .maxval=256 },          // default 0
+      { .name = "lambda",           .target = &param->recursion.tune.lambda,      .dflt=0,          .minval=0,      .maxval=256 },          // default 0
       {0}
     };
 
-    struct s_dbl_config dbl_config[] = {
-      { .name = "beam_curve",       .target = &param->recursion.beam.curve,                 .dflt=1.0,    .minval=0.0,      .maxval=1.0 },        // default 1.0=constant
-      { .name = "alpha",            .target = &param->recursion.tune.alpha,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "beta",             .target = &param->recursion.tune.beta,                  .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "gamma",            .target = &param->recursion.tune.gamma,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 ()
-      { .name = "delta",            .target = &param->recursion.tune.delta,                 .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 1.0 ()
+    dbl_config_param dbl_config[] = {
+      { .name = "bias",             .target = &param->recursion.bias,             .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 (balanced high recall good QPS)
+      { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=0.99,   .minval=0.0,         .maxval=1.0 },          // default 0.99=gentle taper
+      { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=-0.32,  .minval=-10.0,       .maxval=10.0 },         // default -0.32 (depth discount for expansion threshold)
+      { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
+      { .name = "gamma",            .target = &param->recursion.tune.gamma,       .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (global threshold offset, positive means more expansions)
+      { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
+      { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
+      { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
+      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=0.7,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
       {0}
     };
 
-    struct s_bool_config bool_config[] = {
+    bool_config_param bool_config[] = {
       { .name = "reset_metrics",    .target = &param->recursion.visit.reset_metrics,    .dflt=true },
       { .name = "reset_map",        .target = &param->recursion.visit.reset_map,        .dflt=true },
       { .name = "adaptive_taper",   .target = &param->recursion.beam.adaptive_taper,    .dflt=true },
       {0}
     };
 
-    // Set defaults
-    param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
-
-    struct s_int_config *int_cursor = int_config;
+    int_config_param *int_cursor = int_config;
     while( int_cursor->name ) {
       *int_cursor->target = int_cursor->dflt;
       ++int_cursor;
     }
 
-    struct s_dbl_config *dbl_cursor = dbl_config;
+    dbl_config_param *dbl_cursor = dbl_config;
     while( dbl_cursor->name ) {
       *dbl_cursor->target = dbl_cursor->dflt;
       ++dbl_cursor;
     }
 
-    struct s_bool_config *bool_cursor = bool_config;
+    bool_config_param *bool_cursor = bool_config;
     while( bool_cursor->name ) {
       *bool_cursor->target = bool_cursor->dflt;
       ++bool_cursor;
     }
+
+    // Single meta parameter 'bias' contols smart defaults
+    PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
+    if( py_bias ) {
+      if( PyNumber_Check(py_bias) ) {
+        search_bias = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
+      }
+      if( fabs(search_bias) > 100.0 ) {
+        PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
+        THROW_SILENT( CXLIB_ERR_API, 0x003 );
+      }
+    }
+    
+    // Optimization weight 'omega'
+    PyObject *py_omega = PyDict_GetItemString( py_recursion, "omega" );
+    if( py_omega ) {
+      if( PyNumber_Check(py_omega) ) {
+        param->recursion.tune.omega = PyFloat_Check(py_omega) ? PyFloat_AsDouble( py_omega ) : (double)PyLong_AsLongLong(py_omega);
+      }
+      if( param->recursion.tune.omega > 2.0 || param->recursion.tune.omega < 0.0 ) {
+        PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
+        THROW_SILENT( CXLIB_ERR_API, 0x003 );
+      }
+    }
+
+    // Auto config
+    __recursion_auto_param( search_bias, &param->recursion );
 
     // Simple auto-config
     if( py_recursion == Py_True ) {
@@ -298,10 +560,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     else if( py_recursion == Py_False ) {
       param->recursion.mode = VGX_RECURSION_MODE_NONE;
     }
-    // Auto-config heap shadow
-    else if( PyLong_Check( py_recursion ) && PyLong_AsLong( py_recursion ) > 0 ) {
-      //param->recursion.heap.multiplier = PyLong_AsLong( py_recursion );
-    }
     // { "heap_shadow": 256, "frontier_limit": 1024, ... }
     else if( PyDict_Check( py_recursion) ) {
       Py_ssize_t pos = 0;
@@ -309,9 +567,13 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
         if( !PyUnicode_Check( py_key ) ) {
           PyErr_Format( PyExc_TypeError, "recursive search invalid parameter name: %R (string required)", py_key );
-          THROW_SILENT( CXLIB_ERR_API, 0x003 );
+          THROW_SILENT( CXLIB_ERR_API, 0x004 );
         }
         const char *key = PyUnicode_AsUTF8( py_key );
+        if( CharsEqualsConst( key, "bias" ) ) {
+          continue; // already handled
+        }
+
         bool found = false;
         // Integer parameter ?
         int_cursor = int_config;
@@ -319,14 +581,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           if( CharsEqualsConst( key, int_cursor->name ) ) {
             if( !PyLong_Check(py_value) ) {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x006 );
+              THROW_SILENT( CXLIB_ERR_API, 0x005 );
             }
             int64_t value = PyLong_AsLongLong( py_value );
             if( value > int_cursor->maxval || value < int_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x007 );
+              THROW_SILENT( CXLIB_ERR_API, 0x006 );
             }
             *int_cursor->target = value;
             found = true;
@@ -342,16 +604,16 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
         dbl_cursor = dbl_config;
         while( dbl_cursor->name ) {
           if( CharsEqualsConst( key, dbl_cursor->name ) ) {
-            if( !PyFloat_Check(py_value) ) {
-              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (float required)", dbl_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x008 );
+            if( !PyNumber_Check(py_value) ) {
+              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", dbl_cursor->name, py_value );
+              THROW_SILENT( CXLIB_ERR_API, 0x007 );
             }
-            double value = PyFloat_AsDouble( py_value );
+            double value = PyFloat_Check(py_value) ? PyFloat_AsDouble( py_value ) : (double)PyLong_AsLongLong(py_value);
             if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x009 );
+              THROW_SILENT( CXLIB_ERR_API, 0x008 );
             }
             *dbl_cursor->target = value;
             found = true;
@@ -375,7 +637,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
             }
             else {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x00A );
+              THROW_SILENT( CXLIB_ERR_API, 0x009 );
             }
             found = true;
             break;
@@ -388,25 +650,27 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
 
         // Unknown config parameter
         PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
-        THROW_SILENT( CXLIB_ERR_API, 0x00B );
+        THROW_SILENT( CXLIB_ERR_API, 0x00A );
       }
+
     }
     // unsupported
     else {
       PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool, int or dict" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+      THROW_SILENT( CXLIB_ERR_API, 0x00B );
     }
           
-    /*
-    if( param->recursion.heap.size > 0 && param->recursion.heap.multiplier > 0 ) {
-      PyErr_Format( PyExc_TypeError, "recursive search heap_size and heap_multiplier cannot be specified at the same time" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00D );
-    }
-    */
-
-    // Switch to beam mode
-    if( param->recursion.beam.width > 0 ) {
+    // Beam mode
+    if( param->recursion.limit.frontier == 0 && param->recursion.beam.width > 0 ) {
       param->recursion.mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
+    }
+    // Frontier queue mode
+    else if( param->recursion.limit.frontier > 0 && param->recursion.beam.width <= 0 ) {
+      param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
+    }
+    else {
+      PyErr_Format( PyExc_ValueError, "beam_width or frontier_limit required" );
+      THROW_SILENT( CXLIB_ERR_API, 0x00C );
     }
 
   }
@@ -685,10 +949,16 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       param->result_format |= VGX_RESPONSE_SHOW_AS_STRING;
     }
 
-    // Special handling of sorting if counts are requested
-    if( (param->result_format & VGX_RESPONSE_SHOW_WITH_COUNTS) && param->sortspec == VGX_SORTBY_NONE ) {
-      // IMPORTANT: This needs to be set before we create the ranking condition below!
-      param->sortspec = VGX_SORTBY_MEMADDRESS; // we do this to force deep counts
+    // Special handling of unspecified sorting 
+    // IMPORTANT: This needs to be set before we create the ranking condition below!
+    if( param->sortspec == VGX_SORTBY_NONE ) {
+      if( py_recursion ) {
+        param->sortspec = VGX_SORTBY_REAL_PREDICATOR | VGX_SORT_DIRECTION_DESCENDING;
+      }
+      // Special handling of sorting if counts are requested
+      else if( (param->result_format & VGX_RESPONSE_SHOW_WITH_COUNTS) ) {
+        param->sortspec = VGX_SORTBY_MEMADDRESS; // we do this to force deep counts
+      }
     }
 
     // ----

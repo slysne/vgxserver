@@ -102,32 +102,36 @@ order when using `R_STR` or `R_LIST` result entry formats.
 |17
 | Vertex <<../vertex/vertexMembers.adoc#vertexvector, vector>> fingerprint hamming distance the the probe vector fingerprint
 
-|<<F_TMC>>
+|<<F_DEPTH>>
 |18
+| Recursion depth (for recursive/ANN search)
+
+|<<F_TMC>>
+|19
 | Vertex creation timestamp
 
 |<<F_TMM>>
-|19
+|20
 | Vertex modification timestamp
 
 |<<F_TMX>>
-|20
+|21
 | Vertex expiration timestamp
 
 |<<F_DESCR>>
-|21
+|22
 | Vertex <<../vertex/vertexMembers.adoc#vertexdescriptor, descriptor>> (for debugging)
 
 |<<F_ADDR>>
-|22
+|23
 | Vertex memory address (for debugging)
 
 |<<F_HANDLE>>
-|23
+|24
 | Vertex memory allocator handle (for debugging)
 
 |<<F_RAW>>
-|24
+|25
 | Binary dump of internal vertex data structure (for debugging)
 |===
 
@@ -296,6 +300,13 @@ Vertex vector similarity to the probe vector
 `pyvgx.F_HAM = 262144`
 
 Vertex vector fingerprint hamming distance the the probe vector fingerprint.
+
+[[F_DEPTH]]
+=== pyvgx.F_DEPTH
+
+`pyvgx.F_DEPTH = 524288`
+
+Vertex found at this depth when search is recursive. For normal queries this is 0.
 
 [[F_TMC]]
 === pyvgx.F_TMC

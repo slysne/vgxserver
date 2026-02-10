@@ -58,19 +58,20 @@ FIELDS = [              #   N   PRED?   ARC?
     F_RANK,             #  14
     F_SIM,              #  15
     F_HAM,              #  16
-    F_TMC,              #  17
-    F_TMM,              #  18
-    F_TMX,              #  19
-    F_DESCR,            #  20
-    F_ADDR,             #  21
-    F_HANDLE,           #  22
-    F_RAW               #  23
+    F_DEPTH,            #  17
+    F_TMC,              #  18
+    F_TMM,              #  19
+    F_TMX,              #  20
+    F_DESCR,            #  21
+    F_ADDR,             #  22
+    F_HANDLE,           #  23
+    F_RAW               #  24
 ]
 
 
 PRED_FIELDS = F_ARCDIR | F_REL | F_MOD | F_VAL
 ARC_FIELDS = F_ANCHOR | PRED_FIELDS | F_ID
-NON_ARC_FIELDS = F_ANCHOR_OBID | F_OBID | F_TYPE | F_DEG | F_IDEG | F_ODEG | F_VEC | F_PROP | F_RANK | F_SIM | F_HAM | F_TMC | F_TMM | F_TMX | F_DESCR | F_ADDR | F_HANDLE | F_RAW
+NON_ARC_FIELDS = F_ANCHOR_OBID | F_OBID | F_TYPE | F_DEG | F_IDEG | F_ODEG | F_VEC | F_PROP | F_RANK | F_SIM | F_HAM | F_DEPTH | F_TMC | F_TMM | F_TMX | F_DESCR | F_ADDR | F_HANDLE | F_RAW
 ALL_FIELDS = sum( FIELDS )
 
 
@@ -92,13 +93,14 @@ LIST_ORDER = {
     F_RANK          : 14,
     F_SIM           : 15,
     F_HAM           : 16,
-    F_TMC           : 17,
-    F_TMM           : 18,
-    F_TMX           : 19,
-    F_DESCR         : 20,
-    F_ADDR          : 21,
-    F_HANDLE        : 22,
-    F_RAW           : 23
+    F_DEPTH         : 17,
+    F_TMC           : 18,
+    F_TMM           : 19,
+    F_TMX           : 20,
+    F_DESCR         : 21,
+    F_ADDR          : 22,
+    F_HANDLE        : 23,
+    F_RAW           : 24
 }
 
 
@@ -183,6 +185,8 @@ def check_simple_entry( entry, n, F_x, R_x ):
         Expect( entry == -1.0 )
     elif F_x == F_HAM:
         Expect( entry == 64 )
+    elif F_x == F_DEPTH:
+        Expect( entry == 0, f"got {entry}" ) # assume non-recursive search
     elif F_x == F_TMC:
         Expect( entry == graph[node].TMC )
     elif F_x == F_TMM:
@@ -260,9 +264,11 @@ def check_single_string_entry( entry, n, F_x ):
     elif F_x == F_RANK:
         Expect( float(entry) == float(n), "%s, got %s" % (n, entry) )
     elif F_x == F_SIM:
-        Expect( float(entry) == -1 )
+        Expect( float(entry) == -1.0 )
     elif F_x == F_HAM:
-        Expect( float(entry) == 64 )
+        Expect( int(entry) == 64 )
+    elif F_x == F_DEPTH:
+        Expect( int(entry) == 0 ) # assume non-recursive search
     elif F_x == F_TMC:
         Expect( entry == str(graph[node].TMC) )
     elif F_x == F_TMM:
@@ -383,6 +389,8 @@ def check_dict_items( entry, n, F_x ):
         Expect( entry["similarity"] == -1.0 )
     elif F_x & F_HAM:
         Expect( entry["hamming-distance"] == 64 )
+    elif F_x & F_DEPTH:
+        Expect( entry["depth"] == 0 ) # assume non-recursive search
     elif F_x & F_TMC:
         Expect( entry["created"] == graph[node].TMC )
     elif F_x & F_TMM:

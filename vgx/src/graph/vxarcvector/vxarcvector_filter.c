@@ -50,6 +50,7 @@ static int __modifier_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_
 static int __specific_value_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __specific_hamming_distance_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
+static int __ann_filter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __generic_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
 static int __generic_pred_loceval_vertex_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match );
@@ -185,7 +186,8 @@ DLL_EXPORT vgx_ArcFilterFunction_t arcfilterfunc = {
   .SpecificValueFilter            = __specific_value_arcfilter,
   .SpecificHamDistFilter          = __specific_hamming_distance_arcfilter,
   .EvaluatorFilter                = __evaluator_arcfilter,
-  .ANNFilter                      = __ann_arcfilter,
+  .ANNFilter                      = __ann_filter,
+  .ANNArcFilter                   = __ann_arcfilter,
   .GenericArcFilter               = __generic_arcfilter,
   .GenPredLocEvalVertexArcFilter  = __generic_pred_loceval_vertex_arcfilter,
   .GenLocEvalVertexArcFilter      = __generic_loceval_vertex_arcfilter,
@@ -1519,7 +1521,7 @@ static int __evaluator_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_con
  * 
  ***********************************************************************
  */
-static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
+static int __ann_filter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
 
   vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
   vgx_Evaluator_t *evaluator = GAF->traversing_evaluator;
@@ -1546,6 +1548,39 @@ static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, 
   // PASS!
   *match = VGX_ARC_FILTER_MATCH_HIT;
   return 1; // pass
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ * 
+ ***********************************************************************
+ */
+static int __ann_arcfilter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx_LockableArc_t *larc, vgx_ArcFilter_match *match ) {
+  vgx_GenericArcFilter_context_t *GAF = (vgx_GenericArcFilter_context_t*)arcfilter_context;
+
+  int target = larc->head.predicator.val.integer;
+
+  // Never filter out the best arcs with rank better than kappa (lower is better)
+  if( target < GAF->kappa ) {
+    return __ann_filter( arcfilter_context, larc, match );
+  }
+
+  // Keep some arcs according to thinning rule
+  // lambda=0 keep nothing
+  // lambda=1 keep every other
+  // lambda=2 keep one skip three
+  // lambda=3 keep one skip seven
+  // etc.
+  if( GAF->lambda && ((target ^ GAF->lambda) & ((1 << GAF->lambda)-1)) == 0 ) {
+    return __ann_filter( arcfilter_context, larc, match );
+  }
+
+  // Skip this arc
+  *match = VGX_ARC_FILTER_MATCH_MISS;
+  return 0;
 }
 
 
@@ -2615,17 +2650,20 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
           }
         }
       }
-      
-      // Special: recursion with no arc filter and no expression filter: Optimized ANN filter w/collect
-      else if( _vgx_predicator_full_wildcard( pred1 ) && __is_recursion_enabled( recursion ) && EMPTY_EVALUATOR( traversing_evaluator ) ) {
-        filter_context = __new_ann_arc_filter( readonly_graph, traversing_evaluator, recursion );
+
+      // Arc is full wildcard
+      else if( _vgx_predicator_full_wildcard( pred1 ) ) {
+        // Special: recursion with no arc filter and no expression filter: Optimized ANN filter w/collect
+        if( __is_recursion_enabled( recursion ) && EMPTY_EVALUATOR( traversing_evaluator ) ) {
+          filter_context = __new_ann_arc_filter( readonly_graph, traversing_evaluator, recursion );
+        }
+        // At this point: No vertex probe, no predicator filter, only an evaluator instance
+        else if( traversing_evaluator != NULL ) {
+          bool positive = _vgx_predicator_eph_is_positive( pred1 );
+          filter_context = __new_evaluator_arc_filter( readonly_graph, positive, traversing_evaluator, recursion );
+        }
       }
 
-      // At this point: No vertex probe, no predicator filter, only an evaluator instance
-      else if( _vgx_predicator_full_wildcard( pred1 ) && traversing_evaluator != NULL ) {
-        bool positive = _vgx_predicator_eph_is_positive( pred1 );
-        filter_context = __new_evaluator_arc_filter( readonly_graph, positive, traversing_evaluator, recursion );
-      }
     }
   }
 
@@ -3020,9 +3058,15 @@ static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_gra
 
     arcfilter->track_visited = true;
     arcfilter->max_visited = recursion->limit.visit;
-    arcfilter->xxx = recursion->tune.gamma;
+    arcfilter->kappa = (int)recursion->tune.kappa;    // keep only arcs with rank > kappa
+    arcfilter->lambda = (int)recursion->tune.lambda;  // thinning more with higher lambda
 
-    arcfilter->filter = arcfilterfunc.ANNFilter;
+    if( arcfilter->kappa > 0 || arcfilter->lambda > 0 ) {
+      arcfilter->filter = arcfilterfunc.ANNArcFilter;
+    }
+    else {
+      arcfilter->filter = arcfilterfunc.ANNFilter;
+    }
 
     // Head vertex must be locked whenever dereferenced, unless graph is
     // readonly and then we acquire another graph readonly lock while lasts

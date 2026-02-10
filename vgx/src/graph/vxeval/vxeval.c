@@ -98,7 +98,7 @@ static int _vxeval__local_auto_scope_object( vgx_Evaluator_t *self, vgx_EvalStac
 static void _vxeval__clear_local_scope( vgx_Evaluator_t *self );
 static void _vxeval__delete_local_scope( vgx_Evaluator_t *self );
 
-
+static bool _vxeval__vset_add( vgx_ExpressEvalMemory_t *memory, const vgx_Vertex_t *vertex );
 static int64_t _vxeval__clear_dwset( vgx_ExpressEvalMemory_t *memory );
 
 static vgx_StringList_t * _vxeval__get_rpn_definitions( void );
@@ -137,6 +137,7 @@ DLL_EXPORT vgx_IEvaluator_t iEvaluator = {
   .LocalAutoScopeObject = _vxeval__local_auto_scope_object,
   .ClearLocalScope      = _vxeval__clear_local_scope,
   .DeleteLocalScope     = _vxeval__delete_local_scope,
+  .VSetAdd              = _vxeval__vset_add,
   .ClearDWordSet        = _vxeval__clear_dwset,
   .GetRpnDefinitions    = _vxeval__get_rpn_definitions
 };
@@ -1189,13 +1190,22 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->probe = NULL;
 
     mem->dynamic_taper.top_1_best = -1.0f;
-    mem->dynamic_taper.previous_window_best = -1.0f;
+    mem->dynamic_taper.previous_1_window_best = -1.0f;
+    mem->dynamic_taper.current_window_best = -1.0f;
+    mem->dynamic_taper.beam_1_best = -1.0f;
     mem->dynamic_taper.window_counter = 0;
     mem->dynamic_taper.window_top_1_unimproved = 0;
     mem->dynamic_taper.alpha = 0.0f;
     mem->dynamic_taper.beta = 0.0f;
     mem->dynamic_taper.gamma = 0.0f;
     mem->dynamic_taper.delta = 0.0f;
+    mem->dynamic_taper.epsilon = 0.0f;
+    mem->dynamic_taper.zeta = 0.0f;
+    mem->dynamic_taper.kappa = 0;
+    mem->dynamic_taper.lambda = 0;
+    mem->dynamic_taper._rsv2 = 0;
+    mem->dynamic_taper._rsv3 = 0;
+
 
   }
   return mem;
@@ -1275,13 +1285,21 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     }
   
     clone->dynamic_taper.top_1_best = -1.0f;
-    clone->dynamic_taper.previous_window_best = -1.0f;
+    clone->dynamic_taper.previous_1_window_best = -1.0f;
+    clone->dynamic_taper.current_window_best = -1.0f;
+    clone->dynamic_taper.beam_1_best = -1.0f;
     clone->dynamic_taper.window_counter = 0;
     clone->dynamic_taper.window_top_1_unimproved = 0;
     clone->dynamic_taper.alpha = 0.0f;
     clone->dynamic_taper.beta = 0.0f;
     clone->dynamic_taper.gamma = 0.0f;
     clone->dynamic_taper.delta = 0.0f;
+    clone->dynamic_taper.epsilon = 0.0f;
+    clone->dynamic_taper.zeta = 0.0f;
+    clone->dynamic_taper.kappa = 0;
+    clone->dynamic_taper.lambda = 0;
+    clone->dynamic_taper._rsv2 = 0;
+    clone->dynamic_taper._rsv3 = 0;
 
 
     // One owner
@@ -1461,13 +1479,21 @@ static int _vxeval__set_probe_vector( vgx_ExpressEvalMemory_t *memory, vgx_Vecto
   }
   // ANN var reset implied
   memory->dynamic_taper.top_1_best = -1.0f;
-  memory->dynamic_taper.previous_window_best = -1.0f;
+  memory->dynamic_taper.previous_1_window_best = -1.0f;
+  memory->dynamic_taper.current_window_best = -1.0f;
+  memory->dynamic_taper.beam_1_best = -1.0f;
   memory->dynamic_taper.window_counter = 0;
   memory->dynamic_taper.window_top_1_unimproved = 0;
   memory->dynamic_taper.alpha = 0.0f;
   memory->dynamic_taper.beta = 0.0f;
   memory->dynamic_taper.gamma = 0.0f;
   memory->dynamic_taper.delta = 0.0f;
+  memory->dynamic_taper.epsilon = 0.0f;
+  memory->dynamic_taper.zeta = 0.0f;
+  memory->dynamic_taper.kappa = 0;
+  memory->dynamic_taper.lambda = 0;
+  memory->dynamic_taper._rsv2 = 0;
+  memory->dynamic_taper._rsv3 = 0;
 
   // Assign new vector and own reference
   if( (memory->probe = vector) != NULL ) {
@@ -1619,6 +1645,17 @@ static void _vxeval__delete_local_scope( vgx_Evaluator_t *self ) {
   free( context->local_scope.objects );
   context->local_scope.sz = 0;
   context->local_scope.idx = 0;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static bool _vxeval__vset_add( vgx_ExpressEvalMemory_t *memory, const vgx_Vertex_t *vertex ) {
+  return __maps_vertex_unvisited( &memory->dwset, vertex );
 }
 
 
@@ -2899,10 +2936,8 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
  *
  ***********************************************************************
  */
-//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex ) {
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex ) {
   return __maps_vertex_unvisited( dwset, vertex );
-  //return __maps_vertex_unvisited( self->context.memory, max_visited, p_skip, vertex );
 }
 
 

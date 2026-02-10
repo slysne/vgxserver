@@ -5420,8 +5420,6 @@ typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *contex
 
 typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
 
-//typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
-typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int64_t max_visited, const vgx_Vertex_t *vertex );
 
 
 
@@ -5446,7 +5444,8 @@ typedef bool (*f_vgx_VertexUnvisited)( struct s_vgx_Evaluator_t *evaluator, int6
   /* Recursive node visitation tracker max size */            \
   int64_t max_visited;                                        \
   /*  */                                                      \
-  double xxx;                                                 \
+  int kappa;                                                  \
+  int lambda;                                                 \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -6026,22 +6025,25 @@ typedef struct s_vgx_ExpressEvalMemory_t {
     uint32_t expand;
   } counter;
   // ==== CL3 ====
-  // Q3.1-4
+  // Q3.1-8
   struct {
-    float top_1_best;                 // current top score
-    float previous_window_best;       // top score recorded in previous window
+    float top_1_best;                 // current result top score
+    float current_window_best;
+    float previous_1_window_best;     // top score recorded in previous window
+    float beam_1_best;                // current beam's top score
     uint32_t window_counter;          // window counter
     uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score
     float alpha;
     float beta;
     float gamma;
     float delta;
+    float epsilon;
+    float zeta;
+    int kappa;
+    int lambda;
+    int _rsv2;
+    int _rsv3;
   } dynamic_taper;
-  // Q3.5-8
-  QWORD __rsv_3_5;
-  QWORD __rsv_3_6;
-  QWORD __rsv_3_7;
-  QWORD __rsv_3_8;
   // ==== CL4+5 ====
   // Q4.1-8
   // Q51-8
@@ -6284,6 +6286,7 @@ typedef struct s_vgx_IEvaluator_t {
   int (*LocalAutoScopeObject)( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
   void (*ClearLocalScope)( vgx_Evaluator_t *self );
   void (*DeleteLocalScope)( vgx_Evaluator_t *self );
+  bool (*VSetAdd)( vgx_ExpressEvalMemory_t *memory, const vgx_Vertex_t *vertex );
   int64_t (*ClearDWordSet)( vgx_ExpressEvalMemory_t *memory );
   vgx_StringList_t * (*GetRpnDefinitions)( void );
 } vgx_IEvaluator_t;
@@ -6765,12 +6768,14 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  ***********************************************************************
  */
 typedef struct s_vgx_ExpansionShadowTrail_t {
-  float threshold;
+  int sz;
+  float threshold_long;
+  float threshold_short;
   float *wp;
+  float *rp;
   float *end;
   float *queue;
-  float alpha;
-  unsigned count;
+  float zeta;
 } vgx_ExpansionShadowTrail_t;
 
 
@@ -6808,14 +6813,20 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
   bool adaptive_recursion;                    \
+  float current_recursion_score;              \
+  uint32_t last_evals_collected;              \
   double dynamic_taper;                       \
   float alpha;                                \
   float beta;                                 \
   float gamma;                                \
   float delta;                                \
+  float epsilon;                              \
+  float zeta;                                 \
+  int kappa;                                  \
+  int lambda;                                 \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
-  vgx_CollectorItem_t empty;                  \
+  ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty, 32 ); \
   int64_t size;                               \
   int64_t n_remain;                           \
   int64_t n_collectable;                      \
@@ -6825,7 +6836,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   vgx_ExecutionTimingBudget_t *timing_budget;
 
 
-typedef struct s_vgx_BaseCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_BaseCollector_context_t {
   __vgx_BaseCollector_context_HEAD
 } vgx_BaseCollector_context_t;
 
@@ -6837,7 +6848,7 @@ typedef struct s_vgx_BaseCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_ArcCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_ArcCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectArc collect_arc;
   f_vgx_StageArc stage_arc;
@@ -6857,7 +6868,7 @@ typedef struct s_vgx_ArcCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_VertexCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_VertexCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectVertex collect_vertex;
   f_vgx_StageVertex stage_vertex;
@@ -7102,6 +7113,7 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter SpecificHamDistFilter;
   f_vgx_ArcFilter EvaluatorFilter;
   f_vgx_ArcFilter ANNFilter;
+  f_vgx_ArcFilter ANNArcFilter;
   f_vgx_ArcFilter GenericArcFilter;
   f_vgx_ArcFilter GenPredLocEvalVertexArcFilter;
   f_vgx_ArcFilter GenLocEvalVertexArcFilter;
@@ -7173,7 +7185,6 @@ typedef struct s_vgx_IArcFilter_t {
 } vgx_IArcFilter_t;
 
 
-//DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_Evaluator_t *self, int64_t max_visited, double p_skip, const vgx_Vertex_t *vertex );
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
 DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 

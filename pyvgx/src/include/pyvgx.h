@@ -1382,6 +1382,7 @@ DLL_HIDDEN extern PyObject * PyVGX_Vertex__FromInstance( PyVGX_Graph *pygraph, v
 
 DLL_HIDDEN extern PyObject * PyVGX_Vector__FromVector( vgx_Vector_t *vector );
 
+DLL_HIDDEN extern PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id );
 
 DLL_HIDDEN extern int64_t pyvgx_SystemProfile( int64_t n_hash, int64_t n_mem, bool quiet );
 DLL_HIDDEN extern PyObject * pyvgx_GraphStatus( vgx_Graph_t *graph, PyObject *args );

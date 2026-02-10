@@ -4013,6 +4013,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
     .collector_mode             = collector_mode,
     .recursion = {
       .mode                     = recursion_config->mode,
+      .bias                     = recursion_config->bias,
       .heap = {
         .size                   = recursion_config->heap.size,
       },
@@ -4041,7 +4042,12 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
         .alpha                  = recursion_config->tune.alpha,
         .beta                   = recursion_config->tune.beta,
         .gamma                  = recursion_config->tune.gamma,
-        .delta                  = recursion_config->tune.delta
+        .delta                  = recursion_config->tune.delta,
+        .epsilon                = recursion_config->tune.epsilon,
+        .zeta                   = recursion_config->tune.zeta,
+        .kappa                  = recursion_config->tune.kappa,
+        .lambda                 = recursion_config->tune.lambda,
+        .omega                  = recursion_config->tune.omega
       },
       .init = {
         .select                 = recursion_config->init.select

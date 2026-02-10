@@ -225,7 +225,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_exists__has_arc( const vgx_ArcVector
       // Look up exact terminal and proceed only if it exists
       if( arc_type != VGX_ARCVECTOR_NO_ARCS && arc_type != VGX_ARCVECTOR_INDEGREE_COUNTER_ONLY ) {
         // Terminal exists
-        __begin_lockable_arc_context( KEY_LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, keyhead.predicator, keyhead.vertex, arcfilter_context->timing_budget, &filter_match ) {
+        __begin_lockable_arc_context( KEY_LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, keyhead.predicator, keyhead.vertex, arcfilter_context, &filter_match ) {
           vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
           __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &KEY_LARC, &filter_match ) {
             switch( arc_type ) {
@@ -283,7 +283,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_exists__has_arc( const vgx_ArcVector
       .neighborhood_match = VGX_ARC_FILTER_MATCH_MISS
     };
 
-    __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, arcfilter_context->timing_budget, &filter_match ) {
+    __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, arcfilter_context, &filter_match ) {
       vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
       __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
         __arcvector_existence_input_context_t input = {
