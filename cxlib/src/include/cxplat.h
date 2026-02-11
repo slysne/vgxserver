@@ -462,7 +462,7 @@ PUSH_WARNING_LEVEL( 0 )
 //#define __yield() __asm__ __volatile__("yield")
 #endif
 #endif
-
+#endif
 
 
 RESUME_WARNINGS
