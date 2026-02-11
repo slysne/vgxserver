@@ -93,9 +93,9 @@ def test_vgxdemoservice():
     print(f"Detected platform: {system} {arch}")
 
     # Skip on Windows (process management differs significantly)
-    if system == "Windows":
-        print(f"⊘ Skipping vgxdemoservice test on Windows")
-        return True
+    # if system == "Windows":
+    #     print(f"⊘ Skipping vgxdemoservice test on Windows")
+    #     return True
 
     # Skip on non-x86_64/amd64 architectures
     if arch not in ["x86_64", "amd64"]:
