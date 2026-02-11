@@ -9,6 +9,11 @@ pipeline {
     environment {
         // Gsp docker nexus repository
         GSP_DOCKER_PULL = 'gsp-docker.intra.rakuten-it.com'
+        CAP_BUILD_ENV_TAG = '3.x-v1.11-SNAPSHOT'
+        // Proxy configuration
+        HTTP_PROXY = 'http://pkg.proxy.prod.jp.local:10080'
+        HTTPS_PROXY = 'http://pkg.proxy.prod.jp.local:10080'
+        NO_PROXY = 'localhost,127.0.0.1,.intra.rakuten-it.com'
     }
 
     stages {
@@ -26,8 +31,8 @@ pipeline {
                     env.JENKINS_UID = sh(script: 'id -u', returnStdout: true).trim()
                     // Current jenkins server group ID
                     env.JENKINS_GID = sh(script: 'id -g', returnStdout: true).trim()
-                    // Read version from VERSION file
-                    env.VERSION = sh(script: 'cat VERSION', returnStdout: true).trim()
+                    // Docker socket group ID
+                    env.DOCKER_GID = sh(script: 'stat -c \'%g\' /var/run/docker.sock', returnStdout: true).trim()                    
                     // Jenkins script SCM credential and URL
                     env.SCM_BRANCH = scm.branches[0].name
                     env.SCM_URL = scm.getUserRemoteConfigs()[0].getUrl()
@@ -44,13 +49,10 @@ pipeline {
                                                                    reference        : '', trackingSubmodules: true]],
                               submoduleCfg                     : [],
                               userRemoteConfigs                : [[credentialsId: env.SCM_CRED, url: env.SCM_URL]]]
-            }
-            post {
-                always {
-                    // Reset workspace permission
-                    withDockerContainer(args: "-v ${env.WORKSPACE}:/home/tmp:rw,z", image: "${GSP_DOCKER_PULL}/busybox:1.31.0") {
-                        sh "chown -R ${JENKINS_UID}:${JENKINS_GID} /home/tmp/"
-                    }
+                
+                script {
+                    // Read version from VERSION file
+                    env.VERSION = sh(script: 'cat VERSION', returnStdout: true).trim()
                 }
             }
         }
@@ -58,42 +60,37 @@ pipeline {
             agent {
                 docker {
                     alwaysPull false
-                    image "${env.GSP_DOCKER_PULL}/python:${params.PYTHON_VERSION}-slim"
-                    args '-u root:root' +
-                         " -v /var/run/docker.sock:/var/run/docker.sock --net=host"
+                    image "${env.GSP_DOCKER_PULL}/cap-build-env:${env.CAP_BUILD_ENV_TAG}"
+                    args "-u ${env.JENKINS_UID}:${env.DOCKER_GID} -e HOME=/tmp" +
+                         " -e HTTP_PROXY=${env.HTTP_PROXY} -e HTTPS_PROXY=${env.HTTPS_PROXY} -e NO_PROXY=${env.NO_PROXY}" +
+                         " -e http_proxy=${env.HTTP_PROXY} -e https_proxy=${env.HTTPS_PROXY} -e no_proxy=${env.NO_PROXY}" +
+                         ' -v /var/run/docker.sock:/var/run/docker.sock --net=host'
                     reuseNode true
                 }
             }
             steps {
                 sh '''
-                    # Install minimal dependencies (cibuildwheel uses its own build containers)
-                    apt-get update && apt-get install -y make
-                    pip install --upgrade pip cibuildwheel
-
                     # Convert Python version (3.12 -> 312) for PYVER
                     PYVER=$(echo ${PYTHON_VERSION} | sed 's/\\.//')
+
+                    # Set proxy for cibuildwheel's inner containers
+                    export CIBW_ENVIRONMENT_PASS_LINUX="HTTP_PROXY HTTPS_PROXY NO_PROXY http_proxy https_proxy no_proxy"
 
                     # Build wheel using cibuildwheel
                     make cibuildwheel PYVER=$PYVER ARCH=x86_64
                 '''
                 stash name: 'build-artifacts', includes: 'wheelhouse/*.whl'
             }
-            post {
-                always {
-                    // Reset workspace permission
-                    withDockerContainer(args: "-v ${env.WORKSPACE}:/home/tmp:rw,z", image: "${GSP_DOCKER_PULL}/busybox:1.31.0") {
-                        sh "chown -R ${JENKINS_UID}:${JENKINS_GID} /home/tmp/"
-                    }
-                }
-            }            
         }
         stage('TEST') {
             agent {
                 docker {
                     alwaysPull false
                     image "${env.GSP_DOCKER_PULL}/python:${params.PYTHON_VERSION}-slim"
-                    args '-u root:root' +
-                         " -v /var/run/docker.sock:/var/run/docker.sock --net=host"
+                    args "-u ${env.JENKINS_UID}:${env.DOCKER_GID} -e HOME=/tmp" +
+                         " -e HTTP_PROXY=${env.HTTP_PROXY} -e HTTPS_PROXY=${env.HTTPS_PROXY} -e NO_PROXY=${env.NO_PROXY}" +
+                         " -e http_proxy=${env.HTTP_PROXY} -e https_proxy=${env.HTTPS_PROXY} -e no_proxy=${env.NO_PROXY}" +
+                         ' -v /var/run/docker.sock:/var/run/docker.sock --net=host'
                     reuseNode true
                 }
             }
@@ -105,26 +102,18 @@ pipeline {
 
                     # Run tests with optional --quick parameter
                     if [ -n "${QUICK_TEST}" ]; then
-                        python test_pyvgx.py -x --quick=${QUICK_TEST}
+                        python ${WORKSPACE}/pyvgx/test/test_pyvgx.py -x --quick=${QUICK_TEST}
                     else
-                        python test_pyvgx.py -x
+                        python ${WORKSPACE}/pyvgx/test/test_pyvgx.py -x
                     fi
                 '''
-            }
-            post {
-                always {
-                    // Reset workspace permission
-                    withDockerContainer(args: "-v ${env.WORKSPACE}:/home/tmp:rw,z", image: "${GSP_DOCKER_PULL}/busybox:1.31.0") {
-                        sh "chown -R ${JENKINS_UID}:${JENKINS_GID} /home/tmp/"
-                    }
-                }
             }
         }
     }
     post {
         always {
             script {
-                currentBuild.displayName = "pyvgx ${env.VERSION} - Python ${params.PYTHON_VERSION}"
+                currentBuild.displayName = "pyvgx ${env.VERSION}"
                 currentBuild.description = "TIMESTAMP: ${env.TIMESTAMP}"
             }
         }
