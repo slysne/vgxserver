@@ -30,11 +30,6 @@
 #include <cpuid.h>
 #endif
 
-#if defined CXPLAT_LINUX_ARM64
-#include <sys/auxv.h>
-#include <asm/hwcap.h>
-#endif
-
 
 #if defined CXPLAT_ARCH_X64
 static int cxplat_cpuid( unsigned int leaf, int *eax, int *ebx, int *ecx, int *edx );
@@ -1227,6 +1222,8 @@ int get_cpu_cores( int *P_cores, int *E_cores ) {
  ******************************************************************************
  */
 int get_cpu_cores( int *P_cores, int *E_cores ) {
+  // TODO: Add support for detecting heterogeneous core types (P-cores, E-cores, etc.)
+  //       on ARM big.LITTLE and similar architectures. Currently reports all cores as P-cores.
   if( P_cores ) {
     *P_cores = (int)sysconf(_SC_NPROCESSORS_ONLN);
   }
@@ -1274,16 +1271,55 @@ int get_cpu_L2_size( void ) {
     return (int)l2_cache_size;
   }
 #elif defined CXPLAT_LINUX_ARM64
-  // Linux ARM64 - try to read from sysfs
-  FILE *f = fopen("/sys/devices/system/cpu/cpu0/cache/index2/size", "r");
-  if (f) {
+  // Linux ARM64 - iterate through cache indices to find L2
+  // Note: index N does not necessarily correspond to level N
+  for (int idx = 0; idx < 10; idx++) {
+    char path[128];
     char buf[64];
+    FILE *f;
+
+    // Check cache level
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/level", idx);
+    f = fopen(path, "r");
+    if (!f) break;  // No more cache indices
+
+    int level = 0;
     if (fgets(buf, sizeof(buf), f)) {
-      fclose(f);
-      int size_kb = atoi(buf);
-      return size_kb * 1024;
+      level = atoi(buf);
     }
     fclose(f);
+
+    if (level != 2) continue;  // Not L2, keep looking
+
+    // Check cache type (should be Unified or Data)
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/type", idx);
+    f = fopen(path, "r");
+    if (!f) continue;
+
+    bool is_valid_type = false;
+    if (fgets(buf, sizeof(buf), f)) {
+      // Check for "Unified" or "Data" (case-sensitive)
+      if (strncmp(buf, "Unified", 7) == 0 || strncmp(buf, "Data", 4) == 0) {
+        is_valid_type = true;
+      }
+    }
+    fclose(f);
+
+    if (!is_valid_type) continue;  // Instruction cache, keep looking
+
+    // Found L2 Unified or Data cache, read size
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/size", idx);
+    f = fopen(path, "r");
+    if (f) {
+      if (fgets(buf, sizeof(buf), f)) {
+        fclose(f);
+        int size_kb = atoi(buf);
+        return size_kb * 1024;
+      }
+      fclose(f);
+    }
+    // Found valid L2 cache but couldn't read size - fail immediately
+    break;
   }
 #endif
 #endif

@@ -451,8 +451,13 @@ PUSH_WARNING_LEVEL( 0 )
 #include <mach/mach.h>
 #include <mach/mach_host.h>
 #endif
+#if defined(CXPLAT_LINUX_ARM64)
+#include <sys/auxv.h>
+#include <asm/hwcap.h>
+#endif
 
-// CPU yield instruction for ARM64
+// CPU yield instruction for ARM64 (non-Apple platforms)
+#if !defined(__APPLE__)
 #ifndef __yield
 //#define __yield() __asm__ __volatile__("yield")
 #endif

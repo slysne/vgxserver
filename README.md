@@ -295,6 +295,8 @@ This project was open-sourced by **Rakuten, Inc.** and is currently maintained b
 
 - **Stian Lysne** – [@slysne](https://github.com/slysne)
 - Contact: slysne.dev [at] gmail [dot] com
+- **Ariful Islam**
+- Contact: mailtoislam [at] yahoo [dot] com
 
 For questions, issues, or contributions, feel free to open an issue or pull request.
 
