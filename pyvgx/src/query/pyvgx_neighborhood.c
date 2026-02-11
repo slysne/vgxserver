@@ -371,8 +371,8 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
     config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
   }
 
-  // Apply gobal optimization weight
-  double omega = clamp_value( config->tune.omega, 0.001, 1.0 );
+  // Apply global optimization weight
+  double omega = clamp_value( config->tune.omega, 0.05, 2.0 );
   if( fabs(omega - 1.0) > 1e-6 ) {
     config->tune.alpha *= omega;
     config->tune.beta *= omega;
