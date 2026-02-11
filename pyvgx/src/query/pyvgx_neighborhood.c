@@ -264,62 +264,6 @@ __inline static double __recursion_s2delta( int64_t shadow_size ) {
  *
  ******************************************************************************
  */
-__inline static double __old_recursion_b2epsilon( double x ) { 
-#define b2epsilon_x0  -0.75
-#define b2epsilon_x1  0.3
-#define b2epsilon_x2  0.65
-#define b2epsilon_x3  1.0
-#define b2epsilon_y0  0.0
-#define b2epsilon_y1  -0.0014
-#define b2epsilon_y2  -0.0007
-#define b2epsilon_y3  0.001
-#define b2epsilon_a1  ((b2epsilon_y1 - b2epsilon_y0) / (b2epsilon_x1 - b2epsilon_x0))
-#define b2epsilon_a2  ((b2epsilon_y2 - b2epsilon_y1) / (b2epsilon_x2 - b2epsilon_x1))
-#define b2epsilon_a3  ((b2epsilon_y3 - b2epsilon_y2) / (b2epsilon_x3 - b2epsilon_x2))
-#define b2epsilon_b1  (b2epsilon_y1 - b2epsilon_a1 * b2epsilon_x1)
-#define b2epsilon_b2  (b2epsilon_y2 - b2epsilon_a2 * b2epsilon_x2)
-#define b2epsilon_b3  (b2epsilon_y3 - b2epsilon_a3 * b2epsilon_x3)
-
-  static const double a1 = b2epsilon_a1;
-  static const double b1 = b2epsilon_b1;
-
-  static const double a2 = b2epsilon_a2;
-  static const double b2 = b2epsilon_b2;
-
-  static const double a3 = b2epsilon_a3;
-  static const double b3 = b2epsilon_b3;
-
-  // 0th segment
-  if( x < b2epsilon_x0 ) {
-    return b2epsilon_y0;  // 0.0
-  }
-
-  // 1st segment
-  if( x < b2epsilon_x1 ) {
-    return a1 * x + b1;   // -0.00173333 * (-0.3) - 0.0013 = -0.00078
-  }
-
-  // 2nd segment
-  if( x < b2epsilon_x2 ) {
-    return a2 * x + b2;   // 0.0004 * 0.25 - 0.0013 = -0.0012
-  }
-
-  // 3rd segment
-  if( x < b2epsilon_x3 ) {
-    return a3 * x + b3;   // 0.0036 * 0.6 - 0.0029 = -0.00074
-  }
-
-  // End segment
-  return b2epsilon_y3;    // 0.0007
-}
-
-
-
-/******************************************************************************
- *
- *
- ******************************************************************************
- */
 __inline static double __recursion_b2epsilon( double x ) { 
 #define b2epsilon_min   -0.00130
 #define b2epsilon_max    0.00100
@@ -428,7 +372,7 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
   }
 
   // Apply gobal optimization weight
-  double omega = config->tune.omega;
+  double omega = clamp_value( config->tune.omega, 0.001, 1.0 );
   if( fabs(omega - 1.0) > 1e-6 ) {
     config->tune.alpha *= omega;
     config->tune.beta *= omega;
@@ -496,7 +440,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
       { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
-      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=0.7,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
+      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=1.0,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
       {0}
     };
 
@@ -546,6 +490,15 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       if( param->recursion.tune.omega > 2.0 || param->recursion.tune.omega < 0.0 ) {
         PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
         THROW_SILENT( CXLIB_ERR_API, 0x003 );
+      }
+    }
+    else {
+      // Auto-tune omega for the high recall regime
+      if( search_bias > 39.999 ) {
+        // 40: 100-40=60 -> 0.4 + 60/100 = 1.0
+        // 80: 100-80=20 -> 0.4 + 20/100 = 0.6
+        // 99: 100-99=1  -> 0.4 + 1/100 = 0.41
+        param->recursion.tune.omega = 0.4 + (100.0 - search_bias)/100.0;
       }
     }
 

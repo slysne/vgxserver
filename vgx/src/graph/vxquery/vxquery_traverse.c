@@ -628,6 +628,19 @@ __inline static bool __expand_next_check( control_vector_t *control, vgx_Collect
     return false;
   }
 
+  uint32_t unproductive_evals = mem->counter.eval - collector->last_eval_collected;
+
+  if( unproductive_evals > collector->shadow_trail.sz ) {
+    float unproductivity = 0.01f * (float)unproductive_evals / (float)collector->shadow_trail.sz;
+    collector->recursion_productivity -= unproductivity;
+  }
+  else {
+    float productivity = 0.02f * (collector->shadow_trail.sz - unproductive_evals) / collector->shadow_trail.sz;
+    collector->recursion_productivity += productivity;
+  }
+
+  collector->recursion_productivity = clamp_value( collector->recursion_productivity, 0.0f, 1.0f );
+
   control->expansions.local++;
   control->expansions.total++;
   mem->counter.expand++;

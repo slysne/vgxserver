@@ -6813,8 +6813,8 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
   bool adaptive_recursion;                    \
-  float current_recursion_score;              \
-  uint32_t last_evals_collected;              \
+  float recursion_productivity;               \
+  uint32_t last_eval_collected;               \
   double dynamic_taper;                       \
   float alpha;                                \
   float beta;                                 \

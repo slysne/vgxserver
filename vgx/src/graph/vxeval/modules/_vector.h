@@ -345,8 +345,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   mem->counter.contrib++;
   
   // Extract worst score on the heaps
-  float top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
-  float beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
+  float top_k_th = fmaxf( _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap ), threshold );
+  float beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_recursion_score( base->beam_heap ), threshold ) : threshold;
   float collectable_threshold = fminf( top_k_th, beam_j_th ); // <- worst of either beam or heap
   
   // Score good enough for at least one of the heaps
@@ -359,6 +359,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Result contribution
     if( score > top_k_th ) {
       mem->counter.accept++;
+      base->last_eval_collected = mem->counter.eval;
     }
 
     // Collect
@@ -371,8 +372,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     __collect( self, &score_arc );
 
     // Refresh
-    top_k_th = _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap );
-    beam_j_th = base->beam_heap != NULL ? _vxquery_collector__worst_heap_recursion_score( base->beam_heap ) : 0.0f;
+    top_k_th = fmaxf( _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap ), threshold );
+    beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_recursion_score( base->beam_heap ), threshold ) : threshold;
     collectable_threshold = fminf( top_k_th, beam_j_th );
 
     // Update current beam's best score
@@ -380,25 +381,18 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   }
   
   // Inject value into the delay line derived from current score and the current state of search progress
-  float top_1 = mem->dynamic_taper.top_1_best;
-  float beam_1 = mem->dynamic_taper.beam_1_best;
+  float top_1 = fmaxf( mem->dynamic_taper.top_1_best, threshold );
+  float beam_1 = fmaxf( mem->dynamic_taper.beam_1_best, threshold );
   //float short_threshold = _vxquery_collector__get_current_short_threshold( base ); // + base->epsilon;
-  float heap_signal = (fmaxf(top_k_th, threshold) + fmaxf(beam_j_th, threshold)) / 2; 
+  float heap_signal = (top_k_th + beam_j_th) / 2; 
   
-  // Score beats the (possibly refreshed) worst score on beam or result
-  if( score > collectable_threshold ) {
-    injection = (score + heap_signal ) / 2; 
-  }
-  // Score too weak
-  else {
-    // good beam quality -> 0.0 (ignore negative)
-    // bad beam quality -> 1.0
-    float beam_deficit = (top_k_th - beam_1) / (top_1 - beam_1);
-    // good beam -> more contribution from heap worst values
-    // bad beam ->  less contribution from heap worst values
-    float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
-    injection = beta * score + (1.0f - beta) * heap_signal;
-  }
+  // good beam quality -> 0.0 (ignore negative)
+  // bad beam quality -> 1.0
+  float beam_deficit = (top_k_th - beam_1) / fmaxf( (top_1 - beam_1), 1e-6 );
+  // good beam -> more contribution from heap worst values
+  // bad beam ->  less contribution from heap worst values
+  float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
+  injection = beta * score + (1.0f - beta) * heap_signal;
 
   _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
   

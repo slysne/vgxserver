@@ -454,7 +454,7 @@ PUSH_WARNING_LEVEL( 0 )
 
 // CPU yield instruction for ARM64
 #ifndef __yield
-#define __yield() __asm__ __volatile__("yield")
+//#define __yield() __asm__ __volatile__("yield")
 #endif
 #endif
 

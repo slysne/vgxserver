@@ -727,7 +727,11 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
     shadow_trail->threshold_long = 0.0f;
     shadow_trail->threshold_short = 0.0f;
     shadow_trail->wp = shadow_trail->queue;
-    shadow_trail->rp = shadow_trail->queue + (2 * shadow_trail->sz / 4);
+    int sz_mag = ilog2( shadow_trail->sz );
+    sz_mag = clamp_value( sz_mag, 3, 15 );
+    // large shadow -> big sz_mag -> rp is most of the full queue size -> "short" is close to "long"
+    // small shadow -> small sz_mag -> rp sees very recent history -> "short" is much less than "long"
+    shadow_trail->rp = shadow_trail->queue + ((16-sz_mag) * shadow_trail->sz / 16);
     shadow_trail->end = shadow_trail->queue + heap_shadow;
   }
   else {
@@ -1085,8 +1089,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
     top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
-    top_k_collector->current_recursion_score  = -FLT_MAX;
-    top_k_collector->last_evals_collected     = 0;
+    top_k_collector->recursion_productivity   = 1.0f;
+    top_k_collector->last_eval_collected      = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
     top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
@@ -1203,8 +1207,8 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
+    collector->recursion_productivity   = 1.0f;
+    collector->last_eval_collected      = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1334,8 +1338,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
     map_collector->adaptive_recursion           = false;
-    map_collector->current_recursion_score      = -FLT_MAX;
-    map_collector->last_evals_collected         = 0;
+    map_collector->recursion_productivity       = 1.0f;
+    map_collector->last_eval_collected          = 0;
     map_collector->dynamic_taper                = 1.0;
     map_collector->alpha                        = 0.0f;
     map_collector->beta                         = 0.0f;
@@ -1416,8 +1420,8 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
+    collector->recursion_productivity = 1.0f;
+    collector->last_eval_collected    = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
@@ -1535,8 +1539,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
     top_k_collector->adaptive_recursion       = false;
-    top_k_collector->current_recursion_score  = -FLT_MAX;
-    top_k_collector->last_evals_collected     = 0;
+    top_k_collector->recursion_productivity   = 1.0f;
+    top_k_collector->last_eval_collected      = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = 0.0f;
     top_k_collector->beta                     = 0.0f;
@@ -1649,8 +1653,8 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
+    collector->recursion_productivity   = 1.0f;
+    collector->last_eval_collected      = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1727,8 +1731,8 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
+    collector->recursion_productivity  = 1.0f;
+    collector->last_eval_collected     = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
