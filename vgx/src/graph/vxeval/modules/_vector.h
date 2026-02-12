@@ -359,7 +359,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Result contribution
     if( score > top_k_th ) {
       mem->counter.accept++;
-      base->last_eval_collected = mem->counter.eval;
     }
 
     // Collect

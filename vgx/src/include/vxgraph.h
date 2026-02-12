@@ -6769,10 +6769,8 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  */
 typedef struct s_vgx_ExpansionShadowTrail_t {
   int sz;
-  float threshold_long;
-  float threshold_short;
+  float threshold;
   float *wp;
-  float *rp;
   float *end;
   float *queue;
   float zeta;
@@ -6813,8 +6811,6 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
   bool adaptive_recursion;                    \
-  float recursion_productivity;               \
-  uint32_t last_eval_collected;               \
   double dynamic_taper;                       \
   float alpha;                                \
   float beta;                                 \

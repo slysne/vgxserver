@@ -1043,19 +1043,7 @@ __inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap
  ***********************************************************************
  */
 __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector ) {
-  float a = collector->recursion_productivity;
-  return a * collector->shadow_trail.threshold_short + (1.0f - a) * collector->shadow_trail.threshold_long;
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-__inline static float _vxquery_collector__get_current_short_threshold( vgx_BaseCollector_context_t *collector ) {
-  return collector->shadow_trail.threshold_short;
+  return collector->shadow_trail.threshold;
 }
 
 

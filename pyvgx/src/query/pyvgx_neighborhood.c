@@ -287,6 +287,73 @@ __inline static double __recursion_b2epsilon( double x ) {
  *
  ******************************************************************************
  */
+__inline static double __recursion_bias2omega( double bias ) {
+#define bias2omega_x0  -100.0
+#define bias2omega_x1   -50.0
+#define bias2omega_x2     0.0
+#define bias2omega_x3    75.0
+#define bias2omega_x4    95.0
+#define bias2omega_x5   100.0
+
+#define bias2omega_o0     0.9
+#define bias2omega_o1     0.9
+#define bias2omega_o2     0.9
+#define bias2omega_o3     0.7
+#define bias2omega_o4     0.5
+#define bias2omega_o5     0.5
+
+#define bias2omega_a0   ((bias2omega_o1 - bias2omega_o0) / (bias2omega_x1 - bias2omega_x0))
+#define bias2omega_a1   ((bias2omega_o2 - bias2omega_o1) / (bias2omega_x2 - bias2omega_x1))
+#define bias2omega_a2   ((bias2omega_o3 - bias2omega_o2) / (bias2omega_x3 - bias2omega_x2))
+#define bias2omega_a3   ((bias2omega_o4 - bias2omega_o3) / (bias2omega_x4 - bias2omega_x3))
+#define bias2omega_a4   ((bias2omega_o5 - bias2omega_o4) / (bias2omega_x5 - bias2omega_x4))
+
+#define bias2omega_b0   (bias2omega_o1 - bias2omega_a0 * bias2omega_x1)
+#define bias2omega_b1   (bias2omega_o2 - bias2omega_a1 * bias2omega_x2)
+#define bias2omega_b2   (bias2omega_o3 - bias2omega_a2 * bias2omega_x3)
+#define bias2omega_b3   (bias2omega_o4 - bias2omega_a3 * bias2omega_x4)
+#define bias2omega_b4   (bias2omega_o5 - bias2omega_a4 * bias2omega_x5)
+
+  double a, b;
+
+  bias = clamp_value( bias, -100.0, 100.0 );
+
+  // -100 to -40
+  if( bias < bias2omega_x1 ) {
+    const double a = bias2omega_a0;
+    const double b = bias2omega_b0;
+  }
+  // -40 to 0
+  else if( bias < bias2omega_x2 ) {
+    const double a = bias2omega_a1;
+    const double b = bias2omega_b1;
+  }
+  // 0 - 40
+  else if( bias < bias2omega_x3 ) {
+    const double a = bias2omega_a2;
+    const double b = bias2omega_b2;
+  }
+  // 40 - 90
+  else if( bias < bias2omega_x4 ) {
+    const double a = bias2omega_a3;
+    const double b = bias2omega_b3;
+  }
+  // 90 - 100
+  else {
+    const double a = bias2omega_a4;
+    const double b = bias2omega_b4;
+  }
+
+  return a * bias + b;
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
 static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
   double normalized_bias = search_bias / 100.0;
   double b = clamp_value( normalized_bias, -1.0, 1.0 );
@@ -493,13 +560,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       }
     }
     else {
-      // Auto-tune omega for the high recall regime
-      if( search_bias > 39.999 ) {
-        // 40: 100-40=60 -> 0.4 + 60/100 = 1.0
-        // 80: 100-80=20 -> 0.4 + 20/100 = 0.6
-        // 99: 100-99=1  -> 0.4 + 1/100 = 0.41
-        param->recursion.tune.omega = 0.4 + (100.0 - search_bias)/100.0;
-      }
+      param->recursion.tune.omega = __recursion_bias2omega( search_bias );
     }
 
     // Auto config
