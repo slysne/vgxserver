@@ -29,9 +29,9 @@ build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 # Skip 32-bit builds and musllinux (Alpine Linux)
 skip = "*-musllinux_* *-manylinux_i686"
 
-# Use manylinux2014 for maximum compatibility
-manylinux-x86_64-image = "manylinux2014"
-manylinux-aarch64-image = "manylinux2014"
+# Use manylinux_2_28 (AlmaLinux 8) - actively maintained, no EOL mirror issues
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
 
 # Build verbosity (1 = show commands)
 build-verbosity = 1
@@ -39,7 +39,7 @@ build-verbosity = 1
 # Linux settings - architecture controlled by ARCH parameter in Makefile or CIBW_ARCHS env var
 [tool.cibuildwheel.linux]
 # archs = ["x86_64", "aarch64"]  # Commented out - use ARCH=aarch64 or ARCH=x86_64 with make
-before-build = "yum install -y clang llvm-devel && (yum install -y cmake3 && ln -sf /usr/bin/cmake3 /usr/bin/cmake || yum install -y cmake) && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
+before-build = "yum install -y clang llvm-devel cmake && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 test-command = "python {project}/test_pip_package.py"
 test-skip = ""

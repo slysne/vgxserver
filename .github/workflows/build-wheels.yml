@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  pull_request:
-    branches: [ main ]
-  release:
-    types: [published, created]
   workflow_dispatch:
     inputs:
       version:
@@ -62,7 +58,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+          cache: 'pip'
+
+      - name: Cache cibuildwheel
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/cibuildwheel
+          key: cibuildwheel-${{ matrix.platform }}-${{ matrix.arch }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            cibuildwheel-${{ matrix.platform }}-${{ matrix.arch }}-
+            cibuildwheel-${{ matrix.platform }}-
+
       - name: Install cibuildwheel
         run: pip install cibuildwheel==2.16.5
 
@@ -105,7 +111,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
+          cache: 'pip'
+
       - name: Build sdist
         run: |
           pip install build

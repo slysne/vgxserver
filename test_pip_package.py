@@ -42,13 +42,13 @@ def test_module_version():
 
         expected = f"pyvgx v{package_version}"
         if module_version != expected:
-            print(f"✗ Version mismatch: module reports '{module_version}', expected '{expected}'")
+            print(f"Version mismatch: module reports '{module_version}', expected '{expected}'")
             return False
 
-        print(f"✓ Version check passed: {module_version}")
+        print(f"Version check passed: {module_version}")
         return True
     except Exception as e:
-        print(f"✗ Failed to check version: {e}")
+        print(f"Failed to check version: {e}")
         return False
 
 
@@ -57,15 +57,15 @@ def test_script_availability():
     print("\nTesting vgxadmin script availability...")
 
     if not shutil.which("vgxadmin"):
-        print("✗ 'vgxadmin' script not found in PATH")
+        print("'vgxadmin' script not found in PATH")
         return False
 
     result = run_command(["vgxadmin", "--help"], check=False)
     if isinstance(result, Exception) or result.returncode != 0:
-        print("✗ 'vgxadmin --help' failed")
+        print("'vgxadmin --help' failed")
         return False
 
-    print("✓ vgxadmin script is available")
+    print("vgxadmin script is available")
     return True
 
 
@@ -77,9 +77,9 @@ def test_module_imports():
     for module_name in modules:
         try:
             __import__(module_name)
-            print(f"✓ Successfully imported '{module_name}'")
+            print(f"Successfully imported '{module_name}'")
         except ImportError as e:
-            print(f"✗ Failed to import '{module_name}': {e}")
+            print(f"Failed to import '{module_name}': {e}")
             return False
 
     return True
@@ -95,12 +95,12 @@ def test_vgxdemoservice():
 
     # Skip on Windows (process management differs significantly)
     # if system == "Windows":
-    #     print(f"⊘ Skipping vgxdemoservice test on Windows")
+    #     print(f"Skipping vgxdemoservice test on Windows")
     #     return True
 
     # Skip on non-x86_64/amd64 architectures
     if arch not in ["x86_64", "amd64"]:
-        print(f"⊘ Skipping vgxdemoservice test on {arch} architecture")
+        print(f"Skipping vgxdemoservice test on {arch} architecture")
         return True
 
     # On Windows, use full script path from Scripts directory
@@ -116,14 +116,14 @@ def test_vgxdemoservice():
         # Get full path to script
         vgxdemo_cmd = shutil.which("vgxdemoservice", path=env.get("PATH"))
         if not vgxdemo_cmd:
-            print("✗ 'vgxdemoservice' script not found in PATH")
+            print("'vgxdemoservice' script not found in PATH")
             return False
         print(f"Found vgxdemoservice at: {vgxdemo_cmd}")
     else:
         # On Unix, use command name directly
         vgxdemo_cmd = "vgxdemoservice"
         if not shutil.which(vgxdemo_cmd):
-            print("✗ 'vgxdemoservice' script not found")
+            print("'vgxdemoservice' script not found")
             return False
 
     demo_process = None
@@ -150,21 +150,21 @@ def test_vgxdemoservice():
         )
 
         if isinstance(result, Exception):
-            print(f"✗ Failed to check status: {result}")
+            print(f"Failed to check status: {result}")
             return False
 
         # Count S-IN instances
         instance_count = result.stdout.count("S-IN") if result.stdout else 0
 
         if instance_count != 6:
-            print(f"✗ Expected 6 instances, found {instance_count}")
+            print(f"Expected 6 instances, found {instance_count}")
             return False
 
-        print(f"✓ Found {instance_count} running instances")
+        print(f"Found {instance_count} running instances")
         return True
 
     except Exception as e:
-        print(f"✗ vgxdemoservice test failed: {e}")
+        print(f"vgxdemoservice test failed: {e}")
         return False
 
     finally:
@@ -224,7 +224,7 @@ def main():
             passed = test_func()
             results.append((test_name, passed))
         except Exception as e:
-            print(f"\n✗ {test_name} failed with exception: {e}")
+            print(f"\n{test_name} failed with exception: {e}")
             results.append((test_name, False))
 
     # Print summary
@@ -234,7 +234,7 @@ def main():
 
     all_passed = True
     for test_name, passed in results:
-        status = "✓ PASSED" if passed else "✗ FAILED"
+        status = "PASSED" if passed else "FAILED"
         print(f"{test_name:30s} {status}")
         if not passed:
             all_passed = False
@@ -242,10 +242,10 @@ def main():
     print("=" * 60)
 
     if all_passed:
-        print("\n✓ All tests passed!")
+        print("\nAll tests passed!")
         return 0
     else:
-        print("\n✗ Some tests failed")
+        print("\nSome tests failed")
         return 1
 
 
