@@ -113,9 +113,9 @@ cibuildwheel:
 	fi && \
 	if [ "$$(uname)" = "Darwin" ]; then \
 		if [ -n "$(VERSION_EXPLICIT)" ]; then \
-			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
+			export CIBW_ENVIRONMENT="PROJECT_VERSION=$(VERSION) CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=14.0"; \
 		else \
-			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=11.0"; \
+			export CIBW_ENVIRONMENT="CMAKE_PRESET=$(CMAKE_PRESET) MACOSX_DEPLOYMENT_TARGET=14.0"; \
 		fi; \
 		echo "Building on macOS with native architecture..."; \
 		arch -arm64 cibuildwheel --output-dir wheelhouse; \

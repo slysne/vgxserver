@@ -48,8 +48,9 @@ if(APPLE)
   set(CMAKE_SKIP_RPATH FALSE)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
   set(CMAKE_INSTALL_RPATH "@loader_path")
-  set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
-  set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+
+  # Compiler is set via CMAKE_C_COMPILER and CMAKE_CXX_COMPILER from setup.py
+  # Do not hardcode compiler paths here
 
   # Build the path to the libpython .dylib
   set(Python3_LIBRARY "${Python3_LIBDIR}/libpython${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}.dylib")

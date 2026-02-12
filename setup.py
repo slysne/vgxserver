@@ -306,15 +306,11 @@ class CmakeBuild(build_ext):
         cmake_env = os.environ.copy()
 
         if IS_MACOS:
-            clang_path = find_executable('clang')
-            clangxx_path = find_executable('clang++')
-            # Set both CMake variables AND environment variables to ensure compiler is used
-            cmake_env['CC'] = clang_path
-            cmake_env['CXX'] = clangxx_path
+            # CMake will find clang via xcrun automatically when CC/CXX are set
+            cmake_env['CC'] = 'clang'
+            cmake_env['CXX'] = 'clang++'
             cmake_configure_cmd.extend([
                 f"-DCMAKE_OSX_DEPLOYMENT_TARGET=" + os.environ.get("MACOSX_DEPLOYMENT_TARGET", "14.0"),
-                f"-DCMAKE_C_COMPILER={clang_path}",
-                f"-DCMAKE_CXX_COMPILER={clangxx_path}",
                 f"-DCLANG_OPTION_MCPU={os.environ.get('COMPILER_OPTION_MCPU','native')}"
             ])
         elif IS_LINUX:
@@ -403,18 +399,7 @@ def copy_files(source_dir: str, destination_dir: str, ext: str, recursive: bool)
 
 
 def find_executable(executable, path=None):
-    # On macOS, use xcrun to find Xcode toolchain executables
-    if IS_MACOS and executable in ['clang', 'clang++']:
-        try:
-            result = subprocess.run(['xcrun', '--find', executable],
-                                    capture_output=True, text=True, check=True)
-            executable_path = result.stdout.strip()
-            if executable_path and os.path.exists(executable_path):
-                print(f"Found {executable} via xcrun: {executable_path}")
-                return executable_path
-        except (subprocess.CalledProcessError, FileNotFoundError) as e:
-            print(f"xcrun failed for {executable}: {e}, falling back to shutil.which")
-
+    """Find an executable in PATH and verify it exists."""
     executable_path = shutil.which(executable, path=path)
     if executable_path is None:
         raise RuntimeError("Did not find executable '{}'".format(executable))
