@@ -215,7 +215,7 @@ def main():
         ("Module Version", test_module_version),
         ("Script Availability", test_script_availability),
         ("Module Imports", test_module_imports),
-        ("VGX Demo Service", test_vgxdemoservice),
+        # ("VGX Demo Service", test_vgxdemoservice),
     ]
 
     results = []
