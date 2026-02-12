@@ -292,6 +292,7 @@ class CmakeBuild(build_ext):
         # copy "pyvgx_scripts" files
         copy_files(f"{pyvgx_src_dir}", f"{self.build_lib}/{PYVGX_SCRIPTS}", ext="py", recursive=False)
         shutil.copy2(f"{pyvgx_src_dir}/vgxdemoservice", f"{self.build_lib}/{PYVGX_SCRIPTS}")
+        shutil.copy2(f"{pyvgx_src_dir}/vgxdemoservice.cmd", f"{self.build_lib}/{PYVGX_SCRIPTS}")
 
         # overwrite python package __init__.py files
         with open(f'{self.build_lib}/{PYVGX_SCRIPTS}/__init__.py', 'w') as f:

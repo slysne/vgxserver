@@ -18,7 +18,9 @@ readme = { file = "README.md", content-type = "text/markdown" }
 
 [project.scripts]
 vgxadmin = "pyvgx_scripts.vgxadmin:main"
-vgxdemoservice = "pyvgx_scripts.vgxdemoservice:main"
+
+[tool.setuptools]
+script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.cmd", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
 
 [tool.cibuildwheel]
 # Build for Python 3.9+

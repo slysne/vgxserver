@@ -12,7 +12,7 @@ import sys
 import time
 
 
-def run_command(cmd, check=True, capture_output=True, timeout=None):
+def run_command(cmd, check=True, capture_output=True, timeout=None, env=None):
     """Run a command and return the result."""
     try:
         result = subprocess.run(
@@ -21,7 +21,8 @@ def run_command(cmd, check=True, capture_output=True, timeout=None):
             capture_output=capture_output,
             text=True,
             timeout=timeout,
-            check=check
+            check=check,
+            env=env
         )
         return result
     except subprocess.CalledProcessError as e:
@@ -102,19 +103,38 @@ def test_vgxdemoservice():
         print(f"⊘ Skipping vgxdemoservice test on {arch} architecture")
         return True
 
-    # Check if vgxdemoservice is available
-    if not shutil.which("vgxdemoservice"):
-        print("✗ 'vgxdemoservice' script not found")
-        return False
+    # On Windows, use full script path from Scripts directory
+    # On Unix, use command name directly
+    env = os.environ.copy()
+    if system == "Windows":
+        # Find Scripts directory
+        scripts_dir = os.path.join(sys.prefix, "Scripts")
+        if os.path.exists(scripts_dir):
+            env["PATH"] = scripts_dir + os.pathsep + env.get("PATH", "")
+            print(f"Added Scripts directory to PATH: {scripts_dir}")
+
+        # Get full path to script
+        vgxdemo_cmd = shutil.which("vgxdemoservice", path=env.get("PATH"))
+        if not vgxdemo_cmd:
+            print("✗ 'vgxdemoservice' script not found in PATH")
+            return False
+        print(f"Found vgxdemoservice at: {vgxdemo_cmd}")
+    else:
+        # On Unix, use command name directly
+        vgxdemo_cmd = "vgxdemoservice"
+        if not shutil.which(vgxdemo_cmd):
+            print("✗ 'vgxdemoservice' script not found")
+            return False
 
     demo_process = None
     try:
         # Start vgxdemoservice in background
         print("Starting vgxdemoservice in background...")
         demo_process = subprocess.Popen(
-            ["vgxdemoservice", "multi"],
+            [vgxdemo_cmd, "multi"],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stderr=subprocess.DEVNULL,
+            env=env if system == "Windows" else None
         )
 
         # Wait for services to start
@@ -125,7 +145,8 @@ def test_vgxdemoservice():
         print("Checking instance status...")
         result = run_command(
             ["vgxadmin", "127.0.0.1:9001", "--status", "*"],
-            check=False
+            check=False,
+            env=env if system == "Windows" else None
         )
 
         if isinstance(result, Exception):
@@ -153,9 +174,10 @@ def test_vgxdemoservice():
 
             # Try graceful shutdown first
             stop_result = run_command(
-                ["vgxdemoservice", "stop"],
+                [vgxdemo_cmd, "stop"],
                 check=False,
-                timeout=60
+                timeout=60,
+                env=env if system == "Windows" else None
             )
 
             if isinstance(stop_result, subprocess.TimeoutExpired):
