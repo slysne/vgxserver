@@ -49,7 +49,7 @@ test-skip = ""
 archs = ["arm64"]
 before-build = "pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80' 'delocate>=0.10.0'"
 repair-wheel-command = "delocate-wheel -w {dest_dir} {wheel}"
-environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }
 test-command = "python {project}/test_pip_package.py"
 test-skip = ""
 
