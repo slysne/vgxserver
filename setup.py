@@ -394,6 +394,17 @@ def copy_files(source_dir: str, destination_dir: str, ext: str, recursive: bool)
 
 
 def find_executable(executable, path=None):
+    # On macOS, use xcrun to find Xcode toolchain executables
+    if IS_MACOS and executable in ['clang', 'clang++']:
+        try:
+            result = subprocess.run(['xcrun', '--find', executable],
+                                    capture_output=True, text=True, check=True)
+            executable_path = result.stdout.strip()
+            if executable_path and os.path.exists(executable_path):
+                return executable_path
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass  # Fall back to shutil.which
+
     executable_path = shutil.which(executable, path=path)
     if executable_path is None:
         raise RuntimeError("Did not find executable '{}'".format(executable))
