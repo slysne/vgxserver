@@ -4,16 +4,9 @@ pipeline {
     parameters {
         string(name: 'PYTHON_VERSION', defaultValue: '3.12', description: 'Python version to build for')
         string(name: 'QUICK_TEST', defaultValue: '', description: 'Quick test parameter value (e.g., "1", "2", etc.). Leave empty to skip --quick flag')
-    }
-
-    environment {
-        // Gsp docker nexus repository
-        GSP_DOCKER_PULL = 'gsp-docker.intra.rakuten-it.com'
-        CAP_BUILD_ENV_TAG = '3.x-v1.11-SNAPSHOT'
-        // Proxy configuration
-        HTTP_PROXY = 'http://pkg.proxy.prod.jp.local:10080'
-        HTTPS_PROXY = 'http://pkg.proxy.prod.jp.local:10080'
-        NO_PROXY = 'localhost,127.0.0.1,.intra.rakuten-it.com'
+        string(name: 'BUILD_ENV_IMAGE', defaultValue: params.BUILD_ENV_IMAGE ?: '', description: 'Docker image for build environment')
+        string(name: 'HTTP_PROXY', defaultValue: params.HTTP_PROXY ?: '', description: 'HTTP/HTTPS proxy server')
+        string(name: 'NO_PROXY', defaultValue: params.NO_PROXY ?: '', description: 'No proxy hosts')
     }
 
     stages {
@@ -60,10 +53,10 @@ pipeline {
             agent {
                 docker {
                     alwaysPull false
-                    image "${env.GSP_DOCKER_PULL}/cap-build-env:${env.CAP_BUILD_ENV_TAG}"
+                    image "${params.BUILD_ENV_IMAGE}"
                     args "-u ${env.JENKINS_UID}:${env.DOCKER_GID} -e HOME=/tmp" +
-                         " -e HTTP_PROXY=${env.HTTP_PROXY} -e HTTPS_PROXY=${env.HTTPS_PROXY} -e NO_PROXY=${env.NO_PROXY}" +
-                         " -e http_proxy=${env.HTTP_PROXY} -e https_proxy=${env.HTTPS_PROXY} -e no_proxy=${env.NO_PROXY}" +
+                         " -e HTTP_PROXY=${params.HTTP_PROXY} -e HTTPS_PROXY=${params.HTTP_PROXY} -e NO_PROXY=${params.NO_PROXY}" +
+                         " -e http_proxy=${params.HTTP_PROXY} -e https_proxy=${params.HTTP_PROXY} -e no_proxy=${params.NO_PROXY}" +
                          ' -v /var/run/docker.sock:/var/run/docker.sock --net=host'
                     reuseNode true
                 }
@@ -86,10 +79,10 @@ pipeline {
             agent {
                 docker {
                     alwaysPull false
-                    image "${env.GSP_DOCKER_PULL}/python:${params.PYTHON_VERSION}-slim"
+                    image "python:${params.PYTHON_VERSION}-slim"
                     args "-u ${env.JENKINS_UID}:${env.DOCKER_GID} -e HOME=/tmp" +
-                         " -e HTTP_PROXY=${env.HTTP_PROXY} -e HTTPS_PROXY=${env.HTTPS_PROXY} -e NO_PROXY=${env.NO_PROXY}" +
-                         " -e http_proxy=${env.HTTP_PROXY} -e https_proxy=${env.HTTPS_PROXY} -e no_proxy=${env.NO_PROXY}" +
+                         " -e HTTP_PROXY=${params.HTTP_PROXY} -e HTTPS_PROXY=${params.HTTP_PROXY} -e NO_PROXY=${params.NO_PROXY}" +
+                         " -e http_proxy=${params.HTTP_PROXY} -e https_proxy=${params.HTTP_PROXY} -e no_proxy=${params.NO_PROXY}" +
                          ' -v /var/run/docker.sock:/var/run/docker.sock --net=host'
                     reuseNode true
                 }

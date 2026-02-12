@@ -1,4 +1,4 @@
-.PHONY: help clean build-local build-manylinux build-manylinux-arm64 test cibuildwheel
+.PHONY: help clean build-local build-manylinux build-manylinux-arm64 test test-wheels cibuildwheel
 
 # Read version from VERSION file if not specified
 VERSION_FILE := VERSION
@@ -17,7 +17,8 @@ help:
 	@echo "  build-local          - Build wheel locally (current platform)"
 	@echo "  build-manylinux      - Build manylinux wheels (x86_64) using Docker"
 	@echo "  build-manylinux-arm64 - Build manylinux wheels (aarch64) using Docker"
-	@echo "  test                 - Test wheels in wheelhouse/"
+	@echo "  test                 - Run pyvgx test suite (test_pyvgx.py)"
+	@echo "  test-wheels          - Test wheels in wheelhouse/"
 	@echo "  cibuildwheel         - Build wheels using cibuildwheel (auto-detects platform)"
 	@echo ""
 	@echo "Environment variables:"
@@ -26,6 +27,7 @@ help:
 	@echo "  PYVER                - Python version for cibuildwheel: 39|310|311|312|313|all (default: all)"
 	@echo "  ARCH                 - Architecture for cibuildwheel: x86_64|aarch64|arm64 (default: auto)"
 	@echo "  CIBW_PLATFORM        - Platform override for cibuildwheel: linux|macos|windows (default: auto)"
+	@echo "  QUICK                - Quick test mode for test (e.g., QUICK=test_name)"
 
 CMAKE_PRESET ?= release
 PYTHON ?= python3
@@ -62,6 +64,14 @@ build-all-manylinux: build-manylinux build-manylinux-arm64
 	@echo "All manylinux wheels built"
 
 test:
+	@echo "Running pyvgx test suite"
+	@if [ -n "$(QUICK)" ]; then \
+		$(PYTHON) pyvgx/test/test_pyvgx.py -x --quick=$(QUICK); \
+	else \
+		$(PYTHON) pyvgx/test/test_pyvgx.py -x; \
+	fi
+
+test-wheels:
 	@if [ ! -d "wheelhouse" ]; then \
 		echo "ERROR: wheelhouse/ directory not found. Build wheels first:"; \
 		echo "  make build-manylinux"; \
