@@ -401,14 +401,21 @@ def find_executable(executable, path=None):
                                     capture_output=True, text=True, check=True)
             executable_path = result.stdout.strip()
             if executable_path and os.path.exists(executable_path):
+                print(f"Found {executable} via xcrun: {executable_path}")
                 return executable_path
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            pass  # Fall back to shutil.which
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            print(f"xcrun failed for {executable}: {e}, falling back to shutil.which")
 
     executable_path = shutil.which(executable, path=path)
     if executable_path is None:
         raise RuntimeError("Did not find executable '{}'".format(executable))
 
+    # Verify the executable actually exists and is not a broken symlink
+    if not os.path.exists(executable_path):
+        raise RuntimeError("Found '{}' at '{}' but file does not exist (broken symlink?)".format(
+            executable, executable_path))
+
+    print(f"Found {executable}: {executable_path}")
     return executable_path
 
 
