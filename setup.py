@@ -302,11 +302,19 @@ class CmakeBuild(build_ext):
         with open(f'{self.build_lib}/{VGXINSTANCE}/__init__.py', 'w') as f:
             f.write("import sys\nfrom . import vgxinstance as _vgxinstance\nsys.modules[__name__] = _vgxinstance")
         
+        # Prepare environment for CMake
+        cmake_env = os.environ.copy()
+
         if IS_MACOS:
+            clang_path = find_executable('clang')
+            clangxx_path = find_executable('clang++')
+            # Set both CMake variables AND environment variables to ensure compiler is used
+            cmake_env['CC'] = clang_path
+            cmake_env['CXX'] = clangxx_path
             cmake_configure_cmd.extend([
                 f"-DCMAKE_OSX_DEPLOYMENT_TARGET=" + os.environ.get("MACOSX_DEPLOYMENT_TARGET", "14.0"),
-                f"-DCMAKE_C_COMPILER={find_executable('clang')}",
-                f"-DCMAKE_CXX_COMPILER={find_executable('clang++')}",
+                f"-DCMAKE_C_COMPILER={clang_path}",
+                f"-DCMAKE_CXX_COMPILER={clangxx_path}",
                 f"-DCLANG_OPTION_MCPU={os.environ.get('COMPILER_OPTION_MCPU','native')}"
             ])
         elif IS_LINUX:
@@ -344,6 +352,7 @@ class CmakeBuild(build_ext):
         subprocess.run(
             cmake_configure_cmd,
             cwd=cmake_build_dir,
+            env=cmake_env,
             check=True
         )
 
