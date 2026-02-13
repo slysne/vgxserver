@@ -220,58 +220,95 @@ make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 on
 ```
 
 **Supported Platforms:**
-- **Linux**: x86_64, aarch64 (manylinux2014)
-- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+- **Linux**: x86_64 (manylinux_2_28 - AlmaLinux 8)
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 14.0+)
 - **Windows**: AMD64
+
+**Note on ARM64 Linux (aarch64):**
+ARM64 Linux wheels can be built locally or via CI systems with native ARM64 runners (e.g., Jenkins). GitHub Actions free tier does not provide ARM64 Linux runners (ubuntu-24.04-arm64 requires Team/Enterprise plan). To build locally on ARM64 hardware:
+```bash
+make cibuildwheel ARCH=aarch64
+```
 
 **Makefile Parameters:**
 - `VERSION` - Package version (default: reads from VERSION file, appends `.dev0+<timestamp>` for dev builds)
 - `PYVER` - Python version: 39|310|311|312|313|all (default: all)
 - `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected from `uname -m`)
   - Linux: Use `ARCH=aarch64` for ARM64 or `ARCH=x86_64` for x86_64
-  - Note: The architecture setting in pyproject.toml has been removed to allow dynamic selection via this parameter
+  - macOS: Always builds for arm64 (Apple Silicon)
 - `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
 
 **Platform-Specific Guides:**
 - **Windows**: See [Windows Build Guide](WINDOWS_BUILD.md) for detailed instructions and troubleshooting
 
-### Testing Built Wheels
+### Testing
 
-After building, test your wheels using the cross-platform test script:
+**Test the PyVGX module directly:**
 
+Requires pyvgx to be installed first. Either build and install a wheel, or use development mode:
 ```bash
-# Test wheels from wheelhouse directory
-python test_pip_package.py
+# Option 1: Build and install wheel
+make build-local
+pip install --force-reinstall dist/*.whl
 
-# Or use the comprehensive test script that tests all wheels
-python test-wheels.py wheelhouse/
+# Option 2: Install in development mode
+pip install -e .
+
+# Then run tests
+make test                    # Run complete test suite
+make test QUICK=test_name    # Run specific test
+```
+
+**Test built wheels:**
+
+Tests wheels in isolated environments (no prior installation needed):
+```bash
+# Requires wheels in wheelhouse/ directory
+make test-wheels
+
+# Or use the test scripts directly
+python test_pip_package.py              # Test currently installed package
+python test-wheels.py wheelhouse/       # Test all wheels in directory
 ```
 
 ### GitHub Actions Build & Release
 
-**Automated builds for all platforms:**
-- **Linux**: x86_64 (ubuntu-22.04), aarch64 (ubuntu-24.04-arm64) - manylinux2014
-- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 11.0+)
+**Automated builds for supported platforms:**
+- **Linux**: x86_64 (ubuntu-22.04) - manylinux_2_28
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 14.0+)
 - **Windows**: AMD64 (Visual Studio 2022)
 
+**Build timeouts:**
+- Wheel builds: 120 minutes per platform
+- Source distribution: 30 minutes
+
 **Workflow triggers:**
-1. **Tags** (v*): Automatically builds release version from tag name
-2. **Pull Requests** (to main): Test builds using VERSION file + dev timestamp
-3. **Releases** (published/created): Builds release version from tag
-4. **Manual** (workflow_dispatch): Flexible builds with optional parameters:
+1. **Tags** (v*): Automatically builds release version from tag name and creates GitHub Release with permanent artifact storage
+2. **Manual** (workflow_dispatch): Flexible builds with optional parameters:
    - `version`: Custom version (overrides tag/VERSION file)
    - `python_versions`: Target Python versions (default: cp39-* cp310-* cp311-* cp312-* cp313-*)
-   - `architectures`: Select platforms (all/linux_x86_64/linux_aarch64/macos/windows)
 
 **To create a release:**
 1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
-2. Create GitHub release with tag `v3.7.0` or `git tag v3.7.0 && git push origin v3.7.0`
-3. Wheels for all platforms automatically built and available in Actions artifacts (30-day retention)
+2. Push a tag: `git tag v3.7.0 && git push origin v3.7.0`
+3. GitHub Actions automatically:
+   - Builds wheels for all platforms (Linux x86_64, macOS arm64, Windows AMD64)
+   - Builds source distribution
+   - Creates a GitHub Release with all artifacts attached
+   - Generates release notes from commit history
+   - **Artifacts stored permanently** (not subject to 30-day deletion)
 
 **Manual workflow dispatch:**
 - Go to Actions → Build Wheels → Run workflow
-- Customize version, Python versions, or select specific architectures
-- Useful for testing builds or creating custom distribution sets
+- Customize version or Python versions for testing
+- Artifacts available for 30 days (use tags for permanent releases)
+
+**Selective platform builds:**
+To build only specific platforms, edit [.github/workflows/build-wheels.yml](.github/workflows/build-wheels.yml) and comment out unwanted matrix entries. For ARM64 Linux, see the commented-out aarch64 entry in the workflow file.
+
+**Cache behavior:**
+- pip and cibuildwheel caches expire after 7 days of inactivity
+- 10 GB cache limit per repository
 
 ### Development Build
 
