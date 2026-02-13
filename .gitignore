@@ -10,7 +10,8 @@
 
 **/include/generated
 
-venv
+venv*
+.venv
 
 .DS_Store
 .idea/

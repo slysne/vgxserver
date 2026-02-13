@@ -177,12 +177,163 @@ A few quick links:
 
 Recommendation: Read the [Tutorial](https://slysne.github.io/vgxserver/pyvgx/tutorial.html) first. It covers some of the graph basics without going too deep.
 
+## Building from Source
+
+If you want to build PyVGX from source or contribute to development:
+
+### Prerequisites
+
+- **Python 3.9-3.13**: Required for building and testing
+- **cibuildwheel**: For building portable wheels (`pip install cibuildwheel`)
+- **CMake**: Build system (automatically provided by Visual Studio on Windows)
+- **C/C++ Compiler**:
+  - **Linux**: GCC/Clang (auto-installed by cibuildwheel in manylinux containers)
+  - **macOS**: Xcode Command Line Tools (`xcode-select --install`)
+  - **Windows**: Visual Studio Build Tools 2022 with C++ workload (see below)
+
+#### Windows-Specific Requirements
+
+Windows builds require Visual Studio Build Tools 2022 with C++ workload. See the **[Windows Build Guide](WINDOWS_BUILD.md)** for:
+- Detailed installation instructions
+- Troubleshooting common issues
+- Environment configuration
+- Development setup
+
+Quick install (PowerShell as Administrator):
+```powershell
+winget install Microsoft.VisualStudio.2022.BuildTools --force --override "--wait --quiet --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+```
+
+### Building with cibuildwheel
+
+The project uses cibuildwheel to build portable wheels for all platforms:
+
+```bash
+# Install cibuildwheel
+pip install cibuildwheel
+
+# Build wheels using Makefile
+make cibuildwheel                                        # Auto-read VERSION file, all Python versions
+make cibuildwheel VERSION=3.7.0                          # Explicit version, all Python versions
+make cibuildwheel VERSION=3.7.0 PYVER=312               # Python 3.12 only
+make cibuildwheel VERSION=3.7.0 PYVER=312 ARCH=x86_64   # Python 3.12, x86_64 only
+```
+
+**Supported Platforms:**
+- **Linux**: x86_64 (manylinux_2_28 - AlmaLinux 8)
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 14.0+)
+- **Windows**: AMD64
+
+**Note on ARM64 Linux (aarch64):**
+ARM64 Linux wheels can be built locally or via CI systems with native ARM64 runners (e.g., Jenkins). GitHub Actions free tier does not provide ARM64 Linux runners (ubuntu-24.04-arm64 requires Team/Enterprise plan). To build locally on ARM64 hardware:
+```bash
+make cibuildwheel ARCH=aarch64
+```
+
+**Makefile Parameters:**
+- `VERSION` - Package version (default: reads from VERSION file, appends `.dev0+<timestamp>` for dev builds)
+- `PYVER` - Python version: 39|310|311|312|313|all (default: all)
+- `ARCH` - Architecture: x86_64|aarch64|arm64 (default: auto-detected from `uname -m`)
+  - Linux: Use `ARCH=aarch64` for ARM64 or `ARCH=x86_64` for x86_64
+  - macOS: Always builds for arm64 (Apple Silicon)
+- `CMAKE_PRESET` - Build type: release|debug|relWithDebInfo (default: release)
+
+**Platform-Specific Guides:**
+- **Windows**: See [Windows Build Guide](WINDOWS_BUILD.md) for detailed instructions and troubleshooting
+
+### Testing
+
+**Test the PyVGX module directly:**
+
+Requires pyvgx to be installed first. Either build and install a wheel, or use development mode:
+```bash
+# Option 1: Build and install wheel
+make build-local
+pip install --force-reinstall dist/*.whl
+
+# Option 2: Install in development mode
+pip install -e .
+
+# Then run tests
+make test                    # Run complete test suite
+make test QUICK=test_name    # Run specific test
+```
+
+**Test built wheels:**
+
+Tests wheels in isolated environments (no prior installation needed):
+```bash
+# Requires wheels in wheelhouse/ directory
+make test-wheels
+
+# Or use the test scripts directly
+python test_pip_package.py              # Test currently installed package
+python test-wheels.py wheelhouse/       # Test all wheels in directory
+```
+
+### GitHub Actions Build & Release
+
+**Automated builds for supported platforms:**
+- **Linux**: x86_64 (ubuntu-22.04) - manylinux_2_28
+- **macOS**: arm64 only - Apple Silicon/M1+ (macOS 14.0+)
+- **Windows**: AMD64 (Visual Studio 2022)
+
+**Build timeouts:**
+- Wheel builds: 120 minutes per platform
+- Source distribution: 30 minutes
+
+**Workflow triggers:**
+1. **Tags** (v*): Automatically builds release version from tag name and creates GitHub Release with permanent artifact storage
+2. **Manual** (workflow_dispatch): Flexible builds with optional parameters:
+   - `version`: Custom version (overrides tag/VERSION file)
+   - `python_versions`: Target Python versions (default: cp39-* cp310-* cp311-* cp312-* cp313-*)
+
+**To create a release:**
+1. `echo "3.7.0" > VERSION && git commit -am "Bump version" && git push`
+2. Push a tag: `git tag v3.7.0 && git push origin v3.7.0`
+3. GitHub Actions automatically:
+   - Builds wheels for all platforms (Linux x86_64, macOS arm64, Windows AMD64)
+   - Builds source distribution
+   - Creates a GitHub Release with all artifacts attached
+   - Generates release notes from commit history
+   - **Artifacts stored permanently** (not subject to 30-day deletion)
+
+**Manual workflow dispatch:**
+- Go to Actions → Build Wheels → Run workflow
+- Customize version or Python versions for testing
+- Artifacts available for 30 days (use tags for permanent releases)
+
+**Selective platform builds:**
+To build only specific platforms, edit [.github/workflows/build-wheels.yml](.github/workflows/build-wheels.yml) and comment out unwanted matrix entries. For ARM64 Linux, see the commented-out aarch64 entry in the workflow file.
+
+**Cache behavior:**
+- pip and cibuildwheel caches expire after 7 days of inactivity
+- 10 GB cache limit per repository
+
+### Development Build
+
+For local development (requires compiler toolchain installed):
+
+```bash
+# Clone the repository
+git clone https://github.com/slysne/vgxserver.git
+cd vgxserver
+
+# Install in development/editable mode
+pip install -e .
+
+# Run tests
+python -m pytest pyvgx/test/ -v
+```
+
 ## Maintainers
 
 This project was open-sourced by **Rakuten, Inc.** and is currently maintained by:
 
 - **Stian Lysne** – [@slysne](https://github.com/slysne)
 - Contact: slysne.dev [at] gmail [dot] com
+- **Ariful Islam**
+- Contact: mailtoislam [at] yahoo [dot] com
 
 For questions, issues, or contributions, feel free to open an issue or pull request.
 

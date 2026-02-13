@@ -521,7 +521,7 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
 
   // No queue, just moving average
   if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold_long = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_long;
+    return shadow_trail->threshold = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
   }
 
   // Write latest score
@@ -532,17 +532,9 @@ DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail
     shadow_trail->wp = shadow_trail->queue;
   }
   
-  float middle = *shadow_trail->rp++;
-  shadow_trail->threshold_short = shadow_trail->zeta * middle + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_short;
-
-  // Ring buffer rp wrap
-  if( shadow_trail->rp >= shadow_trail->end ) {
-    shadow_trail->rp = shadow_trail->queue;
-  }
-  
   float oldest = *shadow_trail->wp;
 
-  return shadow_trail->threshold_long = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold_long;
+  return shadow_trail->threshold = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
 }
 
 
@@ -633,10 +625,8 @@ static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
   else {
     shadow_trail->sz = 0;
   }
-  shadow_trail->threshold_long = 0.0f;
-  shadow_trail->threshold_short = 0.0f;
+  shadow_trail->threshold = 0.0f;
   shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->rp = shadow_trail->queue + (2 * shadow_trail->sz / 4);
   shadow_trail->zeta = 0.0f;
 }
 
@@ -724,15 +714,12 @@ static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_
     if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
       return -1;
     }
-    shadow_trail->threshold_long = 0.0f;
-    shadow_trail->threshold_short = 0.0f;
+    shadow_trail->threshold = 0.0f;
     shadow_trail->wp = shadow_trail->queue;
-    shadow_trail->rp = shadow_trail->queue + (2 * shadow_trail->sz / 4);
     shadow_trail->end = shadow_trail->queue + heap_shadow;
   }
   else {
-    shadow_trail->threshold_long = -FLT_MAX;;
-    shadow_trail->threshold_short = -FLT_MAX;;
+    shadow_trail->threshold = -FLT_MAX;;
   }
   shadow_trail->zeta = (float)zeta;
   return 0;
@@ -1085,8 +1072,6 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
     top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
     top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
-    top_k_collector->current_recursion_score  = -FLT_MAX;
-    top_k_collector->last_evals_collected     = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
     top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
@@ -1203,8 +1188,6 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1334,8 +1317,6 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
     map_collector->adaptive_recursion           = false;
-    map_collector->current_recursion_score      = -FLT_MAX;
-    map_collector->last_evals_collected         = 0;
     map_collector->dynamic_taper                = 1.0;
     map_collector->alpha                        = 0.0f;
     map_collector->beta                         = 0.0f;
@@ -1416,8 +1397,6 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
@@ -1535,8 +1514,6 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
     top_k_collector->adaptive_recursion       = false;
-    top_k_collector->current_recursion_score  = -FLT_MAX;
-    top_k_collector->last_evals_collected     = 0;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = 0.0f;
     top_k_collector->beta                     = 0.0f;
@@ -1649,8 +1626,6 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
     collector->adaptive_recursion       = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1727,8 +1702,6 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
     collector->adaptive_recursion = false;
-    collector->current_recursion_score  = -FLT_MAX;
-    collector->last_evals_collected     = 0;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;

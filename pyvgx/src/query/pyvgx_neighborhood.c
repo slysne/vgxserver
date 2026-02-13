@@ -264,62 +264,6 @@ __inline static double __recursion_s2delta( int64_t shadow_size ) {
  *
  ******************************************************************************
  */
-__inline static double __old_recursion_b2epsilon( double x ) { 
-#define b2epsilon_x0  -0.75
-#define b2epsilon_x1  0.3
-#define b2epsilon_x2  0.65
-#define b2epsilon_x3  1.0
-#define b2epsilon_y0  0.0
-#define b2epsilon_y1  -0.0014
-#define b2epsilon_y2  -0.0007
-#define b2epsilon_y3  0.001
-#define b2epsilon_a1  ((b2epsilon_y1 - b2epsilon_y0) / (b2epsilon_x1 - b2epsilon_x0))
-#define b2epsilon_a2  ((b2epsilon_y2 - b2epsilon_y1) / (b2epsilon_x2 - b2epsilon_x1))
-#define b2epsilon_a3  ((b2epsilon_y3 - b2epsilon_y2) / (b2epsilon_x3 - b2epsilon_x2))
-#define b2epsilon_b1  (b2epsilon_y1 - b2epsilon_a1 * b2epsilon_x1)
-#define b2epsilon_b2  (b2epsilon_y2 - b2epsilon_a2 * b2epsilon_x2)
-#define b2epsilon_b3  (b2epsilon_y3 - b2epsilon_a3 * b2epsilon_x3)
-
-  static const double a1 = b2epsilon_a1;
-  static const double b1 = b2epsilon_b1;
-
-  static const double a2 = b2epsilon_a2;
-  static const double b2 = b2epsilon_b2;
-
-  static const double a3 = b2epsilon_a3;
-  static const double b3 = b2epsilon_b3;
-
-  // 0th segment
-  if( x < b2epsilon_x0 ) {
-    return b2epsilon_y0;  // 0.0
-  }
-
-  // 1st segment
-  if( x < b2epsilon_x1 ) {
-    return a1 * x + b1;   // -0.00173333 * (-0.3) - 0.0013 = -0.00078
-  }
-
-  // 2nd segment
-  if( x < b2epsilon_x2 ) {
-    return a2 * x + b2;   // 0.0004 * 0.25 - 0.0013 = -0.0012
-  }
-
-  // 3rd segment
-  if( x < b2epsilon_x3 ) {
-    return a3 * x + b3;   // 0.0036 * 0.6 - 0.0029 = -0.00074
-  }
-
-  // End segment
-  return b2epsilon_y3;    // 0.0007
-}
-
-
-
-/******************************************************************************
- *
- *
- ******************************************************************************
- */
 __inline static double __recursion_b2epsilon( double x ) { 
 #define b2epsilon_min   -0.00130
 #define b2epsilon_max    0.00100
@@ -334,6 +278,73 @@ __inline static double __recursion_b2epsilon( double x ) {
 
   return clamp_value( epsilon, b2epsilon_min, b2epsilon_max );
 
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+__inline static double __recursion_bias2omega( double bias ) {
+#define bias2omega_x0  -100.0
+#define bias2omega_x1   -50.0
+#define bias2omega_x2     0.0
+#define bias2omega_x3    75.0
+#define bias2omega_x4    95.0
+#define bias2omega_x5   100.0
+
+#define bias2omega_o0     0.9
+#define bias2omega_o1     0.9
+#define bias2omega_o2     0.9
+#define bias2omega_o3     0.7
+#define bias2omega_o4     0.5
+#define bias2omega_o5     0.5
+
+#define bias2omega_a0   ((bias2omega_o1 - bias2omega_o0) / (bias2omega_x1 - bias2omega_x0))
+#define bias2omega_a1   ((bias2omega_o2 - bias2omega_o1) / (bias2omega_x2 - bias2omega_x1))
+#define bias2omega_a2   ((bias2omega_o3 - bias2omega_o2) / (bias2omega_x3 - bias2omega_x2))
+#define bias2omega_a3   ((bias2omega_o4 - bias2omega_o3) / (bias2omega_x4 - bias2omega_x3))
+#define bias2omega_a4   ((bias2omega_o5 - bias2omega_o4) / (bias2omega_x5 - bias2omega_x4))
+
+#define bias2omega_b0   (bias2omega_o1 - bias2omega_a0 * bias2omega_x1)
+#define bias2omega_b1   (bias2omega_o2 - bias2omega_a1 * bias2omega_x2)
+#define bias2omega_b2   (bias2omega_o3 - bias2omega_a2 * bias2omega_x3)
+#define bias2omega_b3   (bias2omega_o4 - bias2omega_a3 * bias2omega_x4)
+#define bias2omega_b4   (bias2omega_o5 - bias2omega_a4 * bias2omega_x5)
+
+  double a, b;
+
+  bias = clamp_value( bias, -100.0, 100.0 );
+
+  // -100 to -40
+  if( bias < bias2omega_x1 ) {
+    const double a = bias2omega_a0;
+    const double b = bias2omega_b0;
+  }
+  // -40 to 0
+  else if( bias < bias2omega_x2 ) {
+    const double a = bias2omega_a1;
+    const double b = bias2omega_b1;
+  }
+  // 0 - 40
+  else if( bias < bias2omega_x3 ) {
+    const double a = bias2omega_a2;
+    const double b = bias2omega_b2;
+  }
+  // 40 - 90
+  else if( bias < bias2omega_x4 ) {
+    const double a = bias2omega_a3;
+    const double b = bias2omega_b3;
+  }
+  // 90 - 100
+  else {
+    const double a = bias2omega_a4;
+    const double b = bias2omega_b4;
+  }
+
+  return a * bias + b;
 }
 
 
@@ -427,8 +438,8 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
     config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
   }
 
-  // Apply gobal optimization weight
-  double omega = config->tune.omega;
+  // Apply global optimization weight
+  double omega = clamp_value( config->tune.omega, 0.05, 2.0 );
   if( fabs(omega - 1.0) > 1e-6 ) {
     config->tune.alpha *= omega;
     config->tune.beta *= omega;
@@ -496,7 +507,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
       { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
-      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=0.7,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
+      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=1.0,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
       {0}
     };
 
@@ -547,6 +558,9 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
         PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
         THROW_SILENT( CXLIB_ERR_API, 0x003 );
       }
+    }
+    else {
+      param->recursion.tune.omega = __recursion_bias2omega( search_bias );
     }
 
     // Auto config
