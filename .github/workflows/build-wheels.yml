@@ -14,16 +14,6 @@ on:
         description: 'Python versions to build (e.g., cp311-* cp312-*)'
         required: false
         default: 'cp39-* cp310-* cp311-* cp312-* cp313-*'
-      architectures:
-        description: 'Architectures to build (or all for all platforms)'
-        required: false
-        default: 'all'
-        type: choice
-        options:
-          - 'all'
-          - 'macos'
-          - 'windows'
-          - 'linux_x86_64'
 
 jobs:
   build_wheels:
@@ -34,32 +24,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Linux x86_64 - always enabled
           - arch: x86_64
             runner: ubuntu-22.04
             cibw_archs: x86_64
             platform: linux
-          # ARM64 Linux builds require GitHub Team/Enterprise or self-hosted runners
-          # Build aarch64 wheels locally or via Jenkins instead:
+
+          # Linux ARM64 - requires GitHub Team/Enterprise or self-hosted runners
+          # Uncomment to build on ARM64 runners, or build locally:
           #   make cibuildwheel ARCH=aarch64  (on ARM64 hardware)
           # - arch: aarch64
           #   runner: ubuntu-24.04-arm64
           #   cibw_archs: aarch64
           #   platform: linux
+
+          # macOS ARM64 (Apple Silicon) - always enabled
           - arch: arm64
             runner: macos-14
             cibw_archs: arm64
             platform: macos
+
+          # Windows AMD64 - always enabled
           - arch: AMD64
             runner: windows-2022
             cibw_archs: AMD64
             platform: windows
 
-    if: |
-      github.event.inputs.architectures == 'all' ||
-      (github.event.inputs.architectures == 'macos' && matrix.platform == 'macos') ||
-      (github.event.inputs.architectures == 'windows' && matrix.platform == 'windows') ||
-      (github.event.inputs.architectures == 'linux_x86_64' && matrix.platform == 'linux' && matrix.arch == 'x86_64') ||
-      github.event_name == 'push'
+          # To build only specific platforms, comment out unwanted entries above
 
     steps:
       - uses: actions/checkout@v4
