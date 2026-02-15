@@ -1,5 +1,8 @@
 # <img src="./vgx/src/resources/WEB-ROOT/artifacts/logo_w-b.png" alt="VGX" width="200"/>
 
+[![PyPI version](https://badge.fury.io/py/pyvgx.svg)](https://badge.fury.io/py/pyvgx)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 Distributed engine for plugin-based graph and vector search
 
 ## Why VGX?
