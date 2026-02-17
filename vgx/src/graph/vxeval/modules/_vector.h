@@ -332,6 +332,17 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   }
 
   float threshold = _vxquery_collector__get_current_threshold( base ) + base->epsilon;
+
+  /*
+  // --------------------------------------------------
+  // Bayesian experiment
+  float posterior_scalar = _vxquery_collector__get_bayesian_posterior_scalar( base, mem, score );
+  float EMA_tail = threshold;
+  float belief = EMA_tail * posterior_scalar;
+  belief = clamp_value( belief, EMA_tail-0.0018, EMA_tail+0.0018 );
+  // --------------------------------------------------
+  */
+
   float injection;
 
   // Ignore everything below the running threshold

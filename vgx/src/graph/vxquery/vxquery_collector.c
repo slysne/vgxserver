@@ -1081,6 +1081,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
     top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
     top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
+    top_k_collector->rho                      = recursion ? (float)recursion->tune.rho : 0.0f;
+    top_k_collector->sigma                    = recursion ? (float)recursion->tune.sigma : 0.0f;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty.item               = empty.item;

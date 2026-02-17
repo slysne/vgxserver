@@ -1053,6 +1053,30 @@ __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollect
  *
  ***********************************************************************
  */
+__inline static float _vxquery_collector__get_bayesian_posterior_scalar( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
+  float threshold = _vxquery_collector__get_current_threshold( collector );
+  float best_result = fmaxf( mem->dynamic_taper.top_1_best, threshold );
+  float worst_result = fmaxf( _vxquery_collector__worst_heap_recursion_score( collector->container.sequence.heap ), threshold );
+  float expected_good = 0.5f * (best_result + worst_result);
+  static const float sigma = 0.12f;
+  static const float r_2sigma2 = 1.0f / (2.0f * sigma * sigma);
+  float diff = score - expected_good;
+  float lik_good = expf( -diff * diff * r_2sigma2 );  // P(score|good)
+  float prior = 0.5 * threshold;  // ~ P(score) normalized to [0,1]
+  float evidence = lik_good * prior + (1.0f - lik_good) * (1.0f - prior); // P(good)
+  float posterior_scalar = lik_good * prior / evidence;
+  posterior_scalar = fminf( 1.5f, fmaxf( 0.4f, posterior_scalar ));
+  posterior_scalar *= (1.0f + 0.3f * collector->rho);
+  return posterior_scalar;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 __inline static float _vxquery_collector__get_discounted_threshold( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   #define DEPTH_DISCOUNT_FACTOR 0.0006f
   #define EVALS_DISCOUNT_FACTOR 0.0000003f
