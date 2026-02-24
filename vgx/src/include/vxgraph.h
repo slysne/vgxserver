@@ -4733,7 +4733,9 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 #define WAIT_FOR_VERTEX_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->vertex_availability, TimeoutMilliseconds )
-#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define BROADCAST_VERTEX_AVAILABLE( Graph )                       SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ONE_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_MANY_VERTEX_AVAILABLE( Graph, N )                  SIGNAL_MANY_CONDITION( &((Graph)->vertex_availability.cond), (N) )
 
 #define WAIT_FOR_INARCS_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->return_inarcs, TimeoutMilliseconds )
 #define SIGNAL_INARCS_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->return_inarcs.cond) )

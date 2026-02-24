@@ -1596,7 +1596,7 @@ static int64_t _vxdurable_serialization__bulk_serialize( vgx_Graph_t *self, vgx_
         _vgx_clear_serializing_CS( &self->readonly );
       }
      
-      SIGNAL_VERTEX_AVAILABLE( self );
+      BROADCAST_VERTEX_AVAILABLE( self );
 
       // Capture and transmit save operation to remote attached instances, if requested
       if( remote && _vgx_is_writable_CS( &self->readonly ) ) {

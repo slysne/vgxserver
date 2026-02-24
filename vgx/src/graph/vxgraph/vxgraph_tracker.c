@@ -792,7 +792,7 @@ DLL_HIDDEN int _vxgraph_tracker__enter_safe_multilock_CS( vgx_Graph_t *self, vgx
     if( _vxgraph_tracker__has_writable_locks_CS( self ) > 0 ) {
       iFramehash.simple.Process( gt_WL_context.tracker, __yield_inarcs_WL_CS, exempt_if_WL, NULL );
       // Broadcast an availability signal
-      SIGNAL_VERTEX_AVAILABLE( self );
+      BROADCAST_VERTEX_AVAILABLE( self );
     }
   }
   XCATCH( errcode ) {

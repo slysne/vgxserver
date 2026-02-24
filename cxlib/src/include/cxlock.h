@@ -80,6 +80,14 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( PCONDITION_VARIABLE pcond, PCRITICAL_S
 #define TIMED_WAIT_CONDITION_CS( pcscond, pcslock, milliseconds )  __TIMED_WAIT_CONDITION_CS( (pcscond), (pcslock), milliseconds )
 #define SIGNAL_ALL_CONDITION( pcscond )    WakeAllConditionVariable( (pcscond) )
 #define SIGNAL_ONE_CONDITION( pcscond )    WakeConditionVariable( (pcscond) )
+#define SIGNAL_MANY_CONDITION( pcscond, n ) \
+  do {                                      \
+    for( int i=0; i<(n); ++i ) {            \
+      WakeConditionVariable( (pcscond) );   \
+    }                                       \
+  } WHILE_ZERO
+
+
 
 #define ATOMIC_i32       __declspec(align(4)) volatile LONG
 #define ATOMIC_u32       __declspec(align(4)) volatile ULONG
@@ -291,12 +299,18 @@ extern uint32_t __SECONDS_SINCE_1970( void );
 #endif
 
 #define DEL_CONDITION_VARIABLE( pcscond )  pthread_cond_destroy( (pcscond) )
-#define WAIT_CONDITION( pcscond, pcslock )  pthread_cond_wait( (pcscond), (pcslock) ) 
+#define WAIT_CONDITION( pcscond, pcslock ) pthread_cond_wait( (pcscond), (pcslock) ) 
 extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t *mutex, DWORD milliseconds );
 // Return the number of nanoseconds slept
 #define TIMED_WAIT_CONDITION_CS( pcscond, pcslock, milliseconds )  __TIMED_WAIT_CONDITION_CS( (pcscond), (pcslock), milliseconds )
 #define SIGNAL_ALL_CONDITION( pcscond )    pthread_cond_broadcast( (pcscond) )
 #define SIGNAL_ONE_CONDITION( pcscond )    pthread_cond_signal( (pcscond) )
+#define SIGNAL_MANY_CONDITION( pcscond, n ) \
+  do {                                      \
+    for( int i=0; i<(n); ++i ) {            \
+      pthread_cond_signal( (pcscond) );     \
+    }                                       \
+  } WHILE_ZERO
 
 
 #define ATOMIC_i32       __attribute__ ((aligned(4))) int32_t

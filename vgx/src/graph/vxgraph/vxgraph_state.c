@@ -335,7 +335,7 @@ DLL_HIDDEN int _vxgraph_state__yield_inarcs_CS_WL( vgx_Graph_t *self, vgx_Vertex
   }
 
   // Broadcast an availability signal
-  SIGNAL_VERTEX_AVAILABLE( self );
+  BROADCAST_VERTEX_AVAILABLE( self );
 
   return ret;
 }
@@ -399,7 +399,7 @@ DLL_HIDDEN void _vxgraph_state__yield_vertex_inarcs_and_wait_CS_WL( vgx_Graph_t 
   vgx_Vertex_t *vertex = __vertex_set_yield_inarcs( vertex_WL );
 
   // Broadcast an availability signal
-  SIGNAL_VERTEX_AVAILABLE( self );
+  BROADCAST_VERTEX_AVAILABLE( self );
 
   // Optional sleep
   if( sleep_ms > 0 ) {
@@ -753,7 +753,7 @@ DLL_HIDDEN bool _vxgraph_state__unlock_vertex_OPEN_LCK( vgx_Graph_t *self, vgx_V
   GRAPH_LOCK( self ) {
     // Wake other threads that may be waiting for vertex availability
     if( (released = _vxgraph_state__unlock_vertex_CS_LCK( self, vertex_LCK, record )) == true ) {
-      SIGNAL_VERTEX_AVAILABLE( self );
+      BROADCAST_VERTEX_AVAILABLE( self );
     }
   } GRAPH_RELEASE;
   return released;
@@ -2169,7 +2169,7 @@ DLL_HIDDEN bool _vxgraph_state__release_vertex_CS_LCK( vgx_Graph_t *self, vgx_Ve
   
   // Wake other threads that may be waiting for vertex availability
   if( released ) {
-    SIGNAL_VERTEX_AVAILABLE( self );
+    BROADCAST_VERTEX_AVAILABLE( self );
   }
 
   return released;
@@ -2597,14 +2597,14 @@ DLL_HIDDEN bool _vxgraph_state__release_initial_and_terminal_OPEN_LCK( vgx_Graph
     if( _vxgraph_state__relax_to_readonly_vertex_CS_LCK( self, *initial_LCK, VGX_VERTEX_RECORD_ALL ) ) {
       // WL -> RO, lets broadcast
       if( !initial_was_RO && __vertex_is_locked_readonly( *initial_LCK ) ) {
-        SIGNAL_VERTEX_AVAILABLE( self );
+        BROADCAST_VERTEX_AVAILABLE( self );
       }
       // Next we relax the terminal vertex if it is WL
       bool terminal_was_RO = __vertex_is_locked_readonly( *terminal_LCK );
       if( _vxgraph_state__relax_to_readonly_vertex_CS_LCK( self, *terminal_LCK, VGX_VERTEX_RECORD_ALL ) ) {
         // WL -> RO, lets broadcast
         if( !terminal_was_RO && __vertex_is_locked_readonly( *terminal_LCK ) ) {
-          SIGNAL_VERTEX_AVAILABLE( self );
+          BROADCAST_VERTEX_AVAILABLE( self );
         }
 
         // Both vertices have now been committed if their original state required commit, 
@@ -2616,7 +2616,7 @@ DLL_HIDDEN bool _vxgraph_state__release_initial_and_terminal_OPEN_LCK( vgx_Graph
         if( __vertex_is_locked_readonly( *initial_LCK ) ) {
           // It may have been WL or RO originally, but it doesn't matter - release RO and signal
           __unlock_vertex_readonly_CS_RO( self, initial_LCK, VGX_VERTEX_RECORD_ALL );
-          SIGNAL_VERTEX_AVAILABLE( self );
+          BROADCAST_VERTEX_AVAILABLE( self );
         }
         // Initial is still WL after recursive release from multi-WL
         else {
@@ -2627,7 +2627,7 @@ DLL_HIDDEN bool _vxgraph_state__release_initial_and_terminal_OPEN_LCK( vgx_Graph
         if( __vertex_is_locked_readonly( *terminal_LCK ) ) {
           // It may have been WL or RO originally, but it doesn't matter - release RO and signal
           __unlock_vertex_readonly_CS_RO( self, terminal_LCK, VGX_VERTEX_RECORD_ALL );
-          SIGNAL_VERTEX_AVAILABLE( self );
+          BROADCAST_VERTEX_AVAILABLE( self );
         }
         // Terminal is still WL after recursive release from multi-WL
         else {
