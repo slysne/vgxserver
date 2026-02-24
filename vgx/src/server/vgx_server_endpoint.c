@@ -686,10 +686,11 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
               }
               nkey += iEnumerator_CS.Property.Key.Count( graph );
               nval += iEnumerator_CS.Property.Value.Count( graph );
-              // Internal queries
-              qcnt += CALLABLE( graph )->QueryCountNolock( graph );
-              qns += CALLABLE( graph )->QueryTimeNanosecAccNolock( graph );
             } GRAPH_RELEASE;
+            // Internal queries
+            qcnt += CALLABLE( graph )->QueryCountAtomic( graph );
+            qns += CALLABLE( graph )->QueryTimeNanosecAccAtomic( graph );
+            // Virtual properties
             SYNCHRONIZE_ON( graph->vprop.lock ) {
               vprop_bytes += graph->vprop.bytes;
               vprop_count += graph->vprop.count;

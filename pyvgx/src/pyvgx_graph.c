@@ -4953,14 +4953,8 @@ static PyObject * PyVGX_Graph__ResetCounters( PyVGX_Graph *pygraph ) {
     return NULL;
   }
 
-  BEGIN_PYVGX_THREADS {
-    GRAPH_LOCK( graph ) {
-
-      // Reset query counters
-      CALLABLE( graph )->ResetQueryCountNolock( graph );
-
-    } GRAPH_RELEASE; 
-  } END_PYVGX_THREADS;
+  // Reset query counters
+  CALLABLE( graph )->ResetQueryCountAtomic( graph );
 
   Py_RETURN_NONE;
 }

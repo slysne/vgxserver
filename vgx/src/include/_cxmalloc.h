@@ -381,7 +381,7 @@ CALIGNED_TYPE(struct) s_cxmalloc_allocator_t {
     cacheline_t _CL3;
     struct {
       // [Q3.1.1]
-      ATOMIC_VOLATILE_i32( readonly_atomic ); /* [10] */
+      ATOMIC_i32 readonly_atomic;             /* [10] */
       // [Q3.1.2]
       int ready;                              /* [11] allocator construction complete if 1 */
       // [Q3.2]

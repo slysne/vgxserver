@@ -414,7 +414,7 @@ typedef struct s_framehash_dynamic_t {
 #define DYNAMIC_LOCK( DynPtr )                  \
   do {                                          \
     CXLOCK_TYPE *__pdynlock__ = &(((DynPtr)->lock).lock);  \
-    ENTER_CRITICAL_SECTION( __pdynlock__ );     \
+    ENTER_CRITICAL_SECTION( __pdynlock__, NULL ); \
     do
 
 

@@ -61,7 +61,7 @@ typedef struct _CS_COND {
 #define INIT_SPINNING_CRITICAL_SECTION( pcslock, SpinCount )   do { if(!InitializeCriticalSectionAndSpinCount( (pcslock), SpinCount )) { *((int*)NULL)=0; /* goodbye */ } } WHILE_ZERO
 #define INIT_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
 #define DEL_CRITICAL_SECTION( pcslock )    DeleteCriticalSection( (pcslock) )
-#define ENTER_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
+#define ENTER_CRITICAL_SECTION( pcslock, _ign )  EnterCriticalSection( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( LPCRITICAL_SECTION pcs );
 #define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
 #define LEAVE_CRITICAL_SECTION( pcslock )  LeaveCriticalSection( (pcslock) )
@@ -81,10 +81,10 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( PCONDITION_VARIABLE pcond, PCRITICAL_S
 #define SIGNAL_ALL_CONDITION( pcscond )    WakeAllConditionVariable( (pcscond) )
 #define SIGNAL_ONE_CONDITION( pcscond )    WakeConditionVariable( (pcscond) )
 
-#define ATOMIC_VOLATILE_i32       __declspec(align(4)) volatile LONG
-#define ATOMIC_VOLATILE_u32       __declspec(align(4)) volatile ULONG
-#define ATOMIC_VOLATILE_i64       __declspec(align(8)) volatile int64_t
-#define ATOMIC_VOLATILE_u64       __declspec(align(8)) volatile uint64_t
+#define ATOMIC_i32       __declspec(align(4)) volatile LONG
+#define ATOMIC_u32       __declspec(align(4)) volatile ULONG
+#define ATOMIC_i64       __declspec(align(8)) volatile int64_t
+#define ATOMIC_u64       __declspec(align(8)) volatile uint64_t
 
 
 #define ATOMIC_INCREMENT_i32(ptr)   InterlockedIncrement( ptr )
@@ -262,8 +262,8 @@ typedef struct _CS_COND {
 
 
 #define DEL_CRITICAL_SECTION( pcslock )    pthread_mutex_destroy( (pcslock) )
-extern void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
-#define ENTER_CRITICAL_SECTION( pcslock )  __CXLOCK_MUTEX_SPINLOCK( (pcslock) )
+extern void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex, int32_t *patomic_counter );
+#define ENTER_CRITICAL_SECTION( pcslock, patomic_counter )  __CXLOCK_MUTEX_SPINLOCK( (pcslock), (patomic_counter) )
 extern bool __TRY_CRITICAL_SECTION( pthread_mutex_t *mutex );
 #define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
 #define LEAVE_CRITICAL_SECTION( pcslock )  pthread_mutex_unlock( (pcslock) )
@@ -299,10 +299,10 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t 
 #define SIGNAL_ONE_CONDITION( pcscond )    pthread_cond_signal( (pcscond) )
 
 
-#define ATOMIC_VOLATILE_i32       __attribute__ ((aligned(4))) volatile int32_t
-#define ATOMIC_VOLATILE_u32       __attribute__ ((aligned(4))) volatile uint32_t
-#define ATOMIC_VOLATILE_i64       __attribute__ ((aligned(8))) volatile int64_t
-#define ATOMIC_VOLATILE_u64       __attribute__ ((aligned(8))) volatile uint64_t
+#define ATOMIC_i32       __attribute__ ((aligned(4))) int32_t
+#define ATOMIC_u32       __attribute__ ((aligned(4))) uint32_t
+#define ATOMIC_i64       __attribute__ ((aligned(8))) int64_t
+#define ATOMIC_u64       __attribute__ ((aligned(8))) uint64_t
 
 
 #define __CXATOMIC_INCREMENT(ptr)   __atomic_add_fetch(ptr, 1, __ATOMIC_SEQ_CST)
@@ -352,7 +352,7 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t 
 #define SYNCHRONIZE_ON( CS )                \
 do {                                        \
   CXLOCK_TYPE *__pcslock__ = &((CS).lock);  \
-  ENTER_CRITICAL_SECTION( __pcslock__ );    \
+  ENTER_CRITICAL_SECTION( __pcslock__, NULL ); \
   do                                        \
 /*
     {
@@ -365,7 +365,7 @@ do {                                        \
 do {                                          \
   CXLOCK_TYPE *__pcslock__ = (pCS) ? &((pCS)->lock) : NULL; \
   if( __pcslock__ ) {                         \
-    ENTER_CRITICAL_SECTION( __pcslock__ );    \
+    ENTER_CRITICAL_SECTION( __pcslock__, NULL ); \
   }                                           \
   do                                          \
 /*
@@ -397,7 +397,7 @@ do {                                          \
 
 #define RESUME_SYNCH                        \
     WHILE_ZERO;                             \
-    ENTER_CRITICAL_SECTION( __pcslock__ );  \
+    ENTER_CRITICAL_SECTION( __pcslock__, NULL ); \
   } WHILE_ZERO
 
 

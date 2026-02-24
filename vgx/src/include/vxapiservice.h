@@ -1929,10 +1929,10 @@ typedef struct s_vgx_VGXServerDispatcherMatrix_t {
   CQwordQueue_t *backlog;
 
   // [Q3.3.1]
-  ATOMIC_VOLATILE_i32( backlog_sz_atomic );
+  ATOMIC_i32 backlog_sz_atomic;
 
   // [Q3.3.2]
-  ATOMIC_VOLATILE_i32( backlog_count_atomic );
+  ATOMIC_i32 backlog_count_atomic;
 
   // [Q3.4]
   QWORD __rsv_3_4;
@@ -2144,10 +2144,10 @@ typedef struct s_vgx_VGXServerExecutorCompletion_t {
   CQwordQueue_t *queue;
 
   // [Q2.2.1]
-  ATOMIC_VOLATILE_i32 length_atomic;
+  ATOMIC_i32 length_atomic;
 
   // [Q2.2.2]
-  ATOMIC_VOLATILE_i32( poll_blocked_atomic );
+  ATOMIC_i32 poll_blocked_atomic;
 
   // [Q2.3]
   vgx_URI_t *signal;
@@ -2193,10 +2193,10 @@ typedef struct s_vgx_VGXServerDispatchQueue_t {
   CQwordQueue_t *queue;
 
   // [Q2.8.1
-  ATOMIC_VOLATILE_i32 length_atomic;
+  ATOMIC_i32 length_atomic;
 
   // [Q2.8.2]
-  ATOMIC_VOLATILE_i32 n_waiting_atomic;
+  ATOMIC_i32 n_waiting_atomic;
 
 
   // -------------------------------------------------------------------
@@ -2364,7 +2364,7 @@ typedef struct s_vgx_VGXServerExecutor_t {
   vgx_VGXServerDispatchQueue_t *jobQ;
 
   // [Q1.8]
-  ATOMIC_VOLATILE_i64 count_atomic;
+  ATOMIC_i64 count_atomic;
 
   // --------------------------
 

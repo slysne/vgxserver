@@ -1861,8 +1861,8 @@ DLL_HIDDEN PyObject * pyvgx_GraphStatus( vgx_Graph_t *graph, PyObject *args ) {
           status.meminfo = CALLABLE( graph )->advanced->GetMemoryInfo( graph );
 
           // Query
-          status.query.count = CALLABLE( graph )->QueryCountNolock( graph );
-          status.query.time_average = CALLABLE( graph )->QueryTimeAverageNolock( graph );
+          status.query.count = CALLABLE( graph )->QueryCountAtomic( graph );
+          status.query.time_average = CALLABLE( graph )->QueryTimeAverageAtomic( graph );
         }
 
       } GRAPH_RELEASE;

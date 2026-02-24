@@ -3034,19 +3034,19 @@ typedef struct s_vgx_GraphTimer_t {
   struct s_vgx_Graph_t *graph;
 
   // [Q1.3] Current time tick in milliseconds since 1970
-  ATOMIC_VOLATILE_i64 tms_atomic;
+  ATOMIC_i64 tms_atomic;
 
   // [Q1.4.1] Current time tick in seconds since 1970
-  ATOMIC_VOLATILE_u32 ts_atomic;
+  ATOMIC_u32 ts_atomic;
 
   // [Q1.4.2]
-  ATOMIC_VOLATILE_u32 t0_atomic;
+  ATOMIC_u32 t0_atomic;
 
   // [Q1.5.1]
-  ATOMIC_VOLATILE_i32 offset_tms_atomic;
+  ATOMIC_i32 offset_tms_atomic;
 
   // [Q1.5.2]
-  ATOMIC_VOLATILE_u32 inception_t0_atomic;
+  ATOMIC_u32 inception_t0_atomic;
 
 } vgx_GraphTimer_t;
 
@@ -3545,11 +3545,11 @@ typedef struct s_vgx_Graph_vtable_t {
   /* */
   const CString_t * (*Name)( const struct s_vgx_Graph_t *self );
 
-  void (*CountQueryNolock)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
-  void (*ResetQueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryTimeNanosecAccNolock)( struct s_vgx_Graph_t *self );
-  double (*QueryTimeAverageNolock)( struct s_vgx_Graph_t *self );
+  void (*CountQueryAtomic)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
+  void (*ResetQueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryTimeNanosecAccAtomic)( struct s_vgx_Graph_t *self );
+  double (*QueryTimeAverageAtomic)( struct s_vgx_Graph_t *self );
 
   void (*SetDestructorHook)( struct s_vgx_Graph_t *self, void *external_owner, void (*destructor_callback_hook)( struct s_vgx_Graph_t *self, void *external_owner ) );
   void (*ClearExternalOwner)( struct s_vgx_Graph_t *self );
@@ -3671,7 +3671,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       vgx_control_state_t control;
 
       // [Q4.2.2]
-      DWORD __rsv_4_2_2;
+      ATOMIC_i32 state_lock_contention;
 
       // [Q4.3-4] Graph readonly management
       vgx_readonly_state_t readonly;
@@ -3686,7 +3686,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       int64_t count_vtx_RO;
 
       // [Q4.8] Graph order = number of vertices |V(G)|
-      ATOMIC_VOLATILE_i64 _order_atomic;
+      ATOMIC_i64 _order_atomic;
     };
   };
 
@@ -3713,18 +3713,18 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     cacheline_t __cl8;
     struct {
       // [Q8.1] Graph size = number of arcs |E(G)|
-      ATOMIC_VOLATILE_i64 _size_atomic;
+      ATOMIC_i64 _size_atomic;
 
       // [Q8.2]
-      ATOMIC_VOLATILE_i64 _nvectors_atomic;
+      ATOMIC_i64 _nvectors_atomic;
 
       // [Q8.3]
-      ATOMIC_VOLATILE_i64 _nproperties_atomic;
+      ATOMIC_i64 _nproperties_atomic;
 
       // Graph reverse size = number of reverse arcs |E(G)|
       // For debug arcvector consistency
       // [Q8.4]
-      ATOMIC_VOLATILE_i64 rev_size_atomic;
+      ATOMIC_i64 rev_size_atomic;
 
       // [Q8.5]
       QWORD __rsv_8_5;
@@ -3881,16 +3881,16 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       CS_LOCK q_lock;
 
       // [Q20.1.1]
-      int q_pri_req;
+      ATOMIC_i32 q_pri_req;
 
       // [Q20.1.2]
       int __rsv_20_1_2;
 
       // [Q20.2]
-      int64_t q_count;
+      ATOMIC_i64 q_count;
 
       // [Q20.3]
-      int64_t q_time_nanosec_acc;
+      ATOMIC_i64 q_time_nanosec_acc;
 
       // [Q20.4]
       QWORD __rsv_20_4;
@@ -4499,12 +4499,17 @@ __inline static int16_t __try_enter_CS_nonblocking( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
+  #define MAX_YIELD_PER_TRY 32
+  #define MAX_UNINTERRUPTED_SPIN_COUNT 256
+
   if( timeout_ms == 0 ) {
     return __try_enter_CS_nonblocking( graph );
   }
 
   // UNSAFE HERE
   int64_t deadline_ns = -1;
+  int y = 1;
+  int n = 0;
   while( !TRY_CRITICAL_SECTION( &graph->state_lock.lock ) ) {
     int64_t t_ns = __GET_CURRENT_NANOSECOND_TICK();
     // Initialize deadline if this is our first failed attempt
@@ -4520,15 +4525,22 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
     else if( t_ns > deadline_ns ) {
       return -1;
     }
-    // Spin
-    else {
-      int64_t z = 0;
-      int64_t a = 0;
-      // Do something that doesn't get optimized away
-      while( z < (4000 + (int64_t)(timeout_ms&0xf))  ) {
-        a += z++;
+    // Polite Spin
+    else if( ++n < MAX_UNINTERRUPTED_SPIN_COUNT ) {
+      for( int i=0; i<y; ++i ) {
+        #if defined CXPLAT_ARCH_X64
+        _mm_pause();
+        #elif defined CXPLAT_ARCH_ARM64
+        __yield();
+        #endif
       }
-      deadline_ns ^= (a & 1);
+      
+      // More yields every time we go around the loop
+      y = (y < MAX_YIELD_PER_TRY) ? y * 2 : MAX_YIELD_PER_TRY;
+    }
+    // Too much spinning, now we sleep between attempts
+    else {
+      sleep_milliseconds( 1 );
     }
   }
 
@@ -4544,7 +4556,7 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
  */
 __inline static int16_t __enter_CS( vgx_Graph_t *graph ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &graph->state_lock.lock );
+  ENTER_CRITICAL_SECTION( &graph->state_lock.lock, &graph->state_lock_contention );
   // SAFE HERE
   return ++(graph->__state_lock_count);
 }
@@ -4584,14 +4596,15 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
 /*******************************************************************//**
  * 
  ***********************************************************************
- */
+ *//*
 #define GRAPH_LOCK_SPIN( Graph, SpinMillisec )              \
   do {                                                      \
     vgx_Graph_t *__pgraph__ = Graph;                        \
     if( __try_enter_CS( __pgraph__, SpinMillisec ) < 0 ) {  \
-      __enter_CS( __pgraph__ ); /* probably go to sleep */  \
+      __enter_CS( __pgraph__ );                             \
     }                                                       \
     do
+*/
 
 
 
@@ -6229,7 +6242,7 @@ typedef struct s_vgx_Evaluator_t {
     vgx_Vector_t * vector;  // default reference vector
   } current;
   // Refcount
-  ATOMIC_VOLATILE_i64 _refc_atomic;
+  ATOMIC_i64 _refc_atomic;
   //
   struct {
     int64_t i64;

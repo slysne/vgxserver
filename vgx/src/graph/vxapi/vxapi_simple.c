@@ -444,8 +444,8 @@ static int64_t __global_query( vgx_Graph_t *self, vgx_GlobalQuery_t *query ) {
 
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
   } GRAPH_RELEASE;
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
 
   return n_hits;
 }
@@ -1452,8 +1452,8 @@ static vgx_Relation_t * Graph_has_adjacency( vgx_Graph_t *self, vgx_AdjacencyQue
 
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
   } GRAPH_RELEASE;
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
 
   return relation;
 }
@@ -1540,9 +1540,9 @@ static vgx_Vertex_t * Graph_open_neighbor( vgx_Graph_t *self, vgx_AdjacencyQuery
     }
   } END_QUERY;
 
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
     if( neighbor ) {
       if( readonly ) {
         neighbor_LCK = _vxgraph_state__lock_vertex_readonly_CS( self, neighbor, &query->timing_budget, VGX_VERTEX_RECORD_ALL );
@@ -1849,8 +1849,8 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
       if( ro_frozen > 0 ) {
         CALLABLE( self )->advanced->UnfreezeGraphReadonly_CS( self );
       }
-      CALLABLE( self )->CountQueryNolock( self, qt_ns );
     } GRAPH_RELEASE;
+    CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   }
 
   return n_hits;
@@ -1970,8 +1970,8 @@ static int64_t Graph_aggregate( vgx_Graph_t *self, vgx_AggregatorQuery_t *query 
       if( ro_frozen > 0 ) {
         CALLABLE( self )->advanced->UnfreezeGraphReadonly_CS( self );
       }
-      CALLABLE( self )->CountQueryNolock( self, qt_ns );
     } GRAPH_RELEASE;
+    CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   }
 
 

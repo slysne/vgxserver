@@ -775,7 +775,8 @@ __inline static vgx_LockableArc_t * __init_lockable_arc( vgx_LockableArc_t *larc
   // Lock tail when graph is not readonly
   else {
     vgx_Graph_t *graph = larc->tail->graph;
-    GRAPH_LOCK_SPIN( graph, 2 ) {
+    //GRAPH_LOCK_SPIN( graph, 2 ) {
+    GRAPH_LOCK( graph ) {
       static const int8_t TWO_LOCKS = 2;
       // !!! NOTE !!!
       // Own TWO locks here. One is for the traverser, the other for collector (if needed).

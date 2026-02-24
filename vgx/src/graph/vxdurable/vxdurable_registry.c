@@ -233,7 +233,7 @@ static CS_COND g_registry_graph_availability = {0};
  */
 __inline static int16_t __enter_registry_CS( void ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &g_registry_lock.lock );
+  ENTER_CRITICAL_SECTION( &g_registry_lock.lock, NULL );
   // SAFE HERE
   return ++g_registry_lock_count;
 }

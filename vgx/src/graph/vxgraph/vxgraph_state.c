@@ -616,7 +616,8 @@ DLL_HIDDEN vgx_Vertex_t * _vxgraph_state__lock_vertex_readonly_CS( vgx_Graph_t *
  */
 DLL_HIDDEN vgx_Vertex_t * _vxgraph_state__lock_vertex_readonly_OPEN( vgx_Graph_t *self, vgx_Vertex_t *vertex, vgx_ExecutionTimingBudget_t *timing_budget, vgx_vertex_record record ) {
   vgx_Vertex_t *vertex_RO = NULL;
-  GRAPH_LOCK_SPIN( self, 2 ) {
+  //GRAPH_LOCK_SPIN( self, 2 ) {
+  GRAPH_LOCK( self ) {
     vertex_RO = _vxgraph_state__lock_vertex_readonly_CS( self, vertex, timing_budget, record );
   } GRAPH_RELEASE;
   return vertex_RO;
