@@ -615,6 +615,14 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
   vgx_VGXServerClient_t *client;
 
   while( (client = ready->client) != NULL ) {
+    
+    // ---------------------------
+    // Client socket has exception
+    // ---------------------------
+    if( cxpollfd_exception( ready->pfd ) ) {
+      __io__handle_exception( server, client, ready->pfd, 0 );
+      goto next_client;
+    }
 
     // -----------------------------------
     // Send client data to writable socket
@@ -634,14 +642,6 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
     // -------------------------------------
     if( cxpollfd_readable( ready->pfd ) ) {
       __io__recv( server, client );
-      goto next_client;
-    }
-
-    // ---------------------------
-    // Client socket has exception
-    // ---------------------------
-    if( cxpollfd_exception( ready->pfd ) ) {
-      __io__handle_exception( server, client, ready->pfd, 0 );
     }
 
   next_client:
