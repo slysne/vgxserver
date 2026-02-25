@@ -847,6 +847,19 @@ DLL_HIDDEN void vgx_server_request__copy_all( vgx_VGXServerRequest_t *dest, cons
  *
  ***********************************************************************
  */
+DLL_HIDDEN void vgx_server_request__header_capsule_swap( vgx_VGXServerRequest_t *a, vgx_VGXServerRequest_t *b ) {
+  vgx_HTTPHeadersCapsule_t tmp = a->headers->capsule;
+  a->headers->capsule = b->headers->capsule;
+  b->headers->capsule = tmp;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 DLL_HIDDEN vgx_VGXServerRequest_t * vgx_server_request__new( HTTPRequestMethod method, const char *path ) {
   vgx_VGXServerRequest_t *request = calloc( 1, sizeof( vgx_VGXServerRequest_t ) );
   if( request ) {

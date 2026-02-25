@@ -254,6 +254,9 @@ static void __executor__postprocess( vgx_VGXServer_t *server, vgx_VGXServerClien
     }
 
     vgx_VGXServerResponse_t *front_response = &client->response;
+        
+    // Swap header capsules (restore pre-processor capsule back into the matrix request from the front request)
+    vgx_server_request__header_capsule_swap( front_request, matrix_request );
     
     // We operate on the matrix request and the front response
     int ret = server->resource.pluginf( post_plugin, true, NULL, matrix_request, front_response, &CSTR__error );

@@ -509,6 +509,7 @@ DLL_HIDDEN extern void                          vgx_server_request__dump( const 
 DLL_HIDDEN extern int                           vgx_server_request__handle( vgx_VGXServer_t *server, vgx_VGXServerClient_t *client );
 DLL_HIDDEN extern void                          vgx_server_request__copy_clean( vgx_VGXServerRequest_t *dest, const vgx_VGXServerRequest_t *src );
 DLL_HIDDEN extern void                          vgx_server_request__copy_all( vgx_VGXServerRequest_t *dest, const vgx_VGXServerRequest_t *src );
+DLL_HIDDEN extern void                          vgx_server_request__header_capsule_swap( vgx_VGXServerRequest_t *a, vgx_VGXServerRequest_t *b );
 DLL_HIDDEN extern vgx_VGXServerRequest_t *      vgx_server_request__new( HTTPRequestMethod method, const char *path );
 DLL_HIDDEN extern void                          vgx_server_request__delete( vgx_VGXServerRequest_t **request );
 DLL_HIDDEN extern int                           vgx_server_request__init( vgx_VGXServerRequest_t *request, const char *label );

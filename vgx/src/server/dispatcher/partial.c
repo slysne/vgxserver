@@ -44,14 +44,15 @@ DLL_HIDDEN void vgx_server_dispatcher_partial__dump_header( const x_vgx_partial_
     CXLIB_OSTREAM( "sortspec      = %04X", header->sortspec );
     CXLIB_OSTREAM( "n_entries     = %llp", header->n_entries );
     CXLIB_OSTREAM( "segment" );
-    CXLIB_OSTREAM( "    message   = %lld", header->segment.message );
+    CXLIB_OSTREAM( "    message   = %d",   header->segment.message );
+    CXLIB_OSTREAM( "    meta      = %d",   header->segment.meta );
     CXLIB_OSTREAM( "    keys      = %lld", header->segment.keys );
     CXLIB_OSTREAM( "    strings   = %lld", header->segment.strings );
     CXLIB_OSTREAM( "    items     = %lld", header->segment.items );
     CXLIB_OSTREAM( "    end       = %lld", header->segment.end );
     CXLIB_OSTREAM( "hitcount      = %lld", header->hitcount );
     CXLIB_OSTREAM( "message_type  = %02X", header->message_type );
-    CXLIB_OSTREAM( "__rsv_2_2_2   = %u",   header->__rsv_2_2_2 );
+    CXLIB_OSTREAM( "meta_type     = %02X", header->meta_type );
     CXLIB_OSTREAM( "level" );
     CXLIB_OSTREAM( "    number    = %d",   header->level.number );
     CXLIB_OSTREAM( "    parts     = %d",   header->level.parts );
@@ -248,7 +249,7 @@ DLL_EXPORT void vgx_server_dispatcher_partial__reset_header( x_vgx_partial__head
  *
  ******************************************************************************
  */
-DLL_EXPORT int64_t vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output ) {
+DLL_EXPORT int64_t vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const char *meta, int sz_meta, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output ) {
 
   const x_vgx_partial__entry *entry;
   const x_vgx_partial__entry *end = entries + header->n_entries;
@@ -261,18 +262,29 @@ DLL_EXPORT int64_t vgx_server_dispatcher_partial__write_output_binary( const x_v
   szout_delta += iStreamBuffer.Write( output, header->bytes, sizeof( header->bytes ) );
 
   // 2. Message
-  x_vgx_partial__binentry message;
-  message.sz.val = sz_msg;
-  message.data = msg;
-  szout_delta += iStreamBuffer.Write( output, message.sz.bytes, sizeof( message.sz.bytes ) );
-  szout_delta += iStreamBuffer.Write( output, message.data, message.sz.val );
+  x_vgx_partial__binentry message_entry;
+  message_entry.sz.val = sz_msg;
+  message_entry.data = msg;
+  szout_delta += iStreamBuffer.Write( output, message_entry.sz.bytes, sizeof( message_entry.sz.bytes ) );
+  if( message_entry.data ) {
+    szout_delta += iStreamBuffer.Write( output, message_entry.data, message_entry.sz.val );
+  }
+  
+  // 3. Meta
+  x_vgx_partial__binentry meta_entry;
+  meta_entry.sz.val = sz_meta;
+  meta_entry.data = meta;
+  szout_delta += iStreamBuffer.Write( output, meta_entry.sz.bytes, sizeof( meta_entry.sz.bytes ) );
+  if( meta_entry.data ) {
+    szout_delta += iStreamBuffer.Write( output, meta_entry.data, meta_entry.sz.val );
+  }
 
-  // 3. Entry keys
+  // 4. Entry keys
   for( entry=entries; entry < end; ++entry ) {
     szout_delta += iStreamBuffer.Write( output, (const char*)&entry->key.m128i, sizeof( entry->key ) );
   }
 
-  // 4. Strings
+  // 5. Strings
   if( x_vgx_partial__is_sortkeytype_string( header->ktype ) ) {
     for( entry=entries; entry < end; ++entry ) {
       szout_delta += iStreamBuffer.Write( output, entry->sortkey.sz.bytes, sizeof( entry->sortkey.sz.bytes ) );
@@ -280,7 +292,7 @@ DLL_EXPORT int64_t vgx_server_dispatcher_partial__write_output_binary( const x_v
     }
   }
 
-  // 5. Items
+  // 6. Items
   for( entry=entries; entry < end; ++entry ) {
     szout_delta += iStreamBuffer.Write( output, entry->item.sz.bytes, sizeof( entry->item.sz.bytes ) );
     szout_delta += iStreamBuffer.Write( output, entry->item.data, entry->item.sz.val );
@@ -304,12 +316,13 @@ DLL_EXPORT int64_t vgx_server_dispatcher_partial__serialize_partial_error( const
   x_vgx_partial__header header = {0};
   header.message_type = X_VGX_PARTIAL_MESSAGE__UTF8;
   header.status = X_VGX_PARTIAL_STATUS__ERROR;
-  header.segment.message = sizeof( x_vgx_partial__header );
-  header.segment.keys = header.segment.message + sizeof(int) + sz_msg;
+  header.segment.message = (int)sizeof( x_vgx_partial__header );
+  header.segment.meta = (int)(header.segment.message + sizeof(int) + sz_msg);
+  header.segment.keys = header.segment.meta + sizeof(int) + 0;
   header.segment.strings = header.segment.keys;
   header.segment.items = header.segment.strings;
   header.segment.end = header.segment.items;
-  return vgx_server_dispatcher_partial__write_output_binary( &header, msg, (int)sz_msg, NULL, output );
+  return vgx_server_dispatcher_partial__write_output_binary( &header, msg, (int)sz_msg, NULL, 0, NULL, output );
 }
 
 
@@ -319,7 +332,7 @@ DLL_EXPORT int64_t vgx_server_dispatcher_partial__serialize_partial_error( const
  *
  ******************************************************************************
  */
-static int __serialize( x_vgx_partial__header *header, Cm128iList_t *list, vgx_StreamBuffer_t *output, CString_t **CSTR__error ) {
+static int __serialize( x_vgx_partial__header *header, const char *meta, int sz_meta, Cm128iList_t *list, vgx_StreamBuffer_t *output, CString_t **CSTR__error ) {
   int ret = 0;
 
   // Count non-null list entries to determine actual size of result 
@@ -343,8 +356,9 @@ static int __serialize( x_vgx_partial__header *header, Cm128iList_t *list, vgx_S
 
     // Header: Set offsets for keys and strings
     header->status = X_VGX_PARTIAL_STATUS__OK;
-    header->segment.message = sizeof( x_vgx_partial__header );
-    header->segment.keys = sizeof( x_vgx_partial__header ) + sizeof(int) + 0; // zero message length
+    header->segment.message = (int)sizeof( x_vgx_partial__header );
+    header->segment.meta = header->segment.message + sizeof(int) + 0; // zero message length
+    header->segment.keys = header->segment.meta + sizeof(int) + sz_meta;
     header->segment.strings = header->segment.keys + header->n_entries * sizeof( x_vgx_partial__entry_key );
     int64_t running_offset = header->segment.strings;
 
@@ -394,7 +408,7 @@ static int __serialize( x_vgx_partial__header *header, Cm128iList_t *list, vgx_S
     header->segment.end = running_offset;
 
     // OUTPUT
-    if( vgx_server_dispatcher_partial__write_output_binary( header, NULL, 0, entries, output ) < 0 ) {
+    if( vgx_server_dispatcher_partial__write_output_binary( header, NULL, 0, meta, sz_meta, entries, output ) < 0 ) {
       THROW_ERROR( CXLIB_ERR_MEMORY, 0x004 );
     }
 
@@ -713,6 +727,9 @@ DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerC
     bool numericsort = x_vgx_partial__is_sortkeytype_numeric( merged_header.ktype );
     bool stringsort = x_vgx_partial__is_sortkeytype_string( merged_header.ktype );
 
+    const char *meta = NULL;
+    int sz_meta = 0;
+
     // Merge
     for( int i=0; i<merged_header.level.parts; i++ ) {
 
@@ -730,6 +747,16 @@ DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerC
       // Get partial data
       const char *data, *end;
       iStreamBuffer.ReadableSegment( partial_response->buffers.content, LLONG_MAX, &data, &end );
+
+      // Reference first partial's meta segment
+      if( i == 0 ) {
+        merged_header.segment.meta = partial_header->segment.meta;
+        merged_header.meta_type = partial_header->meta_type;
+        meta = data + partial_header->segment.meta;
+        sz_meta = *(int*)meta;
+        meta += sizeof(int);
+      }
+
       // Final valid location that can hold segment size
       const char *finloc = end - 4;
 
@@ -809,7 +836,7 @@ DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerC
     }
 
     // Produce new partial from merged partials
-    if( __serialize( &merged_header, list, response->buffers.content, CSTR__error ) < 0 ) {
+    if( __serialize( &merged_header, meta, sz_meta, list, response->buffers.content, CSTR__error ) < 0 ) {
       THROW_ERROR( CXLIB_ERR_MEMORY, 0x003 );
     }
 

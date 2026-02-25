@@ -235,11 +235,17 @@ typedef struct s_x_vgx_partial__aggregator {
  * 
  *
  *  HEADER:
- *  [status, __xxx, ktype, sdir, n_entries, segment.message, segment.keys, segment.strings, segment.items, segment.end, hitcount, exec_ms, __xxx, __xxx, __xxx, __xxx, __xxx, __xxx]
- *  struct: iiiiqqqqqqqqqqqqqq
+ *  [status, maxhits, ktype, sdir, n_entries, segment.message, segment.meta, segment.keys, segment.strings, segment.items, segment.end, hitcount, message_type, meta_type, level, aggregator]
+ *  struct: iiiiqiiqqqqqiiiiiiqqdd
+ *          ^^^^^------^^^----^^^^
+ *               ||||||
  * 
- *  ENTRY_MSG:
- *  (sz_msg, msg)
+ * 
+ *  ENTRY_MESSAGE:
+ *  (sz_message, message)
+ * 
+ *  ENTRY_META
+ *  (sz_meta, meta)
  * 
  *  ENTRY_KEYS:
  *  [(offset_str1, offset_entry1), (offset_str1, offset_entry2), ..., (offset_strN, offset_entryN)]
@@ -277,9 +283,12 @@ typedef union u_x_vgx_partial__header {
     // Number of hit entries in the result
     int64_t n_entries;
     struct {
-      // [Q1.4]
+      // [Q1.4.1]
       // Byte offset to start of message string
-      int64_t message;
+      int32_t message;
+      // [Q1.4.2]
+      // Byte offset to start of meta string
+      int32_t meta;
       // [Q1.5]
       // Byte offset to entry key segment
       int64_t keys;
@@ -301,7 +310,7 @@ typedef union u_x_vgx_partial__header {
     x_vgx_partial__message message_type;
     
     // [Q2.2.2]
-    DWORD __rsv_2_2_2;
+    x_vgx_partial__message meta_type;
     
     // [Q2.3-4]
     x_vgx_partial__level level;
@@ -370,7 +379,7 @@ typedef struct s_x_vgx_partial__entry {
 
 DLL_VISIBLE int       vgx_server_dispatcher_partial__deserialize_header( const char *data, int64_t sz_data, x_vgx_partial__header *dest );
 DLL_VISIBLE void      vgx_server_dispatcher_partial__reset_header( x_vgx_partial__header *header );
-DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output );
+DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const char *meta, int sz_meta, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output );
 DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__serialize_partial_error( const char *msg, int64_t sz_msg, vgx_StreamBuffer_t *output );
 
 
