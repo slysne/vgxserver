@@ -2069,44 +2069,6 @@ static PyVGX_PluginResponse * __new_deserialized_pluginresponse( PyObject *py_me
  *
  *
  ******************************************************************************
- *//*
-static int __serialize_partial_error( PyObject *py_err, vgx_StreamBuffer_t *output ) {
-  int ret = 0;
-  x_vgx_partial__header header = {0};
-  header.status = X_VGX_PARTIAL_STATUS__ERROR;
-
-  const char *message = NULL;
-  Py_ssize_t sz_message = 0;
-  PyObject *py_repr = PyObject_Repr( py_err );
-  if( py_repr ) {
-    message = PyUnicode_AsUTF8AndSize( py_repr, &sz_message );
-  }
-  if( message == NULL ) {
-    message = "unknown internal error";
-    sz_message = strlen( message );
-  }
-
-  header.segment.message = sizeof( x_vgx_partial__header );
-  header.segment.keys = header.segment.message + sizeof(int) + sz_message;
-  header.segment.strings = header.segment.keys;
-  header.segment.items = header.segment.strings;
-  header.segment.end = header.segment.items;
-
-  if( zzzvgx_server_dispatcher_partial__write_output_binary( &header, message, (int)sz_message, NULL, output ) < 0 ) {
-    ret = -1;
-  }
-
-  Py_XDECREF( py_repr );
-
-  return ret;
-}*/
-
-
-
-/******************************************************************************
- *
- *
- ******************************************************************************
  */
 static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuffer_t *output ) {
   int ret = 0;
@@ -2122,11 +2084,11 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
   x_vgx_partial__entry *entry = NULL;
   int64_t running_offset = 0;
   
-  const char *message = "";
+  const char *message = NULL;
   Py_ssize_t sz_message = 0;
   PyObject *py_message_bytes = NULL;
   
-  const char *meta = "";
+  const char *meta = NULL;
   Py_ssize_t sz_meta = 0;
   PyObject *py_meta_bytes = NULL;
 
@@ -2134,13 +2096,13 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
     // Message
     if( py_plugres->py_message ) {
       if( PyUnicode_CheckExact( py_plugres->py_message ) ) {
-        header.message_type = X_VGX_PARTIAL_MESSAGE__UTF8;
+        header.message_type = X_VGX_PARTIAL_METATYPE__UTF8;
         if( (message = PyUnicode_AsUTF8AndSize( py_plugres->py_message, &sz_message )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
         }
       }
       else {
-        header.message_type = X_VGX_PARTIAL_MESSAGE__OBJECT;
+        header.message_type = X_VGX_PARTIAL_METATYPE__OBJECT;
         if( (py_message_bytes = PyMarshal_WriteObjectToString( py_plugres->py_message, Py_MARSHAL_VERSION )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_API, 0x002 );
         }
@@ -2152,19 +2114,25 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
     
     // Meta
     if( py_plugres->py_meta ) {
-      if( PyUnicode_CheckExact( py_plugres->py_meta ) ) {
-        header.meta_type = X_VGX_PARTIAL_MESSAGE__UTF8;
-        if( (meta = PyUnicode_AsUTF8AndSize( py_plugres->py_meta, &sz_meta )) == NULL ) {
+      if( PyBytes_CheckExact( py_plugres->py_meta ) ) {
+        header.meta_type = X_VGX_PARTIAL_METATYPE__BYTES;
+        if( PyBytes_AsStringAndSize( py_plugres->py_meta, (char**)&meta, &sz_meta ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
         }
       }
+      else if( PyUnicode_CheckExact( py_plugres->py_meta ) ) {
+        header.meta_type = X_VGX_PARTIAL_METATYPE__UTF8;
+        if( (meta = PyUnicode_AsUTF8AndSize( py_plugres->py_meta, &sz_meta )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+        }
+      }
       else {
-        header.meta_type = X_VGX_PARTIAL_MESSAGE__OBJECT;
+        header.meta_type = X_VGX_PARTIAL_METATYPE__OBJECT;
         if( (py_meta_bytes = PyMarshal_WriteObjectToString( py_plugres->py_meta, Py_MARSHAL_VERSION )) == NULL ) {
-          THROW_ERROR( CXLIB_ERR_API, 0x005 );
+          THROW_ERROR( CXLIB_ERR_API, 0x006 );
         }
         if( PyBytes_AsStringAndSize( py_meta_bytes, (char**)&meta, &sz_meta ) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
         }
       }
     }
@@ -2185,7 +2153,7 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
       // Ensure entry is tuple (key,item)
       if( !PyTuple_Check( py_entry ) || PyTuple_GET_SIZE( py_entry ) != 2 ) {
         PyErr_Format( PyVGX_ResponseError, "Invalid response entry at index %d, a tuple (sortkey, item) is required", idx );
-        THROW_SILENT( CXLIB_ERR_API, 0x004 );
+        THROW_SILENT( CXLIB_ERR_API, 0x008 );
       }
       PyObject *py_sortkey = PyTuple_GET_ITEM( py_entry, 0 );
       PyObject *py_item = PyTuple_GET_ITEM( py_entry, 1 );
@@ -2195,12 +2163,12 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
       switch( header.ktype ) {
       case X_VGX_PARTIAL_SORTKEYTYPE__double:
         if( (entry->key.sortkey.dval = PyFloat_AsDouble( py_sortkey )) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
         }
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__int64:
         if( (entry->key.sortkey.ival = PyLong_AsLongLong( py_sortkey )) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
         }
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__bytes:
@@ -2210,7 +2178,7 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
         entry->sortkey.data = PyUnicode_AsUTF8AndSize( py_sortkey, &sz );
 record_string_offset:
         if( entry->sortkey.data == NULL ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x00B );
         }
         entry->key.sortkey.offset = running_offset;
         entry->sortkey.sz.val = (int)sz;
@@ -2222,7 +2190,7 @@ record_string_offset:
 
       // Serialize item
       if( (entry->obj = PyMarshal_WriteObjectToString( py_item, Py_MARSHAL_VERSION )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_MEMORY, 0x008 );
+        THROW_ERROR( CXLIB_ERR_MEMORY, 0x00C );
       }
       entry->item.data = PyBytes_AS_STRING( _PyObject_CAST(entry->obj) );
       entry->item.sz.val = (int)PyBytes_GET_SIZE( _PyObject_CAST(entry->obj) );
@@ -2248,7 +2216,7 @@ record_string_offset:
     } END_PYVGX_THREADS;
 
     if( nw < 0 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00D );
     }
 
   }
@@ -2355,12 +2323,12 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
         THROW_ERROR( CXLIB_ERR_FORMAT, 0x002 );
       }
       switch( header.message_type ) {
-      case X_VGX_PARTIAL_MESSAGE__UTF8:
+      case X_VGX_PARTIAL_METATYPE__UTF8:
         if( (py_message = PyUnicode_FromStringAndSize( message.data, message.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x003 );
         }
         break;
-      case X_VGX_PARTIAL_MESSAGE__OBJECT:
+      case X_VGX_PARTIAL_METATYPE__OBJECT:
         if( (py_message = PyMarshal_ReadObjectFromString( message.data, message.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
         }
@@ -2379,18 +2347,23 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
         THROW_ERROR( CXLIB_ERR_FORMAT, 0x006 );
       }
       switch( header.meta_type ) {
-      case X_VGX_PARTIAL_MESSAGE__UTF8:
-        if( (py_meta = PyUnicode_FromStringAndSize( meta.data, meta.sz.val )) == NULL ) {
+      case X_VGX_PARTIAL_METATYPE__BYTES:
+        if( (py_meta = PyBytes_FromStringAndSize( meta.data, meta.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
         }
         break;
-      case X_VGX_PARTIAL_MESSAGE__OBJECT:
-        if( (py_meta = PyMarshal_ReadObjectFromString( meta.data, meta.sz.val )) == NULL ) {
+      case X_VGX_PARTIAL_METATYPE__UTF8:
+        if( (py_meta = PyUnicode_FromStringAndSize( meta.data, meta.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x008 );
         }
         break;
+      case X_VGX_PARTIAL_METATYPE__OBJECT:
+        if( (py_meta = PyMarshal_ReadObjectFromString( meta.data, meta.sz.val )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+        }
+        break;
       default:
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
       }
     }
 
@@ -2419,7 +2392,7 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
         // String data
         sortkey.data = p + sizeof( sortkey.sz.bytes );
         if( sortkey.data + sortkey.sz.val > segment.items.data ) {
-          THROW_ERROR( CXLIB_ERR_FORMAT, 0x00A );
+          THROW_ERROR( CXLIB_ERR_FORMAT, 0x00B );
         } 
         if( header.ktype == X_VGX_PARTIAL_SORTKEYTYPE__bytes ) {
           py_sortkey = PyBytes_FromStringAndSize( sortkey.data, sortkey.sz.val );
@@ -2440,15 +2413,15 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
       // Item data
       item.data = p + sizeof( item.sz.bytes );
       if( item.data + item.sz.val > segment.end.data ) {
-        THROW_ERROR( CXLIB_ERR_FORMAT, 0x00B );
+        THROW_ERROR( CXLIB_ERR_FORMAT, 0x00C );
       }
       PyObject *py_item = PyMarshal_ReadObjectFromString( item.data, item.sz.val );
 
-      SetEntryOrThrow( py_entries, i, py_sortkey, py_item, 0x00C );
+      SetEntryOrThrow( py_entries, i, py_sortkey, py_item, 0x00D );
     }
 
     if( (py_plugres = __new_deserialized_pluginresponse( py_message, py_meta, py_entries, &header )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00D );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00E );
     }
 
   }

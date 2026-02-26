@@ -193,11 +193,12 @@ __inline static int x_vgx_partial__is_sortkeytype_string( x_vgx_partial__sortkey
  * 
  ***********************************************************************
  */
-typedef enum e_x_vgx_partial__message {
-  X_VGX_PARTIAL_MESSAGE__NONE       = 0x00,
-  X_VGX_PARTIAL_MESSAGE__UTF8       = 0x01,
-  X_VGX_PARTIAL_MESSAGE__OBJECT     = 0x02
-} x_vgx_partial__message;
+typedef enum e_x_vgx_partial__metatype {
+  X_VGX_PARTIAL_METATYPE__NONE      = 0x00,
+  X_VGX_PARTIAL_METATYPE__BYTES     = 0x01,
+  X_VGX_PARTIAL_METATYPE__UTF8      = 0x02,
+  X_VGX_PARTIAL_METATYPE__OBJECT    = 0x04
+} x_vgx_partial__metatype;
 
 
 
@@ -307,10 +308,10 @@ typedef union u_x_vgx_partial__header {
     int64_t hitcount;
     
     // [Q2.2.1]
-    x_vgx_partial__message message_type;
+    x_vgx_partial__metatype message_type;
     
     // [Q2.2.2]
-    x_vgx_partial__message meta_type;
+    x_vgx_partial__metatype meta_type;
     
     // [Q2.3-4]
     x_vgx_partial__level level;
