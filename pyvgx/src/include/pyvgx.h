@@ -1084,6 +1084,7 @@ typedef struct s_PyVGX_PluginResponse {
   PyVGX_PluginResponse_metas metas;
   x_vgx_partial__aggregator aggregator;
   PyObject *py_message;
+  PyObject *py_meta;
   PyObject *py_entries;
   PyObject *py_prev_key;
 } PyVGX_PluginResponse;

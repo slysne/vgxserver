@@ -382,6 +382,7 @@ static PyObject * PyVGX_Similarity__rvec( PyVGX_Similarity *py_sim, PyObject *py
   BEGIN_PYVGX_THREADS {
     float *rval = malloc( sizeof(float) * sz );
     if( rval ) {
+      __lfsr63( __GET_CURRENT_NANOSECOND_TICK() + rand63() );
       float *p = rval;
       float *end = rval + sz;
       while( p < end ) {

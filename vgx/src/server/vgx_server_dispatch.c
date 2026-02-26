@@ -1034,9 +1034,8 @@ DLL_HIDDEN int vgx_server_dispatch__executor_complete( vgx_VGXServer_t *server )
         idcpy( &front_headers->signature, &matrix_headers->signature );
         // Capture user flag for potential later use
         front_headers->flag.__bits = matrix_headers->flag.__bits;
-        // Steal capsule
-        front_headers->capsule = matrix_headers->capsule;
-        memset( matrix_headers->capsule.__bits, 0, sizeof(vgx_HTTPHeadersCapsule_t) );
+        // Swap header capsules (retain pre-processor capsule data in the front request)
+        vgx_server_request__header_capsule_swap( front_request, matrix_request );
         // Forward to matrix
         vgx_server_dispatcher_dispatch__forward( server, client );
         break;
