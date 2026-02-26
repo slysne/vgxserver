@@ -792,7 +792,9 @@
         letter-spacing: 0px;
         font-size: 11px;
         text-align: center;
+        vertical-align: middle;
         margin-right: 10px;
+        padding-top: 3px;
     }
 
     input.nodemmry {
@@ -989,7 +991,7 @@
         background-color: #EEEEEE;
     }
 
-    input.scheme-gray2 {
+    input.scheme-gray2, .scheme-gray2 {
         border-color: #888888;
         color: #888888;
         background-color: #EEEEEE;
@@ -1035,6 +1037,12 @@
         border-color: #444444;
         color: #F1F1F1;
         background-color: #444444;
+    }
+
+    input.scheme-dark3, .scheme-dark3 {
+        border-color: #777777;
+        color: #EAF2F8;
+        background-color: #777777;
     }
 
     input.scheme-orange1, .scheme-orange1{
@@ -1589,7 +1597,7 @@
         static Aggregate  = Symbol("Aggregate");
 
 
-        static update(element, ntyp) {
+        static update(element, ntyp, cache=null) {
             element.addClass("disable-select");
             element.prop("disabled", true);
             element.css("text-align", "center");
@@ -1613,6 +1621,10 @@
                 break;
             case NodeType.Dispatch:
                 element.val( "Dispatch" );
+                if (cache != null && cache.matrix_mode == 'Proxy') {
+                    StatusColor.update( element, "blueinv" );
+                    break;
+                }
                 StatusColor.update( element, "blue" );
                 break;
             case NodeType.Generic:
@@ -2226,6 +2238,7 @@
         currentGroupInstances = [];
         currentGroup = -1.0;
         currentGroupTitle = null;
+        currentGroupType = null;
         prevGroup = -1.0;
         builderOrders = [];
         builderSizes = [];
@@ -2773,12 +2786,9 @@
                             let redness = cache.matrix_nch / cache.matrix_maxch;
                             let gb = redness < 0.2 ? 240 : Math.round(240 * (1 - 0.4*redness));
                             cache.nchaElem.css("color", "rgb(240," + gb + "," + gb + ")");
-                            /*if (redness > 0.75) {
-                                cache.nchaElem.addClass("blinktext");
+                            if (cache.matrix_nch == cache.matrix_maxch) {
+                                cache.nchaElem.val( "MAX" );
                             }
-                            else {
-                                cache.nchaElem.removeClass("blinktext");
-                            }*/
                         }
                     }
                     else {
@@ -2950,6 +2960,9 @@
                     }
                 }
                 if (Object.keys(has).length == 1) {
+                    if (has.Dispatch == true) {
+                        this.currentGroupType = "dispatch";
+                    }
                     this.renderRow("grp_aggr_" + grp, NodeType.Aggregate, null, null, null, cache);
                 }
                 else {
@@ -2959,6 +2972,7 @@
             }
             this.currentGroupInstances = [];
             this.currentGroupTitle = null;
+            this.currentGroupType = null;
         }
 
 
@@ -3045,27 +3059,65 @@
             // Aggregate
             if (ntyp == NodeType.Aggregate) {
                 row.find("input").css("visibility", "hidden");
-                let aggr = {"s_in":true, "rate":0.0, "qlat95":0.0};
+                let aggr = {"s_in":true, "rate":0.0, "qlat95":0.0, "mem_proc":0.0, "order":0, "is_aggr":true};
                 aggr.rateElem = row.find(".noderate input");
-                aggr.rateElem.css("visibility","visible");
-                aggr.rateElem.attr("id", "rate_" + id);
                 aggr.qlatElem = row.find(".nodeqlat input");
-                aggr.qlatElem.css("visibility","visible");
-                aggr.qlatElem.attr("id", "qlat_" + id);
+                aggr.mprcElem = row.find(".nodemprc");
+                aggr.ordrElem = row.find(".nodeordr input");
+
+                // Group Latency
                 if (cache.group_rate != null) {
                     if (this.prevGroup in cache.group_rate) {
                         aggr.rate = cache.group_rate[this.prevGroup];
                     }
                 }
                 this.renderQueryRate(aggr);
+                StatusColor.update(aggr.rateElem, "dark3");
+                aggr.rateElem.css("visibility","visible");
+                aggr.rateElem.css("opacity", "0.8");
+                aggr.rateElem.attr("id", "rate_" + id);
+                // Group Estimated 95th
                 if (cache.group_est_qlat != null) {
                     if (this.prevGroup in cache.group_est_qlat) {
                         aggr.qlat95 = cache.group_est_qlat[this.prevGroup];
                     }
                 }
                 this.renderQueryLatency(aggr);
+                StatusColor.update(aggr.qlatElem, "dark3");
+                aggr.qlatElem.css("visibility","visible");
+                aggr.qlatElem.css("opacity", "0.8");
+                aggr.qlatElem.attr("id", "qlat_" + id);
+                // Group Memory
+                if (cache.group_mem != null) {
+                    if (this.prevGroup in cache.group_mem) {
+                        aggr.mem_proc = cache.group_mem[this.prevGroup];
+                    }
+                }
+                let vgxInstanceGiB = aggr.mem_proc / 0x40000000;
+                aggr.mprcElem.val( vgxInstanceGiB.toFixed(1) );
+                StatusColor.update(aggr.mprcElem, "dark3");
+                aggr.mprcElem.css("visibility","visible");
+                aggr.mprcElem.css("opacity", "0.8");
+                aggr.mprcElem.attr("id", "memuse_" + id);
+                // Group Order
+                if (cache.group_order != null) {
+                    if (this.prevGroup in cache.group_order) {
+                        aggr.order = cache.group_order[this.prevGroup];
+                    }
+                }
+                if (aggr.order > 0 && this.currentGroupType === 'dispatch') {
+                    this.renderOrder(aggr);
+                    StatusColor.update(aggr.ordrElem, "dark3");
+                    aggr.ordrElem.css("visibility","visible");
+                    aggr.ordrElem.css("opacity", "0.8");
+                    aggr.ordrElem.attr("id", "order_" + id);
+                    aggr.ordrElem.closest("td").prop("title", "Group Vertex Count\n\n(" + this.currentGroupTitle + ")");
+                }
+
+                //
                 aggr.rateElem.closest("td").prop("title", "Group Total Requests/sec\n\n(" + this.currentGroupTitle + ")");
                 aggr.qlatElem.closest("td").prop("title", "Group 95th ms (estimate)\n\n(" + this.currentGroupTitle + ")");
+                aggr.mprcElem.closest("td").prop("title", "Group Memory GiB\n\n(" + this.currentGroupTitle + ")");
                 return;
             }
 
@@ -3093,7 +3145,7 @@
             let nodentypTD = row.find(".nodentyp");
             ntypElem.attr("id", "ntyp_" + id);
             if (ntyp != null) {
-                NodeType.update( $('#ntyp_'+$.escapeSelector(id)), ntyp );
+                NodeType.update( $('#ntyp_'+$.escapeSelector(id)), ntyp, cache );
                 let titleType = id + " Type\n\nOpen Admin Dashboard";
                 this.setTitleLink(nodentypTD, host, httpPort, "admin", titleType );
             }
@@ -3646,6 +3698,8 @@
                     let group_rate = {};
                     let group_wsum_qlat = {};
                     let group_est_qlat = {};
+                    let group_mem = {};
+                    let group_order = {};
                     let group_size = {};
                     this.builderOrders = [];
                     this.builderSizes = [];
@@ -3721,6 +3775,8 @@
                                 cache.group = instance["group"].toString();
                                 cache.group_rate = group_rate;
                                 cache.group_est_qlat = group_est_qlat;
+                                cache.group_mem = group_mem;
+                                cache.group_order = group_order;
                                 cache.group_size = group_size;
 
                                 const nodestatObj = instance["nodestat"];
@@ -3816,7 +3872,19 @@
                                     this.totalInstances++;
 
                                     const matrix_mode = nodestatObj["matrix"]["mode"];
-                                    cache.matrix_mode = matrix_mode == 'dispatch' ? 'matrix' : matrix_mode;
+                                    switch( matrix_mode ) {
+                                    case 'dispatch':
+                                        cache.matrix_mode = 'Matrix';
+                                        break;
+                                    case 'proxy':
+                                        cache.matrix_mode = 'Proxy';
+                                        break;
+                                    case 'engine':
+                                        cache.matrix_mode = 'Engine';
+                                        break;
+                                    default:
+                                        cache.matrix_mode = matrix_mode;
+                                    }
 
                                     cache.matrix_nch = nodestatObj["matrix"]["active-channels"];
                                     cache.matrix_maxch = nodestatObj["matrix"]["total-channels"];
@@ -3825,11 +3893,6 @@
                                     cache.maxclients = 1024; // TODO: get from server
                                     cache.rate = nodestatObj["service-rate"];
                                     cache.qlat95 = nodestatObj["service-95th-ms"];
-                                    //cache.qlatAll = null;
-                                    //cache.rate = Math.round( Math.random() ) * 100;
-                                    //if (nodeKey == "S01" || nodeKey == "B01" ) {
-                                    //    cache.s_in = false;
-                                    //}
                                     // Group RPS
                                     if (cache.s_in) {
                                         if (!(cache.group in group_rate)) {
@@ -3848,9 +3911,18 @@
                                     cache.mem_tot = nodestatObj["memory-total"];
                                     cache.mem_proc = nodestatObj["memory-process"];
                                     cache.mem_avail = nodestatObj["memory-available"];
-                                    //cache.mem_tot = 128 * (1<<30);
-                                    //cache.mem_proc =  Math.random() * 128 * (1<<30);
-                                    //cache.mem_avail = cache.mem_tot - cache.mem_proc;
+                                    // Group memory
+                                    if (!(cache.group in group_mem)) {
+                                        group_mem[cache.group] = 0.0;
+                                    }
+                                    group_mem[cache.group] += cache.mem_proc;
+
+                                    // Group order
+                                    if (!(cache.group in group_order)) {
+                                        group_order[cache.group] = 0;
+                                    }
+                                    group_order[cache.group] += cache.order;
+
                                     cache.durable = nodestatObj["durable"];
                                     cache.durable_txlog = nodestatObj["durable-txlog"];
                                     cache.durable_max_txlog = nodestatObj["durable-max-txlog"];
@@ -3880,6 +3952,8 @@
                                 cache.this_instance = false;
                                 cache.group_rate = {};
                                 cache.group_est_qlat = {};
+                                cache.group_mem = {};
+                                cache.group_order = {}
                                 //cache.group_size = {};
                                 cache.ready = false;
                                 cache.lag = 0;
@@ -4025,6 +4099,8 @@
                         this.nextGroup(1000000, {
                             'group_rate': group_rate,
                             'group_est_qlat': group_est_qlat,
+                            'group_mem': group_mem,
+                            'group_order': group_order,
                             'group_size': group_size
                         });
 
