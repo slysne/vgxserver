@@ -557,7 +557,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     memset( &self->control, 0, sizeof(self->control) );
 
     // [Q4.2.2]
-    ATOMIC_ASSIGN_i32( &self->state_lock_contention, 0 );
+    self->__rsv_4_2_2 = 0;
 
     // [Q4.3-4]
     memset( &self->readonly, 0, sizeof(self->readonly) );
@@ -1650,7 +1650,7 @@ static void Graph_dump( vgx_Graph_t *self ) {
       CXLIB_OSTREAM( "  .__rsv7               : %d", (int)ctrl->__rsv7 );
       CXLIB_OSTREAM( "  .__rsv8               : %d", (int)ctrl->__rsv8);
       CXLIB_OSTREAM( "  .__rsv                : %u", (unsigned)ctrl->__rsv);
-      CXLIB_OSTREAM( "state_lock_contention   : %d", (int)ATOMIC_READ_i32( &self->state_lock_contention ) );
+      CXLIB_OSTREAM( "__rsv_4_2_2             : %d", (int)self->__rsv_4_2_2 );
       vgx_readonly_state_t *ro = &self->readonly;
       CXLIB_OSTREAM( "readonly" );
       CXLIB_OSTREAM( "  .__n_disallowed       : %d", (int)ro->__n_disallowed );

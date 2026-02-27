@@ -629,7 +629,7 @@ void cxlib_exception_counters_reset( void ) {
  */
 void cxlib_ostream_lock( void ) {
   if( g_context != NULL ) {
-    ENTER_CRITICAL_SECTION( &g_context->lock.lock, NULL ); 
+    ENTER_CRITICAL_SECTION( &g_context->lock.lock ); 
     g_context->recursion++;
   }
 }

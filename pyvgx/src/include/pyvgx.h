@@ -557,7 +557,6 @@ DLL_HIDDEN extern PyObject * g_py_cfdispatcher;
  */
 DLL_HIDDEN extern __THREAD PyThreadState * PYVGX_THREAD_STATE;
 
-
 #define __PYVGX_BLOCK_THREADS       PyEval_RestoreThread( PYVGX_THREAD_STATE )
 
 
@@ -2097,9 +2096,7 @@ static int PyVGX_DictStealItemString( PyObject *py_map, const char *key, PyObjec
  ******************************************************************************
  */
 static void PyVGX_Yield( void ) {
-  BEGIN_PYVGX_THREADS {
-    sched_yield();
-  } END_PYVGX_THREADS;
+  PyEval_RestoreThread( PyEval_SaveThread() );
 }
 
 
@@ -2114,7 +2111,6 @@ static void PyVGX_SignalAndYield( vgx_Graph_t *graph ) {
     vgx_Graph_t *locked_graph = GRAPH_ENTER_CRITICAL_SECTION( graph );
     SIGNAL_WAKE_EVENT( locked_graph );
     GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
-    sched_yield();
   } END_PYVGX_THREADS;
 }
 

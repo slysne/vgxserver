@@ -289,64 +289,37 @@ default_micronap:
  *
  ***********************************************************************
  */
-void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex, int32_t *patomic_counter ) {
-  #define MAX_SPIN 256
-  #define MAX_YIELD_SPINS 64
-  #define MAX_YIELD_PER_TRY 16
-  #define MAX_SPINNERS_BEFORE_SLEEP 4
+void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
+  #define MAX_SPIN 128
+  #define MIN_BACKOFF 4
+  #define MAX_BACKOFF 64
 
   // Optimistic
   if( pthread_mutex_trylock( mutex ) == 0 ) {
     return;
   }
 
-  if( patomic_counter ) {
-    ATOMIC_INCREMENT_i32( patomic_counter );
-  }
-
-  int y = 1;
+  int y = MIN_BACKOFF;
   for( int spin=0; spin<MAX_SPIN; ++spin ) {
   
-    // Polite spin
-    if( spin < MAX_YIELD_SPINS ) {
-      for( int i=0; i<y; ++i ) {
-        #if defined CXPLAT_ARCH_X64
-        _mm_pause();
-        #elif defined CXPLAT_ARCH_ARM64
-        __yield();
-        #endif
-      }
-      y = (y < MAX_YIELD_PER_TRY) ? y * 2 : MAX_YIELD_PER_TRY;
+    for( int i=0; i<y; ++i ) {
+      #if defined CXPLAT_ARCH_X64
+      _mm_pause();
+      #elif defined CXPLAT_ARCH_ARM64
+      __yield();
+      #endif
     }
-    else {
-      int waiting = patomic_counter ? ATOMIC_READ_i32( patomic_counter ) : 0;
-      if( waiting < MAX_SPINNERS_BEFORE_SLEEP ) {
-        sched_yield();
-      }
-      else {
-        int ns = (500 * waiting) + (int)(ihash64v2( __GET_CURRENT_NANOSECOND_TICK() + waiting ) & 0xFFFULL);
-        struct timespec short_sleep = {
-          .tv_sec = 0,
-          .tv_nsec = ns
-        };
-        nanosleep( &short_sleep, NULL );
-      }
-    }
+    y = (y < MAX_BACKOFF) ? y * 2 : MAX_BACKOFF;
 
     // Try the lock again
     if( pthread_mutex_trylock( mutex ) == 0 ) {
-      goto exit;
+      return;
     }
 
   }
   
   // Fallback
   pthread_mutex_lock( mutex );
-
-exit:
-  if( patomic_counter ) {
-    ATOMIC_DECREMENT_i32( patomic_counter );
-  }
 }
 
 
