@@ -826,6 +826,9 @@ static PyObject * __py_list__single_string_entries( const vgx_SearchResult_t *se
         Py_INCREF( Py_None );
       }
       PyList_SET_ITEM( py_result_list, n, py_string );
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -874,6 +877,9 @@ static PyObject * __py_list__single_object_entries( const vgx_SearchResult_t *se
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -930,6 +936,9 @@ static PyObject * __py_list__tuple_entries( const vgx_SearchResult_t *search_res
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -1005,6 +1014,9 @@ static PyObject * __py_list__dict_entries( const vgx_SearchResult_t *search_resu
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
