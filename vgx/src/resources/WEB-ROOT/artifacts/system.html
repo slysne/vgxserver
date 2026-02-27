@@ -1099,6 +1099,18 @@
         background-color: #1F618D;
     }
 
+    input.scheme-lavender, .scheme-lavender {
+        border-color: #645f92;
+        background-color: #f1f0ff;
+        color: #645f92;
+    }
+
+    input.scheme-lavenderinv, .scheme-lavenderinv {
+        border-color: #645f92;
+        color: #f1f0ff;
+        background-color: #645f92;
+    }
+
     input.scheme-purple, .scheme-purple {
         border-color: #6C3483;
         color: #6C3483;
@@ -1617,7 +1629,7 @@
                 break;
             case NodeType.Search:
                 element.val( "Search" );
-                StatusColor.update( element, "blueinv" );
+                StatusColor.update( element, "lavenderinv" );
                 break;
             case NodeType.Dispatch:
                 element.val( "Dispatch" );
@@ -2544,7 +2556,13 @@
                 let degraded = [];
                 let matrix = [];
                 let partial = false;
-                const dim = "" + height + "R x " + width + "P";
+                let dim;
+                if (cache.matrix_mode == 'Proxy') {
+                    dim = "" + height + "R";
+                }
+                else {
+                    dim = "" + height + "R x " + width + "P";
+                }
                 elem.val(dim);
                 for (const partition of cache.matrix) {
                     let row = []
