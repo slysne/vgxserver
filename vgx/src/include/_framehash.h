@@ -361,8 +361,8 @@ __inline static void __release_subtree( framehash_t * const self, const uint64_t
     int fx = (int)_FRAMEHASH_TOPINDEX( self->_order, idHigh );
     SYNCHRONIZE_ON_PTR( self->_plock ) {
       self->_guard[fx].busy = 0;
-      // Wake all threads waiting for the slot ready condition variable
-      SIGNAL_ALL_CONDITION( &(self->_guard[fx].ready.cond) );
+      // Wake another thread waiting for the slot ready condition variable
+      SIGNAL_ONE_CONDITION( &(self->_guard[fx].ready.cond) );
     } RELEASE;
   }
 }

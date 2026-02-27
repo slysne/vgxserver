@@ -1243,7 +1243,6 @@ BEGIN_COMLIB_TASK( self,
                   emitter->control.flag_CS.flush = false;
                   wait = false;
                   emitter->commit_deadline_ms = 0;
-                  SIGNAL_WAKE_EVENT( graph ); // <- ? Nobody had called WAIT_FOR_WAKE_EVENT() so what's the point of this?
                 }
               } GRAPH_RELEASE;
               tms = _vgx_graph_milliseconds( graph );
