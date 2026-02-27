@@ -791,8 +791,8 @@ DLL_HIDDEN int _vxgraph_tracker__enter_safe_multilock_CS( vgx_Graph_t *self, vgx
     // Yield inarcs for all writelocked vertices held by current thread
     if( _vxgraph_tracker__has_writable_locks_CS( self ) > 0 ) {
       iFramehash.simple.Process( gt_WL_context.tracker, __yield_inarcs_WL_CS, exempt_if_WL, NULL );
-      // Broadcast an availability signal
-      BROADCAST_VERTEX_AVAILABLE( self );
+      // Signal vertex availability
+      SIGNAL_VERTEX_AVAILABLE( self );
     }
   }
   XCATCH( errcode ) {

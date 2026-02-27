@@ -760,7 +760,7 @@ DLL_EXPORT int COMLIB__Log( LogContext_t *context, int64_t ns_1970, CString_t **
     if( context->qready ) {
       Cx2tptrQueue_t *Q = context->queue;
       ret = CALLABLE(Q)->AppendNolock(Q, &ts_cstr);
-      SIGNAL_ALL_CONDITION( &(context->qwake.cond) );
+      SIGNAL_ONE_CONDITION( &(context->qwake.cond) );
     }
   } RELEASE;
 

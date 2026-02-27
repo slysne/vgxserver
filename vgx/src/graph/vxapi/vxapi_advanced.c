@@ -668,7 +668,7 @@ static vgx_VertexList_t * Graph_atomic_acquire_vertices_writable( vgx_Graph_t *s
                 }
               }
               // Leave CS, none WL at this time
-              BROADCAST_VERTEX_AVAILABLE( self );
+              SIGNAL_VERTEX_AVAILABLE( self );
               // Start off in a grabby mode
               if( keep_RO ) {
                 WAIT_FOR_VERTEX_AVAILABLE( self, 1 );

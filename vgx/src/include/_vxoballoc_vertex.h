@@ -278,7 +278,7 @@ DLL_VISIBLE extern const vgx_Vertex_t * __assert_vertex_lock( const vgx_Vertex_t
 #define END_SYNCHRONIZE_VERTEX_CONSTRUCTOR_CS                 \
     WHILE_ZERO;                                               \
     _vgx_graph_allow_vertex_constructor_CS( __graph__ );      \
-    BROADCAST_VERTEX_AVAILABLE( __graph__ );                     \
+    SIGNAL_VERTEX_AVAILABLE( __graph__ );                     \
   } WHILE_ZERO
 
 

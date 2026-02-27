@@ -1895,11 +1895,7 @@ static PyObject * __PyVGX_Vertex__Neighbors( PyVGX_Vertex *pyvertex, vgx_BaseCol
         ++i;
         if( --n_yield < 0 ) {
           n_yield = 100;
-          BEGIN_PYVGX_THREADS {
-            GRAPH_LOCK( graph ) {
-              GRAPH_YIELD_AND_SIGNAL( graph );
-            } GRAPH_RELEASE;
-          } END_PYVGX_THREADS;
+          PyVGX_SignalAndYield( graph );
         }
       }
     }

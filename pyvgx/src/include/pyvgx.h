@@ -2089,4 +2089,33 @@ static int PyVGX_DictStealItemString( PyObject *py_map, const char *key, PyObjec
   return -1;
 }
 
+
+
+/******************************************************************************
+ * PyVGX_Yield
+ *
+ ******************************************************************************
+ */
+static void PyVGX_Yield( void ) {
+  BEGIN_PYVGX_THREADS {
+    sched_yield();
+  } END_PYVGX_THREADS;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_SignalAndYield
+ *
+ ******************************************************************************
+ */
+static void PyVGX_SignalAndYield( vgx_Graph_t *graph ) {
+  BEGIN_PYVGX_THREADS {
+    vgx_Graph_t *locked_graph = GRAPH_ENTER_CRITICAL_SECTION( graph );
+    SIGNAL_WAKE_EVENT( locked_graph );
+    GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+    sched_yield();
+  } END_PYVGX_THREADS;
+}
+
 #endif
