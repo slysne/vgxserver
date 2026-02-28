@@ -290,9 +290,10 @@ default_micronap:
  ***********************************************************************
  */
 void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
-  #define MAX_SPIN 128
+  #define MAX_SPIN 64
   #define MIN_BACKOFF 4
-  #define MAX_BACKOFF 64
+  #define MAX_BACKOFF 16
+  #define MAX_SPIN_BEFORE_SCHED_YIELD 16
 
   // Optimistic
   if( pthread_mutex_trylock( mutex ) == 0 ) {
@@ -301,15 +302,20 @@ void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
 
   int y = MIN_BACKOFF;
   for( int spin=0; spin<MAX_SPIN; ++spin ) {
-  
-    for( int i=0; i<y; ++i ) {
-      #if defined CXPLAT_ARCH_X64
-      _mm_pause();
-      #elif defined CXPLAT_ARCH_ARM64
-      __yield();
-      #endif
+
+    if( spin < MAX_SPIN_BEFORE_SCHED_YIELD ) {
+      for( int i=0; i<y; ++i ) {
+        #if defined CXPLAT_ARCH_X64
+        _mm_pause();
+        #elif defined CXPLAT_ARCH_ARM64
+        __yield();
+        #endif
+      }
+      y = minimum_value( MAX_BACKOFF, 2*y );
     }
-    y = (y < MAX_BACKOFF) ? y * 2 : MAX_BACKOFF;
+    else {
+      sched_yield();
+    }
 
     // Try the lock again
     if( pthread_mutex_trylock( mutex ) == 0 ) {

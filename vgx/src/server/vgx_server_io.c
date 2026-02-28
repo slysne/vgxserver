@@ -519,34 +519,19 @@ static int __io__poll_any_front_only( vgx_VGXServer_t *server, int timeout_ms ) 
  ***********************************************************************
  */
 __inline static bool __io__poll( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
 
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_front_only( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_front_only( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_front_only( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 
@@ -566,34 +551,19 @@ __inline static bool __io__poll( vgx_VGXServer_t *server ) {
  ***********************************************************************
  */
 __inline static bool __io__poll_with_dispatcher( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
 
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_with_dispatcher( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_with_dispatcher( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_with_dispatcher( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 

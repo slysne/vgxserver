@@ -1928,7 +1928,7 @@ typedef struct s_vgx_VGXServerDispatcherMatrix_t {
 
   // -------------------------------------------------------------------
   // [Q2]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q3.1]
@@ -2147,7 +2147,7 @@ typedef struct s_vgx_VGXServerConfig_t {
 typedef struct s_vgx_VGXServerExecutorCompletion_t {
   // -------------------------------------------------------------------
   // [Q1]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q2.1]
@@ -2193,7 +2193,7 @@ typedef struct s_vgx_VGXServerExecutorCompletion_t {
 typedef struct s_vgx_VGXServerDispatchQueue_t {
   // -------------------------------------------------------------------
   // [Q1]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q2.1-6]

@@ -662,7 +662,7 @@ static vgx_VGXServerExecutor_t * __executor__new( vgx_VGXServer_t *server, int e
     executor->jobQ = &server->dispatch.Q[jobq_i];
 
     // [Q1.8]
-    executor->count_atomic = 0;
+    ATOMIC_ASSIGN_i64( &executor->count_atomic, 0 );
 
   }
   XCATCH( errcode ) {
@@ -747,7 +747,7 @@ static void __executor__signal_shutdown( vgx_VGXServer_t *server, vgx_VGXServerE
             for( int qi=0; qi < DISPATCH_QUEUE_COUNT; ++qi ) {
               vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[qi];
               if( job->flag.init.d_lock && job->flag.init.d_cond && job->queue ) {
-                SYNCHRONIZE_ON( job->lock ) {
+                FAST_SYNCHRONIZE_ON( job->fastlock ) {
                   QWORD zero = 0;
                   for( int i=0; i<100; i++ ) {
                     CALLABLE( job->queue )->AppendNolock( job->queue, &zero );

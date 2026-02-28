@@ -72,7 +72,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__dump( const vgx_VGXServerDispatche
       CXLIB_OSTREAM( "  *stack           = @ %llp", *matrix->stream_set_pool.stack );
       CXLIB_OSTREAM( "  *idle            = @ %llp (used=%llu)", *matrix->stream_set_pool.idle, (matrix->stream_set_pool.idle - matrix->stream_set_pool.stack) );
     }
-    CXLIB_OSTREAM( "lock               = @ %llp", &matrix->lock );
+    CXLIB_OSTREAM( "fastlock           = @ %llp", &matrix->fastlock );
     CXLIB_OSTREAM( "asynctask          = @ %llp", matrix->asynctask );
     CXLIB_OSTREAM( "backlog            = @ %llp", matrix->backlog );
     CXLIB_OSTREAM( "backlog_sz_atomic  = %d", (int)ATOMIC_READ_i32( &((vgx_VGXServerDispatcherMatrix_t*)matrix)->backlog_sz_atomic ) );
@@ -180,7 +180,7 @@ DLL_HIDDEN int vgx_server_dispatcher_matrix__init( vgx_VGXServer_t *server, CStr
       }
 
       // [Q2.1/2/3/4/5]
-      INIT_SPINNING_CRITICAL_SECTION( &matrix->lock.lock, 4000 );
+      INIT_FAST_CRITICAL_SECTION( &matrix->fastlock.lock );
 
       // [Q2.8.1]
       matrix->backlog_sz_atomic = 0;
@@ -235,7 +235,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__clear( vgx_VGXServer_t *server ) {
     if( matrix->backlog ) {
       COMLIB_OBJECT_DESTROY( matrix->backlog );
       matrix->backlog = NULL;
-      DEL_CRITICAL_SECTION( &matrix->lock.lock );
+      DEL_CRITICAL_SECTION( &matrix->fastlock.lock );
     }
 
     // --------------------------------
@@ -526,7 +526,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__channel_close( vgx_VGXServerDispat
 
   vgx_server_dispatcher_channel__return( channel );
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     CXSOCKET *psock = &channel->socket;
     cxclose( &psock );
     channel->flag.connected_MCS = false;
@@ -547,7 +547,7 @@ static int __channel_connect( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXSe
 
   int ret = 0;
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     // Make sure any existing socket is closed
     CXSOCKET *psock = &channel->socket;
     cxclose( &psock );
@@ -860,7 +860,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__delete_stream_set( vgx_VGXServerDi
  */
 DLL_HIDDEN void vgx_server_dispatcher_matrix__set_replica_defunct( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXServerDispatcherReplica_t *replica ) {
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     if( !REPLICA_IS_DEFUNCT_MCS( replica ) ) {
       // Set priority deboost to prevent replica from being selected
       REPLICA_SET_DEFUNCT_MCS( replica );
@@ -881,7 +881,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__set_replica_defunct( vgx_VGXServer
  ***********************************************************************
  */
 DLL_HIDDEN void vgx_server_dispatcher_matrix__deboost_replica( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXServerDispatcherReplica_t *replica ) {
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     if( !REPLICA_IS_TMP_DEBOOST_MCS( replica ) ) {
       // Set temporary priority deboost to lower the chance of a replica being selected
       REPLICA_SET_TMP_DEBOOST_MCS( replica );
