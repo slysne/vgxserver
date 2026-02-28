@@ -730,6 +730,10 @@ DLL_HIDDEN void vgx_server_io__process_socket_events( vgx_VGXServer_t *server, i
 
   // Matrix
   if( DISPATCHER_MATRIX_ENABLED( server ) ) {
+    
+    // Dispatch next in line client if backlog exists
+    vgx_server_dispatcher_dispatch__apply_backlog( server );
+
     do {
       int loops_until_deadline_check = 1000;
 
@@ -1216,7 +1220,7 @@ __inline static void __io__process_next_request( vgx_VGXServer_t *server, vgx_VG
   if( vgx_server_request__handle( server, client ) < 0 ) {
     // Fallback in case error was not set
     if( !CLIENT_STATE__HAS_ERROR( client ) ) {
-      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error", true );
+      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error at next request", true );
     }
   }
 }
