@@ -345,14 +345,28 @@ static int __get_optimal_channels( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_
   vgx_VGXServerDispatcherPartition_t *end = partition + matrix->partition.width;
   vgx_VGXServerDispatcherChannel_t *channel;
 
+  int n_part_defunct = 0;
+
   // Get all dispatcher channels needed for request
   while( partition < end ) {
     // Get the optimal channel for this partition
-    if( (channel = vgx_server_dispatcher_matrix__get_partition_channel( matrix, partition, replica_affinity, defunct )) == NULL ) {
-      // Ignore defunct partials if so configured
-      if( defunct && matrix->flags.allow_incomplete ) {
-        __ignore_incomplete( partition, client );
-        goto next;
+    bool part_defunct = false;
+    if( (channel = vgx_server_dispatcher_matrix__get_partition_channel( matrix, partition, replica_affinity, &part_defunct )) == NULL ) {
+      if( part_defunct ) {
+        ++n_part_defunct;
+        // Ignore defunct partials if so configured
+        if( matrix->flags.allow_incomplete ) {
+          // Defunct if all partitions are defunct
+          if( n_part_defunct == matrix->partition.width ) {
+            *defunct = true;
+          }
+          __ignore_incomplete( partition, client );
+          goto next;
+        }
+        // Defunct if any partial is defunct
+        else {
+          *defunct = true;
+        }
       }
       // all channels are busy (or down)
       return -1;
@@ -495,7 +509,7 @@ DLL_HIDDEN int vgx_server_dispatcher_matrix__assign_client_channels( vgx_VGXServ
     }
   }
 
-  // Fail request if no partitions are available, even if we allow incomplete results
+  // No partitions are available, we may place client in backlog or fail request worst case
   if( vgx_server_dispatcher_client__no_channels( client ) ) {
     goto all_partitions_down;
   }
@@ -673,12 +687,17 @@ DLL_HIDDEN vgx_VGXServerDispatcherChannel_t * vgx_server_dispatcher_matrix__get_
     vgx_VGXServerDispatcherReplica_t *cursor = partition->replica.list;
     vgx_VGXServerDispatcherReplica_t *end = cursor + partition->replica.height;
     int min_cost = REPLICA_MAX_COST; // the cost to beat to get selected
-
+    int n_defunct = 0;
+    
     while( cursor < end ) {
-      // Is this replica less expensive?
+      // Is this replica less expensive than the least expensive found so far?
       if( (cost = vgx_server_dispatcher_replica__cost( cursor )) < min_cost ) {
         replica = cursor;
         min_cost = cost;
+      }
+      // Is this replica defunct?
+      else if( cost >= REPLICA_DEFUNCT_COST_FLOOR ) {
+        ++n_defunct;
       }
       ++cursor;
     }
@@ -686,7 +705,7 @@ DLL_HIDDEN vgx_VGXServerDispatcherChannel_t * vgx_server_dispatcher_matrix__get_
     // No replica with low enough cost was found
     if( replica == NULL || REPLICA_EXHAUSTED( replica ) ) {
       // All replicas defunct
-      if( cost >= REPLICA_DEFUNCT_COST_FLOOR ) {
+      if( n_defunct == partition->replica.height ) {
         *defunct = true;
       }
       return NULL;
