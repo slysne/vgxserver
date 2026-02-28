@@ -851,7 +851,7 @@ DLL_HIDDEN extern int     vgx_server_dispatcher_asynctask__destroy( vgx_VGXServe
 #define SERVER_MATRIX_HEIGHT_MAX        127
 
 
-#define EXECUTOR_DISPATCH_QUEUE_MAX_WAITING 4
+#define EXECUTOR_DISPATCH_QUEUE_MAX_WAITING 6
 
 
 
