@@ -202,7 +202,7 @@ DLL_COMLIB_PUBLIC extern int             COMLIB_TASK__GetReturnCode( comlib_task
  */
 __inline static int16_t __enter_task_CS( comlib_task_t *task ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &task->_lock.lock, NULL );
+  ENTER_CRITICAL_SECTION( &task->_lock.lock );
   // SAFE HERE
   return ++(task->_state_TCS._lock_recursion);
 }

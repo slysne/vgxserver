@@ -519,34 +519,19 @@ static int __io__poll_any_front_only( vgx_VGXServer_t *server, int timeout_ms ) 
  ***********************************************************************
  */
 __inline static bool __io__poll( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
 
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_front_only( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_front_only( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_front_only( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 
@@ -566,34 +551,19 @@ __inline static bool __io__poll( vgx_VGXServer_t *server ) {
  ***********************************************************************
  */
 __inline static bool __io__poll_with_dispatcher( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
 
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_with_dispatcher( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_with_dispatcher( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_with_dispatcher( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 
@@ -760,6 +730,10 @@ DLL_HIDDEN void vgx_server_io__process_socket_events( vgx_VGXServer_t *server, i
 
   // Matrix
   if( DISPATCHER_MATRIX_ENABLED( server ) ) {
+    
+    // Dispatch next in line client if backlog exists
+    vgx_server_dispatcher_dispatch__apply_backlog( server );
+
     do {
       int loops_until_deadline_check = 1000;
 
@@ -1246,7 +1220,7 @@ __inline static void __io__process_next_request( vgx_VGXServer_t *server, vgx_VG
   if( vgx_server_request__handle( server, client ) < 0 ) {
     // Fallback in case error was not set
     if( !CLIENT_STATE__HAS_ERROR( client ) ) {
-      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error", true );
+      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error at next request", true );
     }
   }
 }

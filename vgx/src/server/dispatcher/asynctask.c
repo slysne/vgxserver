@@ -135,7 +135,7 @@ static void __asynctask__resolve_replica( vgx_VGXServerDispatcherMatrix_t *matri
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
     }
 
-    SYNCHRONIZE_ON( matrix->lock ) {
+    FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
       if( matrix->flags.enabled ) {
         is_initial = replica->flags_MCS.initial_attempt;
         is_caught = replica->flags_MCS.defunct_caught;
@@ -219,7 +219,7 @@ static void __asynctask__resolve_replica( vgx_VGXServerDispatcherMatrix_t *matri
     }
 
     // Success - replica no longer defunct
-    SYNCHRONIZE_ON( matrix->lock ) {
+    FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
       // Reset cost to base
       replica->resource.cost = replica->resource.priority.base;
       // Steal address
@@ -232,7 +232,7 @@ static void __asynctask__resolve_replica( vgx_VGXServerDispatcherMatrix_t *matri
     VGX_SERVER_DISPATCHER_INFO( 0x00E, "Connected: %s %s", ident, uri );
   }
   XCATCH( errcode ) {
-    SYNCHRONIZE_ON( matrix->lock ) {
+    FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
       replica->flags_MCS.defunct_caught = true;
     } RELEASE;
 
@@ -276,7 +276,7 @@ static int __asynctask__heal_defunct_replicas( vgx_VGXServer_t *server ) {
       if( REPLICA_IS_DEFUNCT_MCS( replica ) ) {
         if( matrix->flags.enabled ) {
           bool defunct = false;
-          SYNCHRONIZE_ON( matrix->lock ) {
+          FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
             // Now MCS, recheck
             if( matrix->flags.enabled ) {
               defunct = REPLICA_IS_DEFUNCT_MCS( replica );
@@ -358,7 +358,7 @@ static int __asynctask__close_unused_channels( vgx_VGXServer_t *server ) {
         if( age_ns > max_idle_ns && channel->flag.busy == false ) {
           // Connection state quick check without mutex, will be re-checked 
           if( channel->flag.connected_MCS ) {
-            SYNCHRONIZE_ON( matrix->lock ) {
+            FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
               if( channel->flag.connected_MCS ) {
                 // Now look at the channel one higher on the stack and confirm its busy flag is false,
                 // which means it is (most likely) idle and will be used before our channel in question
@@ -385,7 +385,7 @@ static int __asynctask__close_unused_channels( vgx_VGXServer_t *server ) {
       age_ns = t1_ns - channel->t0_ns;
       if( age_ns > 4*max_idle_ns && channel->flag.busy == false ) {
         if( channel->flag.connected_MCS ) {
-          SYNCHRONIZE_ON( matrix->lock ) {
+          FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
             if( channel->flag.connected_MCS ) {
               __close_channel_MCS( channel );
             }
@@ -403,7 +403,7 @@ static int __asynctask__close_unused_channels( vgx_VGXServer_t *server ) {
     ++partition;
   }
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     matrix->partition.nopen_channels_MCS = nopen_channels;
     matrix->partition.nmax_channels_MCS = nmax_channels;
   } RELEASE;
@@ -434,7 +434,7 @@ static int __asynctask__remove_temporary_deboost( vgx_VGXServer_t *server ) {
       // Check for deboost marker in non-locked context (will confirm in locked context)
       if( REPLICA_IS_TMP_DEBOOST_MCS( replica ) ) {
         if( matrix->flags.enabled ) {
-          SYNCHRONIZE_ON( matrix->lock ) {
+          FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
             // Now MCS, recheck and clear
             if( matrix->flags.enabled && REPLICA_IS_TMP_DEBOOST_MCS( replica ) ) {
               REPLICA_CLEAR_TMP_DEBOOST_MCS( replica );
@@ -732,7 +732,7 @@ DLL_HIDDEN int vgx_server_dispatcher_asynctask__destroy( vgx_VGXServer_t *server
       GRAPH_LOCK( server->sysgraph ) {
         GRAPH_SUSPEND_LOCK( server->sysgraph ) {
 
-          SYNCHRONIZE_ON( server->matrix.lock ) {
+          FAST_SYNCHRONIZE_ON( server->matrix.fastlock ) {
             server->matrix.flags.enabled = false;
           } RELEASE;
 

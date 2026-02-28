@@ -520,8 +520,12 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // [Q18.1-6] Vertex availability condition
     INIT_CONDITION_VARIABLE( &self->vertex_availability.cond );
 
+    /*
     // [Q19] Query state lock
-    INIT_SPINNING_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
+    //INIT_SPINNING_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
+    */
+    // [Q19]
+    memset( self->__rsv_19, 0, sizeof(self->__rsv_19) );
 
     // [Q22.1-6] Inarcs return condition
     INIT_CONDITION_VARIABLE( &self->return_inarcs.cond );
@@ -557,7 +561,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     memset( &self->control, 0, sizeof(self->control) );
 
     // [Q4.2.2]
-    ATOMIC_ASSIGN_i32( &self->state_lock_contention, 0 );
+    self->__rsv_4_2_2 = 0;
 
     // [Q4.3-4]
     memset( &self->readonly, 0, sizeof(self->readonly) );
@@ -1358,8 +1362,10 @@ static void Graph_destructor( vgx_Graph_t *self ) {
     // Graph state lock
     DEL_CRITICAL_SECTION( &self->state_lock.lock );
 
+    /*
     // Query counter lock
     DEL_CRITICAL_SECTION( &self->q_lock.lock );
+    */
 
     // Graph ID
     // Object typeinfo
@@ -1650,7 +1656,7 @@ static void Graph_dump( vgx_Graph_t *self ) {
       CXLIB_OSTREAM( "  .__rsv7               : %d", (int)ctrl->__rsv7 );
       CXLIB_OSTREAM( "  .__rsv8               : %d", (int)ctrl->__rsv8);
       CXLIB_OSTREAM( "  .__rsv                : %u", (unsigned)ctrl->__rsv);
-      CXLIB_OSTREAM( "state_lock_contention   : %d", (int)ATOMIC_READ_i32( &self->state_lock_contention ) );
+      CXLIB_OSTREAM( "__rsv_4_2_2             : %d", (int)self->__rsv_4_2_2 );
       vgx_readonly_state_t *ro = &self->readonly;
       CXLIB_OSTREAM( "readonly" );
       CXLIB_OSTREAM( "  .__n_disallowed       : %d", (int)ro->__n_disallowed );
@@ -1748,8 +1754,9 @@ static void Graph_dump( vgx_Graph_t *self ) {
 
 
       CXLIB_OSTREAM( "19-20: ------- QUERY ---" );
-      Q = (QWORD*)&self->q_lock;
-      CXLIB_OSTREAM( "q_lock              : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
+      //Q = (QWORD*)&self->q_lock;
+      //CXLIB_OSTREAM( "q_lock              : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
+      CXLIB_OSTREAM( "__rsv_19            : --" );
       CXLIB_OSTREAM( "q_pri_req           : %d", ATOMIC_READ_i32( &self->q_pri_req ) );
       CXLIB_OSTREAM( "__rsv_20_1_2        : %d", self->__rsv_20_1_2 );
       CXLIB_OSTREAM( "q_count             : %lld", ATOMIC_READ_i64( &self->q_count ) );

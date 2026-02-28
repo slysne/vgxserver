@@ -661,9 +661,9 @@ Content-Length: 123\r\n
 |anchor:status_503_cannot_accept[]Server is shutting down
 |`503 Cannot accept new connection at this time`
 |anchor:status_503_partitions_down[]At least one dispatcher partition has no available replica, and dispatcher configuration option <<config_options_allow_incomplete, allow-incomplete>> is False 
-|`503 Partition(s) down`
+|`503 Partition(s) down ...`
 |anchor:status_503_all_partitions_down[]Entire dispatcher back-end matrix is unavailable
-|`503 All partitions down`
+|`503 All partitions down ...`
 
 |`505 HTTP Version Not Supported`
 |HTTP/1.1 is required

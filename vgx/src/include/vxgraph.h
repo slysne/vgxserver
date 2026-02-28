@@ -3671,7 +3671,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       vgx_control_state_t control;
 
       // [Q4.2.2]
-      ATOMIC_i32 state_lock_contention;
+      DWORD __rsv_4_2_2;
 
       // [Q4.3-4] Graph readonly management
       vgx_readonly_state_t readonly;
@@ -3878,7 +3878,8 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
     struct {
       // [Q19]
-      CS_LOCK q_lock;
+      //CS_LOCK q_lock;
+      QWORD __rsv_19[8];
 
       // [Q20.1.1]
       ATOMIC_i32 q_pri_req;
@@ -4556,7 +4557,7 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
  */
 __inline static int16_t __enter_CS( vgx_Graph_t *graph ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &graph->state_lock.lock, &graph->state_lock_contention );
+  ENTER_CRITICAL_SECTION( &graph->state_lock.lock );
   // SAFE HERE
   return ++(graph->__state_lock_count);
 }
@@ -4590,21 +4591,6 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
     }                                                   \
     (AcquiredBool) = true;                              \
     do
-
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- *//*
-#define GRAPH_LOCK_SPIN( Graph, SpinMillisec )              \
-  do {                                                      \
-    vgx_Graph_t *__pgraph__ = Graph;                        \
-    if( __try_enter_CS( __pgraph__, SpinMillisec ) < 0 ) {  \
-      __enter_CS( __pgraph__ );                             \
-    }                                                       \
-    do
-*/
 
 
 

@@ -72,7 +72,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__dump( const vgx_VGXServerDispatche
       CXLIB_OSTREAM( "  *stack           = @ %llp", *matrix->stream_set_pool.stack );
       CXLIB_OSTREAM( "  *idle            = @ %llp (used=%llu)", *matrix->stream_set_pool.idle, (matrix->stream_set_pool.idle - matrix->stream_set_pool.stack) );
     }
-    CXLIB_OSTREAM( "lock               = @ %llp", &matrix->lock );
+    CXLIB_OSTREAM( "fastlock           = @ %llp", &matrix->fastlock );
     CXLIB_OSTREAM( "asynctask          = @ %llp", matrix->asynctask );
     CXLIB_OSTREAM( "backlog            = @ %llp", matrix->backlog );
     CXLIB_OSTREAM( "backlog_sz_atomic  = %d", (int)ATOMIC_READ_i32( &((vgx_VGXServerDispatcherMatrix_t*)matrix)->backlog_sz_atomic ) );
@@ -180,7 +180,7 @@ DLL_HIDDEN int vgx_server_dispatcher_matrix__init( vgx_VGXServer_t *server, CStr
       }
 
       // [Q2.1/2/3/4/5]
-      INIT_SPINNING_CRITICAL_SECTION( &matrix->lock.lock, 4000 );
+      INIT_FAST_CRITICAL_SECTION( &matrix->fastlock.lock );
 
       // [Q2.8.1]
       matrix->backlog_sz_atomic = 0;
@@ -235,7 +235,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__clear( vgx_VGXServer_t *server ) {
     if( matrix->backlog ) {
       COMLIB_OBJECT_DESTROY( matrix->backlog );
       matrix->backlog = NULL;
-      DEL_CRITICAL_SECTION( &matrix->lock.lock );
+      DEL_CRITICAL_SECTION( &matrix->fastlock.lock );
     }
 
     // --------------------------------
@@ -345,14 +345,28 @@ static int __get_optimal_channels( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_
   vgx_VGXServerDispatcherPartition_t *end = partition + matrix->partition.width;
   vgx_VGXServerDispatcherChannel_t *channel;
 
+  int n_part_defunct = 0;
+
   // Get all dispatcher channels needed for request
   while( partition < end ) {
     // Get the optimal channel for this partition
-    if( (channel = vgx_server_dispatcher_matrix__get_partition_channel( matrix, partition, replica_affinity, defunct )) == NULL ) {
-      // Ignore defunct partials if so configured
-      if( defunct && matrix->flags.allow_incomplete ) {
-        __ignore_incomplete( partition, client );
-        goto next;
+    bool part_defunct = false;
+    if( (channel = vgx_server_dispatcher_matrix__get_partition_channel( matrix, partition, replica_affinity, &part_defunct )) == NULL ) {
+      if( part_defunct ) {
+        ++n_part_defunct;
+        // Ignore defunct partials if so configured
+        if( matrix->flags.allow_incomplete ) {
+          // Defunct if all partitions are defunct
+          if( n_part_defunct == matrix->partition.width ) {
+            *defunct = true;
+          }
+          __ignore_incomplete( partition, client );
+          goto next;
+        }
+        // Defunct if any partial is defunct
+        else {
+          *defunct = true;
+        }
       }
       // all channels are busy (or down)
       return -1;
@@ -495,7 +509,7 @@ DLL_HIDDEN int vgx_server_dispatcher_matrix__assign_client_channels( vgx_VGXServ
     }
   }
 
-  // Fail request if no partitions are available, even if we allow incomplete results
+  // No partitions are available, we may place client in backlog or fail request worst case
   if( vgx_server_dispatcher_client__no_channels( client ) ) {
     goto all_partitions_down;
   }
@@ -526,7 +540,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__channel_close( vgx_VGXServerDispat
 
   vgx_server_dispatcher_channel__return( channel );
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     CXSOCKET *psock = &channel->socket;
     cxclose( &psock );
     channel->flag.connected_MCS = false;
@@ -547,7 +561,7 @@ static int __channel_connect( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXSe
 
   int ret = 0;
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     // Make sure any existing socket is closed
     CXSOCKET *psock = &channel->socket;
     cxclose( &psock );
@@ -673,12 +687,17 @@ DLL_HIDDEN vgx_VGXServerDispatcherChannel_t * vgx_server_dispatcher_matrix__get_
     vgx_VGXServerDispatcherReplica_t *cursor = partition->replica.list;
     vgx_VGXServerDispatcherReplica_t *end = cursor + partition->replica.height;
     int min_cost = REPLICA_MAX_COST; // the cost to beat to get selected
-
+    int n_defunct = 0;
+    
     while( cursor < end ) {
-      // Is this replica less expensive?
+      // Is this replica less expensive than the least expensive found so far?
       if( (cost = vgx_server_dispatcher_replica__cost( cursor )) < min_cost ) {
         replica = cursor;
         min_cost = cost;
+      }
+      // Is this replica defunct?
+      else if( cost >= REPLICA_DEFUNCT_COST_FLOOR ) {
+        ++n_defunct;
       }
       ++cursor;
     }
@@ -686,7 +705,7 @@ DLL_HIDDEN vgx_VGXServerDispatcherChannel_t * vgx_server_dispatcher_matrix__get_
     // No replica with low enough cost was found
     if( replica == NULL || REPLICA_EXHAUSTED( replica ) ) {
       // All replicas defunct
-      if( cost >= REPLICA_DEFUNCT_COST_FLOOR ) {
+      if( n_defunct == partition->replica.height ) {
         *defunct = true;
       }
       return NULL;
@@ -860,7 +879,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__delete_stream_set( vgx_VGXServerDi
  */
 DLL_HIDDEN void vgx_server_dispatcher_matrix__set_replica_defunct( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXServerDispatcherReplica_t *replica ) {
 
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     if( !REPLICA_IS_DEFUNCT_MCS( replica ) ) {
       // Set priority deboost to prevent replica from being selected
       REPLICA_SET_DEFUNCT_MCS( replica );
@@ -881,7 +900,7 @@ DLL_HIDDEN void vgx_server_dispatcher_matrix__set_replica_defunct( vgx_VGXServer
  ***********************************************************************
  */
 DLL_HIDDEN void vgx_server_dispatcher_matrix__deboost_replica( vgx_VGXServerDispatcherMatrix_t *matrix, vgx_VGXServerDispatcherReplica_t *replica ) {
-  SYNCHRONIZE_ON( matrix->lock ) {
+  FAST_SYNCHRONIZE_ON( matrix->fastlock ) {
     if( !REPLICA_IS_TMP_DEBOOST_MCS( replica ) ) {
       // Set temporary priority deboost to lower the chance of a replica being selected
       REPLICA_SET_TMP_DEBOOST_MCS( replica );

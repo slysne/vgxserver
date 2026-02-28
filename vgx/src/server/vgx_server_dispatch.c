@@ -48,7 +48,7 @@ __inline static int64_t __dispatch__length( vgx_VGXServerWorkDispatch_t *dispatc
 
   for( int i=0; i < DISPATCH_QUEUE_COUNT; ++i ) {
     vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[i];
-    SYNCHRONIZE_ON( job->lock ) {
+    FAST_SYNCHRONIZE_ON( job->fastlock ) {
       sz += ComlibSequenceLength( job->queue );
     } RELEASE;
   }
@@ -67,7 +67,7 @@ __inline static void __dispatch__drain( vgx_VGXServerWorkDispatch_t *dispatch ) 
   for( int i=0; i < DISPATCH_QUEUE_COUNT; ++i ) {
     vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[i];
 
-    SYNCHRONIZE_ON( job->lock ) {
+    FAST_SYNCHRONIZE_ON( job->fastlock ) {
       uintptr_t client_addr = 0;
       while( ComlibSequenceLength( job->queue ) > 0 ) {
         CALLABLE( job->queue )->NextNolock( job->queue, (QWORD*)&client_addr );
@@ -299,7 +299,7 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
 
       // [Q1]
       // Dispatch lock
-      INIT_SPINNING_CRITICAL_SECTION( &job->lock.lock, 4000 );
+      INIT_FAST_CRITICAL_SECTION( &job->fastlock.lock );
       // [Q3.2.1]
       job->flag.init.d_lock = 1;
 
@@ -315,10 +315,10 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
       }
 
       // [Q2.8.1]
-      job->length_atomic = 0;
+      ATOMIC_ASSIGN_i32( &job->length_atomic, 0 );
 
       // [Q2.8.2]
-      job->n_waiting_atomic = 0;
+      ATOMIC_ASSIGN_i32( &job->n_waiting_atomic, 0 );
 
       // [Q3.1] Last collect timestamp
       job->ts_last_collect = 0;
@@ -358,7 +358,7 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
 
     // [Q1]
     // Completion lock
-    INIT_SPINNING_CRITICAL_SECTION( &completion->lock.lock, 4000 );
+    INIT_FAST_CRITICAL_SECTION( &completion->fastlock.lock );
 
     // [Q2.7.1]
     completion->lock_init = true;
@@ -370,10 +370,10 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
     }
 
     // [Q2.2.1]
-    completion->length_atomic = 0;
+    ATOMIC_ASSIGN_i32( &completion->length_atomic, 0 );
 
     // [Q2.2.2]
-    completion->poll_blocked_atomic = 0;
+    ATOMIC_ASSIGN_i32( &completion->poll_blocked_atomic, 0 );
 
     // [Q2.3]
 #ifdef VGXSERVER_USE_LINUX_EVENTFD
@@ -475,7 +475,7 @@ DLL_HIDDEN void vgx_server_dispatch__destroy( vgx_VGXServer_t *server ) {
 
       // [Q1.1/2/3/4/5]
       if( job->flag.init.d_lock ) {
-        DEL_CRITICAL_SECTION( &job->lock.lock );
+        DEL_CRITICAL_SECTION( &job->fastlock.lock );
         job->flag.init.d_lock = 0;
       }
 
@@ -494,7 +494,7 @@ DLL_HIDDEN void vgx_server_dispatch__destroy( vgx_VGXServer_t *server ) {
 
     // [Q3.1/2/3/4/5]
     if( completion->lock_init ) {
-      DEL_CRITICAL_SECTION( &completion->lock.lock );
+      DEL_CRITICAL_SECTION( &completion->fastlock.lock );
       completion->lock_init = false;
     }
 
@@ -642,21 +642,23 @@ static int __stage_executor_queue( vgx_VGXServer_t *server, vgx_VGXServerClient_
   vgx_VGXServerDispatchQueue_t *job = NULL;
   while( queue_index < DISPATCH_QUEUE_COUNT ) {
     job = &server->dispatch.Q[queue_index++];
+    CQwordQueue_vtable_t *iQ = CALLABLE( job->queue );
     // Use this queue since enough available workers are waiting to process entire queue, or it's the last queue
     if( ATOMIC_READ_i32( &job->length_atomic ) < ATOMIC_READ_i32( &job->n_waiting_atomic ) || queue_index == DISPATCH_QUEUE_COUNT ) {
-      SYNCHRONIZE_ON( job->lock ) {
-        uintptr_t client_addr = (uintptr_t)client;
-        staged = CALLABLE( job->queue )->AppendNolock( job->queue, (QWORD*)&client_addr );
-        ATOMIC_INCREMENT_i32( &job->length_atomic );
-        // Workers are waiting on job queue, wake up one of them
-        if( ATOMIC_READ_i32( &job->n_waiting_atomic ) > 0 ) {
-          SIGNAL_ONE_CONDITION( &(job->wake.cond) );
-          signal_sent = true;
-        }
+
+      uintptr_t client_addr = (uintptr_t)client;
+      FAST_SYNCHRONIZE_ON( job->fastlock ) {
+        staged = iQ->AppendNolock( job->queue, (QWORD*)&client_addr );
+        // Wake up a worker waiting on the job queue
+        SIGNAL_ONE_CONDITION( &(job->wake.cond) );
       } RELEASE;
-      if( signal_sent ) {
+
+      ATOMIC_INCREMENT_i32( &job->length_atomic );
+
+      if( ATOMIC_READ_i32( &job->n_waiting_atomic ) > 0 ) {
         return staged;
       }
+
       break;
     }
   }
@@ -803,46 +805,6 @@ DLL_HIDDEN int vgx_server_dispatch__dispatch( vgx_VGXServer_t *server, vgx_VGXSe
  *
  ***********************************************************************
  */
-__inline static void __await_dispatch_DQCS( vgx_VGXServerExecutor_t *executor, int64_t *t_slept_ns ) {
-  vgx_VGXServerDispatchQueue_t *jobQ = executor->jobQ;
-  *t_slept_ns = 0;
-  // Wait unless many others are already waiting
-  if( ATOMIC_READ_i32( &jobQ->n_waiting_atomic ) < EXECUTOR_DISPATCH_QUEUE_MAX_WAITING ) {
-    // Sleep and wait for signal
-    ATOMIC_INCREMENT_i32( &jobQ->n_waiting_atomic );
-    *t_slept_ns = TIMED_WAIT_CONDITION_CS( &jobQ->wake.cond, &jobQ->lock.lock, 25 + executor->max_sleep );
-    ATOMIC_DECREMENT_i32( &jobQ->n_waiting_atomic );
-  }
-}
-
-
-
-/*******************************************************************//**
- *
- *
- *
- ***********************************************************************
- */
-__inline static vgx_VGXServerClient_t * __client_from_address_DQCS( vgx_VGXServerExecutor_t *executor, QWORD addr ) {
-  vgx_VGXServerClient_t *client = (vgx_VGXServerClient_t*)addr;
-  if( client == NULL ) {
-    return NULL;
-  }
-
-  // Executor thread is acceptable for this request
-  client->request.executor_id = executor->id;
-  ATOMIC_INCREMENT_i64( &executor->count_atomic );
-  return client;
-}
-
-
-
-/*******************************************************************//**
- *
- *
- *
- ***********************************************************************
- */
 DLL_HIDDEN vgx_VGXServerClient_t * vgx_server_dispatch__fetch( vgx_VGXServer_t *server, vgx_VGXServerExecutor_t *executor, int *n_waiting, int64_t *t_slept_ns )  {
   vgx_VGXServerWorkDispatch_t *dispatch = &server->dispatch;
 
@@ -857,29 +819,44 @@ DLL_HIDDEN vgx_VGXServerClient_t * vgx_server_dispatch__fetch( vgx_VGXServer_t *
   vgx_VGXServerDispatchQueue_t *jobQ = executor->jobQ;
   CQwordQueue_t *Q = jobQ->queue;
 
-  SYNCHRONIZE_ON( jobQ->lock ) {
+  // Allow a few threads to listen for wake condition signal (others will go to deeper sleep)
+  bool wait_on_empty = ATOMIC_READ_i32( &jobQ->n_waiting_atomic ) < EXECUTOR_DISPATCH_QUEUE_MAX_WAITING;
+  int dequeued = 0;
+  int exec_sleep_ms = 25 + executor->max_sleep;
+  uintptr_t client_addr = 0;
+
+  FAST_SYNCHRONIZE_ON( jobQ->fastlock ) {
     
-    // Empty queue - go to sleep until signal or timeout
-    if( ComlibSequenceLength( Q ) == 0 ) {
-      __await_dispatch_DQCS( executor, t_slept_ns );
+    // Empty queue and few threads waiting - go to sleep until signal or timeout
+    if( ComlibSequenceLength( Q ) == 0 && wait_on_empty ) {
+      // Sleep and wait for signal
+      ATOMIC_INCREMENT_i32( &jobQ->n_waiting_atomic );
+      *t_slept_ns = TIMED_WAIT_CONDITION_CS( &jobQ->wake.cond, &jobQ->fastlock.lock, exec_sleep_ms );
+      ATOMIC_DECREMENT_i32( &jobQ->n_waiting_atomic );
     }
 
     // At least one client in queue
     if( ComlibSequenceLength( Q ) > 0 ) {
-      uintptr_t client_addr = 0;
-      CALLABLE( Q )->NextNolock( Q, (QWORD*)&client_addr );
-      ATOMIC_DECREMENT_i32( &jobQ->length_atomic );
-      client = __client_from_address_DQCS( executor, client_addr );
-      // Signal if queue not empty and at least one executor needs to be woken up
-      if( ComlibSequenceLength( Q ) > 0 && ATOMIC_READ_i32( &jobQ->n_waiting_atomic ) > 0 ) {
-        SIGNAL_ONE_CONDITION( &(jobQ->wake.cond) );
-      }
+      dequeued = CALLABLE( Q )->NextNolock( Q, (QWORD*)&client_addr );
     }
 
-    // Inform caller of the current number executors waiting for a client to be dispatached
-    *n_waiting = ATOMIC_READ_i32( &jobQ->n_waiting_atomic );
-
+    // Wake up a worker waiting on the job queue
+    SIGNAL_ONE_CONDITION( &(jobQ->wake.cond) );
   } RELEASE;
+    
+  // Inform caller of the current number executors waiting for a client to be dispatached
+  *n_waiting = ATOMIC_READ_i32( &jobQ->n_waiting_atomic );
+
+  if( dequeued ) {
+    ATOMIC_DECREMENT_i32( &jobQ->length_atomic );
+  }
+
+  if( client_addr ) {
+    client = (vgx_VGXServerClient_t*)client_addr;
+    // Executor thread is acceptable for this request
+    client->request.executor_id = executor->id;
+    ATOMIC_INCREMENT_i64( &executor->count_atomic );
+  }
 
   return client;
 
@@ -903,12 +880,14 @@ DLL_HIDDEN int vgx_server_dispatch__return( vgx_VGXServer_t *server, vgx_VGXServ
   vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
   uintptr_t client_addr = (uintptr_t)client;
   CQwordQueue_t *Q = completion->queue;
+  CQwordQueue_vtable_t *iQ = CALLABLE( Q );
   int dispatched;
 
-  SYNCHRONIZE_ON( completion->lock ) {
-    dispatched = CALLABLE( Q )->AppendNolock( Q, (QWORD*)&client_addr );
-    ATOMIC_INCREMENT_i32( &completion->length_atomic );
+  FAST_SYNCHRONIZE_ON( completion->fastlock ) {
+    dispatched = iQ->AppendNolock( Q, (QWORD*)&client_addr );
   } RELEASE;
+
+  ATOMIC_INCREMENT_i32( &completion->length_atomic );
 
   // If the I/O loop is currently blocked on poll() due to no current I/O activity
   // we must signal the poll to wake up. We signal by sending a dummy byte on the
@@ -986,17 +965,18 @@ DLL_HIDDEN int vgx_server_dispatch__executor_complete( vgx_VGXServer_t *server )
   vgx_VGXServerClient_t *completed[MAX_EXECUTOR_POOL_SIZE];
   QWORD *addr = (QWORD*)completed;
   int n_completed = 0;
-  SYNCHRONIZE_ON( completion->lock ) {
+  FAST_SYNCHRONIZE_ON( completion->fastlock ) {
     int64_t sz_Q = ComlibSequenceLength( Q );
     if( sz_Q > 0 ) {
       n_completed = (int)CALLABLE( Q )->ReadNolock( Q, (void**)&addr, minimum_value( max_exec, sz_Q ) );
-      ATOMIC_SUB_i32( &completion->length_atomic, n_completed );
     }
   } RELEASE;
   
   if( n_completed == 0 ) {
     return 0;
   }
+
+  ATOMIC_SUB_i32( &completion->length_atomic, n_completed );
 
   // Decrement current dispatch counter
   server->dispatch.n_current -= n_completed;
