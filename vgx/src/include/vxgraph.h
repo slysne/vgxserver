@@ -3878,7 +3878,8 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
     struct {
       // [Q19]
-      CS_LOCK q_lock;
+      //CS_LOCK q_lock;
+      QWORD __rsv_19[8];
 
       // [Q20.1.1]
       ATOMIC_i32 q_pri_req;
