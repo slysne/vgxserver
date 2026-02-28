@@ -271,7 +271,7 @@ static int __handle__no_replica( vgx_VGXServer_t *server, vgx_VGXServerClient_t 
     vgx_server_client__append_front( server, client );
 
     // Produce error response
-    return vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down", false );
+    return vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down after re-dispatch attempt", false );
   }
 
   // Client goes to backlog

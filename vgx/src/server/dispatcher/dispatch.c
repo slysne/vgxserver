@@ -97,13 +97,13 @@ DLL_HIDDEN int vgx_server_dispatcher_dispatch__forward( vgx_VGXServer_t *server,
 
     // Produce error
     if( alldown ) {
-      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "All partitions down", true );
+      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "All partitions down at initial dispatch", true );
     }
     else if( defunct ) {
-      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down", false );
+      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down at initial dispatch", false );
     }
     else {
-      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__TooManyRequests, "Client backlog full", true );
+      ret = vgx_server_response__produce_error( server, client, HTTP_STATUS__TooManyRequests, "Client backlog full at initial dispatch", true );
     }
   }
   XFINALLY {
@@ -178,10 +178,10 @@ DLL_HIDDEN int vgx_server_dispatcher_dispatch__apply_backlog( vgx_VGXServer_t *s
     // Client back to the front
     vgx_server_client__append_front( server, client );
     if( alldown ) {
-      vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "All partitions down", true );
+      vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "All partitions down at backlog dispatch", true );
     }
     else {
-      vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down", false );
+      vgx_server_response__produce_error( server, client, HTTP_STATUS__ServiceUnavailable, "Partition(s) down at backlog dispatch", false );
     }
   }
   // Backlog applied, consume the client from queue
