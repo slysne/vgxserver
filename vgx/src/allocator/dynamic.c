@@ -166,7 +166,7 @@ DLL_HIDDEN int _framehash_dynamic__reset_simple( framehash_dynamic_t *dynamic ) 
     return -1;
   }
   int ret = 0;
-  SYNCHRONIZE_ON( dynamic->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( dynamic->lock ) {
 
     // Reset frame allocator
     if( dynamic->falloc ) {

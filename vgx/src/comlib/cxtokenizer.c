@@ -212,7 +212,7 @@ static CTokenizer_t * CTokenizer__constructor( const void *identifier, CTokenize
 
   CTokenizer_t *self = NULL;
 
-  SYNCHRONIZE_ON( g_cs_general ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_cs_general ) {
 
     XTRY {
 
@@ -2359,7 +2359,7 @@ end_of_token:
 static BYTE * CTokenizer__next( CTokenizer_t *self, tokinfo_t *tokinfo ) {
   BYTE *token;
 
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     token = __next_token_nolock( self, tokinfo );
   } RELEASE;
 
@@ -2471,7 +2471,7 @@ static void __delete_tokenmap( tokenmap_t **tokmap ) {
 static tokenmap_t * CTokenizer__tokenize( CTokenizer_t *self, const BYTE *utf8_text, CString_t **CSTR__error ) {
   tokenmap_t *tokmap = NULL;
 
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     XTRY {
       BYTE *token;
       CTokenizer__load( self, utf8_text );

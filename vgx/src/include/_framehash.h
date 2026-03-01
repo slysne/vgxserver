@@ -336,7 +336,7 @@ WHILE_ZERO                                        \
 __inline static void __acquire_subtree( framehash_t * const self, const uint64_t idHigh ) {
   if( self->_plock ) {
     int fx = (int)_FRAMEHASH_TOPINDEX( self->_order, idHigh );
-    SYNCHRONIZE_ON_PTR( self->_plock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( self->_plock ) {
       while( self->_guard[fx].busy ) {
         // already busy - release and wait for ready condition, then re-acquire framelock
         // Initialize the slot-ready condition variable
@@ -359,7 +359,7 @@ __inline static void __acquire_subtree( framehash_t * const self, const uint64_t
 __inline static void __release_subtree( framehash_t * const self, const uint64_t idHigh ) {
   if( self->_plock ) {
     int fx = (int)_FRAMEHASH_TOPINDEX( self->_order, idHigh );
-    SYNCHRONIZE_ON_PTR( self->_plock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( self->_plock ) {
       self->_guard[fx].busy = 0;
       // Wake another thread waiting for the slot ready condition variable
       SIGNAL_ONE_CONDITION( &(self->_guard[fx].ready.cond) );
@@ -449,7 +449,7 @@ __inline static void __release_all_subtrees( framehash_t * const self ) {
  ******************************************************************************
  */
 __inline static void __framehash_update_counters( _framehash_counters_t * const counters, const framehash_instrument_t * const instrument ) {
-  SYNCHRONIZE_ON( counters->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( counters->lock ) {
     counters->opcount++;
     counters->probe.depth += instrument->probe.depth;
     counters->probe.nCL += instrument->probe.nCL;

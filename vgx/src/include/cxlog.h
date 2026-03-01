@@ -34,7 +34,7 @@
 typedef struct s_LogContext_t {
   // ------------------------------------------------
   // [Q1]
-  CS_LOCK xlock;
+  CS_LOCK xlock; // recursive lock required
 
   // ------------------------------------------------
   // [Q2.1.1]
@@ -53,7 +53,7 @@ typedef struct s_LogContext_t {
   comlib_task_t *task;
 
   // [Q2.5.1]
-  int qready;
+  ATOMIC_i32 qready;
 
   // [Q2.5.2]
   int __rsv_2_5_2;
@@ -69,7 +69,7 @@ typedef struct s_LogContext_t {
 
   // ------------------------------------------------
   // [Q3]
-  CS_LOCK qlock;
+  CS_LOCK qfastlock;
 
   // ------------------------------------------------
   // [Q4.1]

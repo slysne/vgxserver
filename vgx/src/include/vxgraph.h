@@ -3801,7 +3801,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     struct {
       // -------------------------
       // [Q13]
-      CS_LOCK lock;
+      CS_LOCK fastlock;
 
       // -------------------------
       // [Q14.1.1]
@@ -4557,7 +4557,7 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
  */
 __inline static int16_t __enter_CS( vgx_Graph_t *graph ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &graph->state_lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &graph->state_lock.lock );
   // SAFE HERE
   return ++(graph->__state_lock_count);
 }

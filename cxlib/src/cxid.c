@@ -967,7 +967,7 @@ objectid_t new_subid( void ) {
   }
 
   time( (time_t*)(&subid.L) );
-  SYNCHRONIZE_ON( lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( lock ) {
     subid.H = counter;
     counter = hash64( (unsigned char*)counter, 8 );
   } RELEASE;

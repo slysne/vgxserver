@@ -189,7 +189,7 @@ static __msgtrace * __new_msgtrace( void ) {
 int cxlib_trace_reset( void ) {
   int ret = 0;
 
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __delete_msgtrace( &g_context->msgtrace );
     if( (g_context->msgtrace = __new_msgtrace()) == NULL ) {
       ret = -1;
@@ -206,7 +206,7 @@ int cxlib_trace_reset( void ) {
  ***********************************************************************
  */
 void cxlib_trace_disable( void ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __delete_msgtrace( &g_context->msgtrace );
   } RELEASE;
 }
@@ -219,7 +219,7 @@ void cxlib_trace_disable( void ) {
  */
 int cxlib_trace_add( const char *msg ) {
   int ret = -1;
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     if( g_context->msgtrace ) {
       ret = __push_msgtrace( g_context->msgtrace, msg );
     }
@@ -253,7 +253,7 @@ void cxlib_trace_delete_msglist( char ***list ) {
  */
 char ** cxlib_trace_get_msglist( void ) {
   char **list = NULL;
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __msgtrace *trace = g_context->msgtrace;
     if( trace ) {
       if( (list = calloc( (size_t)trace->sz+1, sizeof( char* ) )) != NULL ) {
@@ -319,7 +319,7 @@ void cxlib_set_exc_context( cxlib_exc_context_t *context ) {
   cxlib_exc_context_t *prev = g_context;
   g_context = context;
   if( g_context != prev ) {
-    SYNCHRONIZE_ON( context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( context->lock ) {
     } RELEASE;
   }
 }
@@ -476,7 +476,7 @@ int cxlib_exc( int code, const char *msg, ... ) {
       sprintf( pmilli, "%03lld", milliseconds_since_epoch % 1000 ); // since system start (not epoch) but good enough for logging, we just want more resolution between seconds
     }
 
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       va_start( args, msg );
       vsnprintf( t_msgbuf, SZ_MSGBUF-1, msg, args );
       va_end( args );
@@ -594,7 +594,7 @@ do {                                    \
  ***********************************************************************
  */
 void cxlib_exception_counters( int64_t *nWarning, int64_t *nError, int64_t *nCritical ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     if( nWarning ) {
       *nWarning  = g_context->nWarning;
     }
@@ -614,7 +614,7 @@ void cxlib_exception_counters( int64_t *nWarning, int64_t *nError, int64_t *nCri
  ***********************************************************************
  */
 void cxlib_exception_counters_reset( void ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     g_context->nWarning = 0;
     g_context->nError = 0;
     g_context->nCritical = 0;
@@ -629,7 +629,7 @@ void cxlib_exception_counters_reset( void ) {
  */
 void cxlib_ostream_lock( void ) {
   if( g_context != NULL ) {
-    ENTER_CRITICAL_SECTION( &g_context->lock.lock ); 
+    ENTER_RECURSIVE_CRITICAL_SECTION( &g_context->lock.lock ); 
     g_context->recursion++;
   }
 }
@@ -671,7 +671,7 @@ int cxlib_ostream( const char *msg, ... ) {
     ostream = g_context->ostream ? g_context->ostream : stderr;
 
     int indent;
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       indent = g_context->recursion - 1;
     } RELEASE;
 
@@ -716,7 +716,7 @@ int cxlib_ostream( const char *msg, ... ) {
 
     } while( buf );
 
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       fwrite( buf, 1, nw, ostream );
     } RELEASE;
 
@@ -813,7 +813,7 @@ void cxlib_print_backtrace( int nframes ) {
 
     CS_LOCK *lock = g_context ? &g_context->lock : NULL;
 
-    SYNCHRONIZE_ON_PTR( lock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( lock ) {
       uint64_t tid = 0;
 #if defined CXPLAT_LINUX_ANY
       tid = (uint64_t)syscall(SYS_gettid);
@@ -883,7 +883,7 @@ void cxlib_print_backtrace( int nframes ) {
 
   CS_LOCK *lock = g_context ? &g_context->lock : NULL;
 
-  SYNCHRONIZE_ON_PTR( lock ) {
+  RECURSIVE_SYNCHRONIZE_ON_PTR( lock ) {
     uint32_t tid = GetCurrentThreadId();
     printf( "-----------------------------------------------------------\n" );
     printf( "*** backtrace for thread %u ***\n", tid );
