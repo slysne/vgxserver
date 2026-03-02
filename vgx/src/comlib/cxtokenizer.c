@@ -158,7 +158,7 @@ static CTokenizer_vtable_t CTokenizerMethods = {
 void CTokenizer_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( CTokenizer_t, CXLIB_OBTYPE_PROCESSOR, &CTokenizerMethods, OBJECT_IDENTIFIED_BY_LONGSTRING, OBJECTID_LONGSTRING_MAX );
 
-  INIT_CRITICAL_SECTION( &g_cs_general.lock );
+  INIT_RECURSIVE_CRITICAL_SECTION( &g_cs_general.lock );
 
   /* UTF-8 NUMBER OF CONTINUATION BYTES BY START BYTE (lookup table) */ 
   for( int c=0xC2; c<=0xDF; c++ ) g_utf8_startn[c] = 1; // start 2-byte sequence, so 1 cont byte expected
@@ -233,7 +233,7 @@ static CTokenizer_t * CTokenizer__constructor( const void *identifier, CTokenize
       self->_nwp = self->_normal;
 
       // [8]
-      INIT_CRITICAL_SECTION( &self->_lock.lock );
+      INIT_RECURSIVE_CRITICAL_SECTION( &self->_lock.lock );
 
       // [9]
       self->__rsv_3_1_1 = 0;

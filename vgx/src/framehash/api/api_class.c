@@ -105,8 +105,8 @@ static framehash_perfcounters_t * __new_perfcounters( void ) {
   framehash_perfcounters_t *counters;
   if( CALIGNED_MALLOC( counters, framehash_perfcounters_t ) != NULL ) {
     memset( counters, 0, sizeof(framehash_perfcounters_t) );
-    INIT_CRITICAL_SECTION( &counters->read.lock.lock );
-    INIT_CRITICAL_SECTION( &counters->write.lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &counters->read.lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &counters->write.lock.lock );
   }
   return counters;
 }

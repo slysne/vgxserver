@@ -245,7 +245,7 @@ static int _vxevent_eventapi__initialize( vgx_Graph_t *self, bool run_daemon ) {
 
         // Public API
         // [Q3] Lock
-        INIT_CRITICAL_SECTION( &processor->PublicAPI.Lock.lock );
+        INIT_RECURSIVE_CRITICAL_SECTION( &processor->PublicAPI.Lock.lock );
 
         // [Q4.1] Input queue
         if( (processor->PublicAPI.Queue = COMLIB_OBJECT_NEW( Cm128iQueue_t, NULL, &eventproc_queue_args )) == NULL ) {

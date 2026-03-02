@@ -39,7 +39,7 @@ static cxlib_exc_context_t g_context = {0};
  */
 void COMLIB_InitializeMessages( void ) {
   if( !g_context.initflag ) {
-    INIT_SPINNING_CRITICAL_SECTION( &g_context.lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &g_context.lock.lock, 4000 );
     g_context.recursion = 0;
     g_context.ostream = stderr;
     g_context.msgtrace = NULL;

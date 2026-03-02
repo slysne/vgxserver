@@ -181,7 +181,7 @@ static cxmalloc_family_t * __cxmalloc_family__new_family_OPEN( const char *id, c
     CALIGNED_INITIALIZED_ARRAY_THROWS( family->allocators, cxmalloc_allocator_t*, (size_t)family->size, NULL, 0x714 );
     
     // [Q2] lock
-    INIT_SPINNING_CRITICAL_SECTION( &family->lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &family->lock.lock, 4000 );
 
     // [Q3.3.1] readonly_cnt
     family->readonly_cnt = 0;

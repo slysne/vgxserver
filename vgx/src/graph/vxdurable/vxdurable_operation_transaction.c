@@ -835,7 +835,7 @@ static vgx_TransactionalProducer_t * _transactional_producer__new( vgx_Graph_t *
     producer->suspend_tx_until_tms = 0;
 
     // [Q3.1-5]
-    INIT_CRITICAL_SECTION( &producer->lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &producer->lock.lock );
 
     // [Q4.1.1]
     producer->lock_count = 0;
@@ -3386,7 +3386,7 @@ static vgx_TransactionalProducers_t * _transactional_producers__new( void ) {
     producers->lock_count = -1;
 
     // [Q1]
-    INIT_CRITICAL_SECTION( &producers->lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &producers->lock.lock );
 
     // [Q2.1.1]
     producers->lock_count = 0;

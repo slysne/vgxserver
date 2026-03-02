@@ -515,14 +515,14 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // ===============================
 
     // [Q3] Graph state lock
-    INIT_SPINNING_CRITICAL_SECTION( &self->state_lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->state_lock.lock, 4000 );
 
     // [Q18.1-6] Vertex availability condition
     INIT_CONDITION_VARIABLE( &self->vertex_availability.cond );
 
     /*
     // [Q19] Query state lock
-    //INIT_SPINNING_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
+    //INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
     */
     // [Q19]
     memset( self->__rsv_19, 0, sizeof(self->__rsv_19) );

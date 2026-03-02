@@ -289,7 +289,7 @@ default_micronap:
  *
  ***********************************************************************
  */
-void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
+void __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
   #define MAX_SPIN 64
   #define MIN_BACKOFF 4
   #define MAX_BACKOFF 16

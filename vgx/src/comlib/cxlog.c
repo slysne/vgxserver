@@ -267,7 +267,7 @@ static int cxlog_process_next_OPEN( LogContext_t *context, int wait ) {
   int n = 0;
   x2tptr_t ts_cstr = {0};
   Cx2tptrQueue_t *Q = context->queue;
-  FAST_SYNCHRONIZE_ON( context->qfastlock ) {
+  SYNCHRONIZE_ON( context->qfastlock ) {
     do {
       // We have data, extract one item
       if( ComlibSequenceLength(Q) > 0 ) {
@@ -317,9 +317,9 @@ static unsigned cxlog_task_initialize_OPEN( comlib_task_t *self ) {
     };
     Q = context->queue = COMLIB_OBJECT_NEW( Cx2tptrQueue_t, NULL, &queue_args );
     INIT_CONDITION_VARIABLE( &context->qwake.cond );
-    INIT_FAST_CRITICAL_SECTION( &context->qfastlock.lock );
+    INIT_CRITICAL_SECTION( &context->qfastlock.lock );
     context->fd = 0;
-    INIT_SPINNING_CRITICAL_SECTION( &context->xlock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &context->xlock.lock, 4000 );
     context->init = 1;
   }
   if( Q == NULL ) {
@@ -558,13 +558,13 @@ DLL_EXPORT int COMLIB__DeleteLogContext( LogContext_t **context ) {
 
     // Drain
     int64_t remain = 0;
-    FAST_SYNCHRONIZE_ON( ctx->qfastlock ) {
+    SYNCHRONIZE_ON( ctx->qfastlock ) {
       int draining = 5;
       int64_t last = remain = ComlibSequenceLength(ctx->queue);
       BEGIN_TIME_LIMITED_WHILE( draining > 0 && ComlibSequenceLength(ctx->queue) > 0, 600000, NULL ) {
         LEAVE_CRITICAL_SECTION( &ctx->qfastlock.lock );
         sleep_milliseconds( 1000 );
-        ENTER_SIMPLE_CRITICAL_SECTION( &ctx->qfastlock.lock );
+        ENTER_CRITICAL_SECTION( &ctx->qfastlock.lock );
         remain = ComlibSequenceLength(ctx->queue);
         if( remain < last ) {
           last = remain;
@@ -759,7 +759,7 @@ DLL_EXPORT int COMLIB__Log( LogContext_t *context, int64_t ns_1970, CString_t **
 
   int ret = 0;
   if( ATOMIC_READ_i32( &context->qready ) || ts_cstr.t_2.qword == END_OF_THREAD_MARKER ) {
-    FAST_SYNCHRONIZE_ON( context->qfastlock ) {
+    SYNCHRONIZE_ON( context->qfastlock ) {
       ret = CALLABLE(context->queue)->AppendNolock(context->queue, &ts_cstr);
       SIGNAL_ONE_CONDITION( &(context->qwake.cond) );
     } RELEASE;

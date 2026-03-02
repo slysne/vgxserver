@@ -2430,7 +2430,7 @@ static int __initialize_graph_registry_ROPEN( const CString_t *CSTR__system_root
   int ret = 0;
 
   if( !g_registry_init && ++g_registry_init == 1 ) {
-    INIT_CRITICAL_SECTION( &g_registry_lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &g_registry_lock.lock );
     INIT_CONDITION_VARIABLE( &g_registry_graph_availability.cond );
   }
 

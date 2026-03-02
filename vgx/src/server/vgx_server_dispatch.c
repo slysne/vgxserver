@@ -48,7 +48,7 @@ __inline static int64_t __dispatch__length( vgx_VGXServerWorkDispatch_t *dispatc
 
   for( int i=0; i < DISPATCH_QUEUE_COUNT; ++i ) {
     vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[i];
-    FAST_SYNCHRONIZE_ON( job->fastlock ) {
+    SYNCHRONIZE_ON( job->fastlock ) {
       sz += ComlibSequenceLength( job->queue );
     } RELEASE;
   }
@@ -67,7 +67,7 @@ __inline static void __dispatch__drain( vgx_VGXServerWorkDispatch_t *dispatch ) 
   for( int i=0; i < DISPATCH_QUEUE_COUNT; ++i ) {
     vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[i];
 
-    FAST_SYNCHRONIZE_ON( job->fastlock ) {
+    SYNCHRONIZE_ON( job->fastlock ) {
       uintptr_t client_addr = 0;
       while( ComlibSequenceLength( job->queue ) > 0 ) {
         CALLABLE( job->queue )->NextNolock( job->queue, (QWORD*)&client_addr );
@@ -299,7 +299,7 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
 
       // [Q1]
       // Dispatch lock
-      INIT_FAST_CRITICAL_SECTION( &job->fastlock.lock );
+      INIT_CRITICAL_SECTION( &job->fastlock.lock );
       // [Q3.2.1]
       job->flag.init.d_lock = 1;
 
@@ -358,7 +358,7 @@ DLL_HIDDEN int vgx_server_dispatch__create( vgx_VGXServer_t *server, CString_t *
 
     // [Q1]
     // Completion lock
-    INIT_FAST_CRITICAL_SECTION( &completion->fastlock.lock );
+    INIT_CRITICAL_SECTION( &completion->fastlock.lock );
 
     // [Q2.7.1]
     completion->lock_init = true;
@@ -647,7 +647,7 @@ static int __stage_executor_queue( vgx_VGXServer_t *server, vgx_VGXServerClient_
     if( ATOMIC_READ_i32( &job->length_atomic ) < ATOMIC_READ_i32( &job->n_waiting_atomic ) || queue_index == DISPATCH_QUEUE_COUNT ) {
 
       uintptr_t client_addr = (uintptr_t)client;
-      FAST_SYNCHRONIZE_ON( job->fastlock ) {
+      SYNCHRONIZE_ON( job->fastlock ) {
         staged = iQ->AppendNolock( job->queue, (QWORD*)&client_addr );
         // Wake up a worker waiting on the job queue
         SIGNAL_ONE_CONDITION( &(job->wake.cond) );
@@ -825,7 +825,7 @@ DLL_HIDDEN vgx_VGXServerClient_t * vgx_server_dispatch__fetch( vgx_VGXServer_t *
   int exec_sleep_ms = 25 + executor->max_sleep;
   uintptr_t client_addr = 0;
 
-  FAST_SYNCHRONIZE_ON( jobQ->fastlock ) {
+  SYNCHRONIZE_ON( jobQ->fastlock ) {
     
     // Empty queue and few threads waiting - go to sleep until signal or timeout
     if( ComlibSequenceLength( Q ) == 0 && wait_on_empty ) {
@@ -883,7 +883,7 @@ DLL_HIDDEN int vgx_server_dispatch__return( vgx_VGXServer_t *server, vgx_VGXServ
   CQwordQueue_vtable_t *iQ = CALLABLE( Q );
   int dispatched;
 
-  FAST_SYNCHRONIZE_ON( completion->fastlock ) {
+  SYNCHRONIZE_ON( completion->fastlock ) {
     dispatched = iQ->AppendNolock( Q, (QWORD*)&client_addr );
   } RELEASE;
 
@@ -965,7 +965,7 @@ DLL_HIDDEN int vgx_server_dispatch__executor_complete( vgx_VGXServer_t *server )
   vgx_VGXServerClient_t *completed[MAX_EXECUTOR_POOL_SIZE];
   QWORD *addr = (QWORD*)completed;
   int n_completed = 0;
-  FAST_SYNCHRONIZE_ON( completion->fastlock ) {
+  SYNCHRONIZE_ON( completion->fastlock ) {
     int64_t sz_Q = ComlibSequenceLength( Q );
     if( sz_Q > 0 ) {
       n_completed = (int)CALLABLE( Q )->ReadNolock( Q, (void**)&addr, minimum_value( max_exec, sz_Q ) );

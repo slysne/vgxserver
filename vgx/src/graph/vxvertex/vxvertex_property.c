@@ -3214,7 +3214,7 @@ static int64_t _vxvertex_property__write_virtual_property_CS( vgx_Graph_t *graph
   GRAPH_SUSPEND_LOCK( graph ) {
 
 
-    FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+    SYNCHRONIZE_ON( graph->vprop.fastlock ) {
       int fd = graph->vprop.fd;
       XTRY {
         // File must be open
@@ -3264,7 +3264,7 @@ static int64_t _vxvertex_property__write_virtual_property_CS( vgx_Graph_t *graph
 DLL_HIDDEN CString_t * _vxvertex_property__read_virtual_property( vgx_Graph_t *graph, int64_t offset, CString_t *CSTR__buffer, int64_t *rsz ) {
   CString_t *CSTR__data = NULL;
 
-  FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+  SYNCHRONIZE_ON( graph->vprop.fastlock ) {
     int fd = graph->vprop.fd;
     XTRY {
       // File must be open
@@ -3361,7 +3361,7 @@ static int _vxvertex_property__erase_virtual_property_CS( vgx_Graph_t *graph, in
   int ret = 0;
   GRAPH_SUSPEND_LOCK( graph ) {
 
-    FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+    SYNCHRONIZE_ON( graph->vprop.fastlock ) {
       int fd = graph->vprop.fd;
       XTRY {
         // File must be open
@@ -3406,7 +3406,7 @@ static int _vxvertex_property__erase_virtual_property_CS( vgx_Graph_t *graph, in
 DLL_HIDDEN void _vxvertex_property__virtual_properties_close( vgx_Graph_t *graph ) {
   GRAPH_LOCK( graph ) {
     if( graph->vprop.ready ) {
-      FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
         // Close file
         if( graph->vprop.fd > 0 ) {
           CX_CLOSE( graph->vprop.fd );
@@ -3577,7 +3577,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, 
 
     if( graph->vprop.ready ) {
 
-      FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
 
         if( graph->vprop.fd <= 0 ) {
 
@@ -3637,7 +3637,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_move( vgx_Graph_t *graph, 
 
     if( graph->vprop.ready ) {
 
-      FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
 
         XTRY {
           // Full path to source file
@@ -3706,7 +3706,7 @@ DLL_HIDDEN int64_t _vxvertex_property__virtual_properties_commit( vgx_Graph_t *g
 
   GRAPH_LOCK( graph ) {
     if( graph->vprop.ready ) {
-      FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
         int fd = graph->vprop.fd;
         // File is open
         if( fd > 0 ) {
@@ -3782,7 +3782,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph, 
       XTRY {
 
         // Virtual properties lock
-        INIT_FAST_CRITICAL_SECTION( &graph->vprop.fastlock.lock );
+        INIT_CRITICAL_SECTION( &graph->vprop.fastlock.lock );
         graph->vprop.ready = true;
 
         // Open the file

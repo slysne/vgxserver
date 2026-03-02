@@ -57,16 +57,16 @@ typedef struct _CS_COND {
   char __pad[EXPECTED_SIZEOF_CS_COND-sizeof(CXCOND_TYPE)];
 } CS_COND;
 
-#define INIT_SPINNING_CRITICAL_SECTION( pcslock, SpinCount )   do { if(!InitializeCriticalSectionAndSpinCount( (pcslock), SpinCount )) { *((int*)NULL)=0; /* goodbye */ } } WHILE_ZERO
-#define INIT_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
+#define INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( pcslock, SpinCount )   do { if(!InitializeCriticalSectionAndSpinCount( (pcslock), SpinCount )) { *((int*)NULL)=0; /* goodbye */ } } WHILE_ZERO
+#define INIT_RECURSIVE_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
 /* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
-#define INIT_FAST_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
+#define INIT_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
 #define DEL_CRITICAL_SECTION( pcslock )    DeleteCriticalSection( (pcslock) )
 #define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( LPCRITICAL_SECTION pcs );
 #define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
 /* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
-#define ENTER_SIMPLE_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
+#define ENTER_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 #define LEAVE_CRITICAL_SECTION( pcslock )  LeaveCriticalSection( (pcslock) )
 
 extern int64_t __GET_CURRENT_NANOSECOND_TICK( void );
@@ -253,7 +253,7 @@ typedef struct _CS_COND {
   char __pad[EXPECTED_SIZEOF_CS_COND-sizeof(CXCOND_TYPE)];
 } CS_COND;
 
-#define INIT_SPINNING_CRITICAL_SECTION( pcslock, SpinCount )          \
+#define INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( pcslock, SpinCount )          \
   do {                                                                \
     pthread_mutexattr_t mutexattr;                                    \
     pthread_mutexattr_init( &mutexattr );                             \
@@ -262,7 +262,7 @@ typedef struct _CS_COND {
     pthread_mutex_init( (pcslock), &mutexattr );                      \
   } WHILE_ZERO
 
-#define INIT_CRITICAL_SECTION( pcslock )                              \
+#define INIT_RECURSIVE_CRITICAL_SECTION( pcslock )                    \
   do {                                                                \
     pthread_mutexattr_t mutexattr;                                    \
     pthread_mutexattr_init( &mutexattr );                             \
@@ -272,7 +272,7 @@ typedef struct _CS_COND {
   } WHILE_ZERO
 
 #if defined(CXPLAT_LINUX_ANY)
-#define INIT_FAST_CRITICAL_SECTION( pcslock )                         \
+#define INIT_CRITICAL_SECTION( pcslock )                         \
   do {                                                                \
     pthread_mutexattr_t mutexattr;                                    \
     pthread_mutexattr_init( &mutexattr );                             \
@@ -280,7 +280,7 @@ typedef struct _CS_COND {
     pthread_mutex_init( (pcslock), &mutexattr );                      \
   } WHILE_ZERO
 #elif defined(CXPLAT_MAC_ARM64)
-#define INIT_FAST_CRITICAL_SECTION( pcslock )                         \
+#define INIT_CRITICAL_SECTION( pcslock )                         \
   do {                                                                \
     pthread_mutexattr_t mutexattr;                                    \
     pthread_mutexattr_init( &mutexattr );                             \
@@ -293,13 +293,13 @@ typedef struct _CS_COND {
 #endif
 
 
-#define DEL_CRITICAL_SECTION( pcslock )         pthread_mutex_destroy( (pcslock) )
-extern void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
-#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock )       __CXLOCK_MUTEX_SPINLOCK( (pcslock) )
+#define DEL_CRITICAL_SECTION( pcslock )             pthread_mutex_destroy( (pcslock) )
+extern void __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
+#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock ) __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( pthread_mutex_t *mutex );
-#define TRY_CRITICAL_SECTION( pcslock )         __TRY_CRITICAL_SECTION( (pcslock) )
-#define ENTER_SIMPLE_CRITICAL_SECTION( pcslock )  pthread_mutex_lock( (pcslock))
-#define LEAVE_CRITICAL_SECTION( pcslock )       pthread_mutex_unlock( (pcslock) )
+#define TRY_CRITICAL_SECTION( pcslock )             __TRY_CRITICAL_SECTION( (pcslock) )
+#define ENTER_CRITICAL_SECTION( pcslock )           pthread_mutex_lock( (pcslock))
+#define LEAVE_CRITICAL_SECTION( pcslock )           pthread_mutex_unlock( (pcslock) )
 
 
 extern int64_t __GET_CURRENT_NANOSECOND_TICK( void );
@@ -401,10 +401,10 @@ do {                                                \
 */
 
 /* synchronize on specified non-recursive mutex */
-#define FAST_SYNCHRONIZE_ON( CS )               \
+#define SYNCHRONIZE_ON( CS )                    \
 do {                                            \
   CXLOCK_TYPE *__pcslock__ = &((CS).lock);      \
-  ENTER_SIMPLE_CRITICAL_SECTION( __pcslock__ ); \
+  ENTER_CRITICAL_SECTION( __pcslock__ );        \
   do                                            \
 /*
     {
@@ -425,14 +425,6 @@ do {                                                        \
       CODE GOES HERE
     }
 */
-
-
-#define SUSPEND_SYNCH_ON( CS )              \
-  do {                                      \
-    CS_LOCK *__pcslock__ = &((CS).lock);    \
-    LEAVE_CRITICAL_SECTION( __pcslock__ );  \
-    do
-
 
 
 #define RELEASE                             \

@@ -1444,7 +1444,7 @@ static _CSEQ_TYPENAME * ComlibSequence_constructor( const void *identifier, _CSE
   self->_prev_fpos = -1;
 #endif
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  INIT_SPINNING_CRITICAL_SECTION( &self->_lock.lock, 4000 ); 
+  INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->_lock.lock, 4000 ); 
 #endif
 #if defined( _CSEQ_FEATURE_UNREAD_METHOD )
   self->_prev_rp = NULL;

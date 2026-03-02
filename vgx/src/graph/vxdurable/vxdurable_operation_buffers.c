@@ -545,7 +545,7 @@ static vgx_OperationBuffer_t * _operation_buffer__new( int order, const char *na
     buffer->cp = buffer->data;
 
     // Initialize lock
-    INIT_CRITICAL_SECTION( &buffer->lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &buffer->lock.lock );
     buffer->lock_count = 0;
 
     // Reset flags
