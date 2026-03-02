@@ -55,12 +55,12 @@ DLL_EXPORT framehash_instrument_t null_instrument = {0};
 static framehash_perfcounters_t * __get_perfcounters( framehash_t * const self, framehash_perfcounters_t *target ) {
   _framehash_counters_t *read = &self->_counters->read;
   _framehash_counters_t *write = &self->_counters->write;
-  SYNCHRONIZE_ON( read->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( read->lock ) {
     target->read.opcount = read->opcount;
     memcpy( &target->read.cache, &read->cache, sizeof(read->cache) );
     memcpy( &target->read.probe, &read->probe, sizeof(read->probe) );
   } RELEASE;
-  SYNCHRONIZE_ON( write->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( write->lock ) {
     target->write.opcount = write->opcount;
     target->write.resize_up = write->resize_up;
     target->write.resize_down = write->resize_down;
@@ -80,12 +80,12 @@ static framehash_perfcounters_t * __get_perfcounters( framehash_t * const self, 
 static void __reset_perfcounters( framehash_t * const self ) {
   _framehash_counters_t *read = &self->_counters->read;
   _framehash_counters_t *write = &self->_counters->write;
-  SYNCHRONIZE_ON( read->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( read->lock ) {
     read->opcount = 0;
     memset( &read->cache, 0, sizeof(read->cache) );
     memset( &read->probe, 0, sizeof(read->probe) );
   } RELEASE;
-  SYNCHRONIZE_ON( write->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( write->lock ) {
     write->opcount = 0;
     write->resize_up = 0;
     write->resize_down = 0;

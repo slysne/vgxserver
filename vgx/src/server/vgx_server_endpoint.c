@@ -691,7 +691,7 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
             qcnt += CALLABLE( graph )->QueryCountAtomic( graph );
             qns += CALLABLE( graph )->QueryTimeNanosecAccAtomic( graph );
             // Virtual properties
-            SYNCHRONIZE_ON( graph->vprop.lock ) {
+            FAST_SYNCHRONIZE_ON( graph->vprop.fastlock ) {
               vprop_bytes += graph->vprop.bytes;
               vprop_count += graph->vprop.count;
             } RELEASE;

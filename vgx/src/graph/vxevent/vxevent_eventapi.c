@@ -767,7 +767,7 @@ static CString_t * _vxevent_eventapi__format_backlog_info( vgx_Graph_t *self, vg
  */
 __inline static int __enqueue_event( vgx_Graph_t *self, vgx_VertexStorableEvent_t *ev ) {
   int n;
-  SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
     n = APPEND_QUEUE_VERTEX_EVENT_NOLOCK( self->EVP.PublicAPI.Queue, ev );
   } RELEASE;
   return n;

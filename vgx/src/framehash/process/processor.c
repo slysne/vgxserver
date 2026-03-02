@@ -965,7 +965,7 @@ DLL_HIDDEN int64_t _framehash_processor__process_nolock( framehash_processing_co
 DLL_HIDDEN int64_t _framehash_processor__process( framehash_processing_context_t * const processor ) {
   int64_t nproc = 0;
   CS_LOCK *lock = processor->instance.dynamic ? processor->instance.dynamic->pflock : NULL;
-  SYNCHRONIZE_ON_PTR( lock ) {
+  RECURSIVE_SYNCHRONIZE_ON_PTR( lock ) {
     nproc = _framehash_processor__process_nolock( processor );
   } RELEASE;
   

@@ -1068,7 +1068,7 @@ DLL_HIDDEN Key64Value56List_t * _framehash_api_simple__int_items( framehash_cell
 
   int64_t n_proc;
   CS_LOCK *plock = dynamic ? dynamic->pflock : NULL;
-  SYNCHRONIZE_ON_PTR( plock ) {
+  RECURSIVE_SYNCHRONIZE_ON_PTR( plock ) {
     n_proc = iFramehash.simple.Process( entrypoint, __collect_cell_as_key_and_value, NULL, items );
   } RELEASE;
 

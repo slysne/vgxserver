@@ -702,7 +702,7 @@ typedef struct s_vgx_OperationBuffer_t {
  */
 __inline static int __enter_buffer_CS( vgx_OperationBuffer_t *buffer ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &buffer->lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &buffer->lock.lock );
   // SAFE HERE
   return ++(buffer->lock_count);
 }
@@ -1939,7 +1939,7 @@ DLL_HIDDEN extern vgx_ITransactional_t iTransactional;
  */
 __inline static int __enter_transactional_CS( vgx_TransactionalProducer_t *producer ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &producer->lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &producer->lock.lock );
   // SAFE HERE
   return ++(producer->lock_count);
 }
@@ -2030,7 +2030,7 @@ __inline static int __leave_transactional_CS( vgx_TransactionalProducer_t *produ
  */
 __inline static int __enter_transactional_producers_CS( vgx_TransactionalProducers_t *producers ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &producers->lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &producers->lock.lock );
   // SAFE HERE
   return ++(producers->lock_count);
 }

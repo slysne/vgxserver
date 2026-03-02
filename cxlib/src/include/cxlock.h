@@ -62,11 +62,11 @@ typedef struct _CS_COND {
 /* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
 #define INIT_FAST_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
 #define DEL_CRITICAL_SECTION( pcslock )    DeleteCriticalSection( (pcslock) )
-#define ENTER_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
+#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( LPCRITICAL_SECTION pcs );
 #define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
 /* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
-#define ENTER_FAST_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
+#define ENTER_SIMPLE_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 #define LEAVE_CRITICAL_SECTION( pcslock )  LeaveCriticalSection( (pcslock) )
 
 extern int64_t __GET_CURRENT_NANOSECOND_TICK( void );
@@ -295,10 +295,10 @@ typedef struct _CS_COND {
 
 #define DEL_CRITICAL_SECTION( pcslock )         pthread_mutex_destroy( (pcslock) )
 extern void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
-#define ENTER_CRITICAL_SECTION( pcslock )       __CXLOCK_MUTEX_SPINLOCK( (pcslock) )
+#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock )       __CXLOCK_MUTEX_SPINLOCK( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( pthread_mutex_t *mutex );
 #define TRY_CRITICAL_SECTION( pcslock )         __TRY_CRITICAL_SECTION( (pcslock) )
-#define ENTER_FAST_CRITICAL_SECTION( pcslock )  pthread_mutex_lock( (pcslock))
+#define ENTER_SIMPLE_CRITICAL_SECTION( pcslock )  pthread_mutex_lock( (pcslock))
 #define LEAVE_CRITICAL_SECTION( pcslock )       pthread_mutex_unlock( (pcslock) )
 
 
@@ -388,50 +388,43 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t 
 
 
 
-/* synchronize on specified mutex */
-#define SYNCHRONIZE_ON( CS )                \
-do {                                        \
-  CXLOCK_TYPE *__pcslock__ = &((CS).lock);  \
-  ENTER_CRITICAL_SECTION( __pcslock__ );    \
-  do                                        \
+/* synchronize on specified recursive mutex */
+#define RECURSIVE_SYNCHRONIZE_ON( CS )              \
+do {                                                \
+  CXLOCK_TYPE *__pcslock__ = &((CS).lock);          \
+  ENTER_RECURSIVE_CRITICAL_SECTION( __pcslock__ );  \
+  do                                                \
 /*
     {
       CODE GOES HERE
     }
 */
 
-/* synchronize on specified fast non-recursive mutex */
-#define FAST_SYNCHRONIZE_ON( CS )             \
-do {                                          \
-  CXLOCK_TYPE *__pcslock__ = &((CS).lock);    \
-  ENTER_FAST_CRITICAL_SECTION( __pcslock__ ); \
-  do                                          \
+/* synchronize on specified non-recursive mutex */
+#define FAST_SYNCHRONIZE_ON( CS )               \
+do {                                            \
+  CXLOCK_TYPE *__pcslock__ = &((CS).lock);      \
+  ENTER_SIMPLE_CRITICAL_SECTION( __pcslock__ ); \
+  do                                            \
 /*
     {
       CODE GOES HERE
     }
 */
 
-/* synchronize on specified mutex pointer */
-#define SYNCHRONIZE_ON_PTR( pCS )             \
-do {                                          \
+/* synchronize on specified recursive mutex pointer */
+#define RECURSIVE_SYNCHRONIZE_ON_PTR( pCS )                 \
+do {                                                        \
   CXLOCK_TYPE *__pcslock__ = (pCS) ? &((pCS)->lock) : NULL; \
-  if( __pcslock__ ) {                         \
-    ENTER_CRITICAL_SECTION( __pcslock__ );    \
-  }                                           \
-  do                                          \
+  if( __pcslock__ ) {                                       \
+    ENTER_RECURSIVE_CRITICAL_SECTION( __pcslock__ );        \
+  }                                                         \
+  do                                                        \
 /*
     {
       CODE GOES HERE
     }
 */
-
-
-#define FORCE_RELEASE                       \
-  LEAVE_CRITICAL_SECTION( __pcslock__ );    \
-  __pcslock__ = NULL                        \
-  /*               ^ expect ; in user code for consistency */
-  /* better know what you're doing at this point            */
 
 
 #define SUSPEND_SYNCH_ON( CS )              \
@@ -439,32 +432,6 @@ do {                                          \
     CS_LOCK *__pcslock__ = &((CS).lock);    \
     LEAVE_CRITICAL_SECTION( __pcslock__ );  \
     do
-
-
-#define SUSPEND_SYNCH                       \
-  do {                                      \
-    LEAVE_CRITICAL_SECTION( __pcslock__ );  \
-    do
-
-
-#define RESUME_SYNCH                        \
-    WHILE_ZERO;                             \
-    ENTER_CRITICAL_SECTION( __pcslock__ );  \
-  } WHILE_ZERO
-
-
-#define SUSPEND_SLEEP( Milliseconds )       \
-  SUSPEND_SYNCH {                           \
-    sleep_milliseconds( Milliseconds );     \
-  } RESUME_SYNCH
-
-
-#define SUSPEND_ON_SLEEP( CS, Milliseconds )  \
-  SUSPEND_SYNCH_ON( CS ) {                    \
-    sleep_milliseconds( Milliseconds );       \
-  } RESUME_SYNCH
-
-
 
 
 
@@ -916,21 +883,6 @@ typedef void* WAITABLE_TIMER;
         }                                                                             \
       }                                                                               \
     }                                                                                 \
-  } WHILE_ZERO
-
-
-#define SYNCHRONIZED_WAIT_UNTIL( ContinueCondition, TimeoutMilliseconds )         \
-  BEGIN_TIME_LIMITED_WHILE( !(ContinueCondition), TimeoutMilliseconds, NULL ) {   \
-    SUSPEND_SLEEP( 10 );                                                          \
-  } END_TIME_LIMITED_WHILE;                                                       \
-
-
-#define SYNCHRONIZED_ON_WAIT_UNTIL( CS, ContinueCondition, TimeoutMilliseconds )    \
-  do {                                                                              \
-    CS_LOCK *__pcslock__ = &((CS).lock);                                            \
-    BEGIN_TIME_LIMITED_WHILE( !(ContinueCondition), TimeoutMilliseconds, NULL ) {   \
-      SUSPEND_SLEEP( 10 );                                                          \
-    } END_TIME_LIMITED_WHILE;                                                       \
   } WHILE_ZERO
 
 

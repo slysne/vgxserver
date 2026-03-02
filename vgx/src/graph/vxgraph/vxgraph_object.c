@@ -1729,8 +1729,8 @@ static void Graph_dump( vgx_Graph_t *self ) {
 
 
       CXLIB_OSTREAM( "13-14: -------- VIRTUAL PROPERTIES ------ " );
-      Q = (QWORD*)&self->vprop.lock;
-      CXLIB_OSTREAM( "vprop.lock          : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
+      Q = (QWORD*)&self->vprop.fastlock;
+      CXLIB_OSTREAM( "vprop.fastlock      : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
       CXLIB_OSTREAM( "vprop.fd            : %d", self->vprop.fd );
       CXLIB_OSTREAM( "vprop.ready         : %d", self->vprop.ready );
       CXLIB_OSTREAM( "vprop.commit        : %lld", self->vprop.commit );

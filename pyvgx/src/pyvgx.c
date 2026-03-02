@@ -1565,7 +1565,7 @@ DLL_HIDDEN int __pyvgx_set_output_stream( const char *filepath, CString_t **CSTR
 
   cxlib_exc_context_t *context = COMLIB_GetExceptionContext();
   int ret = 0;
-  SYNCHRONIZE_ON( context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->lock ) {
 
     // Close previous file if any
     if( g_output_stream != stderr ) {

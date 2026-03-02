@@ -1015,7 +1015,7 @@ static CQwordList_t * __clone_cstringrefs( CQwordList_t *cstringrefs ) {
     QWORD addr = *cursor;
     CString_t *CSTR__str = (CString_t*)addr;
     family = (cxmalloc_family_t*)CSTR__str->allocator_context->allocator;
-    SYNCHRONIZE_ON( family->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( family->lock ) {
       while( cursor < end ) {
         addr = *cursor++;
         if( iList->Append( clone, &addr ) == 1 ) { 
@@ -1049,7 +1049,7 @@ static int64_t __delete_cstringrefs( CQwordList_t **cstringrefs ) {
       CString_t *CSTR__str = (CString_t*)addr;
       family = (cxmalloc_family_t*)CSTR__str->allocator_context->allocator;
       cxmalloc_family_vtable_t *iFamily = CALLABLE( family );
-      SYNCHRONIZE_ON( family->lock ) {
+      RECURSIVE_SYNCHRONIZE_ON( family->lock ) {
         while( cursor < end ) {
           addr = *cursor++;
           CSTR__str = (CString_t*)addr;

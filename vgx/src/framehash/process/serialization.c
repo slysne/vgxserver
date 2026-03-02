@@ -1917,7 +1917,7 @@ DLL_HIDDEN int64_t _framehash_serialization__serialize( framehash_t *self, CQwor
 #endif
 
     // Lock as needed
-    SYNCHRONIZE_ON_PTR( sync_lock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( sync_lock ) {
       __output_t this_output = {0};
       __output_t parent_output = {0};
       char *filepath = NULL;
@@ -2227,7 +2227,7 @@ DLL_HIDDEN framehash_t *_framehash_serialization__deserialize( framehash_t *fram
   else {
     int fileno = -1;
 
-    SYNCHRONIZE_ON_PTR( framehash->_dynamic.pflock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( framehash->_dynamic.pflock ) {
 
       framehash_context_t deserialization_context = CONTEXT_INIT_TOP_FRAME( &framehash->_topframe, &framehash->_dynamic );
 
