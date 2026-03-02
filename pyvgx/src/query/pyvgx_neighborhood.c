@@ -320,28 +320,28 @@ __inline static double __recursion_bias2omega( double bias ) {
 
   // -100 to -40
   if( bias < bias2omega_x1 ) {
-    const double a = bias2omega_a0;
-    const double b = bias2omega_b0;
+    a = bias2omega_a0;
+    b = bias2omega_b0;
   }
   // -40 to 0
   else if( bias < bias2omega_x2 ) {
-    const double a = bias2omega_a1;
-    const double b = bias2omega_b1;
+    a = bias2omega_a1;
+    b = bias2omega_b1;
   }
   // 0 - 40
   else if( bias < bias2omega_x3 ) {
-    const double a = bias2omega_a2;
-    const double b = bias2omega_b2;
+    a = bias2omega_a2;
+    b = bias2omega_b2;
   }
   // 40 - 90
   else if( bias < bias2omega_x4 ) {
-    const double a = bias2omega_a3;
-    const double b = bias2omega_b3;
+    a = bias2omega_a3;
+    b = bias2omega_b3;
   }
   // 90 - 100
   else {
-    const double a = bias2omega_a4;
-    const double b = bias2omega_b4;
+    a = bias2omega_a4;
+    b = bias2omega_b4;
   }
 
   return a * bias + b;

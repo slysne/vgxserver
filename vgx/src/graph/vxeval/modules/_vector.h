@@ -387,7 +387,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   
   // good beam quality -> 0.0 (ignore negative)
   // bad beam quality -> 1.0
-  float beam_deficit = (top_k_th - beam_1) / fmaxf( (top_1 - beam_1), 1e-6 );
+  float beam_deficit = (top_k_th - beam_1) / fmaxf( (top_1 - beam_1), 1e-6f );
   // good beam -> more contribution from heap worst values
   // bad beam ->  less contribution from heap worst values
   float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
