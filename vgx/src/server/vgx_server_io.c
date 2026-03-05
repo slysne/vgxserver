@@ -120,23 +120,28 @@ static int __io__handle_exception( vgx_VGXServer_t *server, vgx_VGXServerClient_
   const char *client_uri = "";
   if( client->URI ) {
     client_uri = iURI.URI( client->URI );
-    if( err == 0 ) {
-      err = iURI.Sock.Error( client->URI, &CSTR__error, -1, 0 );
-    }
-    const char *serr = CSTR__error ? CStringValue( CSTR__error ) : "?";
-    if( pfd && pfd->revents == POLLHUP ) {
+    
+    // Clean disconnect
+    if( pfd && (pfd->revents & POLLHUP) ) {
       SERVERIO_VERBOSE( server, 0x001, "Disconnected: %s", client_uri );
     }
-    else if( (pfd && pfd->revents == POLLERR) || err == ECONNRESET ) {
-      SERVERIO_VERBOSE( server, 0x002, "Disconnected: %s", serr );
-    }
-    else if( err == 0 ) {
-      SERVERIO_INFO( server, 0x003, "%s", serr );
-    }
     else {
-      SERVERIO_REASON( server, 0x004, "I/O Exception %s", serr );
+      if( err == 0 ) {
+        err = iURI.Sock.Error( client->URI, &CSTR__error, -1, 0 );
+      }
+      const char *serr = CSTR__error ? CStringValue( CSTR__error ) : "?";
+      if( (pfd && (pfd->revents & POLLERR)) || err == ECONNRESET ) {
+        SERVERIO_VERBOSE( server, 0x002, "Disconnected: %s", serr );
+      }
+      else if( err == 0 ) {
+        SERVERIO_INFO( server, 0x003, "%s", serr );
+      }
+      else {
+        SERVERIO_REASON( server, 0x004, "I/O Exception %s", serr );
+      }
+      iString.Discard( &CSTR__error );
     }
-    iString.Discard( &CSTR__error );
+    
     return vgx_server_client__close( server, client );
   }
 
@@ -586,14 +591,6 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
 
   while( (client = ready->client) != NULL ) {
     
-    // ---------------------------
-    // Client socket has exception
-    // ---------------------------
-    if( cxpollfd_exception( ready->pfd ) ) {
-      __io__handle_exception( server, client, ready->pfd, 0 );
-      goto next_client;
-    }
-
     // -----------------------------------
     // Send client data to writable socket
     // -----------------------------------
@@ -608,10 +605,16 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
 
     // -------------------------------------
     // Read client data from readable socket
-    // and proceed to next client
     // -------------------------------------
     if( cxpollfd_readable( ready->pfd ) ) {
       __io__recv( server, client );
+    }
+    
+    // ---------------------------
+    // Client socket has exception
+    // ---------------------------
+    if( cxpollfd_exception( ready->pfd ) ) {
+      __io__handle_exception( server, client, ready->pfd, 0 );
     }
 
   next_client:
@@ -655,14 +658,6 @@ static void __io__perform_pending_dispatcher_io( vgx_VGXServer_t *server ) {
 
   while( ready->channel != NULL ) {
 
-    // ----------------------------
-    // Channel socket has exception
-    // ----------------------------
-    if( cxpollfd_exception( ready->pfd ) ) {
-      vgx_server_dispatcher_io__handle_exception( server, ready->channel, HTTP_STATUS__INTERNAL_SOCKET_ERROR, NULL );
-      goto next_channel;
-    }
-
     // ------------------------------------
     // Send channel data to writable socket
     // ------------------------------------
@@ -678,6 +673,13 @@ static void __io__perform_pending_dispatcher_io( vgx_VGXServer_t *server ) {
     // -------------------------------------
     if( cxpollfd_readable( ready->pfd ) ) {
       vgx_server_dispatcher_io__recv( server, ready->channel );
+    }
+
+    // ----------------------------
+    // Channel socket has exception
+    // ----------------------------
+    if( cxpollfd_exception( ready->pfd ) ) {
+      vgx_server_dispatcher_io__handle_exception( server, ready->channel, HTTP_STATUS__INTERNAL_SOCKET_ERROR, NULL );
     }
 
   next_channel:
