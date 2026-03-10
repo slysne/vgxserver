@@ -34,6 +34,7 @@ import time
 import random
 import re
 import getopt
+from functools import total_ordering
 import pprint
 from io import StringIO
 
@@ -53,6 +54,16 @@ class vgxadmin__ServerError( Exception ): pass
 class vgxadmin__OperationIncomplete( Exception ): pass
 
 class vgxadmin__AddressError( Exception ): pass
+
+
+def natural_key( group=0.0, id="" ):
+    return [group] + [ f"{int(text):010d}" if text.isdigit() else text for text in re.split(r'(\d+)', id) if len(text) ]
+
+
+def sortkey( instance_tuple ):
+    id = instance_tuple[0]
+    group = instance_tuple[1].get('group',-1)
+    return natural_key( group, id )
 
 
 
@@ -341,7 +352,7 @@ def sysplugin__ValidateSystemDescriptor( descriptor ):
         engine_part_number = partition if partition is not None else 1
         dispatch_part_number = partition if partition is not None else 1
         other_part_number = partition if partition is not None else 1
-        for id, subT in sorted( T.items() ):
+        for id, subT in sorted( T.items(), key=sortkey ):
             if type(id) is not str:
                 valerr( path, ": {}".format(id) )
             if id not in INSTANCE_NAMES:
@@ -529,8 +540,9 @@ def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
         descriptor = sysplugin__GetSystemDescriptor()
     T = descriptor.get("topology",{}).get("transaction", {})
     TT = sysplugin__TransformTransactionTopology( T )
-    return get_children( descriptor, TT )
-
+    result = get_children( descriptor, TT )
+    result.sort( key=sortkey )
+    return result
 
 
 
@@ -564,6 +576,7 @@ def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
         if instance is None:
             raise KeyError( "unknown instance '{}' in topology.dispatch".format(id) )
         C.append( (str(id), instance) )
+    C.sort( key=sortkey )
     return C
         
 
@@ -799,7 +812,9 @@ class vgxadmin__VGXRemote( object ):
 
     def HC( self, timeout=1.0, retry=1 ):
         status = 0
-        for n in range(retry):
+        n = 0
+        while n < retry:
+            n += 1
             try:
                 status, reason, data, headers = self.SendRequest( "/vgx/hc", auto_executor=False, timeout=timeout )
                 if status == 200 and data.startswith(b"VGX/3"):
@@ -810,7 +825,8 @@ class vgxadmin__VGXRemote( object ):
                     return True, status
             except:
                 pass
-            time.sleep(0.5)
+            if n < retry:
+                time.sleep(0.5)
         return False, status
 
     
@@ -879,6 +895,7 @@ class vgxadmin__VGXRemote( object ):
 # vgxadmin__VGXInstance
 #
 ###############################################################################
+@total_ordering
 class vgxadmin__VGXInstance( object ):
     """
     """
@@ -944,6 +961,16 @@ class vgxadmin__VGXInstance( object ):
 
 
 
+    def __lt__( self, other ):
+        return natural_key( self.group, self.id ) < natural_key( other.group, other.id )
+
+
+
+    def __eq__( self, other ):
+        return natural_key( self.group, self.id ) == natural_key( other.group, other.id )
+
+
+
     def IsLocal( self ):
         return self.local
 
@@ -993,11 +1020,11 @@ class vgxadmin__VGXInstance( object ):
 
 
 
-    def HC( self, timeout=1.0 ):
+    def HC( self, timeout=1.0, retry=1 ):
         """
         Returns bool, httpcode
         """
-        up, status = self.remote.HC( timeout=timeout )
+        up, status = self.remote.HC( timeout=timeout, retry=1 )
         return up, status
 
 
@@ -1856,7 +1883,7 @@ class vgxadmin__Descriptor( object ):
                     self.console.Print("\r{:32}".format(''), flush=True )
             info[instance.id] = []
             try:
-                up, status = instance.HC( timeout=0.1 )
+                up, status = instance.HC( timeout=0.1, retry=2 )
                 if not up:
                     raise Exception()
                 running = True
@@ -1912,11 +1939,13 @@ class vgxadmin__Descriptor( object ):
             I = [self.Get( id )]
         else:
             I = [self.Get(x.strip()) for x in id.split(",")]
+        I = list(I)
+        I.sort()
         running = []
         if ifrunning or confirm:
             for instance in I:
                 try:
-                    up, status = instance.HC( timeout=0.51 )
+                    up, status = instance.HC( timeout=0.1, retry=2 )
                     if not up:
                         raise Exception()
                     running.append( instance )
