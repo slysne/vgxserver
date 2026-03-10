@@ -798,16 +798,20 @@ class vgxadmin__VGXRemote( object ):
 
 
     def HC( self, timeout=1.0, retry=1 ):
+        status = 0
         for n in range(retry):
             try:
                 status, reason, data, headers = self.SendRequest( "/vgx/hc", auto_executor=False, timeout=timeout )
                 if status == 200 and data.startswith(b"VGX/3"):
                     # Success
-                    return True
+                    return True, status
+                elif status == 503 and b"service out" in data.lower():
+                    # Reachable but plugin interface is S-OUT
+                    return True, status
             except:
                 pass
             time.sleep(0.5)
-        return False
+        return False, status
 
     
 
@@ -990,7 +994,11 @@ class vgxadmin__VGXInstance( object ):
 
 
     def HC( self, timeout=1.0 ):
-        return self.remote.HC( timeout=timeout )
+        """
+        Returns bool, httpcode
+        """
+        up, status = self.remote.HC( timeout=timeout )
+        return up, status
 
 
 
@@ -1266,7 +1274,8 @@ class vgxadmin__VGXInstance( object ):
             if sub.IsReadonly():
                 S_RO.append( sub.id )
             try:
-                if sub.HC():
+                up, status = sub.HC()
+                if up and status == 200:
                     S_IN_PRE.add(sub.id)
             except Exception as hcerr:
                 self.console.Print( "{}: {}".format(sub, hcerr) )
@@ -1847,7 +1856,9 @@ class vgxadmin__Descriptor( object ):
                     self.console.Print("\r{:32}".format(''), flush=True )
             info[instance.id] = []
             try:
-                instance.HC( timeout=0.1 )
+                up, status = instance.HC( timeout=0.1 )
+                if not up:
+                    raise Exception()
                 running = True
             except:
                 running = False
@@ -1905,7 +1916,9 @@ class vgxadmin__Descriptor( object ):
         if ifrunning or confirm:
             for instance in I:
                 try:
-                    instance.HC( timeout=0.51 )
+                    up, status = instance.HC( timeout=0.51 )
+                    if not up:
+                        raise Exception()
                     running.append( instance )
                 except:
                     self.console.Print( "Not running: {}".format( instance.id ) )

@@ -51,7 +51,9 @@ def sysplugin__ADMIN_RestartHTTP( request:pyvgx.PluginRequest, headers:dict, aut
 
             # Make sure descriptor is working
             instance = descriptor.Get( ident )
-            instance.HC()
+            up, status = instance.HC()
+            if not up:
+                raise Exception( f"Unexpected HC: up={up} status={status}" )
 
             # Get current S-IN state
             was_serving = instance.Status()['request']['serving']
@@ -90,7 +92,9 @@ def sysplugin__ADMIN_RestartHTTP( request:pyvgx.PluginRequest, headers:dict, aut
                     # Restore connection and verify
                     for n in range(5):
                         try:
-                            instance.HC()
+                            up, status = instance.HC()
+                            if not up:
+                                raise Exception( "not yet running" )
                             instance.Status()
                             break
                         except:
