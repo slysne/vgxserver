@@ -25,6 +25,7 @@
 
 import pyvgx
 import ast
+import math
 
 
 ###############################################################################
@@ -272,7 +273,7 @@ class Validator( ast.NodeTransformer ):
         'AddPlugin'
     ])
 
-    EVAL_GLOBALS = dict( pyvgx=pyvgx )
+    EVAL_GLOBALS = dict( pyvgx=pyvgx, math=math )
 
     def visit_Name( self, node ):
         if node.id in self.FORBIDDEN or node.id.startswith("__"):
@@ -296,7 +297,7 @@ class Validator( ast.NodeTransformer ):
                     if obj.attr in self.FORBIDDEN:
                         break
                     obj = obj.value
-            if type(obj) is ast.Name and obj.id == "pyvgx":
+            if type(obj) is ast.Name and obj.id in ["pyvgx", "math"]:
                 return node
         name = None
         if type(obj) is ast.Name:
