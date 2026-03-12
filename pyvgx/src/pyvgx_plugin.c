@@ -1847,7 +1847,7 @@ DLL_HIDDEN int __pyvgx_plugin__add( const char *plugin_name, vgx_server_plugin_p
         // check default value type
         if( py_arg_default && py_type ) {
           if( !iPyVGXCodec.IsTypeJson( (PyObject*)py_type ) ) {
-            if( Py_TYPE( py_arg_default ) != (PyObject*)py_type ) {
+            if( Py_TYPE( py_arg_default ) != py_type ) {
               PyErr_SetString( PyExc_TypeError, "default parameter value incompatible with annotation" );
               THROW_SILENT( CXLIB_ERR_API, 0x00D );
             }
