@@ -1952,6 +1952,10 @@ class vgxadmin__Descriptor( object ):
             for id, data in info.items():
                 sz = len(data[pos][0])
                 data[pos][1] = " " * (maxsz - sz)
+        self.console.Print( "-" * len(self.name) )
+        self.console.Print( self.name )
+        self.console.Print( "-" * len(self.name) )
+        self.console.Print()
         line = "  ".join( [ "-" * (len(value)+len(pad)) for value, pad in info[None] ] )
         self.console.Print( line[:termwidth-2] )
         for id, data in info.items():
