@@ -2114,4 +2114,20 @@ static void PyVGX_SignalAndYield( vgx_Graph_t *graph ) {
   } END_PYVGX_THREADS;
 }
 
+ 
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */       
+static PyObject * ptr_richcompare( PyObject *a, PyObject *b, int op ) {
+  if( a->ob_type != b->ob_type ) {
+    Py_RETURN_NOTIMPLEMENTED;
+  }
+
+  Py_RETURN_RICHCOMPARE( (uintptr_t)a, (uintptr_t)b, op );
+}
+
+
 #endif
