@@ -42,7 +42,8 @@ call :safe_clear_dir %BUILD_DIR% %SENTINEL%
 if errorlevel 1 exit /b 1
 
 REM === Copy source code ===
-robocopy . "%BUILD_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD "%BUILD_DIR%" >nul
+echo Copying source to: %BUILD_DIR%
+robocopy . "%BUILD_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD "%BUILD_DIR%" "build" "VS\build" "wheelhouse" >nul
 
 REM === Enter build dir ===
 pushd "%BUILD_DIR%"

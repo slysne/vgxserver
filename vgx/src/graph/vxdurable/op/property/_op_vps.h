@@ -48,7 +48,9 @@ __inline static op_vertex_set_property get__op_vertex_set_property( vgx_Graph_t 
   case VGX_VALUE_TYPE_CSTRING:
     opdata.dataL = 0;
     opdata.dataH = 0;
-    opdata.CSTR__value = OwnOrCloneCString( prop->val.data.simple.CSTR__string, graph->ephemeral_string_allocator_context );
+    if( (opdata.CSTR__value = OwnOrCloneCString( prop->val.data.simple.CSTR__string, graph->ephemeral_string_allocator_context )) == NULL ) {
+      opdata.vtype = VGX_VALUE_TYPE_NULL;
+    }
     break;
   default:
     opdata.dataL = prop->val.data.bits;
@@ -196,6 +198,8 @@ static int __execute_op_vertex_set_property( vgx_OperationParser_t *parser ) {
 
       // Value type
       switch( vertex_property.val.type ) {
+      case VGX_VALUE_TYPE_NULL:
+        break;
       case VGX_VALUE_TYPE_BOOLEAN:
       case VGX_VALUE_TYPE_INTEGER:
       case VGX_VALUE_TYPE_REAL:

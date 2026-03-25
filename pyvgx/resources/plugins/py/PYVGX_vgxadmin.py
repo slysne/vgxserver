@@ -33,7 +33,9 @@ import json
 import time
 import random
 import re
+import shutil
 import getopt
+from functools import total_ordering
 import pprint
 from io import StringIO
 
@@ -54,6 +56,45 @@ class vgxadmin__OperationIncomplete( Exception ): pass
 
 class vgxadmin__AddressError( Exception ): pass
 
+
+def natural_key( group=0.0, id="" ):
+    return [group] + [ f"{int(text):010d}" if text.isdigit() else text for text in re.split(r'(\d+)', id) if len(text) ]
+
+
+
+def sortkey( instance_tuple ):
+    id = instance_tuple[0]
+    group = instance_tuple[1].get('group',-1)
+    return natural_key( group, id )
+
+
+    
+def json_load_with_err( fname, context_lines=3 ):
+    f = open( fname, 'r' )
+    data = f.read()
+    f.close()
+    try:
+        return json.loads( data )
+    except json.JSONDecodeError as jex:
+        lines = data.splitlines()
+        err_line = jex.lineno - 1
+        # context line numbers
+        start = max(err_line - context_lines, 0)
+        end = min(err_line + context_lines + 1, len(lines))
+        max_line_num_digits = len(str(end))
+        # generate output with pointer to error position
+        output = []
+        for i in range(start, end):
+            output.append(f"{i+1:>{max_line_num_digits}} | {lines[i]}")
+            if i == err_line:
+                pointer = " " * (max_line_num_digits + 3 + jex.colno - 1) + "^"
+                output.append(pointer)
+        # format message
+        msg = "\n" + f"File: {fname}\n" \
+            + f"{jex.msg}: line {jex.lineno} column {jex.colno} (char {jex.pos})\n" \
+            + "\n".join(output)
+
+        raise vgxadmin__InvalidUsageOrConfig( msg ) from None
 
 
 
@@ -341,7 +382,7 @@ def sysplugin__ValidateSystemDescriptor( descriptor ):
         engine_part_number = partition if partition is not None else 1
         dispatch_part_number = partition if partition is not None else 1
         other_part_number = partition if partition is not None else 1
-        for id, subT in sorted( T.items() ):
+        for id, subT in sorted( T.items(), key=sortkey ):
             if type(id) is not str:
                 valerr( path, ": {}".format(id) )
             if id not in INSTANCE_NAMES:
@@ -529,8 +570,9 @@ def sysplugin__GetTransactionTopologyInstances( descriptor=None ):
         descriptor = sysplugin__GetSystemDescriptor()
     T = descriptor.get("topology",{}).get("transaction", {})
     TT = sysplugin__TransformTransactionTopology( T )
-    return get_children( descriptor, TT )
-
+    result = get_children( descriptor, TT )
+    result.sort( key=sortkey )
+    return result
 
 
 
@@ -564,6 +606,7 @@ def sysplugin__GetDispatchTopologyInstances( descriptor=None ):
         if instance is None:
             raise KeyError( "unknown instance '{}' in topology.dispatch".format(id) )
         C.append( (str(id), instance) )
+    C.sort( key=sortkey )
     return C
         
 
@@ -798,16 +841,23 @@ class vgxadmin__VGXRemote( object ):
 
 
     def HC( self, timeout=1.0, retry=1 ):
-        for n in range(retry):
+        status = 0
+        n = 0
+        while n < retry:
+            n += 1
             try:
                 status, reason, data, headers = self.SendRequest( "/vgx/hc", auto_executor=False, timeout=timeout )
                 if status == 200 and data.startswith(b"VGX/3"):
                     # Success
-                    return True
+                    return True, status
+                elif status == 503 and b"service out" in data.lower():
+                    # Reachable but plugin interface is S-OUT
+                    return True, status
             except:
                 pass
-            time.sleep(0.5)
-        return False
+            if n < retry:
+                time.sleep(0.5)
+        return False, status
 
     
 
@@ -875,6 +925,7 @@ class vgxadmin__VGXRemote( object ):
 # vgxadmin__VGXInstance
 #
 ###############################################################################
+@total_ordering
 class vgxadmin__VGXInstance( object ):
     """
     """
@@ -940,6 +991,16 @@ class vgxadmin__VGXInstance( object ):
 
 
 
+    def __lt__( self, other ):
+        return natural_key( self.group, self.id ) < natural_key( other.group, other.id )
+
+
+
+    def __eq__( self, other ):
+        return natural_key( self.group, self.id ) == natural_key( other.group, other.id )
+
+
+
     def IsLocal( self ):
         return self.local
 
@@ -989,8 +1050,12 @@ class vgxadmin__VGXInstance( object ):
 
 
 
-    def HC( self, timeout=1.0 ):
-        return self.remote.HC( timeout=timeout )
+    def HC( self, timeout=1.0, retry=1 ):
+        """
+        Returns bool, httpcode
+        """
+        up, status = self.remote.HC( timeout=timeout, retry=1 )
+        return up, status
 
 
 
@@ -1266,7 +1331,8 @@ class vgxadmin__VGXInstance( object ):
             if sub.IsReadonly():
                 S_RO.append( sub.id )
             try:
-                if sub.HC():
+                up, status = sub.HC()
+                if up and status == 200:
                     S_IN_PRE.add(sub.id)
             except Exception as hcerr:
                 self.console.Print( "{}: {}".format(sub, hcerr) )
@@ -1693,11 +1759,7 @@ class vgxadmin__Descriptor( object ):
         if type(descriptor) is dict:
             self.data = descriptor
         elif os.path.exists(descriptor) and os.path.isfile(descriptor):
-            f = open( descriptor )
-            try:
-                self.data = json.loads( f.read() )
-            finally:
-                f.close()
+            self.data = json_load_with_err( descriptor )
         else:
             return False
 
@@ -1811,25 +1873,38 @@ class vgxadmin__Descriptor( object ):
         def fmt_int( value ):
             return "{:,}".format( value )
 
-        include_level = 1 if detail else 0
         allitems = [ 
-                  (0, "Id",        "Nodestat", None,                   None),
-                  (1, "Ver",       "Ping",     ["host","version"],     fmt_version),
-                  (0, "Uptime",    "Nodestat", "uptime",               fmt_dhms),
-                  (0, "Host",      "Nodestat", "host",                 fmt),
-                  (0, "IP",        "Nodestat", "ip",                   fmt),
-                  (0, "APort",     "Nodestat", "adminport",            fmt),
-                  (1, "TXPort",    "Nodestat", "txport",               fmt),
-                  (0, "S",         "Status",   ["request","serving"],  fmt_sin),
-                  (1, "RPS",       "Status",   ["request","rate"],     fmt_flt),
-                  (1, "95th(ms)",  "Status",   ["response_ms","95.0"], fmt_flt),
-                  (1, "CPU",       "Nodestat", "cpu",                  fmt),
-                  (1, "Mem(GiB)",  "Nodestat", "memory-total",         fmt_mem_gib),
-                  (1, "Use(MiB)",  "Nodestat", "memory-process",       fmt_mem_mib),
-                  (0, "Order",     "Nodestat", "graph-order",          fmt_int),
-                  (0, "Size",      "Nodestat", "graph-size",           fmt_int),
-                  (0, "Service",   "Nodestat", "service-name",         fmt)
+                  (  0, "Id",        "Nodestat", None,                   None),
+                  (  7, "Ver",       "Ping",     ["host","version"],     fmt_version),
+                  (  0, "Uptime",    "Nodestat", "uptime",               fmt_dhms),
+                  (  6, "Host",      "Nodestat", "host",                 fmt),
+                  (  3, "IP",        "Nodestat", "ip",                   fmt),
+                  (  3, "APort",     "Nodestat", "adminport",            fmt),
+                  (  9, "TXPort",    "Nodestat", "txport",               fmt),
+                  (  2, "S",         "Status",   ["request","serving"],  fmt_sin),
+                  (  2, "RPS",       "Status",   ["request","rate"],     fmt_flt),
+                  (  4, "95th(ms)",  "Status",   ["response_ms","95.0"], fmt_flt),
+                  ( 10, "CPU",       "Nodestat", "cpu",                  fmt),
+                  ( 10, "Mem(GiB)",  "Nodestat", "memory-total",         fmt_mem_gib),
+                  (  5, "Use(MiB)",  "Nodestat", "memory-process",       fmt_mem_mib),
+                  (  1, "Order",     "Nodestat", "graph-order",          fmt_int),
+                  (  1, "Size",      "Nodestat", "graph-size",           fmt_int),
+                  (  8, "Service",   "Nodestat", "service-name",         fmt)
                 ]
+        
+        include_level = 100 if detail else 5
+        termwidth = shutil.get_terminal_size(fallback=(80, 24)).columns
+        if termwidth <= 80:
+            include_level = 5
+        elif termwidth <= 100:
+            include_level = 6
+        elif termwidth <= 120:
+            include_level = 7
+        elif termwidth <= 140:
+            include_level = 8
+        elif termwidth <= 160:
+            include_level = 9
+        
         items = []
         for level, label, method, key, render in allitems:
             if level > include_level:
@@ -1842,12 +1917,14 @@ class vgxadmin__Descriptor( object ):
             N -= 1
             if self.console.IsStdout():
                 if N > 0:
-                    self.console.Print("\r{:3d} {}".format(N, instance.id), end="", flush=True )
+                    self.console.Print("\r{:3d} {}".format(N, instance.id), end="        ", flush=True )
                 else:
                     self.console.Print("\r{:32}".format(''), flush=True )
             info[instance.id] = []
             try:
-                instance.HC( timeout=0.1 )
+                up, status = instance.HC( timeout=0.1, retry=2 )
+                if not up:
+                    raise Exception()
                 running = True
             except:
                 running = False
@@ -1875,14 +1952,18 @@ class vgxadmin__Descriptor( object ):
             for id, data in info.items():
                 sz = len(data[pos][0])
                 data[pos][1] = " " * (maxsz - sz)
+        self.console.Print( "-" * len(self.name) )
+        self.console.Print( self.name )
+        self.console.Print( "-" * len(self.name) )
+        self.console.Print()
         line = "  ".join( [ "-" * (len(value)+len(pad)) for value, pad in info[None] ] )
-        self.console.Print(line)
+        self.console.Print( line[:termwidth-2] )
         for id, data in info.items():
             cols = "  ".join( [ "{}{}{}".format(prepad(value,pad), value, postpad(value,pad)) for value, pad in data ] )
-            self.console.Print( cols )
+            self.console.Print( cols[:termwidth-2] )
             if id is None:
-                self.console.Print(line)
-        self.console.Print(line)
+                self.console.Print( line[:termwidth-2] )
+        self.console.Print( line[:termwidth-2] )
 
 
     def GetMultiple( self, id="*", ifrunning=True, printsum=False, detail=False, confirm=None ):
@@ -1901,11 +1982,15 @@ class vgxadmin__Descriptor( object ):
             I = [self.Get( id )]
         else:
             I = [self.Get(x.strip()) for x in id.split(",")]
+        I = list(I)
+        I.sort()
         running = []
         if ifrunning or confirm:
             for instance in I:
                 try:
-                    instance.HC( timeout=0.51 )
+                    up, status = instance.HC( timeout=0.1, retry=2 )
+                    if not up:
+                        raise Exception()
                     running.append( instance )
                 except:
                     self.console.Print( "Not running: {}".format( instance.id ) )
@@ -2277,7 +2362,6 @@ class vgxadmin__VGXAdmin( object ):
                         if remote is None:
                             raise vgxadmin__InvalidUsageOrConfig( "Option '{}' requires <address>".format(o) )
                         console.Print( json.dumps( remote.Endpoint( a ), indent=4 ) )
-                        #pprint.pprint( remote.Endpoint( a ), indent=2, stream=console.GetStream() )
 
                     elif o in ( "-g", "--readonly" ):
                         R = descriptor.Concurrent( "ReadonlyGraph", a )
@@ -2324,17 +2408,15 @@ class vgxadmin__VGXAdmin( object ):
                         for instance in descriptor.GetMultiple( id ):
                             if key is None:
                                 console.Print( json.dumps( instance.Nodestat(), indent=4 ) )
-                                #pprint.pprint( instance.Nodestat(), indent=2, stream=console.GetStream() )
                             else:
                                 console.Print( "{} {}={}".format(instance, key, instance.Nodestat(key)) )
 
                     elif o in ( "-N", "--reloadplugins" ):
                         id, plugins_json_file = vgxadmin__VGXAdmin.GetArgs( a, [None, None] )
                         if plugins_json_file is not None:
-                            f = open( plugins_json_file, "r" )
-                            plugin_json = f.read()
-                            f.close()
-                            json.loads( plugin_json ) # verify json loadable
+                            if not (os.path.exists(plugins_json_file) and os.path.isfile(plugins_json_file)):
+                                raise vgxadmin__InvalidUsageOrConfig( f"File not found: {plugins_json_file}" )
+                            plugin_json = json.dumps( json_load_with_err( plugins_json_file ) ) # verify json loadable
                             R = descriptor.Concurrent( "ReloadPlugins", id, (plugin_json,) )
                         else:
                             R = descriptor.Concurrent( "ReloadPlugins", id )
