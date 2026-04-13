@@ -2162,14 +2162,16 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
       Py_ssize_t sz;
       switch( header.ktype ) {
       case X_VGX_PARTIAL_SORTKEYTYPE__double:
-        if( (entry->key.sortkey.dval = PyFloat_AsDouble( py_sortkey )) < 0 ) {
+        if( !PyFloat_Check( py_sortkey ) ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
         }
+        entry->key.sortkey.dval = PyFloat_AS_DOUBLE( py_sortkey );
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__int64:
-        if( (entry->key.sortkey.ival = PyLong_AsLongLong( py_sortkey )) < 0 ) {
+        if( !PyLong_Check( py_sortkey ) ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
         }
+        entry->key.sortkey.ival = PyLong_AsLongLong( py_sortkey );
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__bytes:
         PyBytes_AsStringAndSize( py_sortkey, (char**)&entry->sortkey.data, &sz );
