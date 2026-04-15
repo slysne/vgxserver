@@ -949,6 +949,13 @@ typedef struct s_PyVGX_Vertex {
   vgx_Vertex_t *vertex;
   PyVGX_Graph *pygraph;
   uint64_t gen_guard;
+
+  // Cached members
+  PyObject *py_cache__id;
+  PyObject *py_cache__internalid;
+  PyObject *py_cache__address;
+  PyObject *py_cache__enum;
+
 } PyVGX_Vertex;
 
 
