@@ -51,16 +51,32 @@ def TEST_Close():
     V = graph.NewVertex( vertexid )
     # Check
     Expect( V.id == vertexid,                     "Vertex id should be %s" % vertexid )
+    # Prime cached attributes
+    V_id = V.id
+    V_internalid = V.internalid
+    V_address = V.address
+    V_enum = V.enum
     # Close
     V.Close()
     # Verify not accessible
     try:
-        V.id
-        Except( False,  "Vertex should not be accessible after close" )
+        V.type
+        Expect( False,  "Vertex should not be accessible after close" )
     except pyvgx.AccessError as ex:
         Expect( str(ex).startswith( "Vertex is not accessible" ),  "Exception message should state that vertex is not accessible" )
     except:
-        Except( False,  "Should not raise this exception" )
+        Expect( False,  "Should not raise this exception" )
+    # Verify access to cached attributes
+    try:
+        assert V.id == V_id
+        assert V.internalid == V_internalid
+        assert V.address == V_address
+        assert V.enum == V_enum
+    except pyvgx.AccessError as ex:
+        Expect( False,  "Certain vertex attributes should still be accessible after close" )
+    except:
+        Expect( False,  "Should not raise this exception" )
+
 
 
 
