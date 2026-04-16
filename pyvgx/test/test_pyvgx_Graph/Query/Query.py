@@ -163,8 +163,9 @@ def TEST_NeighborhoodQuery_basic():
         Expect( False, "%s should not execute without id" % (Q) )
     except KeyError:
         __verify_attr( Q, "error",  True )
-        Expect( type( Q.error ) is KeyError )
-        Expect( len(str(Q.error)) > 0 )
+        Expect( type( Q.error ) is str )
+        Expect( len(Q.error) > 0 )
+        Expect( Q.error.startswith("KeyError") )
         Expect( Q.reason > 0 )
     except Exception as ex:
         Expect( False, "unexpected exception %s" % ex )
