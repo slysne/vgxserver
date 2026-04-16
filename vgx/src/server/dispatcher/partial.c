@@ -789,7 +789,7 @@ DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerC
           }
           key.item.ptr = (void*)item;
           if( CALLABLE( heap )->HeapPushTopK( heap, &key.m128i, &discarded.m128i ) == NULL ) {
-            // This item and all subsequent items not sorted high enough to be incluced, done with this partition
+            // This item and all subsequent items not sorted high enough to be included, done with this partition
             break;
           }
         }
@@ -810,7 +810,7 @@ DLL_HIDDEN int vgx_server_dispatcher_partial__aggregate_partials( vgx_VGXServerC
           }
           key.item.ptr = (void*)item;
           if( CALLABLE( heap )->HeapPushTopK( heap, &key.m128i, &discarded.m128i ) == NULL ) {
-            // This item and all subsequent items not sorted high enough to be incluced, done with this partition
+            // This item and all subsequent items not sorted high enough to be included, done with this partition
             break;
           }
         }
