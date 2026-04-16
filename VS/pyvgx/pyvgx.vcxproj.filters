@@ -169,6 +169,9 @@
     <Filter Include="resources\cf\sample">
       <UniqueIdentifier>{914a704e-a767-4e97-a46c-6dc275a0b582}</UniqueIdentifier>
     </Filter>
+    <Filter Include="test\test_pyvgx_HTTPServer\System">
+      <UniqueIdentifier>{74b56fe0-c428-42be-9b28-a374643d46d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\docs\src\pyvgx\arcDirectionConstants.adoc">
@@ -1064,6 +1067,18 @@
     </None>
     <None Include="..\..\pyvgx\resources\cf\sample\vgx.cf">
       <Filter>resources\cf\sample</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\__init__.py">
+      <Filter>test\test_pyvgx_HTTPServer\System</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\BasicSystem.py">
+      <Filter>test\test_pyvgx_HTTPServer\System</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\vgx.cf">
+      <Filter>test\test_pyvgx_HTTPServer\System</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\service.py">
+      <Filter>test\test_pyvgx_HTTPServer\System</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

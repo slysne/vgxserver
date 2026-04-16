@@ -6651,6 +6651,36 @@ static PyObject * PyVGX_Graph__repr( PyVGX_Graph *pygraph ) {
 
 
 /******************************************************************************
+ * PyVGX_Graph__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Graph__traverse( PyVGX_Graph *pygraph, visitproc visit, void *arg ) {
+  // Similarity object
+  Py_VISIT( pygraph->py_sim );
+  // Graph name
+  Py_VISIT( pygraph->py_name );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Graph__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Graph__clear( PyVGX_Graph *pygraph ) {
+  // Similarity object
+  Py_CLEAR( pygraph->py_sim );
+  // Graph name
+  Py_CLEAR( pygraph->py_name );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_Graph__dealloc
  *
  ******************************************************************************
@@ -6668,10 +6698,12 @@ static void PyVGX_Graph__dealloc( PyVGX_Graph *pygraph ) {
     }
   }
 
-  // Discard similarity object
-  Py_XDECREF( pygraph->py_sim );
-  // Discard name
-  Py_XDECREF( pygraph->py_name );
+  // Remove from GC tracker
+  PyObject_GC_UnTrack(pygraph);
+
+  // Clear inner object references
+  PyVGX_Graph__clear( pygraph );
+
   // Free python graph
   Py_TYPE( pygraph )->tp_free( pygraph );
 }
@@ -7206,10 +7238,10 @@ static PyTypeObject PyVGX_Graph__GraphType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_FINALIZE,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX Graph objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
+    .tp_traverse        = (traverseproc)PyVGX_Graph__traverse,
+    .tp_clear           = (inquiry)PyVGX_Graph__clear,
     .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,

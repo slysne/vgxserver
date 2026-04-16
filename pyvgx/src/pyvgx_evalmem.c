@@ -616,6 +616,7 @@ static PyObject * __PyVGX_Memory__get_counters( PyVGX_Memory *pymem, void *closu
  ******************************************************************************
  */
 static void PyVGX_Memory__dealloc( PyVGX_Memory *pymem ) {
+  // WARNING: Thread check is not reliable here. TODO: remove this
   if( pymem->threadid == GET_CURRENT_THREAD_ID() ) {
     vgx_ExpressEvalMemory_t *evalmem = pymem->evalmem;
     if( evalmem ) {

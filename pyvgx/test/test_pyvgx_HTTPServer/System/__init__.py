@@ -25,25 +25,14 @@
 
 import pkgutil
 __path__ = pkgutil.extend_path(__path__, __name__)
-from pyvgxtest.pyvgxtest import ListModules, RunModules
+from pyvgxtest.pyvgxtest import ListTestSets, RunTestSets
 
 import pyvgx
 
-from . import Artifacts
-from . import Metrics
-from . import Plugin
-from . import Dispatch
-from . import System
-from . import Performance
-
+from . import BasicSystem
 
 modules = [
-    Artifacts,
-    Metrics,
-    Plugin,
-    Dispatch,
-    System,
-    Performance
+    BasicSystem
 ]
 
 
@@ -55,8 +44,7 @@ modules = [
 def List():
     """
     """
-    ListModules( modules )
-
+    ListTestSets( modules )
 
 
 
@@ -67,6 +55,5 @@ def List():
 def Run():
     """
     """
-    pyvgx.system.Initialize( __name__ )
-    RunModules( modules )
-    pyvgx.system.Unload()
+    # Run tests
+    RunTestSets( modules, __name__ )

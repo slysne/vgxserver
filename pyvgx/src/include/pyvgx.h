@@ -949,6 +949,13 @@ typedef struct s_PyVGX_Vertex {
   vgx_Vertex_t *vertex;
   PyVGX_Graph *pygraph;
   uint64_t gen_guard;
+
+  // Cached members
+  PyObject *py_cache__id;
+  PyObject *py_cache__internalid;
+  PyObject *py_cache__address;
+  PyObject *py_cache__enum;
+
 } PyVGX_Vertex;
 
 
@@ -1718,11 +1725,24 @@ static void __pyvgx_set_query_error( PyVGX_Query *py_query, __base_query_args *p
     PyErr_SetString( param->implied.py_err_class, param->implied.CSTR__error ? CStringValue( param->implied.CSTR__error ) : "unknown internal error" );
   }
   if( py_query ) {
-    PyObject *type, *traceback;
+    PyObject *type=NULL, *value=NULL, *tb=NULL;
+    PyErr_Fetch( &type, &value, &tb );
     Py_XDECREF( py_query->py_error );
-    PyErr_Fetch( &type, &py_query->py_error, &traceback );
-    Py_XINCREF( py_query->py_error );
-    PyErr_Restore( type, py_query->py_error, traceback );
+
+    const char *type_str = "?";
+
+    if( type ) {
+      type_str = ((PyTypeObject*)type)->tp_name;
+    }
+
+    if( value ) {
+      py_query->py_error = PyUnicode_FromFormat( "%s: %S", type_str, value );
+    }
+    else {
+      py_query->py_error = PyUnicode_FromFormat( "%s", type_str );
+    }
+
+    PyErr_Restore( type, value, tb );
   }
 }
 

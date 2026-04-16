@@ -1135,17 +1135,56 @@ static PyObject * PyVGX_PluginRequest_get_baseport( PyVGX_PluginRequest *py_plug
 
 
 /******************************************************************************
+ * PyVGX_PluginRequest__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginRequest__traverse( PyVGX_PluginRequest *py_plugreq, visitproc visit, void *arg ) {
+  // params
+  Py_VISIT( py_plugreq->py_params );
+  // headers
+  Py_VISIT( py_plugreq->py_headers );
+  // content
+  Py_VISIT( py_plugreq->py_content );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_PluginRequest__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginRequest__clear( PyVGX_PluginRequest *py_plugreq ) {
+  // params
+  Py_CLEAR( py_plugreq->py_params );
+  // headers
+  Py_CLEAR( py_plugreq->py_headers );
+  // content
+  Py_CLEAR( py_plugreq->py_content );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_PluginRequest__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_PluginRequest__dealloc( PyVGX_PluginRequest *py_plugreq ) {
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( py_plugreq );
+
   if( py_plugreq->owns_request ) {
     iVGXServer.Request.Delete( &py_plugreq->request );
   }
-  Py_XDECREF( py_plugreq->py_params );
-  Py_XDECREF( py_plugreq->py_headers );
-  Py_XDECREF( py_plugreq->py_content );
+
+  // Clear inner object references
+  PyVGX_PluginRequest__clear( py_plugreq );
+
+  // Free object
   Py_TYPE( py_plugreq )->tp_free( py_plugreq );
 }
 
@@ -1887,10 +1926,10 @@ static PyTypeObject PyVGX_PluginRequestType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX PluginRequest objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
+    .tp_traverse        = (traverseproc)PyVGX_PluginRequest__traverse,
+    .tp_clear           = (inquiry)PyVGX_PluginRequest__clear,
     .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
@@ -3239,16 +3278,56 @@ static PyObject * PyVGX_PluginResponse_get_entries( PyVGX_PluginResponse *py_plu
 
 
 /******************************************************************************
+ * PyVGX_PluginResponse_traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginResponse_traverse( PyVGX_PluginResponse *py_plugres, visitproc visit, void *arg ) {
+  // message
+  Py_VISIT( py_plugres->py_message );
+  // meta
+  Py_VISIT( py_plugres->py_meta );
+  // entries
+  Py_VISIT( py_plugres->py_entries );
+  // previous key
+  Py_VISIT( py_plugres->py_prev_key );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_PluginResponse_clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginResponse_clear( PyVGX_PluginResponse *py_plugres ) {
+  // message
+  Py_CLEAR( py_plugres->py_message );
+  // meta
+  Py_CLEAR( py_plugres->py_meta );
+  // entries
+  Py_CLEAR( py_plugres->py_entries );
+  // previous key
+  Py_CLEAR( py_plugres->py_prev_key );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_PluginResponse_dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_PluginResponse_dealloc( PyVGX_PluginResponse *py_plugres ) {
-  Py_XDECREF( py_plugres->py_message );
-  Py_XDECREF( py_plugres->py_meta );
-  Py_XDECREF( py_plugres->py_entries );
-  Py_XDECREF( py_plugres->py_prev_key );
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( py_plugres );
 
+  // Clear inner object references
+  PyVGX_PluginResponse_clear( py_plugres );
+
+  // Free object
   Py_TYPE( py_plugres )->tp_free( py_plugres );
 }
 
@@ -4056,10 +4135,10 @@ static PyTypeObject PyVGX_PluginResponseType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX PluginResponse objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
+    .tp_traverse        =(traverseproc)PyVGX_PluginResponse_traverse,
+    .tp_clear           = (inquiry)PyVGX_PluginResponse_clear,
     .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,

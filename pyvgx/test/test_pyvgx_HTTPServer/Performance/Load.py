@@ -66,7 +66,7 @@ def client_loop( self, plugin, getquery, nsock=1 ):
     
     REQUEST_FMT = b"GET /vgx/plugin/%s?%%s HTTP/1.1\r\n\r\n" % plugin.encode()
 
-    LogInfo( "Client loop {} running".format(self) )
+    LogInfo( f"Client loop {self} running" )
 
     while self.is_running():
         try:
@@ -83,7 +83,7 @@ def client_loop( self, plugin, getquery, nsock=1 ):
                     S[1] = 0
                     self.QueryCounter += 1
                 except Exception as ex:
-                    LogError( "{}: Error from sendall(): {}".format(self, ex) )
+                    LogError( f"{self}: Error from sendall(): {ex}" )
                     S[0].close()
                     SOCKET[i] = [None, 0]
             # Remove closed sockets
@@ -100,12 +100,12 @@ def client_loop( self, plugin, getquery, nsock=1 ):
                         count_blocking += 1
                 if count_blocking > 1000:
                     if not self.is_running():
-                        LogWarning( "{}: No final recv data from socket(s) after shutdown".format(self) )
+                        LogWarning( f"{self}: No final recv data from socket(s) after shutdown" )
                         break
 
 
         except Exception as ex:
-            LogError( "{}: Error: {}".format(self, ex) )
+            LogError( f"{self}: Error: {ex}" )
             for s, nbytes in SOCKET:
                 s.close()
             SOCKET = []
@@ -113,7 +113,7 @@ def client_loop( self, plugin, getquery, nsock=1 ):
     for s, nbytes in SOCKET:
         s.close()
 
-    LogInfo( "Client loop {} exit".format(self) )
+    LogInfo( f"Client loop {self} exit" )
 
 
 
@@ -126,7 +126,7 @@ def add_worker( L, plugin_name, getquery_func, nsock=5 ):
     """
     """
     wn = len(L) + 1
-    w = Worker( "Client {}".format(wn) )
+    w = Worker( f"Client {wn}" )
     w.QueryCounter = 0
     w.perform( client_loop, w, plugin_name, getquery_func, nsock )
     L.append( w )
@@ -198,7 +198,7 @@ def run_load( plugin_name, getquery_func, duration=30, initial_nworkers=1, inc_n
 
     still_running = len([1 for w in WORKERS if not w.is_dead()])
     if still_running > 0:
-        LogWarning( "{} worker threads still running!".format( still_running ) )
+        LogWarning( f"{still_running} worker threads still running!" )
 
     t = time.time() - t0
 
@@ -319,12 +319,12 @@ def TEST_performance__graph():
     graph.CloseAll()
 
 
-    LogInfo( "Initial graph: {}".format( graph ) )
+    LogInfo( f"Initial graph: {graph}" )
 
     # Fill graph with more data
     run_load( "connect", get_connect_params, duration=20, initial_nworkers=4, nsock_per_worker=2 )
 
-    LogInfo( "Updated graph: {}".format( graph ) )
+    LogInfo( f"Updated graph: {graph}" )
 
     # Run queries
     run_load( "neighbor", get_neighbor_params, duration=60, initial_nworkers=1, inc_nworkers_interval=5, nsock_per_worker=2 )

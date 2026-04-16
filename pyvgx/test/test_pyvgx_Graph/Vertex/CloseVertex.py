@@ -48,18 +48,34 @@ def TEST_CloseVertex():
     # Open, then close and check
     A = graph.NewVertex( "A" )
     Support._VerifyNewVertex( graph, A, "A" )
+    # Prime cached attributes
+    A_id = A.id
+    A_internalid = A.internalid
+    A_address = A.address
+    A_enum = A.enum
+    # Close
     Expect( graph.CloseVertex( A ) is True,       "Vertex should be closed" )
     Expect( A.Writable() is False,                "Vertex should not be writable" )
     Expect( A.Readable() is False,                "Vertex should not be readable" )
     Expect( A.Readonly() is False,                "Vertex should not be readonly" )
+    # Verify no-access
     try:
-        A.id
-        Except( False,  "Vertex should not be accessible after close" )
+        A.type
+        Expect( False,  "Vertex should not be accessible after close" )
     except pyvgx.AccessError as ex:
         Expect( str(ex).startswith( "Vertex is not accessible" ),  "Exception message should state that vertex is not accessible" )
     except:
-        Except( False,  "Should not raise this exception" )
-
+        Expect( False,  "Should not raise this exception" )
+    # Verify access to cached attributes
+    try:
+        assert A.id == A_id
+        assert A.internalid == A_internalid
+        assert A.address == A_address
+        assert A.enum == A_enum
+    except pyvgx.AccessError as ex:
+        Expect( False,  "Certain vertex attributes should still be accessible after close" )
+    except:
+        Expect( False,  "Should not raise this exception" )
 
 
 

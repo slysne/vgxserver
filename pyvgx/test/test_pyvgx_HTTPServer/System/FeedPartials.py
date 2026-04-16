@@ -4,7 +4,7 @@
 # Distributed engine for plugin-based graph and vector search
 # 
 # Module:  pyvgx.test
-# File:    __init__.py
+# File:    FeedPartials.py
 # Author:  Stian Lysne slysne.dev@gmail.com
 # 
 # Copyright © 2025 Rakuten, Inc.
@@ -23,39 +23,47 @@
 # 
 ###############################################################################
 
-import pkgutil
-__path__ = pkgutil.extend_path(__path__, __name__)
-from pyvgxtest.pyvgxtest import ListModules, RunModules
-
+from pyvgxtest.pyvgxtest import RunTests, Expect, TestFailed
+from .. import _http_support as Support
+from pyvgx import *
 import pyvgx
+from . import engines
+import pprint
 
-from . import Artifacts
-from . import Metrics
-from . import Plugin
-from . import Dispatch
-from . import System
-from . import Performance
-
-
-modules = [
-    Artifacts,
-    Metrics,
-    Plugin,
-    Dispatch,
-    System,
-    Performance
-]
 
 
 
 ###############################################################################
-# List
+# TEST_FeedPartials_basic
 #
 ###############################################################################
-def List():
+def TEST_FeedPartials_basic():
     """
+    Feed data to different partials
+    test_level=4101
+    t_nominal=70
     """
-    ListModules( modules )
+
+    HOST = "127.0.0.1"
+    TD_PORTS = [9710, 9720]
+    E_PORTS = [ 9610, 9620, 9630, 9640, 9650 ]
+
+    # Set up backends
+    ENGINES = []
+    try:
+        TD_cf = engines.GetMatrixConfig( width=len(E_PORTS), height=1, host=HOST, ports=E_PORTS )
+        pprint.pprint( TD_cf )
+
+        DISPATCHERS = engines.StartDispatcherEngines( HOST, TD_PORTS, TD_cf )
+        ENGINES.extend( DISPATCHERS )
+
+        SERVERS = engines.StartServerEngines( HOST, E_PORTS, prefill=False )
+        ENGINES.extend( SERVERS )
+
+        # Feed data
+        engines.FeedData( HOST, TD_PORTS, nthreads=16 )
+    finally:
+        engines.StopEngines( ENGINES )
 
 
 
@@ -64,9 +72,7 @@ def List():
 # Run
 #
 ###############################################################################
-def Run():
+def Run( name ):
     """
     """
-    pyvgx.system.Initialize( __name__ )
-    RunModules( modules )
-    pyvgx.system.Unload()
+    RunTests( [__name__] )
