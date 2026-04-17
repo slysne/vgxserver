@@ -1471,13 +1471,16 @@ class vgxadmin__VGXInstance( object ):
 
 
     def Shutdown( self ):
-        params = {
-            "authshutdown": self.remote.GetAuthToken(),
-            "persist": int(self.durable)
-        }
-        return self.remote.SendAdminRequest( "Shutdown", params=params )
-
-
+        retry = 3
+        for n in range(retry):
+            try:
+                params = {
+                    "authshutdown": self.remote.GetAuthToken(),
+                    "persist": int(self.durable)
+                }
+                return self.remote.SendAdminRequest( "Shutdown", params=params, retry=1 )
+            except vgxadmin__ServerError:
+                time.sleep(1)
 
 
 
@@ -1982,8 +1985,7 @@ class vgxadmin__Descriptor( object ):
             I = [self.Get( id )]
         else:
             I = [self.Get(x.strip()) for x in id.split(",")]
-        I = list(I)
-        I.sort()
+        I = [instance for instance in sorted( I, key=lambda x:natural_key(x.group, x.id) )]
         running = []
         if ifrunning or confirm:
             for instance in I:

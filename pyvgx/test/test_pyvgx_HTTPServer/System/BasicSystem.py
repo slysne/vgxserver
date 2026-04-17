@@ -38,10 +38,12 @@ from . import service
 
 
 
+DESCRIPTOR_FILE = "vgx.cf"
 
-def vgxadmin( cmdline ):
+
+def vgxadmin( args ):
     result = subprocess.run(
-        ['vgxadmin', *cmdline.split()],
+        ['vgxadmin', *args, '-f', DESCRIPTOR_FILE],
         capture_output=True,
         text=True
     )
@@ -67,7 +69,7 @@ def WaitUntilReady( instances, id, timeout=30.0 ):
 
 
 
-def StartSystem( descriptor_file ):
+def StartSystem():
     """
     """
     try:
@@ -76,7 +78,7 @@ def StartSystem( descriptor_file ):
         pass
 
 
-    vgx_cf = json.loads( vgxadmin( f"-f {descriptor_file} -J" ) )
+    vgx_cf = json.loads( vgxadmin( ["-J"] ) )
     instances = vgx_cf.get("instances", {})
 
     SERVERS = []
@@ -92,7 +94,7 @@ def StartSystem( descriptor_file ):
             params = {
                 "instance_id": id,
                 "vgxroot": "instances",
-                "descriptor_file": descriptor_file
+                "descriptor_file": DESCRIPTOR_FILE
             }
             server = multiprocessing.Process( target=service.RunService, kwargs=params )
             SERVERS.append( (id, server) )
@@ -121,23 +123,25 @@ def StartSystem( descriptor_file ):
 
 
 
-def StopSystem( descriptor_file ):
+def StopSystem():
     """
     """
-    return vgxadmin( f"-f {descriptor_file} --stop @ --confirm" )
+    vgxadmin( ["--detach", "T*", "--confirm"] )
+    vgxadmin( ["--detach", "B*", "--confirm"] )
+    return vgxadmin( ["--stop", "@", "--confirm"] )
 
 
 
-def CheckSystem( descriptor_file, admin_id ):
+def CheckSystem( admin_id ):
     """
     """
-    vgx_cf = json.loads( vgxadmin( f"-f {descriptor_file} -J" ) )
+    vgx_cf = json.loads( vgxadmin( ["-J"] ) )
     instances = vgx_cf.get("instances", {})
 
     ids = [ k for k,v in sorted( instances.items(), key=lambda x:x[1].get('group'), reverse=1 ) ]
     for id in ids:
         tp = instances[id]['type']
-        echo = vgxadmin( f"{id} -f {descriptor_file} --endpoint /vgx/plugin/SimpleEcho?message=hello_{id}" )
+        echo = vgxadmin( [id, "--endpoint", f"/vgx/plugin/SimpleEcho?message=hello_{id}"] )
         if tp == 'dispatch':
             Expect( f"pre_hello_{id}" in echo, f"server instance should echo, got '{echo}' " )
         else:
@@ -145,7 +149,7 @@ def CheckSystem( descriptor_file, admin_id ):
         time.sleep(0.5)
 
     try:
-        system_overview = vgxadmin( f"{admin_id} -f {descriptor_file} --endpoint /vgx/builtin/system_overview" )
+        system_overview = vgxadmin( [admin_id, "--endpoint", "/vgx/builtin/system_overview"] )
         json.loads( system_overview )
     except json.JSONDecodeError as jerr:
         Expect( False, f"bad system_overview: {jerr}" )
@@ -166,15 +170,16 @@ def TEST_BasicSystem():
     Basic System Test
     test_level=4101
     """
+    global DESCRIPTOR_FILE
 
     thisdir = os.path.dirname(__file__)
-    descriptor_file = os.path.join( thisdir, "vgx.cf" )
+    DESCRIPTOR_FILE = os.path.join( thisdir, "vgx.cf" )
 
 
     admin_id = None
     f = None
     try:
-        f = open( descriptor_file )
+        f = open( DESCRIPTOR_FILE )
         vgx_cf = json.loads( f.read() )
         instances = vgx_cf['instances']
         for id in instances:
@@ -189,14 +194,14 @@ def TEST_BasicSystem():
             f.close()
     
     try:
-        StartSystem( descriptor_file )
+        StartSystem()
 
         print( "Checking all instances" )
-        CheckSystem( descriptor_file, admin_id )
+        CheckSystem( admin_id )
 
     finally:
         print( "Stopping all instances" )
-        result = StopSystem( descriptor_file )
+        result = StopSystem()
         print( result )
 
 
