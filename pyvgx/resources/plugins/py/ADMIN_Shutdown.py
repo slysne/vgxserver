@@ -38,7 +38,7 @@ __ADMIN_Shutdown__Undertaker = None
 # __ADMIN_Shutdown__shutdown
 #
 ###############################################################################
-def __ADMIN_Shutdown__shutdown( persist=False ):
+def __ADMIN_Shutdown__shutdown( persist=False, restartable=False ):
     """
     """
     pyvgx.LogInfo( "Final shutdown initiated" )
@@ -57,18 +57,28 @@ def __ADMIN_Shutdown__shutdown( persist=False ):
         pyvgx.system.StopHTTP()
     except:
         pass
-    # Unload
-    pyvgx.LogInfo( "Unloading" )
-    try:
-        pyvgx.system.Unload()
-    except:
-        pass
-    # Ready to die
-    for n in range(3):
-        pyvgx.LogInfo( "SIGTERM in {}...".format(3-n) )
-        time.sleep(1)
-    pyvgx.LogInfo( "SIGTERM" )
-    os.kill( os.getpid(), signal.SIGTERM )
+    # Stop in a restartable manner
+    if restartable:
+        # Ready to stop and maybe restart if application supports it
+        for n in range(3):
+            pyvgx.LogInfo( "Exit RunServer() in {}...".format(3-n) )
+            time.sleep(1)
+        pyvgx.LogInfo( "Exit RunServer()" )
+        pyvgx.system.ExitRunServer()
+    # Terminate process
+    else:
+        # Unload
+        pyvgx.LogInfo( "Unloading" )
+        try:
+            pyvgx.system.Unload()
+        except:
+            pass
+        # Ready to die
+        for n in range(3):
+            pyvgx.LogInfo( "SIGTERM in {}...".format(3-n) )
+            time.sleep(1)
+        pyvgx.LogInfo( "SIGTERM" )
+        os.kill( os.getpid(), signal.SIGTERM )
 
 
 
@@ -77,7 +87,7 @@ def __ADMIN_Shutdown__shutdown( persist=False ):
 # sysplugin__ADMIN_Shutdown
 #
 ###############################################################################
-def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authtoken:str, authshutdown:str, persist:int=0 ):
+def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authtoken:str, authshutdown:str, persist:int=0, restartable:int=0 ):
     """
     ADMIN: Shutdown
     """
@@ -150,7 +160,8 @@ def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authto
         # Stage final shutdown
         pyvgx.LogInfo( "Staging final shutdown phase" )
         do_persist = True if persist > 0 else False
-        __ADMIN_Shutdown__Undertaker = threading.Thread( target=__ADMIN_Shutdown__shutdown, args=(do_persist,) )
+        allow_restartable = True if restartable > 0 else False
+        __ADMIN_Shutdown__Undertaker = threading.Thread( target=__ADMIN_Shutdown__shutdown, args=(do_persist, allow_restartable) )
         __ADMIN_Shutdown__Undertaker.start()
 
         return { 'action': 'shutdown', 'status': status }

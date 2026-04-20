@@ -6827,7 +6827,7 @@ static int PyVGX_Graph__init( PyVGX_Graph *pygraph, PyObject *args, PyObject *kw
     XCATCH( errcode ) {
       BEGIN_PYTHON_INTERPRETER {
         if( messages && !PyErr_Occurred() ) {
-          iPyVGXBuilder.SetErrorFromMessages( messages );
+          iPyVGXBuilder.SetErrorFromMessages( PyVGX_DataError, NULL, messages );
         }
         PyVGX_SetPyErr( errcode );
       } END_PYTHON_INTERPRETER;

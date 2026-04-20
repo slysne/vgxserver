@@ -510,6 +510,13 @@ DLL_HIDDEN extern __THREAD uint64_t _pyvertex_generation_guard;
 DLL_HIDDEN extern bool _pyvgx_api_enabled;
 
 
+/******************************************************************************
+ * Exit RunServer flag
+ ******************************************************************************
+ */
+DLL_HIDDEN extern ATOMIC_i32 g_exit_run_server;
+
+
 
 /******************************************************************************
  * Flag indicating whether arc creation should automatically set TMC/TMM arcs.
@@ -1462,7 +1469,7 @@ typedef struct s_IPyVGXBuilder {
   int64_t (*MapIntegerConstants)( PyObject *py_dict, vgx_KeyVal_char_int64_t *data );
   PyObject * (*TupleFromCStringMapKeyVal)( const QWORD *item_bits );
   PyObject * (*VertexPropertiesAsDict)( vgx_Vertex_t *vertex_RO );
-  void (*SetErrorFromMessages)( vgx_StringTupleList_t *messages );
+  void (*SetErrorFromMessages)( PyObject *py_exception_type, const char *reason, vgx_StringTupleList_t *messages );
   bool (*SetPyErrorFromAccessReason)( const char *object_name, vgx_AccessReason_t reason, CString_t **CSTR__error );
   int (*CatchPyExceptionIntoOutput)( const char *wrap, vgx_MediaType *mediatype, CString_t **CSTR__output, vgx_StreamBuffer_t *output );
 } IPyVGXBuilder;
