@@ -1470,14 +1470,15 @@ class vgxadmin__VGXInstance( object ):
 
 
 
-    def Shutdown( self, restartable=False ):
+    def Shutdown( self, restartable=False, fullreset=False ):
         retry = 3
         for n in range(retry):
             try:
                 params = {
                     "authshutdown": self.remote.GetAuthToken(),
                     "persist": int(self.durable),
-                    "restartable": int(restartable)
+                    "restartable": int(restartable),
+                    "fullreset": int(fullreset)
                 }
                 return self.remote.SendAdminRequest( "Shutdown", params=params, retry=1 )
             except vgxadmin__ServerError:
@@ -2136,6 +2137,7 @@ class vgxadmin__VGXAdmin( object ):
     -W, --persist <id>              Write instance data to disk
     -g, --readonly <id>             Make graph(s) readonly
     -N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file
+    -A, --reset <id>                Reset and restart service (if application supports it)
     -m, --resetmetrics <id>         Clear performance and error counters
     -e, --restart <id>              Restart service (if application supports it)
     -D, --restarthttp <id>          Restart HTTP server with refreshed config
@@ -2194,6 +2196,7 @@ class vgxadmin__VGXAdmin( object ):
 
         try:
             paramdef = [
+                    ("reset=",           "A:"),
                     ("attach=",          "a:"),
                     ("bind=",            "B:"),
                     ("confirm",          "c" ),
@@ -2479,12 +2482,17 @@ class vgxadmin__VGXAdmin( object ):
                     elif o in ( "-x", "--stop" ):
                         instances = descriptor.GetMultiple( a, printsum=True, confirm="SHUTDOWN" if not CONFIRMED else None )
                         if instances:
-                            R = descriptor.Concurrent( "Shutdown", a, (False,) )
+                            R = descriptor.Concurrent( "Shutdown", a, (False, False) )
                     
                     elif o in ( "-e", "--restart" ):
                         instances = descriptor.GetMultiple( a, printsum=True, confirm="RESTART (SERVICE APP. DEPENDENT)" if not CONFIRMED else None )
                         if instances:
-                            R = descriptor.Concurrent( "Shutdown", a, (True,) )
+                            R = descriptor.Concurrent( "Shutdown", a, (True, False) )
+                    
+                    elif o in ( "-A", "--reset" ):
+                        instances = descriptor.GetMultiple( a, printsum=True, confirm="TRUNCATE AND RESTART (SERVICE APP. DEPENDENT)" if not CONFIRMED else None )
+                        if instances:
+                            R = descriptor.Concurrent( "Shutdown", a, (True, True) )
 
                     elif o in ( "-X", "--truncate" ):
                         instances = descriptor.GetMultiple( a, printsum=True, confirm="DELETE ALL DATA" if not CONFIRMED else None )
