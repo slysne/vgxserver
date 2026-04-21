@@ -54,44 +54,44 @@ def __ADMIN_Shutdown__fullreset():
         for name, o_s in pyvgx.system.Registry().items():
             try:
                 g = pyvgx.Graph( name )
-            except:
+            except Exception as ex:
                 g = pyvgx.system.GetGraph( name )
             G.append( g )
         # Truncate all graphs
         for g in G:
             try:
                 g.Truncate()
-            except:
-                pass
+            except Exception as ex:
+                pyvgx.LogError( f"Truncation error ({g}): {ex}" )
         # Persist all truncated graphs
         for g in G:
             try:
                 g.Save( force=True )
-            except:
-                pass
+            except Exception as ex:
+                pyvgx.LogError( f"Persist error ({g}): {ex}" )
         # Erase all graph instances
         for g in G:
             try:
                 g.Erase()
-            except:
-                pass
+            except Exception as ex:
+                pyvgx.LogError( f"Erase graph error ({g}): {ex}" )
         # Close all graph instances
         for g in G:
             try:
                 g.Close()
-            except:
-                pass
+            except Exception as ex:
+                pyvgx.LogError( f"Close graph error ({g}): {ex}" )
         del g
         # Remove everything from registry
         for name, o_s in pyvgx.system.Registry().items():
             try:
                 pyvgx.system.DeleteGraph( name )
-            except:
-                pass
+            except Exception as ex:
+                pyvgx.LogError( f"Registry removal error ({g}): {ex}" )
         # Persist empty system
         pyvgx.system.Persist( force=True )
-    except:
-        pass
+    except Exception as ex:
+        pyvgx.LogError( f"Full reset error: {ex}" )
 
 
 
@@ -152,14 +152,17 @@ def __ADMIN_Shutdown__shutdown( persist=False, restartable=False, fullreset=Fals
 # sysplugin__ADMIN_Shutdown
 #
 ###############################################################################
-def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authtoken:str, authshutdown:str, persist:int=0, restartable:int=0, fullreset:int=0 ):
+def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authtoken:str, authshutdown:str, persist:int=0, restartable:int=0, authfullreset:str="" ):
     """
     ADMIN: Shutdown
     """
     global __ADMIN_Shutdown__Undertaker
 
     if authshutdown != sysplugin__GetPreviousAuthToken():
-        raise Exception( "Invalid token" )
+        raise Exception( "Invalid authshutdown token" )
+
+    if len(authfullreset) > 0 and authfullreset != authshutdown:
+        raise Exception( "Invalid authfullreset token" )
 
     sysplugin__AuthorizeAdminOperation( headers, authtoken )
 
@@ -226,7 +229,7 @@ def sysplugin__ADMIN_Shutdown( request:pyvgx.PluginRequest, headers:dict, authto
         pyvgx.LogInfo( "Staging final shutdown phase" )
         do_persist = True if persist > 0 else False
         allow_restartable = True if restartable > 0 else False
-        perform_fullreset = True if fullreset > 0 else False
+        perform_fullreset = True if authfullreset == authshutdown else False
         __ADMIN_Shutdown__Undertaker = threading.Thread( target=__ADMIN_Shutdown__shutdown, args=(do_persist, allow_restartable, perform_fullreset) )
         __ADMIN_Shutdown__Undertaker.start()
 

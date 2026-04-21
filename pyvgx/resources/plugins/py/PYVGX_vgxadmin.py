@@ -1474,11 +1474,12 @@ class vgxadmin__VGXInstance( object ):
         retry = 3
         for n in range(retry):
             try:
+                authshutdown = self.remote.GetAuthToken()
                 params = {
-                    "authshutdown": self.remote.GetAuthToken(),
+                    "authshutdown": authshutdown,
                     "persist": int(self.durable),
                     "restartable": int(restartable),
-                    "fullreset": int(fullreset)
+                    "authfullreset": authshutdown if fullreset is True else ""
                 }
                 return self.remote.SendAdminRequest( "Shutdown", params=params, retry=1 )
             except vgxadmin__ServerError:
