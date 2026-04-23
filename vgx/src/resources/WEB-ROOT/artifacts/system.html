@@ -50,6 +50,7 @@
                         <td class="nodestat nodebox nodecell"><input type="text" value=""></td>
                         <td class="nodeuptm nodebox nodecell nodeinfo nodefade"><input type="text" value=""></td>
                         <td class="nodehost nodecell nodeinfo"><input type="text" value=""></td>
+                        <td class="nodewarn nodebox nodecell nodefade"><input type="text" value=""></td>
                         <td class="nodemtrx nodebox nodecell nodeinfo nodefade"><input type="text" value=""></td>
                         <td class="nodencli nodebox nodecell nodefade"><input type="text" value=""></td>
                         <td class="nodencha nodebox nodecell nodefade"><input type="text" value=""></td>
@@ -158,10 +159,10 @@
                 <table id="nodeList" class="hostlist">
                     <thead>
                         <tr>
-                            <th colspan="21"><hr></th>
+                            <th colspan="22"><hr></th>
                         </tr>
                         <tr id="nodeListHeader2" class="nodeListHeader">
-                            <th colspan="5"><span class="colSubGroup">Instance</span></th>
+                            <th colspan="6"><span class="colSubGroup">Instance</span></th>
                             <th colspan="6"><span class="colSubGroup">Server Load</span></th>
                             <th colspan="1"><span class="colSubGroup">Memory</span></th>
                             <th colspan="2"><span class="colSubGroup">Graph</span></th>
@@ -183,6 +184,9 @@
                             </th>
                             <th class="nodehost" title="Hostname/IP : Admin Port">
                                 <span class="colHead">Address</span>
+                            </th>
+                            <th class="nodewarn" title="Instance Warning">
+                                <span class="colHead">Notice</span>
                             </th>
                             <th class="nodemtrx" title="Dispatcher Matrix Shape&#013Service In/Out Indicator">
                                 <span class="colHead">Matrix</span>
@@ -686,6 +690,20 @@
         padding-right: 2px;
     }
 
+    /* Warn */
+    th.nodewarn {
+        text-align: left;
+    }
+
+    .nodewarn input {
+        max-width: 80px;
+        font-weight: bold;
+        text-align: center;
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+
     .nodetlag input {
         max-width: 50px;
     }
@@ -959,186 +977,231 @@
         border-color: #444444;
         color: #0000C0;
         background-color: #EEEEEE;
+        opacity: 1.0;
     }
 
     input.scheme-nominalblack, .scheme-nominalblack {
         border-color: #444444;
         color: #444444;
         background-color: #EEEEEE;
+        opacity: 1.0;
     }
 
     input.scheme-disabled, .scheme-disabled {
         border-color: #B8B8B8;
         color: #808080;
         background-color: #E8E8E8;
+        opacity: 1.0;
     }
 
     input.scheme-green, .scheme-green {
         border-color: #007050;
         color: #007050;
         background-color: #EAFAF1;
+        opacity: 1.0;
+    }
+
+    input.scheme-greentransp, .scheme-greentransp {
+        border-color: #007050;
+        color: #007050;
+        background-color: transparent;
+        opacity: 1.0;
     }
 
     input.scheme-greeninv, .scheme-greeninv {
         border-color: #007050;
         color: #EAFAF1;
         background-color: #007050;
+        opacity: 1.0;
     }
 
     input.scheme-gray, .scheme-gray {
         border-color: #AAAAAA;
         color: #AAAAAA;
         background-color: #EEEEEE;
+        opacity: 1.0;
     }
 
     input.scheme-gray2, .scheme-gray2 {
         border-color: #888888;
         color: #888888;
         background-color: #EEEEEE;
+        opacity: 1.0;
     }
 
     input.scheme-gray3, .scheme-gray3 {
         border-color: #F8F8F8;
         color: #3F3F3F;
         background-color: #F8F8F8;
+        opacity: 1.0;
     }
 
     input.scheme-gray4, .scheme-gray4 {
         border-color: #F8F8F8;
         color: #3F3F3F;
         background-color: #F1F1F1;
+        opacity: 1.0;
     }
 
     input.scheme-grayinv, .scheme-grayinv {
         border-color: #AAAAAA;
         color: #EEEEEE;
         background-color: #AAAAAA;
+        opacity: 1.0;
+    }
+
+    input.scheme-graytransp, .scheme-graytransp {
+        border-color: #AAAAAA;
+        color: #AAAAAA;
+        background-color: transparent;
+        opacity: 1.0;
     }
 
     input.scheme-black, .scheme-black {
         border-color: #000000;
         color: #000000;
         background-color: #EEEEEE;
+        opacity: 1.0;
     }
 
     input.scheme-blackinv, .scheme-blackinv {
         border-color: #000000;
         color: #EEEEEE;
         background-color: #000000;
+        opacity: 1.0;
     }
 
     input.scheme-dark1, .scheme-dark1 {
         border-color: #AAAAAA;
         color: #000000;
         background-color: #CCCCCC;
+        opacity: 1.0;
     }
 
     input.scheme-dark2, .scheme-dark2 {
         border-color: #444444;
         color: #F1F1F1;
         background-color: #444444;
+        opacity: 1.0;
     }
 
     input.scheme-dark3, .scheme-dark3 {
         border-color: #777777;
         color: #EAF2F8;
         background-color: #777777;
+        opacity: 1.0;
     }
 
     input.scheme-orange1, .scheme-orange1{
         border-color: #6E2C00;
         color: #6E2C00;
         background-color: #F9E79F;
+        opacity: 1.0;
     }
 
     input.scheme-orange2, .scheme-orange2 {
         border-color: #6E2C00;
         color: #6E2C00;
         background-color: #F4D03F;
+        opacity: 1.0;
     }
 
     input.scheme-orange3, .scheme-orange3 {
         border-color: #6E2C00;
         color: #6E2C00;
         background-color: #F1C40F;
+        opacity: 1.0;
     }
 
     input.scheme-orange4, .scheme-orange4 {
         border-color: #582300;
         color: #582300;
         background-color: #FDA112;
+        opacity: 1.0;
     }
 
     input.scheme-orange5, .scheme-orange5 {
         border-color: #6E2C00;
         color: #F6DDCC;
         background-color: #E67E22;
+        opacity: 1.0;
     }
 
     input.scheme-orange6, .scheme-orange6 {
         border-color: #D35400;
         color: #F6DDCC;
         background-color: #D35400;
+        opacity: 1.0;
     }
 
     input.scheme-orangeinv, .scheme-orangeinv {
         border-color: #7d6608;
         color: #F9E79F;
         background-color: #7d6608;
+        opacity: 1.0;
     }
 
     input.scheme-blue, .scheme-blue {
         border-color: #1F618D;
         color: #1F618D;
         background-color: #EAF2F8;
+        opacity: 1.0;
     }
 
     input.scheme-blueinv, .scheme-blueinv {
         border-color: #1F618D;
         color: #EAF2F8;
         background-color: #1F618D;
+        opacity: 1.0;
     }
 
     input.scheme-lavender, .scheme-lavender {
         border-color: #645f92;
         background-color: #f1f0ff;
         color: #645f92;
+        opacity: 1.0;
     }
 
     input.scheme-lavenderinv, .scheme-lavenderinv {
         border-color: #645f92;
         color: #f1f0ff;
         background-color: #645f92;
+        opacity: 1.0;
     }
 
     input.scheme-purple, .scheme-purple {
         border-color: #6C3483;
         color: #6C3483;
         background-color: #E8DAEF;
+        opacity: 1.0;
     }
 
     input.scheme-purpleinv, .scheme-purpleinv {
         border-color: #6C3483;
         color: #E8DAEF;
         background-color: #6C3483;
+        opacity: 1.0;
     }
 
     input.scheme-red, .scheme-red {
         border-color: #DD2000;
         color: #DD2000;
         background-color: #FDEDEC;
+        opacity: 1.0;
     }
 
     input.scheme-redinv, .scheme-redinv {
         border-color: #DD2000;
         color: #FDEDEC;
         background-color: #DD2000;
+        opacity: 1.0;
     }
 
     input.scheme-brown, .scheme-brown {
         border-color: #705f00;
         color: #705f00;
         background-color: #fafaea;
+        opacity: 1.0;
     }
 
     input.actionable {
@@ -1467,6 +1530,7 @@
 
     class NodeStatus {
         static OK           = Symbol("OK");
+        static None         = Symbol("None");
         static Busy         = Symbol("Busy");
         static SerialDiff   = Symbol("SerialDiff");
         static NoInput      = Symbol("NoInput");
@@ -1505,6 +1569,10 @@
             case NodeStatus.OK:
                 element.val( "OK" );
                 StatusColor.update( element, "green" );
+                break;
+            case NodeStatus.None:
+                element.val( "" );
+                StatusColor.update( element, "graytransp" );
                 break;
             case NodeStatus.Busy:
                 element.val( "Busy" );
@@ -1545,7 +1613,7 @@
                 StatusColor.update( element, "orange4" );
                 break;
             case NodeStatus.Inconsistent:
-                element.val( "OK/Delta" );
+                element.val( "Delta" );
                 StatusColor.update( element, "orange2" );
                 break;
             case NodeStatus.Degraded:
@@ -1570,7 +1638,7 @@
             case NodeStatus.MemCritical:
                 {
                 const total_pct = (100 * (cache.mem_tot - cache.mem_avail) / cache.mem_tot).toFixed(0);
-                element.val( "! MEM " + total_pct + "%" );
+                element.val( "MEM! " + total_pct + "%" );
                 StatusColor.update( element, "orange6" );
                 }
                 break;
@@ -2232,9 +2300,9 @@
     class Nodes {
 
         // Thresholds
-        static memoryLowThreshold = 0.8;
-        static memoryHighThreshold = 0.83;
-        static memoryCriticalThreshold = 0.9;
+        static memoryLowThreshold = 14/16;
+        static memoryHighThreshold = 14/16;
+        static memoryCriticalThreshold = 15/16;
 
         static simulateBars = false;
 
@@ -2981,7 +3049,7 @@
                     if (has.Dispatch == true) {
                         this.currentGroupType = "dispatch";
                     }
-                    this.renderRow("grp_aggr_" + grp, NodeType.Aggregate, null, null, null, cache);
+                    this.renderRow("grp_aggr_" + grp, NodeType.Aggregate, null, null, null, null, cache);
                 }
                 else {
                 }
@@ -2994,7 +3062,7 @@
         }
 
 
-        renderRow(id, ntyp, host, httpPort, nodeStatus, cache) {
+        renderRow(id, ntyp, host, httpPort, nodeStatus, nodeWarn, cache) {
 
             let nodeList = $('#nodeList tbody');
 
@@ -3009,7 +3077,7 @@
                 let matrix_mode = "matrix_mode" in cache ? cache.matrix_mode : "---";
                 let groupTitleRow =
                     '<tr class="nodeRow">' +
-                    '<td colspan="21">' + sep +
+                    '<td colspan="22">' + sep +
                     '<span class="nodennum"><span class="grouptitle" id="' + grp + '"></span>' +
                     '<span class="groupid">' + grp + ' ' + matrix_mode + '</span></span></td></tr>';
                 nodeList.append(groupTitleRow);
@@ -3041,6 +3109,7 @@
             let nnumElem = row.find(".nodennum input");
             let ntypElem = row.find(".nodentyp input");
             let statElem = row.find(".nodestat input");
+            let warnElem = row.find(".nodewarn input");
             let uptmElem = row.find(".nodeuptm input");
             let hostElem = row.find(".nodehost input");
             let mtrxElem = row.find(".nodemtrx input");
@@ -3078,6 +3147,7 @@
             if (ntyp == NodeType.Aggregate) {
                 row.find("input").css("visibility", "hidden");
                 let aggr = {"s_in":true, "rate":0.0, "qlat95":0.0, "mem_proc":0.0, "order":0, "is_aggr":true};
+                aggr.hostElem = row.find(".nodehost input");
                 aggr.rateElem = row.find(".noderate input");
                 aggr.qlatElem = row.find(".nodeqlat input");
                 aggr.mprcElem = row.find(".nodemprc");
@@ -3091,6 +3161,7 @@
                 }
                 this.renderQueryRate(aggr);
                 StatusColor.update(aggr.rateElem, "dark3");
+                aggr.hostElem.css("width","80px");
                 aggr.rateElem.css("visibility","visible");
                 aggr.rateElem.css("opacity", "0.8");
                 aggr.rateElem.attr("id", "rate_" + id);
@@ -3186,6 +3257,18 @@
                 row.data("up", true);
             }
 
+            // Warn
+            warnElem.attr("id", "warn_" + id);
+            if (nodeWarn != null) {
+                if (nodeStatus != null && nodeStatus == NodeStatus.Down) {
+                    nodeWarn = NodeStatus.None;
+                }
+                NodeStatus.update( $('#warn_'+$.escapeSelector(id)), nodeWarn, cache );
+                let warnTD = row.find(".nodewarn");
+                let titleWarn = id + " Warning\n\nCheck Status";
+                this.setTitleLink(warnTD, host, httpPort, "status", titleWarn );
+            }
+
             // Uptime
             uptmElem.attr("id", "uptime_" + id);
             cache.clock.setElement(uptmElem);
@@ -3201,13 +3284,15 @@
 
             // Address
             let nodehostTD = row.find(".nodehost");
+            nodehostTD.addClass("enable_select");
             hostElem.attr("id", "host_" + id);
             if (host != null) {
-                this.setTitleLink(nodehostTD, host, httpPort, "index");
+                //this.setTitleLink(nodehostTD, host, httpPort, "index");
                 let address = host + ":" + httpPort;
                 //StatusColor.update( hostElem, "gray4" );
                 hostElem.val(address);
                 hostElem.attr("size",address.length);
+                hostElem.addClass("enable_select");
                 let totalGiB = cache.mem_tot / 0x40000000;
                 let titleAddress =  id + 
                                     " Address\n\nhostname: " + cache.hostname + 
@@ -3542,6 +3627,10 @@
 
 
         getNodeStatus( ntyp, nodestatObj, cache ) {
+            let load = 0;
+            if (cache.mem_tot > 0) {
+                load = (cache.mem_tot - cache.mem_avail) / cache.mem_tot;
+            }
             // DOWN
             if (!cache.clock.running()) {
                 return NodeStatus.Down;
@@ -3549,14 +3638,6 @@
             // Unknown
             if (!nodestatObj) {
                 return NodeStatus.Unknown;
-            }
-            let load = 0;
-            if (cache.mem_tot > 0) {
-                load = (cache.mem_tot - cache.mem_avail) / cache.mem_tot;
-            }
-            // Memory!
-            if (load > 0.93) {
-                return NodeStatus.MemCritical;
             }
             // Sync x%
             if (nodestatObj["synchronizing"]) {
@@ -3571,49 +3652,15 @@
             if (cache.ready != true ) {
                 return NodeStatus.Initializing;
             }
-            // MEMORY!
-            if (load > Nodes.memoryCriticalThreshold) {
-                return NodeStatus.MemCritical;
-            }
-            // Memory
-            if (load > Nodes.memoryHighThreshold) {
-                return NodeStatus.MemWarningHI;
-            }
             // S-OUT
             if (!cache.s_in) {
                 return NodeStatus.ServiceOut;
-            }
-            // Incomplete dispatcher matrix
-            if (cache.matrix != null && cache.matrix.length > 0 && cache.matrix_complete === false) {
-                return NodeStatus.Partial;
-            }
-            // Degraded dispatcher matrix
-            if (cache.matrix_degraded === true) {
-                return NodeStatus.Degraded;
-            }
-            // Inconsistent dispatcher matrix
-            if (cache.matrix_consistent === false) {
-                return NodeStatus.Inconsistent;
             }
             // Readonly
             if (cache.readonly === true) {
                 return NodeStatus.Readonly;
             }
             if (NodeType.hasData(ntyp)) {
-                // No Input
-                if (cache.provider_id == null && cache.txin != null) {
-                    return NodeStatus.NoInput;
-                }
-                // Delta
-                if (cache.idle_ms > 30000) {
-                    if (cache.master_digest != cache.digest) {
-                        return NodeStatus.Inconsistent;
-                    }
-                    cache.sndiff = MasterSerial.diff(cache.master_serial, cache.serial);
-                    if (cache.sndiff > 1) {
-                        return NodeStatus.SerialDiff;
-                    }
-                }
                 // Busy
                 if (cache.lag > 30000) {
                     return NodeStatus.Busy;
@@ -3623,13 +3670,62 @@
             if (cache.busy >= 5) {
                 return NodeStatus.Busy;
             }
+            // OK
+            return NodeStatus.OK;
+        }
+
+
+        getNodeWarning( ntyp, nodestatObj, cache ) {
+            let load = 0;
+            if (cache.mem_tot > 0) {
+                load = (cache.mem_tot - cache.mem_avail) / cache.mem_tot;
+            }
+            // MEMORY!
+            if (load > Nodes.memoryCriticalThreshold) {
+                return NodeStatus.MemCritical;
+            }
+            // Incomplete dispatcher matrix
+            if (cache.matrix != null && cache.matrix.length > 0 && cache.matrix_complete === false) {
+                return NodeStatus.Partial;
+            }
+            // Memory
+            if (load > Nodes.memoryHighThreshold) {
+                return NodeStatus.MemWarningHI;
+            }
+            // Degraded dispatcher matrix
+            if (cache.matrix_degraded === true) {
+                return NodeStatus.Degraded;
+            }
+            // Inconsistent dispatcher matrix
+            if (cache.matrix_consistent === false) {
+                return NodeStatus.Inconsistent;
+            }
+            if (NodeType.hasData(ntyp)) {
+                if (cache.readonly === false) {
+                    // No Input
+                    if (cache.provider_id == null && cache.txin != null) {
+                        return NodeStatus.NoInput;
+                    }
+                    // Delta
+                    if (cache.idle_ms > 30000) {
+                        if (cache.master_digest != cache.digest) {
+                            return NodeStatus.Inconsistent;
+                        }
+                        cache.sndiff = MasterSerial.diff(cache.master_serial, cache.serial);
+                        if (cache.sndiff > 1) {
+                            return NodeStatus.SerialDiff;
+                        }
+                    }
+                }
+            }
             // Memory
             if (load > Nodes.memoryLowThreshold) {
                 return NodeStatus.MemWarningLO;
             }
-            // OK
-            return NodeStatus.OK;
+            // None
+            return NodeStatus.None;
         }
+
 
 
         getCanHaveSubs(transactionTopology) {
@@ -4105,13 +4201,14 @@
 
                             const nodestatObj = instance["nodestat"];
                             const stat = this.getNodeStatus(cache.ntyp, nodestatObj, cache);
-                            if (NodeStatus.isWarning( stat )) {
-                                if (!(stat in warnings)) {
-                                    warnings[stat] = 0;
+                            const warn = this.getNodeWarning(cache.ntyp, nodestatObj, cache);
+                            if (NodeStatus.isWarning( warn )) {
+                                if (!(warn in warnings)) {
+                                    warnings[warn] = 0;
                                 }
-                                warnings[stat]++;
+                                warnings[warn]++;
                             }
-                            this.renderRow(nodeKey, cache.ntyp, host, hport, stat, cache);
+                            this.renderRow(nodeKey, cache.ntyp, host, hport, stat, warn, cache);
                         }
 
                         this.nextGroup(1000000, {
