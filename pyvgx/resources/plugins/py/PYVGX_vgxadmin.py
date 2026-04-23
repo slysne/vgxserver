@@ -1852,9 +1852,9 @@ class vgxadmin__Descriptor( object ):
         def postpad( value, pad ):
             return "" if isnum( value ) else pad
         def fmt( value ):
-            s = "{}".format( value )
+            s = f"{value}"
             if isnum(s) and not s.isdigit():
-                return "{:.1f}".format( float(s) )
+                return f"{float(s):.1f}"
             else:
                 return s
         def fmt_mem_gib( value ):
@@ -1873,16 +1873,17 @@ class vgxadmin__Descriptor( object ):
             s -= H*3600
             M = s // 60
             s -= M*60
-            return "{}d {:02d}:{:02d}:{:02d}".format( D, H, M, s )
+            return f"{D}d {H:02d}:{M:02d}:{s:02d}"
         def fmt_flt( value ):
-            return "{:.1f}".format( float(value) )
+            return f"{float(value):.1f}"
         def fmt_int( value ):
-            return "{:,}".format( value )
+            return f"{value:,}"
 
         allitems = [ 
                   (  0, "Id",        "Nodestat", None,                   None),
                   (  7, "Ver",       "Ping",     ["host","version"],     fmt_version),
                   (  0, "Uptime",    "Nodestat", "uptime",               fmt_dhms),
+                  (  3, "PID",       "Nodestat", "pid",                  fmt),
                   (  6, "Host",      "Nodestat", "host",                 fmt),
                   (  3, "IP",        "Nodestat", "ip",                   fmt),
                   (  3, "APort",     "Nodestat", "adminport",            fmt),
@@ -1899,17 +1900,19 @@ class vgxadmin__Descriptor( object ):
                 ]
         
         include_level = 100 if detail else 5
-        termwidth = shutil.get_terminal_size(fallback=(80, 24)).columns
-        if termwidth <= 80:
-            include_level = 5
-        elif termwidth <= 100:
-            include_level = 6
-        elif termwidth <= 120:
-            include_level = 7
-        elif termwidth <= 140:
-            include_level = 8
-        elif termwidth <= 160:
-            include_level = 9
+        termwidth = 1024
+        if self.console.IsStdout():
+            termwidth = shutil.get_terminal_size(fallback=(80, 24)).columns
+            if termwidth <= 80:
+                include_level = 5
+            elif termwidth <= 100:
+                include_level = 6
+            elif termwidth <= 120:
+                include_level = 7
+            elif termwidth <= 140:
+                include_level = 8
+            elif termwidth <= 160:
+                include_level = 9
         
         items = []
         for level, label, method, key, render in allitems:
@@ -1923,9 +1926,9 @@ class vgxadmin__Descriptor( object ):
             N -= 1
             if self.console.IsStdout():
                 if N > 0:
-                    self.console.Print("\r{:3d} {}".format(N, instance.id), end="        ", flush=True )
+                    self.console.Print(f"\r{N:3d} {instance.id}", end="        ", flush=True )
                 else:
-                    self.console.Print("\r{:32}".format(''), flush=True )
+                    self.console.Print(f"\r{'':32}", flush=True )
             info[instance.id] = []
             try:
                 up, status = instance.HC( timeout=0.1, retry=2 )
