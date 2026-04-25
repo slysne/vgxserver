@@ -3297,18 +3297,6 @@
                 row.data("up", true);
             }
 
-            // Warn
-            warnElem.attr("id", "warn_" + id);
-            if (nodeWarn != null) {
-                if (nodeStatus != null && nodeStatus == NodeStatus.Down) {
-                    nodeWarn = NodeStatus.None;
-                }
-                NodeStatus.update( $('#warn_'+$.escapeSelector(id)), nodeWarn, cache );
-                let warnTD = row.find(".nodewarn");
-                let titleWarn = id + " Warning\n\nCheck Status";
-                this.setTitleLink(warnTD, host, httpPort, "status", titleWarn );
-            }
-
             // Uptime
             uptmElem.attr("id", "uptime_" + id);
             cache.clock.setElement(uptmElem);
@@ -3324,7 +3312,6 @@
 
             // Address
             let nodehostTD = row.find(".nodehost");
-            nodehostTD.addClass("enable_select");
             let host_id = "host_" + id;
             hostElem.attr("id", host_id);
             if (host != null) {
@@ -3339,18 +3326,6 @@
                 hostElem.val(address);
                 hostElem.attr("size",address.length);
                 hostElem.addClass("enable_select");
-                nodehostTD.on("click copy", function(e) {
-                    const full = host + ":" + httpPort;
-                    navigator.clipboard.writeText(full).then(
-                        () => {
-                            selection.empty();
-                        }
-                    );
-                    hostElem.addClass("copied-flash");
-                    setTimeout(() => {
-                        hostElem.removeClass("copied-flash");
-                    }, 100);
-                });
                 let totalGiB = cache.mem_tot / 0x40000000;
                 let titleAddress =  id + 
                                     " Address" +
@@ -3362,10 +3337,23 @@
                                     "\npid: " + cache.pid + 
                                     "\n\nCPU: " + cache.cpu + 
                                     "\nMemory: " + totalGiB.toFixed(1) + " GiB";
-                nodehostTD.prop("title", titleAddress );
+                //nodehostTD.prop("title", titleAddress );
+                this.setTitleLink(nodehostTD, host, httpPort, "", titleAddress );
             }
             else {
                 hostElem.val("");
+            }
+            
+            // Notice
+            warnElem.attr("id", "warn_" + id);
+            if (nodeWarn != null) {
+                if (nodeStatus != null && nodeStatus == NodeStatus.Down) {
+                    nodeWarn = NodeStatus.None;
+                }
+                NodeStatus.update( $('#warn_'+$.escapeSelector(id)), nodeWarn, cache );
+                let warnTD = row.find(".nodewarn");
+                let titleWarn = id + " Warning\n\nCheck Status";
+                this.setTitleLink(warnTD, host, httpPort, "status", titleWarn );
             }
 
             if (cache.uptime > 0) {
