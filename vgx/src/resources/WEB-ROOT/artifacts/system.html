@@ -114,6 +114,10 @@
                                   <td><span class="sysinfo enable_select" id="totalInstances"></span></td>
                               </tr>
                               <tr>
+                                  <td><span class="sysinfoname">Domain</span></td>
+                                  <td><span class="sysinfo enable_select" id="domainSuffix"></span></td>
+                              </tr>
+                              <tr>
                                   <td><span class="sysinfoname">Partitions</span></td>
                                   <td><span class="sysinfo enable_select" id="builderPartitions"></span></td>
                               </tr>
@@ -284,6 +288,13 @@
         pointer-events: none;
     }
 
+    .copied-flash {
+      background-color: black !important;
+      color: white !important;
+      transition: background-color 250ms ease;
+      transition: color 50ms ease;
+    }
+
     #commonHeaderTable {
         position: sticky;
         left: 0;
@@ -410,7 +421,7 @@
         height: 24px;
         font-family: Consolas, Menlo, courier;
         overflow: hidden;
-        max-width: 365px;
+        /*max-width: 1365px;*/
     }
 
     .sysinfo:hover {
@@ -1539,6 +1550,7 @@
         static Persist      = Symbol("Persist");
         static Down         = Symbol("Down");
         static Partial      = Symbol("Partial");
+        static NoEngine     = Symbol("NoEngine");
         static Inconsistent = Symbol("Inconsistent");
         static Degraded     = Symbol("Degraded");
         static Warning      = Symbol("Warning");
@@ -1555,6 +1567,7 @@
             NodeStatus.ServiceOut,
             NodeStatus.Down,
             NodeStatus.Partial,
+            NodeStatus.NoEngine,
             NodeStatus.Inconsistent,
             NodeStatus.Degraded,
             NodeStatus.Warning,
@@ -1611,6 +1624,10 @@
             case NodeStatus.Partial:
                 element.val( "Partial" );
                 StatusColor.update( element, "orange4" );
+                break;
+            case NodeStatus.NoEngine:
+                element.val( "NoEngine" );
+                StatusColor.update( element, "orange6" );
                 break;
             case NodeStatus.Inconsistent:
                 element.val( "Delta" );
@@ -2326,6 +2343,7 @@
         builderVectors = [];
         builderPartitions = 0;
         totalInstances = 0;
+        domainSuffix = "";
         uniqueHosts = [];
         totalConsumedMemory = 0;
         totalPhysicalMemory = 0;
@@ -2632,6 +2650,7 @@
                     dim = "" + height + "R x " + width + "P";
                 }
                 elem.val(dim);
+                let totalServing = 0;
                 for (const partition of cache.matrix) {
                     let row = []
                     let serving = 0;
@@ -2642,6 +2661,7 @@
                         }
                         else {
                             serving++;
+                            totalServing++;
                             row.push(1);
                         }
                     }
@@ -2670,8 +2690,19 @@
                     missing += ident + "\n";
                 }
                 if (partial) {
-                    StatusColor.update(elem, "orange4");
-                    titleMatrix += "\n\nALL Unavailable:\n" + missing;
+                    if (cache.matrix_allow_incomplete) {
+                        if (totalServing > 0) {
+                            StatusColor.update(elem, "orange4");
+                        }
+                        else {
+                            StatusColor.update(elem, "orange6");
+                        }
+                        titleMatrix += "\n\nPartition(s) Down:\n" + missing;
+                    }
+                    else {
+                        StatusColor.update(elem, "orange6");
+                        titleMatrix += "\n\nIncomplete matrix not allowed\n\nPartition(s) Down:\n" + missing;
+                    }
                 }
                 else if (degraded.length > 0) {
                     StatusColor.update(elem, "orange2");
@@ -3062,6 +3093,12 @@
         }
 
 
+        isIpAddress(host) {
+            const ipRex = /^\d{1,3}(\.\d{1,3}){3}$/;
+            return ipRex.test(host);
+        }
+
+
         renderRow(id, ntyp, host, httpPort, nodeStatus, nodeWarn, cache) {
 
             let nodeList = $('#nodeList tbody');
@@ -3105,13 +3142,16 @@
             row.find("input").addClass("disable_select");
             row.find("*").css("vertical-align", "middle");
 
-            // Id | Type | Status | Uptime | Address | Clients | Channels | RPS | 95th ms | Memory | Order | Size | Subs | Out | In | Lag | Digest | S/N | TX Log
+            // +-----------------------------------------------+-------------------------------------------------------+--------+--------------+-----------------------+-----------------------+
+            // |<--               Instance                  -->|<--                  Server Load                    -->|<-Mem-->|<--  Graph -->|<--   Interconnect  -->|<--   Transaction   -->|
+            // |Id | Type | Status | Uptime | Address | Notice | Matrix | Clients | Channels | Balance | RPS | 95th ms | Memory | Order | Size | Subs | Out | In | Lag | Digest | S/N | TX Log |
+            // +-----------------------------------------------+-------------------------------------------------------+--------+--------------+-----------------------+-----------------------+
             let nnumElem = row.find(".nodennum input");
             let ntypElem = row.find(".nodentyp input");
             let statElem = row.find(".nodestat input");
-            let warnElem = row.find(".nodewarn input");
             let uptmElem = row.find(".nodeuptm input");
             let hostElem = row.find(".nodehost input");
+            let warnElem = row.find(".nodewarn input");
             let mtrxElem = row.find(".nodemtrx input");
             cache.ncliElem = row.find(".nodencli input");
             cache.nchaElem = row.find(".nodencha input");
@@ -3285,17 +3325,37 @@
             // Address
             let nodehostTD = row.find(".nodehost");
             nodehostTD.addClass("enable_select");
-            hostElem.attr("id", "host_" + id);
+            let host_id = "host_" + id;
+            hostElem.attr("id", host_id);
             if (host != null) {
-                //this.setTitleLink(nodehostTD, host, httpPort, "index");
-                let address = host + ":" + httpPort;
-                //StatusColor.update( hostElem, "gray4" );
+                let simplehost;
+                if (this.isIpAddress(host)) {
+                    simplehost = host;
+                }
+                else {
+                    simplehost = host.split(".")[0];
+                }
+                let address = simplehost + ":" + httpPort;
                 hostElem.val(address);
                 hostElem.attr("size",address.length);
                 hostElem.addClass("enable_select");
+                nodehostTD.on("click copy", function(e) {
+                    const full = host + ":" + httpPort;
+                    navigator.clipboard.writeText(full).then(
+                        () => {
+                            selection.empty();
+                        }
+                    );
+                    hostElem.addClass("copied-flash");
+                    setTimeout(() => {
+                        hostElem.removeClass("copied-flash");
+                    }, 100);
+                });
                 let totalGiB = cache.mem_tot / 0x40000000;
                 let titleAddress =  id + 
-                                    " Address\n\nhostname: " + cache.hostname + 
+                                    " Address" +
+                                    "\n" +
+                                    "\nhostname: " + host +
                                     "\nip: " + cache.ip + 
                                     "\nadmin port: " + httpPort + 
                                     "\nmain port: " + (httpPort-1) + 
@@ -3686,7 +3746,20 @@
             }
             // Incomplete dispatcher matrix
             if (cache.matrix != null && cache.matrix.length > 0 && cache.matrix_complete === false) {
-                return NodeStatus.Partial;
+                let serving = 0;
+                for (const partition of cache.matrix) {
+                    for (const replica of partition) {
+                        if (replica["serving"] === true) {
+                            serving++;
+                        }
+                    }
+                }
+                if (serving > 0 && cache.matrix_allow_incomplete) {
+                    return NodeStatus.Partial;
+                }
+                else {
+                    return NodeStatus.NoEngine;
+                }
             }
             // Memory
             if (load > Nodes.memoryHighThreshold) {
@@ -3821,6 +3894,7 @@
                     this.builderVectors = [];
                     this.builderPartitions = 0;
                     this.totalInstances = 0;
+                    this.domainSuffix = "";
                     this.uniqueHosts = [];
                     this.totalConsumedMemory = 0;
                     this.totalPhysicalMemory = 0;
@@ -4002,6 +4076,7 @@
 
                                     cache.matrix_nch = nodestatObj["matrix"]["active-channels"];
                                     cache.matrix_maxch = nodestatObj["matrix"]["total-channels"];
+                                    cache.matrix_allow_incomplete = nodestatObj["matrix"]["allow-incomplete"];
 
                                     cache.clients = nodestatObj["connected-clients"];
                                     cache.maxclients = 1024; // TODO: get from server
@@ -4021,6 +4096,7 @@
                                         }
                                     }
 
+                                    cache.domain = null;
                                     cache.cpu = nodestatObj["cpu"];
                                     cache.mem_tot = nodestatObj["memory-total"];
                                     cache.mem_proc = nodestatObj["memory-process"];
@@ -4082,12 +4158,14 @@
                                 cache.nkey = 0;
                                 cache.nval = 0;
                                 //cache.matrix_mode = null;
+                                cache.domain = null;
                                 cache.cpu = "";
                                 cache.mem_tot = 0;
                                 cache.mem_proc = 0;
                                 cache.mem_avail = 0;
                                 cache.matrix_nch = 0;
                                 cache.matrix_maxch = 0;
+                                cache.matrix_allow_incomplete = false;
                                 cache.clients = 0;
                                 cache.rate = 0;
                                 cache.qlat95 = 0;
@@ -4171,10 +4249,11 @@
                         this.currentGroupTitle = null;
                         this.prevGroup = -1;
                         let uniqueHostNames = {};
+                        let uniqueDomains = {};
                         let uniqueCPU = {};
                         let warnings = {};
                         for (const instance of instances) {
-                            const host = instance["hostname"];
+                            let host = instance["hostname"];
                             const hport = instance["adminport"];
                             const nodeKey = instance["id"];
                             let cache = this.nodeCache[nodeKey];
@@ -4186,6 +4265,15 @@
                                 this.uniqueHosts.push(host);
                                 this.totalPhysicalMemory += cache.mem_tot;
                             }
+                            let zhost = host;// + ".gsp.use1a.dcnw.rakuten";
+                            if (!this.isIpAddress(zhost)) {
+                                const idx = zhost.indexOf('.');
+                                cache.domain = idx !== -1 ? zhost.slice(idx + 1) : null;
+                                if (cache.domain !== null && !(cache.domain in uniqueDomains)) {
+                                    uniqueDomains[cache.domain] = 1;
+                                }
+                            }
+
                             objCount += cache.order + cache.size + cache.properties + cache.vectors;
                             /*if(Math.random() < 0.05) {
                                 if(Math.random() < 0.5) {
@@ -4263,6 +4351,23 @@
                         $('#totalInstances').html( this.totalInstances + " (" + this.uniqueHosts.length + " host" + plural + ")" );
                         $('#totalInstances').parent().prop("title", "Hosts\n\n" + this.uniqueHosts.join("\n"));
 
+                        // Domain Suffix
+                        let domain;
+                        if (Object.keys(uniqueDomains).length == 1) {
+                            domain = Object.keys(uniqueDomains)[0];
+                            StatusColor.update( $('#domainSuffix'), sysinfoColor );
+                        }
+                        else if (Object.keys(uniqueDomains).length > 1) {
+                            domain = "Mixed (" + Object.keys(uniqueDomains).length + ") " + Object.keys(uniqueDomains)[0];
+                            StatusColor.update( $('#domainSuffix'), "orange1" );
+                        }
+                        else {
+                            domain = "-";
+                        }
+                        $('#domainSuffix').html(domain);
+                        let domainSuffixList = Object.keys(uniqueDomains).join("\n");
+                        $('#domainSuffix').parent().prop("title", domainSuffixList);
+
                         // Partitions
                         $('#builderPartitions').html( this.builderPartitions );
 
@@ -4332,13 +4437,14 @@
                             let sz = $(this).html().length + 1;
                             maxSysinfoSz = Math.max(maxSysinfoSz, sz);
                         });
-                        maxSysinfoSz = Math.min(maxSysinfoSz, 40);
+                        maxSysinfoSz = Math.min(maxSysinfoSz, 70);
                         $('.sysinfo').css("width", maxSysinfoSz + "ch");
 
                         // Make sysinfo values copyable on click
                         $('#descriptorName').mouseup(CommonHeader.copySelectionToClipboard);
                         $('#systemStatus').mouseup(CommonHeader.copySelectionToClipboard);
                         $('#totalInstances').mouseup(CommonHeader.copySelectionToClipboard);
+                        $('#domainSuffix').mouseup(CommonHeader.copySelectionToClipboard);
                         $('#builderPartitions').mouseup(CommonHeader.copySelectionToClipboard);
                         $('#builderSumOrder').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
                         $('#builderSumSize').mouseup({ 'asint': true }, CommonHeader.copySelectionToClipboard);
