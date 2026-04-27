@@ -67,6 +67,8 @@ DLL_HIDDEN __THREAD uint64_t _pyvertex_generation_guard = 0;
 
 DLL_HIDDEN bool _pyvgx_api_enabled = true;
 
+DLL_HIDDEN ATOMIC_i32 g_exit_run_server = false;
+
 
 DLL_HIDDEN PyObject *g_py_plugins = NULL;
 
