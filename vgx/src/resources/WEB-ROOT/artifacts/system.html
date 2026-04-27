@@ -1677,6 +1677,55 @@
             }
         }
 
+        static explain(state) {
+
+            switch (state) {
+            case NodeStatus.OK:
+                return "Running normally";
+            case NodeStatus.None:
+                return "No information available";
+            case NodeStatus.Busy:
+                return "High transaction input load";
+            case NodeStatus.SerialDiff:
+                return "Replica data serial number differs from primary";
+            case NodeStatus.NoInput:
+                return "Configured subscriber has no provider";
+            case NodeStatus.ServiceOut:
+                return "Service-Out";
+            case NodeStatus.Sync:
+                return "Synchronizing data to subscriber(s)";
+            case NodeStatus.Persist:
+                return "Persisting data to disk";
+            case NodeStatus.Down:
+                return "Service not running / lost communication";
+            case NodeStatus.Partial:
+                return "One or more engine partition(s) unavailable in dispatcher back-end matrix";
+            case NodeStatus.NoEngine:
+                return "All engine partition(s) unavailable in dispatcher back-end matrix (or partial matrix not allowed)";
+            case NodeStatus.Inconsistent:
+                return "Replica data inconsistent with primary";
+            case NodeStatus.Degraded:
+                return "One or more replica(s) unavailable in dispatcher back-end matrix";
+            case NodeStatus.Warning:
+                return "General service warning";
+            case NodeStatus.MemWarningLO:
+                return "Memory usage is elevated";
+            case NodeStatus.MemWarningHI:
+                return "High memory usage";
+            case NodeStatus.MemCritical:
+                return "Memory usage is critically high";
+            case NodeStatus.Readonly:
+                return "Graph(s) are readonly";
+            case NodeStatus.Initializing:
+                return "Service is starting";
+            case NodeStatus.Unknown:
+                return "Waiting to determine service state";
+            default:
+                return "Service state is unknown";
+            }
+        }
+ 
+
         static isWarning(state) {
             return NodeStatus.warnings.has(state);
         }
@@ -3284,7 +3333,7 @@
             if (nodeStatus != null) {
                 NodeStatus.update( $('#stat_'+$.escapeSelector(id)), nodeStatus, cache );
                 let statTD = row.find(".nodestat");
-                let titleStatus = id + " Status\n\nOpen VGXServer Status";
+                let titleStatus = id + " " + NodeStatus.explain(nodeStatus) + "\n\nClick to open VGXServer Status Page";
                 this.setTitleLink(statTD, host, httpPort, "status", titleStatus );
             }
             if (nodeStatus == null || nodeStatus == NodeStatus.Down || nodeStatus == NodeStatus.Unknown) {
@@ -3305,8 +3354,20 @@
                 cache.clock.updateTimeReference(cache.uptime);
             }
             cache.clock.refresh();
+            const now_ms = Date.now();
+            const startTime = new Date(now_ms - uptime * 1000);
             let nodeuptmTD = row.find(".nodeuptm");
-            let titleUptime = id + " Uptime\nddd:hh:mm:ss\n\nSend Ping Request";
+            const startText = startTime.toLocaleString("en-US", {
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replaceAll(",", "");
+            let titleUptime = id + " Uptime\n\nService start: " + startText + "\n\nClick to send Ping Request";
             this.setTitleLink(nodeuptmTD, host, httpPort, "vgx/ping", titleUptime );
 
 
@@ -3351,9 +3412,11 @@
                     nodeWarn = NodeStatus.None;
                 }
                 NodeStatus.update( $('#warn_'+$.escapeSelector(id)), nodeWarn, cache );
-                let warnTD = row.find(".nodewarn");
-                let titleWarn = id + " Warning\n\nCheck Status";
-                this.setTitleLink(warnTD, host, httpPort, "status", titleWarn );
+                if (nodeWarn != NodeStatus.None) {
+                    let warnTD = row.find(".nodewarn");
+                    let titleWarn = id + " " + NodeStatus.explain(nodeWarn);
+                    this.setTitleLink(warnTD, host, httpPort, "status", titleWarn );
+                }
             }
 
             if (cache.uptime > 0) {
