@@ -605,7 +605,7 @@ DLL_HIDDEN int _vxdurable_operation_capture__vertex_set_property_WL( vgx_Vertex_
   vgx_Operation_t *operation = &vertex->operation;
 
   // System properties are never emitted
-  if( prop->key && CALLABLE( prop->key )->StartsWith( prop->key, sysprefix ) ) {
+  if( prop->key && CALLABLE( prop->key )->StartsWith( prop->key, sysprefix, false ) ) {
     _vxdurable_operation__set_dirty( operation  );
     return 1;
   }
@@ -1651,7 +1651,7 @@ DLL_HIDDEN int _vxdurable_operation_capture__enumerator_add_propertykey_CS( vgx_
   vgx_Operation_t *operation = &graph->operation;
 
   // System properties are never emitted
-  if( CALLABLE( CSTR__key )->StartsWith( CSTR__key, sysprefix ) ) {
+  if( CALLABLE( CSTR__key )->StartsWith( CSTR__key, sysprefix, false ) ) {
     _vxdurable_operation__set_dirty( operation  );
     return 1;
   }

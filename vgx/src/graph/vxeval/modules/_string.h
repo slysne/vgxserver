@@ -33,6 +33,7 @@
  */
 
 static void __eval_unary_cast_str( vgx_Evaluator_t *self );
+static void __eval_string_lower( vgx_Evaluator_t *self );
 static void __eval_string_normalize( vgx_Evaluator_t *self );
 static void __eval_string_join( vgx_Evaluator_t *self );
 static void __eval_string_replace( vgx_Evaluator_t *self );
@@ -165,6 +166,54 @@ static const char * __stackitem_as_str( vgx_EvalStackItem_t *px, int32_t *sz_str
     }
   }
   return NULL;
+}
+
+
+
+/*******************************************************************//**
+ * lower( x ) -> str
+ ***********************************************************************
+ */
+static void __eval_string_lower( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+
+  int32_t sz_str = 0;
+  CString_attr attr = CSTRING_ATTR_NONE;
+  const char *str = __stackitem_as_str( px, &sz_str, &attr );
+
+  if( str ) {
+    CString_constructor_args_t args = {
+      .string      = NULL,
+      .len         = sz_str,
+      .ucsz        = 0,
+      .format      = NULL,
+      .format_args = NULL,
+      .alloc       = self->graph->ephemeral_string_allocator_context
+    };
+    CString_t *CSTR__lower = COMLIB_OBJECT_NEW( CString_t, NULL, &args );
+    if( CSTR__lower ) {
+      char *data = (char*)CALLABLE( CSTR__lower )->ModifiableQwords( CSTR__lower );
+      char *wp = data;
+      const char *rp = str;
+      const char *end = rp + sz_str;
+      while( rp < end ) {
+        *wp++ = tolower(*rp++);
+      }
+      *wp = '\0';
+
+      // Inherit attributes from original input
+      CStringAttributes( CSTR__lower ) = attr;
+
+      vgx_EvalStackItem_t scoped = {
+        .type = STACK_ITEM_TYPE_CSTRING,
+        .CSTR__str = CSTR__lower
+      };
+
+      if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
+        *px = scoped; // return normalized
+      }
+    }
+  }
 }
 
 
@@ -670,7 +719,7 @@ static void __eval_string_startswith( vgx_Evaluator_t *self ) {
       at_0 = 0;
     }
     else {
-      at_0 = CALLABLE( CSTR__string )->Find( CSTR__string, probe, 0 ) == 0;
+      at_0 = CALLABLE( CSTR__string )->Find( CSTR__string, probe, 0, false ) == 0;
     }
     STACK_RETURN_INTEGER( self, at_0 );
   }
@@ -695,7 +744,7 @@ static void __eval_string_endswith( vgx_Evaluator_t *self ) {
       at_end = 0;
     }
     else {
-      at_end = CALLABLE( CSTR__string )->Find( CSTR__string, probe, -szp ) == 0;
+      at_end = CALLABLE( CSTR__string )->Find( CSTR__string, probe, -szp, false ) == 0;
     }
     STACK_RETURN_INTEGER( self, at_end );
   }

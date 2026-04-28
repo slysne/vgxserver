@@ -113,6 +113,7 @@ static __rpn_operation RpnStringStrcmp       = { .surface.token="strcmp",       
 static __rpn_operation RpnStringStrcasecmp   = { .surface.token="strcasecmp",       .function.eval = __eval_string_strcasecmp,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStartswith   = { .surface.token="startswith",       .function.eval = __eval_string_startswith,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringEndswith     = { .surface.token="endswith",         .function.eval = __eval_string_endswith,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringLower        = { .surface.token="lower",            .function.eval = __eval_string_lower,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringNormalize    = { .surface.token="normalize",        .function.eval = __eval_string_normalize,         .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringJoin         = { .surface.token="join",             .function.eval = __eval_string_join,              .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnStringReplace      = { .surface.token="replace",          .function.eval = __eval_string_replace,           .type = OP_TERNARY_PREFIX,        .precedence = OPP_CALL };
@@ -877,6 +878,7 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnStringStrcasecmp,
       &RpnStringStartswith,
       &RpnStringEndswith,
+      &RpnStringLower,
       &RpnStringNormalize,
       &RpnStringJoin,
       &RpnStringReplace,

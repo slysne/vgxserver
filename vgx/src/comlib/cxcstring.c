@@ -57,12 +57,12 @@ static int CString_compare( const CString_t *CSTR__self, const CString_t *CSTR__
 static int CString_compare_chars( const CString_t *CSTR__self, const char *other );
 static bool CString_equals( const CString_t *CSTR__self, const CString_t *CSTR__other );
 static bool CString_equals_chars( const CString_t *CSTR__self, const char *other );
-static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex );
-static bool CString_contains( const CString_t *CSTR__self, const char *probe );
+static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex, bool ignore_case );
+static bool CString_contains( const CString_t *CSTR__self, const char *probe, bool ignore_case );
 static CString_t * CString_slice( const CString_t *CSTR__self, int32_t *p_start, int32_t *p_end );
 static CString_t * CString_slice_with_allocator( const CString_t *CSTR__self, int32_t *p_start, int32_t *p_end, object_allocator_context_t *allocator );
-static bool CString_startswith( const CString_t *CSTR__self, const char *probe );
-static bool CString_endswith( const CString_t *CSTR__self, const char *probe );
+static bool CString_startswith( const CString_t *CSTR__self, const char *probe, bool ignore_case );
+static bool CString_endswith( const CString_t *CSTR__self, const char *probe, bool ignore_case );
 static CString_t * CString_replace( const CString_t *CSTR__self, const char *probe, const char *subst );
 static CString_t * CString_replace_with_allocator( const CString_t *CSTR__self, const char *probe, const char *subst, object_allocator_context_t *alloc );
 static CString_t ** CString_split( const CString_t *CSTR__self, const char *splitstr, int32_t *sz );
@@ -1614,7 +1614,7 @@ static bool CString_equals_chars( const CString_t *CSTR__self, const char *other
  * NOTE: This method only works with normal NUL-terminated strings.
  ***********************************************************************
  */
-static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex ) {
+static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex, bool ignore_case ) {
   // Automatic match for empty probe
   if( *probe == '\0' ) {
     return 0;
@@ -1680,8 +1680,8 @@ static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int
  *
  ***********************************************************************
  */
-static bool CString_contains( const CString_t *CSTR__self, const char *probe ) {
-  return CString_find( CSTR__self, probe, 0 ) >= 0 ? true : false;
+static bool CString_contains( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
+  return CString_find( CSTR__self, probe, 0, ignore_case ) >= 0 ? true : false;
 }
 
 
@@ -1779,8 +1779,8 @@ static CString_t * CString_slice( const CString_t *CSTR__self, int32_t *p_start,
  *
  ***********************************************************************
  */
-static bool CString_startswith( const CString_t *CSTR__self, const char *probe ) {
-  return CString_find( CSTR__self, probe, 0 ) == 0 ? true : false;
+static bool CString_startswith( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
+  return CString_find( CSTR__self, probe, 0, ignore_case ) == 0 ? true : false;
 }
 
 
@@ -1790,14 +1790,14 @@ static bool CString_startswith( const CString_t *CSTR__self, const char *probe )
  *
  ***********************************************************************
  */
-static bool CString_endswith( const CString_t *CSTR__self, const char *probe ) {
+static bool CString_endswith( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
   // find size of probe (no more than our own length since that is a miss anyway)
   int32_t sz_probe = (int32_t)strnlen( probe, CSTR__self->meta.size+1 );
   if( sz_probe > CSTR__self->meta.size ) {
     return false;
   }
   // is the probe exactly at end of our data?
-  return CString_find( CSTR__self, probe, -sz_probe ) == 0 ? true : false;
+  return CString_find( CSTR__self, probe, -sz_probe, ignore_case ) == 0 ? true : false;
 }
 
 

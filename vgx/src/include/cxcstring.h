@@ -126,14 +126,14 @@ typedef struct s_CString_vtable_t {
   int (*CompareChars)( const struct s_CString_t *CSTR__self, const char *other );
   bool (*Equals)( const struct s_CString_t *CSTR__self, const struct s_CString_t *other );
   bool (*EqualsChars)( const struct s_CString_t *CSTR__self, const char *other );
-  int32_t (*Find)( const struct s_CString_t *CSTR__self, const char *probe, int32_t startindex );
-  bool (*Contains)( const struct s_CString_t *CSTR__self, const char *probe );
+  int32_t (*Find)( const struct s_CString_t *CSTR__self, const char *probe, int32_t startindex, bool ignore_case );
+  bool (*Contains)( const struct s_CString_t *CSTR__self, const char *probe, bool ignore_case );
 
   struct s_CString_t * (*Slice)( const struct s_CString_t *CSTR__self, int32_t *p_start, int32_t *p_end );
   struct s_CString_t * (*SliceAlloc)( const struct s_CString_t *CSTR__self, int32_t *p_start, int32_t *p_end, object_allocator_context_t *alloc );
 
-  bool (*StartsWith)( const struct s_CString_t *CSTR__self, const char *probe );
-  bool (*EndsWith)( const struct s_CString_t *CSTR__self, const char *probe );
+  bool (*StartsWith)( const struct s_CString_t *CSTR__self, const char *probe, bool ignore_case );
+  bool (*EndsWith)( const struct s_CString_t *CSTR__self, const char *probe, bool ignore_case );
   struct s_CString_t * (*Replace)( const struct s_CString_t *CSTR__self, const char *probe, const char *subst );
   struct s_CString_t * (*ReplaceAlloc)( const struct s_CString_t *CSTR__self, const char *probe, const char *subst, object_allocator_context_t *alloc );
   struct s_CString_t ** (*Split)( const struct s_CString_t *CSTR__self, const char *splitstr, int32_t *sz );
@@ -445,12 +445,12 @@ __inline static bool __cxcstring_chars_probably_compressed( const char *data, in
 #define CStringCompareChars( CString, Chars )   CALLABLE( CString )->CompareChars( CString, Chars )
 #define CStringEquals( CString1, CString2 )     CALLABLE( CString1 )->Equals( CString1, CString2 )
 #define CStringEqualsChars( CString, Chars )    CALLABLE( CString )->EqualsChars( CString, Chars )
-#define CStringFind( CString, Chars, StartAt )  CALLABLE( CString )->Find( CString, Chars, StartAt )
-#define CStringAtIndex( CString, Chars, Idx )   (CALLABLE( CString )->Find( CString, Chars, Idx ) == 0)
-#define CStringContains( CString, Chars )       CALLABLE( CString )->Contains( CString, Chars )
+#define CStringFind( CString, Chars, StartAt )  CALLABLE( CString )->Find( CString, Chars, StartAt, false )
+#define CStringAtIndex( CString, Chars, Idx )   (CALLABLE( CString )->Find( CString, Chars, Idx, false ) == 0)
+#define CStringContains( CString, Chars )       CALLABLE( CString )->Contains( CString, Chars, false )
 #define CStringSlice( CString, Start, End )     CALLABLE( CString )->Slice( CString, Start, End )
-#define CStringStartsWith( CString, Chars )     CALLABLE( CString )->StartsWith( CString, Chars )
-#define CStringEndsWith( CString, Chars )       CALLABLE( CString )->EndsWith( CString, Chars )
+#define CStringStartsWith( CString, Chars )     CALLABLE( CString )->StartsWith( CString, Chars, false )
+#define CStringEndsWith( CString, Chars )       CALLABLE( CString )->EndsWith( CString, Chars, false )
 #define CStringReplace( CString, Probe, Subst ) CALLABLE( CString )->Replace( CString, Probe, Subst )
 #define CStringSplit( CString, SplitStr, pSz )  CALLABLE( CString )->Split( CString, SplitStr, pSz )
 #define CStringJoin( CString, CStringList )     CALLABLE( CString )->Join( CString, CStringList )
