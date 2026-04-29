@@ -1620,38 +1620,67 @@ static const char * __first_occurrence( const char *str, const char *probe, bool
     return strstr( str, probe );
   }
 
+  // Edge case 1: Empty probe is always match
+  if( *probe == '\0' ) {
+    return str;
+  }
+  // Edge case 2: Empty string without empty probe is miss
+  if( *str == '\0' ) {
+    return NULL;
+  }
+
+  /*
   const char *pa = str;
-  const char *pb = probe;
-  const char *m = pa;
-  char a, b;
 
+  do {
+    // Reset probe
+    const char *pb = probe;
+    while( *pa != *pb ) {
+      ++pa;
+      if( *pa == '\0' ) {
+        return NULL;
+      }
+    }
 
-  while( *pa != '\0' ) {
-
-    while( *pb != '\0' ) {
-      if( *pa != *pb ) {
-        break;
+    // Match point
+    const char *m = pa;
+    do {
+      // "endswith"
+      if( *pb == '\0' ) { // *pa == 0 implied, i.e. end of string match
+        return m;
       }
       ++pa;
       ++pb;
-    }
-
+    } while( *pa == *pb );
+    // Probe matched string until end of probe
     if( *pb == '\0' ) {
       return m;
     }
+    // End of string reached without probe match
+    if( *pa == '\0' ) {
+      return NULL;
+    }
+    // Reset scan point
+    pa = m+1;
+  } while(1);
+  */
 
-    m = pa;
-    pb = probe;
+  char first = tolower((unsigned char)*probe);
+  size_t len = strlen(probe);
+  const char *firstocc = str;
 
-  }
-  
-
-
-  if( b == '\0' ) {
-    return m;
+  for( ; *firstocc; firstocc++ ) {
+    if( tolower((unsigned char)*firstocc) == first ) {
+      if( strncasecmp(firstocc, probe, len) == 0 ) {
+        return firstocc;
+      }
+    }
   }
 
   return NULL;
+
+
+
 
 }
 
