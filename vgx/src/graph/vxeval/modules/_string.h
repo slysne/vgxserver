@@ -42,6 +42,7 @@ static void __eval_string_prefix( vgx_Evaluator_t *self );
 static void __eval_string_index( vgx_Evaluator_t *self );
 static void __eval_string_strcmp( vgx_Evaluator_t *self );
 static void __eval_string_strcasecmp( vgx_Evaluator_t *self );
+static void __eval_string_strcasestr( vgx_Evaluator_t *self );
 static void __eval_string_startswith( vgx_Evaluator_t *self );
 static void __eval_string_endswith( vgx_Evaluator_t *self );
 static void __eval_string_strftime( vgx_Evaluator_t *self );
@@ -698,6 +699,24 @@ static void __eval_string_strcasecmp( vgx_Evaluator_t *self ) {
   else {
     int cmp = strcasecmp( a, b );
     STACK_RETURN_INTEGER( self, cmp );
+  }
+}
+
+
+
+/*******************************************************************//**
+ * strcasestr( a, b ) -> bool
+ ***********************************************************************
+ */
+static void __eval_string_strcasestr( vgx_Evaluator_t *self ) {
+  const CString_t *CSTR__string, *CSTR__probe;
+  if( __pop_cstrings( self, &CSTR__string, &CSTR__probe ) < 0 ) {
+    STACK_RETURN_NONE( self );
+  }
+  else {
+    const char *probe = CStringValue( CSTR__probe );
+    bool found = CALLABLE( CSTR__string )->Contains( CSTR__string, probe, true );
+    STACK_RETURN_INTEGER( self, found );
   }
 }
 

@@ -111,6 +111,7 @@ static __rpn_operation RpnUnaryHash          = { .surface.token="hash",         
 
 static __rpn_operation RpnStringStrcmp       = { .surface.token="strcmp",           .function.eval = __eval_string_strcmp,            .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStrcasecmp   = { .surface.token="strcasecmp",       .function.eval = __eval_string_strcasecmp,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringStrcasestr   = { .surface.token="strcasestr",       .function.eval = __eval_string_strcasestr,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStartswith   = { .surface.token="startswith",       .function.eval = __eval_string_startswith,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringEndswith     = { .surface.token="endswith",         .function.eval = __eval_string_endswith,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringLower        = { .surface.token="lower",            .function.eval = __eval_string_lower,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
@@ -876,6 +877,7 @@ static __rpn_operation *__rpn_definitions[] = {
       // String
       &RpnStringStrcmp,
       &RpnStringStrcasecmp,
+      &RpnStringStrcasestr,
       &RpnStringStartswith,
       &RpnStringEndswith,
       &RpnStringLower,

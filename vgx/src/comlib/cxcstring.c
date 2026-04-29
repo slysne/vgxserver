@@ -90,6 +90,7 @@ static CString_t * __new_from_format( CString_constructor_args_t *input_args );
 static CString_t * __string_replace( const char *string, int32_t sz_string, const char *probe, const char *subst, object_allocator_context_t *allocator_context );
 static CString_t * __slice( const char *str, int32_t *p_start, int32_t *p_end, object_allocator_context_t *allocator );
 static CString_t * __prefix( const char *data, int32_t len, int32_t uclen, int32_t sz, object_allocator_context_t *alloc );
+static const char * __first_occurrence( const char *str, const char *probe, bool ignore_case );
 
 static const QWORD DEFAULT_SERIALIZER = (0xDEFADEFAULL << 32) | CLASS_CString_t;
 
@@ -1611,6 +1612,53 @@ static bool CString_equals_chars( const CString_t *CSTR__self, const char *other
 
 /*******************************************************************//**
  *
+ *
+ ***********************************************************************
+ */
+static const char * __first_occurrence( const char *str, const char *probe, bool ignore_case ) {
+  if( !ignore_case ) {
+    return strstr( str, probe );
+  }
+
+  const char *pa = str;
+  const char *pb = probe;
+  const char *m = pa;
+  char a, b;
+
+
+  while( *pa != '\0' ) {
+
+    while( *pb != '\0' ) {
+      if( *pa != *pb ) {
+        break;
+      }
+      ++pa;
+      ++pb;
+    }
+
+    if( *pb == '\0' ) {
+      return m;
+    }
+
+    m = pa;
+    pb = probe;
+
+  }
+  
+
+
+  if( b == '\0' ) {
+    return m;
+  }
+
+  return NULL;
+
+}
+
+
+
+/*******************************************************************//**
+ *
  * NOTE: This method only works with normal NUL-terminated strings.
  ***********************************************************************
  */
@@ -1659,7 +1707,8 @@ static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int
 
 
   // look for first occurrence at offset
-  const char *firstocc = strstr( data, probe );
+  //const char *firstocc = strstr( data, probe );
+  const char *firstocc = __first_occurrence( data, probe, ignore_case );
 
   if( decompressed && decompressed != gt_decomp_buffer ) {
     ALIGNED_FREE( decompressed );
