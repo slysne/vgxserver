@@ -1629,58 +1629,40 @@ static const char * __first_occurrence( const char *str, const char *probe, bool
     return NULL;
   }
 
-  /*
   const char *pa = str;
+  char first = tolower((unsigned char)*probe);
 
   do {
     // Reset probe
     const char *pb = probe;
-    while( *pa != *pb ) {
+
+    // Skip until match on probe first char (or end string)
+    while( tolower((unsigned char)*pa) != first ) {
       ++pa;
       if( *pa == '\0' ) {
         return NULL;
       }
     }
 
-    // Match point
-    const char *m = pa;
+    // Start of possible match point
+    const char *firstocc = pa;
+
+    // Verify until end of probe (or end of string)
     do {
-      // "endswith"
-      if( *pb == '\0' ) { // *pa == 0 implied, i.e. end of string match
-        return m;
+      ++pb;
+      if( *pb == '\0' ) {
+        return firstocc;
       }
       ++pa;
-      ++pb;
-    } while( *pa == *pb );
-    // Probe matched string until end of probe
-    if( *pb == '\0' ) {
-      return m;
-    }
-    // End of string reached without probe match
+    } while( tolower((unsigned char)*pa) == tolower((unsigned char)*pb) );
+
     if( *pa == '\0' ) {
       return NULL;
     }
-    // Reset scan point
-    pa = m+1;
+
+    // Rewind scan point to one past previous match point (that failed)
+    pa = firstocc + 1;
   } while(1);
-  */
-
-  char first = tolower((unsigned char)*probe);
-  size_t len = strlen(probe);
-  const char *firstocc = str;
-
-  for( ; *firstocc; firstocc++ ) {
-    if( tolower((unsigned char)*firstocc) == first ) {
-      if( strncasecmp(firstocc, probe, len) == 0 ) {
-        return firstocc;
-      }
-    }
-  }
-
-  return NULL;
-
-
-
 
 }
 
