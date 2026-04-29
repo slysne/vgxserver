@@ -42,9 +42,16 @@ static void __eval_string_prefix( vgx_Evaluator_t *self );
 static void __eval_string_index( vgx_Evaluator_t *self );
 static void __eval_string_strcmp( vgx_Evaluator_t *self );
 static void __eval_string_strcasecmp( vgx_Evaluator_t *self );
-static void __eval_string_strcasestr( vgx_Evaluator_t *self );
+
+static void __eval_string_contains( vgx_Evaluator_t *self );
+static void __eval_string_contains_icase( vgx_Evaluator_t *self );
 static void __eval_string_startswith( vgx_Evaluator_t *self );
+static void __eval_string_startswith_icase( vgx_Evaluator_t *self );
 static void __eval_string_endswith( vgx_Evaluator_t *self );
+static void __eval_string_endswith_icase( vgx_Evaluator_t *self );
+static void __eval_string_indexof( vgx_Evaluator_t *self );
+static void __eval_string_indexof_icase( vgx_Evaluator_t *self );
+
 static void __eval_string_strftime( vgx_Evaluator_t *self );
 static void __eval_string_modtostr( vgx_Evaluator_t *self );
 static void __eval_string_dirtostr( vgx_Evaluator_t *self );
@@ -705,17 +712,17 @@ static void __eval_string_strcasecmp( vgx_Evaluator_t *self ) {
 
 
 /*******************************************************************//**
- * strcasestr( a, b ) -> bool
+ * __string_contains
  ***********************************************************************
  */
-static void __eval_string_strcasestr( vgx_Evaluator_t *self ) {
+static void __string_contains( vgx_Evaluator_t *self, bool ignore_case ) {
   const CString_t *CSTR__string, *CSTR__probe;
   if( __pop_cstrings( self, &CSTR__string, &CSTR__probe ) < 0 ) {
     STACK_RETURN_NONE( self );
   }
   else {
     const char *probe = CStringValue( CSTR__probe );
-    bool found = CALLABLE( CSTR__string )->Contains( CSTR__string, probe, true );
+    bool found = CALLABLE( CSTR__string )->Contains( CSTR__string, probe, ignore_case );
     STACK_RETURN_INTEGER( self, found );
   }
 }
@@ -723,10 +730,30 @@ static void __eval_string_strcasestr( vgx_Evaluator_t *self ) {
 
 
 /*******************************************************************//**
- * startswith( string, probe ) -> bool
+ * contains( a, b ) -> bool
  ***********************************************************************
  */
-static void __eval_string_startswith( vgx_Evaluator_t *self ) {
+static void __eval_string_contains( vgx_Evaluator_t *self ) {
+  __string_contains( self, false );
+}
+
+
+
+/*******************************************************************//**
+ * contains_icase( a, b ) -> bool
+ ***********************************************************************
+ */
+static void __eval_string_contains_icase( vgx_Evaluator_t *self ) {
+  __string_contains( self, true );
+}
+
+
+
+/*******************************************************************//**
+ * __string_startswith
+ ***********************************************************************
+ */
+static void __string_startswith( vgx_Evaluator_t *self, bool ignore_case ) {
   const CString_t *CSTR__string, *CSTR__probe;
   if( __pop_cstrings( self, &CSTR__string, &CSTR__probe ) < 0 ) {
     STACK_RETURN_NONE( self );
@@ -738,7 +765,7 @@ static void __eval_string_startswith( vgx_Evaluator_t *self ) {
       at_0 = 0;
     }
     else {
-      at_0 = CALLABLE( CSTR__string )->Find( CSTR__string, probe, 0, false ) == 0;
+      at_0 = CALLABLE( CSTR__string )->Find( CSTR__string, probe, 0, ignore_case ) == 0;
     }
     STACK_RETURN_INTEGER( self, at_0 );
   }
@@ -747,10 +774,30 @@ static void __eval_string_startswith( vgx_Evaluator_t *self ) {
 
 
 /*******************************************************************//**
- * endswith( string, probe ) -> bool
+ * startswith( string, probe ) -> bool
  ***********************************************************************
  */
-static void __eval_string_endswith( vgx_Evaluator_t *self ) {
+static void __eval_string_startswith( vgx_Evaluator_t *self ) {
+  __string_startswith( self, false );
+}
+
+
+
+/*******************************************************************//**
+ * startswith_icase( string, probe ) -> bool
+ ***********************************************************************
+ */
+static void __eval_string_startswith_icase( vgx_Evaluator_t *self ) {
+  __string_startswith( self, true );
+}
+
+
+
+/*******************************************************************//**
+ * __string_endswith
+ ***********************************************************************
+ */
+static void __string_endswith( vgx_Evaluator_t *self, bool ignore_case ) {
   const CString_t *CSTR__string, *CSTR__probe;
   if( __pop_cstrings( self, &CSTR__string, &CSTR__probe ) < 0 ) {
     STACK_RETURN_NONE( self );
@@ -763,10 +810,71 @@ static void __eval_string_endswith( vgx_Evaluator_t *self ) {
       at_end = 0;
     }
     else {
-      at_end = CALLABLE( CSTR__string )->Find( CSTR__string, probe, -szp, false ) == 0;
+      at_end = CALLABLE( CSTR__string )->Find( CSTR__string, probe, -szp, ignore_case ) == 0;
     }
     STACK_RETURN_INTEGER( self, at_end );
   }
+}
+
+
+
+/*******************************************************************//**
+ * endswith( string, probe ) -> bool
+ ***********************************************************************
+ */
+static void __eval_string_endswith( vgx_Evaluator_t *self ) {
+  __string_endswith( self, false );
+}
+
+
+
+/*******************************************************************//**
+ * endswith_icase( string, probe ) -> bool
+ ***********************************************************************
+ */
+static void __eval_string_endswith_icase( vgx_Evaluator_t *self ) {
+  __string_endswith( self, true );
+}
+
+
+
+/*******************************************************************//**
+ * __string_indexof
+ ***********************************************************************
+ */
+static void __string_indexof( vgx_Evaluator_t *self, bool ignore_case ) {
+  const CString_t *CSTR__string, *CSTR__probe;
+  if( __pop_cstrings( self, &CSTR__string, &CSTR__probe ) < 0 ) {
+    STACK_RETURN_NONE( self );
+  }
+  else {
+    int found_at = -1;
+    const char *probe = CStringValue( CSTR__probe );
+    if( CStringLength( CSTR__probe ) <= CStringLength( CSTR__string ) ) {
+      found_at = CALLABLE( CSTR__string )->Find( CSTR__string, probe, 0, ignore_case );
+    }
+    STACK_RETURN_INTEGER( self, found_at );
+  }
+}
+
+
+
+/*******************************************************************//**
+ * indexof( string, probe ) -> integer
+ ***********************************************************************
+ */
+static void __eval_string_indexof( vgx_Evaluator_t *self ) {
+  __string_indexof( self, false );
+}
+
+
+
+/*******************************************************************//**
+ * indexof_icase( string, probe ) -> integer
+ ***********************************************************************
+ */
+static void __eval_string_indexof_icase( vgx_Evaluator_t *self ) {
+  __string_indexof( self, true );
 }
 
 
