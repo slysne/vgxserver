@@ -602,6 +602,9 @@ __inline static int __is_at_subexpression( const __subexpression *subexpression,
  */
 __inline static __rpn_variable * __subexpression_pop_variable( __subexpression *subexpression ) {
   __rpn_variable *var = subexpression->var;
+  if( var ) {
+    var->subexpr_idx = subexpression->index;;
+  }
   subexpression->var = NULL;
   return var;
 }

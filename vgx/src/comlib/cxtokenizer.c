@@ -47,6 +47,7 @@ static const BYTE * CTokenizer__get_token( const CTokenizer_t *self, tokenmap_t 
 static const BYTE * CTokenizer__get_token_and_info( const CTokenizer_t *self, tokenmap_t *tokmap, tokinfo_t *tokinfo );
 static int32_t CTokenizer__rewind( const CTokenizer_t *self, tokenmap_t *tokmap );
 static int32_t CTokenizer__unget( const CTokenizer_t *self, tokenmap_t *tokmap );
+static int32_t CTokenizer__unget_n( const CTokenizer_t *self, tokenmap_t *tokmap, int n );
 
 
 static CS_LOCK g_cs_general;
@@ -145,7 +146,8 @@ static CTokenizer_vtable_t CTokenizerMethods = {
   .GetToken           = CTokenizer__get_token,
   .GetTokenAndInfo    = CTokenizer__get_token_and_info,
   .Rewind             = CTokenizer__rewind,
-  .Unget              = CTokenizer__unget
+  .Unget              = CTokenizer__unget,
+  .UngetN             = CTokenizer__unget_n
 };
 
 
@@ -2689,4 +2691,16 @@ static int32_t CTokenizer__rewind( const CTokenizer_t *self, tokenmap_t *tokmap 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int32_t CTokenizer__unget( const CTokenizer_t *self, tokenmap_t *tokmap ) {
   return __rewind_tokenmap( tokmap, 1 );
+}
+
+
+
+/***********************************************************************
+ * 
+ *
+ ***********************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static int32_t CTokenizer__unget_n( const CTokenizer_t *self, tokenmap_t *tokmap, int n ) {
+  return __rewind_tokenmap( tokmap, n );
 }
