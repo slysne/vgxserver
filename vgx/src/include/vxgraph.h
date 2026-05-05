@@ -2449,7 +2449,9 @@ typedef struct s_vgx_IGraphSimple_t {
 
   struct s_vgx_Evaluator_t * (*DefineEvaluator)( struct s_vgx_Graph_t *self, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
   struct s_vgx_Evaluator_t * (*GetEvaluator)( struct s_vgx_Graph_t *self, const char *name );
+  bool (*HasEvaluator)( struct s_vgx_Graph_t *self, const char *name );
   struct s_vgx_Evaluator_t ** (*GetEvaluators)( struct s_vgx_Graph_t *self, int64_t *sz );
+  int64_t (*CountEvaluators)( struct s_vgx_Graph_t *self );
 
 } vgx_IGraphSimple_t;
 

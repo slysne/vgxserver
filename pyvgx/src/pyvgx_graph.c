@@ -409,6 +409,49 @@ static PyObject * PyVGX_Graph__Define( PyVGX_Graph *pygraph, PyObject *py_expres
 
 
 /******************************************************************************
+ * PyVGX_Graph__IsDefined
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( IsDefined__doc__,
+  "IsDefined( name ) -> bool\n"
+  "\n"
+  "Return True if named expression is defined, otherwise False.\n"
+  "\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Graph__IsDefined
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Graph__IsDefined( PyVGX_Graph *pygraph, PyObject *py_name ) {
+  vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
+  if( !graph ) {
+    return NULL;
+  }
+
+  const char *name = PyUnicode_AsUTF8( py_name );
+  if( name == NULL ) {
+    return NULL;
+  }
+
+  bool exists;
+  BEGIN_PYVGX_THREADS {
+    exists = CALLABLE( graph )->simple->HasEvaluator( graph, name );
+  } END_PYVGX_THREADS;
+
+  if( exists ) {
+    Py_RETURN_TRUE;
+  }
+  else {
+    Py_RETURN_FALSE;
+  }
+}
+
+
+
+/******************************************************************************
  * PyVGX_Graph__Evaluate
  *
  ******************************************************************************
@@ -834,6 +877,41 @@ static PyObject * PyVGX_Graph__GetDefinitions( PyVGX_Graph *pygraph  ) {
   free( evaluators );
 
   return py_ret;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Graph__CountDefinitions
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( CountDefinitions__doc__,
+  "CountDefinitions() -> int\n"
+  "\n"
+  "Return the number of defined expressions\n"
+  "\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Graph__CountDefinitions
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Graph__CountDefinitions( PyVGX_Graph *pygraph  ) {
+  PyObject *py_ret = NULL;
+  vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
+  if( !graph ) {
+    return NULL;
+  }
+
+  // Count all evaluator objects
+  int64_t sz;
+  BEGIN_PYVGX_THREADS {
+    sz = CALLABLE( graph )->simple->CountEvaluators( graph );
+  } END_PYVGX_THREADS;
+
+  return PyLong_FromLongLong( sz );
 }
 
 
@@ -7099,10 +7177,12 @@ static PyMethodDef PyVGX_Graph__methods[] = {
 
     // SPECIAL METHODS
     {"Define",                (PyCFunction)PyVGX_Graph__Define,                 METH_O                      , Define__doc__ },
+    {"IsDefined",             (PyCFunction)PyVGX_Graph__IsDefined,              METH_O                      , IsDefined__doc__ },
     {"Evaluate",              (PyCFunction)PyVGX_Graph__Evaluate,               METH_VARARGS | METH_KEYWORDS, Evaluate__doc__ },
     {"Memory",                (PyCFunction)PyVGX_Graph__Memory,                 METH_O                      , Memory__doc__ },
     {"GetDefinition",         (PyCFunction)PyVGX_Graph__GetDefinition,          METH_O                      , GetDefinition__doc__ },
     {"GetDefinitions",        (PyCFunction)PyVGX_Graph__GetDefinitions,         METH_NOARGS                 , GetDefinitions__doc__ },
+    {"CountDefinitions",      (PyCFunction)PyVGX_Graph__CountDefinitions,       METH_NOARGS                 , CountDefinitions__doc__ },
 
     // VERTEX METHODS
     {"CreateVertex",          (PyCFunction)PyVGX_Graph__CreateVertex,           METH_VARARGS | METH_KEYWORDS, CreateVertex__doc__ },

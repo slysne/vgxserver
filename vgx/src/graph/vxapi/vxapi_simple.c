@@ -80,7 +80,9 @@ static int64_t Graph_truncate_type( vgx_Graph_t *self, const CString_t *CSTR__ve
 
 static vgx_Evaluator_t * Graph_define_evaluator( vgx_Graph_t *self, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
 static vgx_Evaluator_t * Graph_get_evaluator( vgx_Graph_t *self, const char *name );
+static bool Graph_has_evaluator( vgx_Graph_t *self, const char *name );
 static vgx_Evaluator_t ** Graph_get_evaluators( vgx_Graph_t *self, int64_t *sz );
+static int64_t Graph_count_evaluators( vgx_Graph_t *self );
 
 
 
@@ -118,7 +120,9 @@ static vgx_IGraphSimple_t SimpleMethods = {
   .TruncateType         = Graph_truncate_type,
   .DefineEvaluator      = Graph_define_evaluator,
   .GetEvaluator         = Graph_get_evaluator,
-  .GetEvaluators        = Graph_get_evaluators
+  .HasEvaluator         = Graph_has_evaluator,
+  .GetEvaluators        = Graph_get_evaluators,
+  .CountEvaluators      = Graph_count_evaluators
 };
 
 
@@ -2233,6 +2237,23 @@ static vgx_Evaluator_t * Graph_get_evaluator( vgx_Graph_t *self, const char *nam
 
 
 /*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static bool Graph_has_evaluator( vgx_Graph_t *self, const char *name ) {
+  bool exists;
+  objectid_t obid;
+  obid.H = obid.L = CharsHash64( name );
+  GRAPH_LOCK( self ) {
+    exists = CALLABLE( self->evaluators )->HasObj128Nolock( self->evaluators, &obid ) == CELL_VALUE_TYPE_OBJECT128;
+  } GRAPH_RELEASE;
+  return exists;
+}
+
+
+
+/*******************************************************************//**
  * Return NULL-terminated list of evaluator object pointers.
  * NOTE: CALLER OWNS RETURNED LIST!
  ***********************************************************************
@@ -2262,6 +2283,23 @@ static vgx_Evaluator_t ** Graph_get_evaluators( vgx_Graph_t *self, int64_t *sz )
   } GRAPH_RELEASE;
   return evaluators;
 }
+
+
+
+/*******************************************************************//**
+ * Return number of defined expressions
+ *
+ ***********************************************************************
+ */
+static int64_t Graph_count_evaluators( vgx_Graph_t *self ) {
+  int64_t n;
+  GRAPH_LOCK( self ) {
+    framehash_t *E = self->evaluators;
+    n = CALLABLE(E)->Items(E);
+  } GRAPH_RELEASE;
+  return n;
+}
+
 
 
 
