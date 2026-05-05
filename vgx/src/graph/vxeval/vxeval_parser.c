@@ -492,7 +492,7 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                 // Object Pointer Operand can either stand on its own (address) or take a subscript (e.g. prev, vertex, next[ "prop1" ], etc. )
                 else if( __is_object_operand( current_op ) ) {
                   // Enumerate property if "in" operator preceded object without subscript
-                  if( !__tokenizer__is_next_token( tokenizer, "[", false ) && __enum__conditional_args( graph, program, shuntstack, current_op, NULL ) ) {
+                  if( !__tokenizer__is_next_token( tokenizer, "[" ) && __enum__conditional_args( graph, program, shuntstack, current_op, NULL ) ) {
                     // Account for the deref of head in this case, since by default the head address on its own does not require deref and was not accounted for above
                     if( current_op->type == OP_HEAD_VERTEX_OBJECT ) {
                       program->deref.head++;
@@ -598,7 +598,8 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
           // Is this an existing variable, and we're not overwriting it?
           __rpn_variable *var = __varmap__variable_get( varmap, token );
           const char *peek;
-          if( var && ( (peek = __tokenizer__peek_next_token(tokenizer)) == NULL || !CharsEqualsConst(peek, "=") ) ) {
+          //if( var && ( (peek = __tokenizer__peek_next_token(tokenizer)) == NULL || !CharsEqualsConst(peek, "=") ) ) {
+          if( var && !__tokenizer__is_next_token( tokenizer, "=" ) ) {
             stackitem.integer = var->subexpr_idx;
             stackitem.type = __STACK_ITEM_VARIABLE;
             current_op = &RpnPushVariable;

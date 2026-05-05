@@ -250,7 +250,7 @@ static int32_t __tokenizer__back_token( __tokenizer_context *tokenizer ) {
  * 
  * 
  ***********************************************************************
- */ 
+ */ /*
 static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str, bool not_flow_split ) {
   tokinfo_t nextinfo;
   const char *peek = (char*)CALLABLE( tokenizer->engine )->PeekTokenAndInfo( tokenizer->engine, tokenizer->tokmap, &nextinfo );
@@ -264,7 +264,7 @@ static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const ch
   }
   // Match
   return true;
-}
+}*/
 
 
 
@@ -427,6 +427,18 @@ static const char * __tokenizer__peek_next_token( __tokenizer_context *tokenizer
   }
 
   return token;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */ 
+static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str ) {
+  const char *peek = __tokenizer__peek_next_token(tokenizer);
+  return peek != NULL && CharsEqualsConst(peek, str);
 }
 
 
