@@ -34,6 +34,7 @@
 
 static void __eval_unary_cast_str( vgx_Evaluator_t *self );
 static void __eval_string_lower( vgx_Evaluator_t *self );
+static void __eval_string_upper( vgx_Evaluator_t *self );
 static void __eval_string_normalize( vgx_Evaluator_t *self );
 static void __eval_string_join( vgx_Evaluator_t *self );
 static void __eval_string_replace( vgx_Evaluator_t *self );
@@ -56,6 +57,25 @@ static void __eval_string_strftime( vgx_Evaluator_t *self );
 static void __eval_string_modtostr( vgx_Evaluator_t *self );
 static void __eval_string_dirtostr( vgx_Evaluator_t *self );
 
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static CString_t *__new_scoped_cstring( vgx_Evaluator_t *self, const char *str ) {
+
+  vgx_EvalStackItem_t scoped = {
+    .type = STACK_ITEM_TYPE_CSTRING,
+    .CSTR__str = NewEphemeralCString( self->graph, str )
+  };
+
+  if( scoped.CSTR__str == NULL || iEvaluator.LocalAutoScopeObject( self, &scoped, true ) < 0 ) {
+    return NULL;
+  }
+
+  return scoped.CSTR__str;
+}
 
 
 
@@ -215,6 +235,54 @@ static void __eval_string_lower( vgx_Evaluator_t *self ) {
       vgx_EvalStackItem_t scoped = {
         .type = STACK_ITEM_TYPE_CSTRING,
         .CSTR__str = CSTR__lower
+      };
+
+      if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
+        *px = scoped; // return normalized
+      }
+    }
+  }
+}
+
+
+
+/*******************************************************************//**
+ * upper( x ) -> str
+ ***********************************************************************
+ */
+static void __eval_string_upper( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+
+  int32_t sz_str = 0;
+  CString_attr attr = CSTRING_ATTR_NONE;
+  const char *str = __stackitem_as_str( px, &sz_str, &attr );
+
+  if( str ) {
+    CString_constructor_args_t args = {
+      .string      = NULL,
+      .len         = sz_str,
+      .ucsz        = 0,
+      .format      = NULL,
+      .format_args = NULL,
+      .alloc       = self->graph->ephemeral_string_allocator_context
+    };
+    CString_t *CSTR__upper = COMLIB_OBJECT_NEW( CString_t, NULL, &args );
+    if( CSTR__upper ) {
+      char *data = (char*)CALLABLE( CSTR__upper )->ModifiableQwords( CSTR__upper );
+      char *wp = data;
+      const char *rp = str;
+      const char *end = rp + sz_str;
+      while( rp < end ) {
+        *wp++ = toupper(*rp++);
+      }
+      *wp = '\0';
+
+      // Inherit attributes from original input
+      CStringAttributes( CSTR__upper ) = attr;
+
+      vgx_EvalStackItem_t scoped = {
+        .type = STACK_ITEM_TYPE_CSTRING,
+        .CSTR__str = CSTR__upper
       };
 
       if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
@@ -663,50 +731,34 @@ static int __pop_strings( vgx_Evaluator_t *self, const char **a, const char **b 
 static int __pop_cstrings( vgx_Evaluator_t *self, const CString_t **CSTR__a, const CString_t **CSTR__b ) {
   vgx_EvalStackItem_t *pb = POP_PITEM( self );
   vgx_EvalStackItem_t *pa = POP_PITEM( self );
-
   vgx_StackPairType_t pair_type = PAIR_TYPE( pa, pb );
   switch( pair_type ) {
   case STACK_PAIR_TYPE_XSTR_YSTR:
     *CSTR__a = pa->CSTR__str;
     *CSTR__b = pb->CSTR__str;
-    return 0;
+    break;
   case STACK_PAIR_TYPE_XVID_YSTR:
-    if( pa->vertexid->CSTR__idstr ) {
-      *CSTR__a = pa->vertexid->CSTR__idstr;
-    }
-    else {
-      // ???
-    }
+    *CSTR__a = pa->vertexid->CSTR__idstr ? pa->vertexid->CSTR__idstr : __new_scoped_cstring( self, pa->vertexid->idprefix.data );
     *CSTR__b = pb->CSTR__str;
-    return 0;
+    break;
   case STACK_PAIR_TYPE_XSTR_YVID:
     *CSTR__a = pa->CSTR__str;
-    if( pb->vertexid->CSTR__idstr ) {
-      *CSTR__b = pb->vertexid->CSTR__idstr;
-    }
-    else {
-      // ???
-    }
-    return 0;
+    *CSTR__b = pb->vertexid->CSTR__idstr ? pb->vertexid->CSTR__idstr : __new_scoped_cstring( self, pb->vertexid->idprefix.data );
+    break;
   case STACK_PAIR_TYPE_XVID_YVID:
-    if( pa->vertexid->CSTR__idstr ) {
-      *CSTR__a = pa->vertexid->CSTR__idstr;
-    }
-    else {
-      // ???
-    }
-    if( pb->vertexid->CSTR__idstr ) {
-      *CSTR__b = pb->vertexid->CSTR__idstr;
-    }
-    else {
-      // ???
-    }
-    return 0;
+    *CSTR__a = pa->vertexid->CSTR__idstr ? pa->vertexid->CSTR__idstr : __new_scoped_cstring( self, pa->vertexid->idprefix.data );
+    *CSTR__b = pb->vertexid->CSTR__idstr ? pb->vertexid->CSTR__idstr : __new_scoped_cstring( self, pb->vertexid->idprefix.data );
+    break;
   default:
     *CSTR__a = NULL;
     *CSTR__b = NULL;
-    return -1;
   }
+
+  if( *CSTR__a && *CSTR__b ) {
+    return 0;
+  }
+
+  return -1;
 
 }
 
