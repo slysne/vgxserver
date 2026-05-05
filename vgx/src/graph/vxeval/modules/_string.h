@@ -663,16 +663,51 @@ static int __pop_strings( vgx_Evaluator_t *self, const char **a, const char **b 
 static int __pop_cstrings( vgx_Evaluator_t *self, const CString_t **CSTR__a, const CString_t **CSTR__b ) {
   vgx_EvalStackItem_t *pb = POP_PITEM( self );
   vgx_EvalStackItem_t *pa = POP_PITEM( self );
-  if( pa->type != STACK_ITEM_TYPE_CSTRING || pb->type != STACK_ITEM_TYPE_CSTRING ) {
+
+  vgx_StackPairType_t pair_type = PAIR_TYPE( pa, pb );
+  switch( pair_type ) {
+  case STACK_PAIR_TYPE_XSTR_YSTR:
+    *CSTR__a = pa->CSTR__str;
+    *CSTR__b = pb->CSTR__str;
+    return 0;
+  case STACK_PAIR_TYPE_XVID_YSTR:
+    if( pa->vertexid->CSTR__idstr ) {
+      *CSTR__a = pa->vertexid->CSTR__idstr;
+    }
+    else {
+      // ???
+    }
+    *CSTR__b = pb->CSTR__str;
+    return 0;
+  case STACK_PAIR_TYPE_XSTR_YVID:
+    *CSTR__a = pa->CSTR__str;
+    if( pb->vertexid->CSTR__idstr ) {
+      *CSTR__b = pb->vertexid->CSTR__idstr;
+    }
+    else {
+      // ???
+    }
+    return 0;
+  case STACK_PAIR_TYPE_XVID_YVID:
+    if( pa->vertexid->CSTR__idstr ) {
+      *CSTR__a = pa->vertexid->CSTR__idstr;
+    }
+    else {
+      // ???
+    }
+    if( pb->vertexid->CSTR__idstr ) {
+      *CSTR__b = pb->vertexid->CSTR__idstr;
+    }
+    else {
+      // ???
+    }
+    return 0;
+  default:
     *CSTR__a = NULL;
     *CSTR__b = NULL;
     return -1;
   }
-  else {
-    *CSTR__a = pa->CSTR__str;
-    *CSTR__b = pb->CSTR__str;
-    return 0;
-  }
+
 }
 
 
