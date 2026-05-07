@@ -112,14 +112,16 @@ static __rpn_operation RpnUnaryHash          = { .surface.token="hash",         
 
 static __rpn_operation RpnStringStrcmp       = { .surface.token="strcmp",           .function.eval = __eval_string_strcmp,            .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStrcasecmp   = { .surface.token="strcasecmp",       .function.eval = __eval_string_strcasecmp,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAll  = { .surface.token="strall",           .function.eval = __eval_variadic_string_all,      .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAny  = { .surface.token="strany",           .function.eval = __eval_variadic_string_any,       .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnStringContains     = { .surface.token="contains",         .function.eval = __eval_string_contains,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
-static __rpn_operation RpnStringContainsIC   = { .surface.token="contains_icase",   .function.eval = __eval_string_contains_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringContainsIC   = { .surface.token="containsi",        .function.eval = __eval_string_contains_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStartswith   = { .surface.token="startswith",       .function.eval = __eval_string_startswith,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
-static __rpn_operation RpnStringStartswithIC = { .surface.token="startswith_icase", .function.eval = __eval_string_startswith_icase,  .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringStartswithIC = { .surface.token="startswithi",      .function.eval = __eval_string_startswith_icase,  .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringEndswith     = { .surface.token="endswith",         .function.eval = __eval_string_endswith,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
-static __rpn_operation RpnStringEndswithIC   = { .surface.token="endswith_icase",   .function.eval = __eval_string_endswith_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringEndswithIC   = { .surface.token="endswithi",        .function.eval = __eval_string_endswith_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringIndexOf      = { .surface.token="indexof",          .function.eval = __eval_string_indexof,           .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
-static __rpn_operation RpnStringIndexOfIC    = { .surface.token="indexof_icase",    .function.eval = __eval_string_indexof_icase,     .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringIndexOfIC    = { .surface.token="indexofi",         .function.eval = __eval_string_indexof_icase,     .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringLower        = { .surface.token="lower",            .function.eval = __eval_string_lower,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringUpper        = { .surface.token="upper",            .function.eval = __eval_string_upper,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringNormalize    = { .surface.token="normalize",        .function.eval = __eval_string_normalize,         .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
@@ -885,6 +887,8 @@ static __rpn_operation *__rpn_definitions[] = {
       // String
       &RpnStringStrcmp,
       &RpnStringStrcasecmp,
+      &RpnVariadicStringAll,
+      &RpnVariadicStringAny,
       &RpnStringContains,
       &RpnStringContainsIC,
       &RpnStringStartswith,

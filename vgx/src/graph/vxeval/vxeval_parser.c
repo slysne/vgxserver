@@ -1225,9 +1225,13 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                 // Set the first node in list
                 if( program->strings == NULL ) {
                   program->strings = node;
+                  program->end_strings = node;
                 }
-                // Add node to list
+                // Append node to end of list
                 else {
+                  program->end_strings->next = node;
+                  program->end_strings = node;
+                  /*
                   // Find end
                   vgx_ExpressEvalString_t *cursor = program->strings;
                   while( cursor->next ) {
@@ -1235,6 +1239,7 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                   }
                   // Attach new node to end
                   cursor->next = node;
+                  */
                 }
                 // String stolen by list
                 CSTR__literal = NULL;

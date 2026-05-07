@@ -5937,6 +5937,7 @@ typedef struct s_vgx_ExpressEvalProgram_t {
   
   // Literal strings
   vgx_ExpressEvalString_t *strings;
+  vgx_ExpressEvalString_t *end_strings;
   // Expression name
   CString_t *CSTR__assigned;
   // Expression

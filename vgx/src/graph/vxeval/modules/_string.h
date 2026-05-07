@@ -44,6 +44,9 @@ static void __eval_string_index( vgx_Evaluator_t *self );
 static void __eval_string_strcmp( vgx_Evaluator_t *self );
 static void __eval_string_strcasecmp( vgx_Evaluator_t *self );
 
+static void __eval_variadic_string_all( vgx_Evaluator_t *self );
+static void __eval_variadic_string_any( vgx_Evaluator_t *self );
+
 static void __eval_string_contains( vgx_Evaluator_t *self );
 static void __eval_string_contains_icase( vgx_Evaluator_t *self );
 static void __eval_string_startswith( vgx_Evaluator_t *self );
@@ -710,16 +713,35 @@ static void __eval_string_index( vgx_Evaluator_t *self ) {
 static int __pop_strings( vgx_Evaluator_t *self, const char **a, const char **b ) {
   vgx_EvalStackItem_t *pb = POP_PITEM( self );
   vgx_EvalStackItem_t *pa = POP_PITEM( self );
-  if( pa->type != STACK_ITEM_TYPE_CSTRING || pb->type != STACK_ITEM_TYPE_CSTRING ) {
-    *a = NULL;
-    *b = NULL;
-    return -1;
-  }
-  else {
+  vgx_StackPairType_t pair_type = PAIR_TYPE( pa, pb );
+  switch( pair_type ) {
+  case STACK_PAIR_TYPE_XSTR_YSTR:
     *a = CStringValue( pa->CSTR__str );
     *b = CStringValue( pb->CSTR__str );
+    break;
+  case STACK_PAIR_TYPE_XVID_YSTR:
+    *a = pa->vertexid->CSTR__idstr ? CStringValue( pa->vertexid->CSTR__idstr ) : pa->vertexid->idprefix.data;
+    *b = CStringValue( pb->CSTR__str );
+    break;
+  case STACK_PAIR_TYPE_XSTR_YVID:
+    *a = CStringValue( pa->CSTR__str );
+    *b = pb->vertexid->CSTR__idstr ? CStringValue( pb->vertexid->CSTR__idstr ) : pb->vertexid->idprefix.data;
+    break;
+  case STACK_PAIR_TYPE_XVID_YVID:
+    *a = pa->vertexid->CSTR__idstr ? CStringValue( pa->vertexid->CSTR__idstr ) : pa->vertexid->idprefix.data;
+    *b = pb->vertexid->CSTR__idstr ? CStringValue( pb->vertexid->CSTR__idstr ) : pb->vertexid->idprefix.data;
+    break;
+  default:
+    *a = NULL;
+    *b = NULL;
+  }
+
+  if( *a && *b ) {
     return 0;
   }
+
+  return -1;
+
 }
 
 
@@ -765,6 +787,59 @@ static int __pop_cstrings( vgx_Evaluator_t *self, const CString_t **CSTR__a, con
 
 
 /*******************************************************************//**
+ * __pop_string()
+ ***********************************************************************
+ */
+static const char * __pop_string( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = POP_PITEM( self );
+  switch( px->type ) {
+  case STACK_ITEM_TYPE_CSTRING:
+    return CStringValue( px->CSTR__str );
+  case STACK_ITEM_TYPE_VERTEXID:
+    return px->vertexid->CSTR__idstr ? CStringValue( px->vertexid->CSTR__idstr ) : px->vertexid->idprefix.data;
+  default:
+    return NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ * __pop_cstring()
+ ***********************************************************************
+ */
+static const CString_t * __pop_cstring( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = POP_PITEM( self );
+  switch( px->type ) {
+  case STACK_ITEM_TYPE_CSTRING:
+    return px->CSTR__str;
+  case STACK_ITEM_TYPE_VERTEXID:
+    return px->vertexid->CSTR__idstr ? px->vertexid->CSTR__idstr : __new_scoped_cstring( self, px->vertexid->idprefix.data );
+  default:
+    return NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ * __item_as_cstring( self, pitem )
+ ***********************************************************************
+ */
+static const CString_t * __item_as_cstring( vgx_Evaluator_t *self, vgx_EvalStackItem_t *pitem ) {
+  switch( pitem->type ) {
+  case STACK_ITEM_TYPE_CSTRING:
+    return pitem->CSTR__str;
+  case STACK_ITEM_TYPE_VERTEXID:
+    return pitem->vertexid->CSTR__idstr ? pitem->vertexid->CSTR__idstr : __new_scoped_cstring( self, pitem->vertexid->idprefix.data );
+  default:
+    return NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
  * strcmp( a, b ) -> integer
  ***********************************************************************
  */
@@ -794,6 +869,88 @@ static void __eval_string_strcasecmp( vgx_Evaluator_t *self ) {
     int cmp = strcasecmp( a, b );
     STACK_RETURN_INTEGER( self, cmp );
   }
+}
+
+
+
+/*******************************************************************//**
+ * multimatch( target[, probe1[, probe2[, ...]]]  ) -> bool
+ ***********************************************************************
+ */
+static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_and ) {
+  int64_t nargs = self->op->arg.integer;
+  if( nargs < 1 ) {
+    STACK_RETURN_INTEGER(self, 0 );
+  }
+
+  // Target string
+  int64_t target_idx = nargs - 1;
+  vgx_EvalStackItem_t *pt = IDX_PITEM( self, target_idx );
+  CString_t *CSTR__target = __item_as_cstring( self, pt );
+  if( CSTR__target == NULL ) {
+    STACK_RETURN_INTEGER(self, 0 );
+  }
+  --nargs;
+
+  int match;
+  const char *probe;
+
+  // AND MODE
+  if( mode_and ) {
+    // Disprove it
+    int all = 1;
+    while( nargs-- > 0 ) {
+      if( (probe = __pop_string( self )) == NULL ) {
+        all = 0;
+        break;
+      }
+      if( (all = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, false )) == 0 ) {
+        break;
+      }
+    }
+    match = all;
+  }
+  // OR MODE
+  else {
+    // Any match
+    int any = 0;
+    while( nargs-- > 0 ) {
+      if( (probe = __pop_string( self )) != NULL ) {
+        if( (any = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, false )) != 0 ) {
+          break;
+        }
+      }
+    }
+    match = any;
+  }
+
+  // Discard unused varargs
+  DISCARD_ITEMS( self, nargs );
+
+  // Discard the last args (which is the target string)
+  POP_PITEM(self);
+
+  STACK_RETURN_INTEGER( self, match );
+}
+
+
+
+/*******************************************************************//**
+ * strall( target[, probe1[, probe2[, ...]]]  ) -> bool
+ ***********************************************************************
+ */
+static void __eval_variadic_string_all( vgx_Evaluator_t *self ) {
+  __eval_variadic_string_multimatch( self, true );
+}
+
+
+
+/*******************************************************************//**
+ * strany( target[, probe1[, probe2[, ...]]]  ) -> bool
+ ***********************************************************************
+ */
+static void __eval_variadic_string_any( vgx_Evaluator_t *self ) {
+  __eval_variadic_string_multimatch( self, false );
 }
 
 
