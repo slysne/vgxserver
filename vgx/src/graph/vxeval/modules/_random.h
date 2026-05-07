@@ -121,27 +121,31 @@ static void __eval_unary_rstr( vgx_Evaluator_t *self ) {
     .format_args = NULL,
     .alloc       = self->graph->ephemeral_string_allocator_context
   };
-
-  vgx_EvalStackItem_t scoped = {
-    .type = STACK_ITEM_TYPE_CSTRING,
-    .CSTR__str = COMLIB_OBJECT_NEW( CString_t, NULL, &args )
-  };
-
-  if( scoped.CSTR__str == NULL ) {
+    
+  CString_t *CSTR__rstr = COMLIB_OBJECT_NEW( CString_t, NULL, &args );
+  
+  if( CSTR__rstr == NULL ) {
     SET_NONE(px);
     return;
   }
-
-
-  if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
-    *px = scoped; // return normalized
-  }
-
-  char *data = (char*)CALLABLE( scoped.CSTR__str )->ModifiableQwords( scoped.CSTR__str );
+  
+  char *data = (char*)CALLABLE( CSTR__rstr )->ModifiableQwords( CSTR__rstr );
   char *wp = data;
   const char *end = wp + args.len;
   while( wp < end ) {
     *wp++ = 'a' + (rand63() % 26);
+  }
+
+  vgx_EvalStackItem_t scoped = {
+    .type = STACK_ITEM_TYPE_CSTRING,
+    .CSTR__str = CSTR__rstr
+  };
+
+  if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
+    *px = scoped;
+  }
+  else {
+    SET_NONE(px);
   }
 
 }

@@ -63,7 +63,7 @@ static void __eval_string_dirtostr( vgx_Evaluator_t *self );
  *
  ***********************************************************************
  */
-static CString_t *__new_scoped_cstring( vgx_Evaluator_t *self, const char *str ) {
+static const CString_t *__new_scoped_cstring( vgx_Evaluator_t *self, const char *str ) {
 
   vgx_EvalStackItem_t scoped = {
     .type = STACK_ITEM_TYPE_CSTRING,
