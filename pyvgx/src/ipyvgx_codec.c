@@ -39,6 +39,7 @@ static PyObject *g_py_int_4 = NULL;
 static PyObject *mod_pickle = NULL;
 static PyObject *f_pickle_dumps = NULL;
 static PyObject *f_pickle_loads = NULL;
+static PyObject *g_pickle_proto = NULL;
 
 static PyObject *mod_json = NULL;
 static PyObject *f_json_dumps = NULL;
@@ -59,6 +60,7 @@ static PyObject * __marshal_load( const char *bytes, int64_t sz_bytes );
 static int __import_pickle( void );
 static PyObject * __pickle_dumps( PyObject *py_object );
 static PyObject * __pickle_loads( PyObject *py_pickled );
+static void __delete_pickle( void );
 
 // json
 static int __import_json( void );
@@ -66,6 +68,7 @@ static PyObject * __json_dumps( PyObject *py_object );
 static PyObject * __json_dump( PyObject *py_object );
 static PyObject * __json_loads( PyObject *py_json );
 static PyObject * __json_load( const char *bytes, int64_t sz_bytes );
+static void __delete_json( void );
 
 
 static CString_t *  __new_cstring( const char *data, int64_t sz, int64_t ucsz, object_allocator_context_t *allocator_context, CString_attr attr, bool allow_oversized );
@@ -131,30 +134,20 @@ static int __create_constants( void ) {
  ******************************************************************************
  */
 static void __delete_constants( void ) {
-  if( g_py_str_compress ) {
-    Py_DECREF( g_py_str_compress );
-    g_py_str_compress = NULL;
-  }
+  Py_XDECREF( g_py_str_compress );
+  g_py_str_compress = NULL;
 
-  if( g_py_str_decompress ) {
-    Py_DECREF( g_py_str_decompress );
-    g_py_str_decompress = NULL;
-  }
+  Py_XDECREF( g_py_str_decompress );
+  g_py_str_decompress = NULL;
 
-  if( g_py_int_1 ) {
-    Py_DECREF( g_py_int_1 );
-    g_py_int_1 = NULL;
-  }
+  Py_XDECREF( g_py_int_1 );
+  g_py_int_1 = NULL;
 
-  if( g_py_int_2 ) {
-    Py_DECREF( g_py_int_2 );
-    g_py_int_2 = NULL;
-  }
+  Py_XDECREF( g_py_int_2 );
+  g_py_int_2 = NULL;
 
-  if( g_py_int_4 ) {
-    Py_DECREF( g_py_int_4 );
-    g_py_int_4 = NULL;
-  }
+  Py_XDECREF( g_py_int_4 );
+  g_py_int_4 = NULL;
 
 }
 
@@ -235,6 +228,36 @@ static PyObject * __marshal_load( const char *bytes, int64_t sz_bytes ) {
 
 
 /******************************************************************************
+ *
+ ******************************************************************************
+ */
+static PyObject * __get_pickle_highest_protocol( void ) {
+  PyObject *py_proto = NULL;
+  PyObject *mod = NULL;
+
+  XTRY {
+    if( (mod = PyImport_ImportModule( "pickle")) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
+    }
+
+    if( (py_proto = PyObject_GetAttrString( mod, "HIGHEST_PROTOCOL" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
+    }
+
+  }
+  XCATCH( errcode ) {
+
+  }
+  XFINALLY {
+    Py_XDECREF( mod );
+  }
+  
+  return py_proto;
+}
+
+
+
+/******************************************************************************
  * Equivalent to:
  *
  * >>> import _pickle
@@ -264,21 +287,25 @@ static int __import_pickle( void ) {
     if( (f_pickle_dumps = PyObject_GetAttrString( mod_pickle, "dumps" )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x803 );
     }
+    
+    if( (g_pickle_proto = __get_pickle_highest_protocol()) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x804 );
+    }
 
     // Perform _pickle.dumps( "test pickle dump" )
     if( (py_test_string = PyBytes_FromString("test pickle dump")) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x804 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x805 );
     }
     if( (py_test_pickled = __pickle_dumps( py_test_string )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x805 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x806 );
     }
 
     // Perform _pickle.loads( <pickled_data> )
     if( (py_restored_string = __pickle_loads( py_test_pickled )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x806 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x807 );
     }
     if( PyObject_RichCompareBool( py_test_string, py_restored_string, Py_EQ ) != 1 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x807 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x808 );
     }
 
   }
@@ -303,6 +330,28 @@ static int __import_pickle( void ) {
 
 
 /******************************************************************************
+ *
+ ******************************************************************************
+ */
+static void __delete_pickle( void ) {
+  
+  Py_XDECREF( mod_pickle );
+  mod_pickle = NULL;
+
+  Py_XDECREF( f_pickle_dumps );
+  f_pickle_dumps = NULL;
+
+  Py_XDECREF( f_pickle_loads );
+  f_pickle_loads = NULL;
+
+  Py_XDECREF( g_pickle_proto );
+  g_pickle_proto = NULL;
+
+}
+
+
+
+/******************************************************************************
  * Equivalent to:
  *
  * >>> _pickle.dumps( <some_object> )
@@ -310,11 +359,18 @@ static int __import_pickle( void ) {
  ******************************************************************************
  */
 static PyObject * __pickle_dumps( PyObject *py_object ) {
+  // TODO: Consider optimizing this by creating a long lived pickler object
+  //       to avoid setup/breakdown of inner structs for every call
+  //          bio_out = io.BytesIO()
+  //          pickler = _pickle.Pickler(bio_out, protocol=5)
+  //          .. etc
+
   // Execute: >>> _pickle.dumps( py_object )
   PyObject *args[] = {
     py_object,
-    g_py_int_2
+    g_pickle_proto
   };
+  Py_MARSHAL_VERSION;
   return PyObject_Vectorcall( f_pickle_dumps, args, 2, NULL );
 }
 
@@ -411,6 +467,26 @@ static int __import_json( void ) {
 
 
 /******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static void __delete_json( void ) {
+  
+  Py_XDECREF( mod_json );
+  mod_json = NULL;
+
+  Py_XDECREF( f_json_dumps );
+  f_json_dumps = NULL;
+
+  Py_XDECREF( f_json_loads );
+  f_json_loads = NULL;
+
+}
+
+
+
+/******************************************************************************
  * Equivalent to:
  *
  * >>> json.dumps( <some_object> )
@@ -418,6 +494,12 @@ static int __import_json( void ) {
  ******************************************************************************
  */
 static PyObject * __json_dumps( PyObject *py_object ) {
+  // TODO: Replace Python json with a faster alternative.
+  //       Current implementation is a bottleneck for the
+  //       server implementation with large response payloads.
+  //       Look at things like orjson or other lower level
+  //       libraries that avoid Python altogether.
+
   // Execute: >>> json.dumps( py_object )
   PyObject *args[] = { py_object };
   return PyObject_Vectorcall( f_json_dumps, args, 1, NULL );
@@ -2063,15 +2145,9 @@ DLL_HIDDEN int _ipyvgx_codec__init( void ) {
  */
 DLL_HIDDEN int _ipyvgx_codec__delete( void ) {
 
-  if( mod_pickle ) {
-    Py_DECREF( mod_pickle );
-    mod_pickle = NULL;
-  }
+  __delete_pickle();
 
-  if( mod_json ) {
-    Py_DECREF( mod_json );
-    mod_json = NULL;
-  }
+  __delete_json();
 
   __delete_constants();
 
