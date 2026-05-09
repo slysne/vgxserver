@@ -42,9 +42,11 @@ static PyObject *f_pickle_loads = NULL;
 static PyObject *g_pickle_proto = NULL;
 
 static PyObject *mod_json = NULL;
-static PyObject *f_json_dumps = NULL;
-static PyObject *f_json_loads = NULL;
-
+static PyObject *mod_orjson = NULL;
+//static PyObject *f_json_dumps = NULL;
+//static PyObject *f_json_loads = NULL;
+static PyObject *f_json_encode = NULL;
+static PyObject *f_json_decode = NULL;
 
 
 static int __create_constants( void );
@@ -63,11 +65,13 @@ static PyObject * __pickle_loads( PyObject *py_pickled );
 static void __delete_pickle( void );
 
 // json
+static int __import_orjson( void );
 static int __import_json( void );
-static PyObject * __json_dumps( PyObject *py_object );
-static PyObject * __json_dump( PyObject *py_object );
-static PyObject * __json_loads( PyObject *py_json );
-static PyObject * __json_load( const char *bytes, int64_t sz_bytes );
+static PyObject * __json_encode( PyObject *py_object );
+static PyObject * __json_encode_bytes( PyObject *py_object );
+static PyObject * __json_decode( PyObject *py_json );
+static PyObject * __json_decode_bytes( const char *bytes, int64_t sz_bytes );
+static void __delete_orjson( void );
 static void __delete_json( void );
 
 
@@ -394,17 +398,99 @@ static PyObject * __pickle_loads( PyObject *py_pickled ) {
 /******************************************************************************
  * Equivalent to:
  *
+ * >>> import orjson
+ *
+ ******************************************************************************
+ */
+static int __import_orjson( void ) {
+  
+  // Only import once
+  if( mod_orjson ) {
+    return 0;
+  }
+
+  XTRY {
+
+    // Try to use orjson if installed
+    if( (mod_orjson = PyImport_ImportModule( "orjson" )) == NULL ) {
+      PyErr_Clear();
+      WARN( 0x000, "Skipping orjson. Use `pip install orjson` for better performance" );
+      THROW_SILENT( CXLIB_ERR_IGNORE, 0x000 );
+    }
+
+    // f_json_encode = orjson.dumps
+    if( (f_json_encode = PyObject_GetAttrString( mod_orjson, "dumps" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
+    }
+
+    // f_json_decode = orjson.loads
+    if( (f_json_decode = PyObject_GetAttrString( mod_orjson, "loads" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x02 );
+    }
+
+  }
+  XCATCH( errcode ) {
+    Py_XDECREF( mod_orjson );
+    mod_orjson = NULL;
+  }
+  XFINALLY {
+  }
+
+  if( mod_orjson ) {
+    return 0;
+  }
+  else {
+    return -1;
+  }
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static void __delete_orjson( void ) {
+  
+  Py_XDECREF( mod_orjson );
+  mod_orjson = NULL;
+
+  Py_XDECREF( f_json_encode );
+  f_json_encode = NULL;
+
+  Py_XDECREF( f_json_decode );
+  f_json_decode = NULL;
+}
+
+
+
+/******************************************************************************
+ * Equivalent to:
+ *
  * >>> import json
  *
  ******************************************************************************
  */
 static int __import_json( void ) {
+  const char *sample = "{\"x\":\"hello\",\"y\":[1,2,3]}";
+  const char *restored = NULL;
+
   PyObject *py_test_json_string = NULL;
   PyObject *py_test_decoded = NULL;
-  PyObject *py_restored_string = NULL;
+  PyObject *py_restored = NULL;
+  
+  PyObject *py_encoder_class = NULL;
+  PyObject *py_decoder_class = NULL;
+  PyObject *json_encoder = NULL;
+  PyObject *json_decoder = NULL;
+  PyObject *kwargs = NULL;
+  PyObject *args = NULL;
+  PyObject *py_separators = NULL;
 
+  
   // Only import once
-  if( mod_json ) {
+  if( mod_orjson || mod_json ) {
     return 0;
   }
 
@@ -414,6 +500,103 @@ static int __import_json( void ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
     }
 
+    // Try to use orjson if installed
+    if( __import_orjson() == 0 ) {
+      goto test_json;
+    }
+
+    // Fallback to Python's built-in json module
+
+    // JSONEncoder
+    if( (py_encoder_class = PyObject_GetAttrString( mod_json, "JSONEncoder" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
+    }
+
+    // (",", ":")
+    if( (py_separators = PyTuple_Pack( 2, PyUnicode_FromString(","), PyUnicode_FromString(":") )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x003 );
+    }
+
+    // ()    
+    if( (args = PyTuple_New(0)) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
+    }
+
+    // {}
+    if( (kwargs = PyDict_New()) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+    }
+
+    // {'ensure_ascii': False}
+    if( PyDict_SetItemString( kwargs, "ensure_ascii", Py_False ) < 0 ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
+    }
+
+    // {'ensure_ascii': False, 'separators': (",", ":")}
+    if( PyDict_SetItemString( kwargs, "separators", py_separators ) < 0 ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+    }
+
+    // JSONEncoder( ensure_ascii=False, separators=(",", ":") )
+    if( (json_encoder = PyObject_Call( py_encoder_class, args, kwargs )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x008 );
+    }
+
+    // f_json_encode = json.JSONEncoder(...).encode
+    if( (f_json_encode = PyObject_GetAttrString( json_encoder, "encode" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+    }
+
+
+    // JSONDecoder
+    if( (py_decoder_class = PyObject_GetAttrString( mod_json, "JSONDecoder" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
+    }
+
+    // JSONDecoder()
+    if( (json_decoder = PyObject_CallNoArgs( py_decoder_class )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00B );
+    }
+
+    // f_json_decode = json.JSONDecoder().decode
+    if( (f_json_decode = PyObject_GetAttrString( json_decoder, "decode" )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x0C );
+    }
+
+  test_json:
+    // Test it
+    if( (py_test_json_string = PyUnicode_FromString( sample )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00D );
+    }
+    
+    // Perform json.loads( str )
+    if( (py_test_decoded = __json_decode( py_test_json_string )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00E );
+    }
+    
+    // Perform json.dumps( decoded )
+    if( (py_restored = __json_encode( py_test_decoded )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00F );
+    }
+ 
+    if( PyBytes_Check(py_restored) ) {
+      restored = PyBytes_AsString( py_restored );
+    }
+    else if( PyUnicode_Check(py_restored) ) {
+      restored = PyUnicode_AsUTF8( py_restored );
+    }
+
+    if( restored == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x010 );
+    }
+
+    // Check
+    if( strcmp( sample, restored ) ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x011 );
+    }
+
+
+    /*
     if( (f_json_loads = PyObject_GetAttrString( mod_json, "loads" )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
     }
@@ -427,12 +610,12 @@ static int __import_json( void ) {
     if( (py_test_json_string = PyUnicode_FromString( json )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
     }
-    if( (py_test_decoded = __json_loads( py_test_json_string )) == NULL ) {
+    if( (py_test_decoded = __json_decode( py_test_json_string )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
     }
 
     // Perform json.dumps( decoded )
-    if( (py_restored_string = __json_dumps( py_test_decoded )) == NULL ) {
+    if( (py_restored_string = __json_encode( py_test_decoded )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
     }
     const char *restored = PyUnicode_AsUTF8( py_restored_string );
@@ -444,19 +627,27 @@ static int __import_json( void ) {
     if( strcmp( json, restored ) ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x008 );
     }
+    */
 
   }
   XCATCH( errcode ) {
-    PyVGX_XDECREF( mod_json );
+    Py_XDECREF( mod_json );
     mod_json = NULL;
   }
   XFINALLY {
-    PyVGX_XDECREF( py_test_json_string );
-    PyVGX_XDECREF( py_test_decoded );
-    PyVGX_XDECREF( py_restored_string );
+    Py_XDECREF( py_test_json_string );
+    Py_XDECREF( py_test_decoded );
+    Py_XDECREF( py_restored );
+    Py_XDECREF( py_encoder_class );
+    Py_XDECREF( py_decoder_class );
+    Py_XDECREF( json_encoder );
+    Py_XDECREF( json_decoder );
+    Py_XDECREF( kwargs );
+    Py_XDECREF( args );
+    Py_XDECREF( py_separators );
   }
 
-  if( mod_json ) {
+  if( mod_orjson || mod_json ) {
     return 0;
   }
   else {
@@ -476,12 +667,17 @@ static void __delete_json( void ) {
   Py_XDECREF( mod_json );
   mod_json = NULL;
 
-  Py_XDECREF( f_json_dumps );
-  f_json_dumps = NULL;
+  //Py_XDECREF( f_json_dumps );
+  //f_json_dumps = NULL;
 
-  Py_XDECREF( f_json_loads );
-  f_json_loads = NULL;
+  //Py_XDECREF( f_json_loads );
+  //f_json_loads = NULL;
 
+  Py_XDECREF( f_json_encode );
+  f_json_encode = NULL;
+
+  Py_XDECREF( f_json_decode );
+  f_json_decode = NULL;
 }
 
 
@@ -489,43 +685,72 @@ static void __delete_json( void ) {
 /******************************************************************************
  * Equivalent to:
  *
- * >>> json.dumps( <some_object> )
+ * If orjson is installed:
+ * >>> orjson.dumps( <some_object> ) # <- return bytes
+ *                                        ^^^^^^^^^^^^
+ * Otherwise fallback to:
  *
+ * ## Long lived encoder instance
+ * json_encode = json.JSONEncoder( ensure_ascii=False, separators=(",",":") )
+ * 
+ * >>> json_encode( <some_object> ) # <- return str
+ *                                       ^^^^^^^^^^
+ * 
+ * WARNING: The returned object is either PyBytes or PyUnicode, depending
+ *          on which json encoder is used internally.
+ * 
  ******************************************************************************
  */
-static PyObject * __json_dumps( PyObject *py_object ) {
-  // TODO: Replace Python json with a faster alternative.
-  //       Current implementation is a bottleneck for the
-  //       server implementation with large response payloads.
-  //       Look at things like orjson or other lower level
-  //       libraries that avoid Python altogether.
-
-  // Execute: >>> json.dumps( py_object )
+static PyObject * __json_encode( PyObject *py_object ) {
   PyObject *args[] = { py_object };
-  return PyObject_Vectorcall( f_json_dumps, args, 1, NULL );
-}
-
-
-
-/******************************************************************************
- * Equivalent to:
- *
- * >>> json.dumps( <some_object> ).encode()
- *
- ******************************************************************************
- */
-static PyObject * __json_dump( PyObject *py_object ) {
-  // Execute: >>> json.dumps( py_object )
-  PyObject *args[] = { py_object };
-  PyObject *py_json_str = PyObject_Vectorcall( f_json_dumps, args, 1, NULL );
-  if( py_json_str == NULL ) {
+  PyObject *py_json = PyObject_Vectorcall( f_json_encode, args, 1, NULL );
+  return py_json; // PyBytes or PyUnicode
+  /*
+  if( py_json == NULL ) {
     return NULL;
   }
-  Py_ssize_t sz_bytes;
-  const char *bytes = PyUnicode_AsUTF8AndSize( py_json_str, &sz_bytes );
-  PyObject *py_json_bytes = PyBytes_FromStringAndSize( bytes, sz_bytes );
-  Py_DECREF( py_json_str );
-  return py_json_bytes;
+  if( PyBytes_Check( py_json ) ) {
+    PyObject *py_tmp = PyUnicode_FromStringAndSize( PyBytes_AS_STRING(py_json), PyBytes_GET_SIZE(py_json) );
+    Py_DECREF( py_json );
+    py_json = py_tmp;
+  }
+  // PyUnicode
+  return py_json;
+  */
+}
+
+
+
+/******************************************************************************
+ * Equivalent to:
+ * 
+ * If orjson is installed:
+ * >>> orjson.dumps( <some_object> ) # <- return bytes
+ *
+ * Otherwise fallback to:
+ *
+ * ## Long lived encoder instance
+ * json_encode = json.JSONEncoder( ensure_ascii=False, separators=(",",":") ).encode
+ * 
+ * >>> json_encode( <some_object> ).encode() # <- return bytes
+ *
+ ******************************************************************************
+ */
+static PyObject * __json_encode_bytes( PyObject *py_object ) {
+  PyObject *args[] = { py_object };
+  PyObject *py_json = PyObject_Vectorcall( f_json_encode, args, 1, NULL );
+  if( py_json == NULL ) {
+    return NULL;
+  }
+  if( PyUnicode_Check( py_json ) ) {
+    Py_ssize_t sz_bytes;
+    const char *bytes = PyUnicode_AsUTF8AndSize( py_json, &sz_bytes );
+    PyObject *py_tmp = PyBytes_FromStringAndSize( bytes, sz_bytes );
+    Py_DECREF( py_json );
+    py_json = py_tmp;
+  }
+  // PyBytes
+  return py_json;
 }
 
 
@@ -533,31 +758,73 @@ static PyObject * __json_dump( PyObject *py_object ) {
 /******************************************************************************
  * Equivalent to:
  *
- * >>> json.loads( <json_string> )
+ * If orjson is installed:
+ * >>> orjson.loads( <json_data> ) # <- return object
+ *
+ * Otherwise fallback to:
+ *
+ *  ## Long lived decoder instance
+ * json_decode = json.JSONDecoder().decode
+ * 
+ * >>> json_decode( <json_data> ) # <- return object
  *
  ******************************************************************************
  */
-static PyObject * __json_loads( PyObject *py_json ) {
-  // Execute: >>>  json.loads( py_json )
+static PyObject * __json_decode( PyObject *py_json ) {
+  // orjson handles bytes or unicode input
+  if( mod_orjson ) {
+    PyObject *args[] = { py_json };
+    return PyObject_Vectorcall( f_json_decode, args, 1, NULL );
+  } 
+  // json.JSONDecoder().decode
+  PyObject *py_unicode = NULL;
+  if( PyBytes_Check(py_json) ) {
+    if( (py_unicode = PyUnicode_FromStringAndSize( PyBytes_AS_STRING(py_json), PyBytes_GET_SIZE(py_json) )) == NULL ) {
+      return NULL;
+    }
+    py_json = py_unicode;
+  }
   PyObject *args[] = { py_json };
-  return PyObject_Vectorcall( f_json_loads, args, 1, NULL );
+  PyObject *py_ret = PyObject_Vectorcall( f_json_decode, args, 1, NULL );
+  Py_XDECREF( py_unicode );
+  return py_ret;
 }
 
 
 
 /******************************************************************************
  *
+ * Equivalent to:
+ *
+ * If orjson is installed:
+ * >>> orjson.loads( <json_data> ) # <- return object
+ *
+ * Otherwise fallback to:
+
+ * ## Long lived decoder instance
+ * json_decode = json.JSONDecoder().decode
+ * 
+ * >>> json_decode( <json_bytes> )
  *
  ******************************************************************************
  */
-static PyObject * __json_load( const char *bytes, int64_t sz_bytes ) {
-  PyObject *py_obj = NULL;
-  // TODO: Implement this so we don't have to go via a python string
-  PyObject *py_str = PyUnicode_FromStringAndSize( bytes, sz_bytes );
-  if( py_str ) {
-    py_obj = __json_loads( py_str );
-    Py_DECREF( py_str );
+static PyObject * __json_decode_bytes( const char *bytes, int64_t sz_bytes ) {
+  PyObject *py_json;
+  // orjson.loads()
+  if( mod_orjson ) {
+    // TODO: Consider crossover sz_bytes where PyMemoryView_FromMemory() might be faster.
+    py_json = PyBytes_FromStringAndSize( bytes, sz_bytes );
   }
+  // json.JSONDecoder().decode()
+  else {
+    py_json = PyUnicode_FromStringAndSize( bytes, sz_bytes );
+  }
+  if( py_json == NULL ) {
+    return NULL;
+  }
+  PyObject *args[] = { py_json };
+  PyObject *py_obj = PyObject_Vectorcall( f_json_decode, args, 1, NULL );
+  Py_DECREF( py_json );
   return py_obj;
 }
 
@@ -1999,23 +2266,35 @@ static int __render_pyobject_as_json( PyObject *py_obj, vgx_StreamBuffer_t *outp
     py_json = __pyvgx_PluginResponse_ToJSON( (PyVGX_PluginResponse*)py_obj );
   }
   else {
-    py_json = __json_dumps( py_obj );
+    py_json = __json_encode( py_obj );
   }
+  // JSON encoded
   if( py_json ) {
-    ret = __render_pyunicode( py_json, output );
+    if( PyBytes_Check(py_json) ) {
+      ret = __render_bytes( PyBytes_AS_STRING(py_json), PyBytes_GET_SIZE(py_json), output );
+    }
+    else {
+      ret = __render_pyunicode( py_json, output );
+    }
     Py_DECREF( py_json );
     return ret;
   }
+  // Not JSON encodable
   PyErr_Clear();
   PyObject *py_fallback = PyObject_Repr( py_obj );
   if( py_fallback == NULL ) {
     return -1;
   }
-  if( (py_json = __json_dumps( py_fallback )) == NULL ) {
+  if( (py_json = __json_encode( py_fallback )) == NULL ) {
     ret = -1;
   }
   else {
-    ret = __render_pyunicode( py_json, output );
+    if( PyBytes_Check(py_json) ) {
+      ret = __render_bytes( PyBytes_AS_STRING(py_json), PyBytes_GET_SIZE(py_json), output );
+    }
+    else {
+      ret = __render_pyunicode( py_json, output );
+    }
     Py_DECREF( py_json );
   }
   Py_DECREF( py_fallback );
@@ -2066,11 +2345,11 @@ static PyObject * _ipyvgx_codec__convert_pyobject_by_mediatype( vgx_MediaType mt
   case MEDIA_TYPE__application_json:
     // Not already json, encode
     if( !_ipyvgx_codec__is_type_json( py_plugin_return_type ) ) {
-      if( (py_media = __json_dumps( py_obj )) == NULL ) {
+      if( (py_media = __json_encode( py_obj )) == NULL ) {
         PyErr_Clear();
         PyObject *py_repr = PyObject_Repr( py_obj );
         if( py_repr ) {
-          py_media = __json_dumps( py_repr );
+          py_media = __json_encode( py_repr );
           Py_DECREF( py_repr );
         }
       }
@@ -2095,14 +2374,21 @@ static PyObject * _ipyvgx_codec__convert_pyobject_by_mediatype( vgx_MediaType mt
 
   // Extract bytes into return variable
   if( py_media ) {
-    Py_ssize_t size = 0;
-    *rstr = PyUnicode_AsUTF8AndSize( py_media, &size );
-    *rsz = size;
+    if( PyBytes_Check(py_media) ) {
+      *rstr = PyBytes_AS_STRING( py_media );
+      *rsz = PyBytes_GET_SIZE( py_media );
+    }
+    else {
+      Py_ssize_t size = 0;
+      *rstr = PyUnicode_AsUTF8AndSize( py_media, &size );
+      *rsz = size;
+    }
   }
 
   // Return new object representing the input object.
   // The returned object must not be decrefed until the
   // raw data returned in rstr is no longer needed.
+  // PyUnicode or PyBytes
   return py_media;
 }
 
@@ -2127,7 +2413,7 @@ DLL_HIDDEN int _ipyvgx_codec__init( void ) {
     }
   }
 
-  if( mod_json == NULL ) {
+  if( mod_json == NULL || mod_orjson == NULL ) {
     if( __import_json() < 0 ) {
       return -1;
     }
@@ -2147,6 +2433,7 @@ DLL_HIDDEN int _ipyvgx_codec__delete( void ) {
 
   __delete_pickle();
 
+  __delete_orjson();
   __delete_json();
 
   __delete_constants();
@@ -2170,10 +2457,10 @@ DLL_HIDDEN IPyVGXCodec iPyVGXCodec = {
   .NewCompressedPyBytesFromPyObject   = _ipyvgx_codec__new_compressed_pybytes_from_pyobject,
   .NewPyObjectFromCompressedPyBytes   = _ipyvgx_codec__new_pyobject_from_compressed_pybytes,
 
-  .NewJsonPyStringFromPyObject        = __json_dumps,
-  .NewJsonPyBytesFromPyObject         = __json_dump,
-  .NewPyObjectFromJsonPyString        = __json_loads,
-  .NewPyObjectFromJsonBytes           = __json_load,
+  .NewJsonFromPyObject                = __json_encode,
+  .NewJsonPyBytesFromPyObject         = __json_encode_bytes,
+  .NewPyObjectFromJsonPyObject        = __json_decode,
+  .NewPyObjectFromJsonBytes           = __json_decode_bytes,
   .IsTypeJson                         = _ipyvgx_codec__is_type_json,
 
   .RenderPyObjectByMediatype          = _ipyvgx_codec__render_pyobject_by_mediatype,

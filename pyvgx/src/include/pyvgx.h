@@ -1440,9 +1440,9 @@ typedef struct s_IPyVGXCodec {
   PyObject * (*NewPyObjectFromSerializedBytes)( const char *bytes, int64_t sz_bytes );
   PyObject * (*NewCompressedPyBytesFromPyObject)( PyObject *py_object );
   PyObject * (*NewPyObjectFromCompressedPyBytes)( PyObject *py_bytes );
-  PyObject * (*NewJsonPyStringFromPyObject)( PyObject *py_object );
+  PyObject * (*NewJsonFromPyObject)( PyObject *py_object );
   PyObject * (*NewJsonPyBytesFromPyObject)( PyObject *py_object );
-  PyObject * (*NewPyObjectFromJsonPyString)( PyObject *py_json );
+  PyObject * (*NewPyObjectFromJsonPyObject)( PyObject *py_json );
   PyObject * (*NewPyObjectFromJsonBytes)( const char *bytes, int64_t sz_bytes );
   bool (*IsTypeJson)( const PyObject *py_type );
   int (*RenderPyObjectByMediatype)( vgx_MediaType mtype, PyObject *py_plugin_return_type, PyObject *py_obj, vgx_StreamBuffer_t *output );

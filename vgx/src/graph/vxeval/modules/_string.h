@@ -886,7 +886,7 @@ static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_
   // Target string
   int64_t target_idx = nargs - 1;
   vgx_EvalStackItem_t *pt = IDX_PITEM( self, target_idx );
-  CString_t *CSTR__target = __item_as_cstring( self, pt );
+  const CString_t *CSTR__target = __item_as_cstring( self, pt );
   if( CSTR__target == NULL ) {
     STACK_RETURN_INTEGER(self, 0 );
   }
