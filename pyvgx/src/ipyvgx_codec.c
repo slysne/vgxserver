@@ -47,6 +47,7 @@ static PyObject *mod_orjson = NULL;
 //static PyObject *f_json_loads = NULL;
 static PyObject *f_json_encode = NULL;
 static PyObject *f_json_decode = NULL;
+static char g_json_codec_name[16] = {0};
 
 
 static int __create_constants( void );
@@ -428,6 +429,8 @@ static int __import_orjson( void ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x02 );
     }
 
+    strcpy( g_json_codec_name, "orjson" );
+
   }
   XCATCH( errcode ) {
     Py_XDECREF( mod_orjson );
@@ -461,6 +464,8 @@ static void __delete_orjson( void ) {
 
   Py_XDECREF( f_json_decode );
   f_json_decode = NULL;
+
+  memset( g_json_codec_name, 0, sizeof(g_json_codec_name) );
 }
 
 
@@ -678,6 +683,8 @@ static void __delete_json( void ) {
 
   Py_XDECREF( f_json_decode );
   f_json_decode = NULL;
+
+  memset( g_json_codec_name, 0, sizeof(g_json_codec_name) );
 }
 
 
@@ -1866,216 +1873,6 @@ static PyObject * _ipyvgx_codec__new_pyobject_from_encoded_object( const CString
  *
  ******************************************************************************
  */
-static PyObject * ORIG_ipyvgx_codec__new_pyobject_from_encoded_object( const CString_t *CSTR__encoded, PyObject **py_retkey ) {
-  char PALIGNED_ decomp_buffer[ARCH_PAGE_SIZE];
-
-  if( CSTR__encoded == NULL ) {
-    return NULL;
-  }
-    
-  CString_attr attr = CStringAttributes( CSTR__encoded );
-
-  PyObject *py_key = NULL;
-  PyObject *py_bytes = NULL;
-
-  // If compressed, decompress it first
-  bool compressed = false;
-  if( attr & CSTRING_ATTR_COMPRESSED ) {
-    attr ^= CSTRING_ATTR_COMPRESSED; // remove compressed bit
-    compressed = true;
-
-    char *rdata;
-    int rsz;
-    int rucsz;
-    CString_attr rattr;
-    int r;
-    BEGIN_PYVGX_THREADS {
-      r = CALLABLE( CSTR__encoded )->DecompressToBytes( CSTR__encoded, decomp_buffer, ARCH_PAGE_SIZE, &rdata, &rsz, &rucsz, &rattr );
-    } END_PYVGX_THREADS;
-    if( r < 0 ) {
-      PyErr_SetString( PyExc_MemoryError, "decompress error" );
-      return NULL;
-    }
-
-    py_bytes = PyBytes_FromStringAndSize( rdata, rsz );
-    if( rdata != decomp_buffer ) {
-      ALIGNED_FREE( rdata );
-    }
-    if( py_bytes == NULL ) {
-      return NULL;
-    }
-  }
-
-  // Unpack keyval
-  bool keyval = false;
-  if( attr & CSTRING_ATTR_KEYVAL ) {
-    attr ^= CSTRING_ATTR_KEYVAL; // remove keyval bit
-    keyval = true;
-    // Convert cstring to bytes if we didn't decompress above
-    if( py_bytes == NULL ) {
-      if( (py_bytes = __new_pybytes_from_cstring( CSTR__encoded )) == NULL ) {
-        return NULL;
-      }
-    }
-    // Unpickle to get the tuple (key, val)
-    PyObject *py_tuple = __pickle_loads( py_bytes );
-    Py_DECREF( py_bytes );
-    if( py_tuple == NULL || !PyTuple_Check( py_tuple ) || PyTuple_GET_SIZE( py_tuple ) != 2 ) {
-      if( !PyErr_Occurred() ) {
-        PyErr_SetString( PyExc_Exception, "bad internal encoding" );
-      }
-      Py_XDECREF( py_tuple );
-      return NULL;
-    }
-
-    py_key = PyTuple_GET_ITEM( py_tuple, 0 );
-    Py_INCREF( py_key );
-
-    py_bytes = PyTuple_GET_ITEM( py_tuple, 1 );
-    Py_INCREF( py_bytes );
-
-    Py_DECREF( py_tuple );
-  }
-
-  // Data was compressed and/or a keyval pair, create a new cstring for further processing
-  CString_t *CSTR__bytes = NULL;
-  if( py_bytes && ( (attr & CSTRING_ATTR_BYTEARRAY) || (attr & __CSTRING_ATTR_ARRAY_MASK) ) ) {
-    CSTR__bytes = __new_cstring_from_pystring( py_bytes, NULL, attr, true );
-    Py_DECREF( py_bytes );
-    py_bytes = NULL;
-    if( (CSTR__encoded = CSTR__bytes) == NULL ) {
-      Py_XDECREF( py_key );
-      return NULL;
-    }
-  }
-
-  PyObject *py_object = NULL;
-
-  // Bytearray
-  if( attr & CSTRING_ATTR_BYTEARRAY ) {
-    py_object = __new_pybytearray_from_cstring( CSTR__encoded );
-  }
-  // Bytes
-  else if( attr == CSTRING_ATTR_BYTES ) {
-    if( py_bytes ) {
-      if( PyBytes_CheckExact( py_bytes ) ) {
-        py_object = py_bytes; // already bytes, steal
-        py_bytes = NULL;
-      }
-      else {
-        py_object = PyBytes_FromObject( py_bytes );
-      }
-    }
-    else {
-      py_object = __new_pybytes_from_cstring( CSTR__encoded );
-    }
-  }
-  // Unicode string
-  else if( attr == CSTRING_ATTR_NONE ) {
-    if( py_bytes ) {
-      if( PyUnicode_Check( py_bytes ) ) {
-        py_object = py_bytes; // already unicode, steal
-        py_bytes = NULL;
-      }
-      else {
-        py_object = PyUnicode_FromEncodedObject( py_bytes, "utf-8", NULL ); 
-      }
-    }
-    else {
-      py_object = __new_pyunicode_from_cstring( CSTR__encoded );
-    }
-  }
-  // Encoded array or map
-  else if( attr & __CSTRING_ATTR_ARRAY_MASK ) {
-    switch( attr & __CSTRING_ATTR_ARRAY_MASK ) {
-    case CSTRING_ATTR_ARRAY_INT:
-    case CSTRING_ATTR_ARRAY_FLOAT:
-      py_object = iPyVGXBuilder.NumberListFromCString( CSTR__encoded );
-      break;
-    case CSTRING_ATTR_ARRAY_MAP:
-      py_object = iPyVGXBuilder.NumberMapFromCString( CSTR__encoded );
-      break;
-    }
-  }
-  // Callable
-  else if( attr & CSTRING_ATTR_CALLABLE ) {
-    // Convert cstring to bytes if we didn't already do so because of compression and/or keyval packing
-    if( py_bytes == NULL ) {
-      py_bytes = __new_pybytes_from_cstring( CSTR__encoded );
-    }
-    if( py_bytes ) {
-      PyObject *py_triple;
-      if( keyval ) {
-        py_triple = py_bytes; // already unpickled, steal
-        py_bytes = NULL;
-      }
-      else {
-        py_triple = __pickle_loads( py_bytes );
-      }
-      // Unpickle to get the 3-tuple (code, defaults, annotation)
-      if( py_triple && PyTuple_Check( py_triple ) && PyTuple_GET_SIZE( py_triple ) == 3 ) {
-        PyObject *py_code = NULL;
-        PyObject *py_defaults = NULL;
-        PyObject *py_annotations = NULL;
-        // 0: code
-        // 1: defaults
-        // 2: annotations
-        PyObject *py_code_bytes = PyTuple_GET_ITEM( py_triple, 0 );
-        if( PyBytes_CheckExact( py_code_bytes ) ) {
-          py_code = PyMarshal_ReadObjectFromString( PyBytes_AS_STRING( py_code_bytes ), PyBytes_GET_SIZE( py_code_bytes ) );
-        }
-        py_defaults = PyTuple_GET_ITEM( py_triple, 1 );
-        Py_INCREF( py_defaults );
-        py_annotations = PyTuple_GET_ITEM( py_triple, 2 );
-        Py_INCREF( py_annotations );
-        Py_XDECREF( py_triple );
-
-        // Create function instance from code, defaults and annotations
-        if( py_code ) {
-          py_object = __new_function_from_code_object( py_code, py_defaults, py_annotations );
-          Py_DECREF( py_code );
-        }
-        Py_XDECREF( py_defaults );
-        Py_XDECREF( py_annotations );
-      }
-    }
-  }
-  else if( attr & CSTRING_ATTR_SERIALIZED_TXT ) {
-    // Convert cstring to bytes if we didn't already do so because of compression and/or keyval packing
-    if( py_bytes == NULL ) {
-      py_bytes = __new_pybytes_from_cstring( CSTR__encoded );
-    }
-    if( py_bytes ) {
-      if( keyval ) {
-        py_object = py_bytes; // already unpickled, steal
-        py_bytes = NULL;
-      }
-      else {
-        py_object = __pickle_loads( py_bytes );
-      }
-    }
-  }
-
-  iString.Discard( &CSTR__bytes );
-
-  if( py_object && py_retkey ) {
-    *py_retkey = py_key;
-    py_key = NULL;
-  }
-  Py_XDECREF( py_key );
-  Py_XDECREF( py_bytes );
-
-  return py_object;
-}
-
-
-
-/******************************************************************************
- *
- * 
- *
- ******************************************************************************
- */
 __inline static bool _ipyvgx_codec__is_cstring_compressible( const CString_t *CSTR__string ) {
   return CALLABLE( CSTR__string )->Length( CSTR__string ) >= CSTRING_MIN_COMPRESS_SZ;
 }
@@ -2206,6 +2003,17 @@ static PyObject * _ipyvgx_codec__new_pyobject_from_compressed_pybytes( PyObject 
  */
 static bool _ipyvgx_codec__is_type_json( const PyObject *py_type ) {
   return py_type == mod_json;
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static const char * _ipyvgx_codec__json_codec_name( void ) {
+  return g_json_codec_name;
 }
 
 
@@ -2462,6 +2270,7 @@ DLL_HIDDEN IPyVGXCodec iPyVGXCodec = {
   .NewPyObjectFromJsonPyObject        = __json_decode,
   .NewPyObjectFromJsonBytes           = __json_decode_bytes,
   .IsTypeJson                         = _ipyvgx_codec__is_type_json,
+  .JsonCodecName                      = _ipyvgx_codec__json_codec_name,
 
   .RenderPyObjectByMediatype          = _ipyvgx_codec__render_pyobject_by_mediatype,
   .ConvertPyObjectByMediatype         = _ipyvgx_codec__convert_pyobject_by_mediatype
