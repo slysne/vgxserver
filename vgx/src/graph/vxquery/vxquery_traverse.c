@@ -641,6 +641,20 @@ __inline static bool __expand_next_check( control_vector_t *control, vgx_Collect
  *
  ***********************************************************************
  */
+/*
+static void __try_inc_expand_counter( vgx_Vertex_t *vertex ) {
+  float c0 = vgx_RankGetC0(&vertex->rank);
+  c0 += 1.0f;
+  vgx_RankSetC0(&vertex->rank, c0);
+}*/
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
   vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
   vgx_BaseCollector_context_t *collector = search->collector;
@@ -660,6 +674,8 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   int64_t depth_limit = recursion->limit.depth;
   int64_t visit_limit = recursion->limit.visit;
   int64_t exec_nanosec_limit = recursion->limit.exec_ms * 1000000LL;
+  
+  //int graph_is_RO = CALLABLE(vertex_RO->graph)->advanced->IsGraphReadonly(vertex_RO->graph);
 
   XTRY {
 
@@ -750,6 +766,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         if( __expand_next_check( &control, &frontier, collector, mem ) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
+          /*
+          if( !graph_is_RO ) {
+            __try_inc_expand_counter( next );
+          }
+          */
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
             match = VGX_ARC_FILTER_MATCH_ERROR;
             goto terminate_inner;
