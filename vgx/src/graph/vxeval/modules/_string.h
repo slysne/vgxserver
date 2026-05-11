@@ -46,6 +46,8 @@ static void __eval_string_strcasecmp( vgx_Evaluator_t *self );
 
 static void __eval_variadic_string_all( vgx_Evaluator_t *self );
 static void __eval_variadic_string_any( vgx_Evaluator_t *self );
+static void __eval_variadic_string_all_icase( vgx_Evaluator_t *self );
+static void __eval_variadic_string_any_icase( vgx_Evaluator_t *self );
 
 static void __eval_string_contains( vgx_Evaluator_t *self );
 static void __eval_string_contains_icase( vgx_Evaluator_t *self );
@@ -877,7 +879,7 @@ static void __eval_string_strcasecmp( vgx_Evaluator_t *self ) {
  * multimatch( target[, probe1[, probe2[, ...]]]  ) -> bool
  ***********************************************************************
  */
-static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_and ) {
+static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_and, bool ignore_case ) {
   int64_t nargs = self->op->arg.integer;
   if( nargs < 1 ) {
     STACK_RETURN_INTEGER(self, 0 );
@@ -904,7 +906,7 @@ static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_
         all = 0;
         break;
       }
-      if( (all = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, false )) == 0 ) {
+      if( (all = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, ignore_case )) == 0 ) {
         break;
       }
     }
@@ -916,7 +918,7 @@ static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_
     int any = 0;
     while( nargs-- > 0 ) {
       if( (probe = __pop_string( self )) != NULL ) {
-        if( (any = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, false )) != 0 ) {
+        if( (any = CALLABLE( CSTR__target )->Contains( CSTR__target, probe, ignore_case )) != 0 ) {
           break;
         }
       }
@@ -940,7 +942,7 @@ static void __eval_variadic_string_multimatch( vgx_Evaluator_t *self, bool mode_
  ***********************************************************************
  */
 static void __eval_variadic_string_all( vgx_Evaluator_t *self ) {
-  __eval_variadic_string_multimatch( self, true );
+  __eval_variadic_string_multimatch( self, true, false );
 }
 
 
@@ -950,7 +952,26 @@ static void __eval_variadic_string_all( vgx_Evaluator_t *self ) {
  ***********************************************************************
  */
 static void __eval_variadic_string_any( vgx_Evaluator_t *self ) {
-  __eval_variadic_string_multimatch( self, false );
+  __eval_variadic_string_multimatch( self, false, false );
+}
+
+
+/*******************************************************************//**
+ * striall( target[, probe1[, probe2[, ...]]]  ) -> bool
+ ***********************************************************************
+ */
+static void __eval_variadic_string_all_icase( vgx_Evaluator_t *self ) {
+  __eval_variadic_string_multimatch( self, true, true );
+}
+
+
+
+/*******************************************************************//**
+ * striany( target[, probe1[, probe2[, ...]]]  ) -> bool
+ ***********************************************************************
+ */
+static void __eval_variadic_string_any_icase( vgx_Evaluator_t *self ) {
+  __eval_variadic_string_multimatch( self, false, true );
 }
 
 

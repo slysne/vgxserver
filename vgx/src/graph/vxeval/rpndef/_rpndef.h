@@ -113,7 +113,9 @@ static __rpn_operation RpnUnaryHash          = { .surface.token="hash",         
 static __rpn_operation RpnStringStrcmp       = { .surface.token="strcmp",           .function.eval = __eval_string_strcmp,            .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStrcasecmp   = { .surface.token="strcasecmp",       .function.eval = __eval_string_strcasecmp,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnVariadicStringAll  = { .surface.token="strall",           .function.eval = __eval_variadic_string_all,      .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
-static __rpn_operation RpnVariadicStringAny  = { .surface.token="strany",           .function.eval = __eval_variadic_string_any,       .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAllIC= { .surface.token="striall",          .function.eval = __eval_variadic_string_all_icase,.type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAny  = { .surface.token="strany",           .function.eval = __eval_variadic_string_any,      .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAnyIC= { .surface.token="striany",          .function.eval = __eval_variadic_string_any_icase,.type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnStringContains     = { .surface.token="contains",         .function.eval = __eval_string_contains,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringContainsIC   = { .surface.token="containsi",        .function.eval = __eval_string_contains_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStartswith   = { .surface.token="startswith",       .function.eval = __eval_string_startswith,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
@@ -145,6 +147,8 @@ static __rpn_operation RpnUnaryIsBytes       = { .surface.token="isbytes",      
 static __rpn_operation RpnUnaryIsUTF8        = { .surface.token="isutf8",           .function.eval = __eval_unary_isutf8,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnUnaryIsArray       = { .surface.token="isarray",          .function.eval = __eval_unary_isarray,            .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnUnaryIsMap         = { .surface.token="ismap",            .function.eval = __eval_unary_ismap,              .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
+static __rpn_operation RpnUnaryIsPickled     = { .surface.token="ispickled",        .function.eval = __eval_unary_ispickled,          .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
+static __rpn_operation RpnUnaryIsCompressed  = { .surface.token="iscompressed",     .function.eval = __eval_unary_iscompressed,       .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnAnyNan             = { .surface.token="anynan",           .function.eval = __eval_variadic_anynan,          .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnAllNan             = { .surface.token="allnan",           .function.eval = __eval_variadic_allnan,          .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 
@@ -888,7 +892,9 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnStringStrcmp,
       &RpnStringStrcasecmp,
       &RpnVariadicStringAll,
+      &RpnVariadicStringAllIC,
       &RpnVariadicStringAny,
+      &RpnVariadicStringAnyIC,
       &RpnStringContains,
       &RpnStringContainsIC,
       &RpnStringStartswith,
@@ -921,6 +927,8 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnUnaryIsUTF8,
       &RpnUnaryIsArray,
       &RpnUnaryIsMap,
+      &RpnUnaryIsPickled,
+      &RpnUnaryIsCompressed,
       &RpnAnyNan,
       &RpnAllNan,
       &RpnUnaryInv,
