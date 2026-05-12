@@ -468,6 +468,19 @@ static const char * AddPostFilter_##Class( Class *self, const char *filter_expre
 #define __FunctionName__AddPostFilter( Class ) AddPostFilter_##Class
 
 
+/*******************************************************************//**
+ * AddRecursionFilter
+ *
+ ***********************************************************************
+ */
+#define __Define__AddRecursionFilter( Class )                                                   \
+static const char * AddRecursionFilter_##Class( Class *self, const char *filter_expression ) {  \
+  return __add_filter( &((vgx_BaseQuery_t*)self)->CSTR__recursion_filter, filter_expression );  \
+}
+#define __FunctionName__AddRecursionFilter( Class ) AddRecursionFilter_##Class
+
+
+
 
 /*******************************************************************//**
  * AddVertexCondition
@@ -793,6 +806,7 @@ static vgx_aggregator_predicator_value_t AggregatePredicatorValue_##Class( Class
   .AddPreFilter           = __FunctionName__AddPreFilter( Class ),        \
   .AddFilter              = __FunctionName__AddFilter( Class ),           \
   .AddPostFilter          = __FunctionName__AddPostFilter( Class ),       \
+  .AddRecursionFilter     = __FunctionName__AddRecursionFilter( Class ),  \
   .AddVertexCondition     = __FunctionName__AddVertexCondition( Class ),  \
   .AddRankingCondition    = __FunctionName__AddRankingCondition( Class ), \
   .SetErrorString         = __FunctionName__SetErrorString( Class ),      \
@@ -3525,6 +3539,7 @@ static void __initialize_base_query( vgx_BaseQuery_t *query ) {
   query->CSTR__pre_filter = NULL;
   query->CSTR__vertex_filter = NULL;
   query->CSTR__post_filter = NULL;
+  query->CSTR__recursion_filter = NULL;
 
   // Set vertex condition to default
   query->vertex_condition = NULL;
@@ -3577,6 +3592,7 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
     iString.Discard( &dest->CSTR__pre_filter );
     iString.Discard( &dest->CSTR__vertex_filter );
     iString.Discard( &dest->CSTR__post_filter );
+    iString.Discard( &dest->CSTR__recursion_filter );
 
     // Clone src filters into dest
     if( src->CSTR__pre_filter ) {
@@ -3594,6 +3610,11 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x7F4 );
       }
     }
+    if( src->CSTR__recursion_filter ) {
+      if( (dest->CSTR__recursion_filter = CStringClone( src->CSTR__recursion_filter )) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_MEMORY, 0x7F5 );
+      }
+    }
 
     // Vertex condition
     if( dest->vertex_condition ) {
@@ -3604,7 +3625,7 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
     if( src->vertex_condition ) {
       // clone vertex condition if any
       if( (dest->vertex_condition = iVertexCondition.Clone( src->vertex_condition )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F5 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F6 );
       }
     }
 
@@ -3617,14 +3638,14 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
     if( src->ranking_condition ) {
       // clone ranking condition if any
       if( (dest->ranking_condition = iRankingCondition.Clone( src->ranking_condition )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F6 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F7 );
       }
     }
 
     // Evaluator memory
     if( src->evaluator_memory ) {
       if( (dest->evaluator_memory = iEvaluator.CloneMemory( src->evaluator_memory )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F7 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x7F8 );
       }
     }
     else {
@@ -3689,6 +3710,7 @@ static void __clear_base_query( vgx_BaseQuery_t *query ) {
   iString.Discard( &query->CSTR__pre_filter );
   iString.Discard( &query->CSTR__vertex_filter );
   iString.Discard( &query->CSTR__post_filter );
+  iString.Discard( &query->CSTR__recursion_filter );
 
   // Clear and delete the vertex condition
   if( query->vertex_condition ) {

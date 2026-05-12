@@ -3473,6 +3473,7 @@ typedef struct s_vgx_recursion_config_t {
   struct {
     bool reset_metrics;
     bool reset_map;
+    CString_t *CSTR__filter;
   } visit;
   struct {
     int64_t width;

@@ -1524,6 +1524,7 @@ do {                                                              \
   const char * (*AddPreFilter)( Struct *self, const char *filter_expression );                                  \
   const char * (*AddFilter)( Struct *self, const char *filter_expression );                                     \
   const char * (*AddPostFilter)( Struct *self, const char *filter_expression );                                 \
+  const char * (*AddRecursionFilter)( Struct *self, const char *filter_expression );                            \
   vgx_VertexCondition_t * (*AddVertexCondition)( Struct *self, vgx_VertexCondition_t **vertex_condition );      \
   vgx_RankingCondition_t * (*AddRankingCondition)( Struct *self, vgx_RankingCondition_t **ranking_condition );  \
   const CString_t * (*SetErrorString)( Struct *self, CString_t **CSTR__error );                                 \
@@ -1542,6 +1543,7 @@ do {                                                              \
   CString_t *CSTR__pre_filter;                        \
   CString_t *CSTR__vertex_filter;                     \
   CString_t *CSTR__post_filter;                       \
+  CString_t *CSTR__recursion_filter;                  \
   vgx_VertexCondition_t *vertex_condition;            \
   vgx_RankingCondition_t *ranking_condition;          \
   struct s_vgx_ExpressEvalMemory_t *evaluator_memory; \
@@ -6812,6 +6814,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float zeta;                                 \
   int kappa;                                  \
   int lambda;                                 \
+  struct s_vgx_Evaluator_t *recursion_filter; \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty, 32 ); \

@@ -536,32 +536,50 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       ++bool_cursor;
     }
 
-    // Single meta parameter 'bias' contols smart defaults
-    PyObject *py_bias = PyDict_GetItemString( py_recursion, "bias" );
-    if( py_bias ) {
-      if( PyNumber_Check(py_bias) ) {
-        search_bias = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
+    PyObject *py_bias = NULL;
+    PyObject *py_omega = NULL;
+    PyObject *py_filter = NULL;
+
+    if( PyDict_Check( py_recursion ) ) {
+      // Single meta parameter 'bias' contols smart defaults
+      if( (py_bias = PyDict_GetItemString( py_recursion, "bias" )) != NULL ) {
+        if( PyNumber_Check(py_bias) ) {
+          search_bias = PyFloat_Check(py_bias) ? PyFloat_AsDouble( py_bias ) : (double)PyLong_AsLongLong(py_bias);
+        }
+        if( fabs(search_bias) > 100.0 ) {
+          PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
+          THROW_SILENT( CXLIB_ERR_API, 0x003 );
+        }
       }
-      if( fabs(search_bias) > 100.0 ) {
-        PyErr_Format( PyExc_ValueError, "recursive search invalid bias: numeric range -100.0 to +100.0 required" );
-        THROW_SILENT( CXLIB_ERR_API, 0x003 );
-      }
-    }
     
-    // Optimization weight 'omega'
-    PyObject *py_omega = PyDict_GetItemString( py_recursion, "omega" );
-    if( py_omega ) {
-      if( PyNumber_Check(py_omega) ) {
-        param->recursion.tune.omega = PyFloat_Check(py_omega) ? PyFloat_AsDouble( py_omega ) : (double)PyLong_AsLongLong(py_omega);
+      // Optimization weight 'omega'
+      if( (py_omega = PyDict_GetItemString( py_recursion, "omega" )) != NULL ) {
+        if( PyNumber_Check(py_omega) ) {
+          param->recursion.tune.omega = PyFloat_Check(py_omega) ? PyFloat_AsDouble( py_omega ) : (double)PyLong_AsLongLong(py_omega);
+        }
+        if( param->recursion.tune.omega > 2.0 || param->recursion.tune.omega < 0.0 ) {
+          PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
+          THROW_SILENT( CXLIB_ERR_API, 0x004 );
+        }
       }
-      if( param->recursion.tune.omega > 2.0 || param->recursion.tune.omega < 0.0 ) {
-        PyErr_Format( PyExc_ValueError, "recursive search invalid omega: numeric range 0.0 to 2.0 required" );
-        THROW_SILENT( CXLIB_ERR_API, 0x003 );
+
+      // Recursion filter
+      if( (py_filter = PyDict_GetItemString( py_recursion, "filter" )) != NULL ) {
+        if( !PyUnicode_Check(py_filter) ) {
+          THROW_SILENT( CXLIB_ERR_API, 0x005 );
+        }
+        const char *recursion_filter = PyUnicode_AsUTF8( py_filter );
+        if( (param->recursion.visit.CSTR__filter = iString.New( NULL, recursion_filter )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_MEMORY, 0x006 );
+        }
       }
+
     }
-    else {
+
+    if( py_omega == NULL ) {
       param->recursion.tune.omega = __recursion_bias2omega( search_bias );
     }
+
 
     // Auto config
     __recursion_auto_param( search_bias, &param->recursion );
@@ -581,7 +599,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
         if( !PyUnicode_Check( py_key ) ) {
           PyErr_Format( PyExc_TypeError, "recursive search invalid parameter name: %R (string required)", py_key );
-          THROW_SILENT( CXLIB_ERR_API, 0x004 );
+          THROW_SILENT( CXLIB_ERR_API, 0x007 );
         }
         const char *key = PyUnicode_AsUTF8( py_key );
         if( CharsEqualsConst( key, "bias" ) ) {
@@ -595,14 +613,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           if( CharsEqualsConst( key, int_cursor->name ) ) {
             if( !PyLong_Check(py_value) ) {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x005 );
+              THROW_SILENT( CXLIB_ERR_API, 0x008 );
             }
             int64_t value = PyLong_AsLongLong( py_value );
             if( value > int_cursor->maxval || value < int_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x006 );
+              THROW_SILENT( CXLIB_ERR_API, 0x009 );
             }
             *int_cursor->target = value;
             found = true;
@@ -620,14 +638,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           if( CharsEqualsConst( key, dbl_cursor->name ) ) {
             if( !PyNumber_Check(py_value) ) {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", dbl_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x007 );
+              THROW_SILENT( CXLIB_ERR_API, 0x00A );
             }
             double value = PyFloat_Check(py_value) ? PyFloat_AsDouble( py_value ) : (double)PyLong_AsLongLong(py_value);
             if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
               CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
               PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
               iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x008 );
+              THROW_SILENT( CXLIB_ERR_API, 0x00B );
             }
             *dbl_cursor->target = value;
             found = true;
@@ -651,7 +669,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
             }
             else {
               PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x009 );
+              THROW_SILENT( CXLIB_ERR_API, 0x00C );
             }
             found = true;
             break;
@@ -664,14 +682,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
 
         // Unknown config parameter
         PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
-        THROW_SILENT( CXLIB_ERR_API, 0x00A );
+        THROW_SILENT( CXLIB_ERR_API, 0x00D );
       }
 
     }
     // unsupported
     else {
       PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool, int or dict" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00B );
+      THROW_SILENT( CXLIB_ERR_API, 0x00E );
     }
           
     // Beam mode
@@ -684,11 +702,12 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     }
     else {
       PyErr_Format( PyExc_ValueError, "beam_width or frontier_limit required" );
-      THROW_SILENT( CXLIB_ERR_API, 0x00C );
+      THROW_SILENT( CXLIB_ERR_API, 0x00F );
     }
 
   }
   XCATCH( errcode ) {
+    iString.Discard( &param->recursion.visit.CSTR__filter );
     ret = -1;
   }
   XFINALLY {
@@ -721,6 +740,9 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
     }
     if( param->evalmem ) {
       iEvaluator.DiscardMemory( &param->evalmem );
+    }
+    if( param->recursion.visit.CSTR__filter ) {
+      iString.Discard( &param->recursion.visit.CSTR__filter );
     }
 
     iString.Discard( &param->implied.CSTR__error );
@@ -1045,6 +1067,12 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     }
   }
   XCATCH( errcode ) {
+
+    _pyvgx_Neighborhood__clear_params( (__base_query_args*)&param );
+
+    // TODO: Check that we really delete any allocated objects inside param
+    //       It looks like many things can go wrong above and the objects are not freed
+    //       here before we set param to NULL.
     param = NULL;
   }
   XFINALLY {
@@ -1567,6 +1595,13 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
       }
     }
 
+    // Assign recursion filter
+    if( param->recursion.visit.CSTR__filter ) {
+      if( CALLABLE( query )->AddRecursionFilter( query, param->recursion.visit.CSTR__filter ) == NULL ) {
+        THROW_SILENT( CXLIB_ERR_API, 0xC88 );
+      }
+    }
+
     // Assign vertex condition (steal)
     if( param->vertex_condition ) {
       CALLABLE( query )->AddVertexCondition( query, &param->vertex_condition );
@@ -1580,7 +1615,7 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
     // Select statement
     if( param->select_statement ) {
       if( CALLABLE( query )->SelectStatement( query, param->implied.graph, param->select_statement, &param->implied.CSTR__error ) < 0 ) {
-        THROW_SILENT( CXLIB_ERR_API, 0xC88 );
+        THROW_SILENT( CXLIB_ERR_API, 0xC89 );
       }
     }
 
