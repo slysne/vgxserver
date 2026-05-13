@@ -793,6 +793,7 @@ static vgx_aggregator_predicator_value_t AggregatePredicatorValue_##Class( Class
   __Define__AddPreFilter( Class )             \
   __Define__AddFilter( Class )                \
   __Define__AddPostFilter( Class )            \
+  __Define__AddRecursionFilter( Class )       \
   __Define__AddVertexCondition( Class )       \
   __Define__AddRankingCondition( Class )      \
   __Define__SetErrorString( Class )           \

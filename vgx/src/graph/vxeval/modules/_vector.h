@@ -273,7 +273,7 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
  * anncollect( )
  ***********************************************************************
  */
-static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
+static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target ) {
   if( probe == NULL || target == NULL ) {
     return 0.0f;
   }
@@ -339,6 +339,19 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Inject running threshold to keep delay line ticking
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
     return 0.0f;
+  }
+
+  vgx_Evaluator_t *RF = base->recursion_filter;
+  if( RF ) {
+    // Execute custom recursion filter
+    vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+      return 0.0f;
+    }
+    // Special case: recursion filter returned a float, interpret as score override
+    if( result->type == STACK_ITEM_TYPE_REAL ) {
+      score = clamp_value( (float)result->real, 0.0f, 2.0f );
+    }
   }
   
   // Score is good enough to help refine the baseline threshold
@@ -410,8 +423,9 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
   double score = 0.0;
   if( px->type == STACK_ITEM_TYPE_VECTOR ) {
     const vgx_Vector_t *probe = px->vector;
-    const vgx_Vector_t *target = self->context.HEAD->vector;
-    score = __fast_anncollect( self, probe, target );
+    const vgx_Vertex_t *vertex = self->context.HEAD;
+    const vgx_Vector_t *target = vertex->vector;
+    score = __fast_anncollect( self, probe, vertex, target );
   }
   SET_REAL_PITEM_VALUE( px, score );
 }

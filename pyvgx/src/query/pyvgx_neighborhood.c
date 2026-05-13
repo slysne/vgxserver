@@ -223,7 +223,7 @@ typedef struct s_bool_config_param {
 } bool_config_param;
  
 
- 
+
 /******************************************************************************
  *
  *
@@ -602,7 +602,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           THROW_SILENT( CXLIB_ERR_API, 0x007 );
         }
         const char *key = PyUnicode_AsUTF8( py_key );
-        if( CharsEqualsConst( key, "bias" ) ) {
+        if( CharsEqualsConst( key, "bias" ) || CharsEqualsConst( key, "filter" ) ) {
           continue; // already handled
         }
 
@@ -1068,7 +1068,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
   }
   XCATCH( errcode ) {
 
-    _pyvgx_Neighborhood__clear_params( (__base_query_args*)&param );
+    _pyvgx_Neighborhood__clear_params( (__base_query_args*)param );
 
     // TODO: Check that we really delete any allocated objects inside param
     //       It looks like many things can go wrong above and the objects are not freed
@@ -1597,7 +1597,7 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
 
     // Assign recursion filter
     if( param->recursion.visit.CSTR__filter ) {
-      if( CALLABLE( query )->AddRecursionFilter( query, param->recursion.visit.CSTR__filter ) == NULL ) {
+      if( CALLABLE( query )->AddRecursionFilter( query, CStringValue(param->recursion.visit.CSTR__filter) ) == NULL ) {
         THROW_SILENT( CXLIB_ERR_API, 0xC88 );
       }
     }
