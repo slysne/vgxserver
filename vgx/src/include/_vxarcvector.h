@@ -791,6 +791,7 @@ __inline static vgx_LockableArc_t * __init_lockable_arc( vgx_LockableArc_t *larc
       }
     } GRAPH_RELEASE;
   }
+  larc->flag.bits = 0;
   return larc;
 }
 

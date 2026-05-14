@@ -982,9 +982,12 @@ typedef struct s_vgx_LockableArc_t {
     vgx_VertexRefLock_t tail_lock;
     vgx_VertexRefLock_t head_lock;
   } acquired;
-  struct {
-    int8_t __rsv1;
-    int8_t __rsv2;
+  union {
+    uint16_t bits;
+    struct {
+      int8_t recursion_skip_heap_collect;
+      int8_t __rsv2;
+    };
   } flag;
 #ifdef VGX_CONSISTENCY_CHECK
 #endif
@@ -1001,6 +1004,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                                   \
     .tail_lock = TailLocked,                                      \
     .head_lock = HeadLocked                                       \
+  },                                                              \
+  .flag = {                                                       \
+    .bits = 0                                                     \
   }                                                               \
 }
 
@@ -1015,6 +1021,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                           \
     .tail_lock = 0,                                       \
     .head_lock = 0                                        \
+  },                                                      \
+  .flag = {                                               \
+    .bits = 0                                             \
   }                                                       \
 }
 

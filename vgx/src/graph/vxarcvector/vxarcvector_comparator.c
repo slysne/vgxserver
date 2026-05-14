@@ -1002,14 +1002,16 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     .predicator = larc->head.predicator,
     .sort       = sort
   };
-  vgx_CollectorItem_t result_heap_discarded;
-  vgx_CollectorItem_t *result_heap_location;
+  vgx_CollectorItem_t result_heap_discarded = {0};
+  vgx_CollectorItem_t *result_heap_location = NULL;
   int refmap_updated;
   float recursion_score = larc->head.predicator.val.real;
   
   
   // Try to collect item into result heap
-  result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+  if( !larc->flag.recursion_skip_heap_collect ) {
+    result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+  }
     
   // ------------------------------------------------------------
   // Normal non-recursive (or sort not good enough for recursion)

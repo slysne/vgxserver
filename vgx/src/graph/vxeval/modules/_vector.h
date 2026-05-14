@@ -340,19 +340,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
     return 0.0f;
   }
-
-  vgx_Evaluator_t *RF = base->recursion_filter;
-  if( RF ) {
-    // Execute custom recursion filter
-    vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
-    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
-      return 0.0f;
-    }
-    // Special case: recursion filter returned a float, interpret as score override
-    if( result->type == STACK_ITEM_TYPE_REAL ) {
-      score = clamp_value( (float)result->real, 0.0f, 2.0f );
-    }
-  }
   
   // Score is good enough to help refine the baseline threshold
   mem->counter.contrib++;
@@ -372,6 +359,19 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Result contribution
     if( score > top_k_th ) {
       mem->counter.accept++;
+      vgx_Evaluator_t *RF = base->recursion_filter;
+      if( RF ) {
+        RF->context.rankscore = score;
+        // Execute custom recursion filter
+        vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+        if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+          self->context.larc->flag.recursion_skip_heap_collect = true;
+        }
+        // Special case: recursion filter returned a float, interpret as score override
+        if( result->type == STACK_ITEM_TYPE_REAL ) {
+          score = clamp_value( (float)result->real, 0.0f, 2.0f );
+        }
+      }
     }
 
     // Collect
@@ -382,6 +382,9 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
       .real = score,
     };
     __collect( self, &score_arc );
+    
+    // Clear any temporary flags
+    self->context.larc->flag.bits = 0;
 
     // Refresh
     top_k_th = fmaxf( _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap ), threshold );
