@@ -202,6 +202,7 @@ typedef struct s_int_config_param {
   const int64_t dflt;
   const int64_t minval;
   const int64_t maxval;
+  bool captured;
 } int_config_param;
 
 
@@ -212,16 +213,26 @@ typedef struct s_dbl_config_param {
   const double dflt;
   const double minval;
   const double maxval;
+  bool captured;
 } dbl_config_param;
 
 
 
 typedef struct s_bool_config_param {
   const char *name;
-  bool dflt;
   bool *target;
+  bool dflt;
+  bool captured;
 } bool_config_param;
  
+
+
+typedef struct s_obj_config_param {
+  const char *name;
+  void **target;
+  bool captured;
+} obj_config_param;
+
 
 
 /******************************************************************************
@@ -459,7 +470,7 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
  *
  ******************************************************************************
  */
-static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neighborhood_query_args *param ) {
+static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject *py_recursion, __neighborhood_query_args *param ) {
   int ret = 0;
   XTRY {
 
@@ -499,7 +510,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     };
 
     dbl_config_param dbl_config[] = {
-      { .name = "bias",             .target = &param->recursion.bias,             .dflt=0.0,    .minval=-100.0,      .maxval=100.0 },        // default 0.0 (balanced high recall good QPS)
+      { .name = "bias",             .target = &param->recursion.bias,             .dflt=0.0,    .minval=-100.0,      .maxval=100.0, .captured=true },   // default 0.0 (balanced high recall good QPS)
       { .name = "beam_curve",       .target = &param->recursion.beam.curve,       .dflt=0.99,   .minval=0.0,         .maxval=1.0 },          // default 0.99=gentle taper
       { .name = "alpha",            .target = &param->recursion.tune.alpha,       .dflt=-0.32,  .minval=-10.0,       .maxval=10.0 },         // default -0.32 (depth discount for expansion threshold)
       { .name = "beta",             .target = &param->recursion.tune.beta,        .dflt=0.0,    .minval=-10.0,       .maxval=10.0 },         // default 0.0 (evals discount for expansion threshold)
@@ -507,7 +518,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
       { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
-      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=1.0,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
+      { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=1.0,    .minval=0.0,         .maxval=2.0,   .captured=true },    // default 0.7 (all optimizations weight)
       {0}
     };
 
@@ -518,27 +529,42 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       {0}
     };
 
+    obj_config_param obj_config[] = {
+      { .name = "vector",            .target = (void**)&param->recursion.probe,             },
+      { .name = "filter",            .target = (void**)&param->recursion.visit.CSTR__filter },
+      {0}
+    };
+
+    // Populate default int values
     int_config_param *int_cursor = int_config;
     while( int_cursor->name ) {
       *int_cursor->target = int_cursor->dflt;
       ++int_cursor;
     }
 
+    // Populate default double values
     dbl_config_param *dbl_cursor = dbl_config;
     while( dbl_cursor->name ) {
       *dbl_cursor->target = dbl_cursor->dflt;
       ++dbl_cursor;
     }
 
+    // Populate default bool values
     bool_config_param *bool_cursor = bool_config;
     while( bool_cursor->name ) {
       *bool_cursor->target = bool_cursor->dflt;
       ++bool_cursor;
     }
 
+    // Populate default object values to NULL
+    obj_config_param *obj_cursor = obj_config;
+    while( obj_cursor->name ) {
+      *obj_cursor->target = NULL;
+      ++obj_cursor;
+    }
+
     PyObject *py_bias = NULL;
     PyObject *py_omega = NULL;
-    PyObject *py_filter = NULL;
 
     if( PyDict_Check( py_recursion ) ) {
       // Single meta parameter 'bias' contols smart defaults
@@ -563,16 +589,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
         }
       }
 
-      // Recursion filter
-      if( (py_filter = PyDict_GetItemString( py_recursion, "filter" )) != NULL ) {
-        if( !PyUnicode_Check(py_filter) ) {
-          THROW_SILENT( CXLIB_ERR_API, 0x005 );
-        }
-        const char *recursion_filter = PyUnicode_AsUTF8( py_filter );
-        if( (param->recursion.visit.CSTR__filter = iString.New( NULL, recursion_filter )) == NULL ) {
-          THROW_ERROR( CXLIB_ERR_MEMORY, 0x006 );
-        }
-      }
 
     }
 
@@ -602,87 +618,113 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
           THROW_SILENT( CXLIB_ERR_API, 0x007 );
         }
         const char *key = PyUnicode_AsUTF8( py_key );
-        if( CharsEqualsConst( key, "bias" ) || CharsEqualsConst( key, "filter" ) ) {
-          continue; // already handled
-        }
 
-        bool found = false;
         // Integer parameter ?
         int_cursor = int_config;
         while( int_cursor->name ) {
           if( CharsEqualsConst( key, int_cursor->name ) ) {
-            if( !PyLong_Check(py_value) ) {
-              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x008 );
+            if( !int_cursor->captured ) {
+              if( !PyLong_Check(py_value) ) {
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", int_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x008 );
+              }
+              int64_t value = PyLong_AsLongLong( py_value );
+              if( value > int_cursor->maxval || value < int_cursor->minval ) {
+                CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
+                PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
+                iString.Discard( &CSTR__range );
+                THROW_SILENT( CXLIB_ERR_API, 0x009 );
+              }
+              *int_cursor->target = value;
+              int_cursor->captured = true;
             }
-            int64_t value = PyLong_AsLongLong( py_value );
-            if( value > int_cursor->maxval || value < int_cursor->minval ) {
-              CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", int_cursor->minval, int_cursor->maxval );
-              PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", int_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
-              iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x009 );
-            }
-            *int_cursor->target = value;
-            found = true;
-            break;
+            goto found;
           }
           ++int_cursor;
-        }
-        if( found ) {
-          continue;
         }
 
         // Float parameter ?
         dbl_cursor = dbl_config;
         while( dbl_cursor->name ) {
           if( CharsEqualsConst( key, dbl_cursor->name ) ) {
-            if( !PyNumber_Check(py_value) ) {
-              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", dbl_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x00A );
+            if( !dbl_cursor->captured ) {
+              if( !PyNumber_Check(py_value) ) {
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", dbl_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x00A );
+              }
+              double value = PyFloat_Check(py_value) ? PyFloat_AsDouble( py_value ) : (double)PyLong_AsLongLong(py_value);
+              if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
+                CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
+                PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
+                iString.Discard( &CSTR__range );
+                THROW_SILENT( CXLIB_ERR_API, 0x00B );
+              }
+              *dbl_cursor->target = value;
+              dbl_cursor->captured = true;
             }
-            double value = PyFloat_Check(py_value) ? PyFloat_AsDouble( py_value ) : (double)PyLong_AsLongLong(py_value);
-            if( value > dbl_cursor->maxval || value < dbl_cursor->minval ) {
-              CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", dbl_cursor->minval, dbl_cursor->maxval );
-              PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", dbl_cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
-              iString.Discard( &CSTR__range );
-              THROW_SILENT( CXLIB_ERR_API, 0x00B );
-            }
-            *dbl_cursor->target = value;
-            found = true;
-            break;
+            goto found;
           }
           ++dbl_cursor;
-        }
-        if( found ) {
-          continue;
         }
 
         // Boolean parameter?
         bool_cursor = bool_config;
         while( bool_cursor->name ) {
           if( CharsEqualsConst( key, bool_cursor->name ) ) {
-            if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
-              *bool_cursor->target = true;
+            if( !bool_cursor->captured ) {
+              if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
+                *bool_cursor->target = true;
+              }
+              else if( py_value == Py_False || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) <= 0) ) {
+                *bool_cursor->target = false;
+              }
+              else {
+                PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
+                THROW_SILENT( CXLIB_ERR_API, 0x00C );
+              }
+              bool_cursor->captured = true;
             }
-            else if( py_value == Py_False || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) <= 0) ) {
-              *bool_cursor->target = false;
-            }
-            else {
-              PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", bool_cursor->name, py_value );
-              THROW_SILENT( CXLIB_ERR_API, 0x00C );
-            }
-            found = true;
-            break;
+            goto found;
           }
           ++bool_cursor;
         }
-        if( found ) {
-          continue;
+
+        obj_cursor = obj_config;
+        while( obj_cursor->name ) {
+          if( CharsEqualsConst( key, obj_cursor->name ) ) {
+            if( !obj_cursor->captured ) {
+              if( CharsEqualsConst( key, "vector" ) ) {
+                if( (*obj_cursor->target = iPyVGXParser.InternalVectorFromPyObject( pygraph->graph->similarity, py_value, NULL, true, true )) == NULL ) {
+                  if( !PyErr_Occurred() ) {
+                    PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R", int_cursor->name, py_value );
+                  }
+                  THROW_SILENT( CXLIB_ERR_API, 0x00D );
+                }
+              }
+              else if( CharsEqualsConst( key, "filter" ) ) {
+                const char *recursion_filter = PyUnicode_AsUTF8( py_value );
+                if( recursion_filter == NULL ) {
+                  THROW_SILENT( CXLIB_ERR_API, 0x00E );
+                }
+                if( (param->recursion.visit.CSTR__filter = iString.New( NULL, recursion_filter )) == NULL ) {
+                  THROW_ERROR( CXLIB_ERR_MEMORY, 0x00F );
+                }
+              }
+              else {
+                // ???
+              }
+              obj_cursor->captured = true;
+            }
+            goto found;
+          }
+          ++obj_cursor;
         }
 
         // Unknown config parameter
         PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
         THROW_SILENT( CXLIB_ERR_API, 0x00D );
+      found:
+        continue;
       }
 
     }
@@ -703,6 +745,14 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
     else {
       PyErr_Format( PyExc_ValueError, "beam_width or frontier_limit required" );
       THROW_SILENT( CXLIB_ERR_API, 0x00F );
+    }
+
+    // No recursion vector specified, inherit from ranking condition if we have one
+    if( param->recursion.probe == NULL ) {
+      if( param->ranking_condition && param->ranking_condition->vector ) {
+        param->recursion.probe = param->ranking_condition->vector;
+        CALLABLE(param->recursion.probe)->Incref(param->recursion.probe);
+      }
     }
 
   }
@@ -741,6 +791,10 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
     if( param->evalmem ) {
       iEvaluator.DiscardMemory( &param->evalmem );
     }
+    if( param->recursion.probe ) {
+      CALLABLE(param->recursion.probe)->Decref(param->recursion.probe);
+      param->recursion.probe = NULL;
+    }
     if( param->recursion.visit.CSTR__filter ) {
       iString.Discard( &param->recursion.visit.CSTR__filter );
     }
@@ -756,7 +810,7 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
 
 
 PyVGX_DOC( pyvgx_Neighborhood__doc__,
-  "Neighborhood( id, arc=(None,D_OUT), pre=None, filter=None, post=None, neighbor=\"*\", vector=[], collect=C_COLLECT, result=R_STR, fields=F_ID, nest=0, nested_hits=-1, select=None, rank=None, sortby=S_NONE, aggregate=None, memory=4, offset=0, hits=-1, timeout=0, limexec=False ) -> list\n"
+  "Neighborhood( id, arc=(None,D_OUT), pre=None, filter=None, post=None, neighbor=\"*\", vector=[], collect=C_COLLECT, recursion=False, result=R_STR, fields=F_ID, nest=0, nested_hits=-1, select=None, rank=None, sortby=S_NONE, aggregate=None, memory=4, offset=0, hits=-1, timeout=0, limexec=False ) -> list\n"
   "\n"
   "Perform a neighborhood search around vertex 'id'.\n"
   "\n"
@@ -1008,7 +1062,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     // recursive
     // ---------
     if( py_recursion ) {
-      if( _pyvgx_Neighborhood__parse_recursion( py_recursion, param ) < 0 ) {
+      if( _pyvgx_Neighborhood__parse_recursion( pygraph, py_recursion, param ) < 0 ) {
         THROW_SILENT( CXLIB_ERR_API, 0x007 );
       }
       if( __is_recursion_enabled( &param->recursion ) ) {

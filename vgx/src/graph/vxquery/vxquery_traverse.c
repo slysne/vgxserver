@@ -713,6 +713,12 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       mem->dynamic_taper.kappa = collector->kappa;
       mem->dynamic_taper.lambda = collector->lambda;
     }
+
+    // Memory object inherits recursion probe vector if memory vector not explicitly set
+    if( mem->probe == NULL && recursion->probe ) {
+      mem->probe = recursion->probe;
+      CALLABLE(mem->probe)->Incref(mem->probe);
+    }
     
     // Initialize control vector after the first expansion.
     control_vector_t control = {0};

@@ -4037,6 +4037,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
     .recursion = {
       .mode                     = recursion_config->mode,
       .bias                     = recursion_config->bias,
+      .probe                    = recursion_config->probe,
       .heap = {
         .size                   = recursion_config->heap.size,
       },
