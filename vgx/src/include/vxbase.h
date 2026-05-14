@@ -3454,67 +3454,6 @@ typedef enum e_vgx_recursion_mode_t {
  * 
  ***********************************************************************
  */
-typedef struct s_vgx_recursion_config_t {
-  vgx_recursion_mode_t mode;
-  double bias;
-  struct {
-    int64_t size;
-  } heap;
-  struct {
-    int64_t size;
-  } shadow;
-  struct {
-    int64_t frontier;
-    int64_t expansion;
-    int64_t depth;
-    int64_t exec_ms;
-    int64_t visit;
-  } limit;
-  struct {
-    bool reset_metrics;
-    bool reset_map;
-    CString_t *CSTR__filter;
-  } visit;
-  struct {
-    int64_t width;
-    int64_t min_width;
-    int64_t max_width;
-    double curve;
-    bool adaptive_taper;
-  } beam;
-  struct {
-    double alpha;
-    double beta;
-    double gamma;
-    double delta;
-    double epsilon;
-    double zeta;
-    int64_t kappa;
-    int64_t lambda;
-    double omega;
-  } tune;
-  struct {
-    int64_t select;
-  } init;
-  
-} vgx_recursion_config_t;
-
-
-#define VGX_RECURSION_HEAP_SIZE_MAX (1<<20)
-#define VGX_RECURSION_HEAP_SHADOW_MAX (1<<20)
-#define VGX_RECURSION_FRONTIER_SIZE_MAX (1<<20)
-#define VGX_RECURSION_BEAM_SIZE_MAX (1<<16)
-
-__inline static bool __is_recursion_enabled( const vgx_recursion_config_t *recursion ) {
-  return recursion && recursion->mode != VGX_RECURSION_MODE_NONE;
-}
-
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- */
 typedef enum e_vgx_QueryType {
 
   /*                                                                                            */
