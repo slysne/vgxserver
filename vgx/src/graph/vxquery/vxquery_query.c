@@ -4052,7 +4052,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Gra
       },
       .visit = {
         .reset_metrics          = recursion_config->visit.reset_metrics,
-        .reset_map              = recursion_config->visit.reset_map
+        .reset_map              = recursion_config->visit.reset_map,
+        .CSTR__filter           = recursion_config->visit.CSTR__filter
       },
       .beam = {
         .width                  = recursion_config->beam.width,
