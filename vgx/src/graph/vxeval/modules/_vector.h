@@ -274,57 +274,71 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
  ***********************************************************************
  */
 static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target ) {
-  if( probe == NULL || target == NULL ) {
-    return 0.0f;
-  }
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
   // Eval counter
   mem->counter.eval++;
 
-  // Extract probe vector bytes
-  BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
-  int32_t lenA = probe->metas.vlen;
+  vgx_BaseCollector_context_t *base = self->context.collector;
+  vgx_Evaluator_t *RF = base->recursion_filter;
 
-  // Extract target vector bytes
-  int32_t lenB = target->metas.vlen;
-  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
+  float score;
 
-  // Safeguard
-  int32_t len = minimum_value( lenA, lenB );
+  if( probe && target ) {
+    // Extract probe vector bytes
+    BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
+    int32_t lenA = probe->metas.vlen;
 
-  /*
-  // Hamming distance filter enabled when > 1.0
-  if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
-    FP_t lshA = mem->probe->fp;
-    FP_t lshB = target->fp;
-    double min_cos = mem->threshold - 1.0;
-    int idx = (int)(min_cos * 127) & 0x7F;
-    int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
-    // LSH Hamming distance filter progressively stricter with higher thresholds
-    if( hamdist64( lshA, lshB ) > max_ham ) {
-      STACK_RETURN_REAL( self, 0.0 );
+    // Extract target vector bytes
+    int32_t lenB = target->metas.vlen;
+    BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
+
+    // Safeguard
+    int32_t len = minimum_value( lenA, lenB );
+
+    /*
+    // Hamming distance filter enabled when > 1.0
+    if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
+      FP_t lshA = probe->fp;
+      FP_t lshB = target->fp;
+      double min_cos = mem->threshold - 1.0;
+      int idx = (int)(min_cos * 127) & 0x7F;
+      int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
+      // LSH Hamming distance filter progressively stricter with higher thresholds
+      if( hamdist64( lshA, lshB ) > max_ham ) {
+        STACK_RETURN_REAL( self, 0.0 );
+      }
     }
-  }
-  */  
+    */  
 
-  // -------------------
-  // COMPUTE COSINE(A,B)
-  // -------------------
-  // Faster when both vectors are cosine_mode
-  double cosine;
-  if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
-    double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
+    // -------------------
+    // COMPUTE COSINE(A,B)
+    // -------------------
+    // Faster when both vectors are cosine_mode
+    double cosine;
+    if( probe->metas.flags.cos && target->metas.flags.cos ) {
+      double invnormprod = probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
+      cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
+    }
+    else {
+      cosine = vxeval_bytearray_cosine(A, B, len);
+    }
+    score = (float)cosine + 1.0f; // range is [0.0 - 2.0], so 1.0 represents "zero" middle ground
+  }
+  else if( RF ) {
+    // Execute custom recursion filter
+    vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+      self->context.larc->flag.recursion_skip_heap_collect = true;
+    }
+    double retval = (float)iEvaluator.GetReal( result );
+    RF->context.rankscore = score = clamp_value( (float)retval, 0.0f, 2.0f );
+    RF = NULL; // forget the filter so we don't execute it again below
   }
   else {
-    cosine = vxeval_bytearray_cosine(A, B, len);
+    score = 0.0f;
   }
-
-  vgx_BaseCollector_context_t *base = self->context.collector;
-
-  float score = (float)cosine + 1.0f; // [0.0 - 2.0]
 
   // Adaptive search enabled
   if( base->adaptive_recursion ) {
@@ -359,7 +373,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Result contribution
     if( score > top_k_th ) {
       mem->counter.accept++;
-      vgx_Evaluator_t *RF = base->recursion_filter;
       if( RF ) {
         RF->context.rankscore = score;
         // Execute custom recursion filter
@@ -369,7 +382,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
         }
         // Special case: recursion filter returned a float, interpret as score override
         if( result->type == STACK_ITEM_TYPE_REAL ) {
-          score = clamp_value( (float)result->real, 0.0f, 2.0f );
+          RF->context.rankscore = score = clamp_value( (float)result->real, 0.0f, 2.0f );
         }
       }
     }
