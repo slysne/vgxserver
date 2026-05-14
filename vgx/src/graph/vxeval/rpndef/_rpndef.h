@@ -88,7 +88,12 @@ static __rpn_operation RpnPushReg4           = { .surface.token="r4",           
 
 static __rpn_operation RpnPushMemX           = { .surface.token="M",                .function.eval = __eval_memory_load,              .type = OP_MEMORY,                .precedence = OPP_SUBSCRIPT };
 
-static __rpn_operation RpnPushDepth          = { .surface.token="depth",            .function.eval = __eval_memory_depth,             .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecEval        = { .surface.token="rec.eval",        .function.eval = __eval_memory_recursion_evals,      .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecThreshold   = { .surface.token="rec.threshold",   .function.eval = __eval_memory_recursion_threshold,  .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecFrontier    = { .surface.token="rec.frontier",    .function.eval = __eval_memory_recursion_frontier,   .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecResult      = { .surface.token="rec.result",      .function.eval = __eval_memory_recursion_result,     .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecDepth       = { .surface.token="rec.depth",       .function.eval = __eval_memory_recursion_depth,      .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecExpand      = { .surface.token="rec.expand",      .function.eval = __eval_memory_recursion_expansions, .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
 
 /*
 static __rpn_operation RpnPushEnumRelEnc     = { .surface.token="rel",              .function.eval = __stack_noop,                    .type = OP_RELATIONSHIP,          .precedence = OPP_SUBSCRIPT };
@@ -871,7 +876,12 @@ static __rpn_operation *__rpn_definitions[] = {
 
       &RpnPushMemX,
       
-      &RpnPushDepth,
+      &RpnPushRecEval,
+      &RpnPushRecThreshold,
+      &RpnPushRecFrontier,
+      &RpnPushRecResult,
+      &RpnPushRecDepth,
+      &RpnPushRecExpand,
 
       /*
       &RpnPushEnumRelEnc,
