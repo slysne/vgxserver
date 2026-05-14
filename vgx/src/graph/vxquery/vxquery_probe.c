@@ -1076,7 +1076,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       THROW_ERROR( CXLIB_ERR_MEMORY, 0x641 );
     }
 
-    if( pre_evaluator || post_evaluator || conditional->evaluator || traversing->evaluator || (collector && collector->recursion_filter) ) {
+    if( pre_evaluator || post_evaluator || conditional->evaluator || traversing->evaluator ) {
       if( query->evaluator_memory == NULL ) {
         if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_MEMORY, 0x642 );
@@ -1198,6 +1198,15 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.arcfilter = probe->conditional.arcfilter;
       probe->traversing.arcdir = probe->conditional.arcdir;
       probe->traversing.override = probe->conditional.override;
+    }
+
+    // Special case: recursion filter's vertex access must be flagged in traversing filter for proper locking
+    if( collector && collector->recursion_filter ) {
+      if( CALLABLE( collector->recursion_filter )->ThisNextAccess( collector->recursion_filter ) ) {
+        if( probe->traversing.arcfilter ) {
+          probe->traversing.arcfilter->arcfilter_locked_head_access = true;
+        }
+      }
     }
 
     // 5. Create collector filter for this neighborhood level
