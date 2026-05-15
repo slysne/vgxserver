@@ -2415,6 +2415,11 @@ static void Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_
  ***********************************************************************
  */
 static void Evaluator__set_vector( vgx_Evaluator_t *self, vgx_Vector_t *vector ) {
+  // Same vector as before
+  if( vector == self->current.vector ) {
+    return;
+  }
+
   // Discard any previous vector
   if( self->current.vector ) {
     CALLABLE( self->current.vector )->Decref( self->current.vector );
@@ -2470,23 +2475,26 @@ static vgx_EvalStackItem_t * Evaluator__eval( vgx_Evaluator_t *self ) {
  * This assumes the context has been set to non-NULL values for:
  *   - tail vertex
  *   - prev arc
- * It further assumes the evaluator will NOT access:
+ * It further assumes the evaluator will not access:
  *   - next arc
  *   - head vertex
  ***********************************************************************
  */
 static vgx_EvalStackItem_t * Evaluator__eval_vertex( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex ) {
 
+  /*
   // Assign default values to head if traversals are attempted
   if( self->rpn_program.deref.arc != 0 ) {
     self->context.exit = VGX_PREDICATOR_NONE;
     self->context.HEAD = vertex;
   }
-
-  // Reset vertex property cache
-  self->cache.VERTEX.vertex = NULL;
-
-  // Set vertex to evaluate
+  */
+  
+  // Protect against head access (alias to current vertex)
+  self->context.exit = VGX_PREDICATOR_NONE;
+  self->context.HEAD = vertex;
+  
+  // Set vertex to evaluate ()
   self->context.VERTEX = vertex;
 
   return __evaluator__run( self );
@@ -2505,8 +2513,6 @@ static vgx_EvalStackItem_t * Evaluator__eval_vertex( vgx_Evaluator_t *self, cons
  */
 static vgx_EvalStackItem_t * Evaluator__eval_arc( vgx_Evaluator_t *self, vgx_LockableArc_t *next ) {
   vgx_EvalStackItem_t *ret;
-  // Reset head property cache
-  self->cache.HEAD.vertex = NULL;
 
   // Set the arc
   self->context.VERTEX = next->tail;
@@ -2909,6 +2915,11 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
 
   // Reset stack
   __reset_runtime_stack( self );
+  
+  // Reset vertex property caches
+  self->cache.TAIL.vertex = NULL;
+  self->cache.VERTEX.vertex = NULL;
+  self->cache.HEAD.vertex = NULL;
 
   // Reset local scope
   if( self->context.local_scope.objects ) {
@@ -2924,7 +2935,6 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
     f( self );
     f = (++self->op)->func;
   }
-
 
   // Return top of stack after completion
   return GET_PITEM( self );
