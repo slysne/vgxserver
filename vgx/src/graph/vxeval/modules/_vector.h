@@ -273,7 +273,7 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
  * anncollect( )
  ***********************************************************************
  */
-static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target ) {
+static int __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
@@ -352,7 +352,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   if( score < threshold ) {
     // Inject running threshold to keep delay line ticking
     _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
-    return 0.0f;
+    *rscore = score;
+    return 0;
   }
   
   // Score is good enough to help refine the baseline threshold
@@ -363,6 +364,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   float beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_recursion_score( base->beam_heap ), threshold ) : threshold;
   float collectable_threshold = fminf( top_k_th, beam_j_th ); // <- worst of either beam or heap
   
+  int collected = 0;
+
   // Score good enough for at least one of the heaps
   if( score > collectable_threshold ) {
     // Frontier contribution 
@@ -394,7 +397,7 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
       .type = STACK_ITEM_TYPE_REAL,
       .real = score,
     };
-    __collect( self, &score_arc );
+    collected = __collect( self, &score_arc );
     
     // Clear any temporary flags
     self->context.larc->flag.bits = 0;
@@ -424,7 +427,8 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
 
   _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
   
-  return score;
+  *rscore = score;
+  return collected;
   
 }
 
@@ -436,12 +440,12 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
  */
 static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = GET_PITEM( self );
-  double score = 0.0;
+  float score = 0.0f;
   if( px->type == STACK_ITEM_TYPE_VECTOR ) {
     const vgx_Vector_t *probe = px->vector;
     const vgx_Vertex_t *vertex = self->context.HEAD;
     const vgx_Vector_t *target = vertex->vector;
-    score = __fast_anncollect( self, probe, vertex, target );
+    __fast_anncollect( self, probe, vertex, target, &score );
   }
   SET_REAL_PITEM_VALUE( px, score );
 }

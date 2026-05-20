@@ -1046,7 +1046,10 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
         return 0;
       }
       // Item was pushed to beam only
-      return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
+      if( __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL ) < 0 ) {
+        return -1;
+      }
+      return 0; // <- no result collected (only beam)
     }
 
     // Item was pushed to result only
@@ -1121,7 +1124,11 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     //  ^^^ Should never fail, but if it does collector cleanup is expected to clear all refmap entries
   }
 
-  return refmap_updated;
+  if( refmap_updated < 0 ) {
+    return -1;
+  }
+
+  return result_heap_location ? refmap_updated : 0;
 }
 
 

@@ -1700,7 +1700,12 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
       }
       else if( _vgx_collector_mode_type( query->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
         traverse_neighborhood = iGraphTraverse.TraverseNeighborArcs;
-        hit_counter = &search->n_arcs;
+        if( __is_recursion_enabled( &search->recursion ) ) {
+          hit_counter = &search->n_neighbors; // just collected hits, we need this to avoid the dummy items warning during render
+        }
+        else {
+          hit_counter = &search->n_arcs; // total hits (presumably result will be filled with requested hits)
+        }
       }
       else {
         THROW_ERROR( CXLIB_ERR_API, 0xA65 );
@@ -2184,6 +2189,7 @@ static vgx_Evaluator_t * Graph_define_evaluator( vgx_Graph_t *self, const char *
   vgx_Evaluator_constructor_args_t args = {
     .parent       = self,
     .expression   = expression,
+    .memory       = NULL,
     .vector       = vector,
     .CSTR__error  = CSTR__error
   };
