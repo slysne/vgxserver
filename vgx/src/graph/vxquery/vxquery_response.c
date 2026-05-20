@@ -101,7 +101,7 @@ static void _vxquery_response__delete_search_result( vgx_SearchResult_t **search
 static void _vxquery_response__delete_properties( vgx_Graph_t *self, vgx_SelectProperties_t **selected_properties );
 static void _vxquery_response__format_results_to_stream( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
 static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
-static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
+static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
 
 /*******************************************************************//**
@@ -2112,7 +2112,7 @@ static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *g
  *
  ******************************************************************************
  */
-static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error ) {
+static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error ) {
   // Return value
   vgx_Evaluator_t *propeval = NULL;
 
@@ -2124,7 +2124,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x001 );
     }
 
-    if( (propeval = iEvaluator.NewEvaluator( graph, expression, vector, CSTR__error )) == NULL ) {
+    if( (propeval = iEvaluator.NewEvaluator( graph, expression, memory, vector, CSTR__error )) == NULL ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
     }
 

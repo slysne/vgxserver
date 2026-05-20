@@ -547,7 +547,7 @@ static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, P
   BEGIN_PYVGX_THREADS {
     // Retrieve function
     vgx_Evaluator_t *E = NULL;
-    if( (E = isimple->GetEvaluator( graph, expression )) != NULL || (E = iEvaluator.NewEvaluator( graph, expression, vector, &CSTR__error)) != NULL ) {
+    if( (E = isimple->GetEvaluator( graph, expression )) != NULL || (E = iEvaluator.NewEvaluator( graph, expression, query->evaluator_memory, vector, &CSTR__error)) != NULL ) {
       if( head.id == NULL && CALLABLE( E )->Traversals( E ) > 0 ) {
         CSTR__error = CStringNew( "formula requires head vertex" );
       }
@@ -732,7 +732,7 @@ static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, P
  ******************************************************************************
  */
 PyDoc_STRVAR( Memory__doc__,
-  "Memory( initializer ) -> Memory object\n"
+  "Memory( [initializer] ) -> Memory object\n"
   "\n"
   "Return a new Memory object for use with expression evaluators\n"
   "\n"
@@ -743,19 +743,25 @@ PyDoc_STRVAR( Memory__doc__,
  *
  ******************************************************************************
  */
-static PyObject * PyVGX_Graph__Memory( PyVGX_Graph *pygraph, PyObject *py_order ) {
+static PyObject * PyVGX_Graph__Memory( PyVGX_Graph *pygraph, PyObject *args ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
     return NULL;
   }
 
-  PyObject *args[] = {
+  PyObject *py_initializer = NULL;
+
+  if( !PyArg_ParseTuple( args, "|O", &py_initializer) ) {
+    return NULL;
+  }
+
+  PyObject *vargs[] = {
     NULL,
     (PyObject*)pygraph,
-    py_order
+    py_initializer
   };
 
-  return PyObject_Vectorcall( (PyObject*)p_PyVGX_Memory__MemoryType, args+1, 2 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
+  return PyObject_Vectorcall( (PyObject*)p_PyVGX_Memory__MemoryType, vargs+1, 2 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
 }
 
 
@@ -2365,7 +2371,7 @@ static PyObject * PyVGX_Graph__Disconnect( PyVGX_Graph *pygraph, PyObject *args,
 
       // Construct the neighbor condition if specified
       if( py_vertex_condition ) {
-        if( (vertex_condition = iPyVGXParser.NewVertexCondition( graph, py_vertex_condition, VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST )) == NULL ) { // TODO: support probe vector and similarity??
+        if( (vertex_condition = iPyVGXParser.NewVertexCondition( graph, py_vertex_condition, NULL, VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST )) == NULL ) { // TODO: support probe vector and similarity??
           THROW_SILENT( CXLIB_ERR_GENERAL, 0x272 );
         }
       }
@@ -7179,7 +7185,7 @@ static PyMethodDef PyVGX_Graph__methods[] = {
     {"Define",                (PyCFunction)PyVGX_Graph__Define,                 METH_O                      , Define__doc__ },
     {"IsDefined",             (PyCFunction)PyVGX_Graph__IsDefined,              METH_O                      , IsDefined__doc__ },
     {"Evaluate",              (PyCFunction)PyVGX_Graph__Evaluate,               METH_VARARGS | METH_KEYWORDS, Evaluate__doc__ },
-    {"Memory",                (PyCFunction)PyVGX_Graph__Memory,                 METH_O                      , Memory__doc__ },
+    {"Memory",                (PyCFunction)PyVGX_Graph__Memory,                 METH_VARARGS                , Memory__doc__ },
     {"GetDefinition",         (PyCFunction)PyVGX_Graph__GetDefinition,          METH_O                      , GetDefinition__doc__ },
     {"GetDefinitions",        (PyCFunction)PyVGX_Graph__GetDefinitions,         METH_NOARGS                 , GetDefinitions__doc__ },
     {"CountDefinitions",      (PyCFunction)PyVGX_Graph__CountDefinitions,       METH_NOARGS                 , CountDefinitions__doc__ },

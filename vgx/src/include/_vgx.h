@@ -1044,9 +1044,10 @@ static vgx_Evaluator_t * _vxquery_new_evaluator( vgx_Graph_t *self, vgx_BaseQuer
     vector = query->vertex_condition->advanced.similarity_condition->probevector;
   }
   const char *expression = CStringValue( CSTR__expression );
-  if( (evaluator = iEvaluator.NewEvaluator( self, expression, vector, &query->CSTR__error )) == NULL ) {
+  if( (evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, vector, &query->CSTR__error )) == NULL ) {
     return NULL;
   }
+  /*
   if( query->evaluator_memory == NULL ) {
     if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
       iEvaluator.DiscardEvaluator( &evaluator );
@@ -1054,6 +1055,7 @@ static vgx_Evaluator_t * _vxquery_new_evaluator( vgx_Graph_t *self, vgx_BaseQuer
     }
   }
   CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+  */
   return evaluator;
 }
 

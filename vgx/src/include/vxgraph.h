@@ -1706,7 +1706,7 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
 #define __vgx_NeighborhoodQuery_vtable( Struct )  \
   __vgx_AdjacencyQuery_vtable( Struct )           \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory, CString_t **CSTR__error );
 
 #define __vgx_NeighborhoodQuery_members             \
   __vgx_AdjacencyQuery_members                      \
@@ -1768,7 +1768,7 @@ DLL_HIDDEN extern void vgx_NeighborhoodQuery_UnregisterClass( void );
 #define __vgx_GlobalQuery_vtable( Struct )    \
   __vgx_BaseQuery_vtable( Struct )            \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory,CString_t **CSTR__error );
 
 
 #define __vgx_GlobalQuery_args              \
@@ -6239,7 +6239,7 @@ typedef struct s_vgx_Evaluator_vtable_t {
   /* base methods */
   COMLIB_VTABLE_HEAD
   /* Evaluator methods */
-  int (*Reset)( struct s_vgx_Evaluator_t *self );
+  int (*Reset)( struct s_vgx_Evaluator_t *self, struct s_vgx_ExpressEvalMemory_t *memory );
   void (*SetContext)( struct s_vgx_Evaluator_t *self, const vgx_Vertex_t *tail, const vgx_ArcHead_t *arc, vgx_Vector_t *vector, double rankscore );
   void (*SetDefaultProp)( struct s_vgx_Evaluator_t *self, vgx_EvalStackItem_t *default_prop );
   void (*OwnMemory)( struct s_vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
@@ -6310,6 +6310,7 @@ typedef struct s_vgx_Evaluator_t {
 typedef struct s_vgx_Evaluator_constructor_args_t {
   vgx_Graph_t *parent;
   const char *expression;
+  vgx_ExpressEvalMemory_t *memory;
   vgx_Vector_t *vector;
   CString_t **CSTR__error;
 } vgx_Evaluator_constructor_args_t;
@@ -6330,7 +6331,7 @@ typedef struct s_vgx_IEvaluator_t {
   int (*Destroy)( void );
   int (*CreateEvaluators)( vgx_Graph_t *graph );
   void (*DestroyEvaluators)( vgx_Graph_t *graph );
-  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
   void (*DiscardEvaluator)( vgx_Evaluator_t **evaluator );
   int (*IsPositive)( const vgx_EvalStackItem_t *item );
   int64_t (*GetInteger)( const vgx_EvalStackItem_t *item );
@@ -7249,7 +7250,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
-DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target );
+DLL_HIDDEN int vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore );
 
 
 /*******************************************************************//**
@@ -7566,8 +7567,8 @@ typedef struct s_vgx_IVertexCondition_t {
   void (*RequireManifestation)(       vgx_VertexCondition_t *vertex_condition, vgx_VertexStateContext_man_t manifestation );
   int (*RequireType)(                 vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const vgx_value_comparison vcomp, const char *type );
   vgx_VertexTypeEnumeration_t (*GetTypeEnumeration)( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph );
-  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression );
-  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression );
+  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression, vgx_ExpressEvalMemory_t *memory );
+  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression, vgx_ExpressEvalMemory_t *memory );
   int (*RequireDegree)(               vgx_VertexCondition_t *vertex_condition, const vgx_value_comparison vcomp, const vgx_arc_direction direction, const int64_t degree );
   int (*RequireConditionalDegree)(    vgx_VertexCondition_t *vertex_condition, vgx_DegreeCondition_t **degree_condition );
   int (*RequireSimilarity)(           vgx_VertexCondition_t *vertex_condition, vgx_SimilarityCondition_t **similarity_condition );
@@ -7582,12 +7583,12 @@ typedef struct s_vgx_IVertexCondition_t {
 
   void (*RequireRecursiveCondition)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcCondition)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertCondition)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*RequireRecursiveTraversal)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcTraversal)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertTraversal)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*CollectNeighbors)(           vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode );
@@ -7878,7 +7879,7 @@ typedef struct s_vgx_IGraphResponse_t {
   void (*DeleteProperties)( vgx_Graph_t *self, vgx_SelectProperties_t **selected_properties );
   void (*FormatResultsToStream)( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
   vgx_VertexProperty_t * (*SelectProperty)( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
-  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 } vgx_IGraphResponse_t;
 
 

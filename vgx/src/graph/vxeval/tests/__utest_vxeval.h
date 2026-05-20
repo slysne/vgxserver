@@ -165,7 +165,7 @@ int __test_constructor( vgx_Graph_t *graph, vgx_Vector_t *vector, __test *test, 
 
     vgx_Evaluator_t *evaluator = NULL;
     double now = _vgx_graph_milliseconds( graph ) / 1000.0;
-    evaluator = iEvaluator.NewEvaluator( graph, test->expression, vector, CSTR__err );
+    evaluator = iEvaluator.NewEvaluator( graph, test->expression, NULL, vector, CSTR__err );
 
     ASSERT_OR_THROW( evaluator != NULL,                          "Evaluator instance" );
     int64_t refc = ATOMIC_READ_i64( &evaluator->_refc_atomic );
@@ -322,7 +322,7 @@ static int __test_expressions( vgx_Graph_t *graph, __test *tests, double ranksco
       }
 
       if( evaluator == NULL ) {
-        if( (evaluator = iEvaluator.NewEvaluator( graph, expr, NULL, &CSTR__error )) == NULL ) {
+        if( (evaluator = iEvaluator.NewEvaluator( graph, expr, NULL, NULL, &CSTR__error )) == NULL ) {
           THROW_ERROR_MESSAGE( CXLIB_ERR_ASSERTION, 0x00C, "Evaluator from \"%s\" (error=%s)", expr, CSTR__error ? CStringValue( CSTR__error ) : "?" );
         }
       }
@@ -453,7 +453,7 @@ static int __is_syntax_error( vgx_Graph_t *graph, const char *expression ) {
   vgx_Evaluator_t *evaluator = NULL;
   XTRY {
     iString.Discard( &CSTR__error );
-    if( (evaluator = iEvaluator.NewEvaluator( graph, expression, NULL, &CSTR__error )) != NULL ) {
+    if( (evaluator = iEvaluator.NewEvaluator( graph, expression, NULL, NULL, &CSTR__error )) != NULL ) {
       THROW_SILENT( CXLIB_ERR_ASSERTION, 0x001 );
     }
     if( CSTR__error == NULL ) {
@@ -1131,7 +1131,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
       iString.Discard( &CSTR__error );
     }
     TEST_ASSERTION( ret == 0, "Test 6" );
-    evaluator = iEvaluator.NewEvaluator( graph, "savefunc", NULL, &CSTR__error );
+    evaluator = iEvaluator.NewEvaluator( graph, "savefunc", NULL, NULL, &CSTR__error );
     TEST_ASSERTION( evaluator != NULL,                              "Calling pre-defined evaluator" );
     CALLABLE( evaluator )->SetContext( evaluator, arc->tail, &arc->head, NULL, 0.0 );
     stackitem = CALLABLE( evaluator )->EvalArc( evaluator, arc );
@@ -1163,7 +1163,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
       iString.Discard( &CSTR__error );
     }
     TEST_ASSERTION( ret == 0, "Test 7" );
-    evaluator = iEvaluator.NewEvaluator( graph, "vectorfunc", NULL, &CSTR__error );
+    evaluator = iEvaluator.NewEvaluator( graph, "vectorfunc", NULL, NULL, &CSTR__error );
     TEST_ASSERTION( evaluator != NULL,                              "Calling pre-defined evaluator" );
     CALLABLE( evaluator )->SetContext( evaluator, arc->tail, &arc->head, NULL, 0.0 );
     stackitem = CALLABLE( evaluator )->EvalArc( evaluator, arc );
@@ -1199,7 +1199,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
     }
     TEST_ASSERTION( ret == 0, "Test 9" );
     iString.Discard( (CString_t**)&test9.result.CSTR__str );
-    evaluator = iEvaluator.NewEvaluator( graph, "stackfunc", NULL, &CSTR__error );
+    evaluator = iEvaluator.NewEvaluator( graph, "stackfunc", NULL, NULL, &CSTR__error );
     TEST_ASSERTION( evaluator != NULL,                              "Calling pre-defined evaluator" );
     CALLABLE( evaluator )->SetContext( evaluator, arc->tail, &arc->head, NULL, 0.0 );
     stackitem = CALLABLE( evaluator )->EvalArc( evaluator, arc );
@@ -1244,7 +1244,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
     }
     TEST_ASSERTION( ret == 0, "Test 10" );
     // True
-    evaluator = iEvaluator.NewEvaluator( graph, "load(0) == 100 && load(4) == 104 && load(1023) == pi", NULL, &CSTR__error );
+    evaluator = iEvaluator.NewEvaluator( graph, "load(0) == 100 && load(4) == 104 && load(1023) == pi", NULL, NULL, &CSTR__error );
     TEST_ASSERTION( evaluator != NULL,                            "Created evaluator" );
     CALLABLE( evaluator )->SetContext( evaluator, arc->tail, &arc->head, NULL, 0.0 );
     CALLABLE( evaluator )->OwnMemory( evaluator, evalmem );
@@ -1253,7 +1253,7 @@ BEGIN_UNIT_TEST( __utest_vxeval ) {
     TEST_ASSERTION( stackitem->integer == 1,                      "True" );
     iEvaluator.DiscardEvaluator( &evaluator );
     // False
-    evaluator = iEvaluator.NewEvaluator( graph, "load(0) == 100 && load(5) == 105 && load(1023) == pi", NULL, &CSTR__error );
+    evaluator = iEvaluator.NewEvaluator( graph, "load(0) == 100 && load(5) == 105 && load(1023) == pi", NULL, NULL, &CSTR__error );
     TEST_ASSERTION( evaluator != NULL,                            "Created evaluator" );
     CALLABLE( evaluator )->SetContext( evaluator, arc->tail, &arc->head, NULL, 0.0 );
     CALLABLE( evaluator )->OwnMemory( evaluator, evalmem );

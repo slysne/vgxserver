@@ -75,7 +75,7 @@ static int _vxeval__initialize( void );
 static int _vxeval__destroy( void );
 static int _vxeval__create_evaluators( vgx_Graph_t *graph );
 static void _vxeval__destroy_evaluators( vgx_Graph_t *graph );
-static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
+static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 static void _vxeval__discard_evaluator( vgx_Evaluator_t **evaluator );
 static int _vxeval__is_positive( const vgx_EvalStackItem_t *item );
 static int64_t _vxeval__get_integer( const vgx_EvalStackItem_t *item );
@@ -156,7 +156,7 @@ static vgx_Evaluator_t *      Evaluator__constructor( const void *identifier, vg
 static void                   __destructor_CS( vgx_Evaluator_t *self_CS );
 static void                   Evaluator__destructor( vgx_Evaluator_t *self );
 static CStringQueue_t *       Evaluator__represent( vgx_Evaluator_t *self, CStringQueue_t *output );
-static int                    Evaluator__reset( vgx_Evaluator_t *self );
+static int                    Evaluator__reset( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
 static void                   Evaluator__set_context( vgx_Evaluator_t *self, const vgx_Vertex_t *tail, const vgx_ArcHead_t *arc, vgx_Vector_t *vector, double rankscore );
 static void                   Evaluator__set_default_prop( vgx_Evaluator_t *self, vgx_EvalStackItem_t *default_prop );
 static void                   Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
@@ -463,10 +463,11 @@ static void _vxeval__destroy_evaluators( vgx_Graph_t *graph ) {
  * 
  ***********************************************************************
  */
-static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error ) {
+static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error ) {
   vgx_Evaluator_constructor_args_t args = {
     .parent       = graph,
     .expression   = expression,
+    .memory       = memory,
     .vector       = vector,
     .CSTR__error  = CSTR__error
   };
@@ -2179,7 +2180,7 @@ static vgx_Evaluator_t * Evaluator__constructor( void const *__ign_identifier, v
     self->cache.CSTR__tmp_prop = NULL;
 
     // Ready
-    if( Evaluator__reset( self ) < 0 ) {
+    if( Evaluator__reset( self, args->memory ) < 0 ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x158 );
     }
   }
@@ -2290,7 +2291,7 @@ __inline static void __clear_eval_caches( vgx_ExpressEvalCache_t *ec ) {
  * 
  ***********************************************************************
  */
-static int Evaluator__reset( vgx_Evaluator_t *self ) {
+static int Evaluator__reset( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory ) {
   // Reset caches
   __clear_eval_caches( &self->cache );
 
@@ -2310,9 +2311,23 @@ static int Evaluator__reset( vgx_Evaluator_t *self ) {
   Evaluator__set_default_prop( self, NULL );
 
   // memory
-  _vxeval__discard_memory( &self->context.memory );
-  if( (self->context.memory = _vxeval__new_memory( -1 )) == NULL ) {
-    return -1;
+  // No existing memory
+  if( self->context.memory == NULL ) {
+    // Use supplied memory
+    if( memory ) {
+      _vxeval__own_memory( memory );
+      self->context.memory = memory;
+    }
+    // Create default
+    else if( (self->context.memory = _vxeval__new_memory( -1 )) == NULL ) {
+      return -1;
+    }
+  }
+  // We have existing memory and it's different from supplied
+  else if( memory && memory != self->context.memory ) {
+    _vxeval__discard_memory( &self->context.memory );
+    _vxeval__own_memory( memory );
+    self->context.memory = memory;
   }
 
   // wreg
@@ -2402,9 +2417,11 @@ static void Evaluator__set_default_prop( vgx_Evaluator_t *self, vgx_EvalStackIte
  ***********************************************************************
  */
 static void Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory ) {
-  _vxeval__discard_memory( &self->context.memory );
-  self->context.memory = memory;
-  memory->refc++;
+  if( self->context.memory != memory ) {
+    _vxeval__discard_memory( &self->context.memory );
+    self->context.memory = memory;
+    memory->refc++;
+  }
 }
 
 
@@ -2796,7 +2813,7 @@ static vgx_Evaluator_t * Evaluator__clone( vgx_Evaluator_t *self, vgx_Vector_t *
         clone->cache.CSTR__tmp_prop = NULL;
 
         // Ready
-        if( Evaluator__reset( clone ) < 0 ) {
+        if( Evaluator__reset( clone, self->context.memory ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
         }
 
@@ -2956,8 +2973,8 @@ DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const
  *
  ***********************************************************************
  */
-DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target ) {
-  return __fast_anncollect( self, probe, vertex, target );
+DLL_HIDDEN int vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
+  return __fast_anncollect( self, probe, vertex, target, rscore );
 }
 
 

@@ -151,8 +151,8 @@ static int _vxquery_query__set_vertex_condition_require_type( vgx_VertexConditio
 static vgx_VertexTypeEnumeration_t _vxquery_query__get_vertex_condition_type_enumeration( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph );
 
 // local filter expressions
-static int _vxquery_query__set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression );
-static int _vxquery_query__set_vertex_condition_require_post_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression );
+static int _vxquery_query__set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression, vgx_ExpressEvalMemory_t *memory );
+static int _vxquery_query__set_vertex_condition_require_post_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression, vgx_ExpressEvalMemory_t *memory );
 
 // degree
 static int _vxquery_query__set_vertex_condition_require_degree( vgx_VertexCondition_t *vertex_condition, const vgx_value_comparison vcomp, const vgx_arc_direction direction, const int64_t degree );
@@ -181,13 +181,13 @@ static int _vxquery_query__set_vertex_condition_require_TMX( vgx_VertexCondition
 // recursive condition
 static void _vxquery_query__set_vertex_condition_require_recursive_condition( vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
 static void _vxquery_query__set_vertex_condition_require_arc_condition( vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-static int  _vxquery_query__set_vertex_condition_require_condition_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+static int  _vxquery_query__set_vertex_condition_require_condition_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
 static void  _vxquery_query__set_vertex_condition_assert_condition( vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
 // recursive traversal
 static void _vxquery_query__set_vertex_condition_require_recursive_traversal( vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
 static void _vxquery_query__set_vertex_condition_require_arc_traversal( vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-static int  _vxquery_query__set_vertex_condition_require_traversal_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+static int  _vxquery_query__set_vertex_condition_require_traversal_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
 static void _vxquery_query__set_vertex_condition_neighbor_collector_mode( vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode );
 static void  _vxquery_query__set_vertex_condition_assert_traversal( vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
@@ -694,7 +694,7 @@ static int SetResponseFormat_##Class( Class *self, vgx_ResponseAttrFastMask form
  *
  ***********************************************************************
  */
-__inline static int __ResponseQuery__SelectStatement( vgx_BaseQuery_t *self, vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error ) {
+__inline static int __ResponseQuery__SelectStatement( vgx_BaseQuery_t *self, vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, CString_t **CSTR__error ) {
   
   vgx_Evaluator_t *selector = NULL;
   if( !CharsEqualsConst( select_statement, "*" ) ) {
@@ -703,7 +703,7 @@ __inline static int __ResponseQuery__SelectStatement( vgx_BaseQuery_t *self, vgx
       vector = self->ranking_condition->vector;
     }
 
-    if( (selector = iGraphResponse.ParseSelectProperties( graph, select_statement, vector, CSTR__error )) == NULL ) {
+    if( (selector = iGraphResponse.ParseSelectProperties( graph, select_statement, memory, vector, CSTR__error )) == NULL ) {
       return -1;
     }
   }
@@ -725,8 +725,8 @@ __inline static int __ResponseQuery__SelectStatement( vgx_BaseQuery_t *self, vgx
   }
 }
 #define __Define__SelectStatement( Class )                                                                                      \
-static int SelectStatement_##Class( Class *self, vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error ) {  \
-  return __ResponseQuery__SelectStatement( (vgx_BaseQuery_t*)self, graph, select_statement, CSTR__error );                      \
+static int SelectStatement_##Class( Class *self, vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, CString_t **CSTR__error ) {  \
+  return __ResponseQuery__SelectStatement( (vgx_BaseQuery_t*)self, graph, select_statement, memory, CSTR__error );                      \
 }
 #define __FunctionName__SelectStatement( Class ) SelectStatement_##Class
 
@@ -1871,10 +1871,10 @@ static int _vxquery_query__set_vertex_condition_require_degree( vgx_VertexCondit
  *
  ***********************************************************************
  */
-static int __set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, bool post, const char *filter_expression, vgx_Evaluator_t **evaluator ) {
+static int __set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, bool post, const char *filter_expression, vgx_ExpressEvalMemory_t *memory, vgx_Evaluator_t **evaluator ) {
   if( filter_expression ) {
     vgx_Vector_t *vector = vertex_condition->advanced.similarity_condition ? vertex_condition->advanced.similarity_condition->probevector : NULL;
-    vgx_Evaluator_t *ev = iEvaluator.NewEvaluator( graph, filter_expression, vector, &vertex_condition->CSTR__error );
+    vgx_Evaluator_t *ev = iEvaluator.NewEvaluator( graph, filter_expression, memory, vector, &vertex_condition->CSTR__error );
     if( ev == NULL ) {
       return -1;
     }
@@ -1903,8 +1903,8 @@ static int __set_vertex_condition_require_local_filter( vgx_VertexCondition_t *v
  *
  ***********************************************************************
  */
-static int _vxquery_query__set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression ) {
-  return __set_vertex_condition_require_local_filter( vertex_condition, graph, false, local_filter_expression, &vertex_condition->advanced.local_evaluator.filter );
+static int _vxquery_query__set_vertex_condition_require_local_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression, vgx_ExpressEvalMemory_t *memory ) {
+  return __set_vertex_condition_require_local_filter( vertex_condition, graph, false, local_filter_expression, memory, &vertex_condition->advanced.local_evaluator.filter );
 }
 
 
@@ -1914,8 +1914,8 @@ static int _vxquery_query__set_vertex_condition_require_local_filter( vgx_Vertex
  *
  ***********************************************************************
  */
-static int _vxquery_query__set_vertex_condition_require_post_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression ) {
-  return __set_vertex_condition_require_local_filter( vertex_condition, graph, true, post_filter_expression, &vertex_condition->advanced.local_evaluator.post );
+static int _vxquery_query__set_vertex_condition_require_post_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression, vgx_ExpressEvalMemory_t *memory ) {
+  return __set_vertex_condition_require_local_filter( vertex_condition, graph, true, post_filter_expression, memory, &vertex_condition->advanced.local_evaluator.post );
 }
 
 
@@ -1925,10 +1925,10 @@ static int _vxquery_query__set_vertex_condition_require_post_filter( vgx_VertexC
  *
  ***********************************************************************
  */
-static int __set_vertex_condition_require_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_Evaluator_t **dest ) {
+static int __set_vertex_condition_require_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory, vgx_Evaluator_t **dest ) {
   if( filter_expression ) {
     vgx_Vector_t *vector = vertex_condition->advanced.similarity_condition ? vertex_condition->advanced.similarity_condition->probevector : NULL;
-    vgx_Evaluator_t *ev = iEvaluator.NewEvaluator( graph, filter_expression, vector, &vertex_condition->CSTR__error );
+    vgx_Evaluator_t *ev = iEvaluator.NewEvaluator( graph, filter_expression, memory, vector, &vertex_condition->CSTR__error );
     if( ev == NULL ) {
       return -1;
     }
@@ -1949,8 +1949,8 @@ static int __set_vertex_condition_require_filter( vgx_VertexCondition_t *vertex_
  *
  ***********************************************************************
  */
-static int _vxquery_query__set_vertex_condition_require_condition_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression ) {
-  return __set_vertex_condition_require_filter( vertex_condition, graph, filter_expression, &vertex_condition->advanced.recursive.conditional.evaluator );
+static int _vxquery_query__set_vertex_condition_require_condition_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory ) {
+  return __set_vertex_condition_require_filter( vertex_condition, graph, filter_expression, memory, &vertex_condition->advanced.recursive.conditional.evaluator );
 }
 
 
@@ -1973,8 +1973,8 @@ static void _vxquery_query__set_vertex_condition_assert_condition( vgx_VertexCon
  *
  ***********************************************************************
  */
-static int _vxquery_query__set_vertex_condition_require_traversal_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression ) {
-  return __set_vertex_condition_require_filter( vertex_condition, graph, filter_expression, &vertex_condition->advanced.recursive.traversing.evaluator );
+static int _vxquery_query__set_vertex_condition_require_traversal_filter( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory ) {
+  return __set_vertex_condition_require_filter( vertex_condition, graph, filter_expression, memory, &vertex_condition->advanced.recursive.traversing.evaluator );
 }
 
 

@@ -244,17 +244,19 @@ static int __configure_new_ranking_context_from_condition( vgx_Graph_t *self, bo
   if( ranking_condition->CSTR__expression ) {
     const char *expression = CStringValue( ranking_condition->CSTR__expression );
     vgx_Evaluator_t *evaluator;
-    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, ranking_condition->vector, CSTR__error )) == NULL ) {
+    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, ranking_condition->vector, CSTR__error )) == NULL ) {
       // error
       __delete_ranking_context( ranking_context );
       return -1;
     }
+    /*
     if( query->evaluator_memory == NULL ) {
       if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
         return -1;
       }
     }
     CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+    */
   }
 
   // 8. Ranker timing budget

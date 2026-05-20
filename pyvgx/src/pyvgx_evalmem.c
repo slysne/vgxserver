@@ -680,10 +680,12 @@ static int __init( PyVGX_Memory *pymem, PyObject *pygraph, PyObject *py_source )
     return -1;
   }
 
+  /*
   if( py_source == NULL ) {
     PyErr_SetString( PyExc_TypeError, "source object required" );
     return -1;
   }
+  */
 
   if( (pymem->evalmem = iPyVGXParser.NewExpressEvalMemory( pymem->py_parent->graph, py_source )) == NULL ) {
     return -1;
@@ -719,10 +721,10 @@ static PyObject * PyVGX_Memory__new( PyTypeObject *type, PyObject *args, PyObjec
  */
 static int PyVGX_Memory__init( PyVGX_Memory *pymem, PyObject *args, PyObject *kwds ) {
   static char *kwlist[] = { "graph", "source", NULL };
-  PyObject *pygraph;
-  PyObject *py_source;
+  PyObject *pygraph = NULL;
+  PyObject *py_source = NULL;
 
-  if( !PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &pygraph, &py_source ) ) {
+  if( !PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &pygraph, &py_source ) ) {
     return -1;
   }
 
