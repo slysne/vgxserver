@@ -30,10 +30,12 @@ from pyvgxtest.pyvgxtest import ListTestSets, RunTestSets
 import pyvgx
 
 from . import EuclideanVector
+from . import Recursion
 
 
 modules = [
-  EuclideanVector
+  EuclideanVector,
+  Recursion
 ]
 
 
