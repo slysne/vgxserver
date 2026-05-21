@@ -707,6 +707,28 @@ static void PyVGXError_SetString( PyObject *exc, const char *str ) {
 }
 
 
+
+/******************************************************************************
+ *
+ ******************************************************************************
+ */
+static void PyVGXError_Format( PyObject *exc, const char *format, ... ) {
+  BEGIN_PYTHON_INTERPRETER {
+    if( !PyErr_Occurred() ) {
+      va_list args;
+      va_start(args, format);
+      PyErr_FormatV( exc, format, args);
+      va_end(args);
+    }
+  } END_PYTHON_INTERPRETER;
+}
+
+
+
+/******************************************************************************
+ *
+ ******************************************************************************
+ */
 #define PyVGX_ReturnError( PyExc, Str ) { \
   PyErr_SetString( PyExc, Str ); \
   return NULL; \
@@ -1419,7 +1441,7 @@ typedef struct s_IPyVGXParser {
   vgx_Relation_t * (*NewRelation)( vgx_Graph_t *graph, const char *initial, PyObject *py_arc, const char *terminal );
   vgx_value_comparison (*ParseValueCondition)( PyObject *py_valcond, vgx_value_condition_t *value_condition, const vgx_value_constraint_t vconstraint, const vgx_value_comparison vcomp_default );
   vgx_ArcConditionSet_t * (*NewArcConditionSet)( vgx_Graph_t *graph, PyObject *py_arc_condition, vgx_arc_direction default_direction );
-  vgx_VertexCondition_t * (*NewVertexCondition)( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode );
+  vgx_VertexCondition_t * (*NewVertexCondition)( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode );
   vgx_RankingCondition_t * (*NewRankingCondition)( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, vgx_Vector_t *probe_vector );
   vgx_RankingCondition_t * (*NewRankingConditionEx)( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, PyObject *py_rank_vector_object, vgx_VertexCondition_t *vertex_condition );
   vgx_ExpressEvalMemory_t * (*NewExpressEvalMemory)( vgx_Graph_t *graph, PyObject *py_object );

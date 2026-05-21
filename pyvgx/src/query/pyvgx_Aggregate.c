@@ -149,12 +149,21 @@ static __aggregator_query_args * _pyvgx_Aggregate__parse_params( PyVGX_Graph *py
       return NULL;
     }
     param->modifier = iArcConditionSet.Modifier( param->arc_condition_set );
+    
+    // ------
+    // memory
+    // ------
+    if( py_evalmem || py_vertex_condition ) {
+      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
+        return NULL;
+      }
+    }
 
     // --------
     // neighbor
     // --------
     if( py_vertex_condition ) {
-      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->implied.collector_mode )) == NULL ) {
+      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->evalmem, param->implied.collector_mode )) == NULL ) {
         return NULL;
       }
     }
@@ -178,15 +187,6 @@ static __aggregator_query_args * _pyvgx_Aggregate__parse_params( PyVGX_Graph *py
         if( (param->collect_arc_condition_set = iPyVGXParser.NewArcConditionSet( param->implied.graph, py_collect, VGX_ARCDIR_ANY )) == NULL ) {
           return NULL;
         }
-      }
-    }
-
-    // ------
-    // memory
-    // ------
-    if( py_evalmem && py_evalmem != Py_None ) {
-      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
-        return NULL;
       }
     }
 

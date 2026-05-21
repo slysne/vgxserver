@@ -791,6 +791,7 @@ __inline static vgx_LockableArc_t * __init_lockable_arc( vgx_LockableArc_t *larc
       }
     } GRAPH_RELEASE;
   }
+  larc->flag.bits = 0;
   return larc;
 }
 
@@ -1260,12 +1261,24 @@ __inline static int __evaluate_arc( vgx_Evaluator_t *E, vgx_Vector_t *vector, vg
  * 
  ***********************************************************************
  */
-#define __begin_arc_evaluator_context( PreviousFilterContextPtr, PreEvaluatorPtr, MainEvaluatorPtr, PostEvaluatorPtr, VectorPtr, LockableArcPtr, MatchPtr )  \
+__inline static vgx_Evaluator_t * __collector_recursion_filter_evaluator( vgx_BaseCollector_context_t *collector ) {
+  return collector ? collector->recursion_filter : NULL;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */
+#define __begin_arc_evaluator_context( PreviousFilterContextPtr, PreEvaluatorPtr, MainEvaluatorPtr, PostEvaluatorPtr, RecursionEvaluatorPtr, VectorPtr, LockableArcPtr, MatchPtr )  \
   do {                                                                                  \
     const vgx_virtual_ArcFilter_context_t *__previous__ = PreviousFilterContextPtr;     \
     vgx_Evaluator_t *__pre__ = PreEvaluatorPtr;                                         \
     vgx_Evaluator_t *__main__ = MainEvaluatorPtr;                                       \
     vgx_Evaluator_t *__post__ = PostEvaluatorPtr;                                       \
+    vgx_Evaluator_t *__recursion_eval__ = RecursionEvaluatorPtr;                        \
     vgx_Vector_t *__vector__ = VectorPtr;                                               \
     vgx_LockableArc_t *__larc__ = LockableArcPtr;                                       \
     vgx_ArcFilter_match *__match__ = MatchPtr;                                          \
@@ -1274,6 +1287,9 @@ __inline static int __evaluate_arc( vgx_Evaluator_t *E, vgx_Vector_t *vector, vg
       /* CONTINUE (only if PRE matched) */                                              \
       if( __main__ ) {                                                                  \
         CALLABLE( __main__ )->SetContext( __main__, __previous__->current_tail, __previous__->current_head, __vector__, 0.0 ); \
+      }                                                                                 \
+      if( __recursion_eval__ ) {                                                        \
+        CALLABLE( __recursion_eval__ )->SetContext( __recursion_eval__, __previous__->current_tail, __previous__->current_head, __vector__, 0.0 ); \
       }                                                                                 \
       do
 

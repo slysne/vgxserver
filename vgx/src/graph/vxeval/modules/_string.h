@@ -230,7 +230,7 @@ static void __eval_string_lower( vgx_Evaluator_t *self ) {
       const char *rp = str;
       const char *end = rp + sz_str;
       while( rp < end ) {
-        *wp++ = tolower(*rp++);
+        *wp++ = (char)tolower((unsigned char)*rp++);
       }
       *wp = '\0';
 
@@ -278,7 +278,7 @@ static void __eval_string_upper( vgx_Evaluator_t *self ) {
       const char *rp = str;
       const char *end = rp + sz_str;
       while( rp < end ) {
-        *wp++ = toupper(*rp++);
+        *wp++ = (char)toupper((unsigned char)*rp++);
       }
       *wp = '\0';
 

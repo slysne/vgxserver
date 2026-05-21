@@ -48,8 +48,8 @@ static vgx_value_type_t __parse_arc_values( PyObject *py_arc_condition, const vg
 static vgx_ArcConditionSet_t * _ipyvgx_parser__new_arc_condition_set( vgx_Graph_t *graph, PyObject *py_arc_condition, vgx_arc_direction default_direction );
 static bool __unwrap_signed_condition( bool *sign, PyObject **py_condition );
 static vgx_value_comparison __comparison_code_static( PyObject *py_tuple, PyObject **py_value );
-static vgx_VertexCondition_t * _ipyvgx_parser__new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode );
-static vgx_VertexCondition_t * __recursive_new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode, int rcnt );
+static vgx_VertexCondition_t * _ipyvgx_parser__new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode );
+static vgx_VertexCondition_t * __recursive_new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode, int rcnt );
 static framehash_cell_t * __new_aggregation_mode_keymap( framehash_dynamic_t *dyn );
 static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, vgx_Vector_t *probe_vector );
 static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition_ex( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, PyObject *py_rank_vector_object, vgx_VertexCondition_t *vertex_condition );
@@ -83,6 +83,7 @@ typedef enum __e_traversal_spec {
 typedef struct __s_probe_condition_context_t {
   const char *name;
   vgx_Graph_t *graph;
+  vgx_ExpressEvalMemory_t *memory;
   vgx_collector_mode_t collector_mode;
   __recursion_mode recursion_mode;
   int recursion_count;
@@ -2156,7 +2157,7 @@ static int __set_probe_condition__local_filter( PyObject *py_value, vgx_VertexCo
 
   int set = -1;
   BEGIN_PYVGX_THREADS {
-    set = iVertexCondition.RequireLocalFilter( vertex_condition, context->graph, local_filter_expression );
+    set = iVertexCondition.RequireLocalFilter( vertex_condition, context->graph, local_filter_expression, context->memory );
   } END_PYVGX_THREADS;
   
   if( set < 0 ) {
@@ -2188,7 +2189,7 @@ static int __set_probe_condition__post( PyObject *py_value, vgx_VertexCondition_
 
   int set = -1;
   BEGIN_PYVGX_THREADS {
-    set = iVertexCondition.RequirePostFilter( vertex_condition, context->graph, post_filter_expression );
+    set = iVertexCondition.RequirePostFilter( vertex_condition, context->graph, post_filter_expression, context->memory );
   } END_PYVGX_THREADS;
 
   if( set < 0 ) {
@@ -2222,10 +2223,10 @@ static int __set_probe_condition__filter( PyObject *py_value, vgx_VertexConditio
   BEGIN_PYVGX_THREADS {
     switch( context->recursion_mode ) {
     case RECURSIVE_TRAVERSAL:
-      set = iVertexCondition.RequireTraversalFilter( vertex_condition, context->graph, filter_expression );
+      set = iVertexCondition.RequireTraversalFilter( vertex_condition, context->graph, filter_expression, context->memory );
       break;
     case RECURSIVE_CONDITION:
-      set = iVertexCondition.RequireConditionFilter( vertex_condition, context->graph, filter_expression );
+      set = iVertexCondition.RequireConditionFilter( vertex_condition, context->graph, filter_expression, context->memory );
       break;
     }
   } END_PYVGX_THREADS;
@@ -2315,7 +2316,7 @@ static int __set_probe_condition__neighbor( PyObject *py_value, vgx_VertexCondit
   }
   // Recursive neighbor filter
   else {
-    if( (neighbor_condition = __recursive_new_vertex_condition( context->graph, py_value, context->collector_mode, context->recursion_count-1 )) == NULL ) {
+    if( (neighbor_condition = __recursive_new_vertex_condition( context->graph, py_value, context->memory, context->collector_mode, context->recursion_count-1 )) == NULL ) {
       return -1;
     }
   }
@@ -2636,8 +2637,8 @@ static framehash_cell_t * __new_vertex_condition_keymap( framehash_dynamic_t *dy
  * NOTE: caller will own vertex_condition->id and vertex_condition->vertex_type if not NULL
  ******************************************************************************
  */
-static vgx_VertexCondition_t * _ipyvgx_parser__new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode ) {
-  vgx_VertexCondition_t *vertex_condition = __recursive_new_vertex_condition( graph, py_vertex_condition, collector_mode, PyVGX_VertexConditionMaxRecursion );
+static vgx_VertexCondition_t * _ipyvgx_parser__new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode ) {
+  vgx_VertexCondition_t *vertex_condition = __recursive_new_vertex_condition( graph, py_vertex_condition, memory, collector_mode, PyVGX_VertexConditionMaxRecursion );
   if( vertex_condition ) {
     vgx_Vector_t *vector;
     if( vertex_condition->advanced.similarity_condition && (vector = vertex_condition->advanced.similarity_condition->probevector) != NULL ) {
@@ -2671,7 +2672,7 @@ static vgx_VertexCondition_t * _ipyvgx_parser__new_vertex_condition( vgx_Graph_t
  * NOTE: caller will own vertex_condition->id and vertex_condition->vertex_type if not NULL
  ******************************************************************************
  */
-static vgx_VertexCondition_t * __recursive_new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode, int rcnt ) {
+static vgx_VertexCondition_t * __recursive_new_vertex_condition( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode, int rcnt ) {
 
   if( rcnt < 0 ) {
     return NULL;
@@ -2685,6 +2686,7 @@ static vgx_VertexCondition_t * __recursive_new_vertex_condition( vgx_Graph_t *gr
   __probe_condition_context_t context = {
     .name             = NULL,
     .graph            = graph,
+    .memory           = memory,
     .collector_mode   = collector_mode,
     .recursion_mode   = RECURSIVE_TRAVERSAL,
     .recursion_count  = rcnt,
@@ -2962,7 +2964,13 @@ static vgx_RankingCondition_t * _ipyvgx_parser__new_ranking_condition_ex( vgx_Gr
  */
 static vgx_ExpressEvalMemory_t * _ipyvgx_parser__new_express_eval_memory( vgx_Graph_t *graph, PyObject *py_object ) {
   vgx_ExpressEvalMemory_t *evalmem = NULL;
-  if( PyVGX_Memory_CheckExact( py_object ) ) {
+  if( py_object == NULL || py_object == Py_None ) {
+    if( (evalmem = iEvaluator.NewMemory( -1 )) == NULL ) {
+      PyVGXError_SetString( PyExc_MemoryError, "Out of memory" );
+      return NULL;
+    }
+  }
+  else if( PyVGX_Memory_CheckExact( py_object ) ) {
     PyVGX_Memory *pymem = (PyVGX_Memory*)py_object;
     if( pymem->py_parent->graph != graph ) {
       PyVGXError_SetString( PyVGX_AccessError, "invalid memory object (graph mismatch)" );

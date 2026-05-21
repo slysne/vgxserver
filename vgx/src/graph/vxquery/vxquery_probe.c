@@ -244,17 +244,19 @@ static int __configure_new_ranking_context_from_condition( vgx_Graph_t *self, bo
   if( ranking_condition->CSTR__expression ) {
     const char *expression = CStringValue( ranking_condition->CSTR__expression );
     vgx_Evaluator_t *evaluator;
-    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, ranking_condition->vector, CSTR__error )) == NULL ) {
+    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, ranking_condition->vector, CSTR__error )) == NULL ) {
       // error
       __delete_ranking_context( ranking_context );
       return -1;
     }
+    /*
     if( query->evaluator_memory == NULL ) {
       if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
         return -1;
       }
     }
     CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+    */
   }
 
   // 8. Ranker timing budget
@@ -306,37 +308,6 @@ static void __clear_base_search_context( vgx_base_search_context_t *search ) {
     // Delete the ranking context
     __delete_ranking_context( &search->ranking_context );
   }
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-static vgx_Evaluator_t * __new_evaluator( vgx_Graph_t *self, vgx_BaseQuery_t *query, const char *expression ) {
-  vgx_Evaluator_t *evaluator = NULL;
-  vgx_Vector_t *vector = NULL;
-  // Use vector from ranking condition if supplied
-  if( query->ranking_condition && query->ranking_condition->vector ) {
-    vector = query->ranking_condition->vector;
-  }
-  // Fallback to vertex similarity probe vector
-  else if( query->vertex_condition && query->vertex_condition->advanced.similarity_condition ) {
-    vector = query->vertex_condition->advanced.similarity_condition->probevector;
-  }
-  if( (evaluator = iEvaluator.NewEvaluator( self, expression, vector, &query->CSTR__error )) == NULL ) {
-    return NULL;
-  }
-  if( query->evaluator_memory == NULL ) {
-    if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
-      iEvaluator.DiscardEvaluator( &evaluator );
-      return NULL;
-    }
-  }
-  CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
-  return evaluator;
 }
 
 
@@ -411,7 +382,7 @@ static int __configure_base_search_context( vgx_Graph_t *self, bool readonly_gra
     // PRE
     vgx_Evaluator_t *E;
     if( query->CSTR__pre_filter ) {
-      if( (E = search->pre_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__pre_filter ))) == NULL ) {
+      if( (E = search->pre_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__pre_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x601 );
       }
       if( CALLABLE( E )->Traversals( E ) ) {
@@ -425,13 +396,13 @@ static int __configure_base_search_context( vgx_Graph_t *self, bool readonly_gra
     }
     // MAIN
     if( query->CSTR__vertex_filter ) {
-      if( (search->vertex_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__vertex_filter ))) == NULL ) {
+      if( (search->vertex_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__vertex_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x604 );
       }
     }
     // POST
     if( query->CSTR__post_filter ) {
-      if( (E = search->post_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__post_filter ))) == NULL ) {
+      if( (E = search->post_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__post_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x607 );
       }
       if( CALLABLE( E )->Traversals( E ) ) {
@@ -1231,6 +1202,15 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.override = probe->conditional.override;
     }
 
+    // Special case: recursion filter's vertex access must be flagged in traversing filter for proper locking
+    if( collector && collector->recursion_filter ) {
+      if( CALLABLE( collector->recursion_filter )->ThisNextAccess( collector->recursion_filter ) ) {
+        if( probe->traversing.arcfilter ) {
+          probe->traversing.arcfilter->arcfilter_locked_head_access = true;
+        }
+      }
+    }
+
     // 5. Create collector filter for this neighborhood level
     // TODO ---------------------------- ADD advanced filter to collector filter ----------------v
     if( (probe->collect_filter_context = iArcFilter.New( self, readonly_graph, collect_arc_condition_set, NULL, NULL, NULL, timing_budget )) == NULL ) {
@@ -1506,7 +1486,7 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     case VGX_COLLECTOR_MODE_COLLECT_ARCS:
       if( (search->collector = (vgx_BaseCollector_context_t*)iGraphCollector.NewArcCollector( self, search->ranking_context, (vgx_BaseQuery_t*)query, &counts )) == NULL ) {
         __set_error_string( &query->CSTR__error, "failed to create arc collector" );
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x673 );
+        THROW_SILENT( CXLIB_ERR_GENERAL, 0x673 );
       }
       break;
     // VERTICES

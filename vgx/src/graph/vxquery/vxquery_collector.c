@@ -971,8 +971,12 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_FrontierQueue_t *frontier = NULL;
   int64_t heap_size = size; // i.e. hits requested
   Cm256iHeap_t *beam_heap = NULL;
+  vgx_Evaluator_t *recursion_filter = NULL;
 
   XTRY {
+    // Alloocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_ArcCollector_context_t, 0x321 );
+
     vgx_CollectorItem_t empty = {0};
     f_Cm256iHeap_comparator_t comparator = (f_Cm256iHeap_comparator_t)__get_arc_comparator( ranking_context, &empty );
     vgx_recursion_config_t *recursion = NULL;
@@ -997,11 +1001,23 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
         
         // Size of frontier
         recursion->limit.frontier = __get_recursion_frontier_limit( recursion, heap_size );
+
+        // Recursion filter
+        if( recursion->visit.CSTR__filter ) {
+          if( (recursion_filter = _vxquery_new_evaluator(graph, query, recursion->visit.CSTR__filter )) == NULL ) {
+            THROW_SILENT( CXLIB_ERR_API, 0x322 );
+          }
+          if( CALLABLE( recursion_filter )->Traversals( recursion_filter ) ) {
+            __set_error_string( &query->CSTR__error, "traversal not allowed in recursion filter" );
+            THROW_SILENT( CXLIB_ERR_GENERAL, 0x323 );
+          }
+          if( CALLABLE( recursion_filter )->HasCull( recursion_filter ) ) {
+            __set_error_string( &query->CSTR__error, "mcull() not allowed in recursion filter" );
+            THROW_SILENT( CXLIB_ERR_GENERAL, 0x324 );
+          }
+        }
       }
     }
-
-    // Alloocate
-    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_ArcCollector_context_t, 0x321 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -1011,7 +1027,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
     // Create the new heap
     if( (heap = COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &heap_args )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x322 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x328 );
     }
 
     // Create vertex reference map
@@ -1021,34 +1037,34 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       sz_refmap = maximum_value( heap_size, max_front );
     }
     if( (refmap = __new_vertex_reference_map( sz_refmap, &top_k_collector->sz_refmap )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x323 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x329 );
     }
 
     // Create the ranker
     if( (ranker = __new_search_ranker_context( ranking_context )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x324 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x32A );
     }
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x325 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x32B );
     }
 
     // Recursive search
     if( __is_recursion_enabled( recursion ) ) {
       // Heap shadow queue
       if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x32C );
       }
       // Beam if enabled
       if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
         if( (beam_heap = __new_beam_heap( recursion->beam.max_width, comparator )) == NULL ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x327 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x32D );
         }
       }
       // Frontier queue
       if( (frontier = __new_frontier_queue( recursion->limit.frontier ) ) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x328 );
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x32E );
       }
     }
 
@@ -1081,6 +1097,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
     top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
     top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
+    top_k_collector->recursion_filter         = recursion_filter;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty.item               = empty.item;
@@ -1105,9 +1122,24 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       CALLABLE(beam_heap)->Initialize( beam_heap, &empty.item, recursion->beam.max_width );
     }
 
+    if( recursion_filter ) {
+      CALLABLE( recursion_filter )->SetTimingBudget( recursion_filter, &query->timing_budget );
+      CALLABLE( recursion_filter )->SetCollector( recursion_filter, (vgx_BaseCollector_context_t*)top_k_collector );
+    }
+
   }
   XCATCH( errcode ) {
-    iGraphCollector.DeleteCollector( (vgx_BaseCollector_context_t**)&top_k_collector );
+    if( top_k_collector ) {
+      // Assign possibly allocated objects so they can be destroyed
+      top_k_collector->ranker                   = ranker;
+      top_k_collector->container.sequence.heap  = heap;
+      top_k_collector->refmap                   = refmap;
+      top_k_collector->frontier                 = frontier;
+      top_k_collector->beam_heap                = beam_heap;
+      top_k_collector->recursion_filter         = recursion_filter;
+      top_k_collector->stage                    = stage;
+      iGraphCollector.DeleteCollector( (vgx_BaseCollector_context_t**)&top_k_collector );
+    }
   }
   XFINALLY {
   }
@@ -1812,6 +1844,10 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
     // Delete the recursive beam heap
     if( ctx->beam_heap ) {
       __delete_beam_heap( ctx->graph, &ctx->beam_heap );
+    }
+
+    if( ctx->recursion_filter ) {
+      iEvaluator.DiscardEvaluator( &ctx->recursion_filter );
     }
 
     // Delete the container

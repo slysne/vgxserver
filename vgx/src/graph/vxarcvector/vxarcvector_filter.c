@@ -1536,18 +1536,25 @@ static int __ann_filter( vgx_virtual_ArcFilter_context_t *arcfilter_context, vgx
 
   // Head safe when here - either locked or no locking required
   const vgx_Vector_t *probe = evaluator->context.memory->probe;
-  const vgx_Vector_t *target = larc->head.vertex->vector;
+  const vgx_Vertex_t *vertex = larc->head.vertex;
+  const vgx_Vector_t *target = vertex->vector;
 
   evaluator->context.larc = larc;
-  float score = vxeval_fast_anncollect( evaluator, probe, target );
-  if( score < 0.0f ) {
+  float score = 0.0f;
+  int collected = vxeval_fast_anncollect( evaluator, probe, vertex, target, &score );
+
+  if( collected == 0 ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
     return 0;
   }
 
-  // PASS!
-  *match = VGX_ARC_FILTER_MATCH_HIT;
-  return 1; // pass
+  if( collected > 0 ) {
+    *match = VGX_ARC_FILTER_MATCH_HIT;
+    return 1;
+  }
+
+  *match = VGX_ARC_FILTER_MATCH_ERROR;
+  return 0;
 }
 
 

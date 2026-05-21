@@ -60,7 +60,7 @@ static __rpn_operation RpnPushTailBitVector  = { .surface.token="prev.bitvector"
 // This Vertex
 static __rpn_operation RpnPushThis           = { .surface.token="vertex",           .function.eval = __stack_push_VERTEX,             .type = OP_THIS_VERTEX_OBJECT,    .precedence = OPP_ATTRIBUTE };
 static __rpn_operation RpnPushThisProperty   = { .surface.token=NULL,               .function.eval = __stack_push_VERTEX_prop,        .type = OP_SUBSCRIPT,             .precedence = OPP_SUBSCRIPT };
-static __rpn_operation RpnPushThisFancyProp  = { .surface.token="vertex.property",  .function.eval = __stack_push_VERTEX_fancyprop,   .type = ENCODE_VARIADIC_ARG_COUNTS( OP_VARIADIC_PREFIX, 1, 3 ), .precedence = OPP_CALL };
+static __rpn_operation RpnPushThisFancyProp  = { .surface.token="vertex.property",  .function.eval = __stack_push_VERTEX_fancyprop,   .type = ENCODE_VARIADIC_ARG_COUNTS( OP_VARIADIC_THIS_PREFIX, 1, 3 ), .precedence = OPP_CALL };
 static __rpn_operation RpnPushThisPropCount  = { .surface.token="vertex.propcount", .function.eval = __stack_push_VERTEX_propcount,   .type = OP_THIS_ATTR_OPERAND,     .precedence = OPP_ATTRIBUTE };
 static __rpn_operation RpnPushThisCoeff1     = { .surface.token="vertex.c1",        .function.eval = __stack_push_VERTEX_c1,          .type = OP_THIS_ATTR_OPERAND,     .precedence = OPP_ATTRIBUTE };
 static __rpn_operation RpnPushThisCoeff0     = { .surface.token="vertex.c0",        .function.eval = __stack_push_VERTEX_c0,          .type = OP_THIS_ATTR_OPERAND,     .precedence = OPP_ATTRIBUTE };

@@ -713,6 +713,12 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       mem->dynamic_taper.kappa = collector->kappa;
       mem->dynamic_taper.lambda = collector->lambda;
     }
+
+    // Memory object inherits recursion probe vector if memory vector not explicitly set
+    if( mem->probe == NULL && recursion->probe ) {
+      mem->probe = recursion->probe;
+      CALLABLE(mem->probe)->Incref(mem->probe);
+    }
     
     // Initialize control vector after the first expansion.
     control_vector_t control = {0};
@@ -844,18 +850,12 @@ static int _vxquery_traverse__traverse_neighbor_arcs_OPEN_RO( const vgx_Vertex_t
       V2 = &vertex_RO->outarcs;
       match = iarcvector.GetArcsBidirectional( V1, V2, search->probe );
     }
+    else if( __is_recursion_enabled( &search->recursion ) ) {
+      match = _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( vertex_RO, search );
+    }
     else {
-      if( search->recursion.mode == VGX_RECURSION_MODE_NONE ) {
-        V1 = arcdir == VGX_ARCDIR_IN ? &vertex_RO->inarcs : &vertex_RO->outarcs;
-        match = iarcvector.GetArcs( V1, search->probe );
-      }
-      else if( __is_recursion_enabled( &search->recursion ) ) {
-        match = _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( vertex_RO, search );
-      }
-      else {
-        // ???
-        match = VGX_ARC_FILTER_MATCH_ERROR;
-      }
+      V1 = arcdir == VGX_ARCDIR_IN ? &vertex_RO->inarcs : &vertex_RO->outarcs;
+      match = iarcvector.GetArcs( V1, search->probe );
     }
 
     if( __is_arcfilter_error( match ) ) {
