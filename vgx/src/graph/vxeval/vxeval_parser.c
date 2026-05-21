@@ -597,8 +597,6 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
           bool at_next = __is_at_subexpression( &subexpression, program, shuntstack );
           // Is this an existing variable, and we're not overwriting it?
           __rpn_variable *var = __varmap__variable_get( varmap, token );
-          const char *peek;
-          //if( var && ( (peek = __tokenizer__peek_next_token(tokenizer)) == NULL || !CharsEqualsConst(peek, "=") ) ) {
           if( var && !__tokenizer__is_next_token( tokenizer, "=" ) ) {
             stackitem.integer = var->subexpr_idx;
             stackitem.type = __STACK_ITEM_VARIABLE;

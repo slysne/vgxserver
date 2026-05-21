@@ -375,7 +375,6 @@ static PyObject * __pickle_dumps( PyObject *py_object ) {
     py_object,
     g_pickle_proto
   };
-  Py_MARSHAL_VERSION;
   return PyObject_Vectorcall( f_pickle_dumps, args, 2, NULL );
 }
 

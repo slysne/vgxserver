@@ -349,7 +349,6 @@ static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector 
   // We will transfer Frontier -> Beam
   vgx_CollectorItem_t frontier = {0};
   while( CALLABLE(F)->Next(F, &frontier.item) ) {
-    vgx_Graph_t *locked_graph = NULL;
     vgx_CollectorItem_t discarded = {0};
     if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item) == NULL ) {
       // Inferior item
@@ -458,7 +457,7 @@ static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collect
  *
  ***********************************************************************
  */
-static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+static void __initialize_beam( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   if( collector->beam_heap ) {
     Cm256iHeap_t *B = collector->beam_heap;
     // Initialize beam heap
@@ -477,7 +476,7 @@ static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollec
  *
  ***********************************************************************
  */
-static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, int64_t beam_sz_override ) {
+static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, int64_t beam_sz_override ) {
   switch( collector->recursion_mode ) {
   case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
   {
@@ -496,7 +495,7 @@ static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_
 
     // Prepare next beam
     collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
-    __initialize_beam( recursion, collector, mem );
+    __initialize_beam( collector, mem );
 
     // Number of expansions to perform
     return (int)sz_frontier;
@@ -610,7 +609,7 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  *
  ***********************************************************************
  */
- __inline static int64_t __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+ __inline static int64_t __next_level_control( control_vector_t *control ) {
   control->expansions.local = 0;
   return ++control->evolution.level;
 }
@@ -622,7 +621,7 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  *
  ***********************************************************************
  */
-__inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+__inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_ExpressEvalMemory_t *mem ) {
   float score = frontier_node->predicator.val.real;
   if( score < control->threshold.baseline ) {
     return false;
@@ -659,7 +658,6 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
   vgx_BaseCollector_context_t *collector = search->collector;
   vgx_recursion_config_t *recursion = &search->recursion;
-  vgx_virtual_ArcFilter_context_t *filter_context = search->probe->traversing.arcfilter;
 
   vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
   vgx_FrontierQueue_t *F = collector->frontier;
@@ -669,13 +667,10 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
   }
 
   // Early termination triggers
-  int64_t frontier_limit = recursion->limit.frontier;
   int64_t expansion_limit = recursion->limit.expansion;
   int64_t depth_limit = recursion->limit.depth;
   int64_t visit_limit = recursion->limit.visit;
   int64_t exec_nanosec_limit = recursion->limit.exec_ms * 1000000LL;
-  
-  //int graph_is_RO = CALLABLE(vertex_RO->graph)->advanced->IsGraphReadonly(vertex_RO->graph);
 
   XTRY {
 
@@ -732,7 +727,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     vxeval_vertex_unvisited( dwset, vertex_RO );
 
     // Number of nodes in initial neighborhood
-    __prepare_next_level( recursion, filter_context, collector, mem, 0 );
+    __prepare_next_level( recursion, collector, mem, 0 );
 
     control.coherence.baseline = vgx_RankGetC0( &vertex_RO->rank );
     control.evolution.level = 1;
@@ -749,7 +744,7 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
     }
     
     // After the very first neighborhood (global entrypoint) we optionally select a small set of the best candidates
-    control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, recursion->init.select );
+    control.evolution.level_size = __prepare_next_level( recursion, collector, mem, recursion->init.select );
 
     vgx_CollectorItem_t frontier = {0};
 
@@ -769,14 +764,9 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
         control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
 
         // Expand if frontier node score is high enough
-        if( __expand_next_check( &control, &frontier, collector, mem ) ) {
+        if( __expand_next_check( &control, &frontier, mem ) ) {
           // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
           vgx_Vertex_t *next = frontier.headref->vertex;
-          /*
-          if( !graph_is_RO ) {
-            __try_inc_expand_counter( next );
-          }
-          */
           if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
             match = VGX_ARC_FILTER_MATCH_ERROR;
             goto terminate_inner;
@@ -798,11 +788,11 @@ static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarc
       }
       
       // Max depth reached
-      if( __next_level_control(&control, mem) >= depth_limit ) {
+      if( __next_level_control(&control) >= depth_limit ) {
         goto terminate_outer;
       }
 
-      control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, 0 );
+      control.evolution.level_size = __prepare_next_level( recursion, collector, mem, 0 );
     }
 
     // The initial match only since this determines the overall whether anything was found at all

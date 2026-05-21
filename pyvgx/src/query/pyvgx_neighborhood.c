@@ -510,6 +510,7 @@ __inline static void * set_object_target( vgx_recursion_config_t *recursion, con
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int parse_recursion_parameter_i64( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
   if( !PyLong_Check(py_value) ) {
     PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", cursor->name, py_value );
@@ -537,6 +538,7 @@ static void init_recursion_parameter_i64( const recursion_config_param *cursor, 
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int parse_recursion_parameter_f64( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
   if( !PyNumber_Check(py_value) ) {
     PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", cursor->name, py_value );
@@ -564,6 +566,7 @@ static void init_recursion_parameter_f64( const recursion_config_param *cursor, 
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int parse_recursion_parameter_b32( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
   if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
     set_bool_target( target, cursor, true );
@@ -608,6 +611,7 @@ static int parse_recursion_vector( PyVGX_Graph *pygraph, PyObject *py_value, con
  *
  ******************************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int parse_recursion_filter( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
   if( !PyUnicode_Check( py_value ) ) {
     PyVGXError_Format( PyExc_TypeError, "recursive search invalid %s: %R", cursor->name, py_value );
@@ -830,7 +834,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
     // Parse the preconfig
     if( PyDict_Check( py_recursion ) ) {
       nparams = PyDict_Size( py_recursion );
-      const recursion_config_param *cursor = g_pre_config;
+      cursor = g_pre_config;
       const char *key;
       PyObject *py_value;
       while( (key=cursor->name) != NULL ) {
@@ -864,10 +868,9 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
     }
     // { "heap_shadow": 256, "frontier_limit": 1024, ... }
     else if( PyDict_Check( py_recursion) ) {
-      const recursion_config_param *cursor = g_config;
+      cursor = g_config;
       const char *key;
       PyObject *py_value;
-      int err = 0;
       while( (key=cursor->name) != NULL ) {
         if( (py_value = PyDict_GetItemString(py_recursion, key)) != NULL ) {
           --nparams;

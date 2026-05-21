@@ -384,6 +384,7 @@ DLL_EXPORT vgx_IVertexFilter_t iVertexFilter = {
  * NOTE: Probe must not have relationship wildcard
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __arcvector_predicator_match_relationship( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__REL_DIFF( probe.data ^ target.data );
 }
@@ -395,6 +396,7 @@ __inline static int __arcvector_predicator_match_relationship( const vgx_virtual
  * NOTE: Probe must not have modifier wildcard
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __arcvector_predicator_match_modifier( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__MOD_DIFF( probe.data ^ target.data );
 }
@@ -406,6 +408,7 @@ __inline static int __arcvector_predicator_match_modifier( const vgx_virtual_Arc
  * NOTE: Probe key must not be 0
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __arcvector_predicator_match_key( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   return !__KEY_DIFF( probe.data ^ target.data );
 }
@@ -462,6 +465,7 @@ __inline static int __arcvector_predicator_match_value( const vgx_predicator_t p
  * Predicator value bit pattern hamming distance match
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static int __arcvector_predicator_match_value_hamming_distance( const vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target ) {
   static const BYTE cos_to_ham32_1_0_sigma[] = {
     19, 19, 19, 18, 18, 18, 18, 18, 18, 17, 17, 17, 17, 17, 17, 16,
@@ -469,23 +473,6 @@ __inline static int __arcvector_predicator_match_value_hamming_distance( const v
     13, 13, 13, 13, 12, 12, 12, 12, 12, 11, 11, 11, 11, 10, 10, 10,
     10,  9,  9,  9,  8,  8,  8,  7,  7,  6,  6,  5,  5,  4,  3,  0
   };
-
-
-  /*
-  // Use dynamically adjusted threshold
-  if( context && context->lsh_cos_threshold < 1.0 ) {
-    // Not filter yet
-    if( context->lsh_cos < context->lsh_cos_threshold ) {
-      return !probe.mod.probe.NEG;
-    }
-    unsigned ham = POPCNT32( target.val.bits ^ probe.val.bits );
-    int idx = (int)(context->lsh_cos * 63) & 0x3F;
-    int max_ham = cos_to_ham32_1_0_sigma[ idx ];
-    // Return 1 if our hamdist is lower than implied by cosine (i.e. good to traverse)
-    // (probe.NEG inverts logic if 1)
-    return !( (ham > max_ham) ^ probe.mod.probe.NEG );
-  }
-  */
 
   // Use normal static threshold
   unsigned ham = POPCNT32( target.val.bits ^ probe.val.bits );
@@ -2791,6 +2778,7 @@ static vgx_virtual_ArcFilter_context_t * __new_wildcard_arc_filter( bool pass ) 
  *
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *rel_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( rel_filter ) {
@@ -2812,6 +2800,7 @@ static vgx_virtual_ArcFilter_context_t * __new_relationship_arc_filter( const vg
  *
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *mod_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( mod_filter ) {
@@ -2853,6 +2842,7 @@ static vgx_virtual_ArcFilter_context_t * __new_modifier_arc_filter( const vgx_pr
  * NOTE: No value ranges
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *val_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( val_filter ) {
@@ -2879,6 +2869,7 @@ static vgx_virtual_ArcFilter_context_t * __new_value_arc_filter( const vgx_predi
  *
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relmod_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relmod_filter ) {
@@ -2900,6 +2891,7 @@ static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_pr
  * NOTE: No value ranges
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relval_filter ) {
@@ -2926,6 +2918,7 @@ static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( co
  * NOTE: No value ranges
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *modval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( modval_filter ) {
@@ -2952,6 +2945,7 @@ static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const 
  *
  ***********************************************************************
  */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator, const vgx_recursion_config_t *recursion ) {
   vgx_GenericArcFilter_context_t *relmodval_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( relmodval_filter ) {
