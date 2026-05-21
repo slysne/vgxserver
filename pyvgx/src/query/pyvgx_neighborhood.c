@@ -507,8 +507,6 @@ static int _pyvgx_Neighborhood__parse_recursion( PyObject *py_recursion, __neigh
       { .name = "delta",            .target = &param->recursion.tune.delta,       .dflt=0.0,    .minval=-1.0,        .maxval=10.0 },         // default 0.0 (beam controller reactivity)
       { .name = "epsilon",          .target = &param->recursion.tune.epsilon,     .dflt=0.0,    .minval=-1.0,        .maxval=1.0 },          // default 0.0 (score contribution threshold discount)
       { .name = "zeta",             .target = &param->recursion.tune.zeta,        .dflt=0.2,    .minval=0.0,         .maxval=1.0 },          // default 0.2 (threshold EMA alpha)
-      { .name = "rho",              .target = &param->recursion.tune.rho,         .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          //
-      { .name = "sigma",            .target = &param->recursion.tune.sigma,       .dflt=0.0,    .minval=0.0,         .maxval=1.0 },          //
       { .name = "omega",            .target = &param->recursion.tune.omega,       .dflt=1.0,    .minval=0.0,         .maxval=2.0 },          // default 0.7 (all optimizations weight)
       {0}
     };

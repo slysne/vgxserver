@@ -624,17 +624,6 @@ __inline static void __init_control( control_vector_t *control, int window ) {
  */
 __inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
   float score = frontier_node->predicator.val.real;
-  
-  /*
-  // --------------------------------------------------
-  // Bayesian experiment
-  float posterior_scalar = _vxquery_collector__get_bayesian_posterior_scalar( collector, mem, score );
-  float EMA_tail = control->threshold.baseline;
-  float belief = EMA_tail * posterior_scalar;
-  belief = clamp_value( belief, EMA_tail-0.0018, EMA_tail+0.0018 );
-  // --------------------------------------------------
-  */
-
   if( score < control->threshold.baseline ) {
     return false;
   }

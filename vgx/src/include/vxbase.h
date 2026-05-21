@@ -3488,8 +3488,6 @@ typedef struct s_vgx_recursion_config_t {
     double delta;
     double epsilon;
     double zeta;
-    double rho;
-    double sigma;
     int64_t kappa;
     int64_t lambda;
     double omega;

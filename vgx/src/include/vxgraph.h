@@ -6818,8 +6818,6 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float delta;                                \
   float epsilon;                              \
   float zeta;                                 \
-  float rho;                                  \
-  float sigma;                                \
   int kappa;                                  \
   int lambda;                                 \
   vgx_CollectorStage_t *stage;                \
