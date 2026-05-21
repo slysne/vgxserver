@@ -905,7 +905,6 @@ PyDoc_STRVAR( CountDefinitions__doc__,
  ******************************************************************************
  */
 static PyObject * PyVGX_Graph__CountDefinitions( PyVGX_Graph *pygraph  ) {
-  PyObject *py_ret = NULL;
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
     return NULL;

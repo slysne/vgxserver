@@ -1630,7 +1630,7 @@ static const char * __first_occurrence( const char *str, const char *probe, bool
   }
 
   const char *pa = str;
-  char first = tolower((unsigned char)*probe);
+  char first = (char)tolower((unsigned char)*probe);
 
   do {
     // Reset probe
