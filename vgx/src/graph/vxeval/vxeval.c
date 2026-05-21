@@ -64,6 +64,7 @@ static vgx_AllocatedVertex_t _aV_dummy = {0};
 static vgx_Vertex_t *g_dummy = NULL;
 static const size_t sz_id_prefix = sizeof( vgx_VertexIdentifierPrefix_t ) - 1;
 
+ATOMIC_i64 g_evalmem_allocated_atomic = 0;
 
 
 
@@ -310,6 +311,8 @@ static int _vxeval__initialize( void ) {
   int ret = 0;
   XTRY {
     __initialize_dummy_vertex();
+
+    ATOMIC_ASSIGN_i64( &g_evalmem_allocated_atomic, 0 );
 
     // Parser
     if( _vxeval_parser__initialize() < 0 ) {
@@ -1180,6 +1183,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->cstringref = NULL;
     mem->vectorref = NULL;
 
+    // Owner thread
+    mem->owner_thread = GET_CURRENT_THREAD_ID();
+
     // Integer set defaults to empty, allocate as needed.
     mem->dwset.slots = NULL;
     mem->dwset.mask = 0;
@@ -1207,6 +1213,7 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dynamic_taper._rsv2 = 0;
     mem->dynamic_taper._rsv3 = 0;
 
+    ATOMIC_INCREMENT_i64( &g_evalmem_allocated_atomic );
 
   }
   return mem;
@@ -1220,6 +1227,11 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
  ***********************************************************************
  */
 static int _vxeval__own_memory( vgx_ExpressEvalMemory_t *mem ) {
+#ifdef VGX_CONSISTENCY_CHECK
+  if( mem->owner_thread != GET_CURRENT_THREAD_ID() ) {
+    FATAL( 0x999, "_vxeval__own_memory illegal access by non-owner thread" );
+  }
+#endif
   return ++(mem->refc);
 }
 
@@ -1273,6 +1285,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
       }
     }
 
+    // We capture owner thread
+    clone->owner_thread = GET_CURRENT_THREAD_ID();
+
     // Integer set is NOT cloned
     clone->dwset.slots = NULL;
     clone->dwset.mask = 0;
@@ -1302,9 +1317,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dynamic_taper._rsv2 = 0;
     clone->dynamic_taper._rsv3 = 0;
 
-
     // One owner
     clone->refc = 1;
+
+    ATOMIC_INCREMENT_i64( &g_evalmem_allocated_atomic );
 
   }
   XCATCH( errcode ) {
@@ -1331,6 +1347,11 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
  */
 static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
   if( mem && *mem ) {
+#ifdef VGX_CONSISTENCY_CHECK
+    if( (*mem)->owner_thread != GET_CURRENT_THREAD_ID() ) {
+      FATAL( 0x999, "_vxeval__discard_memory illegal access by non-owner thread" );
+    }
+#endif
     if( --((*mem)->refc) == 0 ) {
       if( (*mem)->data != NULL && (*mem)->data != (*mem)->__data ) {
         ALIGNED_FREE( (*mem)->data );
@@ -1346,6 +1367,8 @@ static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
       }
 
       free( *mem );
+
+      ATOMIC_DECREMENT_i64( &g_evalmem_allocated_atomic );
     }
     *mem = NULL;
   }
@@ -2417,6 +2440,11 @@ static void Evaluator__set_default_prop( vgx_Evaluator_t *self, vgx_EvalStackIte
  ***********************************************************************
  */
 static void Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory ) {
+#ifdef VGX_CONSISTENCY_CHECK
+    if( memory->owner_thread != GET_CURRENT_THREAD_ID() ) {
+      FATAL( 0x999, "Evaluator__own_memory illegal access by non-owner thread" );
+    }
+#endif
   if( self->context.memory != memory ) {
     _vxeval__discard_memory( &self->context.memory );
     self->context.memory = memory;
@@ -2813,7 +2841,11 @@ static vgx_Evaluator_t * Evaluator__clone( vgx_Evaluator_t *self, vgx_Vector_t *
         clone->cache.CSTR__tmp_prop = NULL;
 
         // Ready
-        if( Evaluator__reset( clone, self->context.memory ) < 0 ) {
+        vgx_ExpressEvalMemory_t *memory = NULL;
+        if( self->context.memory->owner_thread == GET_CURRENT_THREAD_ID() ) {
+          memory = self->context.memory;
+        }
+        if( Evaluator__reset( clone, memory ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
         }
 

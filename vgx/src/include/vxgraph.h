@@ -6072,8 +6072,10 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   CQwordList_t *cstringref;
   // Q1.8
   CQwordList_t *vectorref;
-  // Q1.7
-  QWORD __rsv_1_7;
+  // Q1.7.1
+  uint32_t owner_thread;
+  // Q1.7.2
+  DWORD __rsv_1_7_2;
   // Q1.8
   QWORD __rsv_1_8;
   // ==== CL2 ====
