@@ -233,7 +233,7 @@ static CS_COND g_registry_graph_availability = {0};
  */
 __inline static int16_t __enter_registry_CS( void ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &g_registry_lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &g_registry_lock.lock );
   // SAFE HERE
   return ++g_registry_lock_count;
 }
@@ -2430,7 +2430,7 @@ static int __initialize_graph_registry_ROPEN( const CString_t *CSTR__system_root
   int ret = 0;
 
   if( !g_registry_init && ++g_registry_init == 1 ) {
-    INIT_CRITICAL_SECTION( &g_registry_lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &g_registry_lock.lock );
     INIT_CONDITION_VARIABLE( &g_registry_graph_availability.cond );
   }
 

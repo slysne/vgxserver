@@ -1002,14 +1002,16 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     .predicator = larc->head.predicator,
     .sort       = sort
   };
-  vgx_CollectorItem_t result_heap_discarded;
-  vgx_CollectorItem_t *result_heap_location;
+  vgx_CollectorItem_t result_heap_discarded = {0};
+  vgx_CollectorItem_t *result_heap_location = NULL;
   int refmap_updated;
   float recursion_score = larc->head.predicator.val.real;
   
   
   // Try to collect item into result heap
-  result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+  if( !larc->flag.recursion_skip_heap_collect ) {
+    result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+  }
     
   // ------------------------------------------------------------
   // Normal non-recursive (or sort not good enough for recursion)
@@ -1044,7 +1046,10 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
         return 0;
       }
       // Item was pushed to beam only
-      return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
+      if( __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL ) < 0 ) {
+        return -1;
+      }
+      return 0; // <- no result collected (only beam)
     }
 
     // Item was pushed to result only
@@ -1119,7 +1124,11 @@ __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_Locka
     //  ^^^ Should never fail, but if it does collector cleanup is expected to clear all refmap entries
   }
 
-  return refmap_updated;
+  if( refmap_updated < 0 ) {
+    return -1;
+  }
+
+  return result_heap_location ? refmap_updated : 0;
 }
 
 

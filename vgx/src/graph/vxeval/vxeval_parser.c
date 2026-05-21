@@ -595,16 +595,16 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
         // we are possibly assigning something or using a variable
         else if( iString.Validate.StorableKey( token ) ) {
           bool at_next = __is_at_subexpression( &subexpression, program, shuntstack );
-          // Is this an existing variable?
+          // Is this an existing variable, and we're not overwriting it?
           __rpn_variable *var = __varmap__variable_get( varmap, token );
-          if( var ) {
+          if( var && !__tokenizer__is_next_token( tokenizer, "=" ) ) {
             stackitem.integer = var->subexpr_idx;
             stackitem.type = __STACK_ITEM_VARIABLE;
             current_op = &RpnPushVariable;
             __output__emit_operand( program, current_op, &stackitem );
             NEXT_TOKEN( EXPECT_INFIX );
           }
-          // Unknown variable, speculatively assume we are assigning if at start of next subexpression
+          // Unknown (or about to be overwritten) variable, speculatively assume we are assigning if at start of next subexpression
           else if( at_next && subexpression.var == NULL ) {
             assign_name = token;
             NEXT_TOKEN( EXPECT_ASSIGNMENT );
@@ -669,18 +669,32 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
           if( !__is_at_subexpression( &subexpression, program, shuntstack ) ) {
             SYNTAX_ERROR( "cannot assign variable within expression" );
           }
+
+          // Variable may already exist
+          __rpn_variable *var = __varmap__variable_get( varmap, assign_name );
+
+          /*
           // Should not already exist
           if( __varmap__variable_get( varmap, assign_name ) ) {
             SYNTAX_ERROR( "duplicate variable assignment" );
           }
+          */
+
           // Current subexpression should not already be assigned to a variable
           if( subexpression.var != NULL ) {
             INTERNAL_ERROR( "variable already assigned for subexpression" );
           }
-          // Make a new variable that represents current subexpression about to be parsed
-          if( (subexpression.var = __varmap__variable_new( assign_name, subexpression.index )) == NULL ) {
-            INTERNAL_ERROR( "out of memory" );
+          
+          if( var ) {
+            subexpression.var = var;
           }
+          else {
+            // Make a new variable that represents current subexpression about to be parsed
+            if( (subexpression.var = __varmap__variable_new( assign_name, subexpression.index )) == NULL ) {
+              INTERNAL_ERROR( "out of memory" );
+            }
+          }
+
           NEXT_TOKEN( EXPECT_OPERAND );
         }
         // Error
@@ -1209,9 +1223,13 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                 // Set the first node in list
                 if( program->strings == NULL ) {
                   program->strings = node;
+                  program->end_strings = node;
                 }
-                // Add node to list
+                // Append node to end of list
                 else {
+                  program->end_strings->next = node;
+                  program->end_strings = node;
+                  /*
                   // Find end
                   vgx_ExpressEvalString_t *cursor = program->strings;
                   while( cursor->next ) {
@@ -1219,6 +1237,7 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
                   }
                   // Attach new node to end
                   cursor->next = node;
+                  */
                 }
                 // String stolen by list
                 CSTR__literal = NULL;
@@ -1385,7 +1404,9 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
 
     // Variable assignment var last subexpression ignored
     __rpn_variable *var = __subexpression_pop_variable( &subexpression );
-    __varmap__variable_delete( &var );
+    if( var && !__varmap__variable_get( varmap, var->name ) ) {
+      __varmap__variable_delete( &var );
+    }
 
     // Delete variable map
     __varmap__delete( &varmap );

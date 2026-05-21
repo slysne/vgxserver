@@ -24,6 +24,7 @@
  *****************************************************************************/
 
 #include "cxlock.h"
+#include "cxmath.h"
 
 
 #if defined CXPLAT_WINDOWS_X64
@@ -282,28 +283,35 @@ default_micronap:
 #if defined CXPLAT_WINDOWS_X64
 
 #elif defined(CXPLAT_LINUX_ANY) || defined(CXPLAT_MAC_ARM64)
+
 /*******************************************************************//**
  *
  *
  ***********************************************************************
  */
-void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
+void __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
+  #define MAX_SPIN 64
+  #define MIN_BACKOFF 4
+  #define MAX_BACKOFF 16
+  #define MAX_SPIN_BEFORE_SCHED_YIELD 16
+
   // Optimistic
   if( pthread_mutex_trylock( mutex ) == 0 ) {
     return;
   }
 
-  uint8_t yield_counter = 0;
-  int i = 0;
-  do {
-  
-    // 256 times around the loop with pause before yielding
-    if( ++yield_counter != 0 ) {
-      #if defined CXPLAT_ARCH_X64
-      _mm_pause();
-      #elif defined CXPLAT_ARCH_ARM64
-      __yield();
-      #endif
+  int y = MIN_BACKOFF;
+  for( int spin=0; spin<MAX_SPIN; ++spin ) {
+
+    if( spin < MAX_SPIN_BEFORE_SCHED_YIELD ) {
+      for( int i=0; i<y; ++i ) {
+        #if defined CXPLAT_ARCH_X64
+        _mm_pause();
+        #elif defined CXPLAT_ARCH_ARM64
+        __yield();
+        #endif
+      }
+      y = minimum_value( MAX_BACKOFF, 2*y );
     }
     else {
       sched_yield();
@@ -314,11 +322,12 @@ void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex ) {
       return;
     }
 
-  } while( i++ < 4096 );
+  }
   
   // Fallback
   pthread_mutex_lock( mutex );
 }
+
 
 #endif
 

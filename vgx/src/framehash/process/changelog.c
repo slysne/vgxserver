@@ -26,6 +26,7 @@
 #include "_framehash.h"
 #include "_cxmalloc.h"
 
+
 DISABLE_WARNING_NUMBER( 4206 )
 #ifdef FRAMEHASH_CHANGELOG
 SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_FRAMEHASH );
@@ -185,7 +186,7 @@ static CString_t * __new_changelog_name( const char *dirname, const char *basena
  ***********************************************************************
  */
 static char * __get_permanent_name( CString_t *CSTR__delta_name, char *buffer ) {
-  if( CALLABLE( CSTR__delta_name )->EndsWith( CSTR__delta_name, changelog_open_suffix ) ) {
+  if( CALLABLE( CSTR__delta_name )->EndsWith( CSTR__delta_name, changelog_open_suffix, false ) ) {
     // The full temporary path with suffix
     const char *str = CStringValue( CSTR__delta_name );
     char *p = buffer;
@@ -1147,7 +1148,7 @@ static int __start_changelog_monitor( framehash_t *self, bool async ) {
 
   int ret = 0;
 
-  SYNCHRONIZE_ON( self->_dynamic.lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_dynamic.lock ) { // <- not really recursive, must be the only lock level here
     if( self->changelog.enable ) {
       // Already running?
       if( self->changelog.state.__running ) {
@@ -1166,7 +1167,14 @@ static int __start_changelog_monitor( framehash_t *self, bool async ) {
           if( async == false ) {
             // Wait until thread is running
             const int timeout_ms = 10000;
-            SYNCHRONIZED_WAIT_UNTIL( self->changelog.state.__running, timeout_ms );
+
+            // TODO: Requires single acquisition of _dynamic.lock, find a way to avoid recursive locks
+            BEGIN_TIME_LIMITED_WHILE( !self->changelog.state.__running, timeout_ms, NULL ) {   
+              LEAVE_CRITICAL_SECTION( &self->_dynamic.lock );
+              sleep_milliseconds( 10 );
+              ENTER_RECURSIVE_CRITICAL_SECTION( &self->_dynamic.lock );
+            } END_TIME_LIMITED_WHILE;
+
             if( !self->changelog.state.__running ) {
               self->changelog.state.__req_start = 0;
               THREAD_JOIN( self->changelog.monitor, 1000 );
@@ -1195,7 +1203,7 @@ static int __stop_changelog_monitor( framehash_t *self, bool async ) {
   
   int ret = 0;
 
-  SYNCHRONIZE_ON( self->_dynamic.lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_dynamic.lock ) { // <- not really recursive, must be the only lock level here
     // Thread is running
     if( self->changelog.state.__running ) {
       // Streaming thread is running - shut down thread and flush
@@ -1205,7 +1213,14 @@ static int __stop_changelog_monitor( framehash_t *self, bool async ) {
       // Block until shutdown
       if( async == false ) {
         const int timeout_ms = 30000;
-        SYNCHRONIZED_WAIT_UNTIL( !self->changelog.state.__running, timeout_ms );
+
+        // TODO: Requires single acquisition of _dynamic.lock, find a way to avoid recursive locks
+        BEGIN_TIME_LIMITED_WHILE( !self->changelog.state.__running, timeout_ms, NULL ) {   
+          LEAVE_CRITICAL_SECTION( &self->_dynamic.lock );
+          sleep_milliseconds( 10 );
+          ENTER_RECURSIVE_CRITICAL_SECTION( &self->_dynamic.lock );
+        } END_TIME_LIMITED_WHILE;
+
         // Timeout?
         if( self->changelog.state.__running ) {
           self->changelog.state.__req_stop = 0;

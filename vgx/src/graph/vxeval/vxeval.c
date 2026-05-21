@@ -64,6 +64,7 @@ static vgx_AllocatedVertex_t _aV_dummy = {0};
 static vgx_Vertex_t *g_dummy = NULL;
 static const size_t sz_id_prefix = sizeof( vgx_VertexIdentifierPrefix_t ) - 1;
 
+ATOMIC_i64 g_evalmem_allocated_atomic = 0;
 
 
 
@@ -75,7 +76,7 @@ static int _vxeval__initialize( void );
 static int _vxeval__destroy( void );
 static int _vxeval__create_evaluators( vgx_Graph_t *graph );
 static void _vxeval__destroy_evaluators( vgx_Graph_t *graph );
-static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
+static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 static void _vxeval__discard_evaluator( vgx_Evaluator_t **evaluator );
 static int _vxeval__is_positive( const vgx_EvalStackItem_t *item );
 static int64_t _vxeval__get_integer( const vgx_EvalStackItem_t *item );
@@ -156,7 +157,7 @@ static vgx_Evaluator_t *      Evaluator__constructor( const void *identifier, vg
 static void                   __destructor_CS( vgx_Evaluator_t *self_CS );
 static void                   Evaluator__destructor( vgx_Evaluator_t *self );
 static CStringQueue_t *       Evaluator__represent( vgx_Evaluator_t *self, CStringQueue_t *output );
-static int                    Evaluator__reset( vgx_Evaluator_t *self );
+static int                    Evaluator__reset( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
 static void                   Evaluator__set_context( vgx_Evaluator_t *self, const vgx_Vertex_t *tail, const vgx_ArcHead_t *arc, vgx_Vector_t *vector, double rankscore );
 static void                   Evaluator__set_default_prop( vgx_Evaluator_t *self, vgx_EvalStackItem_t *default_prop );
 static void                   Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
@@ -311,6 +312,8 @@ static int _vxeval__initialize( void ) {
   XTRY {
     __initialize_dummy_vertex();
 
+    ATOMIC_ASSIGN_i64( &g_evalmem_allocated_atomic, 0 );
+
     // Parser
     if( _vxeval_parser__initialize() < 0 ) {
       THROW_ERROR( CXLIB_ERR_INITIALIZATION, 0x121 );
@@ -463,10 +466,11 @@ static void _vxeval__destroy_evaluators( vgx_Graph_t *graph ) {
  * 
  ***********************************************************************
  */
-static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error ) {
+static vgx_Evaluator_t * _vxeval__new_evaluator( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error ) {
   vgx_Evaluator_constructor_args_t args = {
     .parent       = graph,
     .expression   = expression,
+    .memory       = memory,
     .vector       = vector,
     .CSTR__error  = CSTR__error
   };
@@ -1015,7 +1019,7 @@ static CQwordList_t * __clone_cstringrefs( CQwordList_t *cstringrefs ) {
     QWORD addr = *cursor;
     CString_t *CSTR__str = (CString_t*)addr;
     family = (cxmalloc_family_t*)CSTR__str->allocator_context->allocator;
-    SYNCHRONIZE_ON( family->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( family->lock ) {
       while( cursor < end ) {
         addr = *cursor++;
         if( iList->Append( clone, &addr ) == 1 ) { 
@@ -1049,7 +1053,7 @@ static int64_t __delete_cstringrefs( CQwordList_t **cstringrefs ) {
       CString_t *CSTR__str = (CString_t*)addr;
       family = (cxmalloc_family_t*)CSTR__str->allocator_context->allocator;
       cxmalloc_family_vtable_t *iFamily = CALLABLE( family );
-      SYNCHRONIZE_ON( family->lock ) {
+      RECURSIVE_SYNCHRONIZE_ON( family->lock ) {
         while( cursor < end ) {
           addr = *cursor++;
           CSTR__str = (CString_t*)addr;
@@ -1179,6 +1183,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->cstringref = NULL;
     mem->vectorref = NULL;
 
+    // Owner thread
+    mem->owner_thread = GET_CURRENT_THREAD_ID();
+
     // Integer set defaults to empty, allocate as needed.
     mem->dwset.slots = NULL;
     mem->dwset.mask = 0;
@@ -1206,6 +1213,7 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
     mem->dynamic_taper._rsv2 = 0;
     mem->dynamic_taper._rsv3 = 0;
 
+    ATOMIC_INCREMENT_i64( &g_evalmem_allocated_atomic );
 
   }
   return mem;
@@ -1219,6 +1227,11 @@ static vgx_ExpressEvalMemory_t * _vxeval__new_memory( int order ) {
  ***********************************************************************
  */
 static int _vxeval__own_memory( vgx_ExpressEvalMemory_t *mem ) {
+#ifdef VGX_CONSISTENCY_CHECK
+  if( mem->owner_thread != GET_CURRENT_THREAD_ID() ) {
+    FATAL( 0x999, "_vxeval__own_memory illegal access by non-owner thread" );
+  }
+#endif
   return ++(mem->refc);
 }
 
@@ -1272,6 +1285,9 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
       }
     }
 
+    // We capture owner thread
+    clone->owner_thread = GET_CURRENT_THREAD_ID();
+
     // Integer set is NOT cloned
     clone->dwset.slots = NULL;
     clone->dwset.mask = 0;
@@ -1301,9 +1317,10 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
     clone->dynamic_taper._rsv2 = 0;
     clone->dynamic_taper._rsv3 = 0;
 
-
     // One owner
     clone->refc = 1;
+
+    ATOMIC_INCREMENT_i64( &g_evalmem_allocated_atomic );
 
   }
   XCATCH( errcode ) {
@@ -1330,6 +1347,11 @@ static vgx_ExpressEvalMemory_t * _vxeval__clone_memory( vgx_ExpressEvalMemory_t 
  */
 static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
   if( mem && *mem ) {
+#ifdef VGX_CONSISTENCY_CHECK
+    if( (*mem)->owner_thread != GET_CURRENT_THREAD_ID() ) {
+      FATAL( 0x999, "_vxeval__discard_memory illegal access by non-owner thread" );
+    }
+#endif
     if( --((*mem)->refc) == 0 ) {
       if( (*mem)->data != NULL && (*mem)->data != (*mem)->__data ) {
         ALIGNED_FREE( (*mem)->data );
@@ -1345,6 +1367,8 @@ static void _vxeval__discard_memory( vgx_ExpressEvalMemory_t **mem ) {
       }
 
       free( *mem );
+
+      ATOMIC_DECREMENT_i64( &g_evalmem_allocated_atomic );
     }
     *mem = NULL;
   }
@@ -2179,7 +2203,7 @@ static vgx_Evaluator_t * Evaluator__constructor( void const *__ign_identifier, v
     self->cache.CSTR__tmp_prop = NULL;
 
     // Ready
-    if( Evaluator__reset( self ) < 0 ) {
+    if( Evaluator__reset( self, args->memory ) < 0 ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x158 );
     }
   }
@@ -2290,7 +2314,7 @@ __inline static void __clear_eval_caches( vgx_ExpressEvalCache_t *ec ) {
  * 
  ***********************************************************************
  */
-static int Evaluator__reset( vgx_Evaluator_t *self ) {
+static int Evaluator__reset( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory ) {
   // Reset caches
   __clear_eval_caches( &self->cache );
 
@@ -2310,9 +2334,23 @@ static int Evaluator__reset( vgx_Evaluator_t *self ) {
   Evaluator__set_default_prop( self, NULL );
 
   // memory
-  _vxeval__discard_memory( &self->context.memory );
-  if( (self->context.memory = _vxeval__new_memory( -1 )) == NULL ) {
-    return -1;
+  // No existing memory
+  if( self->context.memory == NULL ) {
+    // Use supplied memory
+    if( memory ) {
+      _vxeval__own_memory( memory );
+      self->context.memory = memory;
+    }
+    // Create default
+    else if( (self->context.memory = _vxeval__new_memory( -1 )) == NULL ) {
+      return -1;
+    }
+  }
+  // We have existing memory and it's different from supplied
+  else if( memory && memory != self->context.memory ) {
+    _vxeval__discard_memory( &self->context.memory );
+    _vxeval__own_memory( memory );
+    self->context.memory = memory;
   }
 
   // wreg
@@ -2402,9 +2440,16 @@ static void Evaluator__set_default_prop( vgx_Evaluator_t *self, vgx_EvalStackIte
  ***********************************************************************
  */
 static void Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory ) {
-  _vxeval__discard_memory( &self->context.memory );
-  self->context.memory = memory;
-  memory->refc++;
+#ifdef VGX_CONSISTENCY_CHECK
+    if( memory->owner_thread != GET_CURRENT_THREAD_ID() ) {
+      FATAL( 0x999, "Evaluator__own_memory illegal access by non-owner thread" );
+    }
+#endif
+  if( self->context.memory != memory ) {
+    _vxeval__discard_memory( &self->context.memory );
+    self->context.memory = memory;
+    memory->refc++;
+  }
 }
 
 
@@ -2415,6 +2460,11 @@ static void Evaluator__own_memory( vgx_Evaluator_t *self, vgx_ExpressEvalMemory_
  ***********************************************************************
  */
 static void Evaluator__set_vector( vgx_Evaluator_t *self, vgx_Vector_t *vector ) {
+  // Same vector as before
+  if( vector == self->current.vector ) {
+    return;
+  }
+
   // Discard any previous vector
   if( self->current.vector ) {
     CALLABLE( self->current.vector )->Decref( self->current.vector );
@@ -2470,23 +2520,26 @@ static vgx_EvalStackItem_t * Evaluator__eval( vgx_Evaluator_t *self ) {
  * This assumes the context has been set to non-NULL values for:
  *   - tail vertex
  *   - prev arc
- * It further assumes the evaluator will NOT access:
+ * It further assumes the evaluator will not access:
  *   - next arc
  *   - head vertex
  ***********************************************************************
  */
 static vgx_EvalStackItem_t * Evaluator__eval_vertex( vgx_Evaluator_t *self, const vgx_Vertex_t *vertex ) {
 
+  /*
   // Assign default values to head if traversals are attempted
   if( self->rpn_program.deref.arc != 0 ) {
     self->context.exit = VGX_PREDICATOR_NONE;
     self->context.HEAD = vertex;
   }
-
-  // Reset vertex property cache
-  self->cache.VERTEX.vertex = NULL;
-
-  // Set vertex to evaluate
+  */
+  
+  // Protect against head access (alias to current vertex)
+  self->context.exit = VGX_PREDICATOR_NONE;
+  self->context.HEAD = vertex;
+  
+  // Set vertex to evaluate ()
   self->context.VERTEX = vertex;
 
   return __evaluator__run( self );
@@ -2505,8 +2558,6 @@ static vgx_EvalStackItem_t * Evaluator__eval_vertex( vgx_Evaluator_t *self, cons
  */
 static vgx_EvalStackItem_t * Evaluator__eval_arc( vgx_Evaluator_t *self, vgx_LockableArc_t *next ) {
   vgx_EvalStackItem_t *ret;
-  // Reset head property cache
-  self->cache.HEAD.vertex = NULL;
 
   // Set the arc
   self->context.VERTEX = next->tail;
@@ -2790,7 +2841,11 @@ static vgx_Evaluator_t * Evaluator__clone( vgx_Evaluator_t *self, vgx_Vector_t *
         clone->cache.CSTR__tmp_prop = NULL;
 
         // Ready
-        if( Evaluator__reset( clone ) < 0 ) {
+        vgx_ExpressEvalMemory_t *memory = NULL;
+        if( self->context.memory->owner_thread == GET_CURRENT_THREAD_ID() ) {
+          memory = self->context.memory;
+        }
+        if( Evaluator__reset( clone, memory ) < 0 ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
         }
 
@@ -2909,6 +2964,11 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
 
   // Reset stack
   __reset_runtime_stack( self );
+  
+  // Reset vertex property caches
+  self->cache.TAIL.vertex = NULL;
+  self->cache.VERTEX.vertex = NULL;
+  self->cache.HEAD.vertex = NULL;
 
   // Reset local scope
   if( self->context.local_scope.objects ) {
@@ -2924,7 +2984,6 @@ __inline static vgx_EvalStackItem_t * __evaluator__run( vgx_Evaluator_t *self ) 
     f( self );
     f = (++self->op)->func;
   }
-
 
   // Return top of stack after completion
   return GET_PITEM( self );
@@ -2946,8 +3005,8 @@ DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const
  *
  ***********************************************************************
  */
-DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
-  return __fast_anncollect( self, probe, target );
+DLL_HIDDEN int vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
+  return __fast_anncollect( self, probe, vertex, target, rscore );
 }
 
 

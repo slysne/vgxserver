@@ -80,7 +80,9 @@ static int64_t Graph_truncate_type( vgx_Graph_t *self, const CString_t *CSTR__ve
 
 static vgx_Evaluator_t * Graph_define_evaluator( vgx_Graph_t *self, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
 static vgx_Evaluator_t * Graph_get_evaluator( vgx_Graph_t *self, const char *name );
+static bool Graph_has_evaluator( vgx_Graph_t *self, const char *name );
 static vgx_Evaluator_t ** Graph_get_evaluators( vgx_Graph_t *self, int64_t *sz );
+static int64_t Graph_count_evaluators( vgx_Graph_t *self );
 
 
 
@@ -118,7 +120,9 @@ static vgx_IGraphSimple_t SimpleMethods = {
   .TruncateType         = Graph_truncate_type,
   .DefineEvaluator      = Graph_define_evaluator,
   .GetEvaluator         = Graph_get_evaluator,
-  .GetEvaluators        = Graph_get_evaluators
+  .HasEvaluator         = Graph_has_evaluator,
+  .GetEvaluators        = Graph_get_evaluators,
+  .CountEvaluators      = Graph_count_evaluators
 };
 
 
@@ -444,8 +448,8 @@ static int64_t __global_query( vgx_Graph_t *self, vgx_GlobalQuery_t *query ) {
 
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
   } GRAPH_RELEASE;
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
 
   return n_hits;
 }
@@ -1452,8 +1456,8 @@ static vgx_Relation_t * Graph_has_adjacency( vgx_Graph_t *self, vgx_AdjacencyQue
 
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
   } GRAPH_RELEASE;
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
 
   return relation;
 }
@@ -1540,9 +1544,9 @@ static vgx_Vertex_t * Graph_open_neighbor( vgx_Graph_t *self, vgx_AdjacencyQuery
     }
   } END_QUERY;
 
+  CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   GRAPH_LOCK( self ) {
     query->parent_opid = iOperation.GetId_LCK( &self->operation );
-    CALLABLE( self )->CountQueryNolock( self, qt_ns );
     if( neighbor ) {
       if( readonly ) {
         neighbor_LCK = _vxgraph_state__lock_vertex_readonly_CS( self, neighbor, &query->timing_budget, VGX_VERTEX_RECORD_ALL );
@@ -1696,7 +1700,12 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
       }
       else if( _vgx_collector_mode_type( query->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
         traverse_neighborhood = iGraphTraverse.TraverseNeighborArcs;
-        hit_counter = &search->n_arcs;
+        if( __is_recursion_enabled( &search->recursion ) ) {
+          hit_counter = &search->n_neighbors; // just collected hits, we need this to avoid the dummy items warning during render
+        }
+        else {
+          hit_counter = &search->n_arcs; // total hits (presumably result will be filled with requested hits)
+        }
       }
       else {
         THROW_ERROR( CXLIB_ERR_API, 0xA65 );
@@ -1849,8 +1858,8 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
       if( ro_frozen > 0 ) {
         CALLABLE( self )->advanced->UnfreezeGraphReadonly_CS( self );
       }
-      CALLABLE( self )->CountQueryNolock( self, qt_ns );
     } GRAPH_RELEASE;
+    CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   }
 
   return n_hits;
@@ -1970,8 +1979,8 @@ static int64_t Graph_aggregate( vgx_Graph_t *self, vgx_AggregatorQuery_t *query 
       if( ro_frozen > 0 ) {
         CALLABLE( self )->advanced->UnfreezeGraphReadonly_CS( self );
       }
-      CALLABLE( self )->CountQueryNolock( self, qt_ns );
     } GRAPH_RELEASE;
+    CALLABLE( self )->CountQueryAtomic( self, qt_ns );
   }
 
 
@@ -2180,6 +2189,7 @@ static vgx_Evaluator_t * Graph_define_evaluator( vgx_Graph_t *self, const char *
   vgx_Evaluator_constructor_args_t args = {
     .parent       = self,
     .expression   = expression,
+    .memory       = NULL,
     .vector       = vector,
     .CSTR__error  = CSTR__error
   };
@@ -2233,6 +2243,23 @@ static vgx_Evaluator_t * Graph_get_evaluator( vgx_Graph_t *self, const char *nam
 
 
 /*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static bool Graph_has_evaluator( vgx_Graph_t *self, const char *name ) {
+  bool exists;
+  objectid_t obid;
+  obid.H = obid.L = CharsHash64( name );
+  GRAPH_LOCK( self ) {
+    exists = CALLABLE( self->evaluators )->HasObj128Nolock( self->evaluators, &obid ) == CELL_VALUE_TYPE_OBJECT128;
+  } GRAPH_RELEASE;
+  return exists;
+}
+
+
+
+/*******************************************************************//**
  * Return NULL-terminated list of evaluator object pointers.
  * NOTE: CALLER OWNS RETURNED LIST!
  ***********************************************************************
@@ -2262,6 +2289,23 @@ static vgx_Evaluator_t ** Graph_get_evaluators( vgx_Graph_t *self, int64_t *sz )
   } GRAPH_RELEASE;
   return evaluators;
 }
+
+
+
+/*******************************************************************//**
+ * Return number of defined expressions
+ *
+ ***********************************************************************
+ */
+static int64_t Graph_count_evaluators( vgx_Graph_t *self ) {
+  int64_t n;
+  GRAPH_LOCK( self ) {
+    framehash_t *E = self->evaluators;
+    n = CALLABLE(E)->Items(E);
+  } GRAPH_RELEASE;
+  return n;
+}
+
 
 
 

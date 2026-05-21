@@ -41,6 +41,7 @@ static unsigned cxlog_task_shutdown_OPEN( comlib_task_t *self );
 static int cxlog_force_rotate_XLOCK( LogContext_t *context );
 
 
+#define END_OF_THREAD_MARKER 0
 
 
 /*******************************************************************//**
@@ -65,9 +66,7 @@ static void cxlog_close_file_XLOCK( LogContext_t *context, bool flush ) {
     if( flush && context->queue && context->fd > 0 ) {
       if( context->init ) {
         // Close queue input before flushing
-        SYNCHRONIZE_ON( context->qlock ) {
-          context->qready = false;
-        } RELEASE;
+        ATOMIC_ASSIGN_i32( &context->qready, 0 );
         // Flush
         while( ComlibSequenceLength(context->queue) > 0 ) {
           cxlog_process_next_OPEN( context, 0 );
@@ -114,7 +113,7 @@ static void cxlog_clear_context_OPEN( LogContext_t *context ) {
   if( context ) {
     // Flush all items in queue and close file
     CS_LOCK *xlock = context->init ? &context->xlock : NULL;
-    SYNCHRONIZE_ON_PTR( xlock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( xlock ) {
       // Flush queue to file and mark queue input as disabled
       // Nothing new will come into the queue after this
       cxlog_close_file_XLOCK( context, true );
@@ -132,7 +131,7 @@ static void cxlog_clear_context_OPEN( LogContext_t *context ) {
     // Destroy locks and condition variable
     if( context->init ) {
       DEL_CRITICAL_SECTION( &context->xlock.lock );
-      DEL_CRITICAL_SECTION( &context->qlock.lock );
+      DEL_CRITICAL_SECTION( &context->qfastlock.lock );
       DEL_CONDITION_VARIABLE( &context->qwake.cond );
       context->init = 0;
     }
@@ -199,7 +198,7 @@ static int64_t cxlog_write_timestamp_output_OPEN( LogContext_t *context, int64_t
     }
   }
 
-  SYNCHRONIZE_ON( context->xlock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->xlock ) {
     if( context->fd > 0 ) {
       if( p ) {
         nwritten += CX_WRITE( tbuf, 1, p - tbuf, context->fd );
@@ -246,7 +245,7 @@ static int64_t cxlog_write__OPEN( LogContext_t *context, int64_t ns_1970, CStrin
     *p = '\0';
   }
 
-  SYNCHRONIZE_ON( context->xlock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->xlock ) {
     if( context->fd > 0 ) {
       nwritten += CX_WRITE( tbuf, 1, p - tbuf, context->fd );
       nwritten += CX_WRITE( CStringValue(CSTR__msg), 1, CStringLength(CSTR__msg), context->fd );
@@ -259,7 +258,6 @@ static int64_t cxlog_write__OPEN( LogContext_t *context, int64_t ns_1970, CStrin
 
 
 
-
 /*******************************************************************//**
  *
  *
@@ -269,12 +267,12 @@ static int cxlog_process_next_OPEN( LogContext_t *context, int wait ) {
   int n = 0;
   x2tptr_t ts_cstr = {0};
   Cx2tptrQueue_t *Q = context->queue;
-  SYNCHRONIZE_ON( context->qlock ) {
+  SYNCHRONIZE_ON( context->qfastlock ) {
     do {
       // We have data, extract one item
       if( ComlibSequenceLength(Q) > 0 ) {
         n = CALLABLE( Q )->NextNolock( Q, &ts_cstr );
-        if( ts_cstr.t_2.qword == 0 ) { // end of thread marker
+        if( ts_cstr.t_2.qword == END_OF_THREAD_MARKER ) { // end of thread marker
           n = -1;
         }
         break;
@@ -286,7 +284,7 @@ static int cxlog_process_next_OPEN( LogContext_t *context, int wait ) {
       }
 
       // No data, wait for data signal
-      TIMED_WAIT_CONDITION_CS( &(context->qwake.cond), &(context->qlock.lock), wait );
+      TIMED_WAIT_CONDITION_CS( &(context->qwake.cond), &(context->qfastlock.lock), wait );
       // Break if no data, otherwise back to top and extract item
     } while( ComlibSequenceLength(Q) > 0 );
   } RELEASE;
@@ -319,9 +317,9 @@ static unsigned cxlog_task_initialize_OPEN( comlib_task_t *self ) {
     };
     Q = context->queue = COMLIB_OBJECT_NEW( Cx2tptrQueue_t, NULL, &queue_args );
     INIT_CONDITION_VARIABLE( &context->qwake.cond );
-    INIT_SPINNING_CRITICAL_SECTION( &context->qlock.lock, 4000 );
+    INIT_CRITICAL_SECTION( &context->qfastlock.lock );
     context->fd = 0;
-    INIT_SPINNING_CRITICAL_SECTION( &context->xlock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &context->xlock.lock, 4000 );
     context->init = 1;
   }
   if( Q == NULL ) {
@@ -462,7 +460,7 @@ BEGIN_COMLIB_TASK( self,
 
   BEGIN_COMLIB_TASK_MAIN_LOOP( loop_delay ) {
     if( running ) {
-      SYNCHRONIZE_ON( context->xlock ) {
+      RECURSIVE_SYNCHRONIZE_ON( context->xlock ) {
         // Force log rotation of current file too large
         if( context->sz > size_limit ) {
           cxlog_force_rotate_XLOCK( context );
@@ -473,9 +471,11 @@ BEGIN_COMLIB_TASK( self,
           int batch = 100;
           int n;
           do {
-            SUSPEND_SYNCH {
-              n = cxlog_process_next_OPEN( context, 1000 );
-            } RESUME_SYNCH;
+
+            LEAVE_CRITICAL_SECTION( &context->xlock.lock );
+            n = cxlog_process_next_OPEN( context, 1000 );
+            ENTER_RECURSIVE_CRITICAL_SECTION( &context->xlock.lock );
+
             if( n < 0 ) {
               running = false; // end of thread
               break;
@@ -522,7 +522,7 @@ DLL_EXPORT LogContext_t * COMLIB__NewLogContext( void ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x002 );
     }
 
-    context->qready = true;
+    ATOMIC_ASSIGN_i32( &context->qready, 1);
 
   }
   XCATCH( errcode ) {
@@ -549,18 +549,22 @@ DLL_EXPORT int COMLIB__DeleteLogContext( LogContext_t **context ) {
     LogContext_t *ctx = *context;
 
     // End of logging
-    SYNCHRONIZE_ON( ctx->qlock ) {
-      COMLIB__Log( ctx, 0, NULL );
-      ctx->qready = false; // no more items allowed into queue
-    } RELEASE;
+    
+    // No more items allowed into queue
+    ATOMIC_ASSIGN_i32( &ctx->qready, 0 );
+
+    // Terminate
+    COMLIB__Log( ctx, 0, NULL );
 
     // Drain
     int64_t remain = 0;
-    SYNCHRONIZE_ON( ctx->qlock ) {
+    SYNCHRONIZE_ON( ctx->qfastlock ) {
       int draining = 5;
       int64_t last = remain = ComlibSequenceLength(ctx->queue);
       BEGIN_TIME_LIMITED_WHILE( draining > 0 && ComlibSequenceLength(ctx->queue) > 0, 600000, NULL ) {
-        SUSPEND_SLEEP(1000);
+        LEAVE_CRITICAL_SECTION( &ctx->qfastlock.lock );
+        sleep_milliseconds( 1000 );
+        ENTER_CRITICAL_SECTION( &ctx->qfastlock.lock );
         remain = ComlibSequenceLength(ctx->queue);
         if( remain < last ) {
           last = remain;
@@ -676,7 +680,7 @@ DLL_EXPORT int COMLIB__LogRotate( LogContext_t *context, const char *filepath, C
   }
 
   int err = 0;
-  SYNCHRONIZE_ON( context->xlock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->xlock ) {
     // Flush queue and close previous file if any
     cxlog_close_file_XLOCK( context, false );
 
@@ -703,9 +707,7 @@ DLL_EXPORT int COMLIB__LogRotate( LogContext_t *context, const char *filepath, C
       }
       // No log, drain queue without flushing and set not ready 
       else {
-        SYNCHRONIZE_ON( context->qlock ) {
-          context->qready = false;
-        } RELEASE;
+        ATOMIC_ASSIGN_i32( &context->qready, 0 );
         cxlog_drain_queue_OPEN( context );
       }
     }
@@ -739,7 +741,7 @@ DLL_EXPORT int COMLIB__Log( LogContext_t *context, int64_t ns_1970, CString_t **
 
   // may be NULL if this is the terminate thread message
   // STEAL: cstr instance will be discared by async thread
-  uint64_t cstr_addr = CSTR__msg ? (uintptr_t)*CSTR__msg : 0;
+  uint64_t cstr_addr = CSTR__msg ? (uintptr_t)*CSTR__msg : END_OF_THREAD_MARKER;
 
   x2tptr_t ts_cstr = {
     .t_1 = {
@@ -756,13 +758,12 @@ DLL_EXPORT int COMLIB__Log( LogContext_t *context, int64_t ns_1970, CString_t **
   }
 
   int ret = 0;
-  SYNCHRONIZE_ON( context->qlock ) {
-    if( context->qready ) {
-      Cx2tptrQueue_t *Q = context->queue;
-      ret = CALLABLE(Q)->AppendNolock(Q, &ts_cstr);
-      SIGNAL_ALL_CONDITION( &(context->qwake.cond) );
-    }
-  } RELEASE;
+  if( ATOMIC_READ_i32( &context->qready ) || ts_cstr.t_2.qword == END_OF_THREAD_MARKER ) {
+    SYNCHRONIZE_ON( context->qfastlock ) {
+      ret = CALLABLE(context->queue)->AppendNolock(context->queue, &ts_cstr);
+      SIGNAL_ONE_CONDITION( &(context->qwake.cond) );
+    } RELEASE;
+  }
 
   // STOLEN
   if( ret > 0 && cstr_addr ) {

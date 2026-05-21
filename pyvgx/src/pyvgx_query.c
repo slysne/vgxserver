@@ -650,17 +650,54 @@ static void __delete_query( PyVGX_Query *py_query ) {
 
 
 /******************************************************************************
+ * PyVGX_Query__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Query__traverse( PyVGX_Query *py_query, visitproc visit, void *arg ) {
+  // Error string, if set
+  Py_VISIT( py_query->py_error );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Query__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Query__clear( PyVGX_Query *py_query ) {
+  // Error string, if set
+  Py_CLEAR( py_query->py_error );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_Query__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_Query__dealloc( PyVGX_Query *py_query ) {
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( py_query );
+
+  // WARNING: Thread check is not reliable here. TODO: remove this
   if( py_query->threadid == GET_CURRENT_THREAD_ID() ) {
+    // Delete C-only members
     __delete_query( py_query );
-    Py_XDECREF( py_query->py_error );
+
+    // Clear inner object references
+    PyVGX_Query__clear( py_query );
+
+    // Free
     Py_TYPE( py_query )->tp_free( py_query );
   }
 }
+
+
 
 
 
@@ -1014,11 +1051,11 @@ static PyTypeObject PyVGX_Query__QueryType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX Query objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        = (traverseproc)PyVGX_Query__traverse,
+    .tp_clear           = (inquiry)PyVGX_Query__clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

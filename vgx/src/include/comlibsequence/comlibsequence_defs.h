@@ -1254,8 +1254,8 @@ DLL_COMLIB_PUBLIC extern Name##_vtable_t * g_##Name##_vtable;                   
       __L1__ = COMLIB_SEQUENCE_LOCK_PTR( LockableComlibSequence2 );       \
       __L2__ = COMLIB_SEQUENCE_LOCK_PTR( LockableComlibSequence1 );       \
     }                                                                     \
-    SYNCHRONIZE_ON_PTR( __L1__ ) {                                        \
-      SYNCHRONIZE_ON_PTR( __L2__ )
+    RECURSIVE_SYNCHRONIZE_ON_PTR( __L1__ ) {                                        \
+      RECURSIVE_SYNCHRONIZE_ON_PTR( __L2__ )
 
 
 #define RELEASE_TWO_COMLIB_SEQUENCES                                      \

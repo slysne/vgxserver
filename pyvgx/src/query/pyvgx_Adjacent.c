@@ -136,21 +136,21 @@ static __adjacency_query_args * _pyvgx_Adjacent__parse_params( PyVGX_Graph *pygr
       return NULL;
     }
     param->modifier = iArcConditionSet.Modifier( param->arc_condition_set );
+    
+    // ------
+    // memory
+    // ------
+    if( py_evalmem || py_vertex_condition ) {
+      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
+        return NULL;
+      }
+    }
 
     // --------
     // neighbor
     // --------
     if( py_vertex_condition ) {
-      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->implied.collector_mode )) == NULL ) {
-        return NULL;
-      }
-    }
-
-    // ------
-    // memory
-    // ------
-    if( py_evalmem && py_evalmem != Py_None ) {
-      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
+      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->evalmem, param->implied.collector_mode )) == NULL ) {
         return NULL;
       }
     }

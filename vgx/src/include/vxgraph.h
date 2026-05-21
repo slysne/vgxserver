@@ -982,9 +982,12 @@ typedef struct s_vgx_LockableArc_t {
     vgx_VertexRefLock_t tail_lock;
     vgx_VertexRefLock_t head_lock;
   } acquired;
-  struct {
-    int8_t __rsv1;
-    int8_t __rsv2;
+  union {
+    uint16_t bits;
+    struct {
+      int8_t recursion_skip_heap_collect;
+      int8_t __rsv2;
+    };
   } flag;
 #ifdef VGX_CONSISTENCY_CHECK
 #endif
@@ -1001,6 +1004,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                                   \
     .tail_lock = TailLocked,                                      \
     .head_lock = HeadLocked                                       \
+  },                                                              \
+  .flag = {                                                       \
+    .bits = 0                                                     \
   }                                                               \
 }
 
@@ -1015,6 +1021,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                           \
     .tail_lock = 0,                                       \
     .head_lock = 0                                        \
+  },                                                      \
+  .flag = {                                               \
+    .bits = 0                                             \
   }                                                       \
 }
 
@@ -1512,6 +1521,69 @@ do {                                                              \
 
 
 /*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+typedef struct s_vgx_recursion_config_t {
+  vgx_recursion_mode_t mode;
+  double bias;
+  vgx_Vector_t *probe;
+  struct {
+    int64_t size;
+  } heap;
+  struct {
+    int64_t size;
+  } shadow;
+  struct {
+    int64_t frontier;
+    int64_t expansion;
+    int64_t depth;
+    int64_t exec_ms;
+    int64_t visit;
+  } limit;
+  struct {
+    bool reset_metrics;
+    bool reset_map;
+    CString_t *CSTR__filter;
+  } visit;
+  struct {
+    int64_t width;
+    int64_t min_width;
+    int64_t max_width;
+    double curve;
+    bool adaptive_taper;
+  } beam;
+  struct {
+    double alpha;
+    double beta;
+    double gamma;
+    double delta;
+    double epsilon;
+    double zeta;
+    int64_t kappa;
+    int64_t lambda;
+    double omega;
+  } tune;
+  struct {
+    int64_t select;
+  } init;
+  
+} vgx_recursion_config_t;
+
+
+#define VGX_RECURSION_HEAP_SIZE_MAX (1<<20)
+#define VGX_RECURSION_HEAP_SHADOW_MAX (1<<20)
+#define VGX_RECURSION_FRONTIER_SIZE_MAX (1<<20)
+#define VGX_RECURSION_BEAM_SIZE_MAX (1<<16)
+
+__inline static bool __is_recursion_enabled( const vgx_recursion_config_t *recursion ) {
+  return recursion && recursion->mode != VGX_RECURSION_MODE_NONE;
+}
+
+
+
+
+/*******************************************************************//**
  * vgx_BaseQuery_t
  * 
  ***********************************************************************
@@ -1524,6 +1596,7 @@ do {                                                              \
   const char * (*AddPreFilter)( Struct *self, const char *filter_expression );                                  \
   const char * (*AddFilter)( Struct *self, const char *filter_expression );                                     \
   const char * (*AddPostFilter)( Struct *self, const char *filter_expression );                                 \
+  const char * (*AddRecursionFilter)( Struct *self, const char *filter_expression );                            \
   vgx_VertexCondition_t * (*AddVertexCondition)( Struct *self, vgx_VertexCondition_t **vertex_condition );      \
   vgx_RankingCondition_t * (*AddRankingCondition)( Struct *self, vgx_RankingCondition_t **ranking_condition );  \
   const CString_t * (*SetErrorString)( Struct *self, CString_t **CSTR__error );                                 \
@@ -1542,6 +1615,7 @@ do {                                                              \
   CString_t *CSTR__pre_filter;                        \
   CString_t *CSTR__vertex_filter;                     \
   CString_t *CSTR__post_filter;                       \
+  CString_t *CSTR__recursion_filter;                  \
   vgx_VertexCondition_t *vertex_condition;            \
   vgx_RankingCondition_t *ranking_condition;          \
   struct s_vgx_ExpressEvalMemory_t *evaluator_memory; \
@@ -1632,7 +1706,7 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
 #define __vgx_NeighborhoodQuery_vtable( Struct )  \
   __vgx_AdjacencyQuery_vtable( Struct )           \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory, CString_t **CSTR__error );
 
 #define __vgx_NeighborhoodQuery_members             \
   __vgx_AdjacencyQuery_members                      \
@@ -1694,7 +1768,7 @@ DLL_HIDDEN extern void vgx_NeighborhoodQuery_UnregisterClass( void );
 #define __vgx_GlobalQuery_vtable( Struct )    \
   __vgx_BaseQuery_vtable( Struct )            \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory,CString_t **CSTR__error );
 
 
 #define __vgx_GlobalQuery_args              \
@@ -2449,7 +2523,9 @@ typedef struct s_vgx_IGraphSimple_t {
 
   struct s_vgx_Evaluator_t * (*DefineEvaluator)( struct s_vgx_Graph_t *self, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
   struct s_vgx_Evaluator_t * (*GetEvaluator)( struct s_vgx_Graph_t *self, const char *name );
+  bool (*HasEvaluator)( struct s_vgx_Graph_t *self, const char *name );
   struct s_vgx_Evaluator_t ** (*GetEvaluators)( struct s_vgx_Graph_t *self, int64_t *sz );
+  int64_t (*CountEvaluators)( struct s_vgx_Graph_t *self );
 
 } vgx_IGraphSimple_t;
 
@@ -3034,19 +3110,19 @@ typedef struct s_vgx_GraphTimer_t {
   struct s_vgx_Graph_t *graph;
 
   // [Q1.3] Current time tick in milliseconds since 1970
-  ATOMIC_VOLATILE_i64 tms_atomic;
+  ATOMIC_i64 tms_atomic;
 
   // [Q1.4.1] Current time tick in seconds since 1970
-  ATOMIC_VOLATILE_u32 ts_atomic;
+  ATOMIC_u32 ts_atomic;
 
   // [Q1.4.2]
-  ATOMIC_VOLATILE_u32 t0_atomic;
+  ATOMIC_u32 t0_atomic;
 
   // [Q1.5.1]
-  ATOMIC_VOLATILE_i32 offset_tms_atomic;
+  ATOMIC_i32 offset_tms_atomic;
 
   // [Q1.5.2]
-  ATOMIC_VOLATILE_u32 inception_t0_atomic;
+  ATOMIC_u32 inception_t0_atomic;
 
 } vgx_GraphTimer_t;
 
@@ -3545,11 +3621,11 @@ typedef struct s_vgx_Graph_vtable_t {
   /* */
   const CString_t * (*Name)( const struct s_vgx_Graph_t *self );
 
-  void (*CountQueryNolock)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
-  void (*ResetQueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryTimeNanosecAccNolock)( struct s_vgx_Graph_t *self );
-  double (*QueryTimeAverageNolock)( struct s_vgx_Graph_t *self );
+  void (*CountQueryAtomic)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
+  void (*ResetQueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryTimeNanosecAccAtomic)( struct s_vgx_Graph_t *self );
+  double (*QueryTimeAverageAtomic)( struct s_vgx_Graph_t *self );
 
   void (*SetDestructorHook)( struct s_vgx_Graph_t *self, void *external_owner, void (*destructor_callback_hook)( struct s_vgx_Graph_t *self, void *external_owner ) );
   void (*ClearExternalOwner)( struct s_vgx_Graph_t *self );
@@ -3686,7 +3762,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       int64_t count_vtx_RO;
 
       // [Q4.8] Graph order = number of vertices |V(G)|
-      ATOMIC_VOLATILE_i64 _order_atomic;
+      ATOMIC_i64 _order_atomic;
     };
   };
 
@@ -3713,18 +3789,18 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     cacheline_t __cl8;
     struct {
       // [Q8.1] Graph size = number of arcs |E(G)|
-      ATOMIC_VOLATILE_i64 _size_atomic;
+      ATOMIC_i64 _size_atomic;
 
       // [Q8.2]
-      ATOMIC_VOLATILE_i64 _nvectors_atomic;
+      ATOMIC_i64 _nvectors_atomic;
 
       // [Q8.3]
-      ATOMIC_VOLATILE_i64 _nproperties_atomic;
+      ATOMIC_i64 _nproperties_atomic;
 
       // Graph reverse size = number of reverse arcs |E(G)|
       // For debug arcvector consistency
       // [Q8.4]
-      ATOMIC_VOLATILE_i64 rev_size_atomic;
+      ATOMIC_i64 rev_size_atomic;
 
       // [Q8.5]
       QWORD __rsv_8_5;
@@ -3801,7 +3877,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     struct {
       // -------------------------
       // [Q13]
-      CS_LOCK lock;
+      CS_LOCK fastlock;
 
       // -------------------------
       // [Q14.1.1]
@@ -3878,19 +3954,20 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
     struct {
       // [Q19]
-      CS_LOCK q_lock;
+      //CS_LOCK q_lock;
+      QWORD __rsv_19[8];
 
       // [Q20.1.1]
-      int q_pri_req;
+      ATOMIC_i32 q_pri_req;
 
       // [Q20.1.2]
       int __rsv_20_1_2;
 
       // [Q20.2]
-      int64_t q_count;
+      ATOMIC_i64 q_count;
 
       // [Q20.3]
-      int64_t q_time_nanosec_acc;
+      ATOMIC_i64 q_time_nanosec_acc;
 
       // [Q20.4]
       QWORD __rsv_20_4;
@@ -4499,12 +4576,17 @@ __inline static int16_t __try_enter_CS_nonblocking( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
+  #define MAX_YIELD_PER_TRY 32
+  #define MAX_UNINTERRUPTED_SPIN_COUNT 256
+
   if( timeout_ms == 0 ) {
     return __try_enter_CS_nonblocking( graph );
   }
 
   // UNSAFE HERE
   int64_t deadline_ns = -1;
+  int y = 1;
+  int n = 0;
   while( !TRY_CRITICAL_SECTION( &graph->state_lock.lock ) ) {
     int64_t t_ns = __GET_CURRENT_NANOSECOND_TICK();
     // Initialize deadline if this is our first failed attempt
@@ -4520,15 +4602,22 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
     else if( t_ns > deadline_ns ) {
       return -1;
     }
-    // Spin
-    else {
-      int64_t z = 0;
-      int64_t a = 0;
-      // Do something that doesn't get optimized away
-      while( z < (4000 + (int64_t)(timeout_ms&0xf))  ) {
-        a += z++;
+    // Polite Spin
+    else if( ++n < MAX_UNINTERRUPTED_SPIN_COUNT ) {
+      for( int i=0; i<y; ++i ) {
+        #if defined CXPLAT_ARCH_X64
+        _mm_pause();
+        #elif defined CXPLAT_ARCH_ARM64
+        __yield();
+        #endif
       }
-      deadline_ns ^= (a & 1);
+      
+      // More yields every time we go around the loop
+      y = (y < MAX_YIELD_PER_TRY) ? y * 2 : MAX_YIELD_PER_TRY;
+    }
+    // Too much spinning, now we sleep between attempts
+    else {
+      sleep_milliseconds( 1 );
     }
   }
 
@@ -4544,7 +4633,7 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
  */
 __inline static int16_t __enter_CS( vgx_Graph_t *graph ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &graph->state_lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &graph->state_lock.lock );
   // SAFE HERE
   return ++(graph->__state_lock_count);
 }
@@ -4577,20 +4666,6 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
       break;                                            \
     }                                                   \
     (AcquiredBool) = true;                              \
-    do
-
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- */
-#define GRAPH_LOCK_SPIN( Graph, SpinMillisec )              \
-  do {                                                      \
-    vgx_Graph_t *__pgraph__ = Graph;                        \
-    if( __try_enter_CS( __pgraph__, SpinMillisec ) < 0 ) {  \
-      __enter_CS( __pgraph__ ); /* probably go to sleep */  \
-    }                                                       \
     do
 
 
@@ -4720,26 +4795,16 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 #define WAIT_FOR_VERTEX_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->vertex_availability, TimeoutMilliseconds )
-#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define BROADCAST_VERTEX_AVAILABLE( Graph )                       SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ONE_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_MANY_VERTEX_AVAILABLE( Graph, N )                  SIGNAL_MANY_CONDITION( &((Graph)->vertex_availability.cond), (N) )
 
 #define WAIT_FOR_INARCS_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->return_inarcs, TimeoutMilliseconds )
-#define SIGNAL_INARCS_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->return_inarcs.cond) )
+#define SIGNAL_INARCS_AVAILABLE( Graph )                          SIGNAL_ONE_CONDITION( &((Graph)->return_inarcs.cond) )
 
 #define WAIT_FOR_WAKE_EVENT( Graph, TimeoutMilliseconds )         GRAPH_WAIT_CONDITION( Graph, &(Graph)->wake_event, TimeoutMilliseconds )
-#define SIGNAL_WAKE_EVENT( Graph )                                SIGNAL_ALL_CONDITION( &((Graph)->wake_event.cond) )
+#define SIGNAL_WAKE_EVENT( Graph )                                SIGNAL_ONE_CONDITION( &((Graph)->wake_event.cond) )
 
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- */
-#define GRAPH_YIELD_AND_SIGNAL( Graph )         \
-  do {                                          \
-    SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) ); \
-    GRAPH_SUSPEND_LOCK( Graph ) {               \
-    } GRAPH_RESUME_LOCK;                        \
-  } WHILE_ZERO
 
 
 
@@ -5946,6 +6011,7 @@ typedef struct s_vgx_ExpressEvalProgram_t {
   
   // Literal strings
   vgx_ExpressEvalString_t *strings;
+  vgx_ExpressEvalString_t *end_strings;
   // Expression name
   CString_t *CSTR__assigned;
   // Expression
@@ -6006,8 +6072,10 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   CQwordList_t *cstringref;
   // Q1.8
   CQwordList_t *vectorref;
-  // Q1.7
-  QWORD __rsv_1_7;
+  // Q1.7.1
+  uint32_t owner_thread;
+  // Q1.7.2
+  DWORD __rsv_1_7_2;
   // Q1.8
   QWORD __rsv_1_8;
   // ==== CL2 ====
@@ -6173,7 +6241,7 @@ typedef struct s_vgx_Evaluator_vtable_t {
   /* base methods */
   COMLIB_VTABLE_HEAD
   /* Evaluator methods */
-  int (*Reset)( struct s_vgx_Evaluator_t *self );
+  int (*Reset)( struct s_vgx_Evaluator_t *self, struct s_vgx_ExpressEvalMemory_t *memory );
   void (*SetContext)( struct s_vgx_Evaluator_t *self, const vgx_Vertex_t *tail, const vgx_ArcHead_t *arc, vgx_Vector_t *vector, double rankscore );
   void (*SetDefaultProp)( struct s_vgx_Evaluator_t *self, vgx_EvalStackItem_t *default_prop );
   void (*OwnMemory)( struct s_vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
@@ -6229,7 +6297,7 @@ typedef struct s_vgx_Evaluator_t {
     vgx_Vector_t * vector;  // default reference vector
   } current;
   // Refcount
-  ATOMIC_VOLATILE_i64 _refc_atomic;
+  ATOMIC_i64 _refc_atomic;
   //
   struct {
     int64_t i64;
@@ -6244,6 +6312,7 @@ typedef struct s_vgx_Evaluator_t {
 typedef struct s_vgx_Evaluator_constructor_args_t {
   vgx_Graph_t *parent;
   const char *expression;
+  vgx_ExpressEvalMemory_t *memory;
   vgx_Vector_t *vector;
   CString_t **CSTR__error;
 } vgx_Evaluator_constructor_args_t;
@@ -6264,7 +6333,7 @@ typedef struct s_vgx_IEvaluator_t {
   int (*Destroy)( void );
   int (*CreateEvaluators)( vgx_Graph_t *graph );
   void (*DestroyEvaluators)( vgx_Graph_t *graph );
-  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
   void (*DiscardEvaluator)( vgx_Evaluator_t **evaluator );
   int (*IsPositive)( const vgx_EvalStackItem_t *item );
   int64_t (*GetInteger)( const vgx_EvalStackItem_t *item );
@@ -6820,6 +6889,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float zeta;                                 \
   int kappa;                                  \
   int lambda;                                 \
+  struct s_vgx_Evaluator_t *recursion_filter; \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty, 32 ); \
@@ -7182,7 +7252,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
-DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
+DLL_HIDDEN int vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore );
 
 
 /*******************************************************************//**
@@ -7499,8 +7569,8 @@ typedef struct s_vgx_IVertexCondition_t {
   void (*RequireManifestation)(       vgx_VertexCondition_t *vertex_condition, vgx_VertexStateContext_man_t manifestation );
   int (*RequireType)(                 vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const vgx_value_comparison vcomp, const char *type );
   vgx_VertexTypeEnumeration_t (*GetTypeEnumeration)( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph );
-  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression );
-  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression );
+  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression, vgx_ExpressEvalMemory_t *memory );
+  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression, vgx_ExpressEvalMemory_t *memory );
   int (*RequireDegree)(               vgx_VertexCondition_t *vertex_condition, const vgx_value_comparison vcomp, const vgx_arc_direction direction, const int64_t degree );
   int (*RequireConditionalDegree)(    vgx_VertexCondition_t *vertex_condition, vgx_DegreeCondition_t **degree_condition );
   int (*RequireSimilarity)(           vgx_VertexCondition_t *vertex_condition, vgx_SimilarityCondition_t **similarity_condition );
@@ -7515,12 +7585,12 @@ typedef struct s_vgx_IVertexCondition_t {
 
   void (*RequireRecursiveCondition)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcCondition)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertCondition)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*RequireRecursiveTraversal)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcTraversal)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertTraversal)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*CollectNeighbors)(           vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode );
@@ -7811,7 +7881,7 @@ typedef struct s_vgx_IGraphResponse_t {
   void (*DeleteProperties)( vgx_Graph_t *self, vgx_SelectProperties_t **selected_properties );
   void (*FormatResultsToStream)( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
   vgx_VertexProperty_t * (*SelectProperty)( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
-  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 } vgx_IGraphResponse_t;
 
 

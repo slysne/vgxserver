@@ -47,6 +47,7 @@ static const BYTE * CTokenizer__get_token( const CTokenizer_t *self, tokenmap_t 
 static const BYTE * CTokenizer__get_token_and_info( const CTokenizer_t *self, tokenmap_t *tokmap, tokinfo_t *tokinfo );
 static int32_t CTokenizer__rewind( const CTokenizer_t *self, tokenmap_t *tokmap );
 static int32_t CTokenizer__unget( const CTokenizer_t *self, tokenmap_t *tokmap );
+static int32_t CTokenizer__unget_n( const CTokenizer_t *self, tokenmap_t *tokmap, int n );
 
 
 static CS_LOCK g_cs_general;
@@ -145,7 +146,8 @@ static CTokenizer_vtable_t CTokenizerMethods = {
   .GetToken           = CTokenizer__get_token,
   .GetTokenAndInfo    = CTokenizer__get_token_and_info,
   .Rewind             = CTokenizer__rewind,
-  .Unget              = CTokenizer__unget
+  .Unget              = CTokenizer__unget,
+  .UngetN             = CTokenizer__unget_n
 };
 
 
@@ -158,7 +160,7 @@ static CTokenizer_vtable_t CTokenizerMethods = {
 void CTokenizer_RegisterClass( void ) {
   COMLIB_REGISTER_CLASS( CTokenizer_t, CXLIB_OBTYPE_PROCESSOR, &CTokenizerMethods, OBJECT_IDENTIFIED_BY_LONGSTRING, OBJECTID_LONGSTRING_MAX );
 
-  INIT_CRITICAL_SECTION( &g_cs_general.lock );
+  INIT_RECURSIVE_CRITICAL_SECTION( &g_cs_general.lock );
 
   /* UTF-8 NUMBER OF CONTINUATION BYTES BY START BYTE (lookup table) */ 
   for( int c=0xC2; c<=0xDF; c++ ) g_utf8_startn[c] = 1; // start 2-byte sequence, so 1 cont byte expected
@@ -212,7 +214,7 @@ static CTokenizer_t * CTokenizer__constructor( const void *identifier, CTokenize
 
   CTokenizer_t *self = NULL;
 
-  SYNCHRONIZE_ON( g_cs_general ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_cs_general ) {
 
     XTRY {
 
@@ -233,7 +235,7 @@ static CTokenizer_t * CTokenizer__constructor( const void *identifier, CTokenize
       self->_nwp = self->_normal;
 
       // [8]
-      INIT_CRITICAL_SECTION( &self->_lock.lock );
+      INIT_RECURSIVE_CRITICAL_SECTION( &self->_lock.lock );
 
       // [9]
       self->__rsv_3_1_1 = 0;
@@ -2359,7 +2361,7 @@ end_of_token:
 static BYTE * CTokenizer__next( CTokenizer_t *self, tokinfo_t *tokinfo ) {
   BYTE *token;
 
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     token = __next_token_nolock( self, tokinfo );
   } RELEASE;
 
@@ -2471,7 +2473,7 @@ static void __delete_tokenmap( tokenmap_t **tokmap ) {
 static tokenmap_t * CTokenizer__tokenize( CTokenizer_t *self, const BYTE *utf8_text, CString_t **CSTR__error ) {
   tokenmap_t *tokmap = NULL;
 
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     XTRY {
       BYTE *token;
       CTokenizer__load( self, utf8_text );
@@ -2689,4 +2691,16 @@ static int32_t CTokenizer__rewind( const CTokenizer_t *self, tokenmap_t *tokmap 
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int32_t CTokenizer__unget( const CTokenizer_t *self, tokenmap_t *tokmap ) {
   return __rewind_tokenmap( tokmap, 1 );
+}
+
+
+
+/***********************************************************************
+ * 
+ *
+ ***********************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static int32_t CTokenizer__unget_n( const CTokenizer_t *self, tokenmap_t *tokmap, int n ) {
+  return __rewind_tokenmap( tokmap, n );
 }

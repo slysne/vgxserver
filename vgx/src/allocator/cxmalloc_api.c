@@ -747,7 +747,7 @@ static int64_t cxmalloc_api__refcount_object_nolock( cxmalloc_family_t *family, 
  */
 static int64_t cxmalloc_api__refcount_object( cxmalloc_family_t *family, const void *obj ) {
   int64_t refcnt;
-  SYNCHRONIZE_ON( family->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( family->lock ) {
     refcnt = _cxmalloc_object_refcnt_nolock( obj );
   } RELEASE;
   return refcnt;

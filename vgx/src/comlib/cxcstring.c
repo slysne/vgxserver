@@ -57,12 +57,12 @@ static int CString_compare( const CString_t *CSTR__self, const CString_t *CSTR__
 static int CString_compare_chars( const CString_t *CSTR__self, const char *other );
 static bool CString_equals( const CString_t *CSTR__self, const CString_t *CSTR__other );
 static bool CString_equals_chars( const CString_t *CSTR__self, const char *other );
-static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex );
-static bool CString_contains( const CString_t *CSTR__self, const char *probe );
+static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex, bool ignore_case );
+static bool CString_contains( const CString_t *CSTR__self, const char *probe, bool ignore_case );
 static CString_t * CString_slice( const CString_t *CSTR__self, int32_t *p_start, int32_t *p_end );
 static CString_t * CString_slice_with_allocator( const CString_t *CSTR__self, int32_t *p_start, int32_t *p_end, object_allocator_context_t *allocator );
-static bool CString_startswith( const CString_t *CSTR__self, const char *probe );
-static bool CString_endswith( const CString_t *CSTR__self, const char *probe );
+static bool CString_startswith( const CString_t *CSTR__self, const char *probe, bool ignore_case );
+static bool CString_endswith( const CString_t *CSTR__self, const char *probe, bool ignore_case );
 static CString_t * CString_replace( const CString_t *CSTR__self, const char *probe, const char *subst );
 static CString_t * CString_replace_with_allocator( const CString_t *CSTR__self, const char *probe, const char *subst, object_allocator_context_t *alloc );
 static CString_t ** CString_split( const CString_t *CSTR__self, const char *splitstr, int32_t *sz );
@@ -90,6 +90,7 @@ static CString_t * __new_from_format( CString_constructor_args_t *input_args );
 static CString_t * __string_replace( const char *string, int32_t sz_string, const char *probe, const char *subst, object_allocator_context_t *allocator_context );
 static CString_t * __slice( const char *str, int32_t *p_start, int32_t *p_end, object_allocator_context_t *allocator );
 static CString_t * __prefix( const char *data, int32_t len, int32_t uclen, int32_t sz, object_allocator_context_t *alloc );
+static const char * __first_occurrence( const char *str, const char *probe, bool ignore_case );
 
 static const QWORD DEFAULT_SERIALIZER = (0xDEFADEFAULL << 32) | CLASS_CString_t;
 
@@ -1611,10 +1612,68 @@ static bool CString_equals_chars( const CString_t *CSTR__self, const char *other
 
 /*******************************************************************//**
  *
+ *
+ ***********************************************************************
+ */
+static const char * __first_occurrence( const char *str, const char *probe, bool ignore_case ) {
+  if( !ignore_case ) {
+    return strstr( str, probe );
+  }
+
+  // Edge case 1: Empty probe is always match
+  if( *probe == '\0' ) {
+    return str;
+  }
+  // Edge case 2: Empty string without empty probe is miss
+  if( *str == '\0' ) {
+    return NULL;
+  }
+
+  const char *pa = str;
+  char first = (char)tolower((unsigned char)*probe);
+
+  do {
+    // Reset probe
+    const char *pb = probe;
+
+    // Skip until match on probe first char (or end string)
+    while( tolower((unsigned char)*pa) != first ) {
+      ++pa;
+      if( *pa == '\0' ) {
+        return NULL;
+      }
+    }
+
+    // Start of possible match point
+    const char *firstocc = pa;
+
+    // Verify until end of probe (or end of string)
+    do {
+      ++pb;
+      if( *pb == '\0' ) {
+        return firstocc;
+      }
+      ++pa;
+    } while( tolower((unsigned char)*pa) == tolower((unsigned char)*pb) );
+
+    if( *pa == '\0' ) {
+      return NULL;
+    }
+
+    // Rewind scan point to one past previous match point (that failed)
+    pa = firstocc + 1;
+  } while(1);
+
+}
+
+
+
+/*******************************************************************//**
+ *
  * NOTE: This method only works with normal NUL-terminated strings.
  ***********************************************************************
  */
-static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex ) {
+static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int32_t startindex, bool ignore_case ) {
   // Automatic match for empty probe
   if( *probe == '\0' ) {
     return 0;
@@ -1659,7 +1718,8 @@ static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int
 
 
   // look for first occurrence at offset
-  const char *firstocc = strstr( data, probe );
+  //const char *firstocc = strstr( data, probe );
+  const char *firstocc = __first_occurrence( data, probe, ignore_case );
 
   if( decompressed && decompressed != gt_decomp_buffer ) {
     ALIGNED_FREE( decompressed );
@@ -1680,8 +1740,8 @@ static int32_t CString_find( const CString_t *CSTR__self, const char *probe, int
  *
  ***********************************************************************
  */
-static bool CString_contains( const CString_t *CSTR__self, const char *probe ) {
-  return CString_find( CSTR__self, probe, 0 ) >= 0 ? true : false;
+static bool CString_contains( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
+  return CString_find( CSTR__self, probe, 0, ignore_case ) >= 0 ? true : false;
 }
 
 
@@ -1779,8 +1839,8 @@ static CString_t * CString_slice( const CString_t *CSTR__self, int32_t *p_start,
  *
  ***********************************************************************
  */
-static bool CString_startswith( const CString_t *CSTR__self, const char *probe ) {
-  return CString_find( CSTR__self, probe, 0 ) == 0 ? true : false;
+static bool CString_startswith( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
+  return CString_find( CSTR__self, probe, 0, ignore_case ) == 0 ? true : false;
 }
 
 
@@ -1790,14 +1850,14 @@ static bool CString_startswith( const CString_t *CSTR__self, const char *probe )
  *
  ***********************************************************************
  */
-static bool CString_endswith( const CString_t *CSTR__self, const char *probe ) {
+static bool CString_endswith( const CString_t *CSTR__self, const char *probe, bool ignore_case ) {
   // find size of probe (no more than our own length since that is a miss anyway)
   int32_t sz_probe = (int32_t)strnlen( probe, CSTR__self->meta.size+1 );
   if( sz_probe > CSTR__self->meta.size ) {
     return false;
   }
   // is the probe exactly at end of our data?
-  return CString_find( CSTR__self, probe, -sz_probe ) == 0 ? true : false;
+  return CString_find( CSTR__self, probe, -sz_probe, ignore_case ) == 0 ? true : false;
 }
 
 
@@ -2446,82 +2506,6 @@ static int CString_decompress_to_bytes( const CString_t *CSTR__compressed, char 
   }
 
   return CStringDecompressBytesToBytes( CStringValue( CSTR__compressed ), CStringLength( CSTR__compressed ), buffer, bsz, rdata, rsz, rucsz, rattr );
-
-  /*
-
-  int ret = 0;
-
-  QWORD *decompressed_buffer = NULL;
-
-  XTRY {
-
-    // Compressed data including header
-    const char *compressed_buffer = CStringValue( CSTR__compressed );
-    // Compressed header
-    CString_compress_header_t *compressed_header = (CString_compress_header_t*)compressed_buffer;
-
-    // Make sure we are really compressed
-    CString_attr attr = CStringAttributes( CSTR__compressed );
-    if( (attr & CSTRING_ATTR_COMPRESSED) == 0 || CStringLength( CSTR__compressed ) < (int)sizeof( CString_compress_header_t ) ) {
-      // Not compressed, return raw data
-      ret = CString_to_bytes( CSTR__compressed, rdata, rsz, rucsz, rattr );
-      XBREAK;
-    }
-
-    // Verify compressed header
-    if( compressed_header->magic != CSTRING_COMPRESS_MAGIC ) {
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x001, "bad compressed data: invalid header" );
-    }
-
-    // Allocate decompressed buffer with space for nul term
-    int qlen = qwcount( compressed_header->orig.sz + 1 );
-    CALIGNED_ARRAY_THROWS( decompressed_buffer, QWORD, qlen, 0x002 );
-    // Ensure last qword is zero
-    decompressed_buffer[qlen-1] = 0;
-
-    // Compressed data starts right after the header
-    const char *cdata = compressed_buffer + sizeof( CString_compress_header_t );
-
-    char *decompress_dest = (char*)decompressed_buffer;
-
-    // Select decompression mode
-    switch( compressed_header->compressed.mode ) {
-    case CSTRING_COMPRESS_MODE_LZ4:
-      if( LZ4_decompress_safe( cdata, decompress_dest, compressed_header->compressed.sz, compressed_header->orig.sz ) < 0 ) {
-        THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x003 );
-      }
-      break;
-    case CSTRING_COMPRESS_MODE_LZ4HC:
-      THROW_ERROR_MESSAGE( CXLIB_ERR_API, 0xDDD, "TODO!" );
-      break;
-    default:
-      THROW_ERROR_MESSAGE( CXLIB_ERR_CORRUPTION, 0x002, "bad compressed data: invalid mode (%08x)", (int)compressed_header->compressed.mode );
-    }
-
-    // Allocate uninitialized destination object
-    if( compressed_header->orig.mode == CSTRING_COMPRESS_MODE_NONE ) {
-      attr ^= CSTRING_ATTR_COMPRESSED; // remove compressed bit if original was not compressed (the norm)
-    }
-
-
-    // Assign to return pointers
-    *rdata = (char*)decompressed_buffer;
-    *rsz = compressed_header->orig.sz;
-    *rucsz = compressed_header->orig.ucsz;
-    *rattr = attr;
-
-  }
-  XCATCH( error ) {
-    if( decompressed_buffer ) {
-      ALIGNED_FREE( decompressed_buffer );
-    }
-    ret = -1;
-  }
-  XFINALLY {
-  }
-
-  return ret;
-  */
 }
 
 

@@ -686,11 +686,12 @@ static int __endpoint__service_graphsum( vgx_VGXServer_t *server, vgx_URIQueryPa
               }
               nkey += iEnumerator_CS.Property.Key.Count( graph );
               nval += iEnumerator_CS.Property.Value.Count( graph );
-              // Internal queries
-              qcnt += CALLABLE( graph )->QueryCountNolock( graph );
-              qns += CALLABLE( graph )->QueryTimeNanosecAccNolock( graph );
             } GRAPH_RELEASE;
-            SYNCHRONIZE_ON( graph->vprop.lock ) {
+            // Internal queries
+            qcnt += CALLABLE( graph )->QueryCountAtomic( graph );
+            qns += CALLABLE( graph )->QueryTimeNanosecAccAtomic( graph );
+            // Virtual properties
+            SYNCHRONIZE_ON( graph->vprop.fastlock ) {
               vprop_bytes += graph->vprop.bytes;
               vprop_count += graph->vprop.count;
             } RELEASE;
@@ -1661,7 +1662,7 @@ static int __endpoint__service_nodestat( vgx_VGXServer_t *server, vgx_URIQueryPa
   
   if( DISPATCHER_MATRIX_ENABLED( SYSTEM->vgxserverA ) ) {
     vgx_VGXServerDispatcherMatrix_t *matrix = &SYSTEM->vgxserverA->matrix;
-    SYNCHRONIZE_ON( matrix->lock ) {
+    SYNCHRONIZE_ON( matrix->fastlock ) {
       // matrix: active-channels
       active_channels = matrix->partition.nopen_channels_MCS;
       // matrix: total-channels
@@ -2087,7 +2088,7 @@ static int __endpoint__service_dispatch( vgx_VGXServer_t *server, vgx_URIQueryPa
       int64_t nmax_channels = 0;
       if( cf && cf->dispatcher && DISPATCHER_MATRIX_ENABLED( s ) ) {
         vgx_VGXServerDispatcherMatrix_t *matrix = &s->matrix;
-        SYNCHRONIZE_ON( matrix->lock ) {
+        SYNCHRONIZE_ON( matrix->fastlock ) {
           nopen_channels = matrix->partition.nopen_channels_MCS;
           nmax_channels = matrix->partition.nmax_channels_MCS;
         } RELEASE;
@@ -2095,7 +2096,7 @@ static int __endpoint__service_dispatch( vgx_VGXServer_t *server, vgx_URIQueryPa
 
       int64_t n_completed;
       int64_t n_signals;
-      SYNCHRONIZE_ON( completion->lock ) {
+      SYNCHRONIZE_ON( completion->fastlock ) {
         n_completed = completion->completion_count;
         n_signals = completion->n_blocked_poll_signals;
       } RELEASE;

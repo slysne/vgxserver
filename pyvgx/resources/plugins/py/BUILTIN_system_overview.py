@@ -25,7 +25,7 @@
 
 import pyvgx
 import json
-
+import re
 
 
 
@@ -227,7 +227,7 @@ def sysplugin__system_overview( request:pyvgx.PluginRequest, headers:dict ):
             p = 0.0
         t = {'admin':0, 'dispatch':1, 'builder':2, 'txproxy':3, 'search':4}.get(x.get('nodetype'),5)
         i = x.get('id')
-        return "{:08.3f}_{}_{}".format(p,t,i)
+        return [p, t] + [ f"{int(text):010d}" if text.isdigit() else text for text in re.split(r'(\d+)', i) if len(text) ]
 
 
     result = {

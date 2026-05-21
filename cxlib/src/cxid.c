@@ -962,12 +962,12 @@ objectid_t new_subid( void ) {
   if( counter == 0 ) {
     // NOTE: we do this to get a unique starting point in case multiple copies of the library are in use
     // which might be the case with static linkage. TODO: find a way to avoid.
-    INIT_CRITICAL_SECTION( &lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &lock.lock );
     counter = hash64( (unsigned char*)&counter, 8 ); // use counter's address as basis for its initial value
   }
 
   time( (time_t*)(&subid.L) );
-  SYNCHRONIZE_ON( lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( lock ) {
     subid.H = counter;
     counter = hash64( (unsigned char*)counter, 8 );
   } RELEASE;

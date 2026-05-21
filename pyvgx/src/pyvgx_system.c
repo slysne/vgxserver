@@ -24,6 +24,7 @@
  *****************************************************************************/
 
 #include "pyvgx.h"
+#include <signal.h>
 
 SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX );
 
@@ -95,6 +96,9 @@ static PyObject * PyVGX_System__keys( PyVGX_System *py_system );
 static PyObject * PyVGX_System__values( PyVGX_System *py_system );
 
 static PyObject * PyVGX_System__Meminfo( PyObject *self );
+
+
+static int g_system_exit_run_server;
 
 
 
@@ -1076,11 +1080,11 @@ static PyObject * PyVGX_System__Initialize( PyObject *py_system, PyObject *args,
       INFO( 0x000, "PyVGX READY" );
     }
     else if( init == 0 ) {
-      PyErr_Format( PyExc_RuntimeError, "PyVGX already initialized, cannot re-initialize" );
+      iPyVGXBuilder.SetErrorFromMessages( PyExc_RuntimeError, "PyVGX already initialized, cannot re-initialize", messages );
       THROW_ERROR( CXLIB_ERR_API, 0x00F );
     }
     else {
-      iPyVGXBuilder.SetErrorFromMessages( messages );
+      iPyVGXBuilder.SetErrorFromMessages( PyVGX_DataError, NULL, messages );
       THROW_ERROR( CXLIB_ERR_API, 0x010 );
     }
   }
@@ -1861,8 +1865,8 @@ DLL_HIDDEN PyObject * pyvgx_GraphStatus( vgx_Graph_t *graph, PyObject *args ) {
           status.meminfo = CALLABLE( graph )->advanced->GetMemoryInfo( graph );
 
           // Query
-          status.query.count = CALLABLE( graph )->QueryCountNolock( graph );
-          status.query.time_average = CALLABLE( graph )->QueryTimeAverageNolock( graph );
+          status.query.count = CALLABLE( graph )->QueryCountAtomic( graph );
+          status.query.time_average = CALLABLE( graph )->QueryTimeAverageAtomic( graph );
         }
 
       } GRAPH_RELEASE;
@@ -3207,7 +3211,8 @@ static PyObject * PyVGX_System__StartHTTP( PyVGX_System *py_system, PyObject *ar
     }
     
     if( py_dispatcher ) {
-      if( (py_cfdispatcher_json = iPyVGXCodec.NewJsonPyStringFromPyObject( py_dispatcher )) == NULL ) {
+      // json is PyBytes or PyUnicode
+      if( (py_cfdispatcher_json = iPyVGXCodec.NewJsonFromPyObject( py_dispatcher )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_API, 0x002 );
       }
     }
@@ -3425,7 +3430,7 @@ static PyObject * PyVGX_System__DispatcherConfig( PyVGX_System *py_system ) {
     Py_RETURN_NONE;
   }
 
-  return iPyVGXCodec.NewPyObjectFromJsonPyString( g_py_cfdispatcher );
+  return iPyVGXCodec.NewPyObjectFromJsonPyObject( g_py_cfdispatcher );
 }
 
 
@@ -4515,6 +4520,9 @@ static void __execute_watchdog( PyObject *py_watchdog ) {
 static int __run_until_signal( const char *logpath, int rotate_interval_seconds, PyObject *py_watchdog, int watchdog_interval_ms ) {
 
   int signal = 0;
+  int exit = 0;
+
+  ATOMIC_ASSIGN_i32( &g_exit_run_server, 0 );
 
   int rotate_interval_ms = rotate_interval_seconds * 1000;
 
@@ -4554,16 +4562,24 @@ static int __run_until_signal( const char *logpath, int rotate_interval_seconds,
     } END_PYVGX_THREADS;
 
     // Check signals
-    if( !signal ) {
-      BEGIN_PYTHON_INTERPRETER {
-        signal = PyErr_CheckSignals();
-      } END_PYTHON_INTERPRETER;
-      if( signal ) {
-        PYVGX_API_INFO( "system", 0, "Exit signal received" );
-        PYVGX_API_INFO( "system", 0, "Redirecting logs to: stdout" );
-        __rotate_logs( NULL, rotate_interval_seconds );
+    exit = ATOMIC_READ_i32( &g_exit_run_server );
+
+    BEGIN_PYTHON_INTERPRETER {
+      signal = PyErr_CheckSignals();
+    } END_PYTHON_INTERPRETER;
+
+    if( signal || exit ) {
+      if( exit ) {
+        signal = exit;
+      }
+      PYVGX_API_INFO( "system", 0, "Exit signal (%d) received", signal );
+      PYVGX_API_INFO( "system", 0, "Redirecting logs to: stdout" );
+      __rotate_logs( NULL, rotate_interval_seconds );
+      if( exit ) {
+        sleep_milliseconds( 5000 );
       }
     }
+
   } while( !signal );
   
   return signal;
@@ -4682,7 +4698,7 @@ static PyObject * PyVGX_System__RunServer( PyVGX_System *py_system, PyObject *ar
   } END_PYVGX_THREADS;
 
   // Run until signal
-  __run_until_signal( logpath, rotate_interval_seconds, py_watchdog, watchdog_interval_ms );
+  int signal = __run_until_signal( logpath, rotate_interval_seconds, py_watchdog, watchdog_interval_ms );
 
   // Clear service name
   BEGIN_PYVGX_THREADS {
@@ -4691,14 +4707,28 @@ static PyObject * PyVGX_System__RunServer( PyVGX_System *py_system, PyObject *ar
     } GRAPH_RELEASE;
   } END_PYVGX_THREADS;
 
-  PYVGX_API_INFO( "system", 0, "Exit RunServer()" );
+  PYVGX_API_INFO( "system", 0, "Exit RunServer() after signal (%d)", signal );
 
   PyErr_Clear();
 
   Py_RETURN_NONE;
 }
 
- 
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static PyObject * PyVGX_System__ExitRunServer( PyVGX_System *py_system ) {
+  int signal = SIGINT;
+  ATOMIC_ASSIGN_i32( &g_exit_run_server, signal );
+  Py_RETURN_NONE;
+}
+
+
 
 /******************************************************************************
  *
@@ -5111,6 +5141,7 @@ static PyMethodDef PyVGX_System__methods[] = {
   { "RequestHTTP",       (PyCFunction)PyVGX_System__RequestHTTP,        METH_VARARGS | METH_KEYWORDS,   "RequestHTTP( address, path, query, content, headers, timeout )" },
 
   { "RunServer",         (PyCFunction)PyVGX_System__RunServer,          METH_VARARGS | METH_KEYWORDS,   "RunServer( name=None, watchdog=None, interval=5000, logpath=None ) -> None" },
+  { "ExitRunServer",     (PyCFunction)PyVGX_System__ExitRunServer,      METH_NOARGS,                    "ExitRunServer()" },
 
   { "SetProperty",       (PyCFunction)PyVGX_System__SetProperty,        METH_VARARGS | METH_KEYWORDS,   "SetProperty( key, value[, timeout] ) -> None" },
   { "GetProperty",       (PyCFunction)PyVGX_System__GetProperty,        METH_VARARGS | METH_KEYWORDS,   "GetProperty( key[, default[, timeout]] ) -> property" },
@@ -5161,7 +5192,7 @@ static PyTypeObject PyVGX_System__SystemType = {
     .tp_doc             = "PyVGX System objects",
     .tp_traverse        = 0,
     .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

@@ -1029,6 +1029,40 @@ DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShad
 
 /*******************************************************************//**
  *
+ *
+ ***********************************************************************
+ */
+static vgx_Evaluator_t * _vxquery_new_evaluator( vgx_Graph_t *self, vgx_BaseQuery_t *query, const CString_t *CSTR__expression ) {
+  vgx_Evaluator_t *evaluator = NULL;
+  vgx_Vector_t *vector = NULL;
+  // Use vector from ranking condition if supplied
+  if( query->ranking_condition && query->ranking_condition->vector ) {
+    vector = query->ranking_condition->vector;
+  }
+  // Fallback to vertex similarity probe vector
+  else if( query->vertex_condition && query->vertex_condition->advanced.similarity_condition ) {
+    vector = query->vertex_condition->advanced.similarity_condition->probevector;
+  }
+  const char *expression = CStringValue( CSTR__expression );
+  if( (evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, vector, &query->CSTR__error )) == NULL ) {
+    return NULL;
+  }
+  /*
+  if( query->evaluator_memory == NULL ) {
+    if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
+      iEvaluator.DiscardEvaluator( &evaluator );
+      return NULL;
+    }
+  }
+  CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+  */
+  return evaluator;
+}
+
+
+
+/*******************************************************************//**
+ *
  ***********************************************************************
  */
 __inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap_t *heap ) {

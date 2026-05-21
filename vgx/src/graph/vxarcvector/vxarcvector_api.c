@@ -563,8 +563,9 @@ static vgx_ArcFilter_match __api_arcvector_get_arcs( const vgx_ArcVector_cell_t 
       if( __arcvector_archead_unvisited( traverse_filter ) ) {
         const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
         _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
+        vgx_Evaluator_t *recursion_eval = __collector_recursion_filter_evaluator( neighborhood_probe->common_collector );
         vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-        __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+        __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, recursion_eval, vector, &LARC, &filter_match ) {
           __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
             __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
               if( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
@@ -648,7 +649,7 @@ static vgx_ArcFilter_match __api_arcvector_get_arcs_bidirectional( const vgx_Arc
             const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
             _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
             vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-            __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+            __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
               __pre_arc_visit( traverse_filter, &LARC, &filter_match ) {
                 // Filter condition1 : arc must match the (only) entry in the first arcvector
                 __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
@@ -782,7 +783,7 @@ static vgx_ArcFilter_match __api_arcvector_get_vertices( const vgx_ArcVector_cel
       const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
       _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
       vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
         __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
           switch( _vgx_collector_mode_type( neighborhood_probe->collector_mode ) ) {
           case VGX_COLLECTOR_MODE_NONE_STOP_AT_FIRST:
@@ -808,7 +809,7 @@ static vgx_ArcFilter_match __api_arcvector_get_vertices( const vgx_ArcVector_cel
     __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, traverse_filter, &filter_match ) {
       const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
       vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
         filter_match = _vxarcvector_cellproc__collect_vertices( V, neighborhood_probe );
       } __end_arc_evaluator_context;
     } __end_lockable_arc_context;
@@ -870,7 +871,7 @@ static vgx_ArcFilter_match __api_arcvector_get_vertices_bidirectional( const vgx
           // Filter condition1 : arc must match the (only) entry in the first arcvector
           _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
           vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-          __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+          __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
             __begin_arcvector_filter_accept_arc( traverse_filter, &LARC, &filter_match ) {
               // Filter condition 2: and also exist in the second arcvector
               // Create a separate arc filter context for the second arcvector test so we can specify the exact head vertex
@@ -916,7 +917,7 @@ static vgx_ArcFilter_match __api_arcvector_get_vertices_bidirectional( const vgx
       __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, traverse_filter, &filter_match ) {
         const vgx_virtual_ArcFilter_context_t *previous = traverse_filter->previous_context ? traverse_filter->previous_context : traverse_filter;
         vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-        __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+        __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
           filter_match = _vxarcvector_cellproc__collect_vertices_bidirectional( V1, V2, neighborhood_probe );
         } __end_arc_evaluator_context;
       } __end_lockable_arc_context;
@@ -953,7 +954,7 @@ static vgx_ArcFilter_match __simple_arc_match( vgx_ArcHead_t *archead, vgx_recur
     _vgx_arc_set_distance( (vgx_Arc_t*)&LARC, neighborhood_probe->distance ); // set distance from anchor
     const vgx_virtual_ArcFilter_context_t *previous = arcfilter->previous_context ? arcfilter->previous_context : arcfilter;
     vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-    __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, filter_match ) {
+    __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, filter_match ) {
       __pre_arc_visit( arcfilter, &LARC, filter_match ) {
         __begin_arcvector_filter_accept_arc( arcfilter, &LARC, filter_match ) {
           VGX_COPY_ARC( first_match, (vgx_Arc_t*)&LARC );

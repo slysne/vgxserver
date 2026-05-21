@@ -277,6 +277,7 @@ class CmakeBuild(build_ext):
             "cmake",
             "--build",
             cmake_build_dir,
+            "--parallel",
             "--config", build_type,
             "--verbose"
         ]

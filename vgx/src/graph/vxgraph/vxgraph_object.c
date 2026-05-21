@@ -51,11 +51,11 @@ static CStringQueue_t * Graph_representer( vgx_Graph_t *self, CStringQueue_t *ou
 
 static const CString_t * Graph_name( const vgx_Graph_t *self );
 
-static void Graph__count_query_nolock( vgx_Graph_t *self, int64_t q_time_nanosec );
-static void Graph__reset_query_count_nolock( vgx_Graph_t *self );
-static int64_t Graph__query_count_nolock( vgx_Graph_t *self );
-static int64_t Graph__query_time_nanosec_acc_nolock( vgx_Graph_t *self );
-static double Graph__query_time_average_nolock( vgx_Graph_t *self );
+static void Graph__count_query_atomic( vgx_Graph_t *self, int64_t q_time_nanosec );
+static void Graph__reset_query_count_atomic( vgx_Graph_t *self );
+static int64_t Graph__query_count_atomic( vgx_Graph_t *self );
+static int64_t Graph__query_time_nanosec_acc_atomic( vgx_Graph_t *self );
+static double Graph__query_time_average_atomic( vgx_Graph_t *self );
 
 static void Graph_set_destructor_hook( vgx_Graph_t *self, void *external_owner, void (*destructor_callback_hook)( vgx_Graph_t *self, void *external_owner ) );
 static void Graph_clear_external_owner( vgx_Graph_t *self );
@@ -114,11 +114,11 @@ static vgx_Graph_vtable_t Graph_Methods = {
 
   /* */
   .Name                           = Graph_name,
-  .CountQueryNolock               = Graph__count_query_nolock,
-  .ResetQueryCountNolock          = Graph__reset_query_count_nolock,
-  .QueryCountNolock               = Graph__query_count_nolock,
-  .QueryTimeNanosecAccNolock      = Graph__query_time_nanosec_acc_nolock,
-  .QueryTimeAverageNolock         = Graph__query_time_average_nolock,
+  .CountQueryAtomic               = Graph__count_query_atomic,
+  .ResetQueryCountAtomic          = Graph__reset_query_count_atomic,
+  .QueryCountAtomic               = Graph__query_count_atomic,
+  .QueryTimeNanosecAccAtomic      = Graph__query_time_nanosec_acc_atomic,
+  .QueryTimeAverageAtomic         = Graph__query_time_average_atomic,
   .SetDestructorHook              = Graph_set_destructor_hook,
   .ClearExternalOwner             = Graph_clear_external_owner,
   .SetSystemAuxCommandCallback    = Graph_set_sysaux_command_callback,
@@ -515,13 +515,17 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     // ===============================
 
     // [Q3] Graph state lock
-    INIT_SPINNING_CRITICAL_SECTION( &self->state_lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->state_lock.lock, 4000 );
 
     // [Q18.1-6] Vertex availability condition
     INIT_CONDITION_VARIABLE( &self->vertex_availability.cond );
 
+    /*
     // [Q19] Query state lock
-    INIT_SPINNING_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
+    //INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->q_lock.lock, 4000 );
+    */
+    // [Q19]
+    memset( self->__rsv_19, 0, sizeof(self->__rsv_19) );
 
     // [Q22.1-6] Inarcs return condition
     INIT_CONDITION_VARIABLE( &self->return_inarcs.cond );
@@ -572,7 +576,7 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     self->count_vtx_RO = 0;
 
     // [Q4.8] Graph order (number of vertices)
-    self->_order_atomic = 0;
+    ATOMIC_ASSIGN_i64( &self->_order_atomic, 0 );
 
     // [Q2.7] Similarity
     vgx_Similarity_constructor_args_t simargs = {
@@ -783,16 +787,16 @@ static vgx_Graph_t * Graph_constructor( const void *identifier, vgx_Graph_constr
     }
 
     // [Q20.1.1]
-    self->q_pri_req = 0;
+    ATOMIC_ASSIGN_i32( &self->q_pri_req, 0 );
 
     // [Q20.1.2]
     self->__rsv_20_1_2 = 0;
 
     // [Q20.2]
-    self->q_count = 0;
+    ATOMIC_ASSIGN_i64( &self->q_count, 0 );
 
     // [Q20.3]
-    self->q_time_nanosec_acc = 0;
+    ATOMIC_ASSIGN_i64( &self->q_time_nanosec_acc, 0);
 
     // [Q20.4]
     self->__rsv_20_4 = 0;
@@ -1358,8 +1362,10 @@ static void Graph_destructor( vgx_Graph_t *self ) {
     // Graph state lock
     DEL_CRITICAL_SECTION( &self->state_lock.lock );
 
+    /*
     // Query counter lock
     DEL_CRITICAL_SECTION( &self->q_lock.lock );
+    */
 
     // Graph ID
     // Object typeinfo
@@ -1413,10 +1419,10 @@ static const CString_t * Graph_name( const vgx_Graph_t *self ) {
  *
  ***********************************************************************
  */
-static void Graph__count_query_nolock( vgx_Graph_t *self, int64_t q_time_nanosec ) {
+static void Graph__count_query_atomic( vgx_Graph_t *self, int64_t q_time_nanosec ) {
   if( q_time_nanosec >=0 ) {
-    self->q_count++;
-    self->q_time_nanosec_acc += q_time_nanosec;
+    ATOMIC_INCREMENT_i64( &self->q_count );
+    ATOMIC_ADD_i64( &self->q_time_nanosec_acc, q_time_nanosec );
   }
 }
 
@@ -1427,9 +1433,9 @@ static void Graph__count_query_nolock( vgx_Graph_t *self, int64_t q_time_nanosec
  *
  ***********************************************************************
  */
-static void Graph__reset_query_count_nolock( vgx_Graph_t *self ) {
-  self->q_count = 0;
-  self->q_time_nanosec_acc = 0;
+static void Graph__reset_query_count_atomic( vgx_Graph_t *self ) {
+  ATOMIC_ASSIGN_i64( &self->q_count, 0 );
+  ATOMIC_ASSIGN_i64( &self->q_time_nanosec_acc, 0 );
 }
 
 
@@ -1439,8 +1445,8 @@ static void Graph__reset_query_count_nolock( vgx_Graph_t *self ) {
  *
  ***********************************************************************
  */
-static int64_t Graph__query_count_nolock( vgx_Graph_t *self ) {
-  return self->q_count;
+static int64_t Graph__query_count_atomic( vgx_Graph_t *self ) {
+  return ATOMIC_READ_i64( &self->q_count );
 }
 
 
@@ -1450,8 +1456,8 @@ static int64_t Graph__query_count_nolock( vgx_Graph_t *self ) {
  *
  ***********************************************************************
  */
-static int64_t Graph__query_time_nanosec_acc_nolock( vgx_Graph_t *self ) {
-  return self->q_time_nanosec_acc;
+static int64_t Graph__query_time_nanosec_acc_atomic( vgx_Graph_t *self ) {
+  return ATOMIC_READ_i64( &self->q_time_nanosec_acc );
 }
 
 
@@ -1460,15 +1466,13 @@ static int64_t Graph__query_time_nanosec_acc_nolock( vgx_Graph_t *self ) {
  *
  ***********************************************************************
  */
-static double Graph__query_time_average_nolock( vgx_Graph_t *self ) {
-  double avg;
-  if( self->q_count > 0 ) {
-    avg = (self->q_time_nanosec_acc / 1e9) / self->q_count;
+static double Graph__query_time_average_atomic( vgx_Graph_t *self ) {
+  int64_t q_count = ATOMIC_READ_i64( &self->q_count );
+  if( q_count <= 0 ) {
+    return 0.0;
   }
-  else {
-    avg = 0.0;
-  }
-  return avg;
+  double q_secacc = 1e-9 * (double)ATOMIC_READ_i64( &self->q_time_nanosec_acc );
+  return q_secacc / (double)q_count;
 }
 
 
@@ -1652,7 +1656,7 @@ static void Graph_dump( vgx_Graph_t *self ) {
       CXLIB_OSTREAM( "  .__rsv7               : %d", (int)ctrl->__rsv7 );
       CXLIB_OSTREAM( "  .__rsv8               : %d", (int)ctrl->__rsv8);
       CXLIB_OSTREAM( "  .__rsv                : %u", (unsigned)ctrl->__rsv);
-      CXLIB_OSTREAM( "__rsv_4_2_2             : %u", (unsigned int)self->__rsv_4_2_2 );
+      CXLIB_OSTREAM( "__rsv_4_2_2             : %d", (int)self->__rsv_4_2_2 );
       vgx_readonly_state_t *ro = &self->readonly;
       CXLIB_OSTREAM( "readonly" );
       CXLIB_OSTREAM( "  .__n_disallowed       : %d", (int)ro->__n_disallowed );
@@ -1725,8 +1729,8 @@ static void Graph_dump( vgx_Graph_t *self ) {
 
 
       CXLIB_OSTREAM( "13-14: -------- VIRTUAL PROPERTIES ------ " );
-      Q = (QWORD*)&self->vprop.lock;
-      CXLIB_OSTREAM( "vprop.lock          : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
+      Q = (QWORD*)&self->vprop.fastlock;
+      CXLIB_OSTREAM( "vprop.fastlock      : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
       CXLIB_OSTREAM( "vprop.fd            : %d", self->vprop.fd );
       CXLIB_OSTREAM( "vprop.ready         : %d", self->vprop.ready );
       CXLIB_OSTREAM( "vprop.commit        : %lld", self->vprop.commit );
@@ -1750,12 +1754,13 @@ static void Graph_dump( vgx_Graph_t *self ) {
 
 
       CXLIB_OSTREAM( "19-20: ------- QUERY ---" );
-      Q = (QWORD*)&self->q_lock;
-      CXLIB_OSTREAM( "q_lock              : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
-      CXLIB_OSTREAM( "q_pri_req           : %d", self->q_pri_req );
+      //Q = (QWORD*)&self->q_lock;
+      //CXLIB_OSTREAM( "q_lock              : (CS_LOCK) %016llX %016llX %016llX %016llX %016llX %016llX %016llX %016llX", Q[0], Q[1], Q[2], Q[3], Q[4], Q[5], Q[6], Q[7] );
+      CXLIB_OSTREAM( "__rsv_19            : --" );
+      CXLIB_OSTREAM( "q_pri_req           : %d", ATOMIC_READ_i32( &self->q_pri_req ) );
       CXLIB_OSTREAM( "__rsv_20_1_2        : %d", self->__rsv_20_1_2 );
-      CXLIB_OSTREAM( "q_count             : %lld", self->q_count );
-      CXLIB_OSTREAM( "q_time_nanosec_acc  : %lld", self->q_time_nanosec_acc );
+      CXLIB_OSTREAM( "q_count             : %lld", ATOMIC_READ_i64( &self->q_count ) );
+      CXLIB_OSTREAM( "q_time_nanosec_acc  : %lld", ATOMIC_READ_i64( &self->q_time_nanosec_acc ) );
       CXLIB_OSTREAM( "__rsv_20_4          : %llu", self->__rsv_20_4 );
       CXLIB_OSTREAM( "__rsv_20_5          : %llu", self->__rsv_20_5 );
       CXLIB_OSTREAM( "__rsv_20_6          : %llu", self->__rsv_20_6 );

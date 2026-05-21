@@ -60,7 +60,7 @@
                 </tr>
                 <tr id="simple_output" class="outputrow">
                     <td class="col1" colspan="2">
-                        <pre><textarea id="result" name="result" rows=1 spellcheck="false" readonly=readonly></textarea></pre>
+                        <pre><textarea id="result" name="result" rows=1 spellcheck="false" readonly=readonly wrap="off"></textarea></pre>
                     </td>
                 </tr>
             </table>
@@ -266,7 +266,7 @@
                 let url = "/vgx/builtin/ADMIN_Console?graph=" + graph + "&authtoken=" + authToken;
 
                 $.post(url, expression, function (data, textStatus, jqXHR) {
-                    let response = "";
+                    //let response = "";
                     let message = "";
 
                     try {
@@ -274,8 +274,42 @@
                         const exec_ms = parseFloat(data["exec_ms"]);
                         const messageRaw = data["message"];
                         if (responseRaw != null) {
-                            response = JSON.stringify(responseRaw, null, 4);
-                            $('#result').val(response);
+                            const action = responseRaw["action"];
+                            const result = responseRaw["result"];
+                            if (action == "vgxadmin") {
+                                let lines = [];
+                                for (const entry of result) {
+                                    if (Array.isArray(entry)) {
+                                        let inner = [];
+                                        for (const line of entry) {
+                                            inner.push( JSON.stringify(line, null) );
+                                        }
+                                        lines.push( inner.join(" ") );
+                                        lines.push("\n");
+                                    }
+                                    else if (entry === null) {
+                                    }
+                                    else if (typeof entry === "object") {
+                                        const trace = entry["trace"];
+                                        for (const line of trace) {
+                                            lines.push(""+line);
+                                        }
+                                        lines.push("\n");
+                                    }
+                                    else {
+                                        lines.push( JSON.stringify(entry, null) );
+                                    }
+                                }
+                                $('#result').val( lines.join("\n") );
+                            }
+                            else if (action != null && result != null) {
+                                const j_action = JSON.stringify(action, null, 4);
+                                const j_result = JSON.stringify(result, null, 4);
+                                $('#result').val( j_action + "\n\n" + j_result );
+                            }
+                            else {
+                                $('#result').val( ""+responseRaw );
+                            }
                         }
                         else if (messageRaw != null) {
                             message = JSON.stringify(messageRaw, null, 4);

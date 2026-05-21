@@ -382,6 +382,7 @@ static PyObject * PyVGX_Similarity__rvec( PyVGX_Similarity *py_sim, PyObject *py
   BEGIN_PYVGX_THREADS {
     float *rval = malloc( sizeof(float) * sz );
     if( rval ) {
+      __lfsr63( __GET_CURRENT_NANOSECOND_TICK() + rand63() );
       float *p = rval;
       float *end = rval + sz;
       while( p < end ) {
@@ -1297,11 +1298,40 @@ static PyObject * PyVGX_Similarity__repr( PyVGX_Similarity *pysim ) {
 
 
 /******************************************************************************
+ * PyVGX_Similarity__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Similarity__traverse( PyVGX_Similarity *pysim, visitproc visit, void *arg ) {
+  // LSH seeds
+  Py_VISIT( pysim->py_lsh_seeds );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Similarity__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Similarity__clear( PyVGX_Similarity *pysim ) {
+  // LSH seeds
+  Py_CLEAR( pysim->py_lsh_seeds );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_Similarity__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_Similarity__dealloc( PyVGX_Similarity *pysim ) {
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( pysim );
+
   vgx_Similarity_t *sim = pysim->sim;
   if( sim && pysim->standalone == true ) {
     BEGIN_PYVGX_THREADS {
@@ -1309,7 +1339,11 @@ static void PyVGX_Similarity__dealloc( PyVGX_Similarity *pysim ) {
     } END_PYVGX_THREADS;
     pysim->sim = NULL;
   }
-  Py_XDECREF( pysim->py_lsh_seeds );
+
+  // Clear inner object references
+  PyVGX_Similarity__clear( pysim );
+  
+  // Free object
   Py_TYPE( pysim )->tp_free( pysim );
 }
 
@@ -1580,11 +1614,11 @@ static PyTypeObject PyVGX_Similarity__SimilarityType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX Similarity objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        = (traverseproc)PyVGX_Similarity__traverse,
+    .tp_clear           = (inquiry)PyVGX_Similarity__clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

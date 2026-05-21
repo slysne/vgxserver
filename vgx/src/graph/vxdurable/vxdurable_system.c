@@ -1748,9 +1748,7 @@ static int System__capture_destroy_graph( const objectid_t *obid, const char *pa
  ***********************************************************************
  */
 static bool System__begin_query( bool pri ) {
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  g_SYSTEM->q_pri_req += pri;
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
+  ATOMIC_ADD_i32( &g_SYSTEM->q_pri_req, (int)pri );
   return pri;
 }
 
@@ -1762,13 +1760,11 @@ static bool System__begin_query( bool pri ) {
  ***********************************************************************
  */
 static void System__end_query( bool pri, int64_t q_time_nanosec ) {
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  g_SYSTEM->q_pri_req -= pri;
+  ATOMIC_SUB_i32( &g_SYSTEM->q_pri_req, (int)pri );
   if( q_time_nanosec >= 0 ) {
-    g_SYSTEM->q_count++;
-    g_SYSTEM->q_time_nanosec_acc += q_time_nanosec;
+    ATOMIC_INCREMENT_i64( &g_SYSTEM->q_count );
+    ATOMIC_ADD_i64( &g_SYSTEM->q_time_nanosec_acc, q_time_nanosec );
   }
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
 }
 
 
@@ -1779,11 +1775,7 @@ static void System__end_query( bool pri, int64_t q_time_nanosec ) {
  ***********************************************************************
  */
 static int System__get_query_pri_req( void ) {
-  int pri_req;
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  pri_req = g_SYSTEM->q_pri_req;
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  return pri_req;
+  return ATOMIC_READ_i32( &g_SYSTEM->q_pri_req );
 }
 
 
@@ -1794,11 +1786,7 @@ static int System__get_query_pri_req( void ) {
  ***********************************************************************
  */
 static int64_t System__query_count( void ) {
-  int64_t count;
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  count = g_SYSTEM->q_count;
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  return count;
+  return ATOMIC_READ_i64( &g_SYSTEM->q_count );
 }
 
 
@@ -1809,12 +1797,9 @@ static int64_t System__query_count( void ) {
  ***********************************************************************
  */
 static int64_t System__query_time_nanosec_acc( void ) {
-  int64_t ns_acc;
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  ns_acc = g_SYSTEM->q_time_nanosec_acc;
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  return ns_acc;
+  return ATOMIC_READ_i64( &g_SYSTEM->q_time_nanosec_acc );
 }
+
 
 
 /*******************************************************************//**
@@ -1823,16 +1808,12 @@ static int64_t System__query_time_nanosec_acc( void ) {
  ***********************************************************************
  */
 static double System__query_time_average( void ) {
-  double avg;
-  ENTER_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  if( g_SYSTEM->q_count > 0 ) {
-    avg = (g_SYSTEM->q_time_nanosec_acc / 1e9) / g_SYSTEM->q_count;
+  int64_t q_count = ATOMIC_READ_i64( &g_SYSTEM->q_count );
+  if( q_count <= 0 ) {
+    return 0.0;
   }
-  else {
-    avg = 0.0;
-  }
-  LEAVE_CRITICAL_SECTION( &g_SYSTEM->q_lock.lock );
-  return avg;
+  double q_secacc = 1e-9 * (double)ATOMIC_READ_i64( &g_SYSTEM->q_time_nanosec_acc );
+  return q_secacc / (double)q_count;
 }
 
 

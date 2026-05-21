@@ -45,6 +45,8 @@ static void __eval_unary_isbytes( vgx_Evaluator_t *self );
 static void __eval_unary_isutf8( vgx_Evaluator_t *self );
 static void __eval_unary_isarray( vgx_Evaluator_t *self );
 static void __eval_unary_ismap( vgx_Evaluator_t *self );
+static void __eval_unary_ispickled( vgx_Evaluator_t *self );
+static void __eval_unary_iscompressed( vgx_Evaluator_t *self );
 static void __eval_variadic_anynan( vgx_Evaluator_t *self );
 static void __eval_variadic_allnan( vgx_Evaluator_t *self );
 
@@ -332,6 +334,40 @@ static void __eval_unary_ismap( vgx_Evaluator_t *self ) {
   if( px->type == STACK_ITEM_TYPE_CSTRING && px->CSTR__str != NULL ) {
     switch( CStringAttributes( px->CSTR__str ) & __CSTRING_ATTR_ARRAY_MASK ) {
     case CSTRING_ATTR_ARRAY_MAP:
+      SET_INTEGER_PITEM_VALUE( px, 1 );
+      return;
+    }
+  }
+  SET_INTEGER_PITEM_VALUE( px, 0 );
+}
+
+
+
+/*******************************************************************//**
+ * ispickled( x )
+ ***********************************************************************
+ */
+static void __eval_unary_ispickled( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+  if( px->type == STACK_ITEM_TYPE_CSTRING && px->CSTR__str != NULL ) {
+    if( (CStringAttributes( px->CSTR__str ) & CSTRING_ATTR_SERIALIZED_TXT) != 0 ) {
+      SET_INTEGER_PITEM_VALUE( px, 1 );
+      return;
+    }
+  }
+  SET_INTEGER_PITEM_VALUE( px, 0 );
+}
+
+
+
+/*******************************************************************//**
+ * iscompressed( x )
+ ***********************************************************************
+ */
+static void __eval_unary_iscompressed( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+  if( px->type == STACK_ITEM_TYPE_CSTRING && px->CSTR__str != NULL ) {
+    if( (CStringAttributes( px->CSTR__str ) & CSTRING_ATTR_COMPRESSED) != 0 ) {
       SET_INTEGER_PITEM_VALUE( px, 1 );
       return;
     }

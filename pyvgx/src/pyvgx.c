@@ -67,6 +67,8 @@ DLL_HIDDEN __THREAD uint64_t _pyvertex_generation_guard = 0;
 
 DLL_HIDDEN bool _pyvgx_api_enabled = true;
 
+DLL_HIDDEN ATOMIC_i32 g_exit_run_server = false;
+
 
 DLL_HIDDEN PyObject *g_py_plugins = NULL;
 
@@ -1565,7 +1567,7 @@ DLL_HIDDEN int __pyvgx_set_output_stream( const char *filepath, CString_t **CSTR
 
   cxlib_exc_context_t *context = COMLIB_GetExceptionContext();
   int ret = 0;
-  SYNCHRONIZE_ON( context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->lock ) {
 
     // Close previous file if any
     if( g_output_stream != stderr ) {
@@ -2262,6 +2264,10 @@ static void __banner_cpu( unsigned indent ) {
     }
     iString.Discard( &CSTR__cpuext );
   }
+  // ACC-LIB
+  const char *use_lz4 = "LZ4"; // Always used now
+  const char *json_codec_name = iPyVGXCodec.JsonCodecName();
+  __print_banner_entry( indent, "ACC-LIB", "%s %s", use_lz4, json_codec_name );
   // UTEST
 #ifdef INCLUDE_UNIT_TESTS
   __print_banner_entry( indent, "UTEST", "Enabled" );
@@ -2418,6 +2424,7 @@ ______________________________________________________________________________
 /*
   CPU     : Intel(R) Xeon(R) W-2255 CPU @ 3.70GHz (10 cores / 20 threads)
   CPU-EXT : FMA AVX F16C AVX2 AVX512F AVX512DQ AVX512CD AVX512BW AVX512VL AVX512_VNNI
+  ACC-LIB : LZ4 orjson
   UTEST   : Enabled
   HSCORE  : 10/10
 ______________________________________________________________________________

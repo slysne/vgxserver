@@ -254,6 +254,9 @@ static void __executor__postprocess( vgx_VGXServer_t *server, vgx_VGXServerClien
     }
 
     vgx_VGXServerResponse_t *front_response = &client->response;
+        
+    // Swap header capsules (restore pre-processor capsule back into the matrix request from the front request)
+    vgx_server_request__header_capsule_swap( front_request, matrix_request );
     
     // We operate on the matrix request and the front response
     int ret = server->resource.pluginf( post_plugin, true, NULL, matrix_request, front_response, &CSTR__error );
@@ -659,7 +662,7 @@ static vgx_VGXServerExecutor_t * __executor__new( vgx_VGXServer_t *server, int e
     executor->jobQ = &server->dispatch.Q[jobq_i];
 
     // [Q1.8]
-    executor->count_atomic = 0;
+    ATOMIC_ASSIGN_i64( &executor->count_atomic, 0 );
 
   }
   XCATCH( errcode ) {
@@ -744,7 +747,7 @@ static void __executor__signal_shutdown( vgx_VGXServer_t *server, vgx_VGXServerE
             for( int qi=0; qi < DISPATCH_QUEUE_COUNT; ++qi ) {
               vgx_VGXServerDispatchQueue_t *job = &dispatch->Q[qi];
               if( job->flag.init.d_lock && job->flag.init.d_cond && job->queue ) {
-                SYNCHRONIZE_ON( job->lock ) {
+                SYNCHRONIZE_ON( job->fastlock ) {
                   QWORD zero = 0;
                   for( int i=0; i<100; i++ ) {
                     CALLABLE( job->queue )->AppendNolock( job->queue, &zero );

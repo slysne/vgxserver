@@ -330,7 +330,7 @@ json:
   {
     PyObject *py_json_string = PyUnicode_FromString( kv->val.data.simple.string );
     if( py_json_string ) {
-      PyObject *py_object = iPyVGXCodec.NewPyObjectFromJsonPyString( py_json_string );
+      PyObject *py_object = iPyVGXCodec.NewPyObjectFromJsonPyObject( py_json_string );
       Py_DECREF( py_json_string );
       if( py_object ) {
         // LEAK WARNING: Must decref this
@@ -612,17 +612,29 @@ static const char * __plugin__get_pytype_simple_string( PyObject *py_type ) {
  ******************************************************************************
  */
 static bool __plugin__is_pyobj_json_compatible( PyObject *py_obj ) {
-  if( py_obj ) {
-    PyTypeObject *py_type = (PyTypeObject*)PyObject_Type( py_obj );
-    if( py_type == &PyLong_Type ||
-        py_type == &PyFloat_Type ||
-        py_type == &PyUnicode_Type ||
-        iPyVGXCodec.IsTypeJson( (PyObject*)py_type ) )
-    {
-      return true;
-    }
+  if( py_obj == NULL ) {
+    return false;
   }
-  return false; 
+  // int
+  if( PyLong_CheckExact(py_obj) ) {
+    return true;
+  }
+  // float (except nan, inf, -inf)
+  if( PyFloat_CheckExact(py_obj) ) {
+    return isfinite( PyFloat_AS_DOUBLE(py_obj) );
+  }
+  // str
+  if( PyUnicode_CheckExact(py_obj) ) {
+    return true;
+  }
+  // json
+  PyTypeObject *py_type = Py_TYPE(py_obj);
+  if( iPyVGXCodec.IsTypeJson( (PyObject*)py_type ) ) {
+    return true;
+  }
+
+  // not json compatible
+  return false;
 }
 
 
@@ -1835,7 +1847,7 @@ DLL_HIDDEN int __pyvgx_plugin__add( const char *plugin_name, vgx_server_plugin_p
         // check default value type
         if( py_arg_default && py_type ) {
           if( !iPyVGXCodec.IsTypeJson( (PyObject*)py_type ) ) {
-            if( PyObject_Type( py_arg_default ) != (PyObject*)py_type ) {
+            if( Py_TYPE( py_arg_default ) != py_type ) {
               PyErr_SetString( PyExc_TypeError, "default parameter value incompatible with annotation" );
               THROW_SILENT( CXLIB_ERR_API, 0x00D );
             }

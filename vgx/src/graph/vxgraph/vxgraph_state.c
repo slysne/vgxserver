@@ -334,7 +334,7 @@ DLL_HIDDEN int _vxgraph_state__yield_inarcs_CS_WL( vgx_Graph_t *self, vgx_Vertex
     ret = 1;
   }
 
-  // Broadcast an availability signal
+  // Wake up 
   SIGNAL_VERTEX_AVAILABLE( self );
 
   return ret;
@@ -399,7 +399,8 @@ DLL_HIDDEN void _vxgraph_state__yield_vertex_inarcs_and_wait_CS_WL( vgx_Graph_t 
   vgx_Vertex_t *vertex = __vertex_set_yield_inarcs( vertex_WL );
 
   // Broadcast an availability signal
-  SIGNAL_VERTEX_AVAILABLE( self );
+  // TODO: Why broadcast? Switch to signal since only one thread can get the graph lock
+  BROADCAST_VERTEX_AVAILABLE( self );
 
   // Optional sleep
   if( sleep_ms > 0 ) {
@@ -409,6 +410,7 @@ DLL_HIDDEN void _vxgraph_state__yield_vertex_inarcs_and_wait_CS_WL( vgx_Graph_t 
   }
 
   // Wait for signal
+  // TODO: This is not good. We most certainly will wait for the 1 ms timeout.
   WAIT_FOR_VERTEX_AVAILABLE( self, 1 );
   
   // Retract the yielding of inarcs of our originally writelocked vertex
@@ -616,7 +618,8 @@ DLL_HIDDEN vgx_Vertex_t * _vxgraph_state__lock_vertex_readonly_CS( vgx_Graph_t *
  */
 DLL_HIDDEN vgx_Vertex_t * _vxgraph_state__lock_vertex_readonly_OPEN( vgx_Graph_t *self, vgx_Vertex_t *vertex, vgx_ExecutionTimingBudget_t *timing_budget, vgx_vertex_record record ) {
   vgx_Vertex_t *vertex_RO = NULL;
-  GRAPH_LOCK_SPIN( self, 2 ) {
+  //GRAPH_LOCK_SPIN( self, 2 ) {
+  GRAPH_LOCK( self ) {
     vertex_RO = _vxgraph_state__lock_vertex_readonly_CS( self, vertex, timing_budget, record );
   } GRAPH_RELEASE;
   return vertex_RO;
@@ -750,7 +753,7 @@ DLL_HIDDEN bool _vxgraph_state__unlock_vertex_CS_LCK( vgx_Graph_t *self, vgx_Ver
 DLL_HIDDEN bool _vxgraph_state__unlock_vertex_OPEN_LCK( vgx_Graph_t *self, vgx_Vertex_t **vertex_LCK, vgx_vertex_record record ) {
   bool released;
   GRAPH_LOCK( self ) {
-    // Wake other threads that may be waiting for vertex availability
+    // Wake another thread that may be waiting for vertex availability
     if( (released = _vxgraph_state__unlock_vertex_CS_LCK( self, vertex_LCK, record )) == true ) {
       SIGNAL_VERTEX_AVAILABLE( self );
     }
@@ -2164,13 +2167,11 @@ DLL_HIDDEN bool _vxgraph_state__release_vertex_CS_LCK( vgx_Graph_t *self, vgx_Ve
   __assert_state_lock( self );
   bool released = false;
 
-  released = _vxgraph_state__unlock_vertex_CS_LCK( self, vertex_LCK, VGX_VERTEX_RECORD_ALL );
-  
-  // Wake other threads that may be waiting for vertex availability
-  if( released ) {
+  // Wake another thread that may be waiting for vertex availability
+  if( (released = _vxgraph_state__unlock_vertex_CS_LCK( self, vertex_LCK, VGX_VERTEX_RECORD_ALL )) == true ) {
     SIGNAL_VERTEX_AVAILABLE( self );
   }
-
+  
   return released;
 }
 
@@ -2594,14 +2595,14 @@ DLL_HIDDEN bool _vxgraph_state__release_initial_and_terminal_OPEN_LCK( vgx_Graph
     // First we relax the initial vertex if it is WL
     bool initial_was_RO = __vertex_is_locked_readonly( *initial_LCK );
     if( _vxgraph_state__relax_to_readonly_vertex_CS_LCK( self, *initial_LCK, VGX_VERTEX_RECORD_ALL ) ) {
-      // WL -> RO, lets broadcast
+      // WL -> RO, signal
       if( !initial_was_RO && __vertex_is_locked_readonly( *initial_LCK ) ) {
         SIGNAL_VERTEX_AVAILABLE( self );
       }
       // Next we relax the terminal vertex if it is WL
       bool terminal_was_RO = __vertex_is_locked_readonly( *terminal_LCK );
       if( _vxgraph_state__relax_to_readonly_vertex_CS_LCK( self, *terminal_LCK, VGX_VERTEX_RECORD_ALL ) ) {
-        // WL -> RO, lets broadcast
+        // WL -> RO, signal
         if( !terminal_was_RO && __vertex_is_locked_readonly( *terminal_LCK ) ) {
           SIGNAL_VERTEX_AVAILABLE( self );
         }

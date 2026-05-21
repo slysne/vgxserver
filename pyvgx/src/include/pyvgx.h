@@ -510,6 +510,13 @@ DLL_HIDDEN extern __THREAD uint64_t _pyvertex_generation_guard;
 DLL_HIDDEN extern bool _pyvgx_api_enabled;
 
 
+/******************************************************************************
+ * Exit RunServer flag
+ ******************************************************************************
+ */
+DLL_HIDDEN extern ATOMIC_i32 g_exit_run_server;
+
+
 
 /******************************************************************************
  * Flag indicating whether arc creation should automatically set TMC/TMM arcs.
@@ -556,7 +563,6 @@ DLL_HIDDEN extern PyObject * g_py_cfdispatcher;
  ******************************************************************************
  */
 DLL_HIDDEN extern __THREAD PyThreadState * PYVGX_THREAD_STATE;
-
 
 #define __PYVGX_BLOCK_THREADS       PyEval_RestoreThread( PYVGX_THREAD_STATE )
 
@@ -701,6 +707,28 @@ static void PyVGXError_SetString( PyObject *exc, const char *str ) {
 }
 
 
+
+/******************************************************************************
+ *
+ ******************************************************************************
+ */
+static void PyVGXError_Format( PyObject *exc, const char *format, ... ) {
+  BEGIN_PYTHON_INTERPRETER {
+    if( !PyErr_Occurred() ) {
+      va_list args;
+      va_start(args, format);
+      PyErr_FormatV( exc, format, args);
+      va_end(args);
+    }
+  } END_PYTHON_INTERPRETER;
+}
+
+
+
+/******************************************************************************
+ *
+ ******************************************************************************
+ */
 #define PyVGX_ReturnError( PyExc, Str ) { \
   PyErr_SetString( PyExc, Str ); \
   return NULL; \
@@ -950,6 +978,13 @@ typedef struct s_PyVGX_Vertex {
   vgx_Vertex_t *vertex;
   PyVGX_Graph *pygraph;
   uint64_t gen_guard;
+
+  // Cached members
+  PyObject *py_cache__id;
+  PyObject *py_cache__internalid;
+  PyObject *py_cache__address;
+  PyObject *py_cache__enum;
+
 } PyVGX_Vertex;
 
 
@@ -1084,6 +1119,7 @@ typedef struct s_PyVGX_PluginResponse {
   PyVGX_PluginResponse_metas metas;
   x_vgx_partial__aggregator aggregator;
   PyObject *py_message;
+  PyObject *py_meta;
   PyObject *py_entries;
   PyObject *py_prev_key;
 } PyVGX_PluginResponse;
@@ -1405,7 +1441,7 @@ typedef struct s_IPyVGXParser {
   vgx_Relation_t * (*NewRelation)( vgx_Graph_t *graph, const char *initial, PyObject *py_arc, const char *terminal );
   vgx_value_comparison (*ParseValueCondition)( PyObject *py_valcond, vgx_value_condition_t *value_condition, const vgx_value_constraint_t vconstraint, const vgx_value_comparison vcomp_default );
   vgx_ArcConditionSet_t * (*NewArcConditionSet)( vgx_Graph_t *graph, PyObject *py_arc_condition, vgx_arc_direction default_direction );
-  vgx_VertexCondition_t * (*NewVertexCondition)( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_collector_mode_t collector_mode );
+  vgx_VertexCondition_t * (*NewVertexCondition)( vgx_Graph_t *graph, PyObject *py_vertex_condition, vgx_ExpressEvalMemory_t *memory, vgx_collector_mode_t collector_mode );
   vgx_RankingCondition_t * (*NewRankingCondition)( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, vgx_Vector_t *probe_vector );
   vgx_RankingCondition_t * (*NewRankingConditionEx)( vgx_Graph_t *graph, PyObject *py_rankspec, PyObject *py_aggregate, vgx_sortspec_t sortspec, vgx_predicator_modifier_enum modifier, PyObject *py_rank_vector_object, vgx_VertexCondition_t *vertex_condition );
   vgx_ExpressEvalMemory_t * (*NewExpressEvalMemory)( vgx_Graph_t *graph, PyObject *py_object );
@@ -1426,11 +1462,12 @@ typedef struct s_IPyVGXCodec {
   PyObject * (*NewPyObjectFromSerializedBytes)( const char *bytes, int64_t sz_bytes );
   PyObject * (*NewCompressedPyBytesFromPyObject)( PyObject *py_object );
   PyObject * (*NewPyObjectFromCompressedPyBytes)( PyObject *py_bytes );
-  PyObject * (*NewJsonPyStringFromPyObject)( PyObject *py_object );
+  PyObject * (*NewJsonFromPyObject)( PyObject *py_object );
   PyObject * (*NewJsonPyBytesFromPyObject)( PyObject *py_object );
-  PyObject * (*NewPyObjectFromJsonPyString)( PyObject *py_json );
+  PyObject * (*NewPyObjectFromJsonPyObject)( PyObject *py_json );
   PyObject * (*NewPyObjectFromJsonBytes)( const char *bytes, int64_t sz_bytes );
   bool (*IsTypeJson)( const PyObject *py_type );
+  const char * (*JsonCodecName)(void);
   int (*RenderPyObjectByMediatype)( vgx_MediaType mtype, PyObject *py_plugin_return_type, PyObject *py_obj, vgx_StreamBuffer_t *output );
   PyObject * (*ConvertPyObjectByMediatype)( vgx_MediaType mtype, PyObject *py_plugin_return_type, PyObject *py_obj, const char **rstr, int64_t *rsz );
 } IPyVGXCodec;
@@ -1455,7 +1492,7 @@ typedef struct s_IPyVGXBuilder {
   int64_t (*MapIntegerConstants)( PyObject *py_dict, vgx_KeyVal_char_int64_t *data );
   PyObject * (*TupleFromCStringMapKeyVal)( const QWORD *item_bits );
   PyObject * (*VertexPropertiesAsDict)( vgx_Vertex_t *vertex_RO );
-  void (*SetErrorFromMessages)( vgx_StringTupleList_t *messages );
+  void (*SetErrorFromMessages)( PyObject *py_exception_type, const char *reason, vgx_StringTupleList_t *messages );
   bool (*SetPyErrorFromAccessReason)( const char *object_name, vgx_AccessReason_t reason, CString_t **CSTR__error );
   int (*CatchPyExceptionIntoOutput)( const char *wrap, vgx_MediaType *mediatype, CString_t **CSTR__output, vgx_StreamBuffer_t *output );
 } IPyVGXBuilder;
@@ -1718,11 +1755,24 @@ static void __pyvgx_set_query_error( PyVGX_Query *py_query, __base_query_args *p
     PyErr_SetString( param->implied.py_err_class, param->implied.CSTR__error ? CStringValue( param->implied.CSTR__error ) : "unknown internal error" );
   }
   if( py_query ) {
-    PyObject *type, *traceback;
+    PyObject *type=NULL, *value=NULL, *tb=NULL;
+    PyErr_Fetch( &type, &value, &tb );
     Py_XDECREF( py_query->py_error );
-    PyErr_Fetch( &type, &py_query->py_error, &traceback );
-    Py_XINCREF( py_query->py_error );
-    PyErr_Restore( type, py_query->py_error, traceback );
+
+    const char *type_str = "?";
+
+    if( type ) {
+      type_str = ((PyTypeObject*)type)->tp_name;
+    }
+
+    if( value ) {
+      py_query->py_error = PyUnicode_FromFormat( "%s: %S", type_str, value );
+    }
+    else {
+      py_query->py_error = PyUnicode_FromFormat( "%s", type_str );
+    }
+
+    PyErr_Restore( type, value, tb );
   }
 }
 
@@ -2087,5 +2137,47 @@ static int PyVGX_DictStealItemString( PyObject *py_map, const char *key, PyObjec
   }
   return -1;
 }
+
+
+
+/******************************************************************************
+ * PyVGX_Yield
+ *
+ ******************************************************************************
+ */
+static void PyVGX_Yield( void ) {
+  PyEval_RestoreThread( PyEval_SaveThread() );
+}
+
+
+
+/******************************************************************************
+ * PyVGX_SignalAndYield
+ *
+ ******************************************************************************
+ */
+static void PyVGX_SignalAndYield( vgx_Graph_t *graph ) {
+  BEGIN_PYVGX_THREADS {
+    vgx_Graph_t *locked_graph = GRAPH_ENTER_CRITICAL_SECTION( graph );
+    SIGNAL_WAKE_EVENT( locked_graph );
+    GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  } END_PYVGX_THREADS;
+}
+
+ 
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */       
+static PyObject * ptr_richcompare( PyObject *a, PyObject *b, int op ) {
+  if( a->ob_type != b->ob_type ) {
+    Py_RETURN_NOTIMPLEMENTED;
+  }
+
+  Py_RETURN_RICHCOMPARE( (uintptr_t)a, (uintptr_t)b, op );
+}
+
 
 #endif

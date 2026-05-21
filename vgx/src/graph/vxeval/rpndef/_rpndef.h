@@ -78,6 +78,7 @@ static __rpn_operation RpnPushSysUptime      = { .surface.token="sys.uptime",   
 static __rpn_operation RpnPushRandomInt      = { .surface.token="randint",          .function.eval = __eval_binary_random_int,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnPushRandomBits     = { .surface.token="randbits",         .function.eval = __eval_nullary_random_bits,      .type = OP_NULLARY_PREFIX,        .precedence = OPP_CALL };
 static __rpn_operation RpnPushRandomReal     = { .surface.token="random",           .function.eval = __eval_nullary_random_real,      .type = OP_NULLARY_PREFIX,        .precedence = OPP_CALL };
+static __rpn_operation RpnPushRandomString   = { .surface.token="rstr",             .function.eval = __eval_unary_rstr,               .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 
 
 static __rpn_operation RpnPushReg1           = { .surface.token="r1",               .function.eval = __eval_memory_load_reg1,         .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
@@ -86,6 +87,13 @@ static __rpn_operation RpnPushReg3           = { .surface.token="r3",           
 static __rpn_operation RpnPushReg4           = { .surface.token="r4",               .function.eval = __eval_memory_load_reg4,         .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
 
 static __rpn_operation RpnPushMemX           = { .surface.token="M",                .function.eval = __eval_memory_load,              .type = OP_MEMORY,                .precedence = OPP_SUBSCRIPT };
+
+static __rpn_operation RpnPushRecEval        = { .surface.token="rec.eval",        .function.eval = __eval_memory_recursion_evals,      .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecThreshold   = { .surface.token="rec.threshold",   .function.eval = __eval_memory_recursion_threshold,  .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecFrontier    = { .surface.token="rec.frontier",    .function.eval = __eval_memory_recursion_frontier,   .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecResult      = { .surface.token="rec.result",      .function.eval = __eval_memory_recursion_result,     .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecDepth       = { .surface.token="rec.depth",       .function.eval = __eval_memory_recursion_depth,      .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
+static __rpn_operation RpnPushRecExpand      = { .surface.token="rec.expand",      .function.eval = __eval_memory_recursion_expansions, .type = OP_REGISTER_OPERAND,      .precedence = OPP_CONSTANT };
 
 /*
 static __rpn_operation RpnPushEnumRelEnc     = { .surface.token="rel",              .function.eval = __stack_noop,                    .type = OP_RELATIONSHIP,          .precedence = OPP_SUBSCRIPT };
@@ -111,8 +119,20 @@ static __rpn_operation RpnUnaryHash          = { .surface.token="hash",         
 
 static __rpn_operation RpnStringStrcmp       = { .surface.token="strcmp",           .function.eval = __eval_string_strcmp,            .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStrcasecmp   = { .surface.token="strcasecmp",       .function.eval = __eval_string_strcasecmp,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAll  = { .surface.token="strall",           .function.eval = __eval_variadic_string_all,      .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAllIC= { .surface.token="striall",          .function.eval = __eval_variadic_string_all_icase,.type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAny  = { .surface.token="strany",           .function.eval = __eval_variadic_string_any,      .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnVariadicStringAnyIC= { .surface.token="striany",          .function.eval = __eval_variadic_string_any_icase,.type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
+static __rpn_operation RpnStringContains     = { .surface.token="contains",         .function.eval = __eval_string_contains,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringContainsIC   = { .surface.token="containsi",        .function.eval = __eval_string_contains_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringStartswith   = { .surface.token="startswith",       .function.eval = __eval_string_startswith,        .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringStartswithIC = { .surface.token="startswithi",      .function.eval = __eval_string_startswith_icase,  .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
 static __rpn_operation RpnStringEndswith     = { .surface.token="endswith",         .function.eval = __eval_string_endswith,          .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringEndswithIC   = { .surface.token="endswithi",        .function.eval = __eval_string_endswith_icase,    .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringIndexOf      = { .surface.token="indexof",          .function.eval = __eval_string_indexof,           .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringIndexOfIC    = { .surface.token="indexofi",         .function.eval = __eval_string_indexof_icase,     .type = OP_BINARY_PREFIX,         .precedence = OPP_CALL };
+static __rpn_operation RpnStringLower        = { .surface.token="lower",            .function.eval = __eval_string_lower,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
+static __rpn_operation RpnStringUpper        = { .surface.token="upper",            .function.eval = __eval_string_upper,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringNormalize    = { .surface.token="normalize",        .function.eval = __eval_string_normalize,         .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnStringJoin         = { .surface.token="join",             .function.eval = __eval_string_join,              .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnStringReplace      = { .surface.token="replace",          .function.eval = __eval_string_replace,           .type = OP_TERNARY_PREFIX,        .precedence = OPP_CALL };
@@ -134,6 +154,8 @@ static __rpn_operation RpnUnaryIsBytes       = { .surface.token="isbytes",      
 static __rpn_operation RpnUnaryIsUTF8        = { .surface.token="isutf8",           .function.eval = __eval_unary_isutf8,             .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnUnaryIsArray       = { .surface.token="isarray",          .function.eval = __eval_unary_isarray,            .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnUnaryIsMap         = { .surface.token="ismap",            .function.eval = __eval_unary_ismap,              .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
+static __rpn_operation RpnUnaryIsPickled     = { .surface.token="ispickled",        .function.eval = __eval_unary_ispickled,          .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
+static __rpn_operation RpnUnaryIsCompressed  = { .surface.token="iscompressed",     .function.eval = __eval_unary_iscompressed,       .type = OP_UNARY_PREFIX,          .precedence = OPP_CALL };
 static __rpn_operation RpnAnyNan             = { .surface.token="anynan",           .function.eval = __eval_variadic_anynan,          .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 static __rpn_operation RpnAllNan             = { .surface.token="allnan",           .function.eval = __eval_variadic_allnan,          .type = OP_VARIADIC_PREFIX,       .precedence = OPP_CALL };
 
@@ -790,6 +812,7 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnPushRandomInt,
       &RpnPushRandomBits,
       &RpnPushRandomReal,
+      &RpnPushRandomString,
       // Constant
       &RpnPushNull,
       &RpnPushNan,
@@ -852,6 +875,13 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnPushReg4,
 
       &RpnPushMemX,
+      
+      &RpnPushRecEval,
+      &RpnPushRecThreshold,
+      &RpnPushRecFrontier,
+      &RpnPushRecResult,
+      &RpnPushRecDepth,
+      &RpnPushRecExpand,
 
       /*
       &RpnPushEnumRelEnc,
@@ -875,8 +905,20 @@ static __rpn_operation *__rpn_definitions[] = {
       // String
       &RpnStringStrcmp,
       &RpnStringStrcasecmp,
+      &RpnVariadicStringAll,
+      &RpnVariadicStringAllIC,
+      &RpnVariadicStringAny,
+      &RpnVariadicStringAnyIC,
+      &RpnStringContains,
+      &RpnStringContainsIC,
       &RpnStringStartswith,
+      &RpnStringStartswithIC,
       &RpnStringEndswith,
+      &RpnStringEndswithIC,
+      &RpnStringIndexOf,
+      &RpnStringIndexOfIC,
+      &RpnStringLower,
+      &RpnStringUpper,
       &RpnStringNormalize,
       &RpnStringJoin,
       &RpnStringReplace,
@@ -899,6 +941,8 @@ static __rpn_operation *__rpn_definitions[] = {
       &RpnUnaryIsUTF8,
       &RpnUnaryIsArray,
       &RpnUnaryIsMap,
+      &RpnUnaryIsPickled,
+      &RpnUnaryIsCompressed,
       &RpnAnyNan,
       &RpnAllNan,
       &RpnUnaryInv,

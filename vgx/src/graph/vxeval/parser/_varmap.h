@@ -145,12 +145,15 @@ static __rpn_variable * __varmap__variable_get( __varmap *map, const char *key )
  */
 static int __varmap__variable_add( __varmap *map, __rpn_variable *variable ) {
   if( variable ) {
+    // New variable, add it
     if( __varmap__variable_get( map, variable->name ) == NULL ) {
       QWORD addr = (QWORD)variable;
       return CALLABLE( map->list )->Append( map->list, &addr );
     }
+    // Variable already exists
     else {
-      return -1;
+      //return -1;
+      return 0;
     }
   }
   else {

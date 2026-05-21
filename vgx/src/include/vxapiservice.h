@@ -193,11 +193,12 @@ __inline static int x_vgx_partial__is_sortkeytype_string( x_vgx_partial__sortkey
  * 
  ***********************************************************************
  */
-typedef enum e_x_vgx_partial__message {
-  X_VGX_PARTIAL_MESSAGE__NONE       = 0x00,
-  X_VGX_PARTIAL_MESSAGE__UTF8       = 0x01,
-  X_VGX_PARTIAL_MESSAGE__OBJECT     = 0x02
-} x_vgx_partial__message;
+typedef enum e_x_vgx_partial__metatype {
+  X_VGX_PARTIAL_METATYPE__NONE      = 0x00,
+  X_VGX_PARTIAL_METATYPE__BYTES     = 0x01,
+  X_VGX_PARTIAL_METATYPE__UTF8      = 0x02,
+  X_VGX_PARTIAL_METATYPE__OBJECT    = 0x04
+} x_vgx_partial__metatype;
 
 
 
@@ -235,11 +236,17 @@ typedef struct s_x_vgx_partial__aggregator {
  * 
  *
  *  HEADER:
- *  [status, __xxx, ktype, sdir, n_entries, segment.message, segment.keys, segment.strings, segment.items, segment.end, hitcount, exec_ms, __xxx, __xxx, __xxx, __xxx, __xxx, __xxx]
- *  struct: iiiiqqqqqqqqqqqqqq
+ *  [status, maxhits, ktype, sdir, n_entries, segment.message, segment.meta, segment.keys, segment.strings, segment.items, segment.end, hitcount, message_type, meta_type, level, aggregator]
+ *  struct: iiiiqiiqqqqqiiiiiiqqdd
+ *          ^^^^^------^^^----^^^^
+ *               ||||||
  * 
- *  ENTRY_MSG:
- *  (sz_msg, msg)
+ * 
+ *  ENTRY_MESSAGE:
+ *  (sz_message, message)
+ * 
+ *  ENTRY_META
+ *  (sz_meta, meta)
  * 
  *  ENTRY_KEYS:
  *  [(offset_str1, offset_entry1), (offset_str1, offset_entry2), ..., (offset_strN, offset_entryN)]
@@ -277,9 +284,12 @@ typedef union u_x_vgx_partial__header {
     // Number of hit entries in the result
     int64_t n_entries;
     struct {
-      // [Q1.4]
+      // [Q1.4.1]
       // Byte offset to start of message string
-      int64_t message;
+      int32_t message;
+      // [Q1.4.2]
+      // Byte offset to start of meta string
+      int32_t meta;
       // [Q1.5]
       // Byte offset to entry key segment
       int64_t keys;
@@ -298,10 +308,10 @@ typedef union u_x_vgx_partial__header {
     int64_t hitcount;
     
     // [Q2.2.1]
-    x_vgx_partial__message message_type;
+    x_vgx_partial__metatype message_type;
     
     // [Q2.2.2]
-    DWORD __rsv_2_2_2;
+    x_vgx_partial__metatype meta_type;
     
     // [Q2.3-4]
     x_vgx_partial__level level;
@@ -370,7 +380,7 @@ typedef struct s_x_vgx_partial__entry {
 
 DLL_VISIBLE int       vgx_server_dispatcher_partial__deserialize_header( const char *data, int64_t sz_data, x_vgx_partial__header *dest );
 DLL_VISIBLE void      vgx_server_dispatcher_partial__reset_header( x_vgx_partial__header *header );
-DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output );
+DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__write_output_binary( const x_vgx_partial__header *header, const char *msg, int sz_msg, const char *meta, int sz_meta, const x_vgx_partial__entry *entries, vgx_StreamBuffer_t *output );
 DLL_VISIBLE int64_t   vgx_server_dispatcher_partial__serialize_partial_error( const char *msg, int64_t sz_msg, vgx_StreamBuffer_t *output );
 
 
@@ -1918,7 +1928,7 @@ typedef struct s_vgx_VGXServerDispatcherMatrix_t {
 
   // -------------------------------------------------------------------
   // [Q2]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q3.1]
@@ -1929,10 +1939,10 @@ typedef struct s_vgx_VGXServerDispatcherMatrix_t {
   CQwordQueue_t *backlog;
 
   // [Q3.3.1]
-  ATOMIC_VOLATILE_i32( backlog_sz_atomic );
+  ATOMIC_i32 backlog_sz_atomic;
 
   // [Q3.3.2]
-  ATOMIC_VOLATILE_i32( backlog_count_atomic );
+  ATOMIC_i32 backlog_count_atomic;
 
   // [Q3.4]
   QWORD __rsv_3_4;
@@ -2137,17 +2147,17 @@ typedef struct s_vgx_VGXServerConfig_t {
 typedef struct s_vgx_VGXServerExecutorCompletion_t {
   // -------------------------------------------------------------------
   // [Q1]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q2.1]
   CQwordQueue_t *queue;
 
   // [Q2.2.1]
-  ATOMIC_VOLATILE_i32 length_atomic;
+  ATOMIC_i32 length_atomic;
 
   // [Q2.2.2]
-  ATOMIC_VOLATILE_i32( poll_blocked_atomic );
+  ATOMIC_i32 poll_blocked_atomic;
 
   // [Q2.3]
   vgx_URI_t *signal;
@@ -2183,7 +2193,7 @@ typedef struct s_vgx_VGXServerExecutorCompletion_t {
 typedef struct s_vgx_VGXServerDispatchQueue_t {
   // -------------------------------------------------------------------
   // [Q1]
-  CS_LOCK lock;
+  CS_LOCK fastlock;
 
   // -------------------------------------------------------------------
   // [Q2.1-6]
@@ -2193,10 +2203,10 @@ typedef struct s_vgx_VGXServerDispatchQueue_t {
   CQwordQueue_t *queue;
 
   // [Q2.8.1
-  ATOMIC_VOLATILE_i32 length_atomic;
+  ATOMIC_i32 length_atomic;
 
   // [Q2.8.2]
-  ATOMIC_VOLATILE_i32 n_waiting_atomic;
+  ATOMIC_i32 n_waiting_atomic;
 
 
   // -------------------------------------------------------------------
@@ -2364,7 +2374,7 @@ typedef struct s_vgx_VGXServerExecutor_t {
   vgx_VGXServerDispatchQueue_t *jobQ;
 
   // [Q1.8]
-  ATOMIC_VOLATILE_i64 count_atomic;
+  ATOMIC_i64 count_atomic;
 
   // --------------------------
 

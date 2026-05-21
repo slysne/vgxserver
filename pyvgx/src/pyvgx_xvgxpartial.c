@@ -45,6 +45,7 @@ static PyObject *g_py_key_level = NULL;
 static PyObject *g_py_key_hitcount = NULL;
 static PyObject *g_py_key_aggregator = NULL;
 static PyObject *g_py_key_message = NULL;
+static PyObject *g_py_key_meta = NULL;
 static PyObject *g_py_key_entries = NULL;
 static PyObject *g_py_content_length = NULL;
 static PyObject *g_py_content_type = NULL;
@@ -1134,17 +1135,56 @@ static PyObject * PyVGX_PluginRequest_get_baseport( PyVGX_PluginRequest *py_plug
 
 
 /******************************************************************************
+ * PyVGX_PluginRequest__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginRequest__traverse( PyVGX_PluginRequest *py_plugreq, visitproc visit, void *arg ) {
+  // params
+  Py_VISIT( py_plugreq->py_params );
+  // headers
+  Py_VISIT( py_plugreq->py_headers );
+  // content
+  Py_VISIT( py_plugreq->py_content );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_PluginRequest__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginRequest__clear( PyVGX_PluginRequest *py_plugreq ) {
+  // params
+  Py_CLEAR( py_plugreq->py_params );
+  // headers
+  Py_CLEAR( py_plugreq->py_headers );
+  // content
+  Py_CLEAR( py_plugreq->py_content );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_PluginRequest__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_PluginRequest__dealloc( PyVGX_PluginRequest *py_plugreq ) {
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( py_plugreq );
+
   if( py_plugreq->owns_request ) {
     iVGXServer.Request.Delete( &py_plugreq->request );
   }
-  Py_XDECREF( py_plugreq->py_params );
-  Py_XDECREF( py_plugreq->py_headers );
-  Py_XDECREF( py_plugreq->py_content );
+
+  // Clear inner object references
+  PyVGX_PluginRequest__clear( py_plugreq );
+
+  // Free object
   Py_TYPE( py_plugreq )->tp_free( py_plugreq );
 }
 
@@ -1886,11 +1926,11 @@ static PyTypeObject PyVGX_PluginRequestType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX PluginRequest objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        = (traverseproc)PyVGX_PluginRequest__traverse,
+    .tp_clear           = (inquiry)PyVGX_PluginRequest__clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,
@@ -1935,6 +1975,7 @@ DLL_HIDDEN PyTypeObject * p_PyVGX_PluginRequestType = &PyVGX_PluginRequestType;
  */
 
 static int PyVGX_PluginResponse_set_message( PyVGX_PluginResponse *py_plugres, PyObject *py_message, void *closure );
+static int PyVGX_PluginResponse_set_meta( PyVGX_PluginResponse *py_plugres, PyObject *py_meta, void *closure );
 
 
 
@@ -1955,6 +1996,7 @@ DLL_HIDDEN int __pyvgx_xvgxpartial__init( void ) {
   NewUnicodeOrError( g_py_key_hitcount, "hitcount" )
   NewUnicodeOrError( g_py_key_aggregator, "aggregator" )
   NewUnicodeOrError( g_py_key_message, "message" )
+  NewUnicodeOrError( g_py_key_meta, "meta" )
   NewUnicodeOrError( g_py_key_entries, "entries" )
   NewUnicodeOrError( g_py_content_length, "content-length" )
   NewUnicodeOrError( g_py_content_type, "content-type" )
@@ -1996,7 +2038,7 @@ static x_vgx_partial__header __get_header_from_object( const PyVGX_PluginRespons
  *
  ******************************************************************************
  */
-static PyVGX_PluginResponse * __new_deserialized_pluginresponse( PyObject *py_message, PyObject *py_entries, x_vgx_partial__header *header ) {
+static PyVGX_PluginResponse * __new_deserialized_pluginresponse( PyObject *py_message, PyObject *py_meta, PyObject *py_entries, x_vgx_partial__header *header ) {
 
   PyVGX_PluginResponse *py_plugres = NULL;
 
@@ -2010,6 +2052,11 @@ static PyVGX_PluginResponse * __new_deserialized_pluginresponse( PyObject *py_me
     if( py_message ) {
       Py_INCREF( py_message );
       py_plugres->py_message = py_message;
+    }
+
+    if( py_meta ) {
+      Py_INCREF( py_meta );
+      py_plugres->py_meta = py_meta;
     }
 
     if( py_entries ) {
@@ -2062,44 +2109,6 @@ static PyVGX_PluginResponse * __new_deserialized_pluginresponse( PyObject *py_me
  *
  ******************************************************************************
  */
-static int __serialize_partial_error( PyObject *py_err, vgx_StreamBuffer_t *output ) {
-  int ret = 0;
-  x_vgx_partial__header header = {0};
-  header.status = X_VGX_PARTIAL_STATUS__ERROR;
-
-  const char *message = NULL;
-  Py_ssize_t sz_message = 0;
-  PyObject *py_repr = PyObject_Repr( py_err );
-  if( py_repr ) {
-    message = PyUnicode_AsUTF8AndSize( py_repr, &sz_message );
-  }
-  if( message == NULL ) {
-    message = "unknown internal error";
-    sz_message = strlen( message );
-  }
-
-  header.segment.message = sizeof( x_vgx_partial__header );
-  header.segment.keys = header.segment.message + sizeof(int) + sz_message;
-  header.segment.strings = header.segment.keys;
-  header.segment.items = header.segment.strings;
-  header.segment.end = header.segment.items;
-
-  if( vgx_server_dispatcher_partial__write_output_binary( &header, message, (int)sz_message, NULL, output ) < 0 ) {
-    ret = -1;
-  }
-
-  Py_XDECREF( py_repr );
-
-  return ret;
-}
-
-
-
-/******************************************************************************
- *
- *
- ******************************************************************************
- */
 static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuffer_t *output ) {
   int ret = 0;
 
@@ -2113,22 +2122,26 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
   const x_vgx_partial__entry *end = entries + header.n_entries;
   x_vgx_partial__entry *entry = NULL;
   int64_t running_offset = 0;
-  const char *message = "";
+  
+  const char *message = NULL;
   Py_ssize_t sz_message = 0;
-
   PyObject *py_message_bytes = NULL;
+  
+  const char *meta = NULL;
+  Py_ssize_t sz_meta = 0;
+  PyObject *py_meta_bytes = NULL;
 
   XTRY {
     // Message
     if( py_plugres->py_message ) {
       if( PyUnicode_CheckExact( py_plugres->py_message ) ) {
-        header.message_type = X_VGX_PARTIAL_MESSAGE__UTF8;
+        header.message_type = X_VGX_PARTIAL_METATYPE__UTF8;
         if( (message = PyUnicode_AsUTF8AndSize( py_plugres->py_message, &sz_message )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
         }
       }
       else {
-        header.message_type = X_VGX_PARTIAL_MESSAGE__OBJECT;
+        header.message_type = X_VGX_PARTIAL_METATYPE__OBJECT;
         if( (py_message_bytes = PyMarshal_WriteObjectToString( py_plugres->py_message, Py_MARSHAL_VERSION )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_API, 0x002 );
         }
@@ -2137,10 +2150,36 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
         }
       }
     }
+    
+    // Meta
+    if( py_plugres->py_meta ) {
+      if( PyBytes_CheckExact( py_plugres->py_meta ) ) {
+        header.meta_type = X_VGX_PARTIAL_METATYPE__BYTES;
+        if( PyBytes_AsStringAndSize( py_plugres->py_meta, (char**)&meta, &sz_meta ) < 0 ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
+        }
+      }
+      else if( PyUnicode_CheckExact( py_plugres->py_meta ) ) {
+        header.meta_type = X_VGX_PARTIAL_METATYPE__UTF8;
+        if( (meta = PyUnicode_AsUTF8AndSize( py_plugres->py_meta, &sz_meta )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+        }
+      }
+      else {
+        header.meta_type = X_VGX_PARTIAL_METATYPE__OBJECT;
+        if( (py_meta_bytes = PyMarshal_WriteObjectToString( py_plugres->py_meta, Py_MARSHAL_VERSION )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_API, 0x006 );
+        }
+        if( PyBytes_AsStringAndSize( py_meta_bytes, (char**)&meta, &sz_meta ) < 0 ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+        }
+      }
+    }
 
-    // Header: Set offsets for message, keys and strings
-    header.segment.message = sizeof( x_vgx_partial__header );
-    header.segment.keys = header.segment.message + sizeof(int) + sz_message;
+    // Header: Set offsets for message, meta, keys and strings
+    header.segment.message = (int32_t)sizeof( x_vgx_partial__header );
+    header.segment.meta = (int32_t)(header.segment.message + sizeof(int) + sz_message);
+    header.segment.keys = header.segment.meta + sizeof(int) + sz_meta;
     header.segment.strings = header.segment.keys + header.n_entries * sizeof( x_vgx_partial__entry_key );
     running_offset = header.segment.strings;
 
@@ -2153,7 +2192,7 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
       // Ensure entry is tuple (key,item)
       if( !PyTuple_Check( py_entry ) || PyTuple_GET_SIZE( py_entry ) != 2 ) {
         PyErr_Format( PyVGX_ResponseError, "Invalid response entry at index %d, a tuple (sortkey, item) is required", idx );
-        THROW_SILENT( CXLIB_ERR_API, 0x004 );
+        THROW_SILENT( CXLIB_ERR_API, 0x008 );
       }
       PyObject *py_sortkey = PyTuple_GET_ITEM( py_entry, 0 );
       PyObject *py_item = PyTuple_GET_ITEM( py_entry, 1 );
@@ -2162,14 +2201,16 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
       Py_ssize_t sz;
       switch( header.ktype ) {
       case X_VGX_PARTIAL_SORTKEYTYPE__double:
-        if( (entry->key.sortkey.dval = PyFloat_AsDouble( py_sortkey )) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+        if( !PyFloat_Check( py_sortkey ) ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
         }
+        entry->key.sortkey.dval = PyFloat_AS_DOUBLE( py_sortkey );
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__int64:
-        if( (entry->key.sortkey.ival = PyLong_AsLongLong( py_sortkey )) < 0 ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x006 );
+        if( !PyLong_Check( py_sortkey ) ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
         }
+        entry->key.sortkey.ival = PyLong_AsLongLong( py_sortkey );
         break;
       case X_VGX_PARTIAL_SORTKEYTYPE__bytes:
         PyBytes_AsStringAndSize( py_sortkey, (char**)&entry->sortkey.data, &sz );
@@ -2178,7 +2219,7 @@ static int __serialize_partial( PyVGX_PluginResponse *py_plugres, vgx_StreamBuff
         entry->sortkey.data = PyUnicode_AsUTF8AndSize( py_sortkey, &sz );
 record_string_offset:
         if( entry->sortkey.data == NULL ) {
-          THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x00B );
         }
         entry->key.sortkey.offset = running_offset;
         entry->sortkey.sz.val = (int)sz;
@@ -2190,7 +2231,7 @@ record_string_offset:
 
       // Serialize item
       if( (entry->obj = PyMarshal_WriteObjectToString( py_item, Py_MARSHAL_VERSION )) == NULL ) {
-        THROW_ERROR( CXLIB_ERR_MEMORY, 0x008 );
+        THROW_ERROR( CXLIB_ERR_MEMORY, 0x00C );
       }
       entry->item.data = PyBytes_AS_STRING( _PyObject_CAST(entry->obj) );
       entry->item.sz.val = (int)PyBytes_GET_SIZE( _PyObject_CAST(entry->obj) );
@@ -2212,11 +2253,11 @@ record_string_offset:
       header.segment.end = running_offset;
 
       // OUTPUT
-      nw = vgx_server_dispatcher_partial__write_output_binary( &header, message, (int)sz_message, entries, output );
+      nw = vgx_server_dispatcher_partial__write_output_binary( &header, message, (int)sz_message, meta, (int)sz_meta, entries, output );
     } END_PYVGX_THREADS;
 
     if( nw < 0 ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00D );
     }
 
   }
@@ -2226,6 +2267,7 @@ record_string_offset:
   }
   XFINALLY {
     Py_XDECREF( py_message_bytes );
+    Py_XDECREF( py_meta_bytes );
     if( entries ) {
       for( entry=entries; entry < end; ++entry ) {
         Py_XDECREF( _PyObject_CAST(entry->obj) );
@@ -2280,13 +2322,15 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
   struct {
     __segment header;
     __segment message;
+    __segment meta;
     __segment keys;
     __segment strings;
     __segment items;
     __segment end;
   } segment = {
       .header  = { .sz = header.segment.message,                          .data = buffer },
-      .message = { .sz = header.segment.keys    - header.segment.message, .data = buffer + header.segment.message },
+      .message = { .sz = header.segment.meta    - header.segment.message, .data = buffer + header.segment.message },
+      .meta    = { .sz = header.segment.keys    - header.segment.meta,    .data = buffer + header.segment.meta },
       .keys    = { .sz = header.segment.strings - header.segment.keys,    .data = buffer + header.segment.keys },
       .strings = { .sz = header.segment.items   - header.segment.strings, .data = buffer + header.segment.strings },
       .items   = { .sz = header.segment.end     - header.segment.items,   .data = buffer + header.segment.items },
@@ -2294,6 +2338,7 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
   };
 
   PyObject *py_message = NULL;
+  PyObject *py_meta = NULL;
   PyObject *py_entries = NULL;
 
   XTRY {
@@ -2306,29 +2351,60 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
     // Deserialize entries
     const char *p;
     x_vgx_partial__binentry message;
+    x_vgx_partial__binentry meta;
     x_vgx_partial__binentry sortkey;
     x_vgx_partial__binentry item;
 
+    // message
     p = segment.message.data;
     memcpy( message.sz.bytes, p, sizeof( message.sz.bytes ) );
     if( message.sz.val > 0 ) {
       message.data = p + sizeof( message.sz.bytes );
-      if( message.data + message.sz.val > segment.keys.data ) {
+      if( message.data + message.sz.val > segment.meta.data ) {
         THROW_ERROR( CXLIB_ERR_FORMAT, 0x002 );
       }
       switch( header.message_type ) {
-      case X_VGX_PARTIAL_MESSAGE__UTF8:
+      case X_VGX_PARTIAL_METATYPE__UTF8:
         if( (py_message = PyUnicode_FromStringAndSize( message.data, message.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x003 );
         }
         break;
-      case X_VGX_PARTIAL_MESSAGE__OBJECT:
+      case X_VGX_PARTIAL_METATYPE__OBJECT:
         if( (py_message = PyMarshal_ReadObjectFromString( message.data, message.sz.val )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x004 );
         }
         break;
       default:
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x005 );
+      }
+    }
+    
+    // meta
+    p = segment.meta.data;
+    memcpy( meta.sz.bytes, p, sizeof( meta.sz.bytes ) );
+    if( meta.sz.val > 0 ) {
+      meta.data = p + sizeof( meta.sz.bytes );
+      if( meta.data + meta.sz.val > segment.keys.data ) {
+        THROW_ERROR( CXLIB_ERR_FORMAT, 0x006 );
+      }
+      switch( header.meta_type ) {
+      case X_VGX_PARTIAL_METATYPE__BYTES:
+        if( (py_meta = PyBytes_FromStringAndSize( meta.data, meta.sz.val )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+        }
+        break;
+      case X_VGX_PARTIAL_METATYPE__UTF8:
+        if( (py_meta = PyUnicode_FromStringAndSize( meta.data, meta.sz.val )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x008 );
+        }
+        break;
+      case X_VGX_PARTIAL_METATYPE__OBJECT:
+        if( (py_meta = PyMarshal_ReadObjectFromString( meta.data, meta.sz.val )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x009 );
+        }
+        break;
+      default:
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x00A );
       }
     }
 
@@ -2357,7 +2433,7 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
         // String data
         sortkey.data = p + sizeof( sortkey.sz.bytes );
         if( sortkey.data + sortkey.sz.val > segment.items.data ) {
-          THROW_ERROR( CXLIB_ERR_FORMAT, 0x004 );
+          THROW_ERROR( CXLIB_ERR_FORMAT, 0x00B );
         } 
         if( header.ktype == X_VGX_PARTIAL_SORTKEYTYPE__bytes ) {
           py_sortkey = PyBytes_FromStringAndSize( sortkey.data, sortkey.sz.val );
@@ -2378,15 +2454,15 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
       // Item data
       item.data = p + sizeof( item.sz.bytes );
       if( item.data + item.sz.val > segment.end.data ) {
-        THROW_ERROR( CXLIB_ERR_FORMAT, 0x005 );
+        THROW_ERROR( CXLIB_ERR_FORMAT, 0x00C );
       }
       PyObject *py_item = PyMarshal_ReadObjectFromString( item.data, item.sz.val );
 
-      SetEntryOrThrow( py_entries, i, py_sortkey, py_item, 0x006 );
+      SetEntryOrThrow( py_entries, i, py_sortkey, py_item, 0x00D );
     }
 
-    if( (py_plugres = __new_deserialized_pluginresponse( py_message, py_entries, &header )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_GENERAL, 0x007 );
+    if( (py_plugres = __new_deserialized_pluginresponse( py_message, py_meta, py_entries, &header )) == NULL ) {
+      THROW_ERROR( CXLIB_ERR_GENERAL, 0x00E );
     }
 
   }
@@ -2395,6 +2471,7 @@ static PyVGX_PluginResponse * __deserialize_partial( const char *buffer, int64_t
   }
   XFINALLY {
     Py_XDECREF( py_message );
+    Py_XDECREF( py_meta );
     Py_XDECREF( py_entries );
   }
 
@@ -2544,6 +2621,42 @@ static int PyVGX_PluginResponse_set_message( PyVGX_PluginResponse *py_plugres, P
   Py_XDECREF( py_plugres->py_message );
   if( (py_plugres->py_message = py_message) != NULL ) {
     Py_INCREF( py_plugres->py_message );
+  }
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * meta
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static PyObject * PyVGX_PluginResponse_get_meta( PyVGX_PluginResponse *py_plugres, void *closure ) {
+  PyObject *py_ret;
+  if( py_plugres->py_meta ) {
+    py_ret = py_plugres->py_meta;
+  }
+  else {
+    py_ret = Py_None;
+  }
+  Py_INCREF( py_ret );
+  return py_ret;
+}
+
+
+
+/**************************************************************************//**
+ * PyVGX_PluginResponse_set_meta
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static int PyVGX_PluginResponse_set_meta( PyVGX_PluginResponse *py_plugres, PyObject *py_meta, void *closure ) {
+  Py_XDECREF( py_plugres->py_meta );
+  if( (py_plugres->py_meta = py_meta) != NULL ) {
+    Py_INCREF( py_plugres->py_meta );
   }
   return 0;
 }
@@ -3165,15 +3278,56 @@ static PyObject * PyVGX_PluginResponse_get_entries( PyVGX_PluginResponse *py_plu
 
 
 /******************************************************************************
+ * PyVGX_PluginResponse_traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginResponse_traverse( PyVGX_PluginResponse *py_plugres, visitproc visit, void *arg ) {
+  // message
+  Py_VISIT( py_plugres->py_message );
+  // meta
+  Py_VISIT( py_plugres->py_meta );
+  // entries
+  Py_VISIT( py_plugres->py_entries );
+  // previous key
+  Py_VISIT( py_plugres->py_prev_key );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_PluginResponse_clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_PluginResponse_clear( PyVGX_PluginResponse *py_plugres ) {
+  // message
+  Py_CLEAR( py_plugres->py_message );
+  // meta
+  Py_CLEAR( py_plugres->py_meta );
+  // entries
+  Py_CLEAR( py_plugres->py_entries );
+  // previous key
+  Py_CLEAR( py_plugres->py_prev_key );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_PluginResponse_dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_PluginResponse_dealloc( PyVGX_PluginResponse *py_plugres ) {
-  Py_XDECREF( py_plugres->py_message );
-  Py_XDECREF( py_plugres->py_entries );
-  Py_XDECREF( py_plugres->py_prev_key );
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( py_plugres );
 
+  // Clear inner object references
+  PyVGX_PluginResponse_clear( py_plugres );
+
+  // Free object
   Py_TYPE( py_plugres )->tp_free( py_plugres );
 }
 
@@ -3206,6 +3360,7 @@ static PyObject * __new_PluginResponse( void ) {
   py_plugres->metas.py_keytype = NULL;
   memset( &py_plugres->aggregator, 0, sizeof(x_vgx_partial__aggregator) );
   py_plugres->py_message = NULL;
+  py_plugres->py_meta = NULL;
   py_plugres->py_entries = py_entries;
   Py_INCREF( Py_None );
   py_plugres->py_prev_key = Py_None;
@@ -3721,12 +3876,18 @@ DLL_HIDDEN PyObject * __pyvgx_PluginResponse_ToJSON( PyVGX_PluginResponse *py_pl
     if( py_plugres->py_message ) {
       PyDict_SetItem( py_obj, g_py_key_message, py_plugres->py_message );
     }
+    // meta
+    if( py_plugres->py_meta ) {
+      PyDict_SetItem( py_obj, g_py_key_meta, py_plugres->py_meta );
+    }
     // entries
     PyDict_SetItem( py_obj, g_py_key_entries, py_plugres->py_entries );
     // to json
-    py_json = iPyVGXCodec.NewJsonPyStringFromPyObject( py_obj );
+    py_json = iPyVGXCodec.NewJsonFromPyObject( py_obj );
     Py_DECREF( py_obj );
   }
+  // PyBytes or PyUnicode
+  // Caller has to handle both
   return py_json;
 }
 
@@ -3866,6 +4027,7 @@ static PyGetSetDef PyVGX_PluginResponse_getset[] = {
   {"sortby",                  (getter)PyVGX_PluginResponse_get_sortby,              (setter)0,                                  "sortby",         NULL },
   {"keytype",                 (getter)PyVGX_PluginResponse_get_keytype,             (setter)0,                                  "keytype",        NULL },
   {"message",                 (getter)PyVGX_PluginResponse_get_message,             (setter)PyVGX_PluginResponse_set_message,   "message",        NULL },
+  {"meta",                    (getter)PyVGX_PluginResponse_get_meta,                (setter)PyVGX_PluginResponse_set_meta,      "meta",           NULL },
   {"entries",                 (getter)PyVGX_PluginResponse_get_entries,             (setter)0,                                  "entries",        NULL },
   {"hitcount",                (getter)PyVGX_PluginResponse_get_hitcount,            (setter)PyVGX_PluginResponse_set_hitcount,  "hitcount",       NULL },
   {"partials",                (getter)PyVGX_PluginResponse_get_partials,            (setter)PyVGX_PluginResponse_set_partials,  "partials",       NULL },
@@ -3975,11 +4137,11 @@ static PyTypeObject PyVGX_PluginResponseType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX PluginResponse objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        =(traverseproc)PyVGX_PluginResponse_traverse,
+    .tp_clear           = (inquiry)PyVGX_PluginResponse_clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

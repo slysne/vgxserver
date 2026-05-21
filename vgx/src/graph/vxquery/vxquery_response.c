@@ -101,7 +101,7 @@ static void _vxquery_response__delete_search_result( vgx_SearchResult_t **search
 static void _vxquery_response__delete_properties( vgx_Graph_t *self, vgx_SelectProperties_t **selected_properties );
 static void _vxquery_response__format_results_to_stream( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
 static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
-static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
+static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
 
 /*******************************************************************//**
@@ -1433,8 +1433,8 @@ if( SingleFieldBitmask & Remain )  {                                  \
   // Iterate over entries raw search result  // Fieldspec bitmaps
   vgx_ResponseFieldData_t *output_entry = search_result->list;
   vgx_CollectorItem_t *collected;
-#define __YIELD_INTERVAL 100
-  int64_t yield_after = __YIELD_INTERVAL; // For large result sets, we yield the state lock once in a while to avoid long blocking 
+#define __YIELD_COUNTDOWN 100
+  int64_t yield_after = __YIELD_COUNTDOWN; // For large result sets, we yield the state lock once in a while to avoid long blocking 
 
   vgx_ResponseAttrFastMask attr_fastmask = response_fastmask;
   vgx_ResponseFields_t fields = search_result->list_fields;
@@ -1532,6 +1532,7 @@ if( SingleFieldBitmask & Remain )  {                                  \
     if( (attr_fastmask & CS_REQUIRED_MASK) != 0 ) {
       if( locked_graph == NULL ) {
         locked_graph = GRAPH_ENTER_CRITICAL_SECTION( graph );
+        yield_after = __YIELD_COUNTDOWN;
       }
     }
 
@@ -1718,8 +1719,14 @@ if( SingleFieldBitmask & Remain )  {                                  \
       CString_constructor_args_t *cargs = &string_entry_args;
       size_t strsz = output_buffer.wp - output_buffer.buffer;
       if( strsz > ARCH_PAGE_SIZE ) {
+        // Immediate yield after this entry due to large size
+        if( locked_graph ) {
+          yield_after = 1;
+        }
+        /*
         // Leave CS if large string entries are being rendered -- will have to be re-acquired again when needed
         GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+        */
         // Oversized string
         if( strsz > _VXOBALLOC_CSTRING_MAX_LENGTH ) {
           cargs = &ovsz_string_entry_args;
@@ -1756,8 +1763,8 @@ if( SingleFieldBitmask & Remain )  {                                  \
 
     if( locked_graph ) {
       if( --yield_after == 0 ) {
-        GRAPH_YIELD_AND_SIGNAL( graph );
-        yield_after = __YIELD_INTERVAL;
+        SIGNAL_VERTEX_AVAILABLE( graph );
+        GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
       }
     }
   }
@@ -2105,7 +2112,7 @@ static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *g
  *
  ******************************************************************************
  */
-static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error ) {
+static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error ) {
   // Return value
   vgx_Evaluator_t *propeval = NULL;
 
@@ -2117,7 +2124,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x001 );
     }
 
-    if( (propeval = iEvaluator.NewEvaluator( graph, expression, vector, CSTR__error )) == NULL ) {
+    if( (propeval = iEvaluator.NewEvaluator( graph, expression, memory, vector, CSTR__error )) == NULL ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
     }
 

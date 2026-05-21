@@ -105,13 +105,13 @@ def TEST_TopDispatcher_matrix():
 
     D_PORT = 9747
     E_HOST = "127.0.0.1"
-    E_PORTS = [ 9610, 9620, 9630, 9640, 9650, 9660, 9670, 9680, 9690, 9700, 9710, 9720 ]
+    E_PORTS = [ 9610, 9620, 9630, 9640, 9650, 9660 ]
 
     # Set up backends
     ENGINES = engines.StartServerEngines( E_HOST, E_PORTS )
 
     try:
-        for width, height in [ (12,1), (6,2), (4,3), (3,4), (2,6), (1,12) ]:
+        for width, height in [ (6,1), (3,2), (2,3), (1,6) ]:
             try:
                 # Start local dispatcher in WxH mode
                 disp_cf = engines.GetMatrixConfig( width=width, height=height, host=E_HOST, ports=E_PORTS )

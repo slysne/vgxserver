@@ -1444,7 +1444,7 @@ static _CSEQ_TYPENAME * ComlibSequence_constructor( const void *identifier, _CSE
   self->_prev_fpos = -1;
 #endif
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  INIT_SPINNING_CRITICAL_SECTION( &self->_lock.lock, 4000 ); 
+  INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &self->_lock.lock, 4000 ); 
 #endif
 #if defined( _CSEQ_FEATURE_UNREAD_METHOD )
   self->_prev_rp = NULL;
@@ -1727,7 +1727,7 @@ static int __ComlibSequence_attach_input( _CSEQ_TYPENAME *self, short fd ) {
 static int ComlibSequence_attach_input_descriptor( _CSEQ_TYPENAME *self, short fd ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     if( (retcode = __ComlibSequence_attach_input( self, fd )) == 0 ) {
       // ok
@@ -1749,7 +1749,7 @@ static int ComlibSequence_attach_input_descriptor( _CSEQ_TYPENAME *self, short f
 static int ComlibSequence_attach_input_stream( _CSEQ_TYPENAME *self, const char *fpath ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     int fd = -1;
     XTRY {
@@ -1828,7 +1828,7 @@ static int __ComlibSequence_attach_output( _CSEQ_TYPENAME *self, short fd ) {
 static int ComlibSequence_attach_output_descriptor( _CSEQ_TYPENAME *self, short fd ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     if( (retcode = __ComlibSequence_attach_output( self, fd )) == 0 ) {
       self->_flags.owns_fd_out = false;
@@ -1849,7 +1849,7 @@ static int ComlibSequence_attach_output_descriptor( _CSEQ_TYPENAME *self, short 
 static int ComlibSequence_attach_output_stream( _CSEQ_TYPENAME *self, const char *fpath ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     int fd = -1;
     XTRY {
@@ -1904,7 +1904,7 @@ static int ComlibSequence_attach_output_stream( _CSEQ_TYPENAME *self, const char
 static int ComlibSequence_detach_input( _CSEQ_TYPENAME *self ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     if( ComlibSequence_has_input_descriptor(self) ) {
       // close input file if we own it
@@ -1932,7 +1932,7 @@ static int ComlibSequence_detach_input( _CSEQ_TYPENAME *self ) {
 static int ComlibSequence_detach_output( _CSEQ_TYPENAME *self ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     XTRY {
 
@@ -1976,7 +1976,7 @@ static int ComlibSequence_detach_output( _CSEQ_TYPENAME *self ) {
 static int ComlibSequence_detach_output_noflush( _CSEQ_TYPENAME *self ) {
   int retcode = 0;
 #if defined( _CSEQ_FEATURE_SYNCHRONIZED_API )
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
 #endif
     // close output file if we own it
     if( self->_flags.owns_fd_out ) {
@@ -2095,7 +2095,7 @@ static int64_t ComlibSequence_index_nolock( _CSEQ_TYPENAME *self, const _CSEQ_EL
  */
 static int64_t ComlibSequence_index( _CSEQ_TYPENAME *self, const _CSEQ_ELEMENT_TYPE *probe, int64_t plen ) {
   int64_t index = -1;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     index = ComlibSequence_index_nolock( self, probe, plen );
   } RELEASE;
   return index;
@@ -2145,7 +2145,7 @@ static int64_t ComlibSequence_occ_nolock( _CSEQ_TYPENAME *self, const _CSEQ_ELEM
  */
 static int64_t ComlibSequence_occ( _CSEQ_TYPENAME *self, const _CSEQ_ELEMENT_TYPE *probe, int64_t plen ) {
   int64_t index = -1;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     index = ComlibSequence_occ_nolock( self, probe, plen );
   } RELEASE;
   return index;
@@ -2268,7 +2268,7 @@ static int64_t ComlibSequence_initialize_nolock( _CSEQ_TYPENAME* self, const _CS
  */
 static int64_t ComlibSequence_initialize( _CSEQ_TYPENAME* self, const _CSEQ_ELEMENT_TYPE *value, int64_t element_count ) {
   int64_t elements_initialized;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     // Initialize data
     if( (elements_initialized = ComlibSequence_initialize_nolock( self, value, element_count )) != element_count ) {
 #if defined( _CSEQ_FEATURE_ERRORS )
@@ -2303,7 +2303,7 @@ static int64_t ComlibSequence_deadspace_nolock( _CSEQ_TYPENAME* self ) {
  */
 static int64_t ComlibSequence_deadspace( _CSEQ_TYPENAME* self ) {
   int64_t dead;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     dead = ComlibSequence_deadspace_nolock( self );
   } RELEASE;
   return dead;
@@ -2398,7 +2398,7 @@ static int64_t ComlibSequence_write_nolock( _CSEQ_TYPENAME* self, const _CSEQ_EL
  */
 static int64_t ComlibSequence_write( _CSEQ_TYPENAME* self, const _CSEQ_ELEMENT_TYPE *elements, int64_t element_count ) {
   int64_t elements_written;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     XTRY {
       // Write data
       if( (elements_written = ComlibSequence_write_nolock( self, elements, element_count )) != element_count && element_count > 0) {
@@ -2476,7 +2476,7 @@ static int ComlibSequence_set_nolock( _CSEQ_TYPENAME *self, int64_t index, const
  */
 static int ComlibSequence_set( _CSEQ_TYPENAME *self, int64_t index, const _CSEQ_ELEMENT_TYPE *item ) {
   int set;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     // Set item
     set = ComlibSequence_set_nolock( self, index, item );
   } RELEASE;
@@ -2558,7 +2558,7 @@ static int ComlibSequence_append_nolock( _CSEQ_TYPENAME *self, const _CSEQ_ELEME
  */
 static int ComlibSequence_append( _CSEQ_TYPENAME* self, const _CSEQ_ELEMENT_TYPE *item ) {
   int appended;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     // Append data
     appended = ComlibSequence_append_nolock( self, item );
   } RELEASE;
@@ -2816,7 +2816,7 @@ static int ComlibSequence_next_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE 
  */
 static int ComlibSequence_next( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *dest ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_next_nolock( self, dest );
   } RELEASE;
   return ret;
@@ -2926,7 +2926,7 @@ static int64_t ComlibSequence_read_nolock( _CSEQ_TYPENAME *self, void **dest, in
  ***********************************************************************
  */
 static int64_t ComlibSequence_read( _CSEQ_TYPENAME *self, void **dest, int64_t element_count ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     element_count = ComlibSequence_read_nolock( self, dest, element_count );
   } RELEASE;
   return element_count; // don't create a leak now...  caller must free dest if NULL was passed!
@@ -2973,7 +2973,7 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_cursor_nolock( _CSEQ_TYPENAME *self, 
  */
 static _CSEQ_ELEMENT_TYPE * ComlibSequence_cursor( _CSEQ_TYPENAME *self, int64_t index ) {
   _CSEQ_ELEMENT_TYPE *cursor;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     // Cursor
     cursor = ComlibSequence_cursor_nolock( self, index );
   } RELEASE;
@@ -3023,7 +3023,7 @@ static int ComlibSequence_get_nolock( _CSEQ_TYPENAME *self, int64_t index, _CSEQ
  */
 static int ComlibSequence_get( _CSEQ_TYPENAME *self, int64_t index, _CSEQ_ELEMENT_TYPE *dest ) {
   int get;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     // Set item
     get = ComlibSequence_get_nolock( self, index, dest );
   } RELEASE;
@@ -3168,7 +3168,7 @@ static int64_t ComlibSequence_readuntil_nolock( _CSEQ_TYPENAME *self, void **des
  */
 static int64_t ComlibSequence_readuntil( _CSEQ_TYPENAME *self, void **dest, const _CSEQ_ELEMENT_TYPE *probe, int64_t plen, int exclude_probe ) {
   int64_t element_count;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     element_count = ComlibSequence_readuntil_nolock( self, dest, probe, plen, exclude_probe );
   } RELEASE;
   return element_count; // don't create a leak now...  caller must free dest!
@@ -3204,7 +3204,7 @@ static int64_t ComlibSequence_readline_nolock( _CSEQ_TYPENAME *self, void **dest
  */
 static int64_t ComlibSequence_readline( _CSEQ_TYPENAME *self, void **dest ) {
   int64_t len;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     len = ComlibSequence_readline_nolock( self, dest );
   } RELEASE;
   return len;
@@ -3290,7 +3290,7 @@ static int64_t ComlibSequence_peek_nolock( _CSEQ_TYPENAME *self, void **dest, in
  */
 static int64_t ComlibSequence_peek( _CSEQ_TYPENAME *self, void **dest, int64_t element_index, int64_t element_count ) {
   int64_t elements_peeked;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     elements_peeked = ComlibSequence_peek_nolock( self, dest, element_index, element_count );
   } RELEASE;
   return elements_peeked;
@@ -3346,7 +3346,7 @@ static bool ComlibSequence_expect_nolock( _CSEQ_TYPENAME *self, const _CSEQ_ELEM
  */
 static bool ComlibSequence_expect( _CSEQ_TYPENAME *self, const _CSEQ_ELEMENT_TYPE *probe, int64_t plen, int64_t element_index ) {
   bool match;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     match = ComlibSequence_expect_nolock( self, probe, plen, element_index );
   } RELEASE;
   return match;
@@ -3446,7 +3446,7 @@ static void ComlibSequence_unread_nolock( _CSEQ_TYPENAME *self, int64_t element_
  ***********************************************************************
  */
 static void ComlibSequence_unread( _CSEQ_TYPENAME *self, int64_t element_count ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ComlibSequence_unread_nolock( self, element_count );
   } RELEASE;
 }
@@ -3508,7 +3508,7 @@ static int64_t ComlibSequence_truncate_nolock( _CSEQ_TYPENAME *self, int64_t tai
  */
 static int64_t ComlibSequence_truncate( _CSEQ_TYPENAME *self, int64_t tail_index ) {
   int64_t truncate_amount;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     truncate_amount = ComlibSequence_truncate_nolock( self, tail_index );
   } RELEASE;
   return truncate_amount;
@@ -3555,7 +3555,7 @@ static void ComlibSequence_clear_nolock( _CSEQ_TYPENAME *self ) {
  ***********************************************************************
  */
 static void ComlibSequence_clear( _CSEQ_TYPENAME *self ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ComlibSequence_clear_nolock( self );
   } RELEASE;
 }
@@ -3617,7 +3617,7 @@ static void ComlibSequence_reset_nolock( _CSEQ_TYPENAME *self ) {
  ***********************************************************************
  */
 static void ComlibSequence_reset( _CSEQ_TYPENAME *self ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ComlibSequence_reset_nolock( self );
   } RELEASE;
 }
@@ -3680,7 +3680,7 @@ static int64_t ComlibSequence_getvalue_nolock( _CSEQ_TYPENAME *self, void **dest
  */
 static int64_t ComlibSequence_getvalue( _CSEQ_TYPENAME *self, void **dest ) {
   int64_t element_count;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     element_count = ComlibSequence_getvalue_nolock( self, dest );
   } RELEASE;
   return element_count;
@@ -3884,7 +3884,7 @@ static void ComlibSequence_heapify_nolock( _CSEQ_TYPENAME *self ) {
  ***********************************************************************
  */
 static void ComlibSequence_heapify( _CSEQ_TYPENAME *self ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ComlibSequence_heapify_nolock( self );
   } RELEASE;
 }
@@ -3926,7 +3926,7 @@ static int ComlibSequence_heap_top_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_T
  */
 static int ComlibSequence_heap_top( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *dest ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_heap_top_nolock( self, dest );
   } RELEASE;
   return ret;
@@ -4016,7 +4016,7 @@ static int ComlibSequence_heap_push_nolock( _CSEQ_TYPENAME *self, const _CSEQ_EL
  */
 static int ComlibSequence_heap_push( _CSEQ_TYPENAME *self, const _CSEQ_ELEMENT_TYPE *elem ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_heap_push_nolock( self, elem );
   } RELEASE;
   return ret;
@@ -4104,7 +4104,7 @@ static int ComlibSequence_heap_pop_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_T
  */
 static int ComlibSequence_heap_pop( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *dest ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_heap_pop_nolock( self, dest );
   } RELEASE;
   return ret;
@@ -4210,7 +4210,7 @@ static int ComlibSequence_heap_replace_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEME
  */
 static int ComlibSequence_heap_replace( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *popped, _CSEQ_ELEMENT_TYPE *pushed ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_heap_replace_nolock( self, popped, pushed );
   } RELEASE;
   return ret;
@@ -4298,7 +4298,7 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk_nolock( _CSEQ_TYPENAME 
  */
 static _CSEQ_ELEMENT_TYPE * ComlibSequence_heap_pushtopk( _CSEQ_TYPENAME *self, const _CSEQ_ELEMENT_TYPE *candidate, _CSEQ_ELEMENT_TYPE *discarded ) {
   _CSEQ_ELEMENT_TYPE *location;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     location = ComlibSequence_heap_pushtopk_nolock( self, candidate, discarded );
   } RELEASE;
   return location;
@@ -4478,7 +4478,7 @@ static _CSEQ_ELEMENT_TYPE * ComlibSequence_yank_buffer_nolock( _CSEQ_TYPENAME *s
  */
 static _CSEQ_ELEMENT_TYPE * ComlibSequence_yank_buffer( _CSEQ_TYPENAME *self ) {
   _CSEQ_ELEMENT_TYPE *buffer;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     buffer = ComlibSequence_yank_buffer_nolock( self );
   } RELEASE;
   return buffer;
@@ -4549,7 +4549,7 @@ static void ComlibSequence_discard_nolock( _CSEQ_TYPENAME *self, int64_t element
  ***********************************************************************
  */
 static void ComlibSequence_discard( _CSEQ_TYPENAME *self, int64_t element_count ) {
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ComlibSequence_discard_nolock( self, element_count );
   } RELEASE;
 }
@@ -4600,7 +4600,7 @@ static int64_t ComlibSequence_unwrite_nolock( _CSEQ_TYPENAME *self, int64_t elem
  */
 static int64_t ComlibSequence_unwrite( _CSEQ_TYPENAME *self, int64_t element_count ) {
   int64_t unwritten_elements;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     unwritten_elements = ComlibSequence_unwrite_nolock( self, element_count );
   } RELEASE;
   return unwritten_elements;
@@ -4643,7 +4643,7 @@ static int ComlibSequence_pop_nolock( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *
  */
 static int ComlibSequence_pop( _CSEQ_TYPENAME *self, _CSEQ_ELEMENT_TYPE *dest ) {
   int ret;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     ret = ComlibSequence_pop_nolock( self, dest );
   } RELEASE;
   return ret;
@@ -4709,7 +4709,7 @@ static int64_t ComlibSequence_dump_nolock( const _CSEQ_TYPENAME *self ) {
  */
 static int64_t ComlibSequence_dump( const _CSEQ_TYPENAME *self ) {
   int64_t dumped_elements;
-  SYNCHRONIZE_ON( ((_CSEQ_TYPENAME*)self)->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( ((_CSEQ_TYPENAME*)self)->_lock ) {
     dumped_elements = ComlibSequence_dump_nolock( self );
   } RELEASE;
   return dumped_elements;
@@ -4748,7 +4748,7 @@ static int64_t ComlibSequence_flush_nolock( _CSEQ_TYPENAME *self ) {
  */
 static int64_t ComlibSequence_flush( _CSEQ_TYPENAME *self ) {
   int64_t flushed_elements;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     flushed_elements = ComlibSequence_flush_nolock( self );
   } RELEASE;
   return flushed_elements;
@@ -4792,7 +4792,7 @@ static bool ComlibSequence_sort_nolock( _CSEQ_TYPENAME *self ) {
  */
 static bool ComlibSequence_sort( _CSEQ_TYPENAME *self ) {
   bool success;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     success = ComlibSequence_sort_nolock( self );
   } RELEASE;
   return success;
@@ -4882,7 +4882,7 @@ static bool ComlibSequence_reverse_nolock( _CSEQ_TYPENAME *self ) {
  */
 static bool ComlibSequence_reverse( _CSEQ_TYPENAME *self ) {
   bool success;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     success = ComlibSequence_reverse_nolock( self );
   } RELEASE;
   return success;
@@ -4983,7 +4983,7 @@ static int64_t ComlibSequence_optimize_nolock( _CSEQ_TYPENAME *self ) {
  */
 static int64_t ComlibSequence_optimize( _CSEQ_TYPENAME *self ) {
   int64_t element_count;
-  SYNCHRONIZE_ON( self->_lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->_lock ) {
     element_count = ComlibSequence_optimize_nolock( self );
   } RELEASE;
   return element_count;
