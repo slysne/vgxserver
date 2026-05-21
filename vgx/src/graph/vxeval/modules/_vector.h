@@ -337,7 +337,7 @@ static int __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, 
     RF = NULL; // forget the filter so we don't execute it again below
   }
   else {
-    score = 0.0f;
+    score = 1.0f;
   }
 
   // Adaptive search enabled
