@@ -439,12 +439,8 @@ def Run( name ):
     """
     """
     global graph
-    pyvgx.system.Initialize( name, euclidean=True )
-    try:
-        graph = pyvgx.Graph( name )
-        RunTests( [__name__] )
-        graph.Close()
-        del graph
-        PerformCleanup()
-    finally:
-        pyvgx.system.Unload()
+    graph = pyvgx.Graph( name )
+    RunTests( [__name__] )
+    graph.Close()
+    del graph
+    PerformCleanup()
