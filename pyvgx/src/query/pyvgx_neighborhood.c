@@ -595,6 +595,9 @@ static void init_recursion_parameter_b32( const recursion_config_param *cursor, 
  ******************************************************************************
  */
 static int parse_recursion_vector( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+  if( py_value == Py_None ) {
+    return 0;
+  }
   vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( pygraph->graph->similarity, py_value, NULL, true, true );
   if( vector == NULL ) {
     PyVGXError_Format( PyExc_TypeError, "recursive search invalid %s: %R", cursor->name, py_value );
@@ -613,6 +616,9 @@ static int parse_recursion_vector( PyVGX_Graph *pygraph, PyObject *py_value, con
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static int parse_recursion_filter( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+  if( py_value == Py_None ) {
+    return 0;
+  }
   if( !PyUnicode_Check( py_value ) ) {
     PyVGXError_Format( PyExc_TypeError, "recursive search invalid %s: %R", cursor->name, py_value );
     return -1;
