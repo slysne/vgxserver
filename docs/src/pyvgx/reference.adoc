@@ -85,7 +85,11 @@ The number of explicit connections a vertex has is the vertex _degree_, while _o
 Both vertices and arcs may be assigned _properties_ that can be used by graph traversal queries for filtering, sorting and display of search results. Vertices can hold any number of freely assignable key-value properties. Arcs may be assigned a _relationship_ type, _modifier_ (value type), and a _numeric value_.
 
 ==== Graph Search
-Graph search can be _global_ or _local_. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex. Neighborhood queries can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.
+Graph search can be _global_ or _local_. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex.
+
+Neighborhood queries can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.
+
+Recursive neighborhood queries can be used to automatically explore the entire graph from any starting vertex. This is especially useful for traversing proximity graphs where nodes have been connected based on their mutual vector similarity. Traversal of such graphs form the basis of highly efficient vector search, and can be combined with any other filtering to implement hybrid semantic search. 
 
 ==== Implicit Connections
 A vertex becomes implicitly connected to other vertices by setting the vertex _vector_.footnote:simindexfootnote[] <<vectorobject, Vectors>> are numeric arrays or lists of weighted features.

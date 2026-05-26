@@ -1,0 +1,313 @@
+[[neighborhood_recursion]]
+= Neighborhood Recursion Query <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphManagement.adoc#, icon:arrow-circle-right[title="Graph Management Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[neighborhood_recursion_overview]]
+== Overview
+
+Recursive search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. For recursion to be efficient and successful in finding the best matches, the graph network must be constructed in accordance with some proximity metric where each vertex is connected to a small set of neighbors that are closely related in some way. It is usually desirable for such a graph to be strongly connected, where a path exists from any starting point to any other vertex in the graph.
+
+A proximity graph using vectors to express similarity is a prime target for this type of recursive traversal. Such a graph is often a navigable nearest-neighbor construction with diverse local neighborhoods covering both short and occasional longer range hops. This allows efficient implementation of approximate nearest neighbor (ANN) search. The search condition is expressed as a probe vector and the recursion algorithm then explores the graph from a starting point (which can be any node), automatically finding paths to regions of the graph containing items whose vectors are most similar to the probe. 
+
+.Approximate nearest neighbors (ANN) search 
+[source, python]
+----
+g.Neighborhood(
+    id = start_node,
+    hits = 10,
+    recursion = {
+        'vector': probe_vector
+    }
+)
+----
+
+Neighborhood _recursion_ offers many optional control parameters for the recursive search process:
+
+.Neighborhood _recursion_ control parameters, brief overview
+[source, python]
+----
+g.Neighborhood(
+  id = start_node,
+  hits = 10,
+  recursion = {
+    # Main meta-parameter
+    'bias': _B_,            # Main recall vs. speed control
+    
+    # Search target
+    'vector': _v_,          # Probe for similarity search
+    'filter': _f_,          # Arbitrary filter per visited node
+
+    # Threshold control
+    'heap_size': _H_,       # Size of top-k result heap
+    'shadow_size': _S_,     # Length of threshold delay line
+
+    # Limits
+    'frontier_limit': _F_,  # Frontier queue size (non-beam)
+    'expansion_limit': _E_, # Max number of node expansions
+    'depth_limit': _D_,     # Max recursion levels
+    'exec_ms_limit': _X_,   # Max execution time
+    'visit_limit': _V_,     # Max node visits
+
+    # Beam search
+    'init_select': _i_,     # Number of initial entry points
+    'beam_width': _W_,      # Initial beam width
+    'beam_min': _L_,        # Min beam width
+    'beam_max': _H_,        # Max beam width 
+    'beam_curve': _C_,      # Beam narrowing bias
+    'adaptive_taper': _T_,  # Use dynamic beam True/False
+
+    # Optimizations
+    'alpha': _a_,           # Depth discount (expansion thres.)
+    'beta': _b_,            # Evals discount (expansion thres.)
+    'gamma': _g_,           # Global offset (expansion thres.)
+    'delta': _d_,           # Beam controller reactivity
+    'epsilon': _e_,         # Score contrib. thres. discount
+    'zeta': _z_,            # Smoothing factor for thres. EMA
+    'omega': _O_,           # All optimizations weight
+
+    # Traversal thinning
+    'kappa': _k_,           # Arc trav. thinning above thres.
+    'lambda': _l_,          # Arc trav. thinning rule
+
+    # State management
+    'reset_metrics': _r_,   # Reset counters from last query
+    'reset_map': _R_        # Reset visited node map
+  }
+}
+----
+
+It is rarely necessary to use most of these parameters in a production setting, but they can be useful when developing proximity graph construction algorithms or for debugging. Most of the time the _bias_ setting is enough to choose a suitable tradeoff between recall and search speed. Its value ranges from -100 (max speed) to 100 (max recall) and automatically adjusts all other recursion controls. When a specific tuning parameter value is provided it overrides the default determined by _bias_.
+
+.Neighborhood _recursion_ control parameters
+[cols="1,1,1,1,1,5"]
+|===
+|Parameter |Type |Default |Min |Max |Description
+
+6+|*Main Meta-parameter*
+
+|_bias_
+|float
+|0.0
+|-100.0
+|100.0
+|Main recall vs. speed control
+
+6+|*Search Target and Filter*
+
+|_vector_
+|<<../similarity/vector.adoc#pyvgxvector, Euclidean Vector>> or list
+|None
+2+|
+|Probe for similarity search
+
+|_filter_
+|str
+|None
+2+|
+|Arbitrary filter per visited node
+
+6+|*Threshold control*
+
+|_heap_size_
+|int
+|auto
+|0
+|1048576
+|Size of top-k result heap
+
+|_shadow_size_
+|int
+|auto
+|-1
+|1048576
+|Length of threshold delay line
+
+6+|*Limits*
+
+|_frontier_limit_
+|int
+|auto
+|0
+|1048576
+|Frontier queue size (non-beam)
+
+|_expansion_limit_
+|int
+|unlimited
+|0
+|2147483647
+|Max number of node expansions
+
+|_depth_limit_
+|int
+|unlimited
+|0
+|2147483647
+|Max recursion levels
+
+|_exec_ms_limit_
+|int
+|unlimited
+|-1
+|2147483647
+|Max execution time
+
+|_visit_limit_
+|int
+|unlimited
+|0
+|2147483647
+|Max node visits
+
+6+|*Beam Search*
+
+|_init_select_
+|int
+|auto
+|0
+|1024
+|Number of initial entry points
+
+|_beam_width_
+|int
+|auto
+|0
+|65536
+|Initial beam width
+
+|_beam_min_
+|int
+|auto
+|1
+|65536
+|Min beam width
+
+|_beam_max_
+|int
+|auto
+|0
+|65536
+|Max beam width 
+
+|_beam_curve_
+|float
+|auto
+|0.0
+|1.0
+|Beam narrowing bias
+
+|_adaptive_taper_
+|bool
+|auto
+2+|
+|Use dynamic beam True/False
+
+6+|*Optimizations*
+
+|_alpha_
+|float
+|auto
+|-10.0
+|10.0
+|Depth discount (expansion thres.)
+
+|_beta_
+|float
+|auto
+|-10.0
+|10.0
+|Evals discount (expansion thres.)
+
+|_gamma_
+|float
+|auto
+|-10.0
+|10.0
+|Global offset (expansion thres.)
+
+|_delta_
+|float
+|auto
+|-1.0
+|10.0
+|Beam controller reactivity
+
+|_epsilon_
+|float
+|auto
+|-1.0
+|1.0
+|Score contrib. thres. discount
+
+|_zeta_
+|float
+|auto
+|0.0
+|1.0
+|Smoothing factor for thres. EMA
+
+|_omega_
+|float
+|auto
+|0.0
+|2.0
+|All optimizations weight
+
+6+|*Traversal Thinning*
+
+|_kappa_
+|int
+|0
+|0
+|256
+|Arc trav. thinning above thres.
+
+|_lambda_
+|int
+|0
+|0
+|256
+|Arc trav. thinning rule
+
+6+|*State Management*
+
+|_reset_metrics_
+|bool
+|True
+2+|
+|Reset counters from last query
+
+|_reset_map_
+|bool
+|True
+2+|
+|Reset visited node map
+ 
+|===
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphArc.adoc#, title="Graph Arc Methods"]
+<<graphQuery.adoc#, icon:arrow-circle-left[size=2x, title="Graph Query Methods"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
+<<graphManagement.adoc#, icon:arrow-circle-right[size=2x, title="Graph Management Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>
