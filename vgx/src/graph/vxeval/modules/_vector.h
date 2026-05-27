@@ -283,7 +283,7 @@ static int __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, 
   vgx_BaseCollector_context_t *base = self->context.collector;
   vgx_Evaluator_t *RF = base->recursion_filter;
 
-  float score;
+  float score = 1.0f;
 
   if( probe && target ) {
     // Extract probe vector bytes
@@ -324,20 +324,21 @@ static int __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, 
     else {
       cosine = vxeval_bytearray_cosine(A, B, len);
     }
-    score = (float)cosine + 1.0f; // range is [0.0 - 2.0], so 1.0 represents "zero" middle ground
+    score += (float)cosine; // range is [0.0 - 2.0], so 1.0 represents "zero" middle ground
   }
   else if( RF ) {
     // Execute custom recursion filter
     vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+    // Filter not satisfied
     if( result == NULL || !iEvaluator.IsPositive( result ) ) {
       self->context.larc->flag.recursion_skip_heap_collect = true;
     }
-    double retval = (float)iEvaluator.GetReal( result );
-    RF->context.rankscore = score = clamp_value( (float)retval, 0.0f, 2.0f );
+    // Filter returned a positive real value, interpret this as item's score
+    else if( result->type == STACK_ITEM_TYPE_REAL ) {
+      double retval = (float)iEvaluator.GetReal( result );
+      RF->context.rankscore = score = clamp_value( (float)result->real, 0.0f, 2.0f );
+    }
     RF = NULL; // forget the filter so we don't execute it again below
-  }
-  else {
-    score = 1.0f;
   }
 
   // Adaptive search enabled
