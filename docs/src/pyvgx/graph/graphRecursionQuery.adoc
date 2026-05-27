@@ -38,52 +38,52 @@ g.Neighborhood(
   hits = 10,
   recursion = {
     # Main meta-parameter
-    'bias': _B_,            # Main recall vs. speed control
+    'bias': B,            # Main recall vs. speed control
     
     # Search target
-    'vector': _v_,          # Probe for similarity search
-    'filter': _f_,          # Arbitrary filter per visited node
+    'vector': v,          # Probe for similarity search
+    'filter': f,          # Arbitrary filter per visited node
 
     # Threshold control
-    'heap_size': _H_,       # Size of top-k result heap
-    'shadow_size': _S_,     # Length of threshold delay line
+    'heap_size': H,       # Size of top-k result heap
+    'shadow_size': S,     # Length of threshold delay line
 
     # Limits
-    'frontier_limit': _F_,  # Frontier queue size (non-beam)
-    'expansion_limit': _E_, # Max number of node expansions
-    'depth_limit': _D_,     # Max recursion levels
-    'exec_ms_limit': _X_,   # Max execution time
-    'visit_limit': _V_,     # Max node visits
+    'frontier_limit': F,  # Frontier queue size (non-beam)
+    'expansion_limit': E, # Max number of node expansions
+    'depth_limit':aD,     # Max recursion levels
+    'exec_ms_limit': X,   # Max execution time
+    'visit_limit': V,     # Max node visits
 
     # Beam search
-    'init_select': _i_,     # Number of initial entry points
-    'beam_width': _W_,      # Initial beam width
-    'beam_min': _L_,        # Min beam width
-    'beam_max': _H_,        # Max beam width 
-    'beam_curve': _C_,      # Beam narrowing bias
-    'adaptive_taper': _T_,  # Use dynamic beam True/False
+    'init_select': i,     # Number of initial entry points
+    'beam_width': W,      # Initial beam width
+    'beam_min': L,        # Min beam width
+    'beam_max': H,        # Max beam width 
+    'beam_curve': C,      # Beam narrowing bias
+    'adaptive_taper': T,  # Use dynamic beam True/False
 
     # Optimizations
-    'alpha': _a_,           # Depth discount (expansion thres.)
-    'beta': _b_,            # Evals discount (expansion thres.)
-    'gamma': _g_,           # Global offset (expansion thres.)
-    'delta': _d_,           # Beam controller reactivity
-    'epsilon': _e_,         # Score contrib. thres. discount
-    'zeta': _z_,            # Smoothing factor for thres. EMA
-    'omega': _O_,           # All optimizations weight
+    'alpha': a,           # Depth discount (expansion thres.)
+    'beta': b,            # Evals discount (expansion thres.)
+    'gamma': g,           # Global offset (expansion thres.)
+    'delta': d,           # Beam controller reactivity
+    'epsilon': e,         # Score contrib. thres. offset
+    'zeta': z,            # Smoothing factor for thres. EMA
+    'omega': O,           # All optimizations weight
 
     # Traversal thinning
-    'kappa': _k_,           # Arc trav. thinning above thres.
-    'lambda': _l_,          # Arc trav. thinning rule
+    'kappa': k,           # Arc trav. thinning above thres.
+    'lambda': l,          # Arc trav. thinning rule
 
     # State management
-    'reset_metrics': _r_,   # Reset counters from last query
-    'reset_map': _R_        # Reset visited node map
+    'reset_metrics': r,   # Reset counters from last query
+    'reset_map': R        # Reset visited node map
   }
 }
 ----
 
-It is rarely necessary to use most of these parameters in a production setting, but they can be useful when developing proximity graph construction algorithms or for debugging. Most of the time the _bias_ setting is enough to choose a suitable tradeoff between recall and search speed. Its value ranges from -100 (max speed) to 100 (max recall) and automatically adjusts all other recursion controls. When a specific tuning parameter value is provided it overrides the default determined by _bias_.
+It is rarely necessary to use most of these parameters in a production setting, but they can be useful when developing proximity graph construction algorithms or for debugging. Most of the time the _bias_ setting is enough to choose a suitable tradeoff between recall and search speed. Its value ranges from -100.0 (max speed) to 100.0 (max recall) and automatically adjusts all other recursion controls to achieve the desired performance. When a specific parameter value is provided it overrides the default determined by _bias_.
 
 .Neighborhood _recursion_ control parameters
 [cols="1,1,1,1,1,5"]
@@ -97,7 +97,7 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |0.0
 |-100.0
 |100.0
-|Main recall vs. speed control
+|Main recall vs. speed control. This is normally the only parameter needed to dial in the desired search performance.
 
 6+|*Search Target and Filter*
 
@@ -105,13 +105,15 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |<<../similarity/vector.adoc#pyvgxvector, Euclidean Vector>> or list
 |None
 2+|
-|Probe for similarity search
+|Probe for similarity search. When given, the recursion algorithm uses Cosine similarity to evaluate nodes in the graph against the probe. All graph nodes must have a vector <<../vertex/vertexVector.adoc#vertexsetvector, assigned>> for the search to work. +
+ +
+ *NOTE*: Similarity scores are in the range [0.0 - 2.0], computed as `1 + Cosine(_probe_, _node_)`. This is to avoid negative scores, which internally would terminate certain search paths prematurely.
 
 |_filter_
 |str
 |None
 2+|
-|Arbitrary filter per visited node
+|Arbitrary filter per visited node. Use the <<../evaluator/evaluator.adoc#, expression language>> to add custom filters applied to any visited node during graph exploration. The expression must be a *_local evaluator_*, i.e. it cannot reference any of the `next*` arc attributes or head vertex attributes/properties, or perform any `stage*()` or `collect*()` operations.
 
 6+|*Threshold control*
 
@@ -120,14 +122,14 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |auto
 |0
 |1048576
-|Size of top-k result heap
+|Size of top-k result heap. This heap can be made larger than needed to hold _k_ hits which in some cases may increase the ability to find true nearest neighbors. Effective _heap_size_ is never lower than _k_ given by Neighborhood( hits=_k_ ).
 
 |_shadow_size_
 |int
 |auto
 |-1
 |1048576
-|Length of threshold delay line
+|Length of threshold delay line. Recursion is controlled by a running score threshold which must be exceeded for a candidate node to be considered for the result and to facilitate continued traversal. This threshold is computed from a delayed observation at the frontier. Long delays lead to more aggressive exploration (higher recall) due to a slowly rising threshold. Short delays do the opposite, causing the threshold to rise quickly thus terminating the search sooner (higher speed.)
 
 6+|*Limits*
 
@@ -136,35 +138,35 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |auto
 |0
 |1048576
-|Frontier queue size (non-beam)
+|Frontier queue size (non-beam). A positive number forces the recursion algorithm to use a queue-based frontier. Normally the frontier is maintained in a beam (heap) which is populated from scratch at every new level of recursion and then fully consumed at the next level. A frontier queue is continually populated and consumed, causing it to grow rapidly at first and then later consumed to exhaustion. Beam search is normally preferred for both speed an recall, but the frontier queue option may perform better for some performance targets on some data sets. 
 
 |_expansion_limit_
 |int
 |unlimited
 |0
 |2147483647
-|Max number of node expansions
+|Max number of node expansions. A visited node that was accepted into the frontier will later facilitate further exploration (if its score is still above the running threshold.) The process or exploring a node's neighborhood is called expansion. If latency guarantees are needed _expansion_limit_ can be set to place a hard limit on how many nodes will be expanded before terminating the search.
 
 |_depth_limit_
 |int
-|unlimited
+|1024
 |0
 |2147483647
-|Max recursion levels
+|Max recursion levels. Recursion is performed by expanding frontier nodes (i.e. searching their neighborhoods.) This activity adds new promising nodes to the frontier. When all frontier nodes that were present at start of expansion have been consumed the algorithm moves to the next level of recursion, now expanding nodes that were recently added. If latency guarantees are needed _depth_limit_ can be set to place a hard limit on how many levels or recursion will be allowed before terminating the search.
 
 |_exec_ms_limit_
 |int
 |unlimited
 |-1
 |2147483647
-|Max execution time
+|Max execution time in milliseconds. Use this to set a maximum allowed search time. Recursion always carries some risk of runaway execution (in pathological graphs.) Production services should set a timeout to prevent unexpected edge cases from destabilizing the system. (A reasonable upper limit would be something like 2 times the 99.9th latency percentile.)
 
 |_visit_limit_
 |int
 |unlimited
 |0
 |2147483647
-|Max node visits
+|Max node visits. The recursive search process visits graph nodes to evaluate them. Some nodes are accepted into the result or the frontier, most are discarded. As the graph is explored the number of visited nodes grows. All visited nodes are recorded in a set to prevent cyclic exploration. The visited node set consumes memory. To avoid unbounded memory usage _visit_limit_ can be set to terminate the search after a maximum number of node visits. 
 
 6+|*Beam Search*
 
@@ -173,41 +175,41 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |auto
 |0
 |1024
-|Number of initial entry points
+|Number of initial entry points. If the proximity graph is constructed with a synthetic entry point, use _init_select_ to pick the number of starting nodes in the graph. This is helpful if the synthetic entry point connects to a maximally diverse set of nodes in the graph. Selecting a the top best _init_select_ nodes in the graph as seeds for recursive search can help speed up convergence and generally leads to better performance.
 
 |_beam_width_
 |int
 |auto
 |0
 |65536
-|Initial beam width
+|Initial beam width. Beam search uses a focused frontier with promising nodes captured into a heap of a certain max size (the current _beam_width_.) As better nodes are discovered, inferior nodes are evicted from the beam. Once all nodes in the previous beam have been expanded a new beam (just built) takes its place and recursion continues. The initial beam is a special case and consists of all neighbors of the start node. When expansion of a previous beam results in an empty new beam (zero promising nodes found) the search terminates. Use _beam_width_ to set the max number of promising nodes to capture at each level of recursion. (Other parameters may adjust beam width as the search progresses.) 
 
 |_beam_min_
 |int
 |auto
 |1
 |65536
-|Min beam width
+|Min beam width. The smallest beam permitted if beam width is subject to adjustment during search.
 
 |_beam_max_
 |int
 |auto
 |0
 |65536
-|Max beam width 
+|Max beam width, The largest beam permitted if beam width is subject to adjustment during search.
 
 |_beam_curve_
 |float
 |auto
 |0.0
 |1.0
-|Beam narrowing bias
+|Beam narrowing bias. At each level of recursion the next level's beam width will be the current level's beam width multiplied by _beam_curve_. Values lower than 1.0 then gradually shrinks the beam width (but never below _beam_min_.)
 
 |_adaptive_taper_
 |bool
 |auto
 2+|
-|Use dynamic beam True/False
+|Use dynamic beam True/False. The optimal beam width is both data dependent and query dependent. When _adaptive_taper_ is True the algorithm adjusts beam width automatically for each query by measuring how the produced result set improves during search. When the result is quickly improving with new, better items the beam width is reduced. When search stagnates without finding better items the beam is widened (but never above _beam_max_.) If _beam_curve_ is less than 1.0 the narrowing bias is applied on top of the dynamically determined width.
 
 6+|*Optimizations*
 
@@ -216,49 +218,53 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |auto
 |-10.0
 |10.0
-|Depth discount (expansion thres.)
+|Depth discount for expansion threshold. To expand a frontier node its score must be greater than the running threshold. Depth discount _alpha_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above -1.0) make the gate more permissive with recursion depth, i.e. a node may still be expanded even if its score is slightly below the true running threshold. Conversely, lower values (below -1.0) make the gate stricter with recursion depth, thereby expediting termination as recursion goes deeper. Depth discount is disabled with _alpha_ = -1.0.
 
 |_beta_
 |float
 |auto
 |-10.0
 |10.0
-|Evals discount (expansion thres.)
+|Evaluation discount for expansion threshold. To expand a frontier node its score must be greater than the running threshold. Evaluation discount _beta_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive as the number of visited nodes grows, i.e. a node may still be expanded even if its score is slightly below the true running threshold. Conversely, lower values (below 0.0) make the gate stricter as the number of visited nodes grows, thereby promoting faster termination after many node visits. Evaluation discount is disabled with _beta_ = 0.0.
 
 |_gamma_
 |float
 |auto
 |-10.0
 |10.0
-|Global offset (expansion thres.)
+|Global offset for expansion threshold. To expand a frontier node its score must be greater than the running threshold. Global offset _gamma_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive and lower values (below 0.0) make the gate stricter. Global offset is disabled with _gamma_ = 0.0.
 
 |_delta_
 |float
 |auto
 |-1.0
 |10.0
-|Beam controller reactivity
+|Beam controller reactivity. When _adaptive_taper_ is enabled the beam controller adjusts beam width automatically based on how successful search currently is at improving the result set. When the result is improving quickly the beam is narrowed, and when result improvement stagnates the beam is widened. The modulation strength can be adjusted using controller reactivity _delta_. Higher values modulates width more strongly and lower values lessen the effect of the beam controller. Nominal control is obtained with _delta_ = 0.0 and the controller is disabled with _delta_ = -1.0.
 
 |_epsilon_
 |float
 |auto
 |-1.0
 |1.0
-|Score contrib. thres. discount
+|Score contribution threshold offset. Visited nodes are evaluated using a scoring function. If a node's score is above the running threshold, this score is now an observation at the frontier and is injected into the delay line. The node may also be entered into the result and/or frontier if its score is good enough. Conversely, if the node's score is below the running threshold it is discarded and the running threshold is injected into the delay line instead (sample-and-hold.) Contribution offset _epsilon_ adjusts the effective threshold for score evaluation. Positive values make it harder for nodes to beat the threshold and negative values make the gate more permissive. +
+ +
+ *NOTE*: Normally, use very small _epsilon_ values. For reference, the automatic values derived from _bias_ are in the range -0.00067 to 0.001. (The parameter's large range -1.0 to 1.0 is intended for special use cases and debugging.)
 
 |_zeta_
 |float
 |auto
 |0.0
 |1.0
-|Smoothing factor for thres. EMA
+|Smoothing factor for running threshold EMA. At the end of the delay line (whose length is controlled by _shadow_size_) sits an exponential moving average smoothing function. Its purpose is to prevent outlier samples observed at the frontier from abruptly changing the threshold used by the expansion controller and node evaluator. Infinite smoothing is obtained with _zeta_ = 0.0, i.e. threshold never changes from its initial (0.0) value. Smoothing is disabled with _zeta_ = 1.0, i.e. raw (delayed) frontier observations are presented as running threshold. +
+ +
+ *NOTE*: For reference, default _zeta_ = 0.2 for most _bias_ settings.
 
 |_omega_
 |float
 |auto
 |0.0
 |2.0
-|All optimizations weight
+|All optimizations weight. This parameter applies weighted adjustment to _alpha_, _beta_, _gamma_, _delta_, _epsilon_, and _zeta_ simultaneously. The purpose is to temper (with _omega_ < 1.0) the individually optimized parameters for better stability in recursion performance. Experimenting with lower or higher _omega_ can simplify performance tuning by allowing slight adjustments to multiple parameters at the same time.
 
 6+|*Traversal Thinning*
 
@@ -267,14 +273,14 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |0
 |0
 |256
-|Arc trav. thinning above thres.
+|Arc traversal thinning threshold. If the graph uses arcs with modifier M_INT to connect nodes and the values of those arcs indicate rank (or priority), then _kappa_ may be used to enable traversal thinning. A value 1 or higher tells the recursion algorithm to apply a thinning rule (via _lambda_) to possibly skip arcs with rank >= _kappa_. This can be useful for rough searches that need to be extra fast, as part of evaluating overall graph structure during build, debugging, or other special use cases. Normally this parameter should be left at 0. 
 
 |_lambda_
 |int
 |0
 |0
-|256
-|Arc trav. thinning rule
+|7
+|Arc traversal thinning rule. If _kappa_ is > 0 then _lambda_ determines which arcs (whose value >= _kappa_) should be ignored. Skipping rule for arcs with value >= _kappa_ is as follows for different values of _lambda_: 0=skip ALL, 1=skip 50%, 2=75%, 3=88%, 4=94%, 5=97%, 6=98%, 7=99%.
 
 6+|*State Management*
 
@@ -282,13 +288,17 @@ It is rarely necessary to use most of these parameters in a production setting, 
 |bool
 |True
 2+|
-|Reset counters from last query
+|Reset counters from last query. When using an externally managed pyvgx.Memory object _m_ with Neighborhood( memory=m, ... ) various internal counters and beam width control variables are accumulated inside _m_. If _reset_metrics_=False when re-using a memory object these counters and control variables will continue to accumulate. This can be useful for debugging or for special cases where search is manually divided into multiple Neighborhood() calls. +
+ +
+ Some internal counters are visible and may be accessed via `m.counters` attribute. The return value is a tuple: `(score_evaluations, threshold_contributions, accepted_into_frontier, accepted_into_result, recursion_depth, node_expansions, node_visits, node_revisits_avoided)`.
 
 |_reset_map_
 |bool
 |True
 2+|
-|Reset visited node map
+|Reset visited node map. When using an externally managed pyvgx.Memory object _m_ with Neighborhood( memory=m, ... ) the node visitation set built during traversal is kept inside _m_. If _reset_map_=False when re-using a memory object with another Neighborhood() query the visitation set is remembered and will prevent visiting the same nodes visited in the previous query. This can be useful for debugging or when search is manually divided into multiple Neighborhood() calls with different entry points. +
+ +
+ *NOTE*: Nodes that should not be visited can be added to the Memory object before calling Neighborhood(). Use `pyvgx.Memory.VSetAdd( vertex_id )` to pre-populate the visited set.
  
 |===
 
