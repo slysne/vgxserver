@@ -725,7 +725,7 @@ static const recursion_config_param g_config[] = {
   INT64_FIELD("beam_max",         beam.max_width,       0,        0,      VGX_RECURSION_BEAM_SIZE_MAX),  // default 0=auto
   INT64_FIELD("init_select",      init.select,          0,        0,      1024),                         // default 0=off
   INT64_FIELD("kappa",            tune.kappa,           0,        0,      256),          // default 0
-  INT64_FIELD("lambda",           tune.lambda,          0,        0,      256),          // default 0
+  INT64_FIELD("lambda",           tune.lambda,          0,        0,      7),            // default 0
   
   DOUBLE_FIELD("beam_curve",      beam.curve,           0.99,     0.0,    1.0),         // default 0.99=gentle taper
   DOUBLE_FIELD("alpha",           tune.alpha,           -0.32,    -10.0,  10.0),        // default -0.32 (depth discount for expansion threshold)
