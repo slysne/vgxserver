@@ -183,7 +183,7 @@ BEGIN_UNIT_TEST( __utest_vxarcvector_api__basic_get ) {
    */
   NEXT_TEST_SCENARIO( true, "Query Vertices" ) {
 
-    vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CStringValue( CSTR___V ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, VGX_RECURSION_MODE_NONE, NULL );
+    vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CStringValue( CSTR___V ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, VGX_NAVIGATION_MODE_NONE, NULL );
     CALLABLE( query )->SetTimeout( query, 0, false );
 
     vgx_ranking_context_t ranking_context = {0};

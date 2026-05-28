@@ -201,9 +201,9 @@ static PyObject * _pyvgx_Neighborhood__prepare_nested_query( int nesting, PyObje
  *
  ******************************************************************************
  */
-__inline static int64_t __recursion_s2bw( int64_t shadow_size ) { 
+__inline static int64_t __navigation_inertia2bw( int64_t inertia_size ) { 
 #define sqrt_2 1.4142135623730951
-  int64_t bw = (int64_t)round( sqrt_2 * log2( (double)shadow_size ) ) - 5;
+  int64_t bw = (int64_t)round( sqrt_2 * log2( (double)inertia_size ) ) - 5;
   return maximum_value( bw, 2 );
 }
 
@@ -214,19 +214,19 @@ __inline static int64_t __recursion_s2bw( int64_t shadow_size ) {
  *
  ******************************************************************************
  */
-__inline static double __recursion_s2delta( int64_t shadow_size ) { 
-#define s2delta_s0    175.0
-#define s2delta_w     2.0
-#define s2delta_A     1.6
-#define s2delta_B     0.6 
-#define s2delta_d_min -0.7
-#define s2delta_d_max 1.0
+__inline static double __navigation_inertia2delta( int64_t inertia_size ) { 
+#define inertia2delta_s0    175.0
+#define inertia2delta_w     2.0
+#define inertia2delta_A     1.6
+#define inertia2delta_B     0.6 
+#define inertia2delta_d_min -0.7
+#define inertia2delta_d_max 1.0
     
-  double x = log2((double)shadow_size) - log2(s2delta_s0);
+  double x = log2((double)inertia_size) - log2(inertia2delta_s0);
   double x2 = x * x;
-  double delta = s2delta_A * exp( -x2 / s2delta_w ) - s2delta_B;
+  double delta = inertia2delta_A * exp( -x2 / inertia2delta_w ) - inertia2delta_B;
 
-  return clamp_value(delta, s2delta_d_min, s2delta_d_max);
+  return clamp_value(delta, inertia2delta_d_min, inertia2delta_d_max);
 }
 
 
@@ -236,7 +236,7 @@ __inline static double __recursion_s2delta( int64_t shadow_size ) {
  *
  ******************************************************************************
  */
-__inline static double __recursion_b2epsilon( double x ) { 
+__inline static double __navigation_b2epsilon( double x ) { 
 #define b2epsilon_min   -0.00130
 #define b2epsilon_max    0.00100
 #define b2epsilon_a      0.00150
@@ -259,7 +259,7 @@ __inline static double __recursion_b2epsilon( double x ) {
  *
  ******************************************************************************
  */
-__inline static double __recursion_bias2omega( double bias ) {
+__inline static double __navigation_bias2omega( double bias ) {
 #define bias2omega_x0  -100.0
 #define bias2omega_x1   -50.0
 #define bias2omega_x2     0.0
@@ -326,11 +326,11 @@ __inline static double __recursion_bias2omega( double bias ) {
  *
  ******************************************************************************
  */
-static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *config ) {
+static int __navigation_auto_param( double search_bias, vgx_navigation_config_t *config ) {
   double normalized_bias = search_bias / 100.0;
   double b = clamp_value( normalized_bias, -1.0, 1.0 );
 
-  // shadow_size
+  // inertia_size
   // Length of delay line for threshold EMA tap
   /*
   Map search_bias:
@@ -341,7 +341,7 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
    Log plot: flat around 0.0->256 and steeper around -1.0->1 and +1.0->65536
    Linear plot (-1.0 to 0.0 range): gentle S-curve
   
-     b   shadow_size
+     b   inertia_size
     -1.0 1
     -0.9 3
     -0.8 7
@@ -368,30 +368,30 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
 
   // Normal recall regime
   if( b > -0.9 ) {
-    // Shadow size is the main tuning knob
-    config->shadow.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
+    // Threshold inertia size is the main tuning knob
+    config->inertia.size = (int64_t)round( exp2( 8 + 8 * b * fabs(b) ) );
 
-    // Limit depth to avoid runaway recursion in pathological graphs
+    // Limit depth to avoid runaway navigation in pathological graphs
     config->limit.depth = 1024;
   
     // Beam width grows slowly from min=2 and up
-    config->beam.width = __recursion_s2bw( config->shadow.size );
+    config->beam.width = __navigation_inertia2bw( config->inertia.size );
     config->beam.min_width = config->beam.width;
     config->beam.max_width = 16 * config->beam.width * config->beam.width;
-    config->init.select = config->beam.width;
+    config->entry.width = config->beam.width;
 
     // Beam controller most sensitive in the low-mid recall regime, less sensitive for junk (low) recall and extreme (high) recall
-    config->tune.delta = __recursion_s2delta( config->shadow.size );
+    config->tune.delta = __navigation_inertia2delta( config->inertia.size );
 
     // Score contribution threshold
-    config->tune.epsilon = __recursion_b2epsilon( b );
+    config->tune.epsilon = __navigation_b2epsilon( b );
 
   }
   // Junk recall regime (-1.0 to -0.9)
   else {
-    // shadow: 0 - 5
+    // inertia: 0 - 5
     double fshw =  50.0 * fabs(1.0 + b);
-    config->shadow.size = (int64_t)round( fshw );
+    config->inertia.size = (int64_t)round( fshw );
     
     // depth: 4 - 19
     config->limit.depth = 4 + (int64_t)round(3.0 * fshw);
@@ -403,8 +403,8 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
     config->beam.width = 2;
     config->beam.min_width = 2;
     config->beam.min_width = 2;
-    config->beam.adaptive_taper = false;
-    config->init.select = 2;
+    config->beam.adaptive = false;
+    config->entry.width = 2;
 
     // EMA alpha: 0.5 - 0.2
     config->tune.zeta = 0.5 - 3 * fabs(1.0 + b);
@@ -427,16 +427,16 @@ static int __recursion_auto_param( double search_bias, vgx_recursion_config_t *c
 
 
 
-struct s_recursion_config_param;
+struct s_navigation_config_param;
 
-typedef int (*f_parse_recursion_parameter)( PyVGX_Graph *pygraph, PyObject *py_value, const struct s_recursion_config_param *cursor, vgx_recursion_config_t *target );
-typedef void (*f_init_recursion_parameter)( const struct s_recursion_config_param *cursor, vgx_recursion_config_t *target );
+typedef int (*f_parse_navigation_parameter)( PyVGX_Graph *pygraph, PyObject *py_value, const struct s_navigation_config_param *cursor, vgx_navigation_config_t *target );
+typedef void (*f_init_navigation_parameter)( const struct s_navigation_config_param *cursor, vgx_navigation_config_t *target );
 
 
-typedef struct s_recursion_config_param {
+typedef struct s_navigation_config_param {
   const char *name;
-  f_parse_recursion_parameter parse;
-  f_init_recursion_parameter initialize;
+  f_parse_navigation_parameter parse;
+  f_init_navigation_parameter initialize;
   int target_offset;
   union {
     struct {
@@ -461,7 +461,7 @@ typedef struct s_recursion_config_param {
       const QWORD __rsv3;
     } obj;
   } value;
-} recursion_config_param;
+} navigation_config_param;
 
 
 
@@ -469,8 +469,8 @@ typedef struct s_recursion_config_param {
  *
  ******************************************************************************
  */
-__inline static int64_t set_i64_target( vgx_recursion_config_t *recursion, const recursion_config_param *cursor, int64_t value ) {
-  return *(int64_t*)((char*)recursion + cursor->target_offset) = value;
+__inline static int64_t set_i64_target( vgx_navigation_config_t *navigation, const navigation_config_param *cursor, int64_t value ) {
+  return *(int64_t*)((char*)navigation + cursor->target_offset) = value;
 }
 
 
@@ -479,8 +479,8 @@ __inline static int64_t set_i64_target( vgx_recursion_config_t *recursion, const
  *
  ******************************************************************************
  */
-__inline static double set_f64_target( vgx_recursion_config_t *recursion, const recursion_config_param *cursor, double value ) {
-  return *(double*)((char*)recursion + cursor->target_offset) = value;
+__inline static double set_f64_target( vgx_navigation_config_t *navigation, const navigation_config_param *cursor, double value ) {
+  return *(double*)((char*)navigation + cursor->target_offset) = value;
 }
 
 
@@ -489,8 +489,8 @@ __inline static double set_f64_target( vgx_recursion_config_t *recursion, const 
  *
  ******************************************************************************
  */
-__inline static bool set_bool_target( vgx_recursion_config_t *recursion, const recursion_config_param *cursor, bool value ) {
-  return *(bool*)((char*)recursion + cursor->target_offset) = value;
+__inline static bool set_bool_target( vgx_navigation_config_t *navigation, const navigation_config_param *cursor, bool value ) {
+  return *(bool*)((char*)navigation + cursor->target_offset) = value;
 }
 
 
@@ -499,8 +499,8 @@ __inline static bool set_bool_target( vgx_recursion_config_t *recursion, const r
  *
  ******************************************************************************
  */
-__inline static void * set_object_target( vgx_recursion_config_t *recursion, const recursion_config_param *cursor, void *value ) {
-  return *(void**)((char*)recursion + cursor->target_offset) = value;
+__inline static void * set_object_target( vgx_navigation_config_t *navigation, const navigation_config_param *cursor, void *value ) {
+  return *(void**)((char*)navigation + cursor->target_offset) = value;
 }
 
 
@@ -511,15 +511,15 @@ __inline static void * set_object_target( vgx_recursion_config_t *recursion, con
  ******************************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-static int parse_recursion_parameter_i64( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_parameter_i64( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( !PyLong_Check(py_value) ) {
-    PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (int required)", cursor->name, py_value );
+    PyErr_Format( PyExc_TypeError, "navigation search invalid %s: %R (int required)", cursor->name, py_value );
     return -1;
   }
   int64_t value = PyLong_AsLongLong( py_value );
   if( value > cursor->value.i64.maxval || value < cursor->value.i64.minval ) {
     CString_t *CSTR__range = CStringNewFormat( "not in [%lld, %lld]", cursor->value.i64.minval, cursor->value.i64.maxval );
-    PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
+    PyErr_Format( PyExc_TypeError, "navigation search %s out of range: %R %s", cursor->name, py_value, CStringValueDefault(CSTR__range,"") );
     iString.Discard( &CSTR__range );
     return -1;
   }
@@ -527,7 +527,7 @@ static int parse_recursion_parameter_i64( PyVGX_Graph *pygraph, PyObject *py_val
   return 0;
 }
 
-static void init_recursion_parameter_i64( const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static void init_navigation_parameter_i64( const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   set_i64_target( target, cursor, cursor->value.i64.dflt );
 }
 
@@ -539,15 +539,15 @@ static void init_recursion_parameter_i64( const recursion_config_param *cursor, 
  ******************************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-static int parse_recursion_parameter_f64( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_parameter_f64( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( !PyNumber_Check(py_value) ) {
-    PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (number required)", cursor->name, py_value );
+    PyErr_Format( PyExc_TypeError, "navigation search invalid %s: %R (number required)", cursor->name, py_value );
     return -1;
   }
   double value = PyFloat_Check(py_value) ? PyFloat_AsDouble(py_value) : (double)PyLong_AsLongLong(py_value);
   if( value > cursor->value.f64.maxval || value < cursor->value.f64.minval ) {
     CString_t *CSTR__range = CStringNewFormat( "not in [%g, %g]", cursor->value.f64.minval, cursor->value.f64.maxval );
-    PyErr_Format( PyExc_TypeError, "recursive search %s out of range: %R %s", cursor->name, py_value, CStringValueDefault(CSTR__range,"") ); \
+    PyErr_Format( PyExc_TypeError, "navigation search %s out of range: %R %s", cursor->name, py_value, CStringValueDefault(CSTR__range,"") ); \
     iString.Discard( &CSTR__range );
     return -1;
   }
@@ -555,7 +555,7 @@ static int parse_recursion_parameter_f64( PyVGX_Graph *pygraph, PyObject *py_val
   return 0;
 }
 
-static void init_recursion_parameter_f64( const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static void init_navigation_parameter_f64( const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   set_f64_target( target, cursor, cursor->value.f64.dflt );
 }
 
@@ -567,7 +567,7 @@ static void init_recursion_parameter_f64( const recursion_config_param *cursor, 
  ******************************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-static int parse_recursion_parameter_b32( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_parameter_b32( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( py_value == Py_True || (PyLong_Check(py_value) && PyLong_AS_LONG(py_value) > 0) ) {
     set_bool_target( target, cursor, true );
     return 0;
@@ -577,12 +577,12 @@ static int parse_recursion_parameter_b32( PyVGX_Graph *pygraph, PyObject *py_val
     return 0;
   }
   else {
-    PyErr_Format( PyExc_TypeError, "recursive search invalid %s: %R (bool or int required)", cursor->name, py_value );
+    PyErr_Format( PyExc_TypeError, "navigation search invalid %s: %R (bool or int required)", cursor->name, py_value );
     return -1;
   }
 }
 
-static void init_recursion_parameter_b32( const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static void init_navigation_parameter_b32( const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   set_bool_target( target, cursor, cursor->value.b32.dflt );
 }
 
@@ -594,13 +594,13 @@ static void init_recursion_parameter_b32( const recursion_config_param *cursor, 
  *
  ******************************************************************************
  */
-static int parse_recursion_vector( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_vector( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( py_value == Py_None ) {
     return 0;
   }
   vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( pygraph->graph->similarity, py_value, NULL, true, true );
   if( vector == NULL ) {
-    PyVGXError_Format( PyExc_TypeError, "recursive search invalid %s: %R", cursor->name, py_value );
+    PyVGXError_Format( PyExc_TypeError, "navigation search invalid %s: %R", cursor->name, py_value );
     return -1;
   }
   set_object_target( target, cursor, vector );
@@ -615,19 +615,19 @@ static int parse_recursion_vector( PyVGX_Graph *pygraph, PyObject *py_value, con
  ******************************************************************************
  */
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
-static int parse_recursion_filter( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_filter( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( py_value == Py_None ) {
     return 0;
   }
   if( !PyUnicode_Check( py_value ) ) {
-    PyVGXError_Format( PyExc_TypeError, "recursive search invalid %s: %R", cursor->name, py_value );
+    PyVGXError_Format( PyExc_TypeError, "navigation search invalid %s: %R", cursor->name, py_value );
     return -1;
   }
-  const char *recursion_filter = PyUnicode_AsUTF8( py_value );
-  if( recursion_filter == NULL ) {
+  const char *navigation_filter = PyUnicode_AsUTF8( py_value );
+  if( navigation_filter == NULL ) {
     return -1;
   }
-  CString_t *CSTR__filter = iString.New( NULL, recursion_filter );
+  CString_t *CSTR__filter = iString.New( NULL, navigation_filter );
   if( CSTR__filter == NULL ) {
     return -1;
   }
@@ -642,18 +642,18 @@ static int parse_recursion_filter( PyVGX_Graph *pygraph, PyObject *py_value, con
  *
  ******************************************************************************
  */
-static int parse_recursion_parameter_obj( PyVGX_Graph *pygraph, PyObject *py_value, const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static int parse_navigation_parameter_obj( PyVGX_Graph *pygraph, PyObject *py_value, const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   if( CharsEqualsConst( cursor->name, "vector" ) ) {
-    return parse_recursion_vector( pygraph, py_value, cursor, target );
+    return parse_navigation_vector( pygraph, py_value, cursor, target );
   }
   else if( CharsEqualsConst( cursor->name, "filter" ) ) {
-    return parse_recursion_filter( pygraph, py_value, cursor, target );
+    return parse_navigation_filter( pygraph, py_value, cursor, target );
   }
   PyErr_Format( PyExc_ValueError, "unexpected object key: %s", cursor->name );
   return -1;
 }
 
-static void init_recursion_parameter_obj( const recursion_config_param *cursor, vgx_recursion_config_t *target ) {
+static void init_navigation_parameter_obj( const navigation_config_param *cursor, vgx_navigation_config_t *target ) {
   set_object_target( target, cursor, NULL );
 }
 
@@ -667,9 +667,9 @@ static void init_recursion_parameter_obj( const recursion_config_param *cursor, 
  */
 #define INT64_FIELD( Name, Field, DefaultVal, MinVal, MaxVal ) \
 { .name = Name, \
-  .parse = parse_recursion_parameter_i64, \
-  .initialize = init_recursion_parameter_i64, \
-  .target_offset = offsetof(vgx_recursion_config_t, Field), \
+  .parse = parse_navigation_parameter_i64, \
+  .initialize = init_navigation_parameter_i64, \
+  .target_offset = offsetof(vgx_navigation_config_t, Field), \
   .value = { .i64 = { .dflt = (DefaultVal), .minval = (MinVal), .maxval = (MaxVal) } } }
 
 
@@ -679,9 +679,9 @@ static void init_recursion_parameter_obj( const recursion_config_param *cursor, 
  */
 #define DOUBLE_FIELD( Name, Field, DefaultVal, MinVal, MaxVal ) \
 { .name = Name, \
-  .parse = parse_recursion_parameter_f64, \
-  .initialize = init_recursion_parameter_f64, \
-  .target_offset = offsetof(vgx_recursion_config_t, Field), \
+  .parse = parse_navigation_parameter_f64, \
+  .initialize = init_navigation_parameter_f64, \
+  .target_offset = offsetof(vgx_navigation_config_t, Field), \
   .value = { .f64 = { .dflt = (DefaultVal), .minval = (MinVal), .maxval = (MaxVal) } } }
 
 
@@ -691,9 +691,9 @@ static void init_recursion_parameter_obj( const recursion_config_param *cursor, 
  */
 #define BOOL_FIELD( Name, Field, DefaultVal ) \
 { .name = Name, \
-  .parse = parse_recursion_parameter_b32, \
-  .initialize = init_recursion_parameter_b32, \
-  .target_offset = offsetof(vgx_recursion_config_t, Field), \
+  .parse = parse_navigation_parameter_b32, \
+  .initialize = init_navigation_parameter_b32, \
+  .target_offset = offsetof(vgx_navigation_config_t, Field), \
   .value = { .b32 = { .dflt = (DefaultVal) } } }
 
 
@@ -703,44 +703,44 @@ static void init_recursion_parameter_obj( const recursion_config_param *cursor, 
  */
 #define OBJECT_FIELD( Name, Field ) \
 { .name = Name, \
-  .parse = parse_recursion_parameter_obj, \
-  .initialize = init_recursion_parameter_obj, \
-  .target_offset = offsetof(vgx_recursion_config_t, Field) }
+  .parse = parse_navigation_parameter_obj, \
+  .initialize = init_navigation_parameter_obj, \
+  .target_offset = offsetof(vgx_navigation_config_t, Field) }
 
 
 /******************************************************************************
  *
  ******************************************************************************
  */
-static const recursion_config_param g_config[] = {
-  INT64_FIELD("heap_size",        heap.size,            1,        0,      VGX_RECURSION_HEAP_SIZE_MAX),  // default 1=follow hits
-  INT64_FIELD("shadow_size",      shadow.size,          -1,       -1,     VGX_RECURSION_HEAP_SHADOW_MAX),  // default -1=auto
-  INT64_FIELD("frontier_limit",   limit.frontier,       0,        0,      VGX_RECURSION_FRONTIER_SIZE_MAX),  // default 0=auto
-  INT64_FIELD("expansion_limit",  limit.expansion,      INT_MAX,  0,      INT_MAX),
-  INT64_FIELD("depth_limit",      limit.depth,          INT_MAX,  0,      INT_MAX),
-  INT64_FIELD("exec_ms_limit",    limit.exec_ms,        -1,       -1,     LLONG_MAX),                // default -1=unlimited
-  INT64_FIELD("visit_limit",      limit.visit,          INT_MAX,  0,      INT_MAX),
-  INT64_FIELD("beam_width",       beam.width,           0,        0,      VGX_RECURSION_BEAM_SIZE_MAX),  // default 0=off
-  INT64_FIELD("beam_min",         beam.min_width,       1,        1,      VGX_RECURSION_BEAM_SIZE_MAX),
-  INT64_FIELD("beam_max",         beam.max_width,       0,        0,      VGX_RECURSION_BEAM_SIZE_MAX),  // default 0=auto
-  INT64_FIELD("init_select",      init.select,          0,        0,      1024),                         // default 0=off
-  INT64_FIELD("kappa",            tune.kappa,           0,        0,      256),          // default 0
-  INT64_FIELD("lambda",           tune.lambda,          0,        0,      7),            // default 0
+static const navigation_config_param g_config[] = {
+  INT64_FIELD(  "result_capacity",    heap.size,            1,        0,      VGX_NAVIGATION_HEAP_SIZE_MAX ),     // default 1=follow hits
+  INT64_FIELD(  "inertia",            inertia.size,         -1,       -1,     VGX_NAVIGATION_INERTIA_MAX ),       // default -1=auto
+  INT64_FIELD(  "queue_limit",        limit.frontier,       0,        0,      VGX_NAVIGATION_FRONTIER_QUEUE_SIZE_MAX ), // default 0=auto
+  INT64_FIELD(  "expansion_limit",    limit.expansion,      INT_MAX,  0,      INT_MAX ),
+  INT64_FIELD(  "depth_limit",        limit.depth,          INT_MAX,  0,      INT_MAX ),
+  INT64_FIELD(  "exec_ms_limit",      limit.exec_ms,        -1,       -1,     LLONG_MAX ),                        // default -1=unlimited
+  INT64_FIELD(  "visit_limit",        limit.visit,          INT_MAX,  0,      INT_MAX ),
+  INT64_FIELD(  "beam_width",         beam.width,           0,        0,      VGX_NAVIGATION_BEAM_SIZE_MAX ),     // default 0=off
+  INT64_FIELD(  "beam_min",           beam.min_width,       1,        1,      VGX_NAVIGATION_BEAM_SIZE_MAX ),
+  INT64_FIELD(  "beam_max",           beam.max_width,       0,        0,      VGX_NAVIGATION_BEAM_SIZE_MAX ),     // default 0=auto
+  INT64_FIELD(  "entry_width",        entry.width,          0,        0,      1024 ),                             // default 0=off
+  INT64_FIELD(  "kappa",              tune.kappa,           0,        0,      256 ),         // default 0
+  INT64_FIELD(  "lambda",             tune.lambda,          0,        0,      7 ),           // default 0
   
-  DOUBLE_FIELD("beam_curve",      beam.curve,           0.99,     0.0,    1.0),         // default 0.99=gentle taper
-  DOUBLE_FIELD("alpha",           tune.alpha,           -0.32,    -10.0,  10.0),        // default -0.32 (depth discount for expansion threshold)
-  DOUBLE_FIELD("beta",            tune.beta,            0.0,      -10.0,  10.0),        // default 0.0 (evals discount for expansion threshold)
-  DOUBLE_FIELD("gamma",           tune.gamma,           0.0,      -10.0,  10.0),        // default 0.0 (global threshold offset, positive means more expansions)
-  DOUBLE_FIELD("delta",           tune.delta,           0.0,      -1.0,   10.0),        // default 0.0 (beam controller reactivity)
-  DOUBLE_FIELD("epsilon",         tune.epsilon,         0.0,      -1.0,   1.0),         // default 0.0 (score contribution threshold discount)
-  DOUBLE_FIELD("zeta",            tune.zeta,            0.2,      0.0,    1.0),         // default 0.2 (threshold EMA alpha)
+  DOUBLE_FIELD( "beam_decay",         beam.decay,           0.99,     0.0,    1.0 ),         // default 0.99=gentle taper
+  DOUBLE_FIELD( "alpha",              tune.alpha,           -0.32,    -10.0,  10.0 ),        // default -0.32 (depth discount for expansion threshold)
+  DOUBLE_FIELD( "beta",               tune.beta,            0.0,      -10.0,  10.0 ),        // default 0.0 (evals discount for expansion threshold)
+  DOUBLE_FIELD( "gamma",              tune.gamma,           0.0,      -10.0,  10.0 ),        // default 0.0 (global threshold offset, positive means more expansions)
+  DOUBLE_FIELD( "delta",              tune.delta,           0.0,      -1.0,   10.0 ),        // default 0.0 (beam controller reactivity)
+  DOUBLE_FIELD( "epsilon",            tune.epsilon,         0.0,      -1.0,   1.0 ),         // default 0.0 (score contribution threshold discount)
+  DOUBLE_FIELD( "zeta",               tune.zeta,            0.2,      0.0,    1.0 ),         // default 0.2 (threshold EMA alpha)
   
-  BOOL_FIELD("reset_metrics",     visit.reset_metrics,  true),
-  BOOL_FIELD("reset_map",         visit.reset_map,      true),
-  BOOL_FIELD("adaptive_taper",    beam.adaptive_taper,  true),
+  BOOL_FIELD(   "reset_metrics",      visit.reset_metrics,  true ),
+  BOOL_FIELD(   "reset_map",          visit.reset_map,      true ),
+  BOOL_FIELD(   "adaptive_beam",      beam.adaptive,        true ),
   
-  OBJECT_FIELD("vector",          probe),
-  OBJECT_FIELD("filter",          visit.CSTR__filter),
+  OBJECT_FIELD( "vector",             probe),
+  OBJECT_FIELD( "filter",             visit.CSTR__filter ),
 
   {0}
 };
@@ -750,9 +750,9 @@ static const recursion_config_param g_config[] = {
  *
  ******************************************************************************
  */
-static const recursion_config_param g_pre_config[] = {
-  DOUBLE_FIELD("bias",            bias,                 0.0,      -100.0, 100.0),       // default 0.0 (balanced high recall good QPS)
-  DOUBLE_FIELD("omega",           tune.omega,           1.0,      0.0,    2.0),         // default 0.7 (all optimizations weight)
+static const navigation_config_param g_pre_config[] = {
+  DOUBLE_FIELD( "bias",               bias,                 0.0,      -100.0, 100.0 ),       // default 0.0 (balanced high recall good QPS)
+  DOUBLE_FIELD( "omega",              tune.omega,           1.0,      0.0,    2.0 ),         // default 0.7 (all optimizations weight)
   {0}
 };
     
@@ -761,7 +761,7 @@ static const recursion_config_param g_pre_config[] = {
  *
  ******************************************************************************
  */
-static const recursion_config_param *g_configs[] = {
+static const navigation_config_param *g_configs[] = {
   g_config,
   g_pre_config,
   NULL
@@ -774,17 +774,17 @@ static const recursion_config_param *g_configs[] = {
  *
  ******************************************************************************
  */
-static int invalid_recursion_parameter( PyObject *py_recursion ) {
+static int invalid_navigation_parameter( PyObject *py_navigation ) {
   Py_ssize_t pos = 0;
   PyObject *py_key, *py_value;
-  while( PyDict_Next(py_recursion, &pos, &py_key, &py_value) ) {
+  while( PyDict_Next(py_navigation, &pos, &py_key, &py_value) ) {
     if( !PyUnicode_Check( py_key ) ) {
-      PyErr_Format( PyExc_TypeError, "recursive search invalid parameter name: %R (string required)", py_key );
+      PyErr_Format( PyExc_TypeError, "navigation search invalid parameter name: %R (string required)", py_key );
       return -1;
     }
     const char *key = PyUnicode_AsUTF8( py_key );
-    const recursion_config_param **pconfig = g_configs;
-    const recursion_config_param *cursor;
+    const navigation_config_param **pconfig = g_configs;
+    const navigation_config_param *cursor;
     while( (cursor = *pconfig++) != NULL ) {
       while( cursor->name ) {
         if( CharsEqualsConst( key, cursor->name ) ) {
@@ -793,7 +793,7 @@ static int invalid_recursion_parameter( PyObject *py_recursion ) {
         ++cursor;
       }
     }
-    PyErr_Format( PyExc_ValueError, "recursive search unknown parameter name: %R", py_key );
+    PyErr_Format( PyExc_ValueError, "navigation search unknown parameter name: %R", py_key );
     return -1;
   found:
     continue;
@@ -808,28 +808,28 @@ static int invalid_recursion_parameter( PyObject *py_recursion ) {
  *
  ******************************************************************************
  */
-static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject *py_recursion, __neighborhood_query_args *param ) {
+static int _pyvgx_Neighborhood__parse_navigation( PyVGX_Graph *pygraph, PyObject *py_navigation, __neighborhood_query_args *param ) {
   int ret = 0;
   XTRY {
 
     // Sorting required
     if( _vgx_sortby( param->sortspec ) == VGX_SORTBY_NONE || _vgx_sortspec_dontcare( param->sortspec ) ) {
-      PyErr_SetString( PyExc_ValueError, "recursive search requires specific sortby" );
+      PyErr_SetString( PyExc_ValueError, "navigation search requires specific sortby" );
       THROW_SILENT( CXLIB_ERR_API, 0x001 );
     }
 
     // Query arc direction must be D_OUT
     if( param->arc_condition_set->arcdir != VGX_ARCDIR_OUT ) {
-      PyErr_SetString( PyExc_ValueError, "recursive search requires arc direction D_OUT" );
+      PyErr_SetString( PyExc_ValueError, "navigation search requires arc direction D_OUT" );
       THROW_SILENT( CXLIB_ERR_API, 0x002 );
     }
 
     // Populate default values
-    const recursion_config_param **pconfig = g_configs;
-    const recursion_config_param *cursor;
+    const navigation_config_param **pconfig = g_configs;
+    const navigation_config_param *cursor;
     while( (cursor = *pconfig++) != NULL ) {
       while( cursor->name ) {
-        cursor->initialize( cursor, &param->recursion );
+        cursor->initialize( cursor, &param->navigation );
         ++cursor;
       }
     }
@@ -838,15 +838,15 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
     int64_t nparams = 0;
 
     // Parse the preconfig
-    if( PyDict_Check( py_recursion ) ) {
-      nparams = PyDict_Size( py_recursion );
+    if( PyDict_Check( py_navigation ) ) {
+      nparams = PyDict_Size( py_navigation );
       cursor = g_pre_config;
       const char *key;
       PyObject *py_value;
       while( (key=cursor->name) != NULL ) {
-        if( (py_value = PyDict_GetItemString(py_recursion, key)) != NULL ) {
+        if( (py_value = PyDict_GetItemString(py_navigation, key)) != NULL ) {
           --nparams;
-          if( cursor->parse( pygraph, py_value, cursor, &param->recursion ) < 0 ) {
+          if( cursor->parse( pygraph, py_value, cursor, &param->navigation ) < 0 ) {
             THROW_SILENT( CXLIB_ERR_API, 0x009 );
           }
           if( CharsEqualsConst(key, "omega") ) {
@@ -858,29 +858,29 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
     }
 
     if( !omega_override ) {
-      param->recursion.tune.omega = __recursion_bias2omega( param->recursion.bias );
+      param->navigation.tune.omega = __navigation_bias2omega( param->navigation.bias );
     }
 
     // Auto config
-    __recursion_auto_param( param->recursion.bias, &param->recursion );
+    __navigation_auto_param( param->navigation.bias, &param->navigation );
 
     // Simple auto-config
-    if( py_recursion == Py_True ) {
+    if( py_navigation == Py_True ) {
       // use defaults
     }
-    // No recursion
-    else if( py_recursion == Py_False ) {
-      param->recursion.mode = VGX_RECURSION_MODE_NONE;
+    // No navigation
+    else if( py_navigation == Py_False ) {
+      param->navigation.mode = VGX_NAVIGATION_MODE_NONE;
     }
-    // { "heap_shadow": 256, "frontier_limit": 1024, ... }
-    else if( PyDict_Check( py_recursion) ) {
+    // { "inertia": 256, "queue_limit": 1024, ... }
+    else if( PyDict_Check( py_navigation) ) {
       cursor = g_config;
       const char *key;
       PyObject *py_value;
       while( (key=cursor->name) != NULL ) {
-        if( (py_value = PyDict_GetItemString(py_recursion, key)) != NULL ) {
+        if( (py_value = PyDict_GetItemString(py_navigation, key)) != NULL ) {
           --nparams;
-          if( cursor->parse( pygraph, py_value, cursor, &param->recursion ) < 0 ) {
+          if( cursor->parse( pygraph, py_value, cursor, &param->navigation ) < 0 ) {
             THROW_SILENT( CXLIB_ERR_API, 0x00A );
           }
         }
@@ -889,7 +889,7 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
 
       // Some supplied params were not recognized
       if( nparams != 0 ) {
-        if( invalid_recursion_parameter( py_recursion ) < 0 ) {
+        if( invalid_navigation_parameter( py_navigation ) < 0 ) {
           THROW_SILENT( CXLIB_ERR_API, 0x00D );
         }
       }
@@ -897,35 +897,35 @@ static int _pyvgx_Neighborhood__parse_recursion( PyVGX_Graph *pygraph, PyObject 
     }
     // unsupported
     else {
-      PyErr_Format( PyExc_ValueError, "recursive search parameter must be bool or dict" );
+      PyErr_Format( PyExc_ValueError, "navigation search parameter must be bool or dict" );
       THROW_SILENT( CXLIB_ERR_API, 0x00E );
     }
           
     // Beam mode
-    if( param->recursion.limit.frontier == 0 && param->recursion.beam.width > 0 ) {
-      param->recursion.mode = VGX_RECURSION_MODE_BEAM_PROGRESSIVE;
+    if( param->navigation.limit.frontier == 0 && param->navigation.beam.width > 0 ) {
+      param->navigation.mode = VGX_NAVIGATION_MODE_BEAM_BEST_FIRST;
     }
-    // Frontier queue mode
-    else if( param->recursion.limit.frontier > 0 ) {
-      param->recursion.beam.width = 0;
-      param->recursion.mode = VGX_RECURSION_MODE_BFS_PROGRESSIVE;
+    // Frontier queue mode (any user specified beam settings are ignored)
+    else if( param->navigation.limit.frontier > 0 ) {
+      param->navigation.beam.width = 0;
+      param->navigation.mode = VGX_NAVIGATION_MODE_QUEUE_PROGRESSIVE;
     }
     else {
-      PyErr_Format( PyExc_ValueError, "positive beam_width or frontier_limit required" );
+      PyErr_Format( PyExc_ValueError, "positive beam_width or queue_limit required" );
       THROW_SILENT( CXLIB_ERR_API, 0x00F );
     }
 
-    // No recursion vector specified, inherit from ranking condition if we have one
-    if( param->recursion.probe == NULL ) {
+    // No navigation vector specified, inherit from ranking condition if we have one
+    if( param->navigation.probe == NULL ) {
       if( param->ranking_condition && param->ranking_condition->vector ) {
-        param->recursion.probe = param->ranking_condition->vector;
-        CALLABLE(param->recursion.probe)->Incref(param->recursion.probe);
+        param->navigation.probe = param->ranking_condition->vector;
+        CALLABLE(param->navigation.probe)->Incref(param->navigation.probe);
       }
     }
 
   }
   XCATCH( errcode ) {
-    iString.Discard( &param->recursion.visit.CSTR__filter );
+    iString.Discard( &param->navigation.visit.CSTR__filter );
     ret = -1;
   }
   XFINALLY {
@@ -959,12 +959,12 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
     if( param->evalmem ) {
       iEvaluator.DiscardMemory( &param->evalmem );
     }
-    if( param->recursion.probe ) {
-      CALLABLE(param->recursion.probe)->Decref(param->recursion.probe);
-      param->recursion.probe = NULL;
+    if( param->navigation.probe ) {
+      CALLABLE(param->navigation.probe)->Decref(param->navigation.probe);
+      param->navigation.probe = NULL;
     }
-    if( param->recursion.visit.CSTR__filter ) {
-      iString.Discard( &param->recursion.visit.CSTR__filter );
+    if( param->navigation.visit.CSTR__filter ) {
+      iString.Discard( &param->navigation.visit.CSTR__filter );
     }
 
     iString.Discard( &param->implied.CSTR__error );
@@ -978,7 +978,7 @@ static void _pyvgx_Neighborhood__clear_params( __base_query_args *base ) {
 
 
 PyVGX_DOC( pyvgx_Neighborhood__doc__,
-  "Neighborhood( id, arc=(None,D_OUT), pre=None, filter=None, post=None, neighbor=\"*\", vector=[], collect=C_COLLECT, recursion=False, result=R_STR, fields=F_ID, nest=0, nested_hits=-1, select=None, rank=None, sortby=S_NONE, aggregate=None, memory=4, offset=0, hits=-1, timeout=0, limexec=False ) -> list\n"
+  "Neighborhood( id, arc=(None,D_OUT), pre=None, filter=None, post=None, neighbor=\"*\", vector=[], collect=C_COLLECT, navigation=False, result=R_STR, fields=F_ID, nest=0, nested_hits=-1, select=None, rank=None, sortby=S_NONE, aggregate=None, memory=4, offset=0, hits=-1, timeout=0, limexec=False ) -> list\n"
   "\n"
   "Perform a neighborhood search around vertex 'id'.\n"
   "\n"
@@ -1003,7 +1003,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     "neighbor",   //  O
     "vector",     //  O
     "collect",    //  O
-    "recursion",  //  O
+    "navigation", //  O
     "result",     //  I
     "fields",     //  I
     "nest",       //  i
@@ -1031,7 +1031,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     "neighbor",   //  O
     "vector",     //  O
     "collect",    //  O
-    "recursion",  //  O
+    "navigation", //  O
     "result",     //  I
     "fields",     //  I
     "nest",       //  i
@@ -1063,7 +1063,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
   PyObject *py_rankspec = NULL;
   PyObject *py_aggregate = NULL;
   PyObject *py_collect = NULL;
-  PyObject *py_recursion = NULL;
+  PyObject *py_navigation = NULL;
   PyObject *py_evalmem = NULL;
 
   PyObject *py_filter = NULL;
@@ -1082,7 +1082,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       &py_vertex_condition,           // O neighbor
       &py_rank_vector_object,         // O vector
       &py_collect,                    // O collect
-      &py_recursion,                  // O recursion
+      &py_navigation,                  // O navigation
       &param->result_format,          // I result
       &param->result_attrs,           // I fields
       &param->nest,                   // i nest
@@ -1113,7 +1113,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       &py_vertex_condition,           // O neighbor
       &py_rank_vector_object,         // O vector
       &py_collect,                    // O collect
-      &py_recursion,                  // O recursion
+      &py_navigation,                  // O navigation
       &param->result_format,          // I result
       &param->result_attrs,           // I fields
       &param->nest,                   // i nest
@@ -1176,7 +1176,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     // ------
     // memory
     // ------
-    if( py_evalmem || param->filter_expr || py_vertex_condition || py_recursion ) {
+    if( py_evalmem || param->filter_expr || py_vertex_condition || py_navigation ) {
       if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x00E );
       }
@@ -1219,7 +1219,7 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
     // Special handling of unspecified sorting 
     // IMPORTANT: This needs to be set before we create the ranking condition below!
     if( param->sortspec == VGX_SORTBY_NONE ) {
-      if( py_recursion ) {
+      if( py_navigation ) {
         param->sortspec = VGX_SORTBY_REAL_PREDICATOR | VGX_SORT_DIRECTION_DESCENDING;
       }
       // Special handling of sorting if counts are requested
@@ -1235,16 +1235,16 @@ static __neighborhood_query_args * _pyvgx_Neighborhood__parse_params( PyVGX_Grap
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x006 );
     }
 
-    // ---------
-    // recursive
-    // ---------
-    if( py_recursion ) {
-      if( _pyvgx_Neighborhood__parse_recursion( pygraph, py_recursion, param ) < 0 ) {
+    // ----------
+    // navigation
+    // ----------
+    if( py_navigation ) {
+      if( _pyvgx_Neighborhood__parse_navigation( pygraph, py_navigation, param ) < 0 ) {
         THROW_SILENT( CXLIB_ERR_API, 0x007 );
       }
-      if( __is_recursion_enabled( &param->recursion ) ) {
+      if( __is_navigation_enabled( &param->navigation ) ) {
         if( py_collect ) {
-          PyErr_SetString( PyExc_ValueError, "Collect mode implied with recursion (don't specify collect)" );
+          PyErr_SetString( PyExc_ValueError, "Collect mode implied with navigation (don't specify collect)" );
           THROW_SILENT( CXLIB_ERR_API, 0x008 );
         }
         static PyObject *py_C_SCAN = NULL;
@@ -1721,9 +1721,9 @@ static PyObject * _pyvgx_Neighborhood__perform( __neighborhood_query_args *param
     if( query ) {
       XDO {
 
-        // Require positive hits for recursive search
-        if( __is_recursion_enabled( &query->recursion_config ) && query->hits <= 0 ) {
-          PyVGXError_SetString( PyExc_ValueError, "recursive search requires non-negative hits parameter" );
+        // Require positive hits for navigation search
+        if( __is_navigation_enabled( &query->navigation_config ) && query->hits <= 0 ) {
+          PyVGXError_SetString( PyExc_ValueError, "navigation search requires non-negative hits parameter" );
           XBREAK;
         }
 
@@ -1778,7 +1778,7 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
   XTRY {
 
     // Construct neighborhood query object (steals collect_condition_set)
-    if( (query = iGraphQuery.NewNeighborhoodQuery( param->implied.graph, param->anchor.id, &param->collect_arc_condition_set, param->implied.collector_mode, &param->recursion, &param->implied.CSTR__error )) == NULL ) {
+    if( (query = iGraphQuery.NewNeighborhoodQuery( param->implied.graph, param->anchor.id, &param->collect_arc_condition_set, param->implied.collector_mode, &param->navigation, &param->implied.CSTR__error )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0xC82 );
     }
     CALLABLE( query )->SetResponseFormat( query, param->result_format );
@@ -1820,9 +1820,9 @@ static vgx_NeighborhoodQuery_t * _pyvgx_Neighborhood__get_neighborhood_query( __
       }
     }
 
-    // Assign recursion filter
-    if( param->recursion.visit.CSTR__filter ) {
-      if( CALLABLE( query )->AddRecursionFilter( query, CStringValue(param->recursion.visit.CSTR__filter) ) == NULL ) {
+    // Assign navigation filter
+    if( param->navigation.visit.CSTR__filter ) {
+      if( CALLABLE( query )->AddNavigationFilter( query, CStringValue(param->navigation.visit.CSTR__filter) ) == NULL ) {
         THROW_SILENT( CXLIB_ERR_API, 0xC88 );
       }
     }

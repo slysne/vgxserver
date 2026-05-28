@@ -1,5 +1,5 @@
 [[graphquerymethods]]
-= Graph Query Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphRecursionQuery.adoc#, icon:arrow-circle-right[title="Recursion Query"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+= Graph Query Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphNavigationQuery.adoc#, icon:arrow-circle-right[title="Navigation Query"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -425,7 +425,7 @@ Perform a graph neighborhood search around a specific vertex _id_.
 === Syntax
 [source, python]
 ----
-pyvgx.Graph.Neighborhood( id[, arc[, pre[, filter[, post[, neighbor[, vector[, collect[, recursion[, result[, fields[, select[, rank[, sortby[, aggregate[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] )
+pyvgx.Graph.Neighborhood( id[, arc[, pre[, filter[, post[, neighbor[, vector[, collect[, navigation[, result[, fields[, select[, rank[, sortby[, aggregate[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] )
 ----
 
 Arguments can be supplied positionally or as keywords.
@@ -477,11 +477,11 @@ Arguments can be supplied positionally or as keywords.
 |<<../constants/collectConstants.adoc#collectconstants, pyvgx.C_COLLECT>>
 |Control how neighborhood arcs are collected and returned in the result.
 
-|_recursion_
+|_navigation_
 |<bool> or <dict> +
- See <<neighborhood_recursion>>
+ See <<neighborhood_navigation>>
 |False
-|Enable recursive search mode and specify recursion behavior
+|Enable navigation search mode and specify navigation behavior
 
 |_result_
 |<<../constants/resultListEntryConstants.adoc#resultlistentryconstants, &#60;result_format&#62;>>
@@ -586,7 +586,7 @@ For an arc to be traversed it must first satisfy any filter applied directly to 
 
 Arc filters are specified using the <<../specification/arcSpecificationSyntax.adoc#arcfilter, _arc_>> parameter. Neighbor vertex filters are specified using the <<../vertex/vertexFilter.adoc#vertexfilter, _neighbor_>> parameter. The latter has a rich set of constraints for matching and controlling nested traversal.
 
-Recursive search is enabled with the <<.., _recursion_>> parameter. This special traversal mode performs automatic discovery of the anchor's extended neighborhood, and can potentially be configured to explore the entire graph via a few simple controls. This mode is primarily used for vector search, where an underlying proximity graph connects mutually similar vertices to form a traversable "landscape". Such a network of vector-endowed vertices allows the search to discover paths to graph regions containing items most closely resembling a probe condition (vector.)
+Navigation search is enabled with the <<.., _navigation_>> parameter. This special traversal mode performs automatic discovery of the anchor's extended neighborhood, and can potentially be configured to explore the entire graph via a few simple controls. This mode is primarily used for vector search, where an underlying proximity graph connects mutually similar vertices to form a traversable landscape. Such a network of vector-endowed vertices allows the search to discover paths to graph regions containing items most closely resembling a probe condition (vector.)
 
 Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Normally collection is controlled by the _collect_ parameter, which by default is `True` (pyvgx.C_COLLECT) at the anchor's level, and `False` (pyvgx.C_NONE) at nested levels. Queries with nested conditions may be configured to collect at some levels (distance from anchor) and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.
 
@@ -796,10 +796,10 @@ Aggregated arc values lose the modifier types of their collected source arcs. In
 
 |===
 
-[[neighborhood_recursion]]
-==== Recursion
+[[neighborhood_navigation]]
+==== Navigation
 
-Recursive search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. A common use case is approximate nearest neighbor (ANN) search. Given a sufficiently connected proximity graph the built-in recursive search algorithm can traverse its way towards the best matches using only a probe vector as search condition.
+Navigation search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. A common use case is approximate nearest neighbor (ANN) search. Given a sufficiently connected proximity graph the built-in navigation algorithm can traverse its way towards the best matches using only a probe vector as search condition.
 
 .Approximate nearest neighbors (ANN) search 
 [source, python]
@@ -807,13 +807,13 @@ Recursive search is a powerful feature for automatically exploring a graph to co
 g.Neighborhood(
     id = start_node,
     hits = 10,
-    recursion = {
+    navigation = {
         'vector': probe_vector
     }
 )
 ----
 
-See separate <<graphRecursionQuery.adoc#, Neighborhood Recursion Query>> section for more details.
+See separate <<graphNavigationQuery.adoc#, Neighborhood Navigation Query>> section for more details.
 
 [[graphopenneighbor]]
 == pyvgx.Graph.OpenNeighbor()
@@ -1715,7 +1715,7 @@ ___
 //icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
-<<graphRecursionQuery.adoc#, icon:arrow-circle-right[size=2x, title="Recursion Query"]>>
+<<graphNavigationQuery.adoc#, icon:arrow-circle-right[size=2x, title="Navigation Query"]>>
 // cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --

@@ -1262,7 +1262,7 @@ __inline static int __evaluate_arc( vgx_Evaluator_t *E, vgx_Vector_t *vector, vg
  ***********************************************************************
  */
 __inline static vgx_Evaluator_t * __collector_recursion_filter_evaluator( vgx_BaseCollector_context_t *collector ) {
-  return collector ? collector->recursion_filter : NULL;
+  return collector ? collector->navigation_filter : NULL;
 }
 
 

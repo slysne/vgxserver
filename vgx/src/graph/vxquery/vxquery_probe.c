@@ -76,7 +76,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
-                                                const vgx_recursion_config_t *recursion,
+                                                const vgx_navigation_config_t *navigation,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -1056,7 +1056,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
-                                                const vgx_recursion_config_t *recursion,
+                                                const vgx_navigation_config_t *navigation,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -1173,7 +1173,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
     // C * T = C + T
     //
     if( has_cfilter || !has_tfilter ) {
-      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, recursion, timing_budget )) == NULL ) {
+      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, navigation, timing_budget )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x645 );
       }
       // Set the filter's current tail vertex (will be NULL for all but the first neighborhood, i.e. recursive traversal MUST UPDATE THIS FOR EACH RECURSIVE NEIGHBORHOOD!
@@ -1202,9 +1202,9 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.override = probe->conditional.override;
     }
 
-    // Special case: recursion filter's vertex access must be flagged in traversing filter for proper locking
-    if( collector && collector->recursion_filter ) {
-      if( CALLABLE( collector->recursion_filter )->ThisNextAccess( collector->recursion_filter ) ) {
+    // Special case: navigation filter's vertex access must be flagged in traversing filter for proper locking
+    if( collector && collector->navigation_filter ) {
+      if( CALLABLE( collector->navigation_filter )->ThisNextAccess( collector->navigation_filter ) ) {
         if( probe->traversing.arcfilter ) {
           probe->traversing.arcfilter->arcfilter_locked_head_access = true;
         }
@@ -1429,11 +1429,11 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
   int retcode = 1;
   XTRY {
 
-    // Recursion enabled
-    if( __is_recursion_enabled( &query->recursion_config ) ) {
+    // Navigation search enabled
+    if( __is_navigation_enabled( &query->navigation_config ) ) {
       // Copy config to effective config which may be modified
-      query->effective_recursion_config = query->recursion_config;
-      // Recursion requires evaluator memory to track visited nodes
+      query->effective_navigation_config = query->navigation_config;
+      // Navigation requires evaluator memory to track visited nodes
       // We'll need a dummy evaluator if we don't have one
       if( query->CSTR__vertex_filter == NULL ) {
         query->CSTR__vertex_filter = CStringNew("");
@@ -1501,9 +1501,9 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
       THROW_ERROR( CXLIB_ERR_API, 0x675 );
     }
 
-    // Effective recursion config after collector creation
-    if( __is_recursion_enabled( &query->effective_recursion_config ) ) {
-      search->recursion = query->effective_recursion_config;
+    // Effective navigation config after collector creation
+    if( __is_navigation_enabled( &query->effective_navigation_config ) ) {
+      search->navigation = query->effective_navigation_config;
     }
 
     // 3.
@@ -1545,7 +1545,7 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
 
     if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, 
-                                    search->pre_evaluator, search->post_evaluator, conditional, traversing, &search->recursion,
+                                    search->pre_evaluator, search->post_evaluator, conditional, traversing, &search->navigation,
                                     immediate_collector_mode, query->collect_arc_condition_set, search->collector,
                                     search->simcontext, &query->CSTR__error, 1, probe ) ) < 0 )
     {

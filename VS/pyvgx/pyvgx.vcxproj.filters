@@ -1080,6 +1080,12 @@
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\service.py">
       <Filter>test\test_pyvgx_HTTPServer\System</Filter>
     </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Navigation.py">
+      <Filter>test\test_pyvgx_Graph\Query</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\EuclideanVector\Navigation.py">
+      <Filter>test\test_pyvgx_Vector\EuclideanVector</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\docs\src\pyvgx\graphconnect.png">

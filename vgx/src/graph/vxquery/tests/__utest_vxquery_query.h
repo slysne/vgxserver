@@ -517,7 +517,7 @@ BEGIN_UNIT_TEST( __utest_vxquery_query ) {
     const char *anchor_id = "this_is_the_anchor_vertex";
 
     // Create neighborhood query
-    vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, anchor_id, NULL, VGX_COLLECTOR_MODE_COLLECT_ARCS, VGX_RECURSION_MODE_NONE, &CSTR__error );
+    vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, anchor_id, NULL, VGX_COLLECTOR_MODE_COLLECT_ARCS, VGX_NAVIGATION_MODE_NONE, &CSTR__error );
     TEST_ASSERTION( query != NULL, "neighborhood query should be created" );
     
     // Verify data

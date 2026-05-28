@@ -4,7 +4,7 @@
 # Distributed engine for plugin-based graph and vector search
 # 
 # Module:  pyvgx.test
-# File:    Recursion.py
+# File:    Navigation.py
 # Author:  Stian Lysne slysne.dev@gmail.com
 # 
 # Copyright © 2025 Rakuten, Inc.
@@ -31,7 +31,7 @@ import random
 
 
 def make_random_graph(N):
-    g = Graph("recursion")
+    g = Graph("navigation")
     # Make a randomly connected graph
     for n in range(N):
         A = g.NewVertex(str(n))
@@ -48,12 +48,12 @@ def make_random_graph(N):
 
 
 ###############################################################################
-# TEST_recursion_vector
+# TEST_navigation_vector
 #
 ###############################################################################
-def TEST_recursion_vector():
+def TEST_navigation_vector():
     """
-    Test basic recursion with vector
+    Test basic navigation with vector
     test_level=3201
     """
 
@@ -62,13 +62,13 @@ def TEST_recursion_vector():
     # Pick a few entrypoints at random and search by vector similarity
     for n in random.sample(range(100000), 1000):
         entry = str(n)
-        # Simple recursion
+        # Simple navigation
         result_1 = g.Neighborhood(
             id = entry,
             hits = 100,
             fields = F_VAL|F_ID|F_DEPTH,
             result = R_LIST,
-            recursion = {
+            navigation = {
                 'vector': g.sim.rvec(128)
             }
         )

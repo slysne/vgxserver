@@ -38,12 +38,12 @@ static void __eval_memory_load_reg2( vgx_Evaluator_t *self );
 static void __eval_memory_load_reg3( vgx_Evaluator_t *self );
 static void __eval_memory_load_reg4( vgx_Evaluator_t *self );
 
-static void __eval_memory_recursion_evals( vgx_Evaluator_t *self );
-static void __eval_memory_recursion_threshold( vgx_Evaluator_t *self );
-static void __eval_memory_recursion_frontier( vgx_Evaluator_t *self );
-static void __eval_memory_recursion_result( vgx_Evaluator_t *self );
-static void __eval_memory_recursion_depth( vgx_Evaluator_t *self );
-static void __eval_memory_recursion_expansions( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_evals( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_threshold( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_frontier( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_result( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_depth( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_expansions( vgx_Evaluator_t *self );
 
 static void __eval_memory_count( vgx_Evaluator_t *self );
 static void __eval_memory_countif( vgx_Evaluator_t *self );
@@ -628,7 +628,7 @@ static void __eval_memory_load_reg4( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_evals( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_evals( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;
@@ -641,7 +641,7 @@ static void __eval_memory_recursion_evals( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_threshold( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_threshold( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;
@@ -654,7 +654,7 @@ static void __eval_memory_recursion_threshold( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_frontier( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_frontier( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;
@@ -667,7 +667,7 @@ static void __eval_memory_recursion_frontier( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_result( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_result( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;
@@ -680,7 +680,7 @@ static void __eval_memory_recursion_result( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_depth( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_depth( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;
@@ -693,7 +693,7 @@ static void __eval_memory_recursion_depth( vgx_Evaluator_t *self ) {
  * 
  ***********************************************************************
  */
-static void __eval_memory_recursion_expansions( vgx_Evaluator_t *self ) {
+static void __eval_memory_navigation_expansions( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
   px->type = STACK_ITEM_TYPE_INTEGER;

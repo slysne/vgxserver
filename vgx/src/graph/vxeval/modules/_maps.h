@@ -470,7 +470,7 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
  * __maps__vertex_unvisited( evalmem, vertex )
  * 
  * Special use case, call to check if a vertex is unvisited
- * during recursive traversal. If unvisted we add vertex to
+ * during navigation traversal. If unvisted we add vertex to
  * set and return true. When called on a vertex that was
  * previously added we return false. If we somehow can't add
  * vertex to map we also return true to be conservative.

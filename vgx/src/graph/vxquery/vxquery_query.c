@@ -83,7 +83,7 @@ static void _vxquery_query__delete_query( vgx_BaseQuery_t **query );
 
 //
 static vgx_AdjacencyQuery_t *    _vxquery_query__new_adjacency_query( vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error );
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_navigation_config_t *navigation_config, CString_t **CSTR__error );
 static vgx_GlobalQuery_t *       _vxquery_query__new_global_query( vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
 static vgx_AggregatorQuery_t *   _vxquery_query__new_aggregator_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 
@@ -469,15 +469,15 @@ static const char * AddPostFilter_##Class( Class *self, const char *filter_expre
 
 
 /*******************************************************************//**
- * AddRecursionFilter
+ * AddNavigationFilter
  *
  ***********************************************************************
  */
-#define __Define__AddRecursionFilter( Class )                                                   \
-static const char * AddRecursionFilter_##Class( Class *self, const char *filter_expression ) {  \
-  return __add_filter( &((vgx_BaseQuery_t*)self)->CSTR__recursion_filter, filter_expression );  \
+#define __Define__AddNavigationFilter( Class )                                                  \
+static const char * AddNavigationFilter_##Class( Class *self, const char *filter_expression ) { \
+  return __add_filter( &((vgx_BaseQuery_t*)self)->CSTR__navigation_filter, filter_expression ); \
 }
-#define __FunctionName__AddRecursionFilter( Class ) AddRecursionFilter_##Class
+#define __FunctionName__AddNavigationFilter( Class ) AddNavigationFilter_##Class
 
 
 
@@ -793,7 +793,7 @@ static vgx_aggregator_predicator_value_t AggregatePredicatorValue_##Class( Class
   __Define__AddPreFilter( Class )             \
   __Define__AddFilter( Class )                \
   __Define__AddPostFilter( Class )            \
-  __Define__AddRecursionFilter( Class )       \
+  __Define__AddNavigationFilter( Class )      \
   __Define__AddVertexCondition( Class )       \
   __Define__AddRankingCondition( Class )      \
   __Define__SetErrorString( Class )           \
@@ -807,7 +807,7 @@ static vgx_aggregator_predicator_value_t AggregatePredicatorValue_##Class( Class
   .AddPreFilter           = __FunctionName__AddPreFilter( Class ),        \
   .AddFilter              = __FunctionName__AddFilter( Class ),           \
   .AddPostFilter          = __FunctionName__AddPostFilter( Class ),       \
-  .AddRecursionFilter     = __FunctionName__AddRecursionFilter( Class ),  \
+  .AddNavigationFilter    = __FunctionName__AddNavigationFilter( Class ), \
   .AddVertexCondition     = __FunctionName__AddVertexCondition( Class ),  \
   .AddRankingCondition    = __FunctionName__AddRankingCondition( Class ), \
   .SetErrorString         = __FunctionName__SetErrorString( Class ),      \
@@ -1176,8 +1176,8 @@ static vgx_NeighborhoodQuery_t * NeighborhoodQuery_constructor( const void *iden
     // 7. Set the collector mode
     self->collector_mode = args->collector_mode;
 
-    // 8. Set the recursion mode
-    self->recursion_config = args->recursion;
+    // 8. Set the navigation mode
+    self->navigation_config = args->navigation;
 
     // 9. Set (steal) the collect condition
     if( args->collect_arc_condition_set && *args->collect_arc_condition_set ) {
@@ -3540,7 +3540,7 @@ static void __initialize_base_query( vgx_BaseQuery_t *query ) {
   query->CSTR__pre_filter = NULL;
   query->CSTR__vertex_filter = NULL;
   query->CSTR__post_filter = NULL;
-  query->CSTR__recursion_filter = NULL;
+  query->CSTR__navigation_filter = NULL;
 
   // Set vertex condition to default
   query->vertex_condition = NULL;
@@ -3593,7 +3593,7 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
     iString.Discard( &dest->CSTR__pre_filter );
     iString.Discard( &dest->CSTR__vertex_filter );
     iString.Discard( &dest->CSTR__post_filter );
-    iString.Discard( &dest->CSTR__recursion_filter );
+    iString.Discard( &dest->CSTR__navigation_filter );
 
     // Clone src filters into dest
     if( src->CSTR__pre_filter ) {
@@ -3611,8 +3611,8 @@ static int __copy_base_query( vgx_BaseQuery_t *dest, const vgx_BaseQuery_t *src 
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x7F4 );
       }
     }
-    if( src->CSTR__recursion_filter ) {
-      if( (dest->CSTR__recursion_filter = CStringClone( src->CSTR__recursion_filter )) == NULL ) {
+    if( src->CSTR__navigation_filter ) {
+      if( (dest->CSTR__navigation_filter = CStringClone( src->CSTR__navigation_filter )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x7F5 );
       }
     }
@@ -3711,7 +3711,7 @@ static void __clear_base_query( vgx_BaseQuery_t *query ) {
   iString.Discard( &query->CSTR__pre_filter );
   iString.Discard( &query->CSTR__vertex_filter );
   iString.Discard( &query->CSTR__post_filter );
-  iString.Discard( &query->CSTR__recursion_filter );
+  iString.Discard( &query->CSTR__navigation_filter );
 
   // Clear and delete the vertex condition
   if( query->vertex_condition ) {
@@ -4027,55 +4027,55 @@ static void _vxquery_query__delete_neighborhood_query( vgx_NeighborhoodQuery_t *
  *
  ***********************************************************************
  */
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error ) {
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_navigation_config_t *navigation_config, CString_t **CSTR__error ) {
   vgx_NeighborhoodQuery_constructor_args_t args = {
     .graph                      = graph,
     .anchor_id                  = vertex_id,
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = collect_arc_condition_set,
     .collector_mode             = collector_mode,
-    .recursion = {
-      .mode                     = recursion_config->mode,
-      .bias                     = recursion_config->bias,
-      .probe                    = recursion_config->probe,
+    .navigation = {
+      .mode                     = navigation_config->mode,
+      .bias                     = navigation_config->bias,
+      .probe                    = navigation_config->probe,
       .heap = {
-        .size                   = recursion_config->heap.size,
+        .size                   = navigation_config->heap.size,
       },
-      .shadow = {
-        .size                   = recursion_config->shadow.size
+      .inertia = {
+        .size                   = navigation_config->inertia.size
       },
       .limit = {
-        .frontier               = recursion_config->limit.frontier,
-        .expansion              = recursion_config->limit.expansion,
-        .depth                  = recursion_config->limit.depth,
-        .exec_ms                = recursion_config->limit.exec_ms,
-        .visit                  = recursion_config->limit.visit
+        .frontier               = navigation_config->limit.frontier,
+        .expansion              = navigation_config->limit.expansion,
+        .depth                  = navigation_config->limit.depth,
+        .exec_ms                = navigation_config->limit.exec_ms,
+        .visit                  = navigation_config->limit.visit
       },
       .visit = {
-        .reset_metrics          = recursion_config->visit.reset_metrics,
-        .reset_map              = recursion_config->visit.reset_map,
-        .CSTR__filter           = recursion_config->visit.CSTR__filter
+        .reset_metrics          = navigation_config->visit.reset_metrics,
+        .reset_map              = navigation_config->visit.reset_map,
+        .CSTR__filter           = navigation_config->visit.CSTR__filter
       },
       .beam = {
-        .width                  = recursion_config->beam.width,
-        .min_width              = recursion_config->beam.min_width,
-        .max_width              = recursion_config->beam.max_width,
-        .curve                  = recursion_config->beam.curve,
-        .adaptive_taper         = recursion_config->beam.adaptive_taper
+        .width                  = navigation_config->beam.width,
+        .min_width              = navigation_config->beam.min_width,
+        .max_width              = navigation_config->beam.max_width,
+        .decay                  = navigation_config->beam.decay,
+        .adaptive               = navigation_config->beam.adaptive
       },
       .tune = {
-        .alpha                  = recursion_config->tune.alpha,
-        .beta                   = recursion_config->tune.beta,
-        .gamma                  = recursion_config->tune.gamma,
-        .delta                  = recursion_config->tune.delta,
-        .epsilon                = recursion_config->tune.epsilon,
-        .zeta                   = recursion_config->tune.zeta,
-        .kappa                  = recursion_config->tune.kappa,
-        .lambda                 = recursion_config->tune.lambda,
-        .omega                  = recursion_config->tune.omega
+        .alpha                  = navigation_config->tune.alpha,
+        .beta                   = navigation_config->tune.beta,
+        .gamma                  = navigation_config->tune.gamma,
+        .delta                  = navigation_config->tune.delta,
+        .epsilon                = navigation_config->tune.epsilon,
+        .zeta                   = navigation_config->tune.zeta,
+        .kappa                  = navigation_config->tune.kappa,
+        .lambda                 = navigation_config->tune.lambda,
+        .omega                  = navigation_config->tune.omega
       },
-      .init = {
-        .select                 = recursion_config->init.select
+      .entry = {
+        .width                  = navigation_config->entry.width
       }
     }
   };
@@ -4096,8 +4096,8 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_default_neighborhood_query(
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = NULL,
     .collector_mode             = VGX_COLLECTOR_MODE_COLLECT_ARCS,
-    .recursion = {
-      .mode                     = VGX_RECURSION_MODE_NONE
+    .navigation = {
+      .mode                     = VGX_NAVIGATION_MODE_NONE
     }
   };
 
@@ -4338,7 +4338,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__clone_neighborhood_query( const
   }
 
   // Create query clone without anchor. It will be set when we copy adjacency query.
-  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, &other->recursion_config, CSTR__error );
+  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, &other->navigation_config, CSTR__error );
   if( self ) {
 
     // 1. copy adjacency part

@@ -4,7 +4,7 @@
 # Distributed engine for plugin-based graph and vector search
 # 
 # Module:  pyvgx.test
-# File:    Recursion.py
+# File:    Navigation.py
 # Author:  Stian Lysne slysne.dev@gmail.com
 # 
 # Copyright © 2025 Rakuten, Inc.
@@ -32,7 +32,7 @@ import random
 
 
 def make_random_graph(N):
-    g = Graph("recursion")
+    g = Graph("navigation")
     # Make a randomly connected graph
     for n in range(N):
         A = g.NewVertex(str(n))
@@ -47,12 +47,12 @@ def make_random_graph(N):
 
 
 ###############################################################################
-# TEST_recursion_basic
+# TEST_navigation_basic
 #
 ###############################################################################
-def TEST_recursion_basic():
+def TEST_navigation_basic():
     """
-    Test basic recursion
+    Test basic navigation
     test_level=3201
     """
 
@@ -61,13 +61,13 @@ def TEST_recursion_basic():
     # Pick a few entrypoints at random
     for n in random.sample(range(100000), 1000):
         entry = str(n)
-        # Simple recursion
+        # Simple navigation
         result_1 = g.Neighborhood(
             id = entry,
             hits = 100,
             fields = F_VAL|F_ID|F_DEPTH,
             result = R_LIST,
-            recursion = {}
+            navigation = {}
         )
         # Check hit count
         Expect( len(result_1) == 100,     f"should at least collect 100 nodes, got {len(result_1)}" )
@@ -75,19 +75,19 @@ def TEST_recursion_basic():
         S = set([id for score, id, depth in result_1])
         Expect( len(S) == len(result_1),  f"hits should be unique" )
 
-        # Add recursion filter
+        # Add navigation filter
         result_2 = g.Neighborhood(
             id = entry,
             hits = 100,
             fields = F_VAL|F_ID|F_DEPTH,
             result = R_LIST,
-            recursion = {
+            navigation = {
                 'filter': "startswith(vertex.id, '9')"
             }
         )
         # Check filter
         for score, id, depth in result_2:
-            Expect( id.startswith('9'),     f"recursion filter should accept only nodes starting with '9', got {id}" )
+            Expect( id.startswith('9'),     f"navigation filter should accept only nodes starting with '9', got {id}" )
         # Check for duplicates
         S = set([id for score, id, depth in result_2])
         Expect( len(S) == len(result_2),    f"hits should be unique" )
