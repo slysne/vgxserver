@@ -155,7 +155,7 @@ static vgx_virtual_ArcFilter_context_t * __new_specific_arc_filter( const vgx_pr
 static vgx_virtual_ArcFilter_context_t * __new_relationship_value_arc_filter( const vgx_predicator_t predicator, const vgx_navigation_config_t *navigation );
 static vgx_virtual_ArcFilter_context_t * __new_modifier_value_arc_filter( const vgx_predicator_t predicator, const vgx_navigation_config_t *navigation );
 static vgx_virtual_ArcFilter_context_t * __new_specific_value_arc_filter( const vgx_predicator_t predicator, const vgx_navigation_config_t *navigation );
-static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation );
+static vgx_virtual_ArcFilter_context_t * __new_navigation_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation );
 static vgx_virtual_ArcFilter_context_t * __new_evaluator_arc_filter( bool readonly_graph, bool positive, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation );
 static vgx_virtual_ArcFilter_context_t * __new_generic_arc_filter( vgx_Graph_t *self, bool readonly_graph, const vgx_predicator_t predicator1, const vgx_predicator_t predicator2, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation, vgx_ExecutionTimingBudget_t *timing_budget );
 
@@ -1528,7 +1528,7 @@ static int __navigation_filter( vgx_virtual_ArcFilter_context_t *arcfilter_conte
 
   evaluator->context.larc = larc;
   float score = 0.0f;
-  int collected = vxeval_fast_anncollect( evaluator, probe, vertex, target, &score );
+  int collected = vxeval_fast_nav_collect( evaluator, probe, vertex, target, &score );
 
   if( collected == 0 ) {
     *match = VGX_ARC_FILTER_MATCH_MISS;
@@ -2647,9 +2647,9 @@ static vgx_virtual_ArcFilter_context_t * __new_arc_filter( vgx_Graph_t *self, bo
 
       // Arc is full wildcard
       else if( _vgx_predicator_full_wildcard( pred1 ) ) {
-        // Special: navigation with no arc filter and no expression filter: Optimized ANN filter w/collect
+        // Special: navigation with no arc filter and no expression filter: Optimized navigation filter w/collect
         if( __is_navigation_enabled( navigation ) && EMPTY_EVALUATOR( traversing_evaluator ) ) {
-          filter_context = __new_ann_arc_filter( readonly_graph, traversing_evaluator, navigation );
+          filter_context = __new_navigation_arc_filter( readonly_graph, traversing_evaluator, navigation );
         }
         // At this point: No vertex probe, no predicator filter, only an evaluator instance
         else if( traversing_evaluator != NULL ) {
@@ -3045,7 +3045,7 @@ static void __delete_arc_filter( vgx_virtual_ArcFilter_context_t **arcfilter ) {
  *
  ***********************************************************************
  */
-static vgx_virtual_ArcFilter_context_t * __new_ann_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation ) {
+static vgx_virtual_ArcFilter_context_t * __new_navigation_arc_filter( bool readonly_graph, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation ) {
   vgx_virtual_ArcFilter_context_t *arcfilter = NULL;
   vgx_GenericArcFilter_context_t *evaluator_filter = (vgx_GenericArcFilter_context_t*)calloc( 1, sizeof( vgx_GenericArcFilter_context_t ) );
   if( evaluator_filter ) {

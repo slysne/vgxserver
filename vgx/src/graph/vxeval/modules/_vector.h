@@ -255,7 +255,7 @@ __inline static void __modulate_beam_width( vgx_BaseCollector_context_t *collect
  *
  * 
  ***********************************************************************
- */
+ *//*
 static BYTE cos_to_hamdist_1_5_sigma[] = {
   38, 38, 38, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36, 36, 36, 35,
   35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33,
@@ -265,7 +265,7 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
   23, 23, 23, 23, 23, 22, 22, 22, 22, 21, 21, 21, 21, 20, 20, 20,
   20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15,
   14, 14, 13, 13, 13, 12, 12, 11, 10, 10,  9,  8,  7,  6,  5,  0
-};
+};*/
 
 
 
@@ -273,7 +273,7 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
  * anncollect( )
  ***********************************************************************
  */
-static int __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
+static int __fast_navcollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
@@ -444,7 +444,7 @@ static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
     const vgx_Vector_t *probe = px->vector;
     const vgx_Vertex_t *vertex = self->context.HEAD;
     const vgx_Vector_t *target = vertex->vector;
-    __fast_anncollect( self, probe, vertex, target, &score );
+    __fast_navcollect( self, probe, vertex, target, &score );
   }
   SET_REAL_PITEM_VALUE( px, score );
 }

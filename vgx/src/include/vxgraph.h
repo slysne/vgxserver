@@ -7252,7 +7252,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
-DLL_HIDDEN int vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore );
+DLL_HIDDEN int vxeval_fast_nav_collect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore );
 
 
 /*******************************************************************//**
