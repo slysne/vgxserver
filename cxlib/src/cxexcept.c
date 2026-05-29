@@ -549,7 +549,10 @@ do {                                    \
           fprintf( ostream, "[%s]  HARD STOP.\n", tbuf);
           die = 1;
 #else
-          fprintf( ostream, "[%s]  (Execution will continue - data corruption possible)\n", tbuf);
+          if( msg_cod == 0xD1E ) {
+            fprintf( ostream, "[%s]  HARD EXIT\n\n", tbuf);
+            die = 1;
+          }
 #endif
           break;
         case CXLIB_ERR_CRITICAL:
