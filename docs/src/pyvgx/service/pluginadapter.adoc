@@ -761,6 +761,11 @@ a|For internal use and debugging purposes. Can be used in a top level dispatcher
 Message strings set in matrix back-end responses are discarded when those responses are merged in a dispatcher.
 ====
 
+|anchor:response_attr_meta[]`*meta*`
+|_object_ or None
+|r/w
+a|Any object to supplement the response entries list. When matrix back-end responses are merged in a dispatcher, only partition 0 meta object is kept. Back-end meta objects are returned all the way up to the topmost dispatcher unless deliberately overwritten (or removed) along the way.
+
 |anchor:response_attr_partials[]`*partials*`
 |_int_
 |r/w
