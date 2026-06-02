@@ -1,0 +1,537 @@
+[[neighborhood_navigation]]
+= Neighborhood Navigation Query <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphManagement.adoc#, icon:arrow-circle-right[title="Graph Management Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:imagesdir: ../images/
+:source-highlighter: highlightjs
+
+include::../common/_copyable.adoc[]
+
+[[neighborhood_navigation_overview]]
+== Overview
+
+Navigation search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. For navigation to be efficient and successful in finding the best matches, the graph network must be constructed in accordance with some proximity metric where each vertex is connected to a small set of neighbors that are closely related in some way. It is usually desirable for such a graph to be strongly connected, where a path exists from any starting point to any other vertex in the graph.
+
+A proximity graph using vectors to express similarity is a prime target for this type of explorative traversal. Such a graph is often a navigable nearest-neighbor construction with diverse local neighborhoods covering both short and occasional longer range hops. This allows efficient implementation of <<nav_ann>>. The search condition is expressed as a probe vector and the navigation algorithm then explores the graph from a starting point (which can be any node), automatically finding paths to regions of the graph containing items whose vectors are most similar to the probe. 
+
+== Navigation Control Parameters
+
+Neighborhood _navigation_ offers many optional control parameters for the search process:
+
+.Neighborhood _navigation_ control parameters, brief overview
+[source, python]
+----
+g.Neighborhood(
+  id = start_node,
+  hits = 10,
+  navigation = {
+    # Main meta-parameter
+    'bias': B,            # Main recall vs. speed control
+    
+    # Search target
+    'vector': v,          # Probe for similarity search
+    'filter': f,          # Arbitrary filter per visited node
+
+    # Frontier observation history
+    'result_capacity': H, # Size of top best matches set
+    'inertia': I,         # Size of history for estimation
+
+    # Limits
+    'queue_limit': F,     # Frontier queue size (non-beam)
+    'expansion_limit': E, # Max number of node expansions
+    'depth_limit': D,     # Max neighborhood hops from start
+    'exec_ms_limit': X,   # Max execution time
+    'visit_limit': V,     # Max node visits
+
+    # Beam search
+    'entry_width': w,     # Size of initial beam
+    'beam_width': W,      # Initial beam width
+    'beam_min': L,        # Min beam width
+    'beam_max': H,        # Max beam width 
+    'beam_decay': C,      # Beam narrowing bias
+    'adaptive_beam': A,   # Use dynamic beam True/False
+
+    # Optimizations
+    'alpha': a,           # Depth discount (expansion thres.)
+    'beta': b,            # Evals discount (expansion thres.)
+    'gamma': g,           # Global offset (expansion thres.)
+    'delta': d,           # Beam controller reactivity
+    'epsilon': e,         # Score contrib. thres. offset
+    'zeta': z,            # Smoothing factor for thres. EMA
+    'omega': O,           # All optimizations weight
+
+    # Traversal thinning
+    'kappa': k,           # Arc trav. thinning above thres.
+    'lambda': l,          # Arc trav. thinning rule
+
+    # State management
+    'reset_metrics': r,   # Reset counters from last query
+    'reset_map': R        # Reset visited node map
+  }
+}
+----
+
+It is rarely necessary to use most of these parameters in a production setting, but they can be useful when developing proximity graph construction algorithms or for debugging. Most of the time the _bias_ setting is enough to choose a suitable tradeoff between recall and search speed. Its value ranges from -100.0 (max speed) to 100.0 (max recall) and automatically adjusts all other navigation controls to achieve desired performance. When a specific parameter value is provided it overrides the default determined by _bias_.
+
+
+.Neighborhood navigation control parameters
+[cols="1,1,1,1,1,5"]
+|===
+|Parameter |Type |Default |Min |Max |Description
+
+6+|*Main Meta-parameter*
+
+|<<nav_bias, _bias_>>
+|float
+|0.0
+|-100.0
+|100.0
+|*Main recall vs. speed control*: Negative values favor speed, positive values favor recall. This single knob automatically tunes all other parameters.
+
+6+|*Search Target and Filter*
+
+|<<nav_vector, _vector_>>
+|<<../similarity/vector.adoc#pyvgxvector, Euclidean Vector>> or list
+|None
+2+|
+|*Probe vector for similarity search*: Uses Cosine similarity. All nodes must have an assigned vector. +
+Scores are returned in [0.0–2.0] range (`1 + Cosine(probe, node)`) to keep scores non-negative internally.
+
+|<<nav_filter, _filter_>>
+|str
+|None
+2+|
+|*Custom filter* applied to every visited node using the expression language (must be a local evaluator)
+
+6+|*Frontier Observation History*
+
+|<<nav_result_capacity, _result_capacity_>>
+|int
+|auto
+|0
+|1048576
+|*Size of the top-k result heap*: Larger values can sometimes improve recall
+
+|<<nav_inertia, _inertia_>>
+|int
+|auto
+|-1
+|1048576
+|*Length of the frontier observation history*: Controls how quickly the threshold adapts — the primary driver of recall vs. speed
+
+6+|*Limits*
+
+|<<nav_queue_limit, _queue_limit_>>
+|int
+|auto
+|0
+|1048576
+|Use a classic queue instead of beam search (rarely better, but useful to test)
+
+|<<nav_expansion_limit, _expansion_limit_>>
+|int
+|unlimited
+|0
+|2147483647
+|Maximum number of node expansions
+
+|<<nav_depth_limit, _depth_limit_>>
+|int
+|1024
+|0
+|2147483647
+|Maximum hops from the entry point
+
+|<<nav_exec_ms_limit, _exec_ms_limit_>>
+|int
+|unlimited
+|-1
+|2147483647
+|Hard time limit (highly recommended in production)
+
+|<<nav_visit_limit, _visit_limit_>>
+|int
+|unlimited
+|0
+|2147483647
+|Maximum nodes visited (guards memory usage)
+
+6+|*Beam Search*
+
+|<<nav_entry_width, _entry_width_>>
+|int
+|auto
+|0
+|1024
+|Number of diverse entry points to use from a synthetic hub node
+
+|<<nav_beam_width, _beam_width_>>
+|int
+|auto
+|0
+|65536
+|Initial beam size
+
+|<<nav_beam_min, _beam_min_>> / <<nav_beam_max, _beam_max_>>
+|int
+|auto
+|1 / 0
+|65536
+|Bounds for adaptive beam.
+
+|<<nav_beam_decay, _beam_decay_>>
+|float
+|auto
+|0.0
+|1.0
+|Beam narrowing factor per depth level.
+
+|<<nav_adaptive_beam, _adaptive_beam_>>
+|bool
+|auto
+2+|
+|Enable dynamic beam adjustment based on result improvement.
+
+6+|*Optimizations* (advanced)
+
+|<<nav_alpha, _alpha_>> / <<nav_beta, _beta_>> / <<nav_gamma, _gamma_>> / <<nav_delta, _delta_>> / <<nav_epsilon, _epsilon_>> / <<nav_zeta, _zeta_>> / <<nav_omega, _omega_>>
+|float
+|auto
+|various
+|various
+|Fine-grained controls for threshold calculation, depth discounting, beam reactivity, and smoothing. Most users never touch these.
+
+6+|*Traversal Thinning* (advanced)
+
+|<<nav_kappa, _kappa_>> / <<nav_lambda, _lambda_>>
+|int
+|0
+|0
+|256 / 7
+|Skip low-priority arcs for extra speed in rough searches
+
+6+|*State Management*
+
+|<<nav_reset_metrics, _reset_metrics_>> / <<nav_reset_map, _reset_map_>>
+|bool
+|True
+2+|
+|Controls carry-over behavior when reusing an external `pyvgx.Memory` object
+|===
+
+
+
+[[nav_bias]]bias::
+*Main recall vs. speed control*
++
+This is normally the only parameter needed to dial in the desired search performance.
+
+[[nav_vector]]vector::
+*Probe for similarity search*
++
+When given, the navigation algorithm uses Cosine similarity to evaluate nodes in the graph against the probe. All graph nodes must have a vector <<../vertex/vertexVector.adoc#vertexsetvector, assigned>> for the search to work.
++
+NOTE: Similarity scores are in the range [0.0 - 2.0], computed as `1 + Cosine(_probe_, _node_)`. This is to avoid negative scores, which internally would terminate certain search paths prematurely.
+
+[[nav_filter]]filter::
+*Arbitrary filter per visited node*
++
+Use the <<../evaluator/evaluator.adoc#, expression language>> to add custom filters applied to any visited node during graph exploration. The expression must be a *_local evaluator_*, i.e. it cannot reference any of the `next*` arc attributes or head vertex attributes/properties, or perform any `stage*()` or `collect*()` operations.
+
+[[nav_result_capacity]]result_capacity::
+*Size of internal top-k result heap*
++
+This heap can be made larger than needed to hold _k_ hits which in some cases may increase the ability to find true nearest neighbors. Effective _result_capacity_ is never lower than _k_ given by Neighborhood( hits=_k_ ).
+
+[[nav_inertia]]inertia::
+*Length of frontier observation history*
++
+Navigation is controlled by a running threshold estimate which must be exceeded for a candidate node to be considered for the result and to facilitate continued traversal. This threshold is computed from a delayed observation at the frontier. High inertia leads to more aggressive exploration (higher recall) due to a slowly rising threshold. Low inertia does the opposite, causing the threshold to rise quickly thus terminating the search sooner (lower latency.)
+
+[[nav_queue_limit]]queue_limit::
+*Frontier queue size*
++
+A positive number selects a queue-based frontier for the navigation algorithm. By default the frontier is maintained in a beam (heap) which is populated from scratch at every new level of expansion depth and then fully consumed at the next depth. However, selecting a queue-based frontier changes this behavor. The frontier queue is continually populated and consumed, causing it to grow rapidly at first and then later consumed to exhaustion.
++
+NOTE: Beam search is usually preferred for both speed an recall, but the frontier queue option may perform better for some performance targets on some data sets. 
+
+[[nav_expansion_limit]]expansion_limit::
+*Max number of node expansions*
++
+A visited node that was accepted into the frontier will later facilitate further exploration (if its score is still above the running threshold.) The process of exploring a node's neighborhood is called expansion. Set _expansion_limit_ to restrict how many neighborhoods will be explored before terminating the search.
+
+[[nav_depth_limit]]depth_limit::
+*Max neighborhood hops from search entry point*
++
+Navigation is performed by expanding frontier nodes (i.e. searching their neighborhoods.) This activity adds new promising nodes to the frontier. When all frontier nodes that were present at start of expansion have been consumed the algorithm moves one level deeper into the graph, now expanding nodes that were recently added to the frontier. Set _depth_limit_ to restrict max distance (hops) from the entry point before terminating the search.
+
+[[nav_exec_ms_limit]]exec_ms_limit::
+*Max execution time in milliseconds*
++
+Use this to set a maximum allowed search time. Navigation search always carries some risk of runaway execution (in pathological graphs.) Production services should set a timeout to prevent unexpected edge cases from destabilizing the system. (A reasonable upper limit would be something like 2 times the 99.9th latency percentile.)
+
+[[nav_visit_limit]]visit_limit::
+*Max node visits*
++
+Navigation search visits graph nodes to evaluate them. Some nodes are accepted into the result or the frontier, most are discarded. As the graph is explored the number of visited nodes grows. All visited nodes are recorded in a set to prevent cyclic exploration. The visited node set consumes memory. To avoid unbounded memory usage _visit_limit_ can be set to terminate the search after a maximum number of node visits. 
+
+[[nav_entry_width]]entry_width::
+*Number of initial search entry points*
++
+If the proximity graph is constructed with a synthetic entry point, use _entry_width_ to pick the number of starting nodes in the graph. This is helpful if the synthetic entry point connects to a maximally diverse set of nodes in the graph. Selecting the top best _entry_point_ nodes as seeds for navigation can help speed up convergence and generally leads to better performance. For example, a synthetic entry point may be connected to 500 diverse (mutually unrelated) nodes. Selecting five of these using _entry_width_=5 helps give the search a flying start by teleporting straight into potentially relevant graph regions.
+
+[[nav_beam_width]]beam_width::
+*Initial beam width*
++
+Beam search uses a focused frontier of promising nodes captured into a heap of a certain max size (_beam_width_.) As better nodes are discovered, inferior nodes are evicted from the beam. Once all nodes in the previous beam have been expanded a new beam (just built) takes its place and search continues. The initial beam is a special case and consists of all neighbors of the start node. When expansion of a previous beam results in an empty new beam (zero promising nodes found) search terminates. Use _beam_width_ to set the max number of promising nodes captured at each level of expansion depth.
++
+NOTE: Parameters _beam_decay_ and _adaptive_beam_ may cause beam width to be adjusted as the search progresses.
+
+[[nav_beam_min]]beam_min::
+*Min beam width*
++
+The smallest beam permitted if beam width is subject to adjustment during search.
+
+[[nav_beam_max]]beam_max::
+*Max beam width*
++
+The largest beam permitted if beam width is subject to adjustment during search.
+
+[[nav_beam_decay]]beam_decay::
+*Beam narrowing bias*
++
+At each level of expansion (hops from entry point) the next level's beam width will be the current level's beam width multiplied by _beam_decay_. Values lower than 1.0 then gradually shrinks the beam width (but never below _beam_min_.)
+
+[[nav_adaptive_beam]]adaptive_beam::
+*Use dynamic beam True/False*
++
+The optimal beam width is both data dependent and query dependent. When _adaptive_beam_ is True the algorithm adjusts beam width automatically for each query by measuring result set improvement during search. When the result set is quickly improving with new, better items the beam becomes narrower. When search stagnates without finding better items the beam becomes wider (but never above _beam_max_.) If _beam_decay_ is less than 1.0 the narrowing bias is applied on top of the adaptive width.
+
+[[nav_alpha]]alpha::
+*Depth discount for expansion threshold*
++
+To expand a frontier node its score must be greater than the current threshold. Depth discount _alpha_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above -1.0) make the gate more permissive with exploration depth, i.e. a node many hops away from the entry point may be expanded even if its score is slightly below the current threshold. Conversely, lower values (below -1.0) make the gate stricter with exploration depth, thereby expediting termination as neighborhoods far from the entry point are reached.
++ 
+NOTE: _alpha_ = -1.0 disables depth discount (not 0.0.)
+
+[[nav_beta]]beta::
+*Evaluation discount for expansion threshold*
++
+To expand a frontier node its score must be greater than the current threshold. Evaluation discount _beta_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive as the number of visited nodes grows, i.e. a node visited late in the search may still be expanded even if its score is slightly below the current threshold. Conversely, lower values (below 0.0) make the gate stricter as the number of visited nodes grows, thereby promoting faster termination after many node visits. Evaluation discount is disabled with _beta_ = 0.0.
+
+[[nav_gamma]]gamma::
+*Global offset for expansion threshold*
++
+To expand a frontier node its score must be greater than the current threshold. Global offset _gamma_ adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive and lower values (below 0.0) make the gate stricter. Global offset is disabled with _gamma_ = 0.0.
+
+[[nav_delta]]delta::
+*Beam controller reactivity*
++
+When _adaptive_beam_ is enabled the beam controller adjusts beam width automatically based on how successful search currently is at improving the result set. When the result is improving quickly the beam is narrowed, and when result improvement stagnates the beam is widened. Modulation strength can be adjusted using controller reactivity _delta_. Higher values modulates width more strongly and lower values lessen the effect of the beam controller. Nominal control is obtained with _delta_ = 0.0 and the controller is disabled with _delta_ = -1.0.
+
+[[nav_epsilon]]epsilon::
+*Score contribution threshold offset*
++
+Visited nodes are evaluated using a scoring function. (For vector similarity this function is `score = Cosine(probe, node) + 1.0`.) If a node's score is at or above the current threshold it counts as an *observation at the frontier* and is injected into the observation history queue whose size is determined by _inertia_. (The node may also be entered into the result and/or frontier if its score is good enough.) Conversely, if the node's score is below the current threshold the score is ignored and instead the current threshold is injected into the history queue, representing a sample-and-hold observation at the frontier. A non-zero _epsilon_ modifies the current threshold used when making these decisions. Positive _epsilon_ values increase difficulty and negative values make the gate more permissive.
++}
+NOTE: Normally, use tiny _epsilon_ values. For reference, the automatic values derived from _bias_ are in the range -0.00067 to 0.001. (The parameter's large range -1.0 to 1.0 is intended for special use cases and debugging.)
+
+[[nav_zeta]]zeta::
+*Smoothing factor for running threshold EMA*
++
+At the end of the observation history queue (whose length is controlled by _inertia_) sits an exponential moving average smoothing function. Its purpose is to prevent outlier samples observed at the frontier from abruptly changing the threshold used by the expansion controller and node evaluator. Infinite smoothing is obtained with _zeta_ = 0.0, i.e. threshold never changes from its initial (0.0) value. Smoothing is disabled with _zeta_ = 1.0, i.e. raw (delayed) frontier observations are presented as current threshold.
++
+NOTE: For reference, default _zeta_ = 0.2 for most _bias_ settings.
+
+[[nav_omega]]omega::
+*All optimizations weight*
++
+This parameter applies weighted adjustment to _alpha_, _beta_, _gamma_, _delta_, _epsilon_, and _zeta_ simultaneously. Its purpose is to temper (_omega_ < 1.0) the individually optimized parameters for better navigation stability. During custom performance tuning it is easy to over-tune individual parameters to maximize their effects. This can sometimes push the algorithm to the edge of stability. It is often a good idea to dial back these individual settings with _omega_ < 1.0. Experimenting with _omega_ can help finalize performance tuning by allowing slight adjustments to multiple parameters at the same time.
+
+[[nav_kappa]]kappa::
+*Arc traversal thinning threshold*
++
+If the graph uses arcs with modifier `M_INT` to connect nodes and the values of those arcs indicate priority (where 0 is highest), then _kappa_ may be used to enable traversal thinning. A value _kappa_=1 or higher tells the algorithm to apply a thinning rule (via _lambda_) to possibly skip arcs with priority >= _kappa_. This can be useful for rough searches that need extra speed, as part of evaluating overall graph structure during build, debugging, or other special use cases. Normally this parameter should be left at 0. 
+
+[[nav_lambda]]lambda::
+*Arc traversal thinning rule*
++
+If _kappa_ is > 0 then _lambda_ determines which arcs (whose value >= _kappa_) will be ignored. Skipping rule for arcs with value >= _kappa_ is as follows for different values of _lambda_: 0=skip ALL, 1=skip 50%, 2=75%, 3=88%, 4=94%, 5=97%, 6=98%, 7=99%.
+
+[[nav_reset_metrics]]reset_metrics::
+*Reset counters from last query*
++
+When using an externally managed `pyvgx.Memory` object _m_ with Neighborhood( memory=m, ... ) various internal counters and beam width control variables are accumulated inside _m_. If _reset_metrics_=False when re-using a memory object these counters and control variables will continue to accumulate. This can be useful for debugging or for special cases where search is manually divided into multiple Neighborhood() calls.
++
+Some internal counters are visible and may be accessed via `m.counters` attribute. The return value is a tuple: `(score_evaluations, threshold_contributions, accepted_into_frontier, accepted_into_result, recursion_depth, node_expansions, node_visits, node_revisits_avoided)`.
+
+[[nav_reset_map]]reset_map::
+*Reset visited node map*
++
+When using an externally managed pyvgx.Memory object _m_ with Neighborhood( memory=m, ... ) the node visitation set built during traversal is kept inside _m_. If _reset_map_=False when re-using a memory object with another Neighborhood() query the visitation set is remembered and will prevent visiting the same nodes visited in the previous query. This can be useful for debugging or when search is manually divided into multiple Neighborhood() calls with different entry points.
++
+NOTE: Nodes that should not be visited can be added to the Memory object before calling Neighborhood(). Use `pyvgx.Memory.VSetAdd( vertex_id )` to pre-populate the visited set.
+ 
+image::vgx_ann_control.png[vgxserver, title="VGX/ANN Control"]
+
+[[nav_ann]]
+== Approximate Nearest Neighbor (ANN) Search
+
+Neighborhood Navigation turns the graph into a high-performance **Approximate Nearest Neighbor (ANN)** engine. Instead of brute-force scanning every vector, the algorithm treats similarity search as an intelligent routing problem across a pre-built proximity graph.
+
+You supply a probe vector, and the engine efficiently explores only the most promising regions of the graph, delivering excellent recall at very high speed.
+
+.Approximate nearest neighbors (ANN) search
+[source, python]
+----
+g.Neighborhood(
+    id = start_node,        # or synthetic entry point
+    hits = 10,
+    navigation = {
+        'vector': probe_vector
+    }
+)
+----
+
+This approach is powerful because the graph and vector search are deeply integrated in a single in-memory engine. The same structure that makes graph traversal fast also makes vector search fast. There is no separate index to maintain, no data duplication, and seamless hybrid graph + vector queries.
+
+=== How Vector Search Works
+
+Traditional vector search must solve a hard problem: in high-dimensional space there is no efficient lookup path, so exact search requires scanning everything (brute force). ANN methods trade a tiny amount of accuracy for massive speed gains by structuring the data so that large irrelevant regions can be skipped early.
+
+This engine uses a **single-layer proximity graph** (a sparse, navigable nearest-neighbor network). Each node is connected to a small set of diverse nearby neighbors in vector space. This creates:
+
+* **Locality-aware connectivity**: Edges point toward similar vectors
+* **Navigability**: Greedy traversal can iteratively move toward better matches
+* **Low diameter + global entry points**: We reach relevant regions quickly from a good starting node
+
+The navigation algorithm starts at an entry point (any node or a synthetic diverse hub) and maintains a **dynamic frontier** of promising candidates. At every step it:
+
+* Evaluates vectors using **Cosine similarity** (converted to [0.0–2.0] range for internal stability)
+* Updates a running **threshold** based on frontier observations
+* Expands only neighborhoods that show sufficient promise
+* Dynamically adjusts beam width: narrow when results improve quickly, wider when search stagnates
+
+This signal-driven behavior (commit early, expand only when justified) is the core reason for both speed and stable recall.
+
+=== High Performance
+
+The combination of graph structure and adaptive navigation gives several unique advantages:
+
+* **Graph-native routing**: Similarity becomes a pathfinding problem instead of a search problem. Good paths are self-reinforcing; bad regions are pruned early.
+* **Dynamic beam + inertia control**: The main <<nav_bias, _bias_>> parameter controls the entire recall/speed tradeoff. Short observation history → fast termination. Long history → aggressive exploration.
+* **Early commitment + late expansion**: Strong selection pressure at the frontier prevents wasteful branching.
+* **Synthetic entry points**: A single start-hub node connected to hundreds of diverse vectors gives instant global coverage, dramatically accelerating convergence.
+* **Tight engine integration**: All operations run in the same highly optimized in-memory runtime with excellent cache behavior and minimal overhead.
+* **Hybrid readiness**: It is possible to combine vector navigation with graph topology, filters, and custom scoring in one query.
+
+==== Performance Example
+
+These numbers represent single-threaded query performance measured on Apple M4 Max, using 1.4 million 128-D vectors.
+
+.Performance example (real-world measurement on a 1.4M vector dataset)
+[cols="1,1,1,3"]
+|===
+|bias |recall@10 |QPS |Notes
+
+|-100
+|0.008
+|42800
+|Maximum speed
+
+|-99
+|0.246
+|21935.8
+.4+|High speed, rough semantic recall
+
+|-95
+|0.549
+|14419
+
+|-90
+|0.657
+|10892
+
+|-75
+|0.801
+|6657
+
+|-60
+|0.8799
+|4827.6
+.3+|Balanced
+
+|-50
+|0.939
+|3078
+
+|-25
+|0.989
+|1232
+
+|0
+|0.994
+|881
+.3+|Very high recall
+
+|25
+|0.997
+|719
+
+|50
+|0.9981
+|550
+
+|75
+|0.9996
+|268
+.2+|Near-exhaustive
+
+|90
+|0.9998
+|144
+
+|100
+|0.9999
+|71
+|Maximum recall
+
+|===
+
+==== Speed/Recall Curve 
+
+Single threaded performance on Apple M4 MAX, 1.4M vectors, 128-dim is shown below.
+
+image::vgx_ann_perf.png[vgxserver, title="VGX/ANN Performance"]
+
+Multi-threaded scaling is shown below. Again, this is measured on Apple M4 MAX, 1.4M vectors, 128-dim, using a linear vertical scale to better show scaling behavior.
+
+Notice memory bus saturation causing 16-thread performance to be worse in the low recall regime until we reach recall=0.8, after which workload starts to become CPU-bound and 16 threads show marginal benefit.
+
+Overall, in the recall regimes that matter for typical production use we scale almost linearly with CPU core count.
+
+image::vgx_ann_scale_mt.png[vgxserver, title="VGX/ANN Multi-Threaded Scaling"]
+
+
+
+___
+
+[.float-group]
+--
+[.left]
+//icon:arrow-circle-left[size=2x, link=graphArc.adoc#, title="Graph Arc Methods"]
+<<graphQuery.adoc#, icon:arrow-circle-left[size=2x, title="Graph Query Methods"]>>
+//icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
+<<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
+//icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
+<<graphManagement.adoc#, icon:arrow-circle-right[size=2x, title="Graph Management Methods"]>>
+// cspell:ignore backtotop
+include::../common/_backtotop.adoc[]
+--
+
+[[theend]]
+//image::pyvgx.png[PYVGX,120,120,align="center",link="../reference.adoc#"]
+[.text-center]
+<<../reference.adoc#, image:pyvgx.png[PYVGX, 120, 120, align="center"]>>

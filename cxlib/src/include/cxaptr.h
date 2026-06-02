@@ -37,6 +37,23 @@
  ***********************************************************************
  */
 
+
+/* =====================================================================
+ * WARNING (29 May 2026):
+ *
+ * BACKGROUND:
+ * Packed pointers assume slab addresses fit within 45 VA bits.
+ * x86-64 canonical addresses made this mostly safe via sign extension,
+ * but AArch64/Linux may use non-canonical high bits (TBI/PAC/52-bit VA).
+ * 
+ * TODO:
+ * Slab arenas must therefore be mmap()'d into a constrained low VA range.
+ * 
+ * ===================================================================== 
+ */
+
+
+
 /* The number of address bits used by the target CPU */
 #define __ARCH_ADDRESS_BITS 48
 
@@ -368,6 +385,7 @@ then store the offset within that areana.
 
 */
 
+// TODO(arm64): packed ptrs require low/canonical VA bits; use constrained mmap() slab arenas, not arbitrary malloc() addresses.
 #define __TPTR_PACK( Ptr )                                (((intptr_t)(Ptr) >> 3) & __TPTR_PACK_MASK)
 #define __TPTR_UNPACK( Bits )                             (((intptr_t)(Bits) << (3 + __TPTR_SIGN_EXTEND_SHIFT)) >> __TPTR_SIGN_EXTEND_SHIFT)
 

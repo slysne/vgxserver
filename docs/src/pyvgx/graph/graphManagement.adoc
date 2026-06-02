@@ -335,7 +335,7 @@ ___
 [.float-group]
 --
 [.left]
-<<graphQuery.adoc#, icon:arrow-circle-left[size=2x, title="Graph Query Methods"]>>
+<<graphNavigationQuery.adoc#, icon:arrow-circle-left[size=2x, title="Navigation Query"]>>
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 <<graphEnum.adoc#, icon:arrow-circle-right[size=2x, title="Graph Enumeration Methods"]>>
 // cspell:ignore backtotop

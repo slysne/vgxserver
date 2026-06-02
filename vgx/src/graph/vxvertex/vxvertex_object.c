@@ -1388,10 +1388,10 @@ static vgx_BaseCollector_context_t * __Vertex_collect_neighborhood( vgx_Vertex_t
   vgx_BaseCollector_context_t *result = NULL;
 
   vgx_Graph_t *graph = self_RO->graph;
-  vgx_recursion_config_t recursion = {
-    .mode = VGX_RECURSION_MODE_NONE
+  vgx_navigation_config_t navigation = {
+    .mode = VGX_NAVIGATION_MODE_NONE
   };
-  vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CALLABLE( self_RO )->IDString( self_RO ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, &recursion, NULL );
+  vgx_NeighborhoodQuery_t *query = iGraphQuery.NewNeighborhoodQuery( graph, CALLABLE( self_RO )->IDString( self_RO ), NULL, VGX_COLLECTOR_MODE_COLLECT_VERTICES, &navigation, NULL );
   if( query == NULL ) {
     return NULL;
   }

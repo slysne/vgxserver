@@ -446,6 +446,19 @@ static cxmalloc_linechunk_t * __cxmalloc_block__new_initialized_data_lines_ACS( 
   cacheline_t empty_CL = {0};
   cxmalloc_linehead_t *linehead = (cxmalloc_linehead_t*)&first_CL.m256i[0];
 
+  /* =====================================================================
+  * WARNING (29 May 2026):
+  *
+  * BACKGROUND:
+  * Packed pointers assume slab addresses fit within 45 VA bits.
+  * x86-64 canonical addresses made this mostly safe via sign extension,
+  * but AArch64/Linux may use non-canonical high bits (TBI/PAC/52-bit VA).
+  * 
+  * TODO:
+  * Slab arenas must therefore be mmap()'d into a constrained low VA range.
+  * 
+  * ===================================================================== 
+  */
 
   // Allocate data lines, page aligned
   cxmalloc_linechunk_t *data = NULL;
@@ -454,12 +467,22 @@ static cxmalloc_linechunk_t * __cxmalloc_block__new_initialized_data_lines_ACS( 
   // Allocate 64 additional bytes at end of block data for guard/debug check
   n_chunks_alloc += 2;
 #endif
+  // TODO(arm64): packed ptrs require low/canonical VA bits; use constrained mmap() slab arenas, not arbitrary malloc() addresses.
   if( PALIGNED_ARRAY( data, cxmalloc_linechunk_t, n_chunks_alloc ) != NULL ) {
     // Compute sizes
     size_t n_lines = allocator_CS->shape.blockmem.quant;
     size_t n_CL_per_line = allocator_CS->shape.linemem.chunks / (sizeof(cacheline_t) / sizeof(cxmalloc_linechunk_t));
     size_t n_empty_CL_per_line = n_CL_per_line - 1;
     cacheline_t *data_CL = (cacheline_t*)data;
+
+    // Verify top VA bits within range
+    size_t asz = sizeof( cxmalloc_linechunk_t ) * n_chunks_alloc;
+    void *end = (char*)data + asz;
+    tptr_t tp;
+    TPTR_SET_POINTER( &tp, end );
+    if( TPTR_GET_POINTER( &tp ) != end ) {
+      CXMALLOC_FATAL( 0xD1E, "slab address %p exceeds 45-bit packed-pointer range; generic TBI/PAC-safe platform support pending", end );
+    }
 
     #if defined CXPLAT_ARCH_X64
     // Initialize data lines in a cache-friendly way

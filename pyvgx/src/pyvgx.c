@@ -2834,7 +2834,7 @@ int init_PyVGX( PyObject *module ) {
   PyModule_AddIntConstant( module,  "F_RANK",     VGX_RESPONSE_ATTR_RANKSCORE );
   PyModule_AddIntConstant( module,  "F_SIM",      VGX_RESPONSE_ATTR_SIMILARITY );
   PyModule_AddIntConstant( module,  "F_HAM",      VGX_RESPONSE_ATTR_HAMDIST );
-  PyModule_AddIntConstant( module,  "F_DEPTH",    VGX_RESPONSE_ATTR_RECURSION );
+  PyModule_AddIntConstant( module,  "F_DEPTH",    VGX_RESPONSE_ATTR_DEPTH );
   PyModule_AddIntConstant( module,  "F_RLV",      VGX_RESPONSE_ATTRS_RELEVANCE );
   // Timestamps
   PyModule_AddIntConstant( module,  "F_TMC",      VGX_RESPONSE_ATTR_TMC );

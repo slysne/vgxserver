@@ -514,27 +514,27 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  *
  ***********************************************************************
  */
-DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
+DLL_HIDDEN float _vxquery_collector__push_frontier_observation( vgx_FrontierObservationHistory_t *observation_history, float score ) {
   #define min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
   // Never negative cosine (score is [0.0, 2.0] )
   score = fmaxf( min_score, score );
 
   // No queue, just moving average
-  if( shadow_trail->queue == NULL ) {
-    return shadow_trail->threshold = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
+  if( observation_history->queue == NULL ) {
+    return observation_history->estimate = observation_history->zeta * score + (1.0f - observation_history->zeta) * observation_history->estimate;
   }
 
   // Write latest score
-  *shadow_trail->wp++ = score;
+  *observation_history->wp++ = score;
 
   // Ring buffer wp wrap
-  if( shadow_trail->wp >= shadow_trail->end ) {
-    shadow_trail->wp = shadow_trail->queue;
+  if( observation_history->wp >= observation_history->end ) {
+    observation_history->wp = observation_history->queue;
   }
   
-  float oldest = *shadow_trail->wp;
+  float oldest = *observation_history->wp;
 
-  return shadow_trail->threshold = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
+  return observation_history->estimate = observation_history->zeta * oldest + (1.0f - observation_history->zeta) * observation_history->estimate;
 }
 
 
@@ -554,13 +554,13 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   int locked = 0;
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
 
-  bool recursive = false;
-  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_recursion_enabled( &((vgx_NeighborhoodQuery_t*)query)->effective_recursion_config ) ) {
-    recursive = true;
+  bool is_navigation = false;
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_navigation_enabled( &((vgx_NeighborhoodQuery_t*)query)->effective_navigation_config ) ) {
+    is_navigation = true;
   }
 
-  // Vertices will be dereferenced or used as anchors in recursive traversal
-  if( (fieldmask & VGX_RESPONSE_ATTRS_DEREF) || recursive ) {
+  // Vertices will be dereferenced or used as anchors in navigation traversal
+  if( (fieldmask & VGX_RESPONSE_ATTRS_DEREF) || is_navigation ) {
     // TODO:  Don't lock unnecessarily if property selector includes no-deref items only!
     // Graph is not readonly - we have to lock head
     if( readonly_graph == false ) {
@@ -568,8 +568,8 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
       if( fieldmask & VGX_RESPONSE_ATTRS_TAIL_DEREF ) {
         *locked_tail = true;
       }
-      // Heads must be locked if fields other than properties or property fields require head deref, or used as anchors in recursive traversal
-      if( vgx_query_response_head_deref( query ) || recursive ) {
+      // Heads must be locked if fields other than properties or property fields require head deref, or used as anchors in navigation traversal
+      if( vgx_query_response_head_deref( query ) || is_navigation ) {
         *locked_head = true;
       }
       locked = 1;
@@ -613,21 +613,21 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  *
  ***********************************************************************
  */
-static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
-  if( shadow_trail == NULL ) {
+static void __clear_frontier_observation_history( vgx_FrontierObservationHistory_t *observation_history ) {
+  if( observation_history == NULL ) {
     return;
   }
 
-  if( shadow_trail->queue ) {
-    shadow_trail->sz = (int)(shadow_trail->end - shadow_trail->queue);
-    memset( shadow_trail->queue, 0, sizeof(float) * shadow_trail->sz );
+  if( observation_history->queue ) {
+    observation_history->sz = (int)(observation_history->end - observation_history->queue);
+    memset( observation_history->queue, 0, sizeof(float) * observation_history->sz );
   }
   else {
-    shadow_trail->sz = 0;
+    observation_history->sz = 0;
   }
-  shadow_trail->threshold = 0.0f;
-  shadow_trail->wp = shadow_trail->queue;
-  shadow_trail->zeta = 0.0f;
+  observation_history->estimate = 0.0f;
+  observation_history->wp = observation_history->queue;
+  observation_history->zeta = 0.0f;
 }
 
 
@@ -691,13 +691,13 @@ continue_locked:
  *
  ***********************************************************************
  */
-static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
-  if( shadow_trail ) {
-    __clear_shadow_trail( shadow_trail );
-    free( shadow_trail->queue );
-    shadow_trail->queue = NULL;
-    shadow_trail->end = NULL;
-    shadow_trail->wp = NULL;
+static void __delete_frontier_observation_history( vgx_FrontierObservationHistory_t *observation_history ) {
+  if( observation_history ) {
+    __clear_frontier_observation_history( observation_history );
+    free( observation_history->queue );
+    observation_history->queue = NULL;
+    observation_history->end = NULL;
+    observation_history->wp = NULL;
   }
 }
 
@@ -708,20 +708,20 @@ static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
  *
  ***********************************************************************
  */
-static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
-  shadow_trail->sz = (int)maximum_value( heap_shadow, 0 );
-  if( shadow_trail->sz > 0 ) {
-    if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
+static int __init_observation_history( vgx_FrontierObservationHistory_t *observation_history, int64_t inertia_size, double zeta ) {
+  observation_history->sz = (int)maximum_value( inertia_size, 0 );
+  if( observation_history->sz > 0 ) {
+    if( (observation_history->queue = calloc( inertia_size, sizeof(float) )) == NULL ) {
       return -1;
     }
-    shadow_trail->threshold = 0.0f;
-    shadow_trail->wp = shadow_trail->queue;
-    shadow_trail->end = shadow_trail->queue + heap_shadow;
+    observation_history->estimate = 0.0f;
+    observation_history->wp = observation_history->queue;
+    observation_history->end = observation_history->queue + inertia_size;
   }
   else {
-    shadow_trail->threshold = -FLT_MAX;;
+    observation_history->estimate = -FLT_MAX;;
   }
-  shadow_trail->zeta = (float)zeta;
+  observation_history->zeta = (float)zeta;
   return 0;
 }
 
@@ -859,17 +859,17 @@ static Cm256iHeap_t * __new_beam_heap( int64_t max_beam_width, f_Cm256iHeap_comp
  *
  ******************************************************************************
  */
-static int64_t __get_recursion_heap_size( const vgx_recursion_config_t *recursion, int64_t hits ) {
+static int64_t __get_navigation_heap_size( const vgx_navigation_config_t *navigation, int64_t hits ) {
   int64_t heap_size;
 
   // Heap size already provided
-  if( recursion->heap.size > 0 ) {
-    heap_size = maximum_value( recursion->heap.size, hits ); // <- never less than hits
+  if( navigation->heap.size > 0 ) {
+    heap_size = maximum_value( navigation->heap.size, hits ); // <- never less than hits
   }
   // Auto select heap size based on requested hit count
   else {
     if( hits < 0 ) {
-      heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+      heap_size = VGX_NAVIGATION_HEAP_SIZE_MAX;
     }
     else if( hits <= 64 ) {
       heap_size = 60 + hits*4; // 60 - 316
@@ -881,13 +881,13 @@ static int64_t __get_recursion_heap_size( const vgx_recursion_config_t *recursio
       heap_size = 636 + hits*2; // 1662 - 1048576
     }
     else {
-      heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+      heap_size = VGX_NAVIGATION_HEAP_SIZE_MAX;
     }
   }
 
   // Clamp at max
-  if( heap_size > VGX_RECURSION_HEAP_SIZE_MAX ) {
-    heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+  if( heap_size > VGX_NAVIGATION_HEAP_SIZE_MAX ) {
+    heap_size = VGX_NAVIGATION_HEAP_SIZE_MAX;
   } 
 
   return heap_size;
@@ -900,25 +900,25 @@ static int64_t __get_recursion_heap_size( const vgx_recursion_config_t *recursio
  *
  ******************************************************************************
  */
-static int64_t __get_recursion_heap_shadow( const vgx_recursion_config_t *recursion, int64_t heap_size ) {
-  int64_t heap_shadow;
+static int64_t __get_navigation_inertia_size( const vgx_navigation_config_t *navigation, int64_t heap_size ) {
+  int64_t inertia_size;
 
-  // Heap shadow already provided
-  if( recursion->shadow.size >= 0 ) {
-    heap_shadow = recursion->shadow.size;
+  // Inertia size already provided
+  if( navigation->inertia.size >= 0 ) {
+    inertia_size = navigation->inertia.size;
   }
-  // Auto select heap shadow based on heap size
+  // Auto select inertia size based on heap size
   else {
     // Roughly 1/8 of heap size as default
-    heap_shadow = heap_size >> 3;
+    inertia_size = heap_size >> 3;
   }
 
   // Clamp at max
-  if( heap_shadow > VGX_RECURSION_HEAP_SHADOW_MAX ) {
-    heap_shadow = VGX_RECURSION_HEAP_SHADOW_MAX;
+  if( inertia_size > VGX_NAVIGATION_INERTIA_MAX ) {
+    inertia_size = VGX_NAVIGATION_INERTIA_MAX;
   } 
 
-  return heap_shadow;
+  return inertia_size;
 }
 
 
@@ -928,16 +928,16 @@ static int64_t __get_recursion_heap_shadow( const vgx_recursion_config_t *recurs
  *
  ******************************************************************************
  */
-static int64_t __get_recursion_frontier_limit( const vgx_recursion_config_t *recursion, int64_t heap_size ) {
+static int64_t __get_navigation_frontier_limit( const vgx_navigation_config_t *navigation, int64_t heap_size ) {
   int64_t frontier_limit;
 
-  // Frontier limit already provided
-  if( recursion->limit.frontier > 0 ) {
-    frontier_limit = recursion->limit.frontier;
+  // Frontier queue limit already provided
+  if( navigation->limit.frontier > 0 ) {
+    frontier_limit = navigation->limit.frontier;
   }
   // Auto: Frontier limit to max beam if beam is used
-  else if( recursion->beam.max_width > 0 ) {
-    frontier_limit = recursion->beam.max_width;
+  else if( navigation->beam.max_width > 0 ) {
+    frontier_limit = navigation->beam.max_width;
   }
   // Auto: Frontier limit to 32x heap if no beam
   else {
@@ -945,8 +945,8 @@ static int64_t __get_recursion_frontier_limit( const vgx_recursion_config_t *rec
   }
 
   // Clamp at max
-  if( frontier_limit > VGX_RECURSION_FRONTIER_SIZE_MAX ) {
-    frontier_limit = VGX_RECURSION_FRONTIER_SIZE_MAX;
+  if( frontier_limit > VGX_NAVIGATION_FRONTIER_QUEUE_SIZE_MAX ) {
+    frontier_limit = VGX_NAVIGATION_FRONTIER_QUEUE_SIZE_MAX;
   } 
 
   return frontier_limit;
@@ -971,7 +971,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_FrontierQueue_t *frontier = NULL;
   int64_t heap_size = size; // i.e. hits requested
   Cm256iHeap_t *beam_heap = NULL;
-  vgx_Evaluator_t *recursion_filter = NULL;
+  vgx_Evaluator_t *navigation_filter = NULL;
 
   XTRY {
     // Alloocate
@@ -979,40 +979,40 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
     vgx_CollectorItem_t empty = {0};
     f_Cm256iHeap_comparator_t comparator = (f_Cm256iHeap_comparator_t)__get_arc_comparator( ranking_context, &empty );
-    vgx_recursion_config_t *recursion = NULL;
+    vgx_navigation_config_t *navigation = NULL;
 
-    // Recursive query?
+    // Navigation query?
     if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
       vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
-      recursion = &neighborhood_query->effective_recursion_config;
-      if( __is_recursion_enabled( recursion) ) {
-        // Get appropriate heap size from recursion config
-        heap_size = recursion->heap.size = __get_recursion_heap_size( recursion, size );
+      navigation = &neighborhood_query->effective_navigation_config;
+      if( __is_navigation_enabled( navigation) ) {
+        // Get appropriate heap size from navigation config
+        heap_size = navigation->heap.size = __get_navigation_heap_size( navigation, size );
 
-        // Size of heap shadow queue, only applicable for float-sorted descending
+        // Size of navigation inertia, only applicable for float-sorted descending
         if( comparator == (f_Cm256iHeap_comparator_t)_iArcMinComparator.cmp_archead_double_rank ) {
-          recursion->shadow.size = __get_recursion_heap_shadow( recursion, heap_size );
+          navigation->inertia.size = __get_navigation_inertia_size( navigation, heap_size );
         }
       
         // Auto-set max beam to beam width if needed
-        if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE && recursion->beam.max_width < recursion->beam.width ) {
-          recursion->beam.max_width = recursion->beam.width;
+        if( navigation->mode == VGX_NAVIGATION_MODE_BEAM_BEST_FIRST && navigation->beam.max_width < navigation->beam.width ) {
+          navigation->beam.max_width = navigation->beam.width;
         }
         
-        // Size of frontier
-        recursion->limit.frontier = __get_recursion_frontier_limit( recursion, heap_size );
+        // Size of frontier (queue or beam)
+        navigation->limit.frontier = __get_navigation_frontier_limit( navigation, heap_size );
 
-        // Recursion filter
-        if( recursion->visit.CSTR__filter ) {
-          if( (recursion_filter = _vxquery_new_evaluator(graph, query, recursion->visit.CSTR__filter )) == NULL ) {
+        // Navigation filter
+        if( navigation->visit.CSTR__filter ) {
+          if( (navigation_filter = _vxquery_new_evaluator(graph, query, navigation->visit.CSTR__filter )) == NULL ) {
             THROW_SILENT( CXLIB_ERR_API, 0x322 );
           }
-          if( CALLABLE( recursion_filter )->Traversals( recursion_filter ) ) {
-            __set_error_string( &query->CSTR__error, "traversal not allowed in recursion filter" );
+          if( CALLABLE( navigation_filter )->Traversals( navigation_filter ) ) {
+            __set_error_string( &query->CSTR__error, "traversal not allowed in navigation filter" );
             THROW_SILENT( CXLIB_ERR_GENERAL, 0x323 );
           }
-          if( CALLABLE( recursion_filter )->HasCull( recursion_filter ) ) {
-            __set_error_string( &query->CSTR__error, "mcull() not allowed in recursion filter" );
+          if( CALLABLE( navigation_filter )->HasCull( navigation_filter ) ) {
+            __set_error_string( &query->CSTR__error, "mcull() not allowed in navigation filter" );
             THROW_SILENT( CXLIB_ERR_GENERAL, 0x324 );
           }
         }
@@ -1032,8 +1032,8 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
 
     // Create vertex reference map
     int64_t sz_refmap = heap_size; // at least this
-    if( __is_recursion_enabled( recursion ) ) {
-      int64_t max_front = maximum_value( recursion->beam.max_width, recursion->limit.frontier );
+    if( __is_navigation_enabled( navigation ) ) {
+      int64_t max_front = maximum_value( navigation->beam.max_width, navigation->limit.frontier );
       sz_refmap = maximum_value( heap_size, max_front );
     }
     if( (refmap = __new_vertex_reference_map( sz_refmap, &top_k_collector->sz_refmap )) == NULL ) {
@@ -1050,20 +1050,20 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x32B );
     }
 
-    // Recursive search
-    if( __is_recursion_enabled( recursion ) ) {
-      // Heap shadow queue
-      if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
+    // Navigation search
+    if( __is_navigation_enabled( navigation ) ) {
+      // Heap frontier observation history queue
+      if( __init_observation_history( &top_k_collector->observation_history, navigation->inertia.size, navigation->tune.zeta ) < 0 ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x32C );
       }
       // Beam if enabled
-      if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
-        if( (beam_heap = __new_beam_heap( recursion->beam.max_width, comparator )) == NULL ) {
+      if( navigation->mode == VGX_NAVIGATION_MODE_BEAM_BEST_FIRST ) {
+        if( (beam_heap = __new_beam_heap( navigation->beam.max_width, comparator )) == NULL ) {
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x32D );
         }
       }
       // Frontier queue
-      if( (frontier = __new_frontier_queue( recursion->limit.frontier ) ) == NULL ) {
+      if( (frontier = __new_frontier_queue( navigation->limit.frontier ) ) == NULL ) {
         THROW_ERROR( CXLIB_ERR_GENERAL, 0x32E );
       }
     }
@@ -1079,25 +1079,25 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
-    top_k_collector->recursion_mode           = recursion ? recursion->mode : VGX_RECURSION_MODE_NONE;
-    top_k_collector->recursion_depth          = 0;
+    top_k_collector->navigation_mode           = navigation ? navigation->mode : VGX_NAVIGATION_MODE_NONE;
+    top_k_collector->navigation_depth          = 0;
     top_k_collector->frontier                 = frontier;
-    top_k_collector->max_frontier             = recursion ? recursion->limit.frontier : 0;
-    top_k_collector->pure_beam                = recursion ? (beam_heap && (recursion->limit.frontier == recursion->beam.max_width)) : false;
+    top_k_collector->max_frontier             = navigation ? navigation->limit.frontier : 0;
+    top_k_collector->pure_beam                = navigation ? (beam_heap && (navigation->limit.frontier == navigation->beam.max_width)) : false;
     top_k_collector->beam_heap                = beam_heap;
-    top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
-    top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
-    top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
+    top_k_collector->beam_width               = navigation ? navigation->beam.width : 0;
+    top_k_collector->max_beam_width           = navigation ? navigation->beam.max_width : 0;
+    top_k_collector->adaptive_beam            = navigation ? navigation->beam.adaptive : false;
     top_k_collector->dynamic_taper            = 1.0;
-    top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
-    top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
-    top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
-    top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
-    top_k_collector->epsilon                  = recursion ? (float)recursion->tune.epsilon : 0.0f;
-    top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
-    top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
-    top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
-    top_k_collector->recursion_filter         = recursion_filter;
+    top_k_collector->alpha                    = navigation ? (float)navigation->tune.alpha : 0.0f;
+    top_k_collector->beta                     = navigation ? (float)navigation->tune.beta : 0.0f;
+    top_k_collector->gamma                    = navigation ? (float)navigation->tune.gamma : 0.0f;
+    top_k_collector->delta                    = navigation ? (float)navigation->tune.delta : 0.0f;
+    top_k_collector->epsilon                  = navigation ? (float)navigation->tune.epsilon : 0.0f;
+    top_k_collector->zeta                     = navigation ? (float)navigation->tune.zeta : 0.0f;
+    top_k_collector->kappa                    = navigation ? (int)navigation->tune.kappa : 0;
+    top_k_collector->lambda                   = navigation ? (int)navigation->tune.lambda : 0;
+    top_k_collector->navigation_filter         = navigation_filter;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
     top_k_collector->empty.item               = empty.item;
@@ -1119,12 +1119,12 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     // Initialize heaps with "lowest" values
     CALLABLE(heap)->Initialize( heap, &empty.item, heap_size );
     if(beam_heap) {
-      CALLABLE(beam_heap)->Initialize( beam_heap, &empty.item, recursion->beam.max_width );
+      CALLABLE(beam_heap)->Initialize( beam_heap, &empty.item, navigation->beam.max_width );
     }
 
-    if( recursion_filter ) {
-      CALLABLE( recursion_filter )->SetTimingBudget( recursion_filter, &query->timing_budget );
-      CALLABLE( recursion_filter )->SetCollector( recursion_filter, (vgx_BaseCollector_context_t*)top_k_collector );
+    if( navigation_filter ) {
+      CALLABLE( navigation_filter )->SetTimingBudget( navigation_filter, &query->timing_budget );
+      CALLABLE( navigation_filter )->SetCollector( navigation_filter, (vgx_BaseCollector_context_t*)top_k_collector );
     }
 
   }
@@ -1136,7 +1136,7 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       top_k_collector->refmap                   = refmap;
       top_k_collector->frontier                 = frontier;
       top_k_collector->beam_heap                = beam_heap;
-      top_k_collector->recursion_filter         = recursion_filter;
+      top_k_collector->navigation_filter         = navigation_filter;
       top_k_collector->stage                    = stage;
       iGraphCollector.DeleteCollector( (vgx_BaseCollector_context_t**)&top_k_collector );
     }
@@ -1208,18 +1208,18 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
-    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
-    collector->recursion_depth          = 0;
-    collector->shadow_trail.queue       = NULL;
-    collector->shadow_trail.end         = NULL;
-    collector->shadow_trail.wp          = NULL;
+    collector->navigation_mode           = VGX_NAVIGATION_MODE_NONE;
+    collector->navigation_depth          = 0;
+    collector->observation_history.queue       = NULL;
+    collector->observation_history.end         = NULL;
+    collector->observation_history.wp          = NULL;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->pure_beam                = false;
     collector->beam_heap                = NULL;
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
-    collector->adaptive_recursion       = false;
+    collector->adaptive_beam            = false;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1337,18 +1337,18 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     map_collector->ranker                       = ranker;
     map_collector->container.mapping.aggregator = fhmap;
     map_collector->refmap                       = refmap;
-    map_collector->recursion_mode               = VGX_RECURSION_MODE_NONE;
-    map_collector->recursion_depth              = 0;
-    map_collector->shadow_trail.queue           = NULL;
-    map_collector->shadow_trail.end             = NULL;
-    map_collector->shadow_trail.wp              = NULL;
+    map_collector->navigation_mode               = VGX_NAVIGATION_MODE_NONE;
+    map_collector->navigation_depth              = 0;
+    map_collector->observation_history.queue           = NULL;
+    map_collector->observation_history.end             = NULL;
+    map_collector->observation_history.wp              = NULL;
     map_collector->frontier                     = NULL;
     map_collector->max_frontier                 = 0;
     map_collector->pure_beam                    = false;
     map_collector->beam_heap                    = NULL;
     map_collector->beam_width                   = 0;
     map_collector->max_beam_width               = 0;
-    map_collector->adaptive_recursion           = false;
+    map_collector->adaptive_beam                = false;
     map_collector->dynamic_taper                = 1.0;
     map_collector->alpha                        = 0.0f;
     map_collector->beta                         = 0.0f;
@@ -1417,18 +1417,18 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
-    collector->recursion_depth    = 0;
-    collector->shadow_trail.queue = NULL;
-    collector->shadow_trail.end   = NULL;
-    collector->shadow_trail.wp    = NULL;
+    collector->navigation_mode     = VGX_NAVIGATION_MODE_NONE;
+    collector->navigation_depth    = 0;
+    collector->observation_history.queue = NULL;
+    collector->observation_history.end   = NULL;
+    collector->observation_history.wp    = NULL;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->pure_beam          = false;
     collector->beam_heap          = NULL;
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
-    collector->adaptive_recursion = false;
+    collector->adaptive_beam      = false;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
@@ -1534,18 +1534,18 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
-    top_k_collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
-    top_k_collector->recursion_depth          = 0;
-    top_k_collector->shadow_trail.queue       = NULL;
-    top_k_collector->shadow_trail.end         = NULL;
-    top_k_collector->shadow_trail.wp          = NULL;
+    top_k_collector->navigation_mode           = VGX_NAVIGATION_MODE_NONE;
+    top_k_collector->navigation_depth          = 0;
+    top_k_collector->observation_history.queue       = NULL;
+    top_k_collector->observation_history.end         = NULL;
+    top_k_collector->observation_history.wp          = NULL;
     top_k_collector->frontier                 = NULL;
     top_k_collector->max_frontier             = 0;
     top_k_collector->pure_beam                = false;
     top_k_collector->beam_heap                = NULL;
     top_k_collector->beam_width               = 0;
     top_k_collector->max_beam_width           = 0;
-    top_k_collector->adaptive_recursion       = false;
+    top_k_collector->adaptive_beam            = false;
     top_k_collector->dynamic_taper            = 1.0;
     top_k_collector->alpha                    = 0.0f;
     top_k_collector->beta                     = 0.0f;
@@ -1646,18 +1646,18 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
-    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
-    collector->recursion_depth          = 0;
-    collector->shadow_trail.queue       = NULL;
-    collector->shadow_trail.end         = NULL;
-    collector->shadow_trail.wp          = NULL;
+    collector->navigation_mode           = VGX_NAVIGATION_MODE_NONE;
+    collector->navigation_depth          = 0;
+    collector->observation_history.queue       = NULL;
+    collector->observation_history.end         = NULL;
+    collector->observation_history.wp          = NULL;
     collector->frontier                 = NULL;
     collector->max_frontier             = 0;
     collector->pure_beam                = false;
     collector->beam_heap                = NULL;
     collector->beam_width               = 0;
     collector->max_beam_width           = 0;
-    collector->adaptive_recursion       = false;
+    collector->adaptive_beam            = false;
     collector->dynamic_taper            = 1.0;
     collector->alpha                    = 0.0f;
     collector->beta                     = 0.0f;
@@ -1722,18 +1722,18 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
-    collector->recursion_depth    = 0;
-    collector->shadow_trail.queue = NULL;
-    collector->shadow_trail.end   = NULL;
-    collector->shadow_trail.wp    = NULL;
+    collector->navigation_mode     = VGX_NAVIGATION_MODE_NONE;
+    collector->navigation_depth    = 0;
+    collector->observation_history.queue = NULL;
+    collector->observation_history.end   = NULL;
+    collector->observation_history.wp    = NULL;
     collector->frontier           = NULL;
     collector->max_frontier       = 0;
     collector->pure_beam          = false;
     collector->beam_heap          = NULL;
     collector->beam_width         = 0;
     collector->max_beam_width     = 0;
-    collector->adaptive_recursion = false;
+    collector->adaptive_beam      = false;
     collector->dynamic_taper      = 1.0;
     collector->alpha              = 0.0f;
     collector->beta               = 0.0f;
@@ -1793,12 +1793,12 @@ static void __set_collect_counts( const int64_t hits, const int offset, vgx_coll
  */
 static void _vxquery_collector__clear_collector_references( vgx_BaseCollector_context_t *collector ) {
   if( collector ) {
-    // Reset shadow trail
-    if( collector->shadow_trail.queue ) {
-      __clear_shadow_trail( &collector->shadow_trail );
+    // Reset frontier observation history
+    if( collector->observation_history.queue ) {
+      __clear_frontier_observation_history( &collector->observation_history );
     }
 
-    // Clear any lingering references in the recursive frontier queue
+    // Clear any lingering references in the navigation frontier queue
     if( collector->frontier ) {
       __clear_frontier_queue( collector->graph, collector->frontier );
     }
@@ -1831,23 +1831,23 @@ static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **
       __delete_search_ranker_context( &ctx->ranker );
     }
     
-    // Delete the heap shadow trail
-    if( ctx->shadow_trail.queue ) {
-      __delete_shadow_trail( &ctx->shadow_trail );
+    // Delete the observation history
+    if( ctx->observation_history.queue ) {
+      __delete_frontier_observation_history( &ctx->observation_history );
     }
 
-    // Delete the recursive frontier queue
+    // Delete the navigation frontier queue
     if( ctx->frontier ) {
       __delete_frontier_queue( ctx->graph, &ctx->frontier );
     }
 
-    // Delete the recursive beam heap
+    // Delete the navigation beam heap
     if( ctx->beam_heap ) {
       __delete_beam_heap( ctx->graph, &ctx->beam_heap );
     }
 
-    if( ctx->recursion_filter ) {
-      iEvaluator.DiscardEvaluator( &ctx->recursion_filter );
+    if( ctx->navigation_filter ) {
+      iEvaluator.DiscardEvaluator( &ctx->navigation_filter );
     }
 
     // Delete the container

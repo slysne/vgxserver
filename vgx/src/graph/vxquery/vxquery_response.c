@@ -210,7 +210,7 @@ static vgx_ResponseFieldMap_t default_fieldmap_definition[] = {
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RANKSCORE,  .render=(f_ResponseValueRender)__render_real,             .fieldname="rankscore" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_SIMILARITY, .render=(f_ResponseValueRender)__render_real,             .fieldname="similarity" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_HAMDIST,    .render=(f_ResponseValueRender)__render_int64,            .fieldname="hamming-distance" },
-  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RECURSION,  .render=(f_ResponseValueRender)__render_int64,            .fieldname="depth" },
+  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_DEPTH,      .render=(f_ResponseValueRender)__render_int64,            .fieldname="depth" },
   // Timestamps
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMC,        .render=(f_ResponseValueRender)__render_int64,            .fieldname="created" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMM,        .render=(f_ResponseValueRender)__render_int64,            .fieldname="modified" },
@@ -1626,7 +1626,7 @@ if( SingleFieldBitmask & Remain )  {                                  \
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = -1.0; } END_IF_FIELDS_REMAIN
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_HAMDIST, remaining_fields, wp )     { wp++->value.i64 = 64; } END_IF_FIELDS_REMAIN
           }
-          IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_RECURSION, remaining_fields, wp )     { wp++->value.i64 = collected->headref->slot.depth; } END_IF_FIELDS_REMAIN
+          IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_DEPTH, remaining_fields, wp )         { wp++->value.i64 = collected->headref->slot.depth; } END_IF_FIELDS_REMAIN
         }
 
         // TIMESTAMP

@@ -3429,24 +3429,24 @@ typedef enum e_vgx_collector_mode_t {
  * 
  ***********************************************************************
  */
-typedef enum e_vgx_recursion_mode_t {
-  //      recursive      _____________________________
-  //        queue        __________________________   |
-  //         beam        _________________________ |  |
-  //                                              ||  |
-  //                                              ||  |
-  //                                              ||  |
-  //                                              VV  V
+typedef enum e_vgx_navigation_mode_t {
+  //      navigation      _____________________________
+  //         queue        __________________________   |
+  //          beam        _________________________ |  |
+  //                                               ||  |
+  //                                               ||  |
+  //                                               ||  |
+  //                                               VV  V
   //                                          ----------
-  _VGX_RECURSION_MODE_MASK_RECURSIVE        = 0x00000010,
-  _VGX_RECURSION_MODE_MASK_FRONTIER_NONE    = 0x00000000,
-  _VGX_RECURSION_MODE_MASK_FRONTIER_QUEUE   = 0x00010000,
-  _VGX_RECURSION_MODE_MASK_FRONTIER_BEAM    = 0x00100000,
+  _VGX_NAVIGATION_MODE_MASK_NAVIGATION       = 0x00000010,
+  _VGX_NAVIGATION_MODE_MASK_FRONTIER_NONE    = 0x00000000,
+  _VGX_NAVIGATION_MODE_MASK_FRONTIER_QUEUE   = 0x00010000,
+  _VGX_NAVIGATION_MODE_MASK_FRONTIER_BEAM    = 0x00100000,
   //                                          ----------
-  VGX_RECURSION_MODE_NONE                   = 0x00000000,
-  VGX_RECURSION_MODE_BFS_PROGRESSIVE        = _VGX_RECURSION_MODE_MASK_RECURSIVE | _VGX_RECURSION_MODE_MASK_FRONTIER_QUEUE,
-  VGX_RECURSION_MODE_BEAM_PROGRESSIVE       = _VGX_RECURSION_MODE_MASK_RECURSIVE | _VGX_RECURSION_MODE_MASK_FRONTIER_BEAM
-} vgx_recursion_mode_t;
+  VGX_NAVIGATION_MODE_NONE                   = 0x00000000,
+  VGX_NAVIGATION_MODE_QUEUE_PROGRESSIVE      = _VGX_NAVIGATION_MODE_MASK_NAVIGATION | _VGX_NAVIGATION_MODE_MASK_FRONTIER_QUEUE,
+  VGX_NAVIGATION_MODE_BEAM_BEST_FIRST        = _VGX_NAVIGATION_MODE_MASK_NAVIGATION | _VGX_NAVIGATION_MODE_MASK_FRONTIER_BEAM
+} vgx_navigation_mode_t;
   
 
 
@@ -3588,8 +3588,8 @@ typedef enum e_vgx_ResponseAttrFastMask {
   VGX_RESPONSE_ATTR_RANKSCORE      = 0x00010000,
   VGX_RESPONSE_ATTR_SIMILARITY     = 0x00020000,
   VGX_RESPONSE_ATTR_HAMDIST        = 0x00040000,
-  VGX_RESPONSE_ATTR_RECURSION      = 0x00080000,
-  VGX_RESPONSE_ATTRS_RELEVANCE     = VGX_RESPONSE_ATTR_RANKSCORE | VGX_RESPONSE_ATTR_SIMILARITY | VGX_RESPONSE_ATTR_HAMDIST | VGX_RESPONSE_ATTR_RECURSION,
+  VGX_RESPONSE_ATTR_DEPTH          = 0x00080000,
+  VGX_RESPONSE_ATTRS_RELEVANCE     = VGX_RESPONSE_ATTR_RANKSCORE | VGX_RESPONSE_ATTR_SIMILARITY | VGX_RESPONSE_ATTR_HAMDIST | VGX_RESPONSE_ATTR_DEPTH,
   // Timestamps
   VGX_RESPONSE_ATTR_TMC            = 0x00100000,
   VGX_RESPONSE_ATTR_TMM            = 0x00200000,
@@ -3758,7 +3758,7 @@ typedef enum e_vgx_ArcFilter_type {
   VGX_ARC_FILTER_TYPE_MODIFIER_VALUE            = 0x0200,
   VGX_ARC_FILTER_TYPE_SPECIFIC_VALUE            = 0x0300,
   
-  VGX_ARC_FILTER_TYPE_RECURSION_DYNAMIC         = 0x0400,
+  VGX_ARC_FILTER_TYPE_NAVIGATION_DYNAMIC        = 0x0400,
   
   VGX_ARC_FILTER_TYPE_EVALUATOR                 = 0x0800,
   

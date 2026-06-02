@@ -1700,7 +1700,7 @@ static int64_t Graph_neighborhood( vgx_Graph_t *self, vgx_NeighborhoodQuery_t *q
       }
       else if( _vgx_collector_mode_type( query->collector_mode ) == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
         traverse_neighborhood = iGraphTraverse.TraverseNeighborArcs;
-        if( __is_recursion_enabled( &search->recursion ) ) {
+        if( __is_navigation_enabled( &search->navigation ) ) {
           hit_counter = &search->n_neighbors; // just collected hits, we need this to avoid the dummy items warning during render
         }
         else {

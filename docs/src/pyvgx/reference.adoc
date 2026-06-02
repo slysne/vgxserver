@@ -2549,11 +2549,17 @@ Memory objects support sequence lookup, assignment and length methods, i.e. `mem
 [[memoryobject_attributes]]
 === Memory Attributes
 
+[[memory_counters_attr]]`<<evaluator/evaluator.adoc#evaluatormemory, *counters*>>`::
+Navigation progress counters, returns tuple: (_score_evaluations_, _threshold_contributions_, _accepted_into_frontier_, _accepted_into_result_, _recursion_depth_, _node_expansions_, _node_visits_, _node_revisits_avoided_).
+
 [[memory_order_attr]]`<<evaluator/evaluator.adoc#evaluatormemory, *order*>>`::
-The memory order is the log2 of its size. The memory object size is always a power of two and will be returned by `len( memobj )`.
+The memory order (readonly) is the log2 of its size. The memory object size is always a power of two and will be returned by `len( memobj )`.
 
 [[memory_Rn_attr]]`<<evaluator/evaluator.adoc#evaluatormemoryregisters, *R__n__*>>`::
 Memory register R__n__ (read and write), where _n_ is 1, 2, 3, or 4.
+
+[[memory_order_vector]]`<<evaluator/evaluator.adoc#evaluatormemory, *vector*>>`::
+Memory probe vector (read and write). Must be a `pyvgx.Vector`. Accessible as `M.vector` in the expression language.
 
 [[memoryobject_methods]]
 
@@ -2566,13 +2572,19 @@ Return a new list object from the memory object's data. Other ways to achieve th
 
 ___
 
-==== ClearSet
+==== VSetAdd
 
-[[memory_object_clearset]]`<<evaluator/evaluator.adoc#evaluatormemory, *ClearSet*>>()`::
-Clear the contents of any <<evaluator/evaluator.adoc#evaluator_mappingsets, vset or iset>> in the memory object.
+[[memory_object_vsetadd]]`<<evaluator/evaluator.adoc#evaluatormemory, *VSetAdd*>>()`::
+Add a vertex (address) to <<evaluator/evaluator.adoc#evaluator_mappingsets, vset>> in the memory object.
 
 ___
 
+==== VSetClear
+
+[[memory_object_vsetclear]]`<<evaluator/evaluator.adoc#evaluatormemory, *VSetClear*>>()`::
+Clear the contents of any <<evaluator/evaluator.adoc#evaluator_mappingsets, vset or iset>> in the memory object.
+
+___
 
 ==== DualInt
 
