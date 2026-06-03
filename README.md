@@ -98,6 +98,7 @@ pip install pyvgx
 ```
 
 **Optional: orjson**
+
 For improved JSON serialization performance, install the optional dependency
 [`orjson`](https://github.com/ijl/orjson):
 
