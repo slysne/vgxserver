@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://slysne.github.io/vgxserver/sitemap.xml
