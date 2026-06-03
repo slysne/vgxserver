@@ -3,14 +3,68 @@
 [![PyPI version](https://badge.fury.io/py/pyvgx.svg)](https://badge.fury.io/py/pyvgx)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Distributed engine for plugin-based graph and vector search
+High-performance hybrid graph + vector engine with advanced ANN navigation
 
 ## Why VGX?
 
 **VGX + 1 is WHY**  
 **+1 is you**
 
-Originally short for **Vector Graph indeX**, VGX is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. It combines real-time graph traversal, vector similarity, and expressive filtering into a unified platform, backed by a native C-core for speed and scalability. Developers can implement service logic using the **PyVGX** C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end. With built-in support for ANN search, dynamic graphs, expression-based filtering, and pluggable infrastructure, VGX makes it easy to develop powerful, low-latency systems for semantic search, recommendation, autocomplete, and more.
+Originally short for **Vector Graph indeX**, VGX is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. It combines real-time graph traversal, vector similarity, and expressive filtering into a unified platform, backed by a native C-core for speed and scalability. Developers can implement service logic using the **PyVGX** C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end. With built-in support for ANN search (see below), dynamic graphs, expression-based filtering, and pluggable infrastructure, VGX makes it easy to develop powerful, low-latency systems for semantic search, recommendation, autocomplete, and more.
+
+## Highlight: Approximate Nearest Neighbor (ANN) Vector Search
+
+The **Neighborhood Navigation Query** is the most powerful feature in VGX. It turns a proximity graph into a high-performance, hybrid vector + graph search engine.
+
+Instead of brute-force scanning or maintaining a separate vector index, you build a **navigable proximity graph** once, then use intelligent, signal-driven traversal to find the most similar items — with excellent recall and very high speed.
+
+```python
+g.Neighborhood(
+    id=entry_node,           # or synthetic hub
+    hits=20,
+    navigation={
+        'vector': query_vector,   # probe vector
+        'bias': -30               # -100 = fastest, +100 = highest recall
+    }
+)
+```
+
+### Key Strengths
+
+- Single _bias_ parameter elegantly controls the entire recall/speed tradeoff
+- Dynamic beam + inertia-based threshold for adaptive exploration
+- Seamless hybrid queries (vector similarity + graph topology + custom filters)
+- Synthetic entry points for fast global coverage
+- Production-ready with unlimited sharding and replication support
+
+This feature combines most of VGX’s internal capabilities (graph traversal, vector math, memory management, adaptive algorithms) into one clear, high-value use case: low-latency semantic search, GraphRAG, recommendations, and entity resolution.
+
+[Navigation Query Documentation](https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html)
+
+### Performance
+
+These numbers represent single-threaded query performance as measured on Apple M4 Max, using 1.4 million 128-D vectors, Cosine similarity:
+
+| Bias | Recall@10 | Queries/sec | Description      |
+|------|-----------|-------------|------------------|
+| -100 | 0.008     | 42800       | Maximum speed    |
+| -99  | 0.246     | 21936       |                  |
+| -90  | 0.657     | 10892       | Fast             |
+| -75  | 0.801     | 6657        |                  |
+| -60  | 0.8799    | 4828        | Balanced         |
+| -25  | 0.989     | 1232        |                  |
+| 0    | 0.994     | 881         | High recall      |
+| 25   | 0.997     | 719         | Very high recall |
+| 75   | 0.9996    | 268         | Near-exhaustive  |
+| 100  | 0.9999    | 71          | Maximum recall   |
+
+The single `_bias_` parameter gives you smooth, predictable control over the entire recall/speed spectrum.
+
+<img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Single Thread Performance" width="768"/>
+
+Parallel requests scale almost linearly (notices linear vertical scale instead of log to better show scaling behavior):
+
+<img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Multi Thread Scaling" width="768"/>
 
 ## About This Project
 
