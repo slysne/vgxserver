@@ -1510,6 +1510,14 @@ Increment the integer value for <<constants/arcModifierConstants.adoc#M_CNT, M_C
 
 ___
 
+==== CountDefinitions
+
+[[countdefinitions_func]]`*CountDefinitions*()`::
+Return the number of pre-defined expressions (See <<evaluator/evaluator.adoc#evaluatordefine, Define()>>.)
+
+___
+
+
 ==== CreateVertex
 
 [[createvertex_func]]`<<graph/graphVertex.adoc#graphcreatevertex, *CreateVertex*>>( _id_**[**, _type_**[**, _lifespan_**[**, properties **]]]** )`::
@@ -1746,10 +1754,17 @@ Return a list of vertex names of all vertices with explicit connection(s) *to* t
 
 ___
 
+==== IsDefined
+
+[[isdefined_func]]`*IsDefined*( _name_ )`::
+Return True if the named expression has been defined with <<evaluator/evaluator.adoc#evaluatordefine, Define( "_name_ := ..." )>>, otherwise return False.
+
+___
+
 
 ==== IsGraphLocal
 
-[[isgraphlocal_func]]`*IsGraphLocal*( _id_ )`::
+[[isgraphlocal_func]]`*IsGraphLocal*()`::
 Return True if the graph is <<graphobject_type, local only>>, otherwise False. 
 
 ___
@@ -1777,7 +1792,7 @@ ___
 
 ==== Memory
 
-[[memory_func]]`<<evaluator/evaluator.adoc#evaluatormemory, *Memory*>>( _initializer_ )`::
+[[memory_func]]`<<evaluator/evaluator.adoc#evaluatormemory, *Memory*>>( [_initializer_] )`::
 Return a new <<memoryobject, pyvgx.Memory>> object associated with this graph. See <<evaluator/evaluator.adoc#evaluatormemory, Evaluator Memory>> for usage details.
 
 ___
@@ -2522,10 +2537,10 @@ ___
 
 The <<evaluator/evaluator.adoc#evaluatormemory, pyvgx.Memory>> type represents arrays of numeric data which can be used with expression evaluators in queries.
 
-`_class_ pyvgx.*Memory*( _graph_instance_, _initializer_ )`::
-Create a memory object associated with _graph_instance_, initialized according to _initializer_. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <<AccessError_exc, AccessError>>.
+`_class_ pyvgx.*Memory*( _graph_instance_[, _initializer_] )`::
+Create a memory object associated with _graph_instance_, optionally initialized according to _initializer_. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <<AccessError_exc, AccessError>>.
 +
-The memory object _initializer_ can be an integer specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.
+The memory object _initializer_ can be an integer (default=8) specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.
 +
 Memory objects can be passed as arguments to queries, which may read or write the elements as part of executing filters and ranking formulas. The same memory object can be used multiple times with queries, making it possible to pass information from one query to the next.
 +

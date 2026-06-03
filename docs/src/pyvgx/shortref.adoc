@@ -640,6 +640,10 @@ g.Neighborhood(
 |Float aggregation
 
 |{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY>>
+|Forward arc only (bitmask)
+
+|{counter:cm}
 |<<constants/arcModifierConstants.adoc#M_INT, M_INT>>
 |Signed 32-bit integer
 
@@ -800,6 +804,10 @@ g.Neighborhood(
 |{counter:cf}
 |<<constants/resultFieldConstants.adoc#F_DEGREES, F_DEGREES>>
 |All degree fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DEPTH, F_DEPTH>>
+|Navigation depth
 
 |{counter:cf}
 |<<constants/resultFieldConstants.adoc#F_DESCR, F_DESCR>>
@@ -1690,6 +1698,10 @@ g.Neighborhood(
 |N |Graph Evaluator Method |Description
 
 |{counter:cgev}
+|<<reference.adoc#countdefinitions_func, __g__.CountDefinitions()>>
+|Return the number of defined evaluator expressions
+
+|{counter:cgev}
 |<<evaluator/evaluator.adoc#evaluatordefine, __g__.Define()>>
 |Define and store an evaluator expression to be invoked later
 
@@ -1704,6 +1716,10 @@ g.Neighborhood(
 |{counter:cgev}
 |<<referece.adoc#getdefinitions_func, __g__.GetDefinitions()>>
 |Return all previously defined evaluator expressions
+
+|{counter:cgev}
+|<<reference.adoc#isdefined_func, __g__.IsDefined()>>
+|Check if named expression is defined
 
 |{counter:cgev}
 |<<reference.adoc#memory_func, __g__.Memory()>>
@@ -1732,6 +1748,10 @@ g.Neighborhood(
 |{counter:cgmgm}
 |<<graph/graphManagement.adoc#graphgetmemoryusage, __g__.GetMemoryUsage()>>
 |Return graph memory usage information
+
+|{counter:cgmgm}
+|<<reference.adoc#isgraphlocal_func, __g__.IsGraphLocal()>>
+|Check if graph is local only
 
 |{counter:cgmgm}
 |<<graph/graphManagement.adoc#graphisgraphreadonly, __g__.IsGraphReadonly()>>
