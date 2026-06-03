@@ -158,6 +158,7 @@
 <li><a href="#_current_graph_state">3.7.1. Current Graph State</a></li>
 <li><a href="#_system_attributes">3.7.2. System Attributes</a></li>
 <li><a href="#_current_evaluator_context">3.7.3. Current Evaluator Context</a></li>
+<li><a href="#navigation_query_context">3.7.4. Navigation Query Context</a></li>
 </ul>
 </li>
 <li><a href="#evaluatorfunctions">3.8. Functions</a>
@@ -3657,6 +3658,58 @@ System attributes are re-read from their source each time an expression is evalu
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="navigation_query_context">3.7.4. Navigation Query Context</h4>
+<div class="paragraph">
+<p>These readonly values are available during execution of a <a href="../graph/graphNavigationQuery.html">Navigation Query</a>. They can be accessed in a <a href="../graph/graphNavigationQuery.html#nav_filter">navigation filter expression</a>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 22.2222%;">
+<col style="width: 11.1111%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.depth</code> <a id="_nav_depth"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Query&#8217;s current distance (hops) from search entry point</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.eval</code> <a id="_nav_eval"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of evaluated nodes so far during navigation query</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.expand</code> <a id="_nav_expand"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of frontier expansions so far during navigation query</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.frontier</code> <a id="_nav_frontier"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of nodes with good enough scores to enter the frontier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.result</code> <a id="_nav_result"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of nodes with good enough scores to enter the result heap</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nav.threshold</code> <a id="_nav_threshold"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of nodes with good enough scores to contribute to frontier observation history</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="evaluatorfunctions">3.8. Functions</h3>
@@ -3974,6 +4027,14 @@ System attributes are re-read from their source each time an expression is evalu
 <td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if <em>x</em> is an array of bytes (0-255), otherwise return 0. See <a href="../vertex/vertexProperty.html#vertex_property_type_bytes">Vertex Property Types: <em>bytes</em></a> for how to assign a property for which <code>isbytes()</code> is true.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ispickled( <em>x</em> )</code> <a id="_ispickled"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if <em>x</em> is a Python-layer object which has been serialized using the pickle protocol. This object cannot be interpreted by the expression language.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>iscompressed( <em>x</em> )</code> <a id="_iscompressed"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if <em>x</em> is a large object which is internally compressed, such as very large string properties.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>len( <em>x</em> )</code> <a id="_len"></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Return the length of object <em>x</em>. Definition of length depends on object type.
 <br>
@@ -4043,16 +4104,64 @@ System attributes are re-read from their source each time an expression is evalu
 <td class="tableblock halign-left valign-top"><p class="tableblock">Return the number of bytes in string <em>x</em>. If <em>x</em> is not <em>string</em> or <em>vertexid</em> 0 is returned.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>contains( <em>s</em>, <em>p</em> )</code> <a id="_contains"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains string <em>p</em>, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>containsi( <em>s</em>, <em>p</em> )</code> <a id="_containsi"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains string <em>p</em> ignoring case, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>startswith( <em>s</em>, <em>p</em> )</code> <a id="_startswith"></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> starts with string <em>p</em>, otherwise return 0. If either <em>a</em> or <em>b</em> is not a string, <code>null</code> is returned.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> starts with string <em>p</em>, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>endswith( <em>string</em>, <em>probe</em> )</code> <a id="_endswith"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>startswithi( <em>s</em>, <em>p</em> )</code> <a id="_startswithi"></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
 <td class="tableblock halign-left valign-top"></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> ends with string <em>p</em>, otherwise return 0. If either <em>a</em> or <em>b</em> is not a string, <code>null</code> is returned.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> starts with string <em>p</em> ignoring case, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>endswith( <em>s</em>, <em>p</em> )</code> <a id="_endswith"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> ends with string <em>p</em>, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>endswithi( <em>s</em>, <em>p</em> )</code> <a id="_endswithi"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> ends with string <em>p</em> ignoring case, otherwise return 0. If either <em>s</em> or <em>p</em> is not a string, <code>null</code> is returned.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>strall( <em>s</em>[, <em>p1</em>[, <em>p2</em>[, &#8230;&#8203;]]] )</code> <a id="_strall"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains all probe strings <em>p<sub>n</sub></em>, otherwise return 0.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>striall( <em>s</em>[, <em>p1</em>[, <em>p2</em>[, &#8230;&#8203;]]] )</code> <a id="_striall"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains all probe strings <em>p<sub>n</sub></em> ignoring case, otherwise return 0.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>strany( <em>s</em>[, <em>p1</em>[, <em>p2</em>[, &#8230;&#8203;]]] )</code> <a id="_strany"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains at least one probe string <em>p<sub>n</sub></em>, otherwise return 0.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>striany( <em>s</em>[, <em>p1</em>[, <em>p2</em>[, &#8230;&#8203;]]] )</code> <a id="_striany"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0 or 1</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return 1 if string <em>s</em> contains at least one probe string <em>p<sub>n</sub></em> ignoring case, otherwise return 0.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>join( <em>sep</em>, <em>s<sub>1</sub></em>, <em>s<sub>2</sub></em>, &#8230;&#8203;, <em>s<sub>n</sub></em> )</code> <a id="_join"></a></p></td>
@@ -4067,10 +4176,34 @@ System attributes are re-read from their source each time an expression is evalu
 <td class="tableblock halign-left valign-top"><p class="tableblock">Return a new string object copied from <em>str</em> with all occurrences of <em>probe</em> replaced with <em>repl</em>. All non-string arguments are implicitly cast using <a href="#_str"><code>str()</code></a>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>lower( <em>x</em> )</code> <a id="_lower"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Modified copy of <em>x</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">y</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a new, lower case copy of string <em>x</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>upper( <em>x</em> )</code> <a id="_upper"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Modified copy of <em>x</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">y</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return a new, upper case copy of string <em>x</em></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>idx( <em>s</em>, <em>i</em> )</code> <a id="_idx"></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Integer or real</p></td>
 <td class="tableblock halign-left valign-top"></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Return the value at index <em>i</em> of string <em>s</em>. For normal strings this is the byte value at offset <em>i</em>. For a vertex property numeric array this is the numeric value at offset <em>i</em>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>indexof( <em>s</em>, <em>p</em> )</code> <a id="_indexof"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integer</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the position where <em>p</em> first occurs in <em>s</em>, or -1 if <em>p</em> not found</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>indexofi( <em>s</em>, <em>p</em> )</code> <a id="_indexofi"></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integer</p></td>
+<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the position where <em>p</em> first occurs in <em>s</em> ignoring case, or -1 if <em>p</em> not found</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>slice( <em>str</em>, <em>a</em>, <em>b</em> )</code> <a id="_slice"></a></p></td>
@@ -9004,7 +9137,7 @@ When collecting search results using evaluator expressions it is often desirable
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-22 16:25:35 -0400
+Last updated 2026-06-02 08:41:55 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

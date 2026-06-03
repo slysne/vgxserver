@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<title>Neighborhood Navigation Query</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body id="neighborhood_navigation" class="article toc2 toc-left">
+<div id="header">
+<h1>Neighborhood Navigation Query <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Management Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#neighborhood_navigation_overview">1. Overview</a></li>
+<li><a href="#_navigation_control_parameters">2. Navigation Control Parameters</a></li>
+<li><a href="#nav_ann">3. Approximate Nearest Neighbor (ANN) Search</a>
+<ul class="sectlevel2">
+<li><a href="#_how_vector_search_works">3.1. How Vector Search Works</a></li>
+<li><a href="#_high_performance">3.2. High Performance</a>
+<ul class="sectlevel3">
+<li><a href="#_performance_example">3.2.1. Performance Example</a></li>
+<li><a href="#_speedrecall_curve">3.2.2. Speed/Recall Curve</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<style>
+.copy-button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    cursor: pointer;
+    background-color: #e8e8e8;
+    color: #888;
+    border: 1px solid #ddd;
+    padding: 2px 12px;
+    width: 80px;
+    border-radius: 3px;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 13px;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('div.copyable pre').forEach(function(codeBlock) {
+        var button = document.createElement('button');
+        button.className = 'copy-button';
+        button.textContent = 'Copy';
+        codeBlock.parentNode.style.position = 'relative';
+        codeBlock.parentNode.appendChild(button);
+
+        button.addEventListener('click', function() {
+            var code = codeBlock.innerText || codeBlock.textContent;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(function() {
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }, function() {
+                    button.textContent = 'Failed';
+                });
+            } else {
+                // Fallback method for older browsers
+                var textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    button.textContent = 'Copied';
+                    setTimeout(function() {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                } catch (err) {
+                    button.textContent = 'Failed';
+                }
+                document.body.removeChild(textArea);
+            }
+        });
+    });
+});
+</script>
+</div>
+</div>
+<div class="sect1">
+<h2 id="neighborhood_navigation_overview">1. Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Navigation search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. For navigation to be efficient and successful in finding the best matches, the graph network must be constructed in accordance with some proximity metric where each vertex is connected to a small set of neighbors that are closely related in some way. It is usually desirable for such a graph to be strongly connected, where a path exists from any starting point to any other vertex in the graph.</p>
+</div>
+<div class="paragraph">
+<p>A proximity graph using vectors to express similarity is a prime target for this type of explorative traversal. Such a graph is often a navigable nearest-neighbor construction with diverse local neighborhoods covering both short and occasional longer range hops. This allows efficient implementation of <a href="#nav_ann">Approximate Nearest Neighbor (ANN) Search</a>. The search condition is expressed as a probe vector and the navigation algorithm then explores the graph from a starting point (which can be any node), automatically finding paths to regions of the graph containing items whose vectors are most similar to the probe.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_navigation_control_parameters">2. Navigation Control Parameters</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Neighborhood <em>navigation</em> offers many optional control parameters for the search process:</p>
+</div>
+<div class="listingblock">
+<div class="title">Neighborhood <em>navigation</em> control parameters, brief overview</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+  <span class="nb">id</span> <span class="o">=</span> <span class="n">start_node</span><span class="p">,</span>
+  <span class="n">hits</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+  <span class="n">navigation</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="c1"># Main meta-parameter
+</span>    <span class="sh">'</span><span class="s">bias</span><span class="sh">'</span><span class="p">:</span> <span class="n">B</span><span class="p">,</span>            <span class="c1"># Main recall vs. speed control
+</span>
+    <span class="c1"># Search target
+</span>    <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span><span class="p">:</span> <span class="n">v</span><span class="p">,</span>          <span class="c1"># Probe for similarity search
+</span>    <span class="sh">'</span><span class="s">filter</span><span class="sh">'</span><span class="p">:</span> <span class="n">f</span><span class="p">,</span>          <span class="c1"># Arbitrary filter per visited node
+</span>
+    <span class="c1"># Frontier observation history
+</span>    <span class="sh">'</span><span class="s">result_capacity</span><span class="sh">'</span><span class="p">:</span> <span class="n">H</span><span class="p">,</span> <span class="c1"># Size of top best matches set
+</span>    <span class="sh">'</span><span class="s">inertia</span><span class="sh">'</span><span class="p">:</span> <span class="n">I</span><span class="p">,</span>         <span class="c1"># Size of history for estimation
+</span>
+    <span class="c1"># Limits
+</span>    <span class="sh">'</span><span class="s">queue_limit</span><span class="sh">'</span><span class="p">:</span> <span class="n">F</span><span class="p">,</span>     <span class="c1"># Frontier queue size (non-beam)
+</span>    <span class="sh">'</span><span class="s">expansion_limit</span><span class="sh">'</span><span class="p">:</span> <span class="n">E</span><span class="p">,</span> <span class="c1"># Max number of node expansions
+</span>    <span class="sh">'</span><span class="s">depth_limit</span><span class="sh">'</span><span class="p">:</span> <span class="n">D</span><span class="p">,</span>     <span class="c1"># Max neighborhood hops from start
+</span>    <span class="sh">'</span><span class="s">exec_ms_limit</span><span class="sh">'</span><span class="p">:</span> <span class="n">X</span><span class="p">,</span>   <span class="c1"># Max execution time
+</span>    <span class="sh">'</span><span class="s">visit_limit</span><span class="sh">'</span><span class="p">:</span> <span class="n">V</span><span class="p">,</span>     <span class="c1"># Max node visits
+</span>
+    <span class="c1"># Beam search
+</span>    <span class="sh">'</span><span class="s">entry_width</span><span class="sh">'</span><span class="p">:</span> <span class="n">w</span><span class="p">,</span>     <span class="c1"># Size of initial beam
+</span>    <span class="sh">'</span><span class="s">beam_width</span><span class="sh">'</span><span class="p">:</span> <span class="n">W</span><span class="p">,</span>      <span class="c1"># Initial beam width
+</span>    <span class="sh">'</span><span class="s">beam_min</span><span class="sh">'</span><span class="p">:</span> <span class="n">L</span><span class="p">,</span>        <span class="c1"># Min beam width
+</span>    <span class="sh">'</span><span class="s">beam_max</span><span class="sh">'</span><span class="p">:</span> <span class="n">H</span><span class="p">,</span>        <span class="c1"># Max beam width
+</span>    <span class="sh">'</span><span class="s">beam_decay</span><span class="sh">'</span><span class="p">:</span> <span class="n">C</span><span class="p">,</span>      <span class="c1"># Beam narrowing bias
+</span>    <span class="sh">'</span><span class="s">adaptive_beam</span><span class="sh">'</span><span class="p">:</span> <span class="n">A</span><span class="p">,</span>   <span class="c1"># Use dynamic beam True/False
+</span>
+    <span class="c1"># Optimizations
+</span>    <span class="sh">'</span><span class="s">alpha</span><span class="sh">'</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span>           <span class="c1"># Depth discount (expansion thres.)
+</span>    <span class="sh">'</span><span class="s">beta</span><span class="sh">'</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>            <span class="c1"># Evals discount (expansion thres.)
+</span>    <span class="sh">'</span><span class="s">gamma</span><span class="sh">'</span><span class="p">:</span> <span class="n">g</span><span class="p">,</span>           <span class="c1"># Global offset (expansion thres.)
+</span>    <span class="sh">'</span><span class="s">delta</span><span class="sh">'</span><span class="p">:</span> <span class="n">d</span><span class="p">,</span>           <span class="c1"># Beam controller reactivity
+</span>    <span class="sh">'</span><span class="s">epsilon</span><span class="sh">'</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>         <span class="c1"># Score contrib. thres. offset
+</span>    <span class="sh">'</span><span class="s">zeta</span><span class="sh">'</span><span class="p">:</span> <span class="n">z</span><span class="p">,</span>            <span class="c1"># Smoothing factor for thres. EMA
+</span>    <span class="sh">'</span><span class="s">omega</span><span class="sh">'</span><span class="p">:</span> <span class="n">O</span><span class="p">,</span>           <span class="c1"># All optimizations weight
+</span>
+    <span class="c1"># Traversal thinning
+</span>    <span class="sh">'</span><span class="s">kappa</span><span class="sh">'</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>           <span class="c1"># Arc trav. thinning above thres.
+</span>    <span class="sh">'</span><span class="s">lambda</span><span class="sh">'</span><span class="p">:</span> <span class="n">l</span><span class="p">,</span>          <span class="c1"># Arc trav. thinning rule
+</span>
+    <span class="c1"># State management
+</span>    <span class="sh">'</span><span class="s">reset_metrics</span><span class="sh">'</span><span class="p">:</span> <span class="n">r</span><span class="p">,</span>   <span class="c1"># Reset counters from last query
+</span>    <span class="sh">'</span><span class="s">reset_map</span><span class="sh">'</span><span class="p">:</span> <span class="n">R</span>        <span class="c1"># Reset visited node map
+</span>  <span class="p">}</span>
+<span class="p">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is rarely necessary to use most of these parameters in a production setting, but they can be useful when developing proximity graph construction algorithms or for debugging. Most of the time the <em>bias</em> setting is enough to choose a suitable tradeoff between recall and search speed. Its value ranges from -100.0 (max speed) to 100.0 (max recall) and automatically adjusts all other navigation controls to achieve desired performance. When a specific parameter value is provided it overrides the default determined by <em>bias</em>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Neighborhood navigation control parameters</caption>
+<colgroup>
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 10%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Min</th>
+<th class="tableblock halign-left valign-top">Max</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Main Meta-parameter</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_bias"><em>bias</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-100.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Main recall vs. speed control</strong>: Negative values favor speed, positive values favor recall. This single knob automatically tunes all other parameters.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Search Target and Filter</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_vector"><em>vector</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../similarity/vector.html#pyvgxvector">Euclidean Vector</a> or list</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top" colspan="2"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Probe vector for similarity search</strong>: Uses Cosine similarity. All nodes must have an assigned vector.<br>
+Scores are returned in [0.0–2.0] range (<code>1 + Cosine(probe, node)</code>) to keep scores non-negative internally.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_filter"><em>filter</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">str</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">None</p></td>
+<td class="tableblock halign-left valign-top" colspan="2"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Custom filter</strong> applied to every visited node using the expression language (must be a local evaluator)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Frontier Observation History</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_result_capacity"><em>result_capacity</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1048576</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Size of the top-k result heap</strong>: Larger values can sometimes improve recall</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_inertia"><em>inertia</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1048576</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Length of the frontier observation history</strong>: Controls how quickly the threshold adapts — the primary driver of recall vs. speed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Limits</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_queue_limit"><em>queue_limit</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1048576</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use a classic queue instead of beam search (rarely better, but useful to test)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_expansion_limit"><em>expansion_limit</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unlimited</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2147483647</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum number of node expansions</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_depth_limit"><em>depth_limit</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1024</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2147483647</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum hops from the entry point</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_exec_ms_limit"><em>exec_ms_limit</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unlimited</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2147483647</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hard time limit (highly recommended in production)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_visit_limit"><em>visit_limit</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unlimited</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2147483647</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum nodes visited (guards memory usage)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Beam Search</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_entry_width"><em>entry_width</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1024</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of diverse entry points to use from a synthetic hub node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_beam_width"><em>beam_width</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65536</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initial beam size</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_beam_min"><em>beam_min</em></a> / <a href="#nav_beam_max"><em>beam_max</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 / 0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">65536</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bounds for adaptive beam.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_beam_decay"><em>beam_decay</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Beam narrowing factor per depth level.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_adaptive_beam"><em>adaptive_beam</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top" colspan="2"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable dynamic beam adjustment based on result improvement.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Optimizations</strong> (advanced)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_alpha"><em>alpha</em></a> / <a href="#nav_beta"><em>beta</em></a> / <a href="#nav_gamma"><em>gamma</em></a> / <a href="#nav_delta"><em>delta</em></a> / <a href="#nav_epsilon"><em>epsilon</em></a> / <a href="#nav_zeta"><em>zeta</em></a> / <a href="#nav_omega"><em>omega</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">float</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">auto</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">various</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">various</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine-grained controls for threshold calculation, depth discounting, beam reactivity, and smoothing. Most users never touch these.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>Traversal Thinning</strong> (advanced)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_kappa"><em>kappa</em></a> / <a href="#nav_lambda"><em>lambda</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">int</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">256 / 7</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Skip low-priority arcs for extra speed in rough searches</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" colspan="6"><p class="tableblock"><strong>State Management</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#nav_reset_metrics"><em>reset_metrics</em></a> / <a href="#nav_reset_map"><em>reset_map</em></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bool</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">True</p></td>
+<td class="tableblock halign-left valign-top" colspan="2"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Controls carry-over behavior when reusing an external <code>pyvgx.Memory</code> object</p></td>
+</tr>
+</tbody>
+</table>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="nav_bias"></a>bias</dt>
+<dd>
+<p><strong>Main recall vs. speed control</strong></p>
+<div class="paragraph">
+<p>This is normally the only parameter needed to dial in the desired search performance.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_vector"></a>vector</dt>
+<dd>
+<p><strong>Probe for similarity search</strong></p>
+<div class="paragraph">
+<p>When given, the navigation algorithm uses Cosine similarity to evaluate nodes in the graph against the probe. All graph nodes must have a vector <a href="../vertex/vertexVector.html#vertexsetvector">assigned</a> for the search to work.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Similarity scores are in the range [0.0 - 2.0], computed as <code>1 + Cosine(<em>probe</em>, <em>node</em>)</code>. This is to avoid negative scores, which internally would terminate certain search paths prematurely.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_filter"></a>filter</dt>
+<dd>
+<p><strong>Arbitrary filter per visited node</strong></p>
+<div class="paragraph">
+<p>Use the <a href="../evaluator/evaluator.html">expression language</a> to add custom filters applied to any visited node during graph exploration. The expression must be a <strong><em>local evaluator</em></strong>, i.e. it cannot reference any of the <code>next*</code> arc attributes or head vertex attributes/properties, or perform any <code>stage*()</code> or <code>collect*()</code> operations.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_result_capacity"></a>result_capacity</dt>
+<dd>
+<p><strong>Size of internal top-k result heap</strong></p>
+<div class="paragraph">
+<p>This heap can be made larger than needed to hold <em>k</em> hits which in some cases may increase the ability to find true nearest neighbors. Effective <em>result_capacity</em> is never lower than <em>k</em> given by Neighborhood( hits=<em>k</em> ).</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_inertia"></a>inertia</dt>
+<dd>
+<p><strong>Length of frontier observation history</strong></p>
+<div class="paragraph">
+<p>Navigation is controlled by a running threshold estimate which must be exceeded for a candidate node to be considered for the result and to facilitate continued traversal. This threshold is computed from a delayed observation at the frontier. High inertia leads to more aggressive exploration (higher recall) due to a slowly rising threshold. Low inertia does the opposite, causing the threshold to rise quickly thus terminating the search sooner (lower latency.)</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_queue_limit"></a>queue_limit</dt>
+<dd>
+<p><strong>Frontier queue size</strong></p>
+<div class="paragraph">
+<p>A positive number selects a queue-based frontier for the navigation algorithm. By default the frontier is maintained in a beam (heap) which is populated from scratch at every new level of expansion depth and then fully consumed at the next depth. However, selecting a queue-based frontier changes this behavor. The frontier queue is continually populated and consumed, causing it to grow rapidly at first and then later consumed to exhaustion.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Beam search is usually preferred for both speed an recall, but the frontier queue option may perform better for some performance targets on some data sets.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_expansion_limit"></a>expansion_limit</dt>
+<dd>
+<p><strong>Max number of node expansions</strong></p>
+<div class="paragraph">
+<p>A visited node that was accepted into the frontier will later facilitate further exploration (if its score is still above the running threshold.) The process of exploring a node&#8217;s neighborhood is called expansion. Set <em>expansion_limit</em> to restrict how many neighborhoods will be explored before terminating the search.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_depth_limit"></a>depth_limit</dt>
+<dd>
+<p><strong>Max neighborhood hops from search entry point</strong></p>
+<div class="paragraph">
+<p>Navigation is performed by expanding frontier nodes (i.e. searching their neighborhoods.) This activity adds new promising nodes to the frontier. When all frontier nodes that were present at start of expansion have been consumed the algorithm moves one level deeper into the graph, now expanding nodes that were recently added to the frontier. Set <em>depth_limit</em> to restrict max distance (hops) from the entry point before terminating the search.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_exec_ms_limit"></a>exec_ms_limit</dt>
+<dd>
+<p><strong>Max execution time in milliseconds</strong></p>
+<div class="paragraph">
+<p>Use this to set a maximum allowed search time. Navigation search always carries some risk of runaway execution (in pathological graphs.) Production services should set a timeout to prevent unexpected edge cases from destabilizing the system. (A reasonable upper limit would be something like 2 times the 99.9th latency percentile.)</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_visit_limit"></a>visit_limit</dt>
+<dd>
+<p><strong>Max node visits</strong></p>
+<div class="paragraph">
+<p>Navigation search visits graph nodes to evaluate them. Some nodes are accepted into the result or the frontier, most are discarded. As the graph is explored the number of visited nodes grows. All visited nodes are recorded in a set to prevent cyclic exploration. The visited node set consumes memory. To avoid unbounded memory usage <em>visit_limit</em> can be set to terminate the search after a maximum number of node visits.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_entry_width"></a>entry_width</dt>
+<dd>
+<p><strong>Number of initial search entry points</strong></p>
+<div class="paragraph">
+<p>If the proximity graph is constructed with a synthetic entry point, use <em>entry_width</em> to pick the number of starting nodes in the graph. This is helpful if the synthetic entry point connects to a maximally diverse set of nodes in the graph. Selecting the top best <em>entry_point</em> nodes as seeds for navigation can help speed up convergence and generally leads to better performance. For example, a synthetic entry point may be connected to 500 diverse (mutually unrelated) nodes. Selecting five of these using <em>entry_width</em>=5 helps give the search a flying start by teleporting straight into potentially relevant graph regions.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_beam_width"></a>beam_width</dt>
+<dd>
+<p><strong>Initial beam width</strong></p>
+<div class="paragraph">
+<p>Beam search uses a focused frontier of promising nodes captured into a heap of a certain max size (<em>beam_width</em>.) As better nodes are discovered, inferior nodes are evicted from the beam. Once all nodes in the previous beam have been expanded a new beam (just built) takes its place and search continues. The initial beam is a special case and consists of all neighbors of the start node. When expansion of a previous beam results in an empty new beam (zero promising nodes found) search terminates. Use <em>beam_width</em> to set the max number of promising nodes captured at each level of expansion depth.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Parameters <em>beam_decay</em> and <em>adaptive_beam</em> may cause beam width to be adjusted as the search progresses.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_beam_min"></a>beam_min</dt>
+<dd>
+<p><strong>Min beam width</strong></p>
+<div class="paragraph">
+<p>The smallest beam permitted if beam width is subject to adjustment during search.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_beam_max"></a>beam_max</dt>
+<dd>
+<p><strong>Max beam width</strong></p>
+<div class="paragraph">
+<p>The largest beam permitted if beam width is subject to adjustment during search.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_beam_decay"></a>beam_decay</dt>
+<dd>
+<p><strong>Beam narrowing bias</strong></p>
+<div class="paragraph">
+<p>At each level of expansion (hops from entry point) the next level&#8217;s beam width will be the current level&#8217;s beam width multiplied by <em>beam_decay</em>. Values lower than 1.0 then gradually shrinks the beam width (but never below <em>beam_min</em>.)</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_adaptive_beam"></a>adaptive_beam</dt>
+<dd>
+<p><strong>Use dynamic beam True/False</strong></p>
+<div class="paragraph">
+<p>The optimal beam width is both data dependent and query dependent. When <em>adaptive_beam</em> is True the algorithm adjusts beam width automatically for each query by measuring result set improvement during search. When the result set is quickly improving with new, better items the beam becomes narrower. When search stagnates without finding better items the beam becomes wider (but never above <em>beam_max</em>.) If <em>beam_decay</em> is less than 1.0 the narrowing bias is applied on top of the adaptive width.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_alpha"></a>alpha</dt>
+<dd>
+<p><strong>Depth discount for expansion threshold</strong></p>
+<div class="paragraph">
+<p>To expand a frontier node its score must be greater than the current threshold. Depth discount <em>alpha</em> adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above -1.0) make the gate more permissive with exploration depth, i.e. a node many hops away from the entry point may be expanded even if its score is slightly below the current threshold. Conversely, lower values (below -1.0) make the gate stricter with exploration depth, thereby expediting termination as neighborhoods far from the entry point are reached.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<em>alpha</em> = -1.0 disables depth discount (not 0.0.)
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_beta"></a>beta</dt>
+<dd>
+<p><strong>Evaluation discount for expansion threshold</strong></p>
+<div class="paragraph">
+<p>To expand a frontier node its score must be greater than the current threshold. Evaluation discount <em>beta</em> adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive as the number of visited nodes grows, i.e. a node visited late in the search may still be expanded even if its score is slightly below the current threshold. Conversely, lower values (below 0.0) make the gate stricter as the number of visited nodes grows, thereby promoting faster termination after many node visits. Evaluation discount is disabled with <em>beta</em> = 0.0.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_gamma"></a>gamma</dt>
+<dd>
+<p><strong>Global offset for expansion threshold</strong></p>
+<div class="paragraph">
+<p>To expand a frontier node its score must be greater than the current threshold. Global offset <em>gamma</em> adjusts the effective threshold used when deciding if a node should be expanded. Higher values (above 0.0) make the gate more permissive and lower values (below 0.0) make the gate stricter. Global offset is disabled with <em>gamma</em> = 0.0.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_delta"></a>delta</dt>
+<dd>
+<p><strong>Beam controller reactivity</strong></p>
+<div class="paragraph">
+<p>When <em>adaptive_beam</em> is enabled the beam controller adjusts beam width automatically based on how successful search currently is at improving the result set. When the result is improving quickly the beam is narrowed, and when result improvement stagnates the beam is widened. Modulation strength can be adjusted using controller reactivity <em>delta</em>. Higher values modulates width more strongly and lower values lessen the effect of the beam controller. Nominal control is obtained with <em>delta</em> = 0.0 and the controller is disabled with <em>delta</em> = -1.0.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_epsilon"></a>epsilon</dt>
+<dd>
+<p><strong>Score contribution threshold offset</strong></p>
+<div class="paragraph">
+<p>Visited nodes are evaluated using a scoring function. (For vector similarity this function is <code>score = Cosine(probe, node) + 1.0</code>.) If a node&#8217;s score is at or above the current threshold it counts as an <strong>observation at the frontier</strong> and is injected into the observation history queue whose size is determined by <em>inertia</em>. (The node may also be entered into the result and/or frontier if its score is good enough.) Conversely, if the node&#8217;s score is below the current threshold the score is ignored and instead the current threshold is injected into the history queue, representing a sample-and-hold observation at the frontier. A non-zero <em>epsilon</em> modifies the current threshold used when making these decisions. Positive <em>epsilon</em> values increase difficulty and negative values make the gate more permissive.
++}
+NOTE: Normally, use tiny <em>epsilon</em> values. For reference, the automatic values derived from <em>bias</em> are in the range -0.00067 to 0.001. (The parameter&#8217;s large range -1.0 to 1.0 is intended for special use cases and debugging.)</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_zeta"></a>zeta</dt>
+<dd>
+<p><strong>Smoothing factor for running threshold EMA</strong></p>
+<div class="paragraph">
+<p>At the end of the observation history queue (whose length is controlled by <em>inertia</em>) sits an exponential moving average smoothing function. Its purpose is to prevent outlier samples observed at the frontier from abruptly changing the threshold used by the expansion controller and node evaluator. Infinite smoothing is obtained with <em>zeta</em> = 0.0, i.e. threshold never changes from its initial (0.0) value. Smoothing is disabled with <em>zeta</em> = 1.0, i.e. raw (delayed) frontier observations are presented as current threshold.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+For reference, default <em>zeta</em> = 0.2 for most <em>bias</em> settings.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_omega"></a>omega</dt>
+<dd>
+<p><strong>All optimizations weight</strong></p>
+<div class="paragraph">
+<p>This parameter applies weighted adjustment to <em>alpha</em>, <em>beta</em>, <em>gamma</em>, <em>delta</em>, <em>epsilon</em>, and <em>zeta</em> simultaneously. Its purpose is to temper (<em>omega</em> &lt; 1.0) the individually optimized parameters for better navigation stability. During custom performance tuning it is easy to over-tune individual parameters to maximize their effects. This can sometimes push the algorithm to the edge of stability. It is often a good idea to dial back these individual settings with <em>omega</em> &lt; 1.0. Experimenting with <em>omega</em> can help finalize performance tuning by allowing slight adjustments to multiple parameters at the same time.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_kappa"></a>kappa</dt>
+<dd>
+<p><strong>Arc traversal thinning threshold</strong></p>
+<div class="paragraph">
+<p>If the graph uses arcs with modifier <code>M_INT</code> to connect nodes and the values of those arcs indicate priority (where 0 is highest), then <em>kappa</em> may be used to enable traversal thinning. A value <em>kappa</em>=1 or higher tells the algorithm to apply a thinning rule (via <em>lambda</em>) to possibly skip arcs with priority &gt;= <em>kappa</em>. This can be useful for rough searches that need extra speed, as part of evaluating overall graph structure during build, debugging, or other special use cases. Normally this parameter should be left at 0.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_lambda"></a>lambda</dt>
+<dd>
+<p><strong>Arc traversal thinning rule</strong></p>
+<div class="paragraph">
+<p>If <em>kappa</em> is &gt; 0 then <em>lambda</em> determines which arcs (whose value &gt;= <em>kappa</em>) will be ignored. Skipping rule for arcs with value &gt;= <em>kappa</em> is as follows for different values of <em>lambda</em>: 0=skip ALL, 1=skip 50%, 2=75%, 3=88%, 4=94%, 5=97%, 6=98%, 7=99%.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_reset_metrics"></a>reset_metrics</dt>
+<dd>
+<p><strong>Reset counters from last query</strong></p>
+<div class="paragraph">
+<p>When using an externally managed <code>pyvgx.Memory</code> object <em>m</em> with Neighborhood( memory=m, &#8230;&#8203; ) various internal counters and beam width control variables are accumulated inside <em>m</em>. If <em>reset_metrics</em>=False when re-using a memory object these counters and control variables will continue to accumulate. This can be useful for debugging or for special cases where search is manually divided into multiple Neighborhood() calls.</p>
+</div>
+<div class="paragraph">
+<p>Some internal counters are visible and may be accessed via <code>m.counters</code> attribute. The return value is a tuple: <code>(score_evaluations, threshold_contributions, accepted_into_frontier, accepted_into_result, recursion_depth, node_expansions, node_visits, node_revisits_avoided)</code>.</p>
+</div>
+</dd>
+<dt class="hdlist1"><a id="nav_reset_map"></a>reset_map</dt>
+<dd>
+<p><strong>Reset visited node map</strong></p>
+<div class="paragraph">
+<p>When using an externally managed pyvgx.Memory object <em>m</em> with Neighborhood( memory=m, &#8230;&#8203; ) the node visitation set built during traversal is kept inside <em>m</em>. If <em>reset_map</em>=False when re-using a memory object with another Neighborhood() query the visitation set is remembered and will prevent visiting the same nodes visited in the previous query. This can be useful for debugging or when search is manually divided into multiple Neighborhood() calls with different entry points.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Nodes that should not be visited can be added to the Memory object before calling Neighborhood(). Use <code>pyvgx.Memory.VSetAdd( vertex_id )</code> to pre-populate the visited set.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/vgx_ann_control.png" alt="vgxserver">
+</div>
+<div class="title">Figure 1. VGX/ANN Control</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="nav_ann">3. Approximate Nearest Neighbor (ANN) Search</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Neighborhood Navigation turns the graph into a high-performance <strong>Approximate Nearest Neighbor (ANN)</strong> engine. Instead of brute-force scanning every vector, the algorithm treats similarity search as an intelligent routing problem across a pre-built proximity graph.</p>
+</div>
+<div class="paragraph">
+<p>You supply a probe vector, and the engine efficiently explores only the most promising regions of the graph, delivering excellent recall at very high speed.</p>
+</div>
+<div class="listingblock">
+<div class="title">Approximate nearest neighbors (ANN) search</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">start_node</span><span class="p">,</span>        <span class="c1"># or synthetic entry point
+</span>    <span class="n">hits</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">navigation</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span><span class="p">:</span> <span class="n">probe_vector</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This approach is powerful because the graph and vector search are deeply integrated in a single in-memory engine. The same structure that makes graph traversal fast also makes vector search fast. There is no separate index to maintain, no data duplication, and seamless hybrid graph + vector queries.</p>
+</div>
+<div class="sect2">
+<h3 id="_how_vector_search_works">3.1. How Vector Search Works</h3>
+<div class="paragraph">
+<p>Traditional vector search must solve a hard problem: in high-dimensional space there is no efficient lookup path, so exact search requires scanning everything (brute force). ANN methods trade a tiny amount of accuracy for massive speed gains by structuring the data so that large irrelevant regions can be skipped early.</p>
+</div>
+<div class="paragraph">
+<p>This engine uses a <strong>single-layer proximity graph</strong> (a sparse, navigable nearest-neighbor network). Each node is connected to a small set of diverse nearby neighbors in vector space. This creates:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Locality-aware connectivity</strong>: Edges point toward similar vectors</p>
+</li>
+<li>
+<p><strong>Navigability</strong>: Greedy traversal can iteratively move toward better matches</p>
+</li>
+<li>
+<p><strong>Low diameter + global entry points</strong>: We reach relevant regions quickly from a good starting node</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The navigation algorithm starts at an entry point (any node or a synthetic diverse hub) and maintains a <strong>dynamic frontier</strong> of promising candidates. At every step it:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Evaluates vectors using <strong>Cosine similarity</strong> (converted to [0.0–2.0] range for internal stability)</p>
+</li>
+<li>
+<p>Updates a running <strong>threshold</strong> based on frontier observations</p>
+</li>
+<li>
+<p>Expands only neighborhoods that show sufficient promise</p>
+</li>
+<li>
+<p>Dynamically adjusts beam width: narrow when results improve quickly, wider when search stagnates</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This signal-driven behavior (commit early, expand only when justified) is the core reason for both speed and stable recall.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_high_performance">3.2. High Performance</h3>
+<div class="paragraph">
+<p>The combination of graph structure and adaptive navigation gives several unique advantages:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Graph-native routing</strong>: Similarity becomes a pathfinding problem instead of a search problem. Good paths are self-reinforcing; bad regions are pruned early.</p>
+</li>
+<li>
+<p><strong>Dynamic beam + inertia control</strong>: The main <a href="#nav_bias"><em>bias</em></a> parameter controls the entire recall/speed tradeoff. Short observation history → fast termination. Long history → aggressive exploration.</p>
+</li>
+<li>
+<p><strong>Early commitment + late expansion</strong>: Strong selection pressure at the frontier prevents wasteful branching.</p>
+</li>
+<li>
+<p><strong>Synthetic entry points</strong>: A single start-hub node connected to hundreds of diverse vectors gives instant global coverage, dramatically accelerating convergence.</p>
+</li>
+<li>
+<p><strong>Tight engine integration</strong>: All operations run in the same highly optimized in-memory runtime with excellent cache behavior and minimal overhead.</p>
+</li>
+<li>
+<p><strong>Hybrid readiness</strong>: It is possible to combine vector navigation with graph topology, filters, and custom scoring in one query.</p>
+</li>
+</ul>
+</div>
+<div class="sect3">
+<h4 id="_performance_example">3.2.1. Performance Example</h4>
+<div class="paragraph">
+<p>These numbers represent single-threaded query performance measured on Apple M4 Max, using 1.4 million 128-D vectors.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. Performance example (real-world measurement on a 1.4M vector dataset)</caption>
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0002%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">bias</th>
+<th class="tableblock halign-left valign-top">recall@10</th>
+<th class="tableblock halign-left valign-top">QPS</th>
+<th class="tableblock halign-left valign-top">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-100</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.008</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42800</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum speed</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-99</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.246</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">21935.8</p></td>
+<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock">High speed, rough semantic recall</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-95</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.549</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14419</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-90</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.657</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10892</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-75</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.801</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6657</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-60</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.8799</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4827.6</p></td>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock">Balanced</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-50</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.939</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3078</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">-25</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.989</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1232</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.994</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">881</p></td>
+<td class="tableblock halign-left valign-top" rowspan="3"><p class="tableblock">Very high recall</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">25</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.997</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">719</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.9981</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">550</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">75</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.9996</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">268</p></td>
+<td class="tableblock halign-left valign-top" rowspan="2"><p class="tableblock">Near-exhaustive</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">90</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.9998</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">144</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">100</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.9999</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">71</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum recall</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_speedrecall_curve">3.2.2. Speed/Recall Curve</h4>
+<div class="paragraph">
+<p>Single threaded performance on Apple M4 MAX, 1.4M vectors, 128-dim is shown below.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/vgx_ann_perf.png" alt="vgxserver">
+</div>
+<div class="title">Figure 2. VGX/ANN Performance</div>
+</div>
+<div class="paragraph">
+<p>Multi-threaded scaling is shown below. Again, this is measured on Apple M4 MAX, 1.4M vectors, 128-dim, using a linear vertical scale to better show scaling behavior.</p>
+</div>
+<div class="paragraph">
+<p>Notice memory bus saturation causing 16-thread performance to be worse in the low recall regime until we reach recall=0.8, after which workload starts to become CPU-bound and 16 threads show marginal benefit.</p>
+</div>
+<div class="paragraph">
+<p>Overall, in the recall regimes that matter for typical production use we scale almost linearly with CPU core count.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/vgx_ann_scale_mt.png" alt="vgxserver">
+</div>
+<div class="title">Figure 3. VGX/ANN Multi-Threaded Scaling</div>
+</div>
+<hr>
+<div class="openblock float-group">
+<div class="content">
+<div class="paragraph left">
+<p><a href="graphQuery.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Query Methods"></i></span></a>
+<a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
+<a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Management Methods"></i></span></a></p>
+</div>
+<div class="paragraph right">
+<p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
+</div>
+</div>
+</div>
+<div id="theend" class="paragraph text-center">
+<p><a href="../reference.html"><span class="image"><img src="../images/pyvgx.png" alt="PYVGX" width="120" height="120"></span></a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2026-06-02 08:41:55 -0400
+</div>
+</div>
+</body>
+</html>

@@ -375,6 +375,20 @@ The transaction sub-section defines the provider/subscriber relationships betwee
 <div class="paragraph">
 <p>Referencing an undefined instance identifier is not allowed.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>An instance without subscribers will be marked as <a href="../reference.html#isgraphlocal_func">local only</a>. This flag is persistent and is <em>not</em> automatically cleared if the topology is later changed to include subscribers for an instance. See <a href="#local_only_caution">how to reset local only</a> for more details.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="sect4">
 <h5 id="descriptor_topology_transaction_default">1.5.1.1. Default Value</h5>
 <div class="paragraph">
@@ -801,6 +815,30 @@ If <code>"*"</code> the plugin functions will be bound to the <a href="#descript
 </dd>
 </dl>
 </div>
+<div id="local_only_caution" class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Sometimes graph(s) in a VGX instance may be marked as <a href="../reference.html#isgraphlocal_func">local only</a>, preventing graph data from being replicated to attached subscribers. This is almost always caused by re-using saved instances that were originally created with a different <a href="#system_descriptor">descriptor</a>. For example, a <code>builder</code> instance may originally have had no subscribers defined in its <a href="#descriptor_topology_transaction">transaction topology</a>, marking it local only. Even if one or more <code>search</code> instances are later added to the descriptor, the <code>builder</code> still remembers its original local-only role.</p>
+</div>
+<div class="paragraph">
+<p>The easiest way to reset the local only state is to remove the following file from the affected instance&#8217;s data directory. (Stop instance before removing file, then restart.)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>vgxroot/
+├─ graphname/
+    ├─ vxgraph_[graphname].dat   ( &lt;- remove to reset state )</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="sect2">
 <h3 id="_pyvgx_vgxinstance_example">3.1. pyvgx.VGXInstance Example</h3>
 <div class="paragraph">
@@ -925,7 +963,7 @@ Module containing plugin code used by <code>exampleservice.py</code></p>
 </div>
 <div class="listingblock copyable">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> @</code></pre>
 </div>
 </div>
 <div class="dlist">
@@ -959,7 +997,7 @@ Module containing plugin code used by <code>exampleservice.py</code></p>
 </div>
 <div class="listingblock copyable">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> <span class="s2">"*"</span> <span class="nt">--confirm</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> @ <span class="nt">--confirm</span></code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -1381,7 +1419,7 @@ Module containing plugin code used by <code>exampleservice.py</code></p>
 </div>
 <div class="listingblock copyable">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> <span class="s2">"*"</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--status</span> @</code></pre>
 </div>
 </div>
 </div>
@@ -1429,7 +1467,7 @@ Module containing plugin code used by <code>exampleservice.py</code></p>
 <div class="listingblock copyable">
 <div class="title">Shutdown</div>
 <div class="content">
-<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> <span class="s2">"*"</span> <span class="nt">--confirm</span></code></pre>
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--stop</span> @ <span class="nt">--confirm</span></code></pre>
 </div>
 </div>
 <hr>
@@ -1454,7 +1492,7 @@ Module containing plugin code used by <code>exampleservice.py</code></p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-22 16:25:45 -0400
+Last updated 2026-06-03 14:57:14 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

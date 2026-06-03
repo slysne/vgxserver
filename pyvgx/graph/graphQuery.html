@@ -13,7 +13,7 @@
 </head>
 <body id="graphquerymethods" class="article toc2 toc-left">
 <div id="header">
-<h1>Graph Query Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Graph Management Methods"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<h1>Graph Query Methods <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="pyvgx.Graph"></i></span></a> <a href="graphNavigationQuery.html"><span class="icon"><i class="fa fa-arrow-circle-right" title="Navigation Query"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -76,7 +76,10 @@
 <li><a href="#_remarks_6">7.4. Remarks</a>
 <ul class="sectlevel3">
 <li><a href="#_overview">7.4.1. Overview</a></li>
-<li><a href="#neighborhood_aggregate">7.4.2. Aggregation</a></li>
+<li><a href="#neighborhood_basic">7.4.2. Basic Neighborhood Query</a></li>
+<li><a href="#neighborhood_nested">7.4.3. Nested Neighborhood Query</a></li>
+<li><a href="#neighborhood_aggregate">7.4.4. Aggregation</a></li>
+<li><a href="#neighborhood_navigation">7.4.5. Navigation</a></li>
 </ul>
 </li>
 </ul>
@@ -799,7 +802,7 @@ V = g.GetVertex( name )</pre>
 <h3 id="_syntax_6">7.1. Syntax</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">vector</span><span class="p">[,</span> <span class="n">collect</span><span class="p">[,</span> <span class="n">result</span><span class="p">[,</span> <span class="n">fields</span><span class="p">[,</span> <span class="n">select</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">aggregate</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">offset</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
+<pre class="rouge highlight"><code data-lang="python"><span class="n">pyvgx</span><span class="p">.</span><span class="n">Graph</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span> <span class="nb">id</span><span class="p">[,</span> <span class="n">arc</span><span class="p">[,</span> <span class="n">pre</span><span class="p">[,</span> <span class="nb">filter</span><span class="p">[,</span> <span class="n">post</span><span class="p">[,</span> <span class="n">neighbor</span><span class="p">[,</span> <span class="n">vector</span><span class="p">[,</span> <span class="n">collect</span><span class="p">[,</span> <span class="n">navigation</span><span class="p">[,</span> <span class="n">result</span><span class="p">[,</span> <span class="n">fields</span><span class="p">[,</span> <span class="n">select</span><span class="p">[,</span> <span class="n">rank</span><span class="p">[,</span> <span class="n">sortby</span><span class="p">[,</span> <span class="n">aggregate</span><span class="p">[,</span> <span class="n">memory</span><span class="p">[,</span> <span class="n">offset</span><span class="p">[,</span> <span class="n">hits</span><span class="p">[,</span> <span class="n">timeout</span><span class="p">[,</span> <span class="n">limexec</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -871,6 +874,13 @@ V = g.GetVertex( name )</pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock">&lt;bool&gt; or <a href="../specification/arcSpecificationSyntax.html#arcfilter">&#60;arc_filter&#62;</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="../constants/collectConstants.html#collectconstants">pyvgx.C_COLLECT</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Control how neighborhood arcs are collected and returned in the result.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>navigation</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;bool&gt; or &lt;dict&gt;<br>
+ See <a href="#neighborhood_navigation">Navigation</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">False</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable navigation search mode and specify navigation behavior</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>result</em></p></td>
@@ -1002,16 +1012,31 @@ See <a href="../constants/resultListEntryConstants.html#resultlistentryconstants
 <div class="sect3">
 <h4 id="_overview">7.4.1. Overview</h4>
 <div class="paragraph">
-<p>A neighborhood search starts at the specified vertex <em>id</em> and processes the arcs incident on that vertex according to the query parameters. Arcs are matched against any filters supplied, and they may be traversed to reach the terminal vertices on the other side to continue processing there. Arc matching is a depth-first process. In order for an arc to match, it first has to match its own filter criteria and then any recursive criteria by traversal. Neighborhood queries may traverse arcs to other vertices and then continue traversal recursively from those vertices as specified by the query parameters.</p>
+<p>A neighborhood search starts at the specified vertex <em>id</em> (anchor) and radiates outwards via its arcs to its immediate neighbors. If requested, the search may continue from all neighbors along <em>their</em> arcs to reach farther into the graph. Separate conditions for vertices and arcs are specified at each level (distance) from the anchor. A simple neighborhood query only traverses the anchor&#8217;s arcs to its immediate neighbors.</p>
 </div>
 <div class="paragraph">
-<p>Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Recursive queries may be configured to collect at some levels of the recursion and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.</p>
+<p>Filters can be used to control which arcs are traversed. Filters can apply to arcs and the neighbors pointed to by those arcs. By default traversal is greedy. Arc filters restrict traversal based on relationship types, arc values, etc. Neighbor vertex filters restrict traversal based on vertex attributes, properties, and possibly nested traversal to their neighbors, which again may have separate arc and vertex filters, and so on.</p>
 </div>
 <div class="paragraph">
-<p>Collecting an arc means to collect that arc&#8217;s attributes (i.e. relationship and value) and the arc head vertex attributes and properties. The <em>fields</em> and <em>select</em> parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a recursive query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item&#8217;s distance from the anchor vertex.</p>
+<p>For an arc to be traversed it must first satisfy any filter applied directly to the arc, then any filter applied to the neighbor pointed to (the terminal). If filters are nested, then the terminal&#8217;s own arcs and neighbors will have to match their filters. This is a depth-first process, in the sense that for any arc to be traversed its entire chain of filters must be matched. However, the matching process is executed shallow-to-deep, such that a miss may be declared sooner rather than later. This means, for instance, that if an arc filter declares a miss on the relationship type it will not proceed to the neighbor vertex to evaluate its filters. But it also means an arc cannot be declared a match until all cascading filters have been satisfied.</p>
 </div>
 <div class="paragraph">
-<p>Result lists can be order by any attribute or vertex property, or according to user-defined ranking formulas.</p>
+<p>Arc filters are specified using the <a href="../specification/arcSpecificationSyntax.html#arcfilter"><em>arc</em></a> parameter. Neighbor vertex filters are specified using the <a href="../vertex/vertexFilter.html#vertexfilter"><em>neighbor</em></a> parameter. The latter has a rich set of constraints for matching and controlling nested traversal.</p>
+</div>
+<div class="paragraph">
+<p>Navigation search is enabled with the <a href="#.."><em>navigation</em></a> parameter. This special traversal mode performs automatic discovery of the anchor&#8217;s extended neighborhood, and can potentially be configured to explore the entire graph via a few simple controls. This mode is primarily used for vector search, where an underlying proximity graph connects mutually similar vertices to form a traversable landscape. Such a network of vector-endowed vertices allows the search to discover paths to graph regions containing items most closely resembling a probe condition (vector.)</p>
+</div>
+<div class="paragraph">
+<p>Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Normally collection is controlled by the <em>collect</em> parameter, which by default is <code>True</code> (pyvgx.C_COLLECT) at the anchor&#8217;s level, and <code>False</code> (pyvgx.C_NONE) at nested levels. Queries with nested conditions may be configured to collect at some levels (distance from anchor) and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.</p>
+</div>
+<div class="paragraph">
+<p>Collecting an arc means to collect that arc&#8217;s attributes (i.e. relationship and value) and the terminal&#8217;s attributes and properties. The <em>fields</em> and <em>select</em> parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a nested query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item&#8217;s distance from the anchor vertex.</p>
+</div>
+<div class="paragraph">
+<p>The <em>result</em> parameter controls the data type returned by the neighborhood query. The outer container for collected items is always a list. Items can be formatted as strings, tuples, dicts, or numbers. If meta information is requested (with pyvgx.R_COUNTS or pyvgx.R_TIMING) the item container list is wrapped in a dict along with the requested metas.</p>
+</div>
+<div class="paragraph">
+<p>Result lists can be ordered by any attribute or vertex property, or according to user-defined ranking formulas.</p>
 </div>
 <div class="paragraph">
 <p>A <em>timeout</em> can be specified for neighborhood queries. It represents an upper limit for how long the query is allowed to run before terminating the query and raising an exception.</p>
@@ -1024,9 +1049,127 @@ See <a href="../constants/resultListEntryConstants.html#resultlistentryconstants
 </div>
 </div>
 <div class="sect3">
-<h4 id="neighborhood_aggregate">7.4.2. Aggregation</h4>
+<h4 id="neighborhood_basic">7.4.2. Basic Neighborhood Query</h4>
 <div class="paragraph">
-<p>It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an <em>aggregated arc</em> with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a recursive traversal scenario, so long as their heads terminate at the same vertex.</p>
+<p>Simple neighborhood queries start at an anchor vertex and returns the anchor&#8217;s neighbors with optional filters applied and optional fields collected.</p>
+</div>
+<div class="listingblock">
+<div class="title">Collect the names of all neighbors of anchor vertex</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span>  <span class="c1"># Start search here
+</span><span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Restrict search by arc&#8217;s relationship type</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">)</span> <span class="c1"># Require specific relationship
+</span><span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Further restrict search by terminal condition</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>  <span class="c1"># Require specific relationship
+</span>    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span><span class="sh">"</span><span class="s">id</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">A*</span><span class="sh">"</span><span class="p">}</span>  <span class="c1"># and some neighbor restriction
+</span><span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Control what fields are returned and their format</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">A*</span><span class="sh">"</span>
+    <span class="p">},</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="n">F_VAL</span><span class="o">|</span><span class="n">F_ID</span><span class="p">,</span>  <span class="c1"># Return arc value and terminal id
+</span>    <span class="n">result</span> <span class="o">=</span> <span class="n">R_LIST</span>       <span class="c1"># as tuples
+</span><span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="neighborhood_nested">7.4.3. Nested Neighborhood Query</h4>
+<div class="paragraph">
+<p>Nested neighborhood queries restrict their matches based on conditions reaching deeper into the graph. Nesting up to the 15th extended neighborhood is supported. Collection may be configured to occur at any level.</p>
+</div>
+<div class="listingblock">
+<div class="title">Return names of anchor&#8217;s terminals which are themselves connected to vertices meeting a certain condition</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># terminal must be
+</span>        <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span> <span class="c1"># connected to another
+</span>            <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span> <span class="c1"># neighbor satisfying
+</span>                <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">B*</span><span class="sh">"</span> <span class="c1"># a specific condition
+</span>            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Further restrict the returned items to those who like someone who knows someone who visited some country</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span> <span class="c1"># Restrict immediate neighborhood by relationship type
+</span>    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span> <span class="c1"># Restrict next neighborhood by another relationship type
+</span>            <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">B*</span><span class="sh">"</span><span class="p">,</span>
+                <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span> <span class="c1"># 3rd extended neighborhood
+</span>                    <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span> <span class="c1"># must have visited
+</span>                    <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">country</span><span class="sh">"</span><span class="p">,</span> <span class="c1"># a country of
+</span>                        <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">Elbonia</span><span class="sh">"</span> <span class="c1"># this specific name
+</span>                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Perform item collection at another level of nesting</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">anchor_name</span><span class="p">,</span>
+    <span class="n">collect</span> <span class="o">=</span> <span class="n">C_NONE</span><span class="p">,</span> <span class="c1"># Don't collect immediate neighbors
+</span>    <span class="n">arc</span> <span class="o">=</span> <span class="p">(</span><span class="sh">"</span><span class="s">likes</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+    <span class="n">neighbor</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">traverse</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+            <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">knows</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+            <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">B*</span><span class="sh">"</span><span class="p">,</span>
+                <span class="sh">'</span><span class="s">collect</span><span class="sh">'</span><span class="p">:</span> <span class="n">C_COLLECT</span><span class="p">,</span> <span class="c1"># Collect these neighbors
+</span>                <span class="sh">'</span><span class="s">adjacent</span><span class="sh">'</span> <span class="p">:</span> <span class="p">{</span>
+                    <span class="sh">'</span><span class="s">arc</span><span class="sh">'</span><span class="p">:</span> <span class="p">(</span><span class="sh">"</span><span class="s">visited</span><span class="sh">"</span><span class="p">,</span> <span class="n">D_OUT</span><span class="p">),</span>
+                    <span class="sh">'</span><span class="s">neighbor</span><span class="sh">'</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="sh">'</span><span class="s">type</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">country</span><span class="sh">"</span><span class="p">,</span>
+                        <span class="sh">'</span><span class="s">id</span><span class="sh">'</span><span class="p">:</span> <span class="sh">"</span><span class="s">Elbonia</span><span class="sh">"</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="neighborhood_aggregate">7.4.4. Aggregation</h4>
+<div class="paragraph">
+<p>It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an <em>aggregated arc</em> with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a nested traversal scenario, so long as their heads terminate at the same vertex.</p>
 </div>
 <div class="paragraph">
 <p>To enable aggregation use the <em>aggregate</em> parameter:</p>
@@ -1139,6 +1282,27 @@ Post filters are not directional. Specify arc direction <code>D_OUT</code> for p
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect3">
+<h4 id="neighborhood_navigation">7.4.5. Navigation</h4>
+<div class="paragraph">
+<p>Navigation search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. A common use case is approximate nearest neighbor (ANN) search. Given a sufficiently connected proximity graph the built-in navigation algorithm can traverse its way towards the best matches using only a probe vector as search condition.</p>
+</div>
+<div class="listingblock">
+<div class="title">Approximate nearest neighbors (ANN) search</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="n">g</span><span class="p">.</span><span class="nc">Neighborhood</span><span class="p">(</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="n">start_node</span><span class="p">,</span>
+    <span class="n">hits</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">navigation</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sh">'</span><span class="s">vector</span><span class="sh">'</span><span class="p">:</span> <span class="n">probe_vector</span>
+    <span class="p">}</span>
+<span class="p">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See separate <a href="graphNavigationQuery.html">Neighborhood Navigation Query</a> section for more details.</p>
+</div>
 </div>
 </div>
 </div>
@@ -2293,7 +2457,7 @@ When anchor is specified the behavior is that of <a href="#graphneighborhood">py
 <div class="paragraph left">
 <p><a href="graphArc.html"><span class="icon"><i class="fa fa-arrow-circle-left fa-2x" title="Graph Arc Methods"></i></span></a>
 <a href="graph.html"><span class="icon"><i class="fa fa-arrow-circle-up fa-2x" title="pyvgx Graph"></i></span></a>
-<a href="graphManagement.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Graph Management Methods"></i></span></a></p>
+<a href="graphNavigationQuery.html"><span class="icon"><i class="fa fa-arrow-circle-right fa-2x" title="Navigation Query"></i></span></a></p>
 </div>
 <div class="paragraph right">
 <p><a href="#"><span class="icon"><i class="fa fa-chevron-circle-up fa-2x" title="Top of page"></i></span></a></p>
@@ -2309,7 +2473,7 @@ When anchor is specified the behavior is that of <a href="#graphneighborhood">py
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2026-06-02 08:41:55 -0400
 </div>
 </div>
 </body>

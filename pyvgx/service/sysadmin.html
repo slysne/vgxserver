@@ -92,27 +92,33 @@
 <li><a href="#_example_add_square_root_capabilities_to_running_system">3.1.20.1. Example: Add square root capabilities to running system</a></li>
 </ul>
 </li>
-<li><a href="#vgxadmin_option_resetmetrics">3.1.21. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</a></li>
-<li><a href="#vgxadmin_option_restarthttp">3.1.22. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</a></li>
-<li><a href="#vgxadmin_option_resumein">3.1.23. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</a></li>
-<li><a href="#vgxadmin_option_resumeout">3.1.24. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</a></li>
-<li><a href="#vgxadmin_option_resumettl">3.1.25. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</a></li>
-<li><a href="#vgxadmin_option_reversesync">3.1.26. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</a></li>
-<li><a href="#vgxadmin_option_rollingupdate">3.1.27. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</a></li>
-<li><a href="#vgxadmin_option_servicein">3.1.28. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</a></li>
-<li><a href="#vgxadmin_option_serviceout">3.1.29. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</a></li>
-<li><a href="#vgxadmin_option_show">3.1.30. <code>--show</code> (<code>-J</code>)</a></li>
-<li><a href="#vgxadmin_option_start">3.1.31. <code>--start &lt;id&gt;</code> (<code>-s</code>)</a></li>
-<li><a href="#vgxadmin_option_status">3.1.32. <code>--status &lt;id&gt;</code> (<code>-S</code>)</a></li>
-<li><a href="#vgxadmin_option_stop">3.1.33. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</a></li>
-<li><a href="#vgxadmin_option_sync">3.1.34. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</a></li>
-<li><a href="#vgxadmin_option_throttle">3.1.35. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</a></li>
-<li><a href="#vgxadmin_option_truncate">3.1.36. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</a></li>
-<li><a href="#vgxadmin_option_unbind">3.1.37. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</a></li>
-<li><a href="#vgxadmin_option_unsubscribe">3.1.38. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</a></li>
-<li><a href="#vgxadmin_option_version">3.1.39. <code>--version</code> (<code>-v</code>)</a></li>
-<li><a href="#vgxadmin_option_waitforidle">3.1.40. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</a></li>
-<li><a href="#vgxadmin_option_writable">3.1.41. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</a></li>
+<li><a href="#vgxadmin_option_reset">3.1.21. <code>--reset &lt;id&gt;</code> (<code>-A</code>)</a></li>
+<li><a href="#vgxadmin_option_resetmetrics">3.1.22. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</a></li>
+<li><a href="#vgxadmin_option_restart">3.1.23. <code>--restart &lt;id&gt;</code> (<code>-e</code>)</a>
+<ul class="sectlevel4">
+<li><a href="#_example_minimal_restartable_application">3.1.23.1. Example: Minimal restartable application</a></li>
+</ul>
+</li>
+<li><a href="#vgxadmin_option_restarthttp">3.1.24. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</a></li>
+<li><a href="#vgxadmin_option_resumein">3.1.25. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</a></li>
+<li><a href="#vgxadmin_option_resumeout">3.1.26. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</a></li>
+<li><a href="#vgxadmin_option_resumettl">3.1.27. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</a></li>
+<li><a href="#vgxadmin_option_reversesync">3.1.28. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</a></li>
+<li><a href="#vgxadmin_option_rollingupdate">3.1.29. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</a></li>
+<li><a href="#vgxadmin_option_servicein">3.1.30. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</a></li>
+<li><a href="#vgxadmin_option_serviceout">3.1.31. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</a></li>
+<li><a href="#vgxadmin_option_show">3.1.32. <code>--show</code> (<code>-J</code>)</a></li>
+<li><a href="#vgxadmin_option_start">3.1.33. <code>--start &lt;id&gt;</code> (<code>-s</code>)</a></li>
+<li><a href="#vgxadmin_option_status">3.1.34. <code>--status &lt;id&gt;</code> (<code>-S</code>)</a></li>
+<li><a href="#vgxadmin_option_stop">3.1.35. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</a></li>
+<li><a href="#vgxadmin_option_sync">3.1.36. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</a></li>
+<li><a href="#vgxadmin_option_throttle">3.1.37. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</a></li>
+<li><a href="#vgxadmin_option_truncate">3.1.38. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</a></li>
+<li><a href="#vgxadmin_option_unbind">3.1.39. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</a></li>
+<li><a href="#vgxadmin_option_unsubscribe">3.1.40. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</a></li>
+<li><a href="#vgxadmin_option_version">3.1.41. <code>--version</code> (<code>-v</code>)</a></li>
+<li><a href="#vgxadmin_option_waitforidle">3.1.42. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</a></li>
+<li><a href="#vgxadmin_option_writable">3.1.43. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</a></li>
 </ul>
 </li>
 </ul>
@@ -706,6 +712,11 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Total number of instances <em>i</em> running on <em>h</em> separate hosts</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Domain</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>name</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Network <em>domain</em> name</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Partitions</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>p</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of partitions (Builder instances)</p></td>
@@ -797,21 +808,13 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Default, unspecified node type</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" rowspan="18"><p class="tableblock"><strong>Status</strong></p></td>
+<td class="tableblock halign-left valign-top" rowspan="9"><p class="tableblock"><strong>Status</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>OK</strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Instance is running normally</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Busy</strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Transaction input processing is lagging more than 30 seconds behind provider</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>S/N</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Serial number difference between this instance and its provider</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>No Input</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Instance with VGX Transaction Service running (bound txport) has no provider attached</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>S-OUT</strong></code></p></td>
@@ -827,31 +830,7 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Down</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Instance does not respond to status requests and is either not running or not reachable</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Partial</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix is incomplete due to one or more partitions without any replicas</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>OK/Delta</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is our of sync with its provider</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Degraded</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more unavailable replicas (reduced capacity)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Memory</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Memory warning, instance&#8217;s physical host memory usage is 80% - 83%</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Mem <em>x</em>%</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Memory warning, instance&#8217;s physical host memory usage is 83% - 93%</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>! MEM <em>x</em>%</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Memory critical, instance&#8217;s physical host memory usage is above 93%</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance does not respond to status requests and is either not running or not reachable. Intermittent occurrences of this status may appear under heavy load.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Readonly</strong></code></p></td>
@@ -866,10 +845,6 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Instance is running but did not provide node status information</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>---</strong></code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">State unknown due to incomplete status information</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Uptime</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>D:H:M:S</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Time since instance was started</p></td>
@@ -877,7 +852,48 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="multinode.html#descriptor_instance_host"><strong>Address</strong></a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>host:port</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname/IP and admin port of instance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hostname (or IP) and <strong>admin</strong> port of instance. Subtract 1 from admin port to get main service/plugin port.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" rowspan="10"><p class="tableblock"><strong>Notice</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;empty&gt;</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No warnings</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>S/N</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Serial number difference between this instance and its provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>No Input</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Instance with VGX Transaction Service running (bound txport) has no provider attached</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Partial</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix is incomplete due to one or more partitions without any replicas</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Delta</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is out of sync with its provider</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Degraded</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix has one or more unavailable replicas (reduced query capacity)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Memory</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Memory warning: Physical host memory usage is 81% - 88%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>Mem <em>x</em>%</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High memory warning: Physical host memory usage is 88% - 94%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>! MEM <em>x</em>%</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Critically high memory: Physical host memory usage is above 94%</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong>NoEngine</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All engine partition(s) unavailable in dispatcher back-end matrix (or <a href="multinode.html#descriptor_topology_dispatch_partial_results">partial matrix</a> not allowed)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" colspan="3"></td>
@@ -886,7 +902,7 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <td class="tableblock halign-left valign-top" colspan="3"><p class="tableblock"><strong>[Server Load]</strong></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" rowspan="4"><p class="tableblock"><strong>Matrix</strong></p></td>
+<td class="tableblock halign-left valign-top" rowspan="5"><p class="tableblock"><strong>Matrix</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>S-IN</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Service In: Back end engine instance operating normally</p></td>
 </tr>
@@ -895,11 +911,15 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Service Out: Back end or dispatcher instance not accepting plugin requests</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>m</em></strong>R x <strong><em>n</em></strong>P</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Dispatcher&#8217;s back-end matrix dimensions (<em>m</em> replicas, <em>n</em> partitions)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>m</em></strong>R</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Proxy Dispatcher&#8217;s back-end replica count <em>m</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><strong><em>m</em></strong>R x <strong><em>n</em></strong>P</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matrix Dispatcher&#8217;s back-end dimensions (<em>m</em> replicas, <em>n</em> partitions)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&lt;empty&gt;</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">N/A</p></td>
 </tr>
 <tr>
@@ -1170,7 +1190,7 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 <div class="sect2">
 <h3 id="admin_service_plugins">2.2. ADMIN Plugins</h3>
 <div class="paragraph">
-<p>Call these endpoints to perform administrative tasks. Obtain a unique <a href="#admin_service_authtoken"><em>authtoken</em></a> for each new request.</p>
+<p>Call these endpoints to perform administrative tasks. Obtain a new, unique <a href="#admin_service_authtoken"><em>authtoken</em></a> before making a request.</p>
 </div>
 <div class="sect3">
 <h4 id="_admin_plugin_parameters">2.2.1. ADMIN Plugin Parameters</h4>
@@ -1235,12 +1255,25 @@ e.g. <code>Graph.Vertices: {'hits':5, 'sortby':S_IDEG}</code></p>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_GetAuthToken</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generate a new, unique authtoken to be submitted with the next admin request</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Console</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">View or edit graph information, as in <a href="#admin_ui_console">Section 1.4, &#8220;Console <code>/console</code>&#8221;</a></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_Shutdown</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Initiate instance shutdown. This requires two authtokens. Obtain the first token and pass in <code>authshutdown</code> parameter. Then obtain the second token and pass in <code>authtoken</code> parameter.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initiate instance shutdown. This requires <strong>two</strong> authtokens. Obtain the first token and pass in <code>authshutdown</code> parameter. Then obtain the second token and pass in <code>authtoken</code> parameter.
+<br>
+<br>
+ Optionally pass <code>persist=1</code> to save graphs on shutdown.
+<br>
+<br>
+ Optionally pass <code>restartable=1</code> to cause shutdown to internally invoke <a href="../reference.html#system_exitrunserver_func">pyvgx.system.ExitRunServer()</a> instead of process-wide exit signal SIGTERM.
+<br>
+<br>
+ Optionally pass a copy of the first admin token (the one passed to <code>authshutdown</code>) in <code>authfullreset</code> parameter to fully erase all graph data before shutdown. (<code>persist=1</code> is implied in this case.)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>/vgx/builtin/ADMIN_SystemDescriptor</code></p></td>
@@ -1474,7 +1507,9 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
     <span class="nt">-W</span>, <span class="nt">--persist</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>              Write instance data to disk
     <span class="nt">-g</span>, <span class="nt">--readonly</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Make graph<span class="o">(</span>s<span class="o">)</span> <span class="nb">readonly</span>
     <span class="nt">-N</span>, <span class="nt">--reloadplugins</span> &lt;<span class="nb">id</span><span class="o">&gt;[</span>,&lt;pd&gt;] Reload or add plugins <span class="k">in</span> &lt;pd&gt; json file
+    <span class="nt">-A</span>, <span class="nt">--reset</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>                Reset and restart service <span class="o">(</span><span class="k">if </span>application supports it<span class="o">)</span>
     <span class="nt">-m</span>, <span class="nt">--resetmetrics</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>         Clear performance and error counters
+    <span class="nt">-e</span>, <span class="nt">--restart</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>              Restart service <span class="o">(</span><span class="k">if </span>application supports it<span class="o">)</span>
     <span class="nt">-D</span>, <span class="nt">--restarthttp</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>          Restart HTTP server with refreshed config
     <span class="nt">-r</span>, <span class="nt">--resumein</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>             Resume transaction input
     <span class="nt">-R</span>, <span class="nt">--resumeout</span> &lt;<span class="nb">id</span><span class="o">&gt;</span>            Resume transaction output
@@ -1502,8 +1537,20 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 <div class="paragraph">
 <p>Many options require an argument <code>&lt;id&gt;</code>, which is a reference to <a href="multinode.html#descriptor_instance_id">instance identifiers</a> in the system descriptor. <code>&lt;id&gt;</code> can be a single instance identifier, multiple identifiers separated by commas, or a wildcard pattern using <code>*</code>. (Some options do not accept multiple identifiers.)</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use the special identifier <code>@</code> to mean all instances. (Often more convenient than <code>*</code> in case you forget to add quotes, causing trouble with shell expansion.)
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>The same option can occur multiple times. Actions are performed sequentially, i.e. one action has to complete before the next action starts.</p>
+<p>The same option can occur multiple times. Actions are performed sequentially and synchronously, i.e. one action has to complete before the next action starts.</p>
 </div>
 <div class="paragraph">
 <p>If <code>&lt;address&gt;</code> is specified, it can either be a valid instance identifier or the <code>&lt;host&gt;:&lt;port&gt;</code> of a running VGX Server instance. In this case the <code>&lt;id&gt;</code> argument for all specified options defaults to that instance&#8217;s identifier and can be omitted.</p>
@@ -1908,7 +1955,22 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_resetmetrics">3.1.21. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</h4>
+<h4 id="vgxadmin_option_reset">3.1.21. <code>--reset &lt;id&gt;</code> (<code>-A</code>)</h4>
+<div class="paragraph">
+<p>Reset and restart service, if application supports this action. Resetting a service means erasing all graph data and persisting the empty system, before attempting restart.</p>
+</div>
+<div class="paragraph">
+<p>For restart to work the application must be implemented as explained for <a href="#vgxadmin_option_restart">vgxadmin --restart</a>.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Fully reset instance "B1" to an empty state</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--reset</span> <span class="s2">"B1"</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_resetmetrics">3.1.22. <code>--resetmetrics &lt;id&gt;</code> (<code>-m</code>)</h4>
 <div class="paragraph">
 <p>Clear errors and performance counters for instance(s).</p>
 </div>
@@ -1920,7 +1982,39 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_restarthttp">3.1.22. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</h4>
+<h4 id="vgxadmin_option_restart">3.1.23. <code>--restart &lt;id&gt;</code> (<code>-e</code>)</h4>
+<div class="paragraph">
+<p>Restart service, if application supports this action.</p>
+</div>
+<div class="paragraph">
+<p>Supporting restart requires the application to re-enter <a href="../reference.html#system_runserver_func">pyvgx.system.RunServer()</a> in a loop after exit caused by the restart request.
+Before calling RunServer() again the application must also start the HTTP server, since it automatically shuts down by this request.</p>
+</div>
+<div class="paragraph">
+<p>If not implemented this way the restart request will terminate the service.</p>
+</div>
+<div class="listingblock copyable">
+<div class="title">Restart instance "B1"</div>
+<div class="content">
+<pre class="rouge highlight"><code data-lang="shell">vgxadmin <span class="nt">--restart</span> <span class="s2">"B1"</span></code></pre>
+</div>
+</div>
+<div class="sect4">
+<h5 id="_example_minimal_restartable_application">3.1.23.1. Example: Minimal restartable application</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="python"><span class="k">def</span> <span class="nf">run</span><span class="p">():</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">system</span><span class="p">.</span><span class="nc">StartHTTP</span><span class="p">(</span> <span class="mi">9000</span> <span class="p">)</span>
+        <span class="n">system</span><span class="p">.</span><span class="nc">RunServer</span><span class="p">()</span>
+
+<span class="nf">run</span><span class="p">()</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vgxadmin_option_restarthttp">3.1.24. <code>--restarthttp &lt;id&gt;</code> (<code>-D</code>)</h4>
 <div class="paragraph">
 <p>Restart HTTP server(s) with refreshed config. This is useful for dispatcher instances after making changes to the <a href="multinode.html#descriptor_topology_dispatch">dispatch topology</a>.</p>
 </div>
@@ -1932,7 +2026,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_resumein">3.1.23. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</h4>
+<h4 id="vgxadmin_option_resumein">3.1.25. <code>--resumein &lt;id&gt;</code> (<code>-r</code>)</h4>
 <div class="paragraph">
 <p>Resume transaction input service on subscriber instance(s). Transactions previously received and queued while in the paused state are immediately applied,  followed by normal streaming operation.</p>
 </div>
@@ -1944,7 +2038,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_resumeout">3.1.24. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</h4>
+<h4 id="vgxadmin_option_resumeout">3.1.26. <code>--resumeout &lt;id&gt;</code> (<code>-R</code>)</h4>
 <div class="paragraph">
 <p>Resume transaction output emitter on provider instance(s). Transactions previously produced and queued while in the paused state are immediately sent to subscribers, followed by normal streaming operation.</p>
 </div>
@@ -1956,7 +2050,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_resumettl">3.1.25. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</h4>
+<h4 id="vgxadmin_option_resumettl">3.1.27. <code>--resumettl &lt;id&gt;</code> (<code>-T</code>)</h4>
 <div class="paragraph">
 <p>Resume TTL event processor, if globally enabled. Expired objects will be deleted immediately.</p>
 </div>
@@ -1968,7 +2062,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_reversesync">3.1.26. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</h4>
+<h4 id="vgxadmin_option_reversesync">3.1.28. <code>--reversesync &lt;id&gt;</code> (<code>-Y</code>)</h4>
 <div class="paragraph">
 <p>Perform reverse synchronization of provider instance data from its subscriber with the highest master serial number.</p>
 </div>
@@ -1980,7 +2074,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_rollingupdate">3.1.27. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</h4>
+<h4 id="vgxadmin_option_rollingupdate">3.1.29. <code>--rollingupdate &lt;id&gt;</code> (<code>-L</code>)</h4>
 <div class="paragraph">
 <p>Synchronize data from provider instance to all its subscribers, one at a time, with each destination subscriber in S-OUT state while being updated. Since each destination is hard-sync&#8217;ed (destructive truncation followed by rebuild) the S-OUT state is required to avoid live traffic reaching the updated instance.</p>
 </div>
@@ -2006,7 +2100,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_servicein">3.1.28. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</h4>
+<h4 id="vgxadmin_option_servicein">3.1.30. <code>--servicein &lt;id&gt;</code> (<code>-I</code>)</h4>
 <div class="paragraph">
 <p>Set instance(s) HTTP server to the S-IN state. Plugin requests on the <a href="service.html#server_a_and_server_b">main port</a> will execute normally.</p>
 </div>
@@ -2018,7 +2112,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_serviceout">3.1.29. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</h4>
+<h4 id="vgxadmin_option_serviceout">3.1.31. <code>--serviceout &lt;id&gt;</code> (<code>-i</code>)</h4>
 <div class="paragraph">
 <p>Set instance(s) HTTP server to the S-OUT state. Plugin requests on the <a href="service.html#server_a_and_server_b">main port</a> will return HTTP code <a href="service.html#status_503_service_out">"503 Service out"</a>.</p>
 </div>
@@ -2030,7 +2124,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_show">3.1.30. <code>--show</code> (<code>-J</code>)</h4>
+<h4 id="vgxadmin_option_show">3.1.32. <code>--show</code> (<code>-J</code>)</h4>
 <div class="paragraph">
 <p>Show effective system descriptor.</p>
 </div>
@@ -2042,7 +2136,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_start">3.1.31. <code>--start &lt;id&gt;</code> (<code>-s</code>)</h4>
+<h4 id="vgxadmin_option_start">3.1.33. <code>--start &lt;id&gt;</code> (<code>-s</code>)</h4>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -2059,7 +2153,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_status">3.1.32. <code>--status &lt;id&gt;</code> (<code>-S</code>)</h4>
+<h4 id="vgxadmin_option_status">3.1.34. <code>--status &lt;id&gt;</code> (<code>-S</code>)</h4>
 <div class="paragraph">
 <p>Print status summary for instance(s).</p>
 </div>
@@ -2071,7 +2165,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_stop">3.1.33. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</h4>
+<h4 id="vgxadmin_option_stop">3.1.35. <code>--stop &lt;id&gt;</code> (<code>-x</code>)</h4>
 <div class="paragraph">
 <p>Shut down instance(s).</p>
 </div>
@@ -2083,7 +2177,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_sync">3.1.34. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</h4>
+<h4 id="vgxadmin_option_sync">3.1.36. <code>--sync &lt;id&gt;[,&lt;mode&gt;]</code> (<code>-y</code>)</h4>
 <div class="paragraph">
 <p>Synchronize data from provider instance(s) to their attached subscriber(s). Synchronization is performed according to the specified <code>&lt;mode&gt;</code>, which must be one of <code>hard</code>, <code>soft</code>, or <code>repair</code>.</p>
 </div>
@@ -2111,7 +2205,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_throttle">3.1.35. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</h4>
+<h4 id="vgxadmin_option_throttle">3.1.37. <code>--throttle &lt;id&gt;[,&lt;r&gt;,&lt;u&gt;]</code> (<code>-V</code>)</h4>
 <div class="paragraph">
 <p>Get or set data consumption rate limits for the transaction input service.</p>
 </div>
@@ -2135,7 +2229,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_truncate">3.1.36. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</h4>
+<h4 id="vgxadmin_option_truncate">3.1.38. <code>--truncate &lt;id&gt;</code> (<code>-X</code>)</h4>
 <div class="paragraph">
 <p>Erase instance data.</p>
 </div>
@@ -2147,7 +2241,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_unbind">3.1.37. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</h4>
+<h4 id="vgxadmin_option_unbind">3.1.39. <code>--unbind &lt;id&gt;</code> (<code>-U</code>)</h4>
 <div class="paragraph">
 <p>Stop the transaction input service on instance.</p>
 </div>
@@ -2159,7 +2253,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_unsubscribe">3.1.38. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</h4>
+<h4 id="vgxadmin_option_unsubscribe">3.1.40. <code>--unsubscribe &lt;id&gt;</code> (<code>-u</code>)</h4>
 <div class="paragraph">
 <p>Detach subscriber instance(s) from provider(s).</p>
 </div>
@@ -2171,7 +2265,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_version">3.1.39. <code>--version</code> (<code>-v</code>)</h4>
+<h4 id="vgxadmin_option_version">3.1.41. <code>--version</code> (<code>-v</code>)</h4>
 <div class="paragraph">
 <p>Print version info and exit.</p>
 </div>
@@ -2182,7 +2276,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_waitforidle">3.1.40. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</h4>
+<h4 id="vgxadmin_option_waitforidle">3.1.42. <code>--waitforidle &lt;id&gt;</code> (<code>-w</code>)</h4>
 <div class="paragraph">
 <p>Wait until instance transaction input has not been processing data for at least 5 seconds. This is useful when stringing several actions together in the same command and subsequent actions depend on previous actions to be fully completed.</p>
 </div>
@@ -2194,7 +2288,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 </div>
 <div class="sect3">
-<h4 id="vgxadmin_option_writable">3.1.41. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</h4>
+<h4 id="vgxadmin_option_writable">3.1.43. <code>--writable &lt;id&gt;</code> (<code>-G</code>)</h4>
 <div class="paragraph">
 <p>Make all graph(s) in instance(s) writable.</p>
 </div>
@@ -2227,7 +2321,7 @@ usage: vgxadmin <span class="o">[</span>&lt;address|id&gt;] &lt;options&gt;
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-24 10:19:36 -0400
+Last updated 2026-06-03 15:12:26 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

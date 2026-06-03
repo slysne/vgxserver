@@ -130,6 +130,25 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="paragraph">
 <p>Python plugins can be installed and invoked via HTTP requests. A plugin is a regular Python function registered via <a href="#system_addplugin_func">pyvgx.system.AddPlugin()</a>. A unique service URI is automatically created for the registered function. It is executed by sending a HTTP request to that URI.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Install <code>orjson</code> for better performance with JSON-heavy payloads.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>orjson</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -203,6 +222,42 @@ document.addEventListener("DOMContentLoaded", function() {
 <img src="../images/pre_post_engine.png" alt="pre_post_engine">
 </div>
 <div class="title">Figure 1. Plugin Functions</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Any engine or dispatcher (other than the <a href="#response_attr_toplevel">topmost dispatcher</a>) must return a <a href="#pyvgx_pluginresponse">PluginResponse</a> object. Partition merge requires PluginResponse objects to function, since merging arbitrary object types is generally undefined.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+A <strong>pre</strong>-processor may terminate a request early (e.g. a cache-hit) by returning a PluginResponse object.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+A <strong>post</strong>-processor may re-submit a request by returning a (special) PluginRequest object obtained from <a href="#pluginresponse_resubmittable">PluginResponse.Resubmittable()</a>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -1174,6 +1229,14 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
 </div></div></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_meta"></a><code><strong>meta</strong></code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>object</em> or None</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>Any object to supplement the response entries list. When matrix back-end responses are merged in a dispatcher, only partition 0 meta object is kept. Back-end meta objects are returned all the way up to the topmost dispatcher unless deliberately overwritten (or removed) along the way.</p>
+</div></div></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a id="response_attr_partials"></a><code><strong>partials</strong></code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>int</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">r/w</p></td>
@@ -1279,9 +1342,34 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
 <div class="sect2">
 <h3 id="pluginresponse_json_serializer">5.4. PluginResponse Serialized as JSON</h3>
 <div class="paragraph">
-<p>A topmost dispatcher or engine returning a PluginResponse object will automatically render the object as JSON by default.</p>
+<p>Transmission of PluginResponse objects between back-end engines and dispatchers is using an internal, binary protocol. However, a topmost dispatcher or engine returning a PluginResponse object automatically renders the response as JSON. A top dispatcher plugin may choose to return an object of a different type, such as a simple dict or list, or any other Python object.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Plugin code can check <a href="#response_attr_toplevel">response.toplevel</a> to determine if it is the topmost dispatcher for a request, and then return an object of any type if needed.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Responses returned from any engine or dispatcher other than the topmost dispatcher <strong>must</strong> be PluginResponse objects, since dispatchers cannot merge or processes arbitrary Python objects.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
+<div class="title">PluginResponse as JSON</div>
 <div class="content">
 <pre class="rouge highlight"><code data-lang="JSON">{
   "status": "OK",
@@ -1290,25 +1378,12 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
     "levelparts": 1,
     "partials": 1,
     "hitcount": 3,
-    "aggregator": [
-      0,
-      0,
-      0,
-      0
-    ],
+    "aggregator": [ 0, 0, 0.0, 0.0 ],
+    "meta": {"some_value": 123},
     "entries": [
-      [
-        1,
-        "First"
-      ],
-      [
-        2,
-        "Second"
-      ],
-      [
-        3,
-        "Third"
-      ]
+      [ 1, "First" ],
+      [ 2, "Second" ],
+      [ 3, "Third" ]
     ]
   },
   "level": 0,
@@ -1339,7 +1414,7 @@ Dispatchers only know how to merge and post-process objects of type PluginRespon
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2026-06-03 15:29:17 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

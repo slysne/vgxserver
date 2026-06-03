@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.23">
-<title>PyVGX 3.6 Reference</title>
+<title>PyVGX 3.8 Reference</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="./asciidoctor.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -13,7 +13,7 @@
 </head>
 <body id="pyvgxreference" class="article toc2 toc-left">
 <div id="header">
-<h1>PyVGX 3.6 Reference <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
+<h1>PyVGX 3.8 Reference <a href="../index.html"><span class="icon"><i class="fa fa-arrow-circle-up" title="Index"></i></span></a> <a href="#theend"><span class="icon"><i class="fa fa-chevron-circle-down" title="Bottom of page"></i></span></a></h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -21,7 +21,7 @@
 <ul class="sectlevel2">
 <li><a href="#_summary_of_features">1.1. Summary of Features</a>
 <ul class="sectlevel3">
-<li><a href="#_basic_structure">1.1.1. Basic Structure</a></li>
+<li><a href="#_graph_structure">1.1.1. Graph Structure</a></li>
 <li><a href="#_graph_search">1.1.2. Graph Search</a></li>
 <li><a href="#_implicit_connections">1.1.3. Implicit Connections</a></li>
 <li><a href="#_capacity">1.1.4. Capacity</a></li>
@@ -47,46 +47,47 @@
 <li><a href="#_dispatcherconfig">2.1.1.6. DispatcherConfig</a></li>
 <li><a href="#_durabilitypoint">2.1.1.7. DurabilityPoint</a></li>
 <li><a href="#_eventsresumable">2.1.1.8. EventsResumable</a></li>
-<li><a href="#_fingerprint">2.1.1.9. Fingerprint</a></li>
-<li><a href="#_getbuiltins">2.1.1.10. GetBuiltins</a></li>
-<li><a href="#_getgraph">2.1.1.11. GetGraph</a></li>
-<li><a href="#_getplugins">2.1.1.12. GetPlugins</a></li>
-<li><a href="#_getproperties">2.1.1.13. GetProperties</a></li>
-<li><a href="#_getproperty">2.1.1.14. GetProperty</a></li>
-<li><a href="#_hasproperty">2.1.1.15. HasProperty</a></li>
-<li><a href="#_initialize">2.1.1.16. Initialize</a></li>
-<li><a href="#_isinitialized">2.1.1.17. IsInitialized</a></li>
-<li><a href="#_meminfo">2.1.1.18. Meminfo</a></li>
-<li><a href="#_numproperties">2.1.1.19. NumProperties</a></li>
-<li><a href="#_persist">2.1.1.20. Persist</a></li>
-<li><a href="#_registry">2.1.1.21. Registry</a></li>
-<li><a href="#_removeplugin">2.1.1.22. RemovePlugin</a></li>
-<li><a href="#_removeproperties">2.1.1.23. RemoveProperties</a></li>
-<li><a href="#_removeproperty">2.1.1.24. RemoveProperty</a></li>
-<li><a href="#_requesthttp">2.1.1.25. RequestHTTP</a></li>
-<li><a href="#_requestrate">2.1.1.26. RequestRate</a></li>
-<li><a href="#_resetmetrics">2.1.1.27. ResetMetrics</a></li>
-<li><a href="#_restarthttp">2.1.1.28. RestartHTTP</a></li>
-<li><a href="#_resumeevents">2.1.1.29. ResumeEvents</a></li>
-<li><a href="#_root">2.1.1.30. Root</a></li>
-<li><a href="#_runserver">2.1.1.31. RunServer</a></li>
-<li><a href="#_serveradminip">2.1.1.32. ServerAdminIP</a></li>
-<li><a href="#_serverhost">2.1.1.33. ServerHost</a></li>
-<li><a href="#_servermetrics">2.1.1.34. ServerMetrics</a></li>
-<li><a href="#_serverports">2.1.1.35. ServerPorts</a></li>
-<li><a href="#_serverprefix">2.1.1.36. ServerPrefix</a></li>
-<li><a href="#_serviceinhttp">2.1.1.37. ServiceInHTTP</a></li>
-<li><a href="#_setproperties">2.1.1.38. SetProperties</a></li>
-<li><a href="#_setproperty">2.1.1.39. SetProperty</a></li>
-<li><a href="#_setreadonly">2.1.1.40. SetReadonly</a></li>
-<li><a href="#_starthttp">2.1.1.41. StartHTTP</a></li>
-<li><a href="#_status">2.1.1.42. Status</a></li>
-<li><a href="#_stophttp">2.1.1.43. StopHTTP</a></li>
-<li><a href="#_suspendevents">2.1.1.44. SuspendEvents</a></li>
-<li><a href="#_sync">2.1.1.45. Sync</a></li>
-<li><a href="#_system">2.1.1.46. System</a></li>
-<li><a href="#_unload">2.1.1.47. Unload</a></li>
-<li><a href="#_writablevertices">2.1.1.48. WritableVertices</a></li>
+<li><a href="#_exitrunserver">2.1.1.9. ExitRunServer</a></li>
+<li><a href="#_fingerprint">2.1.1.10. Fingerprint</a></li>
+<li><a href="#_getbuiltins">2.1.1.11. GetBuiltins</a></li>
+<li><a href="#_getgraph">2.1.1.12. GetGraph</a></li>
+<li><a href="#_getplugins">2.1.1.13. GetPlugins</a></li>
+<li><a href="#_getproperties">2.1.1.14. GetProperties</a></li>
+<li><a href="#_getproperty">2.1.1.15. GetProperty</a></li>
+<li><a href="#_hasproperty">2.1.1.16. HasProperty</a></li>
+<li><a href="#_initialize">2.1.1.17. Initialize</a></li>
+<li><a href="#_isinitialized">2.1.1.18. IsInitialized</a></li>
+<li><a href="#_meminfo">2.1.1.19. Meminfo</a></li>
+<li><a href="#_numproperties">2.1.1.20. NumProperties</a></li>
+<li><a href="#_persist">2.1.1.21. Persist</a></li>
+<li><a href="#_registry">2.1.1.22. Registry</a></li>
+<li><a href="#_removeplugin">2.1.1.23. RemovePlugin</a></li>
+<li><a href="#_removeproperties">2.1.1.24. RemoveProperties</a></li>
+<li><a href="#_removeproperty">2.1.1.25. RemoveProperty</a></li>
+<li><a href="#_requesthttp">2.1.1.26. RequestHTTP</a></li>
+<li><a href="#_requestrate">2.1.1.27. RequestRate</a></li>
+<li><a href="#_resetmetrics">2.1.1.28. ResetMetrics</a></li>
+<li><a href="#_restarthttp">2.1.1.29. RestartHTTP</a></li>
+<li><a href="#_resumeevents">2.1.1.30. ResumeEvents</a></li>
+<li><a href="#_root">2.1.1.31. Root</a></li>
+<li><a href="#_runserver">2.1.1.32. RunServer</a></li>
+<li><a href="#_serveradminip">2.1.1.33. ServerAdminIP</a></li>
+<li><a href="#_serverhost">2.1.1.34. ServerHost</a></li>
+<li><a href="#_servermetrics">2.1.1.35. ServerMetrics</a></li>
+<li><a href="#_serverports">2.1.1.36. ServerPorts</a></li>
+<li><a href="#_serverprefix">2.1.1.37. ServerPrefix</a></li>
+<li><a href="#_serviceinhttp">2.1.1.38. ServiceInHTTP</a></li>
+<li><a href="#_setproperties">2.1.1.39. SetProperties</a></li>
+<li><a href="#_setproperty">2.1.1.40. SetProperty</a></li>
+<li><a href="#_setreadonly">2.1.1.41. SetReadonly</a></li>
+<li><a href="#_starthttp">2.1.1.42. StartHTTP</a></li>
+<li><a href="#_status">2.1.1.43. Status</a></li>
+<li><a href="#_stophttp">2.1.1.44. StopHTTP</a></li>
+<li><a href="#_suspendevents">2.1.1.45. SuspendEvents</a></li>
+<li><a href="#_sync">2.1.1.46. Sync</a></li>
+<li><a href="#_system">2.1.1.47. System</a></li>
+<li><a href="#_unload">2.1.1.48. Unload</a></li>
+<li><a href="#_writablevertices">2.1.1.49. WritableVertices</a></li>
 </ul>
 </li>
 <li><a href="#op_namespace">2.1.2. <code>pyvgx.<strong>op</strong></code> Namespace</a>
@@ -210,81 +211,83 @@
 <li><a href="#_commitall">3.3.11. CommitAll</a></li>
 <li><a href="#_connect">3.3.12. Connect</a></li>
 <li><a href="#_count">3.3.13. Count</a></li>
-<li><a href="#_createvertex">3.3.14. CreateVertex</a></li>
-<li><a href="#_debugcheckallocators">3.3.15. DebugCheckAllocators</a></li>
-<li><a href="#_debugdumpgraph">3.3.16. DebugDumpGraph</a></li>
-<li><a href="#_debugfindobjectbyidentifier">3.3.17. DebugFindObjectByIdentifier</a></li>
-<li><a href="#_debuggetobjectbyaddress">3.3.18. DebugGetObjectByAddress</a></li>
-<li><a href="#_debugprintallocators">3.3.19. DebugPrintAllocators</a></li>
-<li><a href="#_define">3.3.20. Define</a></li>
-<li><a href="#_degree">3.3.21. Degree</a></li>
-<li><a href="#_deletevertex">3.3.22. DeleteVertex</a></li>
-<li><a href="#_dimension">3.3.23. Dimension</a></li>
-<li><a href="#_disconnect">3.3.24. Disconnect</a></li>
-<li><a href="#_enumdimension">3.3.25. EnumDimension</a></li>
-<li><a href="#_enumkey">3.3.26. EnumKey</a></li>
-<li><a href="#_enumrelationship">3.3.27. EnumRelationship</a></li>
-<li><a href="#_enumvalue">3.3.28. EnumValue</a></li>
-<li><a href="#_enumvertextype">3.3.29. EnumVertexType</a></li>
-<li><a href="#_erase">3.3.30. Erase</a></li>
-<li><a href="#_escalatevertex">3.3.31. EscalateVertex</a></li>
-<li><a href="#_evaluate">3.3.32. Evaluate</a></li>
-<li><a href="#_eventbacklog">3.3.33. EventBacklog</a></li>
-<li><a href="#_eventdisable">3.3.34. EventDisable</a></li>
-<li><a href="#_eventenable">3.3.35. EventEnable</a></li>
-<li><a href="#_eventflush">3.3.36. EventFlush</a></li>
-<li><a href="#_eventparam">3.3.37. EventParam</a></li>
-<li><a href="#_getdefinition">3.3.38. GetDefinition</a></li>
-<li><a href="#_getdefinitions">3.3.39. GetDefinitions</a></li>
-<li><a href="#_getmemoryusage">3.3.40. GetMemoryUsage</a></li>
-<li><a href="#_getopenvertices">3.3.41. GetOpenVertices</a></li>
-<li><a href="#_getvertex">3.3.42. GetVertex</a></li>
-<li><a href="#_getvertexid">3.3.43. GetVertexID</a></li>
-<li><a href="#_hasvertex">3.3.44. HasVertex</a></li>
-<li><a href="#_inarcs">3.3.45. Inarcs</a></li>
-<li><a href="#_initials">3.3.46. Initials</a></li>
-<li><a href="#_isgraphlocal">3.3.47. IsGraphLocal</a></li>
-<li><a href="#_isgraphreadonly">3.3.48. IsGraphReadonly</a></li>
-<li><a href="#_key">3.3.49. Key</a></li>
-<li><a href="#_lock">3.3.50. Lock</a></li>
-<li><a href="#_memory">3.3.51. Memory</a></li>
-<li><a href="#_neighborhood">3.3.52. Neighborhood</a></li>
-<li><a href="#_newadjacencyquery">3.3.53. NewAdjacencyQuery</a></li>
-<li><a href="#_newaggregatorquery">3.3.54. NewAggregatorQuery</a></li>
-<li><a href="#_newarcsquery">3.3.55. NewArcsQuery</a></li>
-<li><a href="#_newneighborhoodquery">3.3.56. NewNeighborhoodQuery</a></li>
-<li><a href="#_newvertex">3.3.57. NewVertex</a></li>
-<li><a href="#_newverticesquery">3.3.58. NewVerticesQuery</a></li>
-<li><a href="#_openneighbor">3.3.59. OpenNeighbor</a></li>
-<li><a href="#_openvertex">3.3.60. OpenVertex</a></li>
-<li><a href="#_openvertices">3.3.61. OpenVertices</a></li>
-<li><a href="#_order">3.3.62. Order</a></li>
-<li><a href="#_outarcs">3.3.63. Outarcs</a></li>
-<li><a href="#_propertykeys">3.3.64. PropertyKeys</a></li>
-<li><a href="#_propertystringvalues">3.3.65. PropertyStringValues</a></li>
-<li><a href="#_relationship">3.3.66. Relationship</a></li>
-<li><a href="#_relationships">3.3.67. Relationships</a></li>
-<li><a href="#_relaxvertex">3.3.68. RelaxVertex</a></li>
-<li><a href="#_resetcounters">3.3.69. ResetCounters</a></li>
-<li><a href="#_resetserial">3.3.70. ResetSerial</a></li>
-<li><a href="#_save">3.3.71. Save</a></li>
-<li><a href="#_search">3.3.72. Search</a></li>
-<li><a href="#_setgraphreadonly">3.3.73. SetGraphReadonly</a></li>
-<li><a href="#_showopenvertices">3.3.74. ShowOpenVertices</a></li>
-<li><a href="#_showvertex">3.3.75. ShowVertex</a></li>
-<li><a href="#_size">3.3.76. Size</a></li>
-<li><a href="#_status_2">3.3.77. Status</a></li>
-<li><a href="#_sync_2">3.3.78. Sync</a></li>
-<li><a href="#_synchronized">3.3.79. Synchronized</a></li>
-<li><a href="#_terminals">3.3.80. Terminals</a></li>
-<li><a href="#_truncate">3.3.81. Truncate</a></li>
-<li><a href="#_value">3.3.82. Value</a></li>
-<li><a href="#_vertexdescriptor">3.3.83. VertexDescriptor</a></li>
-<li><a href="#_vertexidbyaddress">3.3.84. VertexIdByAddress</a></li>
-<li><a href="#_vertextype">3.3.85. VertexType</a></li>
-<li><a href="#_vertextypes">3.3.86. VertexTypes</a></li>
-<li><a href="#_vertices">3.3.87. Vertices</a></li>
-<li><a href="#_verticestype">3.3.88. VerticesType</a></li>
+<li><a href="#_countdefinitions">3.3.14. CountDefinitions</a></li>
+<li><a href="#_createvertex">3.3.15. CreateVertex</a></li>
+<li><a href="#_debugcheckallocators">3.3.16. DebugCheckAllocators</a></li>
+<li><a href="#_debugdumpgraph">3.3.17. DebugDumpGraph</a></li>
+<li><a href="#_debugfindobjectbyidentifier">3.3.18. DebugFindObjectByIdentifier</a></li>
+<li><a href="#_debuggetobjectbyaddress">3.3.19. DebugGetObjectByAddress</a></li>
+<li><a href="#_debugprintallocators">3.3.20. DebugPrintAllocators</a></li>
+<li><a href="#_define">3.3.21. Define</a></li>
+<li><a href="#_degree">3.3.22. Degree</a></li>
+<li><a href="#_deletevertex">3.3.23. DeleteVertex</a></li>
+<li><a href="#_dimension">3.3.24. Dimension</a></li>
+<li><a href="#_disconnect">3.3.25. Disconnect</a></li>
+<li><a href="#_enumdimension">3.3.26. EnumDimension</a></li>
+<li><a href="#_enumkey">3.3.27. EnumKey</a></li>
+<li><a href="#_enumrelationship">3.3.28. EnumRelationship</a></li>
+<li><a href="#_enumvalue">3.3.29. EnumValue</a></li>
+<li><a href="#_enumvertextype">3.3.30. EnumVertexType</a></li>
+<li><a href="#_erase">3.3.31. Erase</a></li>
+<li><a href="#_escalatevertex">3.3.32. EscalateVertex</a></li>
+<li><a href="#_evaluate">3.3.33. Evaluate</a></li>
+<li><a href="#_eventbacklog">3.3.34. EventBacklog</a></li>
+<li><a href="#_eventdisable">3.3.35. EventDisable</a></li>
+<li><a href="#_eventenable">3.3.36. EventEnable</a></li>
+<li><a href="#_eventflush">3.3.37. EventFlush</a></li>
+<li><a href="#_eventparam">3.3.38. EventParam</a></li>
+<li><a href="#_getdefinition">3.3.39. GetDefinition</a></li>
+<li><a href="#_getdefinitions">3.3.40. GetDefinitions</a></li>
+<li><a href="#_getmemoryusage">3.3.41. GetMemoryUsage</a></li>
+<li><a href="#_getopenvertices">3.3.42. GetOpenVertices</a></li>
+<li><a href="#_getvertex">3.3.43. GetVertex</a></li>
+<li><a href="#_getvertexid">3.3.44. GetVertexID</a></li>
+<li><a href="#_hasvertex">3.3.45. HasVertex</a></li>
+<li><a href="#_inarcs">3.3.46. Inarcs</a></li>
+<li><a href="#_initials">3.3.47. Initials</a></li>
+<li><a href="#_isdefined">3.3.48. IsDefined</a></li>
+<li><a href="#_isgraphlocal">3.3.49. IsGraphLocal</a></li>
+<li><a href="#_isgraphreadonly">3.3.50. IsGraphReadonly</a></li>
+<li><a href="#_key">3.3.51. Key</a></li>
+<li><a href="#_lock">3.3.52. Lock</a></li>
+<li><a href="#_memory">3.3.53. Memory</a></li>
+<li><a href="#_neighborhood">3.3.54. Neighborhood</a></li>
+<li><a href="#_newadjacencyquery">3.3.55. NewAdjacencyQuery</a></li>
+<li><a href="#_newaggregatorquery">3.3.56. NewAggregatorQuery</a></li>
+<li><a href="#_newarcsquery">3.3.57. NewArcsQuery</a></li>
+<li><a href="#_newneighborhoodquery">3.3.58. NewNeighborhoodQuery</a></li>
+<li><a href="#_newvertex">3.3.59. NewVertex</a></li>
+<li><a href="#_newverticesquery">3.3.60. NewVerticesQuery</a></li>
+<li><a href="#_openneighbor">3.3.61. OpenNeighbor</a></li>
+<li><a href="#_openvertex">3.3.62. OpenVertex</a></li>
+<li><a href="#_openvertices">3.3.63. OpenVertices</a></li>
+<li><a href="#_order">3.3.64. Order</a></li>
+<li><a href="#_outarcs">3.3.65. Outarcs</a></li>
+<li><a href="#_propertykeys">3.3.66. PropertyKeys</a></li>
+<li><a href="#_propertystringvalues">3.3.67. PropertyStringValues</a></li>
+<li><a href="#_relationship">3.3.68. Relationship</a></li>
+<li><a href="#_relationships">3.3.69. Relationships</a></li>
+<li><a href="#_relaxvertex">3.3.70. RelaxVertex</a></li>
+<li><a href="#_resetcounters">3.3.71. ResetCounters</a></li>
+<li><a href="#_resetserial">3.3.72. ResetSerial</a></li>
+<li><a href="#_save">3.3.73. Save</a></li>
+<li><a href="#_search">3.3.74. Search</a></li>
+<li><a href="#_setgraphreadonly">3.3.75. SetGraphReadonly</a></li>
+<li><a href="#_showopenvertices">3.3.76. ShowOpenVertices</a></li>
+<li><a href="#_showvertex">3.3.77. ShowVertex</a></li>
+<li><a href="#_size">3.3.78. Size</a></li>
+<li><a href="#_status_2">3.3.79. Status</a></li>
+<li><a href="#_sync_2">3.3.80. Sync</a></li>
+<li><a href="#_synchronized">3.3.81. Synchronized</a></li>
+<li><a href="#_terminals">3.3.82. Terminals</a></li>
+<li><a href="#_truncate">3.3.83. Truncate</a></li>
+<li><a href="#_value">3.3.84. Value</a></li>
+<li><a href="#_vertexdescriptor">3.3.85. VertexDescriptor</a></li>
+<li><a href="#_vertexidbyaddress">3.3.86. VertexIdByAddress</a></li>
+<li><a href="#_vertextype">3.3.87. VertexType</a></li>
+<li><a href="#_vertextypes">3.3.88. VertexTypes</a></li>
+<li><a href="#_vertices">3.3.89. Vertices</a></li>
+<li><a href="#_verticestype">3.3.90. VerticesType</a></li>
 </ul>
 </li>
 </ul>
@@ -354,10 +357,12 @@
 <li><a href="#memoryobject_methods">5.2. Memory Methods</a>
 <ul class="sectlevel3">
 <li><a href="#_aslist">5.2.1. AsList</a></li>
-<li><a href="#_dualint">5.2.2. DualInt</a></li>
-<li><a href="#_reset_2">5.2.3. Reset</a></li>
-<li><a href="#_sort">5.2.4. Sort</a></li>
-<li><a href="#_stack">5.2.5. Stack</a></li>
+<li><a href="#_vsetadd">5.2.2. VSetAdd</a></li>
+<li><a href="#_vsetclear">5.2.3. VSetClear</a></li>
+<li><a href="#_dualint">5.2.4. DualInt</a></li>
+<li><a href="#_reset_2">5.2.5. Reset</a></li>
+<li><a href="#_sort">5.2.6. Sort</a></li>
+<li><a href="#_stack">5.2.7. Stack</a></li>
 </ul>
 </li>
 </ul>
@@ -550,48 +555,73 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect2">
 <h3 id="_summary_of_features">1.1. Summary of Features</h3>
 <div class="sect3">
-<h4 id="_basic_structure">1.1.1. Basic Structure</h4>
+<h4 id="_graph_structure">1.1.1. Graph Structure</h4>
 <div class="paragraph">
-<p>Graphs are built from two basic object types: <em>vertices</em> (nodes) and <em>arcs</em> (directed edges). Vertices are connected <em>explicitly</em> via arcs or <em>implicitly</em> via their similarity to other vertices. Explicit connections (i.e. arcs) are expressed by special vertex attributes called <em>adjacency vectors</em>, thus implementing index-free adjacency. Implicit connections (i.e. similarity) are based on special vertex attributes called <em>similarity vectors</em> and expressed via a global similarity index.<sup class="footnote" id="_footnote_simindexfootnote">[<a id="_footnoteref_1" class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup></p>
+<p>Graphs are built from two basic object types: <a href="#vertexobject"><em>vertices</em></a> (nodes) and <em>arcs</em> (directed edges). Vertices are <a href="#connect_func">connected <em>explicitly</em> via arcs</a> or <em>implicitly</em> via their similarity (represented by a vector metric) to other vertices.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>Explicit connections</em> are realized internally as <em>adjacency vectors</em> directly associating vertex pairs. Index-free adjacency allows efficient movement from node to node by following direct links. This network of vertices connected by arcs is the graph.</p>
+</li>
+<li>
+<p><em>Implicit connections</em> are expressed via <a href="#vectorobject"><em>similarity vectors</em></a>. Vertices with such vectors assigned to them become indirectly associated by a chosen vector metric such as <a href="#_euclideandistance">Euclidean distance</a> or <a href="#_cosine">Cosine similarity</a>. A proximity graph can be constructed to facilitate efficient vector search, using the explicit network to form navigable paths between implicitly connected items.</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>Two vertices may be explicitly connected by a <em>simple arc</em> (one connection) or a <em>multiple arc</em> (many connections). A vertex may have explicit connections to any number of other vertices. Two explicitly connected vertices are <em>neighbors</em>. The set of arcs between a vertex and all its neighbors is the vertex <em>neighborhood</em>.</p>
+<p>Two vertices may be <a href="#connect_func">connected</a> by a <em>simple arc</em> (one connection) or a <em>multiple arc</em> (many connections). A vertex may be connected to any number of other vertices.</p>
 </div>
 <div class="paragraph">
-<p>The number of explicit connections a vertex has is the vertex <em>degree</em>, while <em>outdegree</em> and <em>indegree</em> refer to the number of outbound and inbound connections, respectively. The graph <em>size</em> is the sum of all degrees for all vertices in the graph, i.e. the total number of explicit connections in the graph. The total number of vertices in a graph is the graph <em>order</em>.</p>
+<p>Two explicitly connected vertices are <em>neighbors</em>. The set of arcs between a vertex and all its neighbors is the vertex <em>neighborhood</em>.</p>
 </div>
 <div class="paragraph">
-<p>Both vertices and arcs may be assigned <em>properties</em> that can be used by graph traversal queries for filtering, sorting and display of search results. Vertices can hold any number of freely assignable key-value properties. Arcs may be assigned a <em>relationship</em> type, <em>modifier</em> (value type), and a <em>numeric value</em>.</p>
+<p>The total number of explicit connections a vertex has is the vertex <em>degree</em>. Outbound arcs and inbound arcs are counted as <em>outdegree</em> and <em>indegree</em>, respectively.</p>
+</div>
+<div class="paragraph">
+<p>The graph&#8217;s <em>size</em> is the sum of all degrees for all vertices in the graph, i.e. the total number of explicit connections. The total number of vertices in a graph is the graph <em>order</em>.</p>
+</div>
+<div class="paragraph">
+<p>Both vertices and arcs may have <em>properties</em>. <a href="#_setproperty_2">Vertices properties</a> are freely assignable key-value pairs. <a href="specification/arcSpecificationSyntax.html#arcelements">Arc properties</a> include a <em>relationship</em> type, <em>modifier</em> (value type), and a <em>numeric value</em>. Queries use these properties for filtering, scoring, sorting and display of search results.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_graph_search">1.1.2. Graph Search</h4>
 <div class="paragraph">
-<p>Graph search can be <em>global</em> or <em>local</em>. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex. Neighborhood queries can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.</p>
+<p>Graph search can be <em>global</em> or <em>local</em>. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex.</p>
+</div>
+<div class="paragraph">
+<p><a href="graph/graphQuery.html#graphneighborhood">Neighborhood queries</a> can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.</p>
+</div>
+<div class="paragraph">
+<p><a href="graph/graphNavigationQuery.html">Neighborhood navigation queries</a> can be used to automatically explore the entire graph from any starting vertex. This is especially useful for traversing proximity graphs where nodes have been connected based on their mutual vector similarity. Traversal of such graphs form the basis of highly efficient vector search, and can be combined with any other filtering to implement hybrid semantic search.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_implicit_connections">1.1.3. Implicit Connections</h4>
 <div class="paragraph">
-<p>A vertex becomes implicitly connected to other vertices by setting the vertex <em>vector</em>.<sup class="footnoteref">[<a class="footnote" href="#_footnotedef_1" title="View footnote.">1</a>]</sup> <a href="#vectorobject">Vectors</a> are numeric arrays or lists of weighted features.</p>
+<p>A vertex becomes implicitly connected to other vertices by setting the vertex <em>vector</em>. <a href="#vectorobject">Vectors</a> are numeric arrays or lists of weighted features.</p>
 </div>
 <div class="paragraph">
-<p>The implicit connection strength between two vertices with vectors is determined by their vector similarity. When configured in Euclidean Vector mode similarity is computed either as the <em>Euclidean distance</em> or as the <em>Cosine similarity</em> between vectors. When configured in Feature Vector mode similarity is computed as the <em>Cosine similarity</em> or the <em>Jaccard index</em>, or a combination of the two.</p>
+<p>The implicit connection strength between two vertices with vectors is determined by their vector similarity. When configured in <a href="#system_initialize_func">Euclidean Vector</a> mode similarity can be computed either as the <em>Euclidean distance</em> or the <em>Cosine similarity</em> between vectors. When configured in <a href="#system_initialize_func">Feature Vector</a> mode similarity can be computed as the <em>Cosine similarity</em> or the <em>Jaccard index</em>, or a combination of the two.</p>
 </div>
 <div class="paragraph">
 <p>A global similarity query will return all vertices implicitly connected to a probe vertex using a globally configured similarity threshold to determine whether a sufficiently strong connection exists. Vector similarity can also be combined with explicit connection filters in neighborhood queries.</p>
+</div>
+<div class="paragraph">
+<p>For efficient discovery of implicit connections (i.e. vector search) a proximity graph can be built and searched using neighborhood navigation queries.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_capacity">1.1.4. Capacity</h4>
 <div class="paragraph">
-<p>All graph data is held in memory, ensuring low latency and predictable performance (soft realtime) for all operations. The system may hold any number of independent graphs of any size and order at the same time, limited only by the available memory on your machine. Graphs may be persisted from memory to disk and restored from disk to memory later.</p>
+<p>All graph data is held in memory, ensuring low latency and predictable performance (soft realtime) for all operations. The system may hold any number of independent graphs of any size and order at the same time, limited only by the available memory on your machine. Graphs may be <a href="#save_func">saved</a> to disk and restored later.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_object_expiration">1.1.5. Object Expiration</h4>
 <div class="paragraph">
-<p>Vertices and arcs may be assigned expiration timestamps (time-to-live or TTL) for automatic deletion at a future point in time. Expiration times are independently assignable for all objects. TTL has a resolution of one second for any expiration timestamp ranging from imminent to infinity.</p>
+<p>Vertices and arcs may be assigned <a href="#_setexpiration">expiration timestamps</a> (time-to-live or TTL) for automatic deletion at a future point in time. Expiration times are independently assignable for all objects. TTL has a resolution of one second for any expiration timestamp ranging from imminent to infinity.</p>
 </div>
 </div>
 <div class="sect3">
@@ -603,7 +633,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect3">
 <h4 id="_plugins_and_vgx_server">1.1.7. Plugins and VGX Server</h4>
 <div class="paragraph">
-<p>A plugin framework allows remote execution of Python functions that you define and register with the system. Plugins are invoked by sending HTTP requests to VGX Server, a fully asynchronous, multithreaded request engine running within the VGX core. This server is independent from the Python interpreter.</p>
+<p>A <a href="service/pluginadapter.html">plugin framework</a> allows remote execution of Python functions that you define and <a href="service/pluginadapter.html#system_addplugin_func">register</a> with the system. Plugins are invoked by sending HTTP requests to <a href="service/service.html">VGX Server</a>, a fully asynchronous, multithreaded request engine running within the VGX core. This server is independent from the Python interpreter.</p>
 </div>
 </div>
 </div>
@@ -638,6 +668,19 @@ document.addEventListener("DOMContentLoaded", function() {
 </li>
 <li>
 <p><a href="#graphobject_methods">Section 3.3, &#8220;Graph Methods&#8221;</a></p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#createvertex_func">CreateVertex()</a></p>
+</li>
+<li>
+<p><a href="#connect_func">Connect()</a></p>
+</li>
+<li>
+<p><a href="graph/graphQuery.html#graphneighborhood">Neighborhood()</a></p>
+</li>
+</ul>
+</div>
 </li>
 </ul>
 </div>
@@ -836,7 +879,22 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_fingerprint">2.1.1.9. Fingerprint</h5>
+<h5 id="_exitrunserver">2.1.1.9. ExitRunServer</h5>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="system_exitrunserver_func"></a><code>pyvgx.<strong>system.ExitRunServer</strong>()</code></dt>
+<dd>
+<p>Causes <a href="#system_runserver_func">RunServer()</a> to exit.</p>
+<div class="paragraph">
+<p>Calling this function has no effect unless RunServer() is currently blocking.</p>
+</div>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect4">
+<h5 id="_fingerprint">2.1.1.10. Fingerprint</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_fingerprint_func"></a><code>pyvgx.<strong>system.Fingerprint</strong>()</code></dt>
@@ -848,7 +906,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_getbuiltins">2.1.1.10. GetBuiltins</h5>
+<h5 id="_getbuiltins">2.1.1.11. GetBuiltins</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_getbuiltins_func"></a><code>pyvgx.<strong>system.GetBuiltins</strong>()</code></dt>
@@ -860,7 +918,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_getgraph">2.1.1.11. GetGraph</h5>
+<h5 id="_getgraph">2.1.1.12. GetGraph</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_getgraph_func"></a><code>pyvgx.<strong>system.GetGraph</strong>( <em>name</em> )</code></dt>
@@ -872,7 +930,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_getplugins">2.1.1.12. GetPlugins</h5>
+<h5 id="_getplugins">2.1.1.13. GetPlugins</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_getplugins_func"></a><code>pyvgx.<strong>system.GetPlugins</strong>()</code></dt>
@@ -884,7 +942,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_getproperties">2.1.1.13. GetProperties</h5>
+<h5 id="_getproperties">2.1.1.14. GetProperties</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_get_properties_func"></a><code>pyvgx.<strong>system.GetProperties</strong>( <strong>[</strong> <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -896,7 +954,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_getproperty">2.1.1.14. GetProperty</h5>
+<h5 id="_getproperty">2.1.1.15. GetProperty</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_get_property_func"></a><code>pyvgx.<strong>system.GetProperty</strong>( <em>key</em><strong>[</strong>, <em>default</em><strong>[</strong>, <em>timeout</em> <strong>]]</strong> )</code></dt>
@@ -908,7 +966,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_hasproperty">2.1.1.15. HasProperty</h5>
+<h5 id="_hasproperty">2.1.1.16. HasProperty</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_has_property_func"></a><code>pyvgx.<strong>system.HasProperty</strong>( <em>key</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -920,7 +978,7 @@ Subscribers are generally left in an inconsistent state if synchronization is te
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_initialize">2.1.1.16. Initialize</h5>
+<h5 id="_initialize">2.1.1.17. Initialize</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_initialize_func"></a><code>pyvgx.<strong>system.Initialize</strong>( <strong>[</strong><em>vgxroot</em><strong>[</strong>, <em>http</em><strong>[</strong>, <em>attach</em><strong>[</strong>, <em>bind</em><strong>[</strong>, <em>durable</em><strong>[</strong>, <em>events</em><strong>[</strong>, <em>idle</em><strong>[</strong>, <em>readonly</em><strong>[</strong>, <em>euclidean</em><strong> ]]]]]]]]]</strong> )</code></dt>
@@ -995,7 +1053,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_isinitialized">2.1.1.17. IsInitialized</h5>
+<h5 id="_isinitialized">2.1.1.18. IsInitialized</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_isinitialized_func"></a><code>pyvgx.<strong>system.IsInitialized</strong>()</code></dt>
@@ -1007,7 +1065,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_meminfo">2.1.1.18. Meminfo</h5>
+<h5 id="_meminfo">2.1.1.19. Meminfo</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_meminfo_func"></a><code>pyvgx.<strong>system.Meminfo</strong>()</code></dt>
@@ -1019,7 +1077,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_numproperties">2.1.1.19. NumProperties</h5>
+<h5 id="_numproperties">2.1.1.20. NumProperties</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_num_properties_func"></a><code>pyvgx.<strong>system.NumProperties</strong>( <strong>[</strong> <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -1031,7 +1089,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_persist">2.1.1.20. Persist</h5>
+<h5 id="_persist">2.1.1.21. Persist</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_persist_func"></a><code>pyvgx.<strong>system.Persist</strong>( <strong>[</strong><em>timeout</em><strong>[</strong>, <em>force</em><strong>[</strong>, <em>remote</em><strong>]]]</strong> )</code></dt>
@@ -1043,7 +1101,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_registry">2.1.1.21. Registry</h5>
+<h5 id="_registry">2.1.1.22. Registry</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_registry_func"></a><code>pyvgx.<strong>system.Registry</strong>()</code></dt>
@@ -1055,7 +1113,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_removeplugin">2.1.1.22. RemovePlugin</h5>
+<h5 id="_removeplugin">2.1.1.23. RemovePlugin</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_removeplugin_func"></a><code>pyvgx.<strong>system.RemovePlugin</strong>( <em>name</em> )</code></dt>
@@ -1067,7 +1125,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_removeproperties">2.1.1.23. RemoveProperties</h5>
+<h5 id="_removeproperties">2.1.1.24. RemoveProperties</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_remove_properties_func"></a><code>pyvgx.<strong>system.RemoveProperties</strong>( <strong>[</strong> <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -1079,7 +1137,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_removeproperty">2.1.1.24. RemoveProperty</h5>
+<h5 id="_removeproperty">2.1.1.25. RemoveProperty</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_remove_property_func"></a><code>pyvgx.<strong>system.RemoveProperty</strong>( <em>key</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -1091,7 +1149,7 @@ It is not possible to remove graphs from disk using this API. Graphs can be made
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_requesthttp">2.1.1.25. RequestHTTP</h5>
+<h5 id="_requesthttp">2.1.1.26. RequestHTTP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_requesthttp_func"></a><code>pyvgx.<strong>system.RequestHTTP</strong>( <em>address</em><strong>[</strong>, <em>path</em><strong>[</strong>, <em>query</em><strong>[</strong>, <em>content</em><strong>[</strong>, <em>headers</em><strong>[</strong>, <em>timeout</em><strong>]]]]]</strong> )</code></dt>
@@ -1126,7 +1184,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_requestrate">2.1.1.26. RequestRate</h5>
+<h5 id="_requestrate">2.1.1.27. RequestRate</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_requestrate_func"></a><code>pyvgx.<strong>system.RequestRate</strong>()</code></dt>
@@ -1138,7 +1196,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_resetmetrics">2.1.1.27. ResetMetrics</h5>
+<h5 id="_resetmetrics">2.1.1.28. ResetMetrics</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_resetmetrics_func"></a><code>pyvgx.<strong>system.ResetMetrics</strong>()</code></dt>
@@ -1150,7 +1208,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_restarthttp">2.1.1.28. RestartHTTP</h5>
+<h5 id="_restarthttp">2.1.1.29. RestartHTTP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_restarthttp_func"></a><code>pyvgx.<strong>system.RestartHTTP</strong>()</code></dt>
@@ -1162,7 +1220,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_resumeevents">2.1.1.29. ResumeEvents</h5>
+<h5 id="_resumeevents">2.1.1.30. ResumeEvents</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_resume_events_func"></a><code>pyvgx.<strong>system.ResumeEvents</strong>()</code></dt>
@@ -1174,7 +1232,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_root">2.1.1.30. Root</h5>
+<h5 id="_root">2.1.1.31. Root</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_root_func"></a><code>pyvgx.<strong>system.Root</strong>()</code></dt>
@@ -1186,12 +1244,12 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_runserver">2.1.1.31. RunServer</h5>
+<h5 id="_runserver">2.1.1.32. RunServer</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_runserver_func"></a><code>pyvgx.<strong>system.RunServer</strong>( <strong>[</strong> <em>name</em><strong>[</strong>, <em>watchdog</em><strong>[</strong>, <em>interval</em><strong>[</strong>, <em>logpath</em> <strong>]]]]</strong> )</code></dt>
 <dd>
-<p>Block forever until interrupted by <code>signal.SIGINT</code>.</p>
+<p>Block forever until interrupted by <code>signal.SIGINT</code> or by another thread calling <a href="#system_exitrunserver_func">ExitRunServer()</a>.</p>
 <div class="paragraph">
 <p>An optional <em>name</em> string may be used to identify a VGX instance when accessed via the <a href="#system_starthttp_func">HTTP Service</a>.</p>
 </div>
@@ -1217,7 +1275,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serveradminip">2.1.1.32. ServerAdminIP</h5>
+<h5 id="_serveradminip">2.1.1.33. ServerAdminIP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_serveradminip_func"></a><code>pyvgx.<strong>system.ServerAdminIP</strong>()</code></dt>
@@ -1229,7 +1287,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serverhost">2.1.1.33. ServerHost</h5>
+<h5 id="_serverhost">2.1.1.34. ServerHost</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_serverhost_func"></a><code>pyvgx.<strong>system.ServerHost</strong>()</code></dt>
@@ -1241,7 +1299,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_servermetrics">2.1.1.34. ServerMetrics</h5>
+<h5 id="_servermetrics">2.1.1.35. ServerMetrics</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_servermetrics_func"></a><code>pyvgx.<strong>system.ServerMetrics</strong>( <em>percentiles</em> )</code></dt>
@@ -1253,7 +1311,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serverports">2.1.1.35. ServerPorts</h5>
+<h5 id="_serverports">2.1.1.36. ServerPorts</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_serverports_func"></a><code>pyvgx.<strong>system.ServerPorts</strong>()</code></dt>
@@ -1265,7 +1323,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serverprefix">2.1.1.36. ServerPrefix</h5>
+<h5 id="_serverprefix">2.1.1.37. ServerPrefix</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_serverprefix_func"></a><code>pyvgx.<strong>system.ServerPrefix</strong>()</code></dt>
@@ -1277,7 +1335,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_serviceinhttp">2.1.1.37. ServiceInHTTP</h5>
+<h5 id="_serviceinhttp">2.1.1.38. ServiceInHTTP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_serviceinhttp_func"></a><code>pyvgx.<strong>system.ServiceInHTTP</strong>( <strong>[</strong>service_in<strong>]</strong> )</code></dt>
@@ -1289,7 +1347,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_setproperties">2.1.1.38. SetProperties</h5>
+<h5 id="_setproperties">2.1.1.39. SetProperties</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_set_properties_func"></a><code>pyvgx.<strong>system.SetProperties</strong>( <em>properties</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -1301,7 +1359,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_setproperty">2.1.1.39. SetProperty</h5>
+<h5 id="_setproperty">2.1.1.40. SetProperty</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_set_property_func"></a><code>pyvgx.<strong>system.SetProperty</strong>( <em>key</em>, <em>value</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -1313,7 +1371,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_setreadonly">2.1.1.40. SetReadonly</h5>
+<h5 id="_setreadonly">2.1.1.41. SetReadonly</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_set_readonly_func"></a><code>pyvgx.<strong>system.SetReadonly</strong>()</code></dt>
@@ -1328,7 +1386,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_starthttp">2.1.1.41. StartHTTP</h5>
+<h5 id="_starthttp">2.1.1.42. StartHTTP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_starthttp_func"></a><code>pyvgx.<strong>system.StartHTTP</strong>( <em>port</em><strong>[</strong>, <em>ip</em><strong>[</strong>, <em>prefix</em><strong>[</strong>, <em>servicein</em><strong>[</strong>, <em>dispatcher</em><strong>]]]]</strong> )</code></dt>
@@ -1340,7 +1398,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_status">2.1.1.42. Status</h5>
+<h5 id="_status">2.1.1.43. Status</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_status_func"></a><code>pyvgx.<strong>system.Status</strong>( <strong>[</strong><em>graph</em><strong>[</strong>, <em>simple</em><strong>]]</strong> )</code></dt>
@@ -1352,7 +1410,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_stophttp">2.1.1.43. StopHTTP</h5>
+<h5 id="_stophttp">2.1.1.44. StopHTTP</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_stophttp_func"></a><code>pyvgx.<strong>system.StopHTTP</strong>()</code></dt>
@@ -1364,7 +1422,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_suspendevents">2.1.1.44. SuspendEvents</h5>
+<h5 id="_suspendevents">2.1.1.45. SuspendEvents</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_suspend_events_func"></a><code>pyvgx.<strong>system.SuspendEvents</strong>()</code></dt>
@@ -1376,7 +1434,7 @@ This function returns the raw response content returned by the server.</p>
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_sync">2.1.1.45. Sync</h5>
+<h5 id="_sync">2.1.1.46. Sync</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_sync_func"></a><code>pyvgx.<strong>system.Sync</strong>( <strong>[</strong><em>hard</em><strong>[</strong>, <em>timeout</em><strong>]]</strong> )</code></dt>
@@ -1400,7 +1458,7 @@ Synchronizing data this way temporarily suspends normal operation of the VGX sou
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_system">2.1.1.46. System</h5>
+<h5 id="_system">2.1.1.47. System</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_system_func"></a><code>pyvgx.<strong>system.System</strong>()</code></dt>
@@ -1424,7 +1482,7 @@ Do not modify the system graph. Doing so may destabilize the system and lead to 
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_unload">2.1.1.47. Unload</h5>
+<h5 id="_unload">2.1.1.48. Unload</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_unload_func"></a><code>pyvgx.<strong>system.Unload</strong>( <strong>[</strong><em>persist</em><strong>]</strong> )</code></dt>
@@ -1439,7 +1497,7 @@ Do not modify the system graph. Doing so may destabilize the system and lead to 
 <hr>
 </div>
 <div class="sect4">
-<h5 id="_writablevertices">2.1.1.48. WritableVertices</h5>
+<h5 id="_writablevertices">2.1.1.49. WritableVertices</h5>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="system_writablevertices_func"></a><code>pyvgx.<strong>system.WritableVertices</strong>()</code></dt>
@@ -3097,7 +3155,19 @@ Save memory by using <a href="constants/arcModifierConstants.html#M_FWDONLY">M_F
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_createvertex">3.3.14. CreateVertex</h4>
+<h4 id="_countdefinitions">3.3.14. CountDefinitions</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="countdefinitions_func"></a><code><strong>CountDefinitions</strong>()</code></dt>
+<dd>
+<p>Return the number of pre-defined expressions (See <a href="evaluator/evaluator.html#evaluatordefine">Define()</a>.)</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_createvertex">3.3.15. CreateVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="createvertex_func"></a><code><a href="graph/graphVertex.html#graphcreatevertex"><strong>CreateVertex</strong></a>( <em>id</em><strong>[</strong>, <em>type</em><strong>[</strong>, <em>lifespan</em><strong>[</strong>, properties <strong>]]]</strong> )</code></dt>
@@ -3109,7 +3179,7 @@ Save memory by using <a href="constants/arcModifierConstants.html#M_FWDONLY">M_F
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_debugcheckallocators">3.3.15. DebugCheckAllocators</h4>
+<h4 id="_debugcheckallocators">3.3.16. DebugCheckAllocators</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="debugcheckallocators_func"></a><code><a href="graph/graphMiscellaneous.html#graphdebugcheckallocators"><strong>DebugCheckAllocators</strong></a>( <strong>[</strong> <em>name</em> <strong>]</strong> )</code></dt>
@@ -3122,7 +3192,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_debugdumpgraph">3.3.16. DebugDumpGraph</h4>
+<h4 id="_debugdumpgraph">3.3.17. DebugDumpGraph</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="debugdumpgraph_func"></a><code><a href="graph/graphMiscellaneous.html#graphdebugdumpgraph"><strong>DebugDumpGraph</strong></a>()</code></dt>
@@ -3134,7 +3204,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_debugfindobjectbyidentifier">3.3.17. DebugFindObjectByIdentifier</h4>
+<h4 id="_debugfindobjectbyidentifier">3.3.18. DebugFindObjectByIdentifier</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="debugfindobjectbyidentifier_func"></a><code><a href="graph/graphMiscellaneous.html#graphfindobjectbyidentifier"><strong>DebugFindObjectByIdentifier</strong></a>( <em>identifier</em> )</code></dt>
@@ -3146,7 +3216,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_debuggetobjectbyaddress">3.3.18. DebugGetObjectByAddress</h4>
+<h4 id="_debuggetobjectbyaddress">3.3.19. DebugGetObjectByAddress</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="debuggetobjectbyaddress_func"></a><code><a href="graph/graphMiscellaneous.html#graphgetobjectbyaddress"><strong>DebugGetObjectByAddress</strong></a>( <em>address</em> )</code></dt>
@@ -3158,7 +3228,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_debugprintallocators">3.3.19. DebugPrintAllocators</h4>
+<h4 id="_debugprintallocators">3.3.20. DebugPrintAllocators</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="debugprintallocators_func"></a><code><a href="graph/graphMiscellaneous.html#graphdebugprintallocators"><strong>DebugPrintAllocators</strong></a>( <strong>[</strong> <em>name</em> <strong>]</strong> )</code></dt>
@@ -3170,7 +3240,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_define">3.3.20. Define</h4>
+<h4 id="_define">3.3.21. Define</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="define_func"></a><code><a href="evaluator/evaluator.html#define"><strong>Define</strong></a>( <em>expression</em> )</code></dt>
@@ -3182,7 +3252,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_degree">3.3.21. Degree</h4>
+<h4 id="_degree">3.3.22. Degree</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="degree_func"></a><code><a href="graph/graphQuery.html#graphdegree"><strong>Degree</strong></a>( <em>id</em><strong>[</strong>, <em>arc</em><strong>[</strong>, <em>filter</em><strong>[</strong>, <em>timeout</em><strong>[</strong>, <em>limexec</em> <strong>]]]]</strong> )</code></dt>
@@ -3194,7 +3264,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_deletevertex">3.3.22. DeleteVertex</h4>
+<h4 id="_deletevertex">3.3.23. DeleteVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="deletevertex_func"></a><code><a href="graph/graphVertex.html#graphdeletevertex"><strong>DeleteVertex</strong></a>( <em>id</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -3206,7 +3276,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_dimension">3.3.23. Dimension</h4>
+<h4 id="_dimension">3.3.24. Dimension</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="dimension_func"></a><code><a href="graph/graphEnum.html#graphdimension"><strong>Dimension</strong></a>( <em>code</em> )</code></dt>
@@ -3221,7 +3291,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_disconnect">3.3.24. Disconnect</h4>
+<h4 id="_disconnect">3.3.25. Disconnect</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="disconnect_func"></a><code><a href="graph/graphArc.html#graphdisconnect"><strong>Disconnect</strong></a>( <em>id</em><strong>[</strong>, <em>arc</em><strong>[</strong>, <em>neighbor</em><strong>[</strong>, <em>timeout</em> <strong>]]]</strong> )</code></dt>
@@ -3233,7 +3303,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_enumdimension">3.3.25. EnumDimension</h4>
+<h4 id="_enumdimension">3.3.26. EnumDimension</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="enumdimension_func"></a><code><a href="graph/graphEnum.html#graphenumdimension"><strong>EnumDimension</strong></a>( <em>dim</em> )</code></dt>
@@ -3248,7 +3318,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_enumkey">3.3.26. EnumKey</h4>
+<h4 id="_enumkey">3.3.27. EnumKey</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="enumkey_func"></a><code><a href="graph/graphEnum.html#graphenumkey"><strong>EnumKey</strong></a>( <em>key</em> )</code></dt>
@@ -3260,7 +3330,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_enumrelationship">3.3.27. EnumRelationship</h4>
+<h4 id="_enumrelationship">3.3.28. EnumRelationship</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="enumrelationship_func"></a><code><a href="graph/graphEnum.html#graphenumrelationship"><strong>EnumRelationship</strong></a>( <em>rel</em> )</code></dt>
@@ -3272,7 +3342,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_enumvalue">3.3.28. EnumValue</h4>
+<h4 id="_enumvalue">3.3.29. EnumValue</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="enumvalue_func"></a><code><a href="graph/graphEnum.html#graphenumvalue"><strong>EnumValue</strong></a>( <em>string</em> )</code></dt>
@@ -3284,7 +3354,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_enumvertextype">3.3.29. EnumVertexType</h4>
+<h4 id="_enumvertextype">3.3.30. EnumVertexType</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="enumvertextype_func"></a><code><a href="graph/graphEnum.html#graphenumvertextype"><strong>EnumVertexType</strong></a>( <em>vtype</em> )</code></dt>
@@ -3296,7 +3366,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_erase">3.3.30. Erase</h4>
+<h4 id="_erase">3.3.31. Erase</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="erase_func"></a><code><a href="graph/graphManagement.html#grapherase"><strong>Erase</strong></a>()</code></dt>
@@ -3308,7 +3378,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_escalatevertex">3.3.31. EscalateVertex</h4>
+<h4 id="_escalatevertex">3.3.32. EscalateVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="escalatevertex_func"></a><code><a href="graph/graphVertex.html#graphescalatevertex"><strong>EscalateVertex</strong></a>( <em>readonly_vertex_object</em><strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -3320,7 +3390,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_evaluate">3.3.32. Evaluate</h4>
+<h4 id="_evaluate">3.3.33. Evaluate</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="evaluate_func"></a><code><a href="evaluator/evaluator.html#evaluate"><strong>Evaluate</strong></a>( <em>expression</em><strong>[</strong>, <em>tail</em><strong>[</strong>, <em>arc</em><strong>[</strong>, <em>head</em><strong>[</strong>, <em>vector</em><strong>[</strong>, <em>memory</em> <strong>]]]]]</strong> )</code></dt>
@@ -3332,7 +3402,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_eventbacklog">3.3.33. EventBacklog</h4>
+<h4 id="_eventbacklog">3.3.34. EventBacklog</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="eventbacklog_func"></a><code><a href="graph/graphEvent.html#grapheventbacklog"><strong>EventBacklog</strong></a>()</code></dt>
@@ -3344,7 +3414,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_eventdisable">3.3.34. EventDisable</h4>
+<h4 id="_eventdisable">3.3.35. EventDisable</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="eventdisable_func"></a><code><a href="graph/graphEvent.html#grapheventdisable"><strong>EventDisable</strong></a>()</code></dt>
@@ -3356,7 +3426,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_eventenable">3.3.35. EventEnable</h4>
+<h4 id="_eventenable">3.3.36. EventEnable</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="eventenable_func"></a><code><a href="graph/graphEvent.html#grapheventenable"><strong>EventEnable</strong></a>()</code></dt>
@@ -3368,7 +3438,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_eventflush">3.3.36. EventFlush</h4>
+<h4 id="_eventflush">3.3.37. EventFlush</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="eventflush_func"></a><code><a href="graph/graphEvent.html#grapheventflush"><strong>EventFlush</strong></a>()</code></dt>
@@ -3380,7 +3450,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_eventparam">3.3.37. EventParam</h4>
+<h4 id="_eventparam">3.3.38. EventParam</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="eventparam_func"></a><code><a href="graph/graphEvent.html#grapheventparam"><strong>EventParam</strong></a>()</code></dt>
@@ -3392,7 +3462,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getdefinition">3.3.38. GetDefinition</h4>
+<h4 id="_getdefinition">3.3.39. GetDefinition</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getdefinition_func"></a><code><strong>GetDefinition</strong>( <em>name</em> )</code></dt>
@@ -3404,7 +3474,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getdefinitions">3.3.39. GetDefinitions</h4>
+<h4 id="_getdefinitions">3.3.40. GetDefinitions</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getdefinitions_func"></a><code><strong>GetDefinitions</strong>()</code></dt>
@@ -3416,7 +3486,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getmemoryusage">3.3.40. GetMemoryUsage</h4>
+<h4 id="_getmemoryusage">3.3.41. GetMemoryUsage</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getmemoryusage_func"></a><code><a href="graph/graphManagement.html#graphgetmemoryusage"><strong>GetMemoryUsage</strong></a>( <strong>[</strong> <em>metric</em> <strong>]</strong> )</code></dt>
@@ -3428,7 +3498,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getopenvertices">3.3.41. GetOpenVertices</h4>
+<h4 id="_getopenvertices">3.3.42. GetOpenVertices</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getopenvertices_func"></a><code><a href="graph/graphVertex.html#getopenvertices"><strong>GetOpenVertices</strong></a>( <strong>[</strong> <em>threadid</em> <strong>]</strong> )</code></dt>
@@ -3440,7 +3510,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getvertex">3.3.42. GetVertex</h4>
+<h4 id="_getvertex">3.3.43. GetVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getvertex_func"></a><code><a href="graph/graphQuery.html#graphgetvertex"><strong>GetVertex</strong></a>( <em>id</em> )</code></dt>
@@ -3452,7 +3522,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_getvertexid">3.3.43. GetVertexID</h4>
+<h4 id="_getvertexid">3.3.44. GetVertexID</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="getvertexid_func"></a><code><strong>GetVertexID</strong>( <strong>[</strong> <em>offset</em> <strong>]</strong> )</code></dt>
@@ -3464,7 +3534,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_hasvertex">3.3.44. HasVertex</h4>
+<h4 id="_hasvertex">3.3.45. HasVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="hasvertex_func"></a><code><a href="graph/graphQuery.html#graphhasvertex"><strong>HasVertex</strong></a>( <em>id</em> )</code></dt>
@@ -3476,7 +3546,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_inarcs">3.3.45. Inarcs</h4>
+<h4 id="_inarcs">3.3.46. Inarcs</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="inarcs_func"></a><code><a href="graph/graphQuery.html#graphinarcs"><strong>Inarcs</strong></a>( <em>id</em><strong>[</strong>, <em>hits</em><strong>[</strong>, <em>timeout</em><strong>[</strong>, <em>limexec</em> <strong>]]]</strong> )</code></dt>
@@ -3488,7 +3558,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_initials">3.3.46. Initials</h4>
+<h4 id="_initials">3.3.47. Initials</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="initials_func"></a><code><a href="graph/graphQuery.html#graphinitials"><strong>Initials</strong></a>( <em>id</em><strong>[</strong>, &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3500,10 +3570,22 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_isgraphlocal">3.3.47. IsGraphLocal</h4>
+<h4 id="_isdefined">3.3.48. IsDefined</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a id="isgraphlocal_func"></a><code><strong>IsGraphLocal</strong>( <em>id</em> )</code></dt>
+<dt class="hdlist1"><a id="isdefined_func"></a><code><strong>IsDefined</strong>( <em>name</em> )</code></dt>
+<dd>
+<p>Return True if the named expression has been defined with <a href="evaluator/evaluator.html#evaluatordefine">Define( "<em>name</em> := &#8230;&#8203;" )</a>, otherwise return False.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_isgraphlocal">3.3.49. IsGraphLocal</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="isgraphlocal_func"></a><code><strong>IsGraphLocal</strong>()</code></dt>
 <dd>
 <p>Return True if the graph is <a href="#graphobject_type">local only</a>, otherwise False.</p>
 </dd>
@@ -3512,7 +3594,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_isgraphreadonly">3.3.48. IsGraphReadonly</h4>
+<h4 id="_isgraphreadonly">3.3.50. IsGraphReadonly</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="isgraphreadonly_func"></a><code><a href="graph/graphManagement.html#graphisgraphreadonly"><strong>IsGraphReadonly</strong></a>()</code></dt>
@@ -3524,7 +3606,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_key">3.3.49. Key</h4>
+<h4 id="_key">3.3.51. Key</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="key_func"></a><code><a href="graph/graphEnum.html#graphkey"><strong>Key</strong></a>( <em>code</em> )</code></dt>
@@ -3536,7 +3618,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_lock">3.3.50. Lock</h4>
+<h4 id="_lock">3.3.52. Lock</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="lock_func"></a><code><a href="graph/graphManagement.html#graphlock"><strong>Lock</strong></a>( <strong>[</strong> <em>id</em><strong>[</strong>, <em>linger</em><strong>[</strong>, <em>timeout</em> <strong>]]]</strong> )</code></dt>
@@ -3548,10 +3630,10 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_memory">3.3.51. Memory</h4>
+<h4 id="_memory">3.3.53. Memory</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a id="memory_func"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>Memory</strong></a>( <em>initializer</em> )</code></dt>
+<dt class="hdlist1"><a id="memory_func"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>Memory</strong></a>( [<em>initializer</em>] )</code></dt>
 <dd>
 <p>Return a new <a href="#memoryobject">pyvgx.Memory</a> object associated with this graph. See <a href="evaluator/evaluator.html#evaluatormemory">Evaluator Memory</a> for usage details.</p>
 </dd>
@@ -3560,7 +3642,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_neighborhood">3.3.52. Neighborhood</h4>
+<h4 id="_neighborhood">3.3.54. Neighborhood</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="neighborhood_func"></a><code><a href="graph/graphQuery.html#graphneighborhood"><strong>Neighborhood</strong></a>( <em>id</em><strong>[</strong>, &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3572,7 +3654,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newadjacencyquery">3.3.53. NewAdjacencyQuery</h4>
+<h4 id="_newadjacencyquery">3.3.55. NewAdjacencyQuery</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newadjacencyquery_func"></a><code><strong>NewAdjacencyQuery</strong>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3584,7 +3666,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newaggregatorquery">3.3.54. NewAggregatorQuery</h4>
+<h4 id="_newaggregatorquery">3.3.56. NewAggregatorQuery</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newaggregatorquery_func"></a><code><strong>NewAggregatorQuery</strong>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3596,7 +3678,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newarcsquery">3.3.55. NewArcsQuery</h4>
+<h4 id="_newarcsquery">3.3.57. NewArcsQuery</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newarcsquery_func"></a><code><strong>NewArcsQuery</strong>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3608,7 +3690,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newneighborhoodquery">3.3.56. NewNeighborhoodQuery</h4>
+<h4 id="_newneighborhoodquery">3.3.58. NewNeighborhoodQuery</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newneighborhoodquery_func"></a><code><strong>NewNeighborhoodQuery</strong>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3620,7 +3702,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newvertex">3.3.57. NewVertex</h4>
+<h4 id="_newvertex">3.3.59. NewVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newvertex_func"></a><code><a href="graph/graphVertex.html#graphnewvertex"><strong>NewVertex</strong></a>( <em>id</em><strong>[</strong>, <em>type</em><strong>[</strong>, <em>lifespan</em><strong>[</strong>, <em>properties</em><strong>[</strong>, <em>timeout</em> <strong>]]]]</strong> )</code></dt>
@@ -3632,7 +3714,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_newverticesquery">3.3.58. NewVerticesQuery</h4>
+<h4 id="_newverticesquery">3.3.60. NewVerticesQuery</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="newverticesquery_func"></a><code><strong>NewVerticesQuery</strong>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3644,7 +3726,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_openneighbor">3.3.59. OpenNeighbor</h4>
+<h4 id="_openneighbor">3.3.61. OpenNeighbor</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="openneighbor_func"></a><code><a href="graph/graphQuery.html#graphopenneighbor"><strong>OpenNeighbor</strong></a>( <em>id</em><strong>[</strong>, <em>arc</em><strong>[</strong>, <em>mode</em><strong>[</strong>, <em>timeout</em><strong>]]]</strong> )</code></dt>
@@ -3656,7 +3738,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_openvertex">3.3.60. OpenVertex</h4>
+<h4 id="_openvertex">3.3.62. OpenVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="openvertex_func"></a><code><a href="graph/graphVertex.html#graphopenvertex"><strong>OpenVertex</strong></a>( <em>id</em><strong>[</strong>, <em>mode</em><strong>[</strong>, <em>timeout</em> <strong>]]</strong> )</code></dt>
@@ -3668,7 +3750,7 @@ This method returns <code>None</code>. If internal allocator problems are detect
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_openvertices">3.3.61. OpenVertices</h4>
+<h4 id="_openvertices">3.3.63. OpenVertices</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="openvertices_func"></a><code><a href="graph/graphVertex.html#graphopenvertices"><strong>OpenVertices</strong></a>( <em>idlist</em><strong>[</strong>, <em>mode</em><strong>[</strong>, <em>timeout</em> <strong>]]</strong> )</code></dt>
@@ -3692,7 +3774,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_order">3.3.62. Order</h4>
+<h4 id="_order">3.3.64. Order</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="order_func"></a><code><a href="graph/graphManagement.html#graphorder"><strong>Order</strong></a>( <strong>[</strong> <em>type</em> <strong>]</strong> )</code></dt>
@@ -3704,7 +3786,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_outarcs">3.3.63. Outarcs</h4>
+<h4 id="_outarcs">3.3.65. Outarcs</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="outarcs_func"></a><code><a href="graph/graphQuery.html#graphoutarcs"><strong>Outarcs</strong></a>( <em>id</em><strong>[</strong>, <em>hits</em><strong>[</strong>, <em>timeout</em><strong>[</strong>, <em>limexec</em> <strong>]]]</strong> )</code></dt>
@@ -3716,7 +3798,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_propertykeys">3.3.64. PropertyKeys</h4>
+<h4 id="_propertykeys">3.3.66. PropertyKeys</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="propertykeys_func"></a><code><a href="graph/graphEnum.html#graphpropertykeys"><strong>PropertyKeys</strong></a>()</code></dt>
@@ -3728,7 +3810,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_propertystringvalues">3.3.65. PropertyStringValues</h4>
+<h4 id="_propertystringvalues">3.3.67. PropertyStringValues</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="propertyvalues_func"></a><code><a href="graph/graphEnum.html#graphpropertyvalues"><strong>PropertyStringValues</strong></a>()</code></dt>
@@ -3740,7 +3822,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_relationship">3.3.66. Relationship</h4>
+<h4 id="_relationship">3.3.68. Relationship</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="relationship_func"></a><code><a href="graph/graphEnum.html#graphrelationship"><strong>Relationship</strong></a>( <em>code</em> )</code></dt>
@@ -3752,7 +3834,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_relationships">3.3.67. Relationships</h4>
+<h4 id="_relationships">3.3.69. Relationships</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="relationships_func"></a><code><a href="graph/graphEnum.html#graphrelationships"><strong>Relationships</strong></a>()</code></dt>
@@ -3764,7 +3846,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_relaxvertex">3.3.68. RelaxVertex</h4>
+<h4 id="_relaxvertex">3.3.70. RelaxVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="relaxvertex_func"></a><code><a href="graph/graphVertex.html#graphrelaxvertex"><strong>RelaxVertex</strong></a>( <em>writable_vertex_object</em> )</code></dt>
@@ -3776,7 +3858,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_resetcounters">3.3.69. ResetCounters</h4>
+<h4 id="_resetcounters">3.3.71. ResetCounters</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="resetcounters_func"></a><code><a href="graph/graphManagement.html#graphresetcounters"><strong>ResetCounters</strong></a>()</code></dt>
@@ -3788,7 +3870,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_resetserial">3.3.70. ResetSerial</h4>
+<h4 id="_resetserial">3.3.72. ResetSerial</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="resetserial_func"></a><code><a href="graph/graphManagement.html#graphresetserial"><strong>ResetSerial</strong></a>( <strong>[</strong> <em>sn</em> <strong>]</strong> )</code></dt>
@@ -3800,7 +3882,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_save">3.3.71. Save</h4>
+<h4 id="_save">3.3.73. Save</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="save_func"></a><code><a href="graph/graphManagement.html#graphsave"><strong>Save</strong></a>( <strong>[</strong> <em>timeout</em><strong>[</strong>, <em>force</em><strong>[</strong>, <em>remote</em> <strong>]]]</strong> )</code></dt>
@@ -3812,7 +3894,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_search">3.3.72. Search</h4>
+<h4 id="_search">3.3.74. Search</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="search_func"></a><code><a href="graph/graphQuery.html#graphsearch"><strong>Search</strong></a>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3824,7 +3906,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_setgraphreadonly">3.3.73. SetGraphReadonly</h4>
+<h4 id="_setgraphreadonly">3.3.75. SetGraphReadonly</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="setgraphreadonly_func"></a><code><a href="graph/graphManagement.html#graphsetgraphreadonly"><strong>SetGraphReadonly</strong></a>( <strong>[</strong> <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -3836,7 +3918,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_showopenvertices">3.3.74. ShowOpenVertices</h4>
+<h4 id="_showopenvertices">3.3.76. ShowOpenVertices</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="showopenvertices_func"></a><code><a href="graph/graphMiscellaneous.html#showopenvertices"><strong>ShowOpenVertices</strong></a>()</code></dt>
@@ -3848,7 +3930,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_showvertex">3.3.75. ShowVertex</h4>
+<h4 id="_showvertex">3.3.77. ShowVertex</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="showvertex_func"></a><code><a href="graph/graphMiscellaneous.html#graphshowvertex"><strong>ShowVertex</strong></a>( <em>id</em> <strong>[</strong>, <em>timeout</em> <strong>]</strong> )</code></dt>
@@ -3860,7 +3942,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_size">3.3.76. Size</h4>
+<h4 id="_size">3.3.78. Size</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="size_func"></a><code><a href="graph/graphManagement.html#graphsize"><strong>Size</strong></a>()</code></dt>
@@ -3872,7 +3954,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_status_2">3.3.77. Status</h4>
+<h4 id="_status_2">3.3.79. Status</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="status_func"></a><code><a href="graph/graphManagement.html#graphstatus"><strong>Status</strong></a>()</code></dt>
@@ -3884,7 +3966,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_sync_2">3.3.78. Sync</h4>
+<h4 id="_sync_2">3.3.80. Sync</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="sync_func"></a><code><a href="graph/graphManagement.html#graphsync"><strong>Sync</strong></a>( <strong>[</strong> <em>hard</em><strong>[</strong>, <em>timeout</em> <strong>]]</strong> )</code></dt>
@@ -3899,7 +3981,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_synchronized">3.3.79. Synchronized</h4>
+<h4 id="_synchronized">3.3.81. Synchronized</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="synchronized_func"></a><code><a href="graph/graphManagement.html#graphsynchronized"><strong>Synchronized</strong></a>(  <em>function</em>, *args, **kwds )</code></dt>
@@ -3911,7 +3993,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_terminals">3.3.80. Terminals</h4>
+<h4 id="_terminals">3.3.82. Terminals</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="terminals_func"></a><code><a href="graph/graphQuery.html#graphterminals"><strong>Terminals</strong></a>( <em>id</em><strong>[</strong>, &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -3923,7 +4005,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_truncate">3.3.81. Truncate</h4>
+<h4 id="_truncate">3.3.83. Truncate</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="truncate_func"></a><code><a href="graph/graphManagement.html#graphtruncate"><strong>Truncate</strong></a>( <strong>[</strong> <em>type</em> <strong>]</strong> )</code></dt>
@@ -3935,7 +4017,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_value">3.3.82. Value</h4>
+<h4 id="_value">3.3.84. Value</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="value_func"></a><code><a href="graph/graphEnum.html#graphvalue"><strong>Value</strong></a>( <em>code</em> )</code></dt>
@@ -3947,7 +4029,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_vertexdescriptor">3.3.83. VertexDescriptor</h4>
+<h4 id="_vertexdescriptor">3.3.85. VertexDescriptor</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="vertexdescriptor_func"></a><code><a href="graph/graphMiscellaneous.html#graphvertexdescriptor"><strong>VertexDescriptor</strong></a>( <em>id</em> )</code></dt>
@@ -3959,7 +4041,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_vertexidbyaddress">3.3.84. VertexIdByAddress</h4>
+<h4 id="_vertexidbyaddress">3.3.86. VertexIdByAddress</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="vertexidbyaddress_func"></a><code><a href="graph/graphQuery.html#graphvertexidbyaddress"><strong>VertexIdByAddress</strong></a>( <em>address</em> )</code></dt>
@@ -3971,7 +4053,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_vertextype">3.3.85. VertexType</h4>
+<h4 id="_vertextype">3.3.87. VertexType</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="vertextype_func"></a><code><a href="graph/graphEnum.html#graphvertextype"><strong>VertexType</strong></a>( <em>code</em> )</code></dt>
@@ -3983,7 +4065,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_vertextypes">3.3.86. VertexTypes</h4>
+<h4 id="_vertextypes">3.3.88. VertexTypes</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="vertextypes_func"></a><code><a href="graph/graphEnum.html#graphvertextypes"><strong>VertexTypes</strong></a>()</code></dt>
@@ -3995,7 +4077,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_vertices">3.3.87. Vertices</h4>
+<h4 id="_vertices">3.3.89. Vertices</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="vertices_func"></a><code><a href="graph/graphQuery.html#graphvertices"><strong>Vertices</strong></a>( <strong>[</strong> &#8230;&#8203; <strong>]</strong> )</code></dt>
@@ -4007,7 +4089,7 @@ When VGX is <a href="#op_attach_func">attached to an output stream</a> <strong>a
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_verticestype">3.3.88. VerticesType</h4>
+<h4 id="_verticestype">3.3.90. VerticesType</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="verticestype_func"></a><code><a href="graph/graphQuery.html#graphverticestype"><strong>VerticesType</strong></a>( <em>type</em> )</code></dt>
@@ -4793,11 +4875,11 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code><em>class</em> pyvgx.<strong>Memory</strong>( <em>graph_instance</em>, <em>initializer</em> )</code></dt>
+<dt class="hdlist1"><code><em>class</em> pyvgx.<strong>Memory</strong>( <em>graph_instance</em>[, <em>initializer</em>] )</code></dt>
 <dd>
-<p>Create a memory object associated with <em>graph_instance</em>, initialized according to <em>initializer</em>. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <a href="#AccessError_exc">AccessError</a>.</p>
+<p>Create a memory object associated with <em>graph_instance</em>, optionally initialized according to <em>initializer</em>. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <a href="#AccessError_exc">AccessError</a>.</p>
 <div class="paragraph">
-<p>The memory object <em>initializer</em> can be an integer specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.</p>
+<p>The memory object <em>initializer</em> can be an integer (default=8) specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.</p>
 </div>
 <div class="paragraph">
 <p>Memory objects can be passed as arguments to queries, which may read or write the elements as part of executing filters and ranking formulas. The same memory object can be used multiple times with queries, making it possible to pass information from one query to the next.</p>
@@ -4812,13 +4894,21 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 <h3 id="memoryobject_attributes">5.1. Memory Attributes</h3>
 <div class="dlist">
 <dl>
+<dt class="hdlist1"><a id="memory_counters_attr"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>counters</strong></a></code></dt>
+<dd>
+<p>Navigation progress counters, returns tuple: (<em>score_evaluations</em>, <em>threshold_contributions</em>, <em>accepted_into_frontier</em>, <em>accepted_into_result</em>, <em>recursion_depth</em>, <em>node_expansions</em>, <em>node_visits</em>, <em>node_revisits_avoided</em>).</p>
+</dd>
 <dt class="hdlist1"><a id="memory_order_attr"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>order</strong></a></code></dt>
 <dd>
-<p>The memory order is the log2 of its size. The memory object size is always a power of two and will be returned by <code>len( memobj )</code>.</p>
+<p>The memory order (readonly) is the log2 of its size. The memory object size is always a power of two and will be returned by <code>len( memobj )</code>.</p>
 </dd>
 <dt class="hdlist1"><a id="memory_Rn_attr"></a><code><a href="evaluator/evaluator.html#evaluatormemoryregisters"><strong>R<em>n</em></strong></a></code></dt>
 <dd>
 <p>Memory register R<em>n</em> (read and write), where <em>n</em> is 1, 2, 3, or 4.</p>
+</dd>
+<dt class="hdlist1"><a id="memory_order_vector"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>vector</strong></a></code></dt>
+<dd>
+<p>Memory probe vector (read and write). Must be a <code>pyvgx.Vector</code>. Accessible as <code>M.vector</code> in the expression language.</p>
 </dd>
 </dl>
 </div>
@@ -4838,7 +4928,31 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_dualint">5.2.2. DualInt</h4>
+<h4 id="_vsetadd">5.2.2. VSetAdd</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="memory_object_vsetadd"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>VSetAdd</strong></a>()</code></dt>
+<dd>
+<p>Add a vertex (address) to <a href="evaluator/evaluator.html#evaluator_mappingsets">vset</a> in the memory object.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_vsetclear">5.2.3. VSetClear</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="memory_object_vsetclear"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>VSetClear</strong></a>()</code></dt>
+<dd>
+<p>Clear the contents of any <a href="evaluator/evaluator.html#evaluator_mappingsets">vset or iset</a> in the memory object.</p>
+</dd>
+</dl>
+</div>
+<hr>
+</div>
+<div class="sect3">
+<h4 id="_dualint">5.2.4. DualInt</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="memory_object_dualint"></a><code><strong>DualInt</strong>( <em>a</em><strong>[</strong>, <em>b</em><strong>]</strong> )</code></dt>
@@ -4863,7 +4977,7 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_reset_2">5.2.3. Reset</h4>
+<h4 id="_reset_2">5.2.5. Reset</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="memory_object_reset"></a><code><a href="evaluator/evaluator.html#evaluatormemory"><strong>Reset</strong></a>( <em>value</em><strong>[</strong>, <em>increment</em> <strong>]</strong> )</code></dt>
@@ -4875,7 +4989,7 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_sort">5.2.4. Sort</h4>
+<h4 id="_sort">5.2.6. Sort</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="memory_object_sort"></a><code><a href="evaluator/evaluator.html#evaluatormemorysort"><strong>Sort</strong></a>( <strong>[</strong> <em>start</em><strong>[</strong>, <em>end</em><strong>[</strong>, <em>reverse</em> <strong>]</strong> <strong>]</strong> <strong>]</strong> )</code></dt>
@@ -4887,7 +5001,7 @@ The normal use of these coefficients is for evaluating the linear ranking functi
 <hr>
 </div>
 <div class="sect3">
-<h4 id="_stack">5.2.5. Stack</h4>
+<h4 id="_stack">5.2.7. Stack</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><a id="memory_object_stack"></a><code><a href="evaluator/evaluator.html#evaluatormemorystack"><strong>Stack</strong></a>()</code></dt>
@@ -5535,15 +5649,9 @@ This method is only relevant in <strong>Feature vector</strong> mode.
 </div>
 </div>
 </div>
-<div id="footnotes">
-<hr>
-<div class="footnote" id="_footnotedef_1">
-<a href="#_footnoteref_1">1</a>. The global similarity index is currently under development and will be included in a future release. Implicit connections can be emulated by manually building arc-based indices and using vector similarity query filters.
-</div>
-</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-22 16:25:45 -0400
+Last updated 2026-06-03 15:18:40 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">

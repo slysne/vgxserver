@@ -334,7 +334,15 @@ document.addEventListener("DOMContentLoaded", function() {
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Use a serialization protocol such as JSON or Python&#8217;s own Pickle module to store complex objects.
+<div class="paragraph">
+<p>Use a serialization protocol such as JSON or Python&#8217;s own Pickle module to store complex objects.
+For large JSON payloads the <code>orjson</code> module is recommended for better performance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight"><code data-lang="bash">pip <span class="nb">install </span>orjson</code></pre>
+</div>
+</div>
 </td>
 </tr>
 </table>
@@ -679,7 +687,7 @@ Data types with special restrictions (such as numeric lists or integer-to-float 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2026-06-03 09:49:43 -0400
 </div>
 </div>
 </body>
