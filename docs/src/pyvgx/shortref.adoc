@@ -132,6 +132,10 @@ g.Neighborhood(
 |Check if one or more graphs have TTL suspended
 
 |{counter:ps}
+|<<reference.adoc#system_exitrunserver_func, ExitRunServer()>>
+|Exit any currently blocking RunServer() call
+
+|{counter:ps}
 |<<reference.adoc#system_fingerprint_func, Fingerprint()>>
 |Return a digest string representing the state of all loaded graph data
 
@@ -221,7 +225,7 @@ g.Neighborhood(
 
 |{counter:ps}
 |<<reference.adoc#system_runserver_func, RunServer()>>
-|Enter infinite loop until SIGINT
+|Enter infinite loop until SIGINT, or ExitRunServer() called
 
 |{counter:ps}
 |<<service/service.adoc#system_serveradminip_func, ServerAdminIP()>>

@@ -244,6 +244,15 @@ Return `True` if any loaded graph has its TTL event processor suspended, otherwi
 
 ___
 
+===== ExitRunServer
+
+[[system_exitrunserver_func]]`pyvgx.*system.ExitRunServer*()`::
+Causes <<system_runserver_func, RunServer()>> to exit.
++
+Calling this function has no effect unless RunServer() is currently blocking.
+
+___
+
 ===== Fingerprint
 
 [[system_fingerprint_func]]`pyvgx.*system.Fingerprint*()`::
@@ -440,7 +449,7 @@ ___
 ===== RunServer
 
 [[system_runserver_func]]`pyvgx.*system.RunServer*( **[** _name_**[**, _watchdog_**[**, _interval_**[**, _logpath_ **]]]]** )`::
-Block forever until interrupted by `signal.SIGINT`.
+Block forever until interrupted by `signal.SIGINT` or by another thread calling <<system_exitrunserver_func, ExitRunServer()>>.
 +
 An optional _name_ string may be used to identify a VGX instance when accessed via the <<system_starthttp_func, HTTP Service>>.
 +
