@@ -26,7 +26,7 @@
 #include "cxfileio.h"
 
 
-#if defined CXPLAT_LINUX_ANY
+#if defined CXPLAT_LINUX_X64
 #include <cpuid.h>
 #endif
 
@@ -808,8 +808,9 @@ char * get_new_cpu_instruction_set_extensions( int *avxcompat ) {
         **) CPUID leaf 04H provides details of deterministic cache parameters, including the L2 cache in sub-leaf 2
 
   */
-#elif CXPLAT_ARCH_ARM64
+#elif defined CXPLAT_ARCH_ARM64
 
+#if defined CXPLAT_MAC_ARM64
 /**************************************************************************//**
  * get_new_cpu_instruction_set_extensions
  *
@@ -901,6 +902,246 @@ char * get_new_cpu_instruction_set_extensions( int *__ign ) {
   return info;
 
 }
+
+#elif defined CXPLAT_LINUX_ARM64
+/**************************************************************************//**
+ * get_new_cpu_instruction_set_extensions
+ * Linux ARM64 - uses getauxval() to query hardware capabilities
+ ******************************************************************************
+ */
+char * get_new_cpu_instruction_set_extensions( int *__ign ) {
+
+  // Define HWCAP constants in case they're missing from headers
+  #ifndef HWCAP_FP
+  #define HWCAP_FP            (1 << 0)
+  #endif
+  #ifndef HWCAP_ASIMD
+  #define HWCAP_ASIMD         (1 << 1)
+  #endif
+  #ifndef HWCAP_AES
+  #define HWCAP_AES           (1 << 3)
+  #endif
+  #ifndef HWCAP_PMULL
+  #define HWCAP_PMULL         (1 << 4)
+  #endif
+  #ifndef HWCAP_SHA1
+  #define HWCAP_SHA1          (1 << 5)
+  #endif
+  #ifndef HWCAP_SHA2
+  #define HWCAP_SHA2          (1 << 6)
+  #endif
+  #ifndef HWCAP_CRC32
+  #define HWCAP_CRC32         (1 << 7)
+  #endif
+  #ifndef HWCAP_ATOMICS
+  #define HWCAP_ATOMICS       (1 << 8)
+  #endif
+  #ifndef HWCAP_FPHP
+  #define HWCAP_FPHP          (1 << 9)
+  #endif
+  #ifndef HWCAP_ASIMDHP
+  #define HWCAP_ASIMDHP       (1 << 10)
+  #endif
+  #ifndef HWCAP_ASIMDRDM
+  #define HWCAP_ASIMDRDM      (1 << 12)
+  #endif
+  #ifndef HWCAP_JSCVT
+  #define HWCAP_JSCVT         (1 << 13)
+  #endif
+  #ifndef HWCAP_FCMA
+  #define HWCAP_FCMA          (1 << 14)
+  #endif
+  #ifndef HWCAP_LRCPC
+  #define HWCAP_LRCPC         (1 << 15)
+  #endif
+  #ifndef HWCAP_DCPOP
+  #define HWCAP_DCPOP         (1 << 16)
+  #endif
+  #ifndef HWCAP_SHA3
+  #define HWCAP_SHA3          (1 << 17)
+  #endif
+  #ifndef HWCAP_SM3
+  #define HWCAP_SM3           (1 << 18)
+  #endif
+  #ifndef HWCAP_SM4
+  #define HWCAP_SM4           (1 << 19)
+  #endif
+  #ifndef HWCAP_ASIMDDP
+  #define HWCAP_ASIMDDP       (1 << 20)
+  #endif
+  #ifndef HWCAP_SHA512
+  #define HWCAP_SHA512        (1 << 21)
+  #endif
+  #ifndef HWCAP_SVE
+  #define HWCAP_SVE           (1 << 22)
+  #endif
+  #ifndef HWCAP_ASIMDFHM
+  #define HWCAP_ASIMDFHM      (1 << 23)
+  #endif
+  #ifndef HWCAP_DIT
+  #define HWCAP_DIT           (1 << 24)
+  #endif
+  #ifndef HWCAP_ILRCPC
+  #define HWCAP_ILRCPC        (1 << 26)
+  #endif
+  #ifndef HWCAP_FLAGM
+  #define HWCAP_FLAGM         (1 << 27)
+  #endif
+  #ifndef HWCAP_SSBS
+  #define HWCAP_SSBS          (1 << 28)
+  #endif
+  #ifndef HWCAP_SB
+  #define HWCAP_SB            (1 << 29)
+  #endif
+  #ifndef HWCAP_PACA
+  #define HWCAP_PACA          (1 << 30)
+  #endif
+  #ifndef HWCAP_PACG
+  #define HWCAP_PACG          (1UL << 31)
+  #endif
+
+  // HWCAP2 constants
+  #ifndef HWCAP2_DCPODP
+  #define HWCAP2_DCPODP       (1 << 0)
+  #endif
+  #ifndef HWCAP2_SVE2
+  #define HWCAP2_SVE2         (1 << 1)
+  #endif
+  #ifndef HWCAP2_SVEAES
+  #define HWCAP2_SVEAES       (1 << 2)
+  #endif
+  #ifndef HWCAP2_SVEPMULL
+  #define HWCAP2_SVEPMULL     (1 << 3)
+  #endif
+  #ifndef HWCAP2_SVEBITPERM
+  #define HWCAP2_SVEBITPERM   (1 << 4)
+  #endif
+  #ifndef HWCAP2_SVESHA3
+  #define HWCAP2_SVESHA3      (1 << 5)
+  #endif
+  #ifndef HWCAP2_SVESM4
+  #define HWCAP2_SVESM4       (1 << 6)
+  #endif
+  #ifndef HWCAP2_FLAGM2
+  #define HWCAP2_FLAGM2       (1 << 7)
+  #endif
+  #ifndef HWCAP2_FRINT
+  #define HWCAP2_FRINT        (1 << 8)
+  #endif
+  #ifndef HWCAP2_SVEI8MM
+  #define HWCAP2_SVEI8MM      (1 << 9)
+  #endif
+  #ifndef HWCAP2_SVEF32MM
+  #define HWCAP2_SVEF32MM     (1 << 10)
+  #endif
+  #ifndef HWCAP2_SVEF64MM
+  #define HWCAP2_SVEF64MM     (1 << 11)
+  #endif
+  #ifndef HWCAP2_SVEBF16
+  #define HWCAP2_SVEBF16      (1 << 12)
+  #endif
+  #ifndef HWCAP2_I8MM
+  #define HWCAP2_I8MM         (1 << 13)
+  #endif
+  #ifndef HWCAP2_BF16
+  #define HWCAP2_BF16         (1 << 14)
+  #endif
+  #ifndef HWCAP2_DGH
+  #define HWCAP2_DGH          (1 << 15)
+  #endif
+  #ifndef HWCAP2_RNG
+  #define HWCAP2_RNG          (1 << 16)
+  #endif
+  #ifndef HWCAP2_BTI
+  #define HWCAP2_BTI          (1 << 17)
+  #endif
+  #ifndef HWCAP2_MTE
+  #define HWCAP2_MTE          (1 << 18)
+  #endif
+  #ifndef HWCAP2_ECV
+  #define HWCAP2_ECV          (1 << 19)
+  #endif
+  #ifndef HWCAP2_AFP
+  #define HWCAP2_AFP          (1 << 20)
+  #endif
+  #ifndef HWCAP2_RPRES
+  #define HWCAP2_RPRES        (1 << 21)
+  #endif
+
+  // Feature mapping table (matching macOS feature names where possible)
+  typedef struct {
+    const char *name;
+    unsigned long hwcap_mask;
+    int hwcap_reg;  // 1 = HWCAP, 2 = HWCAP2
+  } feature_t;
+
+  static const feature_t FEATURES[] = {
+    // Match macOS names for consistency
+    { "CRC32",      HWCAP_CRC32,        1 },
+    { "FlagM",      HWCAP_FLAGM,        1 },
+    { "FlagM2",     HWCAP2_FLAGM2,      2 },
+    { "FHM",        HWCAP_ASIMDFHM,     1 },
+    { "DotProd",    HWCAP_ASIMDDP,      1 },
+    { "SHA3",       HWCAP_SHA3,         1 },
+    { "RDM",        HWCAP_ASIMDRDM,     1 },
+    { "LSE",        HWCAP_ATOMICS,      1 },
+    { "SHA256",     HWCAP_SHA2,         1 },
+    { "SHA512",     HWCAP_SHA512,       1 },
+    { "SHA1",       HWCAP_SHA1,         1 },
+    { "AES",        HWCAP_AES,          1 },
+    { "PMULL",      HWCAP_PMULL,        1 },
+    { "SB",         HWCAP_SB,           1 },
+    { "FRINTTS",    HWCAP2_FRINT,       2 },
+    { "LRCPC",      HWCAP_LRCPC,        1 },
+    { "LRCPC2",     HWCAP_ILRCPC,       1 },
+    { "FCMA",       HWCAP_FCMA,         1 },
+    { "JSCVT",      HWCAP_JSCVT,        1 },
+    { "DPB",        HWCAP_DCPOP,        1 },
+    { "DPB2",       HWCAP2_DCPODP,      2 },
+    { "BF16",       HWCAP2_BF16,        2 },
+    { "I8MM",       HWCAP2_I8MM,        2 },
+    { "RPRES",      HWCAP2_RPRES,       2 },
+    { "ECV",        HWCAP2_ECV,         2 },
+    { "AFP",        HWCAP2_AFP,         2 },
+    { "DIT",        HWCAP_DIT,          1 },
+    { "FP16",       HWCAP_FPHP,         1 },
+    { "SSBS",       HWCAP_SSBS,         1 },
+    { "BTI",        HWCAP2_BTI,         2 },
+    { "SVE",        HWCAP_SVE,          1 },
+    { "SVE2",       HWCAP2_SVE2,        2 },
+    { NULL,         0,                  0 }
+  };
+
+  // Get hardware capabilities
+  unsigned long hwcap = getauxval(AT_HWCAP);
+  unsigned long hwcap2 = getauxval(AT_HWCAP2);
+
+  // Allocate buffer for feature string
+  const int N = sizeof(FEATURES) / sizeof(feature_t);
+  char *info = calloc(N, 16);
+  if (info == NULL) {
+    return NULL;
+  }
+
+  // Build feature string
+  char *wp = info;
+  const feature_t *cursor = FEATURES;
+  while (cursor->name != NULL) {
+    unsigned long caps = (cursor->hwcap_reg == 1) ? hwcap : hwcap2;
+    if (caps & cursor->hwcap_mask) {
+      const char *rp = cursor->name;
+      while (*rp != '\0') {
+        *wp++ = *rp++;
+      }
+      *wp++ = ' ';
+    }
+    cursor++;
+  }
+  *wp = '\0';
+
+  return info;
+}
+#endif
 #endif
 
 
@@ -946,13 +1187,11 @@ int get_cpu_cores( int *cores, int *threads ) {
     *threads = core_count;
     return 0;
   }
-  else {
-    return -1;
-  }
-  return 0;
+  return -1;
 }
 #elif defined CXPLAT_ARCH_ARM64
 
+#if defined CXPLAT_MAC_ARM64
 /**************************************************************************//**
  * get_cpu_cores
  *
@@ -975,6 +1214,26 @@ int get_cpu_cores( int *P_cores, int *E_cores ) {
   }
   return 0;
 }
+
+#elif defined CXPLAT_LINUX_ARM64
+/**************************************************************************//**
+ * get_cpu_cores - Linux ARM64
+ *
+ ******************************************************************************
+ */
+int get_cpu_cores( int *P_cores, int *E_cores ) {
+  // TODO: Add support for detecting heterogeneous core types (P-cores, E-cores, etc.)
+  //       on ARM big.LITTLE and similar architectures. Currently reports all cores as P-cores.
+  if( P_cores ) {
+    *P_cores = (int)sysconf(_SC_NPROCESSORS_ONLN);
+  }
+  if( E_cores ) {
+    *E_cores = 0;
+  }
+  return 0;
+}
+#endif
+
 #else
 #error "Unsupported platform"
 #endif
@@ -1001,6 +1260,7 @@ int get_cpu_L2_size( void ) {
     }
   }
 #elif defined CXPLAT_ARCH_ARM64
+#if defined CXPLAT_MAC_ARM64
   uint64_t l2_cache_size = 0;
   size_t size = sizeof(l2_cache_size);
 
@@ -1010,6 +1270,58 @@ int get_cpu_L2_size( void ) {
   if (sysctlbyname("hw.l2cachesize", &l2_cache_size, &size, NULL, 0) == 0) {
     return (int)l2_cache_size;
   }
+#elif defined CXPLAT_LINUX_ARM64
+  // Linux ARM64 - iterate through cache indices to find L2
+  // Note: index N does not necessarily correspond to level N
+  for (int idx = 0; idx < 10; idx++) {
+    char path[128];
+    char buf[64];
+    FILE *f;
+
+    // Check cache level
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/level", idx);
+    f = fopen(path, "r");
+    if (!f) break;  // No more cache indices
+
+    int level = 0;
+    if (fgets(buf, sizeof(buf), f)) {
+      level = atoi(buf);
+    }
+    fclose(f);
+
+    if (level != 2) continue;  // Not L2, keep looking
+
+    // Check cache type (should be Unified or Data)
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/type", idx);
+    f = fopen(path, "r");
+    if (!f) continue;
+
+    bool is_valid_type = false;
+    if (fgets(buf, sizeof(buf), f)) {
+      // Check for "Unified" or "Data" (case-sensitive)
+      if (strncmp(buf, "Unified", 7) == 0 || strncmp(buf, "Data", 4) == 0) {
+        is_valid_type = true;
+      }
+    }
+    fclose(f);
+
+    if (!is_valid_type) continue;  // Instruction cache, keep looking
+
+    // Found L2 Unified or Data cache, read size
+    snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu0/cache/index%d/size", idx);
+    f = fopen(path, "r");
+    if (f) {
+      if (fgets(buf, sizeof(buf), f)) {
+        fclose(f);
+        int size_kb = atoi(buf);
+        return size_kb * 1024;
+      }
+      fclose(f);
+    }
+    // Found valid L2 cache but couldn't read size - fail immediately
+    break;
+  }
+#endif
 #endif
   return -1;
 }
@@ -1217,6 +1529,7 @@ char * get_new_cpu_cache_info( void ) {
   }
 
 #elif defined CXPLAT_ARCH_ARM64
+#if defined CXPLAT_MAC_ARM64
   /*
      L3   : 25600 kiB 10-way
      L2   :  1280 kiB 10-way (x 10)
@@ -1270,6 +1583,11 @@ char * get_new_cpu_cache_info( void ) {
           );
   
 
+#elif defined CXPLAT_LINUX_ARM64
+  // Linux ARM64 - return simple info
+  char *p = buffer;
+  int used = snprintf( p, remain, "Cache info not available on Linux ARM64" );
+#endif
 #endif
   
   return buffer;
@@ -1758,7 +2076,7 @@ write_tlb_info:
 #endif
   // Finally, page size
   if( remain > 32 ) {
-    used = snprintf( p, remain, "PAGE : %5d kiB\n", pageSize >> 10 );
+    used = snprintf( p, remain, "PAGE : %5d kiB\n", (int)(pageSize >> 10) );
     remain -= used;
     p += used;
   }

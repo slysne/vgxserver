@@ -692,7 +692,7 @@ __inline static void __arcvector_context_prepare_multipred( __arcvector_virtual_
  * 
  ***********************************************************************
  */
-typedef int (*__f_match_pred)( const vgx_predicator_t A, const vgx_predicator_t B );
+typedef int (*__f_match_pred)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t A, const vgx_predicator_t B );
 
 
 
@@ -775,7 +775,8 @@ __inline static vgx_LockableArc_t * __init_lockable_arc( vgx_LockableArc_t *larc
   // Lock tail when graph is not readonly
   else {
     vgx_Graph_t *graph = larc->tail->graph;
-    GRAPH_LOCK_SPIN( graph, 2 ) {
+    //GRAPH_LOCK_SPIN( graph, 2 ) {
+    GRAPH_LOCK( graph ) {
       static const int8_t TWO_LOCKS = 2;
       // !!! NOTE !!!
       // Own TWO locks here. One is for the traverser, the other for collector (if needed).
@@ -814,24 +815,29 @@ static void __timing_budget_exhausted( vgx_ExecutionTimingBudget_t *timing_budge
  * 
  ***********************************************************************
  */
-#define __begin_lockable_arc_context( LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, TimingBudget, MatchPtr ) \
-  do {                                                      \
-    vgx_ExecutionTimingBudget_t *__tb__ = TimingBudget;     \
-    vgx_ArcFilter_match *__match__ = MatchPtr;              \
-    if( _vgx_is_execution_limit_exceeded( __tb__ ) ) {      \
-      __timing_budget_exhausted( __tb__, __match__ );       \
-      break;                                                \
-    }                                                       \
-    vgx_LockableArc_t LockableArcName;                      \
+#define __begin_lockable_arc_context( LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, TraverseFilter, MatchPtr ) \
+  do {                                                            \
+    vgx_virtual_ArcFilter_context_t *__tf__ = TraverseFilter;     \
+    vgx_ExecutionTimingBudget_t *__tb__ = __tf__->timing_budget;  \
+    vgx_ArcFilter_match *__match__ = MatchPtr;                    \
+    if( _vgx_is_execution_limit_exceeded( __tb__ ) ) {            \
+      __timing_budget_exhausted( __tb__, __match__ );             \
+      break;                                                      \
+    }                                                             \
+    vgx_LockableArc_t LockableArcName;                            \
     vgx_LockableArc_t *__larc__ = __init_lockable_arc( &LockableArcName, ArcVectorCellType, GraphIsReadonly, Tail, Predicator, Head, __tb__, __match__ );  \
-    if( __larc__ == NULL ) {                                \
-      break;                                                \
-    }                                                       \
-    else
+    if( __larc__ == NULL ) {                                      \
+      break;                                                      \
+    }                                                             \
+    __tf__->current_head = &__larc__->head;                       \
+    do
+    
 
 
-#define __end_lockable_arc_context                          \
-    __release_lockable_arc( __larc__, __tb__ );             \
+#define __end_lockable_arc_context                                \
+    WHILE_ZERO;                                                   \
+    __release_lockable_arc( __larc__, __tb__ );                   \
+    __tf__->current_head = NULL;                                  \
   } WHILE_ZERO
 
 
@@ -962,18 +968,50 @@ __inline static int64_t __arcvector_traversal_result( __arcvector_virtual_input_
 }
 
 
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+__inline static bool __arcvector_archead_unvisited( vgx_virtual_ArcFilter_context_t *afc ) {
+  // We don't track visited nodes
+  if( afc->track_visited == false ) {
+    return true;
+  }
+
+  // Assume we will need vertex. (Pollutes lower levels if already visited, but reduce latency when it's needed)
+  vgx_ExpressEvalMemory_t *mem = afc->traversing_evaluator->context.memory;
+  vgx_ExpressEvalDWordSet_t *dwset = &mem->dwset;
+  vgx_Vertex_t *vertex = afc->current_head->vertex;
+  // Early phase, likely unvisited, prefetch to L2
+  if( dwset->sz < 8192 ) {
+    __prefetch_L2( vertex );
+  }
+  // Late phase, likely visited, prefetch to L3 to avoid L2 pollution
+  else {
+    __prefetch_L3( vertex );
+  }
+
+  // True if unvistied node (it is added to map for future), false if already visited or map full
+  return vxeval_vertex_unvisited( dwset, vertex );
+}
+
+
+
 #define __begin_safe_traversal_context( VirtualInputContext, ArcArrayCell  )  \
   do {                                                                        \
     __arcvector_virtual_input_context_t *__context__ = VirtualInputContext;   \
     framehash_cell_t * const __cell__ = ArcArrayCell;                         \
     __arcvector_set_archead_vertex( __context__, __cell__ );                  \
-    vgx_LockableArc_t *__larc__ = __context__->larc;
+    vgx_LockableArc_t *__larc__ = __context__->larc;                          \
+    if( __arcvector_archead_unvisited( __context__->traverse_filter ) )
 
 
 #define __end_safe_traversal_context          \
     __release_lockable_archead( __larc__ );   \
     __arcvector_clear_archead( __context__ ); \
   } WHILE_ZERO
+
 
 
 

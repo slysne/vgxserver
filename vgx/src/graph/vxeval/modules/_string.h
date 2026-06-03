@@ -526,7 +526,7 @@ static void __eval_string_prefix( vgx_Evaluator_t *self ) {
 static void __eval_string_index( vgx_Evaluator_t *self ) {
 
   vgx_EvalStackItem_t *pi = POP_PITEM( self );
-  vgx_EvalStackItem_t *px = GET_PITEM( self );
+  vgx_EvalStackItem_t *px = POP_PITEM( self );
 
   // must be idx( str, int )
   if( px->type != STACK_ITEM_TYPE_CSTRING || pi->type != STACK_ITEM_TYPE_INTEGER ) {

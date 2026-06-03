@@ -1,9 +1,9 @@
 [build-system]
 requires = [
-    "setuptools>=78",
-    "wheel",
-    "cmake",
-    "build"
+    "setuptools>=78,<80",
+    "wheel>=0.42.0,<0.45",
+    "cmake>=3.10",
+    "build>=1.0.0,<2.0"
 ]
 
 build-backend = "setuptools.build_meta"
@@ -22,3 +22,41 @@ vgxadmin = "pyvgx_scripts.vgxadmin:main"
 [tool.setuptools]
 script-files = ["pyvgx/src/py/vgxdemoservice", "pyvgx/src/py/vgxdemoservice.cmd", "pyvgx/src/py/vgxdemoservice.py", "pyvgx/src/py/vgxdemoplugin.py"]
 
+[tool.cibuildwheel]
+# Build for Python 3.9+
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+
+# Skip 32-bit builds, musllinux (Alpine Linux), and PyPy
+skip = "*-musllinux_* *-manylinux_i686 pp*"
+
+# Use manylinux_2_28 (AlmaLinux 8) - actively maintained, no EOL mirror issues
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+
+# Build verbosity (1 = show commands)
+build-verbosity = 1
+
+# Linux settings - architecture controlled by ARCH parameter in Makefile or CIBW_ARCHS env var
+[tool.cibuildwheel.linux]
+# archs = ["x86_64", "aarch64"]  # Commented out - use ARCH=aarch64 or ARCH=x86_64 with make
+before-build = "yum install -y clang llvm-devel cmake && pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80'"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+test-command = "python {project}/test_pip_package.py"
+test-skip = ""
+
+# macOS settings - target arm64 only (Apple Silicon/M1+)
+[tool.cibuildwheel.macos]
+archs = ["arm64"]
+before-build = "pip install 'build>=1.0.0,<2.0' 'wheel>=0.42.0,<0.45' 'setuptools>=78,<80' 'delocate>=0.10.0'"
+repair-wheel-command = "delocate-wheel -w {dest_dir} {wheel}"
+environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }
+test-command = "python {project}/test_pip_package.py"
+test-skip = ""
+
+# Windows settings - target x86_64 only
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+before-build = "pip install \"build>=1.0.0,<2.0\" \"wheel>=0.42.0,<0.45\" \"setuptools>=78,<80\""
+environment = { CMAKE_GENERATOR = "Visual Studio 17 2022" }
+test-command = "python {project}/test_pip_package.py"
+test-skip = ""

@@ -1,0 +1,62 @@
+{
+    "name": "Basic System Test",
+
+    "instances": {
+        "A1":   { "type": "admin",      "description": "Admin",             "group": 1000.001,  "hport": 9500 },
+
+        "TD1":  { "type": "dispatch",   "description": "Top Dispatcher 1",  "group": 2004.001,  "hport": 9590 },
+
+        "D1":   { "type": "dispatch",   "description": "Dispatcher 1",      "group": 2005.001,  "hport": 9570 },
+        "D2":   { "type": "dispatch",   "description": "Dispatcher 2",      "group": 2005.001,  "hport": 9580 },
+
+        "B1":   { "type": "builder",    "description": "Builder 1",         "group": 3001.001,  "hport": 9510, "tport": 10510, "attach": true },
+        "T1":   { "type": "txproxy",    "description": "TXProxy 1",         "group": 3001.001,  "hport": 9520, "tport": 10520, "attach": true },
+        "S11":  { "type": "search",     "description": "Search 1.1",        "group": 3001.001,  "hport": 9530, "tport": 10530 },
+
+        "B2":   { "type": "builder",    "description": "Builder 2",         "group": 3002.001,  "hport": 9540, "tport": 10540, "attach": true },
+        "T2":   { "type": "txproxy",    "description": "TXProxy 2",         "group": 3002.001,  "hport": 9550, "tport": 10550, "attach": true },
+        "S21":  { "type": "search",     "description": "Search 2.1",        "group": 3002.001,  "hport": 9560, "tport": 10560 }
+
+    },
+
+    "common": {
+        "host": "127.0.0.1",
+        "s-in": true
+    },
+
+    "topology": {
+        "transaction": {
+            "A1": null,
+            "B1": {
+                "T1": ["S11"]
+            },
+            "B2": {
+                "T2": ["S21"]
+            }
+        },
+        "dispatch": {
+            "TD1": {
+                "D1": { "channels": 8, "priority": 1 },
+                "D2": { "channels": 8, "priority": 1 }
+            },
+
+            "D1": [
+                { "channels": 8, "priority": 1, "partitions": [ "S11", "S21" ] },
+                { "channels": 4, "priority": 2, "partitions": [ "T1", "T2" ] },
+                { "channels": 2, "priority": 5, "partitions": [ "B1", "B2" ], "primary": 1 },
+                { "partitions": [], "priority": -1 }
+            ],
+
+            "D2": [
+                { "channels": 8, "priority": 1, "partitions": [ "S11", "S21" ] },
+                { "channels": 4, "priority": 2, "partitions": [ "T1", "T2" ] },
+                { "channels": 2, "priority": 5, "partitions": [ "B1", "B2" ], "primary": 1 },
+                { "partitions": [], "priority": -1 }
+            ]
+
+        }
+    },
+
+    "graphs": ["g1"]
+}
+

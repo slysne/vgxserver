@@ -82,7 +82,7 @@ DLL_HIDDEN framehash_dynamic_t * _framehash_dynamic__initialize( framehash_dynam
     }
 
     // 5. Initialize the framelock pointer (always initialized regardless of sychronization needs)
-    INIT_CRITICAL_SECTION( &dyn->lock.lock );
+    INIT_RECURSIVE_CRITICAL_SECTION( &dyn->lock.lock );
 
     // 6. Assign the frame lock pointer if we need to synchronize things internally
     dyn->pflock = args->param.synchronized ? &dyn->lock : NULL;
@@ -166,7 +166,7 @@ DLL_HIDDEN int _framehash_dynamic__reset_simple( framehash_dynamic_t *dynamic ) 
     return -1;
   }
   int ret = 0;
-  SYNCHRONIZE_ON( dynamic->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( dynamic->lock ) {
 
     // Reset frame allocator
     if( dynamic->falloc ) {

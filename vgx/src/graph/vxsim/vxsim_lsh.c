@@ -63,7 +63,9 @@ static int Fingerprinter_hamming_distance_parallel( const vgx_Fingerprinter_t *s
 static int Fingerprinter_hamming_distance_intrinsic( const vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 );
 
 static FP_t Fingerprinter_compute( const vgx_Fingerprinter_t *self, vgx_Vector_t *vector, int64_t seed, FP_t *rlcm );
+static uint32_t Fingerprinter_compute32( const vgx_Fingerprinter_t *self, vgx_Vector_t *vector, int64_t seed );
 static FP_t Fingerprinter_compute_bytearray( const vgx_Fingerprinter_t *self, const BYTE* bytes, int sz, int64_t seed, FP_t *rlcm );
+static uint32_t Fingerprinter_compute32_bytearray( const vgx_Fingerprinter_t *self, const BYTE* bytes, int sz, int64_t seed );
 static char * Fingerprinter_projections( const vgx_Fingerprinter_t *self, char buffer321[], const vgx_Vector_t *vector, FP_t lsh, FP_t lcm, WORD seed, int ksize, bool reduce, bool expand );
 
 static int Fingerprinter_segm_valid( const vgx_Fingerprinter_t *self, int nsegm, int nsign );
@@ -85,7 +87,9 @@ static vgx_Fingerprinter_vtable_t Fingerprinter_Methods = {
   /* Fingerprinter interface */
   .Distance         = Fingerprinter_hamming_distance_intrinsic,
   .Compute          = Fingerprinter_compute,
+  .Compute32        = Fingerprinter_compute32,
   .ComputeBytearray = Fingerprinter_compute_bytearray,
+  .Compute32Bytearray = Fingerprinter_compute32_bytearray,
   .Projections      = Fingerprinter_projections,
   .SegmValid        = Fingerprinter_segm_valid,
   .PnoValid         = Fingerprinter_pno_valid,
@@ -369,80 +373,104 @@ static FP_t __fp_int_feat_segm( const vgx_Fingerprinter_t *self, const vgx_Vecto
  */
 static FP_t __fp_bytes_eucl( const BYTE *bytes, int sz, int64_t seed, FP_t *rlcm ) {
   FP_t lsh = 0;
-  int A[ 64 ] = {0}; // 64 slots
-  int *E = A + 64;
+  int64_t A[ 64 ] = {0}; // 64 slots
+  int64_t *p;
   const char *m = (const char*)bytes;
   const char *z = m + sz;
-  uint64_t seeda = ihash64( seed+1 );
-  uint64_t seedb = ihash64( seed+2 );
-  uint64_t seedc = ihash64( seed+3 );
-  uint64_t seedd = ihash64( seed+4 );
-  uint64_t h64a = ihash64( seeda );
-  uint64_t h64b = ihash64( seedb );
-  uint64_t h64c = ihash64( seedc );
-  uint64_t h64d = ihash64( seedd );
-  int x;
-  int w;
-  int *p;
+  uint64_t h64a = ihash64v2( seed+1 );
+  uint64_t h64b = ihash64v2( seed+2 );
+  uint64_t h64c = ihash64v2( seed+3 );
+  uint64_t h64d = ihash64v2( seed+4 );
+  uint64_t h64e = ihash64v2( seed+5 );
+  uint64_t h64f = ihash64v2( seed+6 );
+  uint64_t h64g = ihash64v2( seed+7 );
+  uint64_t h64h = ihash64v2( seed+8 );
 
-  uint64_t a;
-  uint64_t b;
-  uint64_t c;
-  uint64_t d;
 
   // N dimensions
   while( m < z ) {
-    // #1
-    x = *m++;
-    a = h64a;
-    b = h64b;
-    c = h64c;
-    d = h64d;
-    // bit 0 - 63
+    h64a = ihash64v2( h64b + seed+1 );
+    h64b = ihash64v2( h64c + seed+2 );
+    h64c = ihash64v2( h64d + seed+3 );
+    h64d = ihash64v2( h64e + seed+4 );
+    h64e = ihash64v2( h64f + seed+5 );
+    h64f = ihash64v2( h64g + seed+6 );
+    h64g = ihash64v2( h64h + seed+7 );
+    h64h = ihash64v2( h64a + seed+8 );
+
+    uint64_t a = h64a;
+    uint64_t b = h64b;
+    uint64_t c = h64c;
+    uint64_t d = h64d;
+    uint64_t e = h64e;
+    uint64_t f = h64f;
+    uint64_t g = h64g;
+    uint64_t h = h64h;
+    
+    int64_t x = *m++;
+    int64_t w;
+
+    // bit 0 - 31
     p = A;
-    while( p < E ) {
-      
-      w = (int)((a&0xF) << 1) - 15; 
-      a >>= 4;
+    for( int n=0; n<8; ++n ) {
+      w = (int8_t)(a&0xFF); 
+      a >>= 8;
       *p++ += w * x;
 
-      w = (int)((b&0xF) << 1) - 15; 
-      b >>= 4;
+      w = (int8_t)(b&0xFF); 
+      b >>= 8;
       *p++ += w * x;
 
-      w = (int)((c&0xF) << 1) - 15; 
-      c >>= 4;
+      w = (int8_t)(c&0xFF); 
+      c >>= 8;
       *p++ += w * x;
 
-      w = (int)((d&0xF) << 1) - 15; 
-      d >>= 4;
+      w = (int8_t)(d&0xFF); 
+      d >>= 8;
       *p++ += w * x;
-
     }
 
-    h64a = ihash64( h64b + seeda );
-    h64b = ihash64( h64c + seedb );
-    h64c = ihash64( h64d + seedc );
-    h64d = ihash64( h64a + seedd );
+    // bit 32 - 63
+    for( int n=0; n<8; ++n ) {
+      w = (int8_t)(e&0xFF); 
+      e >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(f&0xFF); 
+      f >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(g&0xFF); 
+      g >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(h&0xFF); 
+      h >>= 8;
+      *p++ += w * x;
+    }
+   
   }
 
-  int o = 1;
+  int64_t o = 1;
   p = A;
-  while( p < E ) {
-    int i = *p++;
-    int y = i >> 31; // 0xffffffff if neg
-    int u = (i ^ y) - y; // abs
+  for( int n=0; n<64; ++n ) {
+    int64_t i = *p++;
+    int64_t y = i >> 63; // 0xffffffffffffffff if neg
+    int64_t u = (i ^ y) - y; // abs
     o |= u; // order of magnitude bits
   }
   int t = ilog2( o ) - 4;
+  if( t < 0 ) {
+    t = 0;
+  }
 
   // Set bits in lsh according to A +/-.
   FP_t lcm = 0; // low confidence mask
   p = A;
-  while( p < E ) {
-    int i = *p++;
-    int y = i >> 31; // 0xffffffff if neg
-    int u = (i ^ y) - y; // abs
+  for( int n=0; n<64; ++n ) {
+    int64_t i = *p++;
+    int64_t y = i >> 63; // 0xffffffffffffffff if neg
+    int64_t u = (i ^ y) - y; // abs
     lcm = (lcm << 1) | !(u >> t);
     lsh = (lsh << 1) | (uint64_t)(y&1);
   }
@@ -463,6 +491,83 @@ static FP_t __fp_bytes_eucl( const BYTE *bytes, int sz, int64_t seed, FP_t *rlcm
 static FP_t __fp_int_eucl( const vgx_Vector_t *vector, int64_t seed, FP_t *rlcm ) {
   const BYTE *bytes = (BYTE*)CALLABLE( vector )->Elements( vector );
   return __fp_bytes_eucl( bytes, vector->metas.vlen, seed, rlcm );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ *
+ ***********************************************************************
+ */
+static uint32_t __fp32_bytes_eucl( const BYTE *bytes, int sz, int64_t seed ) {
+  uint32_t lsh = 0;
+  int64_t A[ 32 ] = {0}; // 32 slots
+  int64_t *p;
+  const char *m = (const char*)bytes;
+  const char *z = m + sz;
+  uint64_t h64a = ihash64v3( seed+1 );
+  uint64_t h64b = ihash64v3( seed+2 );
+  uint64_t h64c = ihash64v3( seed+3 );
+  uint64_t h64d = ihash64v3( seed+4 );
+
+
+  // N dimensions
+  while( m < z ) {
+    h64a = ihash64v3( h64b + seed+1 );
+    h64b = ihash64v3( h64c + seed+2 );
+    h64c = ihash64v3( h64d + seed+3 );
+    h64d = ihash64v3( h64a + seed+4 );
+
+    uint64_t a = h64a;
+    uint64_t b = h64b;
+    uint64_t c = h64c;
+    uint64_t d = h64d;
+    
+    int64_t x = *m++;
+    int64_t w;
+
+    // bit 0 - 31
+    p = A;
+    for( int n=0; n<8; ++n ) {
+      w = (int8_t)(a&0xFF); 
+      a >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(b&0xFF); 
+      b >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(c&0xFF); 
+      c >>= 8;
+      *p++ += w * x;
+
+      w = (int8_t)(d&0xFF); 
+      d >>= 8;
+      *p++ += w * x;
+    }
+  }
+
+  // Set bits in lsh according to A +/-.
+  p = A;
+  for( int n=0; n<32; ++n ) {
+    int64_t y = *p++ >> 63; // 0xffffffffffffffff if neg
+    lsh = (lsh << 1) | (uint32_t)(y&1);
+  }
+  return lsh;
+}
+
+
+/*******************************************************************//**
+ *
+ *
+ *
+ ***********************************************************************
+ */
+static uint32_t __fp32_int_eucl( const vgx_Vector_t *vector, int64_t seed ) {
+  const BYTE *bytes = (BYTE*)CALLABLE( vector )->Elements( vector );
+  return __fp32_bytes_eucl( bytes, vector->metas.vlen, seed );
 }
 
 
@@ -503,14 +608,10 @@ static FP_t __fp_int_feat( const vgx_Vector_t *vector, int64_t seed ) {
 
 
 
-
-
 /*******************************************************************//**
  * Compute segmented LSH of vector using current global configuration.
  * Any segments (partitions) untouched after all vector elements have been
  * hashed/applied are filled in using data from other segments.
- *
- * CURRENT WEAKNESS: if the 64-bit fingerprint array is all negative the FP=0.
  *
  *
  * vector   : vector object
@@ -527,7 +628,7 @@ static FP_t Fingerprinter_compute( const vgx_Fingerprinter_t *self, vgx_Vector_t
     return 0; // by definition
   }
 
-  FP_t FP = 0;
+  FP_t LSH64 = 0;
 
   // internal vector
   if( (vector->metas.type & __VECTOR__MASK_INTERNAL) ) {
@@ -535,27 +636,27 @@ static FP_t Fingerprinter_compute( const vgx_Fingerprinter_t *self, vgx_Vector_t
     if( vector->metas.flags.ecl ) {
       // Non-segmented LSH
       if( !self->use_segm ) {
-        FP = __fp_int_eucl( vector, seed, rlcm );
+        LSH64 = __fp_int_eucl( vector, seed, rlcm );
       }
       // Segmented LSH
       else {
-        FP = __fp_int_eucl_segm( self, vector, seed );
+        LSH64 = __fp_int_eucl_segm( self, vector, seed );
       }
     }
     // FEATURE VECTOR
     else {
       // Non-segmented LSH
       if( !self->use_segm ) {
-        FP = __fp_int_feat( vector, seed );
+        LSH64 = __fp_int_feat( vector, seed );
       }
       // Segmented LSH
       else {
-        FP = __fp_int_feat_segm( self, vector );
+        LSH64 = __fp_int_feat_segm( self, vector );
       }
     }
 
     // Ensure never zero
-    FP |= -(FP == 0);
+    LSH64 |= -(LSH64 == 0);
     
   }
   // external vector
@@ -563,17 +664,66 @@ static FP_t Fingerprinter_compute( const vgx_Fingerprinter_t *self, vgx_Vector_t
     vgx_VectorContext_t *vector_context = CALLABLE(vector)->Context(vector);
     vgx_Similarity_t *simobj = vector_context->simobj;
     // We need to create a temporary internal vector to compute fingerprint from
-    vgx_Vector_t *internal_vector = CALLABLE(simobj)->InternalizeVector( simobj, vector, true, NULL );
+    vgx_Vector_t *internal_vector = CALLABLE(simobj)->InternalizeVector( simobj, vector, true, true, NULL );
     if( internal_vector == NULL ) {
       return 0; // error
     }
     if( (vector->metas.type & __VECTOR__MASK_INTERNAL) ) {
-      FP = Fingerprinter_compute( self, internal_vector, seed, rlcm );
+      LSH64 = Fingerprinter_compute( self, internal_vector, seed, rlcm );
     }
     CALLABLE( internal_vector )->Decref( internal_vector );
   }
 
-  return FP;
+  return LSH64;
+}
+
+
+
+/*******************************************************************//**
+ * Compute 32-bit LSH of Euclidean vector.
+ *
+ * vector   : vector object
+ * seed     : seed for randomized projection
+ *
+ * Returns  : 32-bit fingerprint
+ ***********************************************************************
+ */
+static uint32_t Fingerprinter_compute32( const vgx_Fingerprinter_t *self, vgx_Vector_t *vector, int64_t seed ) {
+
+  // null vector
+  if( vector->metas.flags.nul ) {
+    return 0; // by definition
+  }
+
+  uint32_t LSH32 = 0;
+
+  // internal vector
+  if( (vector->metas.type & __VECTOR__MASK_INTERNAL) ) {
+    // EUCLIDEAN VECTOR
+    if( vector->metas.flags.ecl ) {
+      LSH32 = __fp32_int_eucl( vector, seed );
+      // Ensure never zero
+      LSH32 |= -(LSH32 == 0);
+      return LSH32;
+    }
+  }
+  // external vector
+  else if( (vector->metas.type & __VECTOR__MASK_EXTERNAL) ) {
+    vgx_VectorContext_t *vector_context = CALLABLE(vector)->Context(vector);
+    vgx_Similarity_t *simobj = vector_context->simobj;
+    // We need to create a temporary internal vector to compute fingerprint from
+    vgx_Vector_t *internal_vector = CALLABLE(simobj)->InternalizeVector( simobj, vector, true, true, NULL );
+    if( internal_vector == NULL ) {
+      return 0; // error
+    }
+    if( (vector->metas.type & __VECTOR__MASK_INTERNAL) ) {
+      LSH32 = Fingerprinter_compute32( self, internal_vector, seed );
+    }
+    CALLABLE( internal_vector )->Decref( internal_vector );
+    return LSH32;
+  }
+
+  return 0;
 }
 
 
@@ -587,6 +737,19 @@ static FP_t Fingerprinter_compute( const vgx_Fingerprinter_t *self, vgx_Vector_t
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 static FP_t Fingerprinter_compute_bytearray( const vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed, FP_t *rlcm ) {
   return __fp_bytes_eucl( bytes, sz, seed, rlcm );
+}
+
+
+
+/*******************************************************************//**
+ *  
+ *  Return 32-bit fingerprint of internal vector represented by pure bytes
+ *
+ ***********************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static uint32_t Fingerprinter_compute32_bytearray( const vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed ) {
+  return __fp32_bytes_eucl( bytes, sz, seed );
 }
 
 

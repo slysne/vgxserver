@@ -417,6 +417,10 @@
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\CustomPlugin.py" />
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\JsonResponse.py" />
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\Plugin\__init__.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\BasicSystem.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\service.py" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\vgx.cf" />
+    <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\__init__.py" />
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\_http_support.py" />
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\__init__.py" />
     <None Include="..\..\pyvgx\test\test_pyvgx_module\Module\pyvgxmodule.py" />

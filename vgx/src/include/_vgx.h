@@ -375,7 +375,7 @@ static CString_t * __set_error_string_from_reason( CString_t **CSTR__error, cons
  ******************************************************************************
  */
 static CString_t * __set_error_string_from_errcode( CString_t **CSTR__error, int errcode, const char *message ) {
-  static char codebuf[512] = {0};
+  static __THREAD char codebuf[512] = {0};
 #define FORMAT_ERROR_CODE( Message, Errcode ) \
 
   int msg_sub = cxlib_exc_subtype( errcode );
@@ -934,6 +934,8 @@ DLL_HIDDEN extern double (*vxeval_bytearray_sum_squares)( const BYTE *A, int len
 DLL_HIDDEN extern double (*vxeval_bytearray_rsqrt_ssq)( const BYTE *A, int len );
 DLL_HIDDEN extern double (*vxeval_bytearray_dot_product)( const BYTE *A, const BYTE *B, int len );
 DLL_HIDDEN extern double (*vxeval_bytearray_cosine)( const BYTE *A, const BYTE *B, int len );
+DLL_HIDDEN extern double (*vxeval_bytearray_dp_cosine)( const BYTE *A, const BYTE *B, int len, double invnorm_prod );
+DLL_HIDDEN extern double (*vxeval_bytearray_dp_cosine_with_threshold)( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos );
 
 
 
@@ -1003,6 +1005,7 @@ typedef struct s_vgx_collect_counts_t {
  ***********************************************************************
  */
 typedef struct s_IGraphCollector_t {
+  void (*ClearCollectorReferences)( vgx_BaseCollector_context_t *collector );
   void (*DeleteCollector)( vgx_BaseCollector_context_t **collector );
   vgx_ArcCollector_context_t * (*NewArcCollector)( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
   vgx_VertexCollector_context_t * (*NewVertexCollector)( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
@@ -1014,10 +1017,65 @@ typedef struct s_IGraphCollector_t {
 DLL_HIDDEN extern IGraphCollector_t iGraphCollector;
 DLL_HIDDEN extern vgx_VertexRef_t * _vxquery_collector__add_vertex_reference( vgx_BaseCollector_context_t *collector, vgx_Vertex_t *vertex, vgx_VertexRefLock_t *ext_lock );
 DLL_HIDDEN extern int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref, vgx_Graph_t **locked_graph );
+DLL_HIDDEN extern int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref );
+DLL_HIDDEN extern void _vxquery_collector__del_collector_item_headref_OPEN( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *item );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_tail_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_OPEN( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 
+DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score );
+
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+__inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap_t *heap ) {
+  return ((vgx_CollectorItem_t*)heap->_buffer)->predicator.val.real;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector ) {
+  return collector->shadow_trail.threshold;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static float _vxquery_collector__get_discounted_threshold( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+  #define DEPTH_DISCOUNT_FACTOR 0.0006f
+  #define EVALS_DISCOUNT_FACTOR 0.0000003f
+  #define OFFSET_SCALE 0.001f
+  // alpha = 0.0 (default) -> slightly more permissive threshold with depth, bias towards exhaustive search when deep
+  // alpha > 0.0 -> increasingly more permissive with depth
+  // alpha < 0.0 -> reduce the discount effect
+  // alpha = -1.0 -> discount is effectively disabled, i.e. naturally evolved threshold at all depths
+  // alpha < -1.0 -> discount is now punishing deeper search to terminate faster
+  // 
+  // beta = 0.0 (default) -> evals have no contribution
+  // beta > 0.0 -> more permissive threshold with higher evals
+  // beta < 0.0 -> stricter than natural threshold with higher evals
+  //
+  // offset = 0.0 (default) -> threshold not modified
+  // offset > 0.0 -> globally more permissive
+  // offset < 0.0 -> globally less permissive
+  //
+  float depth_discount = DEPTH_DISCOUNT_FACTOR * (1.0f + collector->alpha) * mem->counter.depth;
+  float evals_discount = EVALS_DISCOUNT_FACTOR * collector->beta * mem->counter.eval;
+  float offset = OFFSET_SCALE * collector->gamma;
+  return _vxquery_collector__get_current_threshold( collector ) - depth_discount - evals_discount - offset;
+}
 
 
 
@@ -1123,11 +1181,11 @@ DLL_HIDDEN extern void                      _vxvertex_property__free_select_prop
 DLL_HIDDEN extern void                      _vxvertex_property__clear_select_property_CS( vgx_Graph_t *self, vgx_VertexProperty_t *selectprop );
 
 DLL_HIDDEN extern void                      _vxvertex_property__virtual_properties_close( vgx_Graph_t *graph );
-DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase );
+DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase, bool load_counters );
 DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_move( vgx_Graph_t *graph, const char *tmpbase );
 DLL_HIDDEN extern int64_t                   _vxvertex_property__virtual_properties_commit( vgx_Graph_t *graph );
 DLL_HIDDEN extern void                      _vxvertex_property__virtual_properties_destroy( vgx_Graph_t *graph );
-DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph );
+DLL_HIDDEN extern int                       _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph, bool load_counters );
 DLL_HIDDEN extern CString_t *               _vxvertex_property__read_virtual_property( vgx_Graph_t *graph, int64_t offset, CString_t *CSTR__buffer, int64_t *rsz );
 
 

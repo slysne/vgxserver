@@ -10,8 +10,9 @@
 
 **/include/generated
 
-venv
-
+venv*
+.venv
+.vscode/
 .DS_Store
 .idea/
 build/

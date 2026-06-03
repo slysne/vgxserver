@@ -48,8 +48,9 @@ if(APPLE)
   set(CMAKE_SKIP_RPATH FALSE)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
   set(CMAKE_INSTALL_RPATH "@loader_path")
-  set(CMAKE_C_COMPILER "/opt/homebrew/opt/llvm/bin/clang")
-  set(CMAKE_CXX_COMPILER "/opt/homebrew/opt/llvm/bin/clang++")
+
+  # Compiler is set via CMAKE_C_COMPILER and CMAKE_CXX_COMPILER from setup.py
+  # Do not hardcode compiler paths here
 
   # Build the path to the libpython .dylib
   set(Python3_LIBRARY "${Python3_LIBDIR}/libpython${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}.dylib")
@@ -68,7 +69,12 @@ endif()
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
   # we have passed in the variables
   set(Python3_FOUND TRUE CACHE BOOL "")
+elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
+  # On Linux, Python extensions don't link against libpython
+  # Use dynamic symbol lookup at runtime instead
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 else()
+  # macOS
   find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 endif()
 
@@ -98,18 +104,22 @@ set(LINKFLAGS)
 # Define platform-specific settings
 set(C_FLAGS)
 set(C_FLAGS_DEBUG)
+set(C_FLAGS_DEBUGREL)
 set(C_FLAGS_RELEASE)
 
 set(CC_FLAGS)
 set(CC_FLAGS_DEBUG)
+set(CC_FLAGS_DEBUGREL)
 set(CC_FLAGS_RELEASE)
 
 set(CXX_FLAGS)
 set(CXX_FLAGS_DEBUG)
+set(CXX_FLAGS_DEBUGREL)
 set(CXX_FLAGS_RELEASE)
 
 set(CPP_DEFINES)
 set(CPP_DEFINES_DEBUG)
+set(CPP_DEFINES_DEBUGREL)
 set(CPP_DEFINES_RELEASE)
 
 # Setup platform-specific settings
@@ -117,7 +127,14 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
     # Define compiler flags
     set(C_FLAGS "-fno-strict-aliasing;-Wstrict-prototypes;-Wno-format")
 
-    set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    # Architecture-specific flags
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64")
+        set(CC_FLAGS "-pthread;-fPIC;-mavx2;-m64;-mfma")
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64|ARM64")
+        set(CC_FLAGS "-pthread;-fPIC;-march=armv8.2-a+crc+dotprod")
+    else()
+        set(CC_FLAGS "-pthread;-fPIC")
+    endif()
     # set(CC_FLAGS_DEBUG "-g")
     # set(CC_FLAGS_RELEASE "-O3")
 
@@ -156,15 +173,23 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     # Compiler flags for Clang on Apple Silicon
     set(C_FLAGS "-fno-strict-aliasing -Wstrict-prototypes -Wno-format -fcolor-diagnostics -fansi-escape-codes")
 
+    # Set default MCPU option if not provided
+    if(NOT DEFINED CLANG_OPTION_MCPU)
+        set(CLANG_OPTION_MCPU "native")
+    endif()
+
     # General optimization and architecture flags
     set(CC_FLAGS "-fPIC -arch arm64 -mcpu=${CLANG_OPTION_MCPU}")  # or apple-m2, etc.
-    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4")
+    set(CC_FLAGS_DEBUG "-O0 -g3 -gdwarf-4 -fno-inline -fno-omit-frame-pointer")
 
     # C++ standard and flags (note: macOS supports C++11+ by default)
     set(CXX_FLAGS "-std=c++11")
 
     # Preprocessor defines for macOS
     set(CPP_DEFINES "_DARWIN;APPLE")
+    set(CPP_DEFINES_DEBUG "NDEBUG;VGX_CONSISTENCY_CHECK")
+    set(CPP_DEFINES_DEBUGREL "NDEBUG")
+    set(CPP_DEFINES_RELEASE "NDEBUG")
 
     # Python linkage — macOS doesn’t need -lrt or pthread explicitly, just link Python
     #set(LIBS "python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
@@ -173,7 +198,7 @@ elseif(CMAKE_HOST_SYSTEM_NAME MATCHES "Windows")
     #set(LINKFLAGS "-Wl,-rpath,@loader_path")
 
 else()
-    message(FATAl_ERROR "CMake is running on unsupported host: ${CMAKE_HOST_SYSTEM_NAME}")
+    message(FATAL_ERROR "CMake is running on unsupported host: ${CMAKE_HOST_SYSTEM_NAME}")
 endif()
 
 # Append version info to cpp_defines
@@ -185,11 +210,16 @@ list(APPEND CPP_DEFINES "CXLIB_VERSION=${VERSION}"
                         "PYVGX_VERSION=${VERSION}"
                         "VGX_VERSION=${VERSION}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(C_FLAGS "${C_FLAGS};${C_FLAGS_DEBUG}")
     set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_DEBUG}")
     set(CXX_FLAGS "${CXX_FLAGS};${CXX_FLAGS_DEBUG}")
     set(CPP_DEFINES "${CPP_DEFINES};${CPP_DEFINES_DEBUG}")
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(C_FLAGS "${C_FLAGS};${C_FLAGS_DEBUGREL}")
+    set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_DEBUGREL}")
+    set(CXX_FLAGS "${CXX_FLAGS};${CXX_FLAGS_DEBUGREL}")
+    set(CPP_DEFINES "${CPP_DEFINES};${CPP_DEFINES_DEBUGREL}")
 else()
     set(C_FLAGS "${C_FLAGS};${C_FLAGS_RELEASE}")
     set(CC_FLAGS "${CC_FLAGS};${CC_FLAGS_RELEASE}")
@@ -199,7 +229,7 @@ endif()
 
 # Define the include & lib paths
 set(LIBPATH)
-#set(CPPPATH "${Python3_INCLUDE_DIRS}")
+set(CPPPATH "${Python3_INCLUDE_DIRS}")
 
 if(DEFINED ADDITIONAL_INCLUDE_PATHS AND NOT "${ADDITIONAL_INCLUDE_PATHS}" STREQUAL "")
   list(APPEND CPPPATH "${ADDITIONAL_INCLUDE_PATHS}")

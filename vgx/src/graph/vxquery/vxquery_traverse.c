@@ -322,6 +322,487 @@ static int64_t _vxquery_traverse__validate_global_collectable_counts( vgx_Graph_
  *
  ***********************************************************************
  */
+static int64_t __next_beam_width( vgx_recursion_config_t *recursion, int64_t current_beam_width, double dynamic_taper ) {
+  // next = width * curve * dynamic_taper
+  int64_t next;
+  if( current_beam_width < 10 ) {
+    double next_d = current_beam_width * recursion->beam.curve * dynamic_taper;
+    next = (int64_t)( dynamic_taper <= 0.0 ? floor(next_d) : ceil(next_d) );
+  }
+  else {
+    next = (int64_t)round( current_beam_width * recursion->beam.curve * dynamic_taper );
+  }
+  // clamp, never allow increasing width and never below minimum
+  return clamp_value( next, recursion->beam.min_width, recursion->beam.max_width );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __transfer_frontier_to_beam( vgx_BaseCollector_context_t *collector ) {
+  vgx_FrontierQueue_t *F = collector->frontier;
+  Cm256iHeap_t *B = collector->beam_heap;
+  // We will transfer Frontier -> Beam
+  vgx_CollectorItem_t frontier = {0};
+  while( CALLABLE(F)->Next(F, &frontier.item) ) {
+    vgx_Graph_t *locked_graph = NULL;
+    vgx_CollectorItem_t discarded = {0};
+    if( CALLABLE(B)->HeapPushTopK(B, &frontier.item, &discarded.item) == NULL ) {
+      // Inferior item
+      _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
+    }
+    else if( discarded.headref->refcnt > 0 ) {
+      // Discarded from beam
+      _vxquery_collector__del_collector_item_headref_OPEN( collector, &discarded );
+    }
+  } 
+}
+
+
+static int beam_item_comparator_score_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  return (a->predicator.val.real > b->predicator.val.real) - (a->predicator.val.real < b->predicator.val.real);
+}
+
+
+static int beam_item_comparator_score_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  return (a->predicator.val.real < b->predicator.val.real) - (a->predicator.val.real > b->predicator.val.real);
+}
+
+
+static int beam_item_comparator_address_asc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  uint64_t a_addr = (uint64_t)a->headref->vertex;
+  uint64_t b_addr = (uint64_t)b->headref->vertex;
+  return (a_addr > b_addr) - (a_addr < b_addr);
+}
+
+
+static int beam_item_comparator_indegree_desc( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  int64_t a_ideg = iarcvector.Degree( &a->headref->vertex->inarcs );
+  int64_t b_ideg = iarcvector.Degree( &b->headref->vertex->inarcs );
+  return (a_ideg < b_ideg) - (a_ideg > b_ideg);
+}
+
+
+static int beam_item_comparator_random( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  uint64_t x = ihash64v2( (uint64_t)a->headref->vertex );
+  uint64_t y = ihash64v2( (uint64_t)b->headref->vertex );
+  return x > y;
+}
+
+
+static int beam_item_comparator_priority( vgx_CollectorItem_t *a, vgx_CollectorItem_t *b ) {
+  float coherence_a = vgx_RankGetC0( &a->headref->vertex->rank );
+  float coherence_b = vgx_RankGetC0( &b->headref->vertex->rank );
+  float score_a = (float)a->predicator.val.real * (1.0f - coherence_a);
+  float score_b = (float)b->predicator.val.real * (1.0f - coherence_b);
+  return (score_a < score_b) - (score_a > score_b);
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int64_t __transfer_beam_to_frontier( vgx_BaseCollector_context_t *collector, int64_t n_transfer ) {
+  Cm256iHeap_t *B = collector->beam_heap;
+  vgx_FrontierQueue_t *F = collector->frontier;
+  // We will transfer Beam -> Frontier
+  // Sort beam buffer in place
+  
+  vgx_CollectorItem_t *beam = (vgx_CollectorItem_t*)B->_buffer;
+  
+  // Keep it simple: Sort beam best to worst in all cases
+  // This prevents second guessing the threshold EMA controller
+  qsort( beam, B->_size, sizeof(vgx_CollectorItem_t), (int (*)(const void*, const void*))beam_item_comparator_score_desc );
+
+  vgx_CollectorItem_t *cursor = beam;
+  vgx_CollectorItem_t *push_end = cursor + minimum_value( n_transfer, B->_size );
+  vgx_CollectorItem_t *beam_end = cursor + B->_size;
+
+  // Push sorted beam buffer to frontier
+  while( cursor < push_end && cursor < beam_end ) {
+    if( cursor->headref->refcnt <= 0 ) { // <- asc sort, empty item ignored
+      push_end++; // extend
+    }
+    else {
+      CALLABLE(F)->Append(F, &cursor->item);
+    }
+    ++cursor;
+  }
+  
+  // Discard rest if any
+  if( cursor < beam_end ) {
+    GRAPH_LOCK( collector->graph ) {
+      while( cursor < beam_end ) {
+        if( cursor->headref->refcnt > 0 ) {
+          _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
+        }
+        ++cursor;
+      }
+    } GRAPH_RELEASE;
+  }
+
+  return ComlibSequenceLength(F);
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __initialize_beam( vgx_recursion_config_t *recursion, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+  if( collector->beam_heap ) {
+    Cm256iHeap_t *B = collector->beam_heap;
+    // Initialize beam heap
+    CALLABLE(B)->Clear(B);
+    // We have already guaranteed internal allocation is large enough for all beam width
+    CALLABLE(B)->Initialize(B, &collector->empty.item, collector->beam_width);
+    // Reset beam's top score
+    mem->dynamic_taper.beam_1_best = -1.0f;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int __prepare_next_level( vgx_recursion_config_t *recursion, vgx_virtual_ArcFilter_context_t *filter_context, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, int64_t beam_sz_override ) {
+  switch( collector->recursion_mode ) {
+  case VGX_RECURSION_MODE_BEAM_PROGRESSIVE:
+  {
+    // Frontier is populated, transfer to beam
+    if( ComlibSequenceLength(collector->frontier) > 0 ) {
+      // Populate beam heap from frontier gathered during previous expansion
+      __transfer_frontier_to_beam( collector );
+    }
+
+    // Sort beam and push back to frontier queue for use during expansion
+    int64_t n_transfer = collector->beam_width;
+    if( beam_sz_override > 0 ) {
+      n_transfer = minimum_value( beam_sz_override, n_transfer );
+    }
+    int64_t sz_frontier = __transfer_beam_to_frontier( collector, n_transfer );
+
+    // Prepare next beam
+    collector->beam_width = __next_beam_width( recursion, collector->beam_width, collector->dynamic_taper );
+    __initialize_beam( recursion, collector, mem );
+
+    // Number of expansions to perform
+    return (int)sz_frontier;
+  }
+  case VGX_RECURSION_MODE_BFS_PROGRESSIVE:
+    return (int)ComlibSequenceLength(collector->frontier);
+  default:
+    return 0;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __discard_beam_CS( vgx_BaseCollector_context_t *collector ) {
+  Cm256iHeap_t *B = collector->beam_heap;
+  vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)B->_buffer;
+  vgx_CollectorItem_t *end = cursor + B->_size;
+  while( cursor < end ) {
+    //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->tailref, &collector->graph );
+    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, cursor->headref, &collector->graph );
+    ++cursor;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __discard_frontier_queue_CS( vgx_BaseCollector_context_t *collector ) {
+  vgx_FrontierQueue_t *F = collector->frontier;
+  if( F ) {
+    vgx_CollectorItem_t frontier = {0};
+    while( CALLABLE(F)->Next(F, &frontier.item) > 0 ) {
+      //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.tailref, &collector->graph );
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, frontier.headref, &collector->graph );
+    }
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __discard_frontier( vgx_BaseCollector_context_t *collector ) {
+  GRAPH_LOCK( collector->graph ) {
+    __discard_frontier_queue_CS( collector );
+  } GRAPH_RELEASE;
+}
+
+
+
+// --------------------------------
+// Control setup
+//
+typedef struct _s_control_vector_t {
+  struct {
+    int window;
+  } config;
+  struct {
+    int level;
+    int level_size;
+  } evolution;
+  struct {
+    int local;
+    int total;
+  } expansions;
+  struct {
+    float baseline;
+  } threshold;
+  struct {
+    float baseline;
+  } coherence;
+} control_vector_t;
+
+ 
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static void __init_control( control_vector_t *control, int window ) {
+  control->config.window = window;
+  // evolution
+  control->evolution.level = 0;
+  control->evolution.level_size = 0;
+  // expansions
+  control->expansions.local = 0;
+  control->expansions.total = 0;
+  // threshold
+  control->threshold.baseline = 0.0f;
+  // coherence
+  control->coherence.baseline = 1.0f;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+ __inline static int64_t __next_level_control( control_vector_t *control, vgx_ExpressEvalMemory_t *mem ) {
+  control->expansions.local = 0;
+  return ++control->evolution.level;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+__inline static bool __expand_next_check( control_vector_t *control, vgx_CollectorItem_t *frontier_node, vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem ) {
+  float score = frontier_node->predicator.val.real;
+  if( score < control->threshold.baseline ) {
+    return false;
+  }
+
+  control->expansions.local++;
+  control->expansions.total++;
+  mem->counter.expand++;
+  return true;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static vgx_ArcFilter_match _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
+  vgx_ArcFilter_match match = VGX_ARC_FILTER_MATCH_ERROR;
+  vgx_BaseCollector_context_t *collector = search->collector;
+  vgx_recursion_config_t *recursion = &search->recursion;
+  vgx_virtual_ArcFilter_context_t *filter_context = search->probe->traversing.arcfilter;
+
+  vgx_Evaluator_t *E = search->probe->traversing.arcfilter->traversing_evaluator;
+  vgx_FrontierQueue_t *F = collector->frontier;
+  Cm256iHeap_t *main_heap = collector->container.sequence.heap;
+  if( E == NULL || F == NULL || main_heap == NULL ) {
+    return VGX_ARC_FILTER_MATCH_ERROR;
+  }
+
+  // Early termination triggers
+  int64_t frontier_limit = recursion->limit.frontier;
+  int64_t expansion_limit = recursion->limit.expansion;
+  int64_t depth_limit = recursion->limit.depth;
+  int64_t visit_limit = recursion->limit.visit;
+  int64_t exec_nanosec_limit = recursion->limit.exec_ms * 1000000LL;
+
+  XTRY {
+
+    vgx_ExpressEvalMemory_t *mem = E->context.memory;
+
+    // Handle edge case
+    if( expansion_limit < 1 || depth_limit < 1 ) {
+      match = VGX_ARC_FILTER_MATCH_MISS;
+      XBREAK;
+    }
+    if( recursion->visit.reset_map || recursion->visit.reset_metrics ) {
+      if( recursion->visit.reset_map ) {
+        iEvaluator.ClearDWordSet( mem );
+      }
+      if( recursion->visit.reset_metrics ) {
+        mem->dynamic_taper.top_1_best = -1.0f;
+        mem->dynamic_taper.current_window_best = -1.0f;
+        mem->dynamic_taper.previous_1_window_best = -1.0f;
+        mem->dynamic_taper.beam_1_best = -1.0f;
+        mem->dynamic_taper.window_counter = 0;
+        mem->dynamic_taper.window_top_1_unimproved = 0;
+        mem->counter.eval = 0;
+        mem->counter.contrib = 0;
+        mem->counter.frontier = 0;
+        mem->counter.accept = 0;
+        mem->counter.depth = 0;
+        mem->counter.expand = 0;
+      }
+      mem->dynamic_taper.alpha = collector->alpha;
+      mem->dynamic_taper.beta = collector->beta;
+      mem->dynamic_taper.gamma = collector->gamma;
+      mem->dynamic_taper.delta = collector->delta;
+      mem->dynamic_taper.epsilon = collector->epsilon;
+      mem->dynamic_taper.zeta = collector->zeta;
+      mem->dynamic_taper.kappa = collector->kappa;
+      mem->dynamic_taper.lambda = collector->lambda;
+    }
+    
+    // Initialize control vector after the first expansion.
+    control_vector_t control = {0};
+    __init_control( &control, (int)recursion->shadow.size );
+
+    int64_t t0_ns = __GET_CURRENT_NANOSECOND_TICK();
+    int64_t t_end_ns = exec_nanosec_limit > 0 ? t0_ns + exec_nanosec_limit : -1;
+
+    // Mark start node as visited
+    vgx_ExpressEvalDWordSet_t *dwset = &mem->dwset;
+    vxeval_vertex_unvisited( dwset, vertex_RO );
+
+    // Number of nodes in initial neighborhood
+    __prepare_next_level( recursion, filter_context, collector, mem, 0 );
+
+    control.coherence.baseline = vgx_RankGetC0( &vertex_RO->rank );
+    control.evolution.level = 1;
+    control.expansions.local = 1;
+    control.expansions.total = 1;
+    collector->recursion_depth = control.evolution.level; // initial neighborhood implied
+    if( __is_arcfilter_error( (match = iarcvector.GetArcs( &vertex_RO->outarcs, search->probe )) ) ) {
+      THROW_SILENT( CXLIB_ERR_GENERAL, 0x002 );
+    }
+
+    // Limits reached after initial traversal
+    if( control.expansions.total >= expansion_limit || control.evolution.level >= depth_limit ) {
+      XBREAK;
+    }
+    
+    // After the very first neighborhood (global entrypoint) we optionally select a small set of the best candidates
+    control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, recursion->init.select );
+
+    vgx_CollectorItem_t frontier = {0};
+
+    while( control.evolution.level_size > 0 ) {
+
+      // Collector needs level info in case we collect depth field
+      collector->recursion_depth = mem->counter.depth = (unsigned)control.evolution.level;
+
+      // Frontier size at the start of this loop is exactly the number of nodes at the current depth
+      for( int64_t i=0; i<control.evolution.level_size; ++i ) {
+
+        if( CALLABLE(F)->Next(F, &frontier.item) < 1 || frontier.headref->vertex == NULL ) {
+          THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x009 );
+        }
+        
+        // Update min score to increase difficulty after heap refinement
+        control.threshold.baseline = _vxquery_collector__get_discounted_threshold( collector, mem );
+
+        // Expand if frontier node score is high enough
+        if( __expand_next_check( &control, &frontier, collector, mem ) ) {
+          // Perform expansion around next anchor (frontier limit is enforced by the internal collector)
+          vgx_Vertex_t *next = frontier.headref->vertex;
+          if( __is_arcfilter_error( iarcvector.GetArcs( &next->outarcs, search->probe ) ) ) {
+            match = VGX_ARC_FILTER_MATCH_ERROR;
+            goto terminate_inner;
+          }
+
+          // Early termination if max expansions or node visits limit reached
+          if( control.expansions.total >= expansion_limit || dwset->sz >= visit_limit ) {
+            goto terminate_inner;
+          }
+
+          // We are execution time limited, check
+          if( t_end_ns > 0 && __GET_CURRENT_NANOSECOND_TICK() > t_end_ns ) {
+            goto terminate_inner;
+          }
+        }
+
+        // Used item from frontier must be closed here
+        _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
+      }
+      
+      // Max depth reached
+      if( __next_level_control(&control, mem) >= depth_limit ) {
+        goto terminate_outer;
+      }
+
+      control.evolution.level_size = __prepare_next_level( recursion, filter_context, collector, mem, 0 );
+    }
+
+    // The initial match only since this determines the overall whether anything was found at all
+    XBREAK;
+
+  terminate_inner:
+    _vxquery_collector__del_collector_item_headref_OPEN( collector, &frontier );
+
+  terminate_outer:
+    __discard_frontier( collector );
+  }
+  XCATCH( errcode ) {
+    match = VGX_ARC_FILTER_MATCH_ERROR;
+  }
+  XFINALLY {
+  }
+
+  return match;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static int _vxquery_traverse__traverse_neighbor_arcs_OPEN_RO( const vgx_Vertex_t *vertex_RO, vgx_neighborhood_search_context_t *search ) {
   __assert_vertex_lock( vertex_RO );
 
@@ -343,8 +824,17 @@ static int _vxquery_traverse__traverse_neighbor_arcs_OPEN_RO( const vgx_Vertex_t
       match = iarcvector.GetArcsBidirectional( V1, V2, search->probe );
     }
     else {
-      V1 = arcdir == VGX_ARCDIR_IN ? &vertex_RO->inarcs : &vertex_RO->outarcs;
-      match = iarcvector.GetArcs( V1, search->probe );
+      if( search->recursion.mode == VGX_RECURSION_MODE_NONE ) {
+        V1 = arcdir == VGX_ARCDIR_IN ? &vertex_RO->inarcs : &vertex_RO->outarcs;
+        match = iarcvector.GetArcs( V1, search->probe );
+      }
+      else if( __is_recursion_enabled( &search->recursion ) ) {
+        match = _vxquery_traverse__recursive_traverse_neighbor_outarcs_OPEN_RO( vertex_RO, search );
+      }
+      else {
+        // ???
+        match = VGX_ARC_FILTER_MATCH_ERROR;
+      }
     }
 
     if( __is_arcfilter_error( match ) ) {

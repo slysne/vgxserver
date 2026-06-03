@@ -36,6 +36,12 @@ SET_EXCEPTION_MODULE( COMLIB_MSG_MOD_VGX );
     return NULL;                                        \
   }
 
+#define ASSERT_PARENT_GRAPH_INT( PyMemObj )             \
+  if( !TEST_PARENT_GRAPH( PyMemObj ) ) {                \
+    PyErr_SetString( PyExc_Exception, "no graph" );     \
+    return -1;                                          \
+  }
+
 
 #define PyVGX_MEMORY_LEN( PyMemObj )  (1LL << (PyMemObj)->evalmem->order)
 
@@ -516,12 +522,101 @@ static int __PyVGX_Memory__set_R4( PyVGX_Memory *pymem, PyObject *py_obj, void *
 
 
 
+/**************************************************************************//**
+ * __PyVGX_Memory__get_vector
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static PyObject * __PyVGX_Memory__get_vector( PyVGX_Memory *pymem, void *closure ) {
+  ASSERT_PARENT_GRAPH( pymem )
+  vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
+  if( mem->probe == NULL ) {
+    Py_RETURN_NONE;
+  }
+  return PyVGX_Vector__FromVector( mem->probe );
+}
+
+
+
+/**************************************************************************//**
+ * __PyVGX_Memory__set_vector
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static int __PyVGX_Memory__set_vector( PyVGX_Memory *pymem, PyObject *py_obj, void *closure ) {
+  ASSERT_PARENT_GRAPH_INT( pymem )
+  vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
+  vgx_Graph_t *graph = pymem->parent;
+  // Delete vector if one is set 
+  if( py_obj == NULL ) {
+    if( mem->probe ) {
+      iEvaluator.SetProbeVector( mem, NULL );
+    }
+  }
+  
+  if( !igraphfactory.EuclideanVectors() ) {
+    PyErr_SetString( PyExc_TypeError, "Euclidean vector object is required" );
+    return -1;
+  }
+  
+  if( !PyVGX_Vector_CheckExact( py_obj ) ) {
+    PyErr_SetString( PyExc_TypeError, "pyvgx.Vector object required" );
+    return -1;
+  }
+
+  PyVGX_Vector *py_vector = (PyVGX_Vector*)py_obj;
+  vgx_Vector_t *vector = py_vector->vint;
+
+  vgx_Similarity_t *sim = CALLABLE( vector )->Context( vector )->simobj;
+  if( sim != graph->similarity ) {
+    PyErr_SetString( PyExc_Exception, "incompatible vector similarity context" );
+    return -1;
+  }
+
+  if( iEvaluator.SetProbeVector( mem, vector ) < 0 ) {
+    PyErr_SetString( PyExc_Exception, "internal vector assignment error" );
+    return -1;
+  }
+
+  return 0;
+}
+
+
+
+/**************************************************************************//**
+ * __PyVGX_Memory__get_counters
+ *
+ ******************************************************************************
+ */
+SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
+static PyObject * __PyVGX_Memory__get_counters( PyVGX_Memory *pymem, void *closure ) {
+  ASSERT_PARENT_GRAPH( pymem )
+  vgx_ExpressEvalMemory_t *mem = pymem->evalmem;
+  PyObject *py_counters = PyTuple_New( 8 );
+  if( py_counters ) {
+    PyTuple_SET_ITEM( py_counters, 0, PyLong_FromUnsignedLong(mem->counter.eval) );
+    PyTuple_SET_ITEM( py_counters, 1, PyLong_FromUnsignedLong(mem->counter.contrib) );
+    PyTuple_SET_ITEM( py_counters, 2, PyLong_FromUnsignedLong(mem->counter.frontier) );
+    PyTuple_SET_ITEM( py_counters, 3, PyLong_FromUnsignedLong(mem->counter.accept) );
+    PyTuple_SET_ITEM( py_counters, 4, PyLong_FromUnsignedLong(mem->counter.depth) );
+    PyTuple_SET_ITEM( py_counters, 5, PyLong_FromUnsignedLong(mem->counter.expand) );
+    PyTuple_SET_ITEM( py_counters, 6, PyLong_FromUnsignedLong(mem->dwset.sz) );
+    PyTuple_SET_ITEM( py_counters, 7, PyLong_FromLongLong(mem->dwset.hits) );
+  }
+  return py_counters;
+}
+
+
+
 /******************************************************************************
  * PyVGX_Memory__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_Memory__dealloc( PyVGX_Memory *pymem ) {
+  // WARNING: Thread check is not reliable here. TODO: remove this
   if( pymem->threadid == GET_CURRENT_THREAD_ID() ) {
     vgx_ExpressEvalMemory_t *evalmem = pymem->evalmem;
     if( evalmem ) {
@@ -931,6 +1026,14 @@ static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyOb
     iEvaluator.ClearCStrings( mem );
     iEvaluator.ClearVectors( mem );
     iEvaluator.ClearDWordSet( mem );
+    iEvaluator.SetProbeVector( mem, NULL );
+    //mem->threshold = 0.0;
+    mem->counter.eval = 0;
+    mem->counter.contrib = 0;
+    mem->counter.frontier = 0;
+    mem->counter.accept = 0;
+    mem->counter.depth = 0;
+    mem->counter.expand = 0;
   } END_PYVGX_THREADS;
 
   // Reset stack pointer to right below register R4
@@ -938,6 +1041,75 @@ static PyObject * PyVGX_Memory__Reset( PyVGX_Memory *pymem, PyObject *args, PyOb
 
 
   Py_RETURN_NONE;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Memory__VSetClear()
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( VSetClear__doc__,
+  "VSetClear() -> n\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Memory__VSetClear
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Memory__VSetClear( PyVGX_Memory *pymem ) {
+  if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
+    PyVGXError_SetString( PyVGX_AccessError, "not owner thread" );
+    return NULL;
+  }
+
+  int64_t n = iEvaluator.ClearDWordSet( pymem->evalmem );
+  return PyLong_FromLongLong( n );
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Memory__VSetAdd()
+ *
+ ******************************************************************************
+ */
+PyDoc_STRVAR( VSetAdd__doc__,
+  "VSetAdd() -> n\n"
+);
+
+/**************************************************************************//**
+ * PyVGX_Memory__VSetAdd
+ *
+ ******************************************************************************
+ */
+static PyObject * PyVGX_Memory__VSetAdd( PyVGX_Memory *pymem, PyObject *py_id ) {
+  if( pymem->threadid != GET_CURRENT_THREAD_ID() ) {
+    PyVGXError_SetString( PyVGX_AccessError, "not owner thread" );
+    return NULL;
+  }
+  ASSERT_PARENT_GRAPH(pymem)
+  
+  PyObject *py_vertex = NULL;
+  if( PyVGX_Vertex_CheckExact( py_id ) ) {
+    py_vertex = py_id;
+    Py_INCREF( py_vertex );
+  }
+  else {
+    if( (py_vertex = PyVGX_Graph__GetVertex( pymem->py_parent, py_id )) == NULL ) {
+      return NULL;
+    }
+  }
+
+  vgx_Vertex_t *vertex = ((PyVGX_Vertex*)py_vertex)->vertex;
+
+  int added = iEvaluator.VSetAdd( pymem->evalmem, vertex );
+
+  Py_DECREF( py_vertex );
+
+  return PyLong_FromLongLong( added );
 }
 
 
@@ -1186,7 +1358,7 @@ static PyObject * PyVGX_Memory_item( PyVGX_Memory *pymem, Py_ssize_t idx ) {
   case STACK_ITEM_TYPE_VERTEX:
     return __pyunicode_from_vertex( pymem, value.vertex );
   case STACK_ITEM_TYPE_VECTOR:
-    ASSERT_PARENT_GRAPH( pymem );
+    ASSERT_PARENT_GRAPH( pymem )
     return PyVGX_Vector__FromVector( (vgx_Vector_t*)value.vector );
   default:
     return PyFloat_FromDouble( Py_NAN );
@@ -1403,11 +1575,13 @@ static PyMemberDef PyVGX_Memory__members[] = {
  ******************************************************************************
  */
 static PyGetSetDef PyVGX_Memory__getset[] = {
-  {"order",               (getter)__PyVGX_Memory__get_order,           (setter)NULL,                    "order", NULL },
-  {"R1",                  (getter)__PyVGX_Memory__get_R1,              (setter)__PyVGX_Memory__set_R1,  "R1",    NULL },
-  {"R2",                  (getter)__PyVGX_Memory__get_R2,              (setter)__PyVGX_Memory__set_R2,  "R2",    NULL },
-  {"R3",                  (getter)__PyVGX_Memory__get_R3,              (setter)__PyVGX_Memory__set_R3,  "R3",    NULL },
-  {"R4",                  (getter)__PyVGX_Memory__get_R4,              (setter)__PyVGX_Memory__set_R4,  "R4",    NULL },
+  {"order",               (getter)__PyVGX_Memory__get_order,           (setter)NULL,                        "order",    NULL },
+  {"R1",                  (getter)__PyVGX_Memory__get_R1,              (setter)__PyVGX_Memory__set_R1,      "R1",       NULL },
+  {"R2",                  (getter)__PyVGX_Memory__get_R2,              (setter)__PyVGX_Memory__set_R2,      "R2",       NULL },
+  {"R3",                  (getter)__PyVGX_Memory__get_R3,              (setter)__PyVGX_Memory__set_R3,      "R3",       NULL },
+  {"R4",                  (getter)__PyVGX_Memory__get_R4,              (setter)__PyVGX_Memory__set_R4,      "R4",       NULL },
+  {"vector",              (getter)__PyVGX_Memory__get_vector,          (setter)__PyVGX_Memory__set_vector,  "vector",   NULL },
+  {"counters",            (getter)__PyVGX_Memory__get_counters,        (setter)NULL,                        "counters", NULL },
   {NULL}  /* Sentinel */
 };
 
@@ -1421,12 +1595,14 @@ static PyGetSetDef PyVGX_Memory__getset[] = {
 IGNORE_WARNING_UNSAFE_FUNCTION_POINTER_CAST
 static PyMethodDef PyVGX_Memory__methods[] = {
 
-    {"AsList",            (PyCFunction)PyVGX_Memory__AsList,              METH_NOARGS,                    AsList__doc__  },
-    {"Stack",             (PyCFunction)PyVGX_Memory__Stack,               METH_NOARGS,                    Stack__doc__  },
-    {"Reset",             (PyCFunction)PyVGX_Memory__Reset,               METH_VARARGS | METH_KEYWORDS,   Reset__doc__  },
-    {"Sort",              (PyCFunction)PyVGX_Memory__Sort,                METH_VARARGS | METH_KEYWORDS,   Sort__doc__  },
+    {"AsList",            (PyCFunction)PyVGX_Memory__AsList,              METH_NOARGS,                    AsList__doc__     },
+    {"Stack",             (PyCFunction)PyVGX_Memory__Stack,               METH_NOARGS,                    Stack__doc__      },
+    {"Reset",             (PyCFunction)PyVGX_Memory__Reset,               METH_VARARGS | METH_KEYWORDS,   Reset__doc__      },
+    {"VSetClear",         (PyCFunction)PyVGX_Memory__VSetClear,           METH_NOARGS,                    VSetClear__doc__  },
+    {"VSetAdd",           (PyCFunction)PyVGX_Memory__VSetAdd,             METH_O,                         VSetAdd__doc__    },
+    {"Sort",              (PyCFunction)PyVGX_Memory__Sort,                METH_VARARGS | METH_KEYWORDS,   Sort__doc__       },
 
-    {"DualInt",           (PyCFunction)PyVGX_Memory__DualInt,             METH_VARARGS,                   DualInt__doc__ },
+    {"DualInt",           (PyCFunction)PyVGX_Memory__DualInt,             METH_VARARGS,                   DualInt__doc__    },
 
     {NULL}  /* Sentinel */
 };
@@ -1496,7 +1672,7 @@ static PyTypeObject PyVGX_Memory__MemoryType = {
     .tp_doc             = "PyVGX Evalmem objects",
     .tp_traverse        = (traverseproc)0,
     .tp_clear           = (inquiry)0,
-    .tp_richcompare     = (richcmpfunc)0,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = (getiterfunc)0,
     .tp_iternext        = (iternextfunc)0,

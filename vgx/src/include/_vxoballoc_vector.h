@@ -69,7 +69,7 @@ DLL_HIDDEN extern IVectorAllocator_t ivectoralloc;
  ***********************************************************************
  */
 typedef struct s_IVectorObject_t {
-  vgx_Vector_t * (*New)( vgx_Similarity_t *context, vector_type_t type, uint16_t length, bool ephemeral );
+  vgx_Vector_t * (*New)( vgx_Similarity_t *context, vector_type_t type, uint16_t length, bool cosine_mode, bool ephemeral );
   vgx_Vector_t * (*Null)( vgx_Similarity_t *context );
   int (*Delete)( vgx_Vector_t *vector );
   void (*IncrefDimensionsNolock)( vgx_Vector_t *vector );

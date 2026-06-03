@@ -102,7 +102,7 @@ DLL_HIDDEN int _vxarcvector_cellproc__collect_first_cell( const vgx_ArcVector_ce
 typedef struct __s_match_predicator {
   vgx_predicator_t probe;
   vgx_predicator_t first;
-  int (*match)( const vgx_predicator_t A, const vgx_predicator_t B );
+  int (*match)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t A, const vgx_predicator_t B );
 } __match_predicator;
 
 
@@ -115,7 +115,7 @@ typedef struct __s_match_predicator {
 static int64_t __first_predicator( framehash_processing_context_t * const processor, framehash_cell_t * const fh_cell ) {
   __match_predicator *matcher = (__match_predicator*)processor->processor.input;
   vgx_predicator_t stored = { .data = APTR_AS_UNSIGNED( fh_cell ) };
-  if( matcher->match( matcher->probe, stored ) ) {
+  if( matcher->match( NULL, matcher->probe, stored ) ) {
     matcher->first = stored;
     FRAMEHASH_PROCESSOR_SET_COMPLETED( processor );
     return 1;
@@ -213,7 +213,7 @@ static int64_t __collect_as_vertex( framehash_processing_context_t * const proce
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter->timing_budget, &filter_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter, &filter_match ) {
     // GREEN    Multiple Arc: FRAME
     if( __arcvector_fhash_is_multiple_arc( fh_cell ) ) {
       // Multiple Arc: FRAME
@@ -313,7 +313,7 @@ static int64_t __collect_as_vertex_bidirectional( framehash_processing_context_t
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter->timing_budget, &filter_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, archead.predicator, archead.vertex, arcfilter, &filter_match ) {
 
     // GREEN    Multiple Arc: FRAME
     if( __arcvector_fhash_is_multiple_arc( fh_cell ) ) {

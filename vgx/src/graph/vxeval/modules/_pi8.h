@@ -34,7 +34,7 @@
  ***********************************************************************
  */
 static vgx_EvalStackItem_t * __eval_prepare_one( vgx_Evaluator_t *self, const BYTE **data, float *scale, int *len );
-static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BYTE **a_data, const BYTE **b_data, float *a_scale, float *b_scale, int *len );
+static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BYTE **a_data, const BYTE **b_data, float *a_scalar, float *b_scalar, int *len, bool *invnorm );
 
 static double __ecld_pi8_inf( const BYTE *A, const BYTE *B, float fA, float fB, int len );
 static double __ssq_pi8_zero( const BYTE *A, int len );
@@ -88,7 +88,7 @@ static vgx_EvalStackItem_t * __eval_prepare_one( vgx_Evaluator_t *self, const BY
  *
  ***********************************************************************
  */
-static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BYTE **a_data, const BYTE **b_data, float *a_scale, float *b_scale, int *len ) {
+static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BYTE **a_data, const BYTE **b_data, float *a_scalar, float *b_scalar, int *len, bool *invnorm ) {
   vgx_EvalStackItem_t B = POP_ITEM( self );
   vgx_EvalStackItem_t A = POP_ITEM( self );
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
@@ -97,32 +97,50 @@ static vgx_EvalStackItem_t * __eval_prepare_two( vgx_Evaluator_t *self, const BY
 
   int32_t sz_a, sz_b;
 
-  switch( A.type ) {
-  case STACK_ITEM_TYPE_CSTRING:
-    *a_data = (BYTE*)CStringValue( A.CSTR__str );
-    sz_a = CStringLength( A.CSTR__str );
-    *a_scale = 1.0f;
-    break;
-  case STACK_ITEM_TYPE_VECTOR:
+  switch( PAIR_TYPE( &A, &B ) ) {
+  case STACK_PAIR_TYPE_XVEC_YVEC:
     *a_data = (BYTE*)CALLABLE( A.vector )->Elements( A.vector );
-    sz_a = A.vector->metas.vlen;
-    *a_scale = CALLABLE( A.vector )->Scaler( A.vector );
-    break;
-  default:
-    return NULL;
-  }
-
-  switch( B.type ) {
-  case STACK_ITEM_TYPE_CSTRING:
-    *b_data = (BYTE*)CStringValue( B.CSTR__str );
-    sz_b = CStringLength( B.CSTR__str );
-    *b_scale = 1.0f;
-    break;
-  case STACK_ITEM_TYPE_VECTOR:
     *b_data = (BYTE*)CALLABLE( B.vector )->Elements( B.vector );
+    sz_a = A.vector->metas.vlen;
     sz_b = B.vector->metas.vlen;
-    *b_scale = CALLABLE( B.vector )->Scaler( B.vector );
-    break;
+    if( A.vector->metas.flags.cos && B.vector->metas.flags.cos ) {
+      *invnorm = true;
+      *a_scalar = A.vector->metas.scalar.invnorm;
+      *b_scalar = B.vector->metas.scalar.invnorm;
+    }
+    else {
+      *invnorm = false;
+      *a_scalar = A.vector->metas.scalar.alpha;
+      *b_scalar = B.vector->metas.scalar.alpha;
+    }
+    break; 
+  case STACK_PAIR_TYPE_XSTR_YSTR:
+    *a_data = (BYTE*)CStringValue( A.CSTR__str );
+    *b_data = (BYTE*)CStringValue( B.CSTR__str );
+    sz_a = CStringLength( A.CSTR__str );
+    sz_b = CStringLength( B.CSTR__str );
+    *invnorm = false;
+    *a_scalar = 1.0f;
+    *b_scalar = 1.0f;
+    break; 
+  case STACK_PAIR_TYPE_XSTR_YVEC:
+    *a_data = (BYTE*)CStringValue( A.CSTR__str );
+    *b_data = (BYTE*)CALLABLE( B.vector )->Elements( B.vector );
+    sz_a = CStringLength( A.CSTR__str );
+    sz_b = B.vector->metas.vlen;
+    *invnorm = false;
+    *a_scalar = 1.0f;
+    *b_scalar = B.vector->metas.scalar.alpha;
+    break; 
+  case STACK_PAIR_TYPE_XVEC_YSTR:
+    *a_data = (BYTE*)CALLABLE( A.vector )->Elements( A.vector );
+    *b_data = (BYTE*)CStringValue( B.CSTR__str );
+    sz_a = A.vector->metas.vlen;
+    sz_b = CStringLength( B.CSTR__str );
+    *invnorm = false;
+    *a_scalar = A.vector->metas.scalar.alpha;
+    *b_scalar = 1.0f;
+    break; 
   default:
     return NULL;
   }

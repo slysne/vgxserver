@@ -439,12 +439,12 @@ static int __cxmalloc_line__validate_inactive_BCS( const cxmalloc_block_t *block
     }
     //  Verify refcnt of inactive line is zero
     if( linehead->data.refc != 0 ) {
-      CXMALLOC_CRITICAL( 0x927, "Inactive line @0x%016llx (bidx=%u, offset=%lu) has nonzero refcnt: %ld", block_CS->bidx, linehead->data.offset, linehead->data.refc );
+      CXMALLOC_CRITICAL( 0x927, "Inactive line @0x%016llx (bidx=%u, offset=%lu) has nonzero refcnt: %ld", linehead, block_CS->bidx, linehead->data.offset, linehead->data.refc );
       THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x928 );
     }
     // Verify not active
     if( linehead->data.flags._act ) {
-      CXMALLOC_CRITICAL( 0x929, "Inactive line @0x%016llx (bidx=%u, offset=%lu) marked as active", block_CS->bidx, linehead->data.offset );
+      CXMALLOC_CRITICAL( 0x929, "Inactive line @0x%016llx (bidx=%u, offset=%lu) marked as active", linehead, block_CS->bidx, linehead->data.offset );
       THROW_SILENT( CXLIB_ERR_CORRUPTION, 0x92A );
     }
     // Mark as checked

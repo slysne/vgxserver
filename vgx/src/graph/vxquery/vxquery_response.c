@@ -102,7 +102,7 @@ static void _vxquery_response__delete_properties( vgx_Graph_t *self, vgx_SelectP
 static void _vxquery_response__format_results_to_stream( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
 static vgx_VertexProperty_t * _vxquery_response__select_property( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
 static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
-static char * __prepare_select_statement( const char *select_statement, CString_t **CSTR__error );
+static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
 
 /*******************************************************************//**
  * IGrapResponse_t
@@ -210,7 +210,7 @@ static vgx_ResponseFieldMap_t default_fieldmap_definition[] = {
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RANKSCORE,  .render=(f_ResponseValueRender)__render_real,             .fieldname="rankscore" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_SIMILARITY, .render=(f_ResponseValueRender)__render_real,             .fieldname="similarity" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_HAMDIST,    .render=(f_ResponseValueRender)__render_int64,            .fieldname="hamming-distance" },
-  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR__R_RSV,     .render=(f_ResponseValueRender)__render_qword_hex,        .fieldname="RESERVED" },
+  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RECURSION,  .render=(f_ResponseValueRender)__render_int64,            .fieldname="depth" },
   // Timestamps
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMC,        .render=(f_ResponseValueRender)__render_int64,            .fieldname="created" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMM,        .render=(f_ResponseValueRender)__render_int64,            .fieldname="modified" },
@@ -1433,8 +1433,8 @@ if( SingleFieldBitmask & Remain )  {                                  \
   // Iterate over entries raw search result  // Fieldspec bitmaps
   vgx_ResponseFieldData_t *output_entry = search_result->list;
   vgx_CollectorItem_t *collected;
-#define __YIELD_INTERVAL 100
-  int64_t yield_after = __YIELD_INTERVAL; // For large result sets, we yield the state lock once in a while to avoid long blocking 
+#define __YIELD_COUNTDOWN 100
+  int64_t yield_after = __YIELD_COUNTDOWN; // For large result sets, we yield the state lock once in a while to avoid long blocking 
 
   vgx_ResponseAttrFastMask attr_fastmask = response_fastmask;
   vgx_ResponseFields_t fields = search_result->list_fields;
@@ -1532,6 +1532,7 @@ if( SingleFieldBitmask & Remain )  {                                  \
     if( (attr_fastmask & CS_REQUIRED_MASK) != 0 ) {
       if( locked_graph == NULL ) {
         locked_graph = GRAPH_ENTER_CRITICAL_SECTION( graph );
+        yield_after = __YIELD_COUNTDOWN;
       }
     }
 
@@ -1618,13 +1619,14 @@ if( SingleFieldBitmask & Remain )  {                                  \
           IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_RANKSCORE, remaining_fields, wp )     { wp++->value.real = getrank( collected ); } END_IF_FIELDS_REMAIN
           vector = head->vector;
           if( vector && probe_vector ) {
-            IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = CALLABLE(similarity)->Similarity( similarity, probe_vector, vector ); } END_IF_FIELDS_REMAIN
+            IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = CALLABLE(similarity)->Similarity( similarity, probe_vector, vector, -1.0f ); } END_IF_FIELDS_REMAIN
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_HAMDIST, remaining_fields, wp )     { wp++->value.i64 = hamdist64( probe_vector->fp, vector->fp ); } END_IF_FIELDS_REMAIN
           }
           else {
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_SIMILARITY, remaining_fields, wp )  { wp++->value.real = -1.0; } END_IF_FIELDS_REMAIN
             IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_HAMDIST, remaining_fields, wp )     { wp++->value.i64 = 64; } END_IF_FIELDS_REMAIN
           }
+          IF_FIELDS_REMAIN( VGX_RESPONSE_ATTR_RECURSION, remaining_fields, wp )     { wp++->value.i64 = collected->headref->slot.depth; } END_IF_FIELDS_REMAIN
         }
 
         // TIMESTAMP
@@ -1717,8 +1719,14 @@ if( SingleFieldBitmask & Remain )  {                                  \
       CString_constructor_args_t *cargs = &string_entry_args;
       size_t strsz = output_buffer.wp - output_buffer.buffer;
       if( strsz > ARCH_PAGE_SIZE ) {
+        // Immediate yield after this entry due to large size
+        if( locked_graph ) {
+          yield_after = 1;
+        }
+        /*
         // Leave CS if large string entries are being rendered -- will have to be re-acquired again when needed
         GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+        */
         // Oversized string
         if( strsz > _VXOBALLOC_CSTRING_MAX_LENGTH ) {
           cargs = &ovsz_string_entry_args;
@@ -1755,8 +1763,8 @@ if( SingleFieldBitmask & Remain )  {                                  \
 
     if( locked_graph ) {
       if( --yield_after == 0 ) {
-        GRAPH_YIELD_AND_SIGNAL( graph );
-        yield_after = __YIELD_INTERVAL;
+        SIGNAL_VERTEX_AVAILABLE( graph );
+        GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
       }
     }
   }
@@ -2112,7 +2120,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
 
   XTRY {
 
-    if( (expression = __prepare_select_statement( select_statement, CSTR__error )) == NULL ) {
+    if( (expression = __prepare_select_statement( graph, select_statement, CSTR__error )) == NULL ) {
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x001 );
     }
 
@@ -2158,7 +2166,7 @@ static vgx_Evaluator_t * _vxquery_response__parse_select_properties( vgx_Graph_t
  *
  ******************************************************************************
  */
-static char * __prepare_select_statement( const char *select_statement, CString_t **CSTR__error ) {
+static char * __prepare_select_statement( vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error ) {
   // Return value
   char *expression = NULL;
 
@@ -2175,9 +2183,15 @@ static char * __prepare_select_statement( const char *select_statement, CString_
 
   // Create the tokenizer if needed
   static CTokenizer_t *tokenizer = NULL;
+
   if( tokenizer == NULL ) {
-    tokenizer = __new_generic_tokenizer();
+    GRAPH_LOCK(graph) {
+      if( tokenizer == NULL ) {
+        tokenizer = __new_generic_tokenizer();
+      }
+    } GRAPH_RELEASE;
   }
+
   tokenmap_t *tokenmap = NULL;
   const char *current_token = NULL;
 

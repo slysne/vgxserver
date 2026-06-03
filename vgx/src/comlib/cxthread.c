@@ -180,7 +180,7 @@ static int64_t __measure_spinfactor( void ) {
  ***********************************************************************
  */
 DLL_EXPORT void COMLIB__Spin( int microseconds ) {
-  static int64_t spin_factor = -1;
+  static __THREAD int64_t spin_factor = -1;
   static __THREAD int64_t x = 1;
   if( spin_factor < 0 ) {
     spin_factor = __measure_spinfactor();
@@ -236,7 +236,7 @@ DLL_EXPORT comlib_task_t * COMLIB_TASK__New( f_cxlib_thread_entrypoint entrypoin
   comlib_task_t *task = calloc( 1, sizeof( comlib_task_t ) );
   if( task && entrypoint ) {
     // Create the thread lock
-    INIT_SPINNING_CRITICAL_SECTION( &task->_lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &task->_lock.lock, 4000 );
 
     // Initialize the condition variables
     INIT_CONDITION_VARIABLE( &task->_idle_event.cond );

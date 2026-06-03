@@ -46,12 +46,19 @@
 #  define _ALIGNED_ELEMENTS(p, T, cnt, A)   ( p = (T*)(_aligned_malloc( sizeof(T)*(cnt), A ) ) )
 #  define _ALIGNED_FREE(p)                  _aligned_free(p)
 #  define _ALIGNED_(A)                      __declspec(align(A))
+/* use this when including aligned types within structs */
+#  define ALIGNED_STRUCT_MEMBER( Type, Name, Alignment )  _ALIGNED_(Alignment) Type Name
+
 #else
 __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*) ? A : sizeof(void*); }
 #  define _ALIGNED_BYTES(p, cnt, A)         (posix_memalign( (void*)(&p), __min_memalignment(A), cnt) == 0 ? (char*)(p) : NULL)
 #  define _ALIGNED_ELEMENTS(p, T, cnt, A)   (posix_memalign( (void*)(&p), __min_memalignment(A), sizeof(T)*(cnt)) == 0 ? (T*)(p) : NULL)
 #  define _ALIGNED_FREE(p)                  free(p)
 #  define _ALIGNED_(A)                      __attribute__ ((aligned(A)))
+
+/* use this when including aligned types within structs */
+#  define ALIGNED_STRUCT_MEMBER( Type, Name, Alignment )  Type Name _ALIGNED_(Alignment)
+
 #endif
 
 /* convenience pattern for NULL-checking allocation within a XTRY-XCATCH-XFINALLY macro */
@@ -95,6 +102,7 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
     }                                                                     \
   } WHILE_ZERO
 
+
 /* allocate bytes on specified alignment boundary */
 #define ALIGNED_BYTES(memptr, sz, alignment)      _ALIGNED_BYTES(memptr,sz,alignment)
 /* allocate bytes on cache line boundary */
@@ -135,6 +143,15 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
 #define CALIGNED_MALLOC_THROWS(memptr, T, err)                _ALIGNED_ELEMENTS_THROWS(memptr,T,1,CACHE_LINE_SIZE,err)
 /* allocate memory for one element of type T on page boundary */
 #define PALIGNED_MALLOC_THROWS(memptr, T, err)                _ALIGNED_ELEMENTS_THROWS(memptr,T,1,ARCH_PAGE_SIZE,err)
+
+/* allocate zeroed memory for one element of type T on specified alignment boundary */
+#define ALIGNED_CALLOC_THROWS(memptr, T, alignment, err)      _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,alignment,err)
+/* allocate zeroed memory for one element of type T with type alignment */
+#define TALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,__alignof(T),err)
+/* allocate zeroed memory for one element of type T on cache line boundary */
+#define CALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,CACHE_LINE_SIZE,err)
+/* allocate zeroed memory for one element of type T on page boundary */
+#define PALIGNED_CALLOC_THROWS(memptr, T, err)                _ALIGNED_ZELEMENTS_THROWS(memptr,T,1,ARCH_PAGE_SIZE,err)
 
 /* allocate memory for N elements of type T on specified alignment boundary */
 #define ALIGNED_ARRAY_THROWS(arrayptr, T, N, alignment, err)  _ALIGNED_ELEMENTS_THROWS(arrayptr,T,N,alignment,err)
@@ -187,6 +204,7 @@ __inline static size_t __min_memalignment( size_t A ) { return A > sizeof(void*)
 #define CALIGNED_TYPE(struct_or_union)            typedef struct_or_union CALIGNED_
 /* define new type with page size alignment requirement */
 #define PALIGNED_TYPE(struct_or_union)            typedef struct_or_union PALIGNED_
+
 
 
 

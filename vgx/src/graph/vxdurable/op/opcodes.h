@@ -729,7 +729,7 @@ static void __reset_opcode( vgx_OperationParser_t *parser ) {
  */
 static int __decode_opcode( vgx_OperationParser_t *parser ) {
 
-  static op_BASE INIT_OP = {
+  static __THREAD op_BASE INIT_OP = {
     .op = OPERATOR_NONE,
     {0,0,0,0,0,0,0}
   };

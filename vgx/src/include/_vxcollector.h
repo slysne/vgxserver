@@ -297,7 +297,7 @@ static f_vgx_ArcComparator __get_arc_comparator( const vgx_ranking_context_t *ra
     DWORD *pmin = NULL, *pmax = NULL;
     
     // Simplify the logic below using a dummy destination for lowest if caller didn't supply one
-    vgx_CollectorItem_t local_lowest;
+    vgx_CollectorItem_t local_lowest = {0};
     if( lowest == NULL ) {
       lowest = &local_lowest;
     }
@@ -350,9 +350,11 @@ static f_vgx_ArcComparator __get_arc_comparator( const vgx_ranking_context_t *ra
       case VGX_PREDICATOR_VAL_TYPE_INTEGER:
         if( pmin ) {
           lowest->sort.int64.value = LLONG_MIN;
+          lowest->predicator.val.integer = INT_MIN;
         }
         if( pmax ) {
           lowest->sort.int64.value = LLONG_MAX;
+          lowest->predicator.val.integer = INT_MAX;
         }
         return icomparator.cmp_archead_int64_rank;
       case VGX_PREDICATOR_VAL_TYPE_NONE:
@@ -360,9 +362,11 @@ static f_vgx_ArcComparator __get_arc_comparator( const vgx_ranking_context_t *ra
       case VGX_PREDICATOR_VAL_TYPE_REAL:
         if( pmin ) {
           lowest->sort.flt64.value = -DBL_MAX;
+          lowest->predicator.val.real = -FLT_MAX;
         }
         if( pmax ) {
           lowest->sort.flt64.value = DBL_MAX;
+          lowest->predicator.val.real = FLT_MAX;
         }
         return icomparator.cmp_archead_double_rank;
       default:
@@ -371,66 +375,93 @@ static f_vgx_ArcComparator __get_arc_comparator( const vgx_ranking_context_t *ra
 
     case VGX_SORTBY_MEMADDRESS:
       lowest->sort.uint64.value = sort_ascending ? ULLONG_MAX : 0;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_uint64_rank;
+    
+    case VGX_SORTBY_REAL_PREDICATOR:
+      if( pmin ) {
+        lowest->sort.flt64.value = -DBL_MAX;
+        lowest->predicator.val.real = -FLT_MAX;
+      }
+      if( pmax ) {
+        lowest->sort.flt64.value = DBL_MAX;
+        lowest->predicator.val.real = FLT_MAX;
+      }
+      return icomparator.cmp_archead_double_rank;
 
     case VGX_SORTBY_ANCHOR_OBID:
       lowest->sort.internalid_H = ((objectid_t*)COMLIB_OBJECT_GETID( V ))->H;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_arctail_internalid;
 
     case VGX_SORTBY_INTERNALID:
       lowest->sort.internalid_H = ((objectid_t*)COMLIB_OBJECT_GETID( V ))->H;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_internalid;
 
     case VGX_SORTBY_ANCHOR_ID:
       lowest->sort.qword = V ? CALLABLE(V)->Identifier(V)->idprefix.qwords[0] : 0;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_arctail_identifier;
 
     case VGX_SORTBY_IDSTRING:
       lowest->sort.qword = V ? CALLABLE(V)->Identifier(V)->idprefix.qwords[0] : 0;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_identifier;
 
     case VGX_SORTBY_DEGREE:
       lowest->sort.int64.value = CALLABLE(V)->Degree(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
 
     case VGX_SORTBY_INDEGREE:
       lowest->sort.int64.value = CALLABLE(V)->InDegree(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
 
     case VGX_SORTBY_OUTDEGREE:
       lowest->sort.int64.value = CALLABLE(V)->OutDegree(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
 
     case VGX_SORTBY_SIMSCORE:
       lowest->sort.flt64.value = sort_ascending ? DBL_MAX : -DBL_MAX;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_double_rank;
 
     case VGX_SORTBY_HAMDIST:
       lowest->sort.int64.value = sort_ascending ? LLONG_MAX : LLONG_MIN;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
 
     case VGX_SORTBY_RANKING:
       lowest->sort.flt64.value = sort_ascending ? INFINITY : -INFINITY;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_double_rank;
 
     case VGX_SORTBY_TMC:
       lowest->sort.uint32.value = CALLABLE(V)->CreationTime(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_uint32_rank;
 
     case VGX_SORTBY_TMM:
       lowest->sort.uint32.value = CALLABLE(V)->ModificationTime(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_uint32_rank;
 
     case VGX_SORTBY_TMX:
       lowest->sort.uint32.value = CALLABLE(V)->GetExpirationTime(V);
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_uint32_rank;
 
     case VGX_SORTBY_NATIVE:
       lowest->sort.int64.value = sort_ascending ? LLONG_MAX : LLONG_MIN;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
     
     case VGX_SORTBY_RANDOM:
       lowest->sort.int64.value = sort_ascending ? LLONG_MAX : LLONG_MIN;
+      lowest->predicator.val.real = 0.0;
       return icomparator.cmp_archead_int64_rank;
 
     default:
@@ -571,6 +602,10 @@ static void __get_arc_collector_functions_by_sortspec( const vgx_sortspec_t sort
   case VGX_SORTBY_MEMADDRESS:
     *stagef   =   _iStageArc.to_sort_by_memaddress;
     *collectf = _iCollectArc.to_sort_by_memaddress;
+    return;
+  case VGX_SORTBY_REAL_PREDICATOR:
+    *stagef = _iStageArc.to_sort_by_real_predicator;
+    *collectf = _iCollectArc.to_sort_by_real_predicator;
     return;
   case VGX_SORTBY_INTERNALID:
     *stagef   =   _iStageArc.to_sort_by_internalid;
@@ -753,6 +788,8 @@ static f_vgx_RankScoreFromItem __get_rank_score_from_item_function( const vgx_so
     return _iRankScoreFromItem.from_none;
   case VGX_SORTBY_PREDICATOR:
     return _iRankScoreFromItem.from_predicator;
+  case VGX_SORTBY_REAL_PREDICATOR:
+    return _iRankScoreFromItem.from_real_predicator;
   case VGX_SORTBY_TMC:
   case VGX_SORTBY_TMM:
   case VGX_SORTBY_TMX:

@@ -177,7 +177,7 @@ static int __write_direct( vgx_VGXServerRequest_t *request, const char *line, in
 */
 static int __add_header__x_vgx_partial( vgx_VGXServerRequest_t *request, int (*writef)(vgx_VGXServerRequest_t*, const char*, int64_t) ) {
   static const char HEADER_Accept_x_vgx_partial[] = "Accept: application/x-vgx-partial" CRLF;
-  static int64_t sz_HEADER_Accept_x_vgx_partial = sizeof( HEADER_Accept_x_vgx_partial ) - 1;
+  static const int64_t sz_HEADER_Accept_x_vgx_partial = sizeof( HEADER_Accept_x_vgx_partial ) - 1;
   return writef( request, HEADER_Accept_x_vgx_partial, sz_HEADER_Accept_x_vgx_partial );
 }
 
@@ -838,6 +838,19 @@ DLL_HIDDEN void vgx_server_request__copy_all( vgx_VGXServerRequest_t *dest, cons
   iStreamBuffer.Clear( dest->buffers.content );
   iStreamBuffer.Copy( dest->buffers.stream, src->buffers.stream );
   iStreamBuffer.Copy( dest->buffers.content, src->buffers.content );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+DLL_HIDDEN void vgx_server_request__header_capsule_swap( vgx_VGXServerRequest_t *a, vgx_VGXServerRequest_t *b ) {
+  vgx_HTTPHeadersCapsule_t tmp = a->headers->capsule;
+  a->headers->capsule = b->headers->capsule;
+  b->headers->capsule = tmp;
 }
 
 

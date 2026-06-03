@@ -245,7 +245,7 @@ static int _vxevent_eventapi__initialize( vgx_Graph_t *self, bool run_daemon ) {
 
         // Public API
         // [Q3] Lock
-        INIT_CRITICAL_SECTION( &processor->PublicAPI.Lock.lock );
+        INIT_RECURSIVE_CRITICAL_SECTION( &processor->PublicAPI.Lock.lock );
 
         // [Q4.1] Input queue
         if( (processor->PublicAPI.Queue = COMLIB_OBJECT_NEW( Cm128iQueue_t, NULL, &eventproc_queue_args )) == NULL ) {
@@ -767,7 +767,7 @@ static CString_t * _vxevent_eventapi__format_backlog_info( vgx_Graph_t *self, vg
  */
 __inline static int __enqueue_event( vgx_Graph_t *self, vgx_VertexStorableEvent_t *ev ) {
   int n;
-  SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
     n = APPEND_QUEUE_VERTEX_EVENT_NOLOCK( self->EVP.PublicAPI.Queue, ev );
   } RELEASE;
   return n;

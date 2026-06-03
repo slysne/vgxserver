@@ -39,7 +39,7 @@ static cxlib_exc_context_t g_context = {0};
  */
 void COMLIB_InitializeMessages( void ) {
   if( !g_context.initflag ) {
-    INIT_SPINNING_CRITICAL_SECTION( &g_context.lock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &g_context.lock.lock, 4000 );
     g_context.recursion = 0;
     g_context.ostream = stderr;
     g_context.msgtrace = NULL;
@@ -74,7 +74,7 @@ DLL_EXPORT cxlib_exc_context_t * COMLIB_GetExceptionContext( void ) {
  */
 DLL_EXPORT FILE * COMLIB_SetOutputStream( FILE *new_ostream ) {
   FILE *old_stream = NULL;
-  SYNCHRONIZE_ON( g_context.lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context.lock ) {
     if( new_ostream != g_context.ostream ) {
       old_stream = g_context.ostream;           // save
       g_context.ostream = new_ostream;          // set new
@@ -132,7 +132,7 @@ DLL_EXPORT void COMLIB_UnmuteOutputStream( void ) {
  */
 DLL_EXPORT uint32_t COMLIB_GetMessage( void ) {
   uint32_t code = 0;
-  SYNCHRONIZE_ON( g_context.lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context.lock ) {
     if( g_context.ridx != g_context.widx ) {
       code = g_context.code[ g_context.ridx ];
       g_context.code[ g_context.ridx++ ] = 0; // clear

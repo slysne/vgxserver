@@ -42,7 +42,6 @@ extern "C" {
 
 #if defined CXPLAT_WINDOWS_X64
 #include <process.h>
-#define cpu_yield() SwitchToThread()
 
 #define CXLOCK_TYPE CRITICAL_SECTION
 
@@ -58,12 +57,16 @@ typedef struct _CS_COND {
   char __pad[EXPECTED_SIZEOF_CS_COND-sizeof(CXCOND_TYPE)];
 } CS_COND;
 
-#define INIT_SPINNING_CRITICAL_SECTION( pcslock, SpinCount )   do { if(!InitializeCriticalSectionAndSpinCount( (pcslock), SpinCount )) { *((int*)NULL)=0; /* goodbye */ } } WHILE_ZERO
+#define INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( pcslock, SpinCount )   do { if(!InitializeCriticalSectionAndSpinCount( (pcslock), SpinCount )) { *((int*)NULL)=0; /* goodbye */ } } WHILE_ZERO
+#define INIT_RECURSIVE_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
+/* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
 #define INIT_CRITICAL_SECTION( pcslock )   InitializeCriticalSection( (pcslock) )
 #define DEL_CRITICAL_SECTION( pcslock )    DeleteCriticalSection( (pcslock) )
-#define ENTER_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
+#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( LPCRITICAL_SECTION pcs );
 #define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
+/* TODO: Migrate to SRWLOCK for this fast, non-recursive mode */
+#define ENTER_CRITICAL_SECTION( pcslock )  EnterCriticalSection( (pcslock) )
 #define LEAVE_CRITICAL_SECTION( pcslock )  LeaveCriticalSection( (pcslock) )
 
 extern int64_t __GET_CURRENT_NANOSECOND_TICK( void );
@@ -80,11 +83,19 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( PCONDITION_VARIABLE pcond, PCRITICAL_S
 #define TIMED_WAIT_CONDITION_CS( pcscond, pcslock, milliseconds )  __TIMED_WAIT_CONDITION_CS( (pcscond), (pcslock), milliseconds )
 #define SIGNAL_ALL_CONDITION( pcscond )    WakeAllConditionVariable( (pcscond) )
 #define SIGNAL_ONE_CONDITION( pcscond )    WakeConditionVariable( (pcscond) )
+#define SIGNAL_MANY_CONDITION( pcscond, n ) \
+  do {                                      \
+    for( int i=0; i<(n); ++i ) {            \
+      WakeConditionVariable( (pcscond) );   \
+    }                                       \
+  } WHILE_ZERO
 
-#define ATOMIC_VOLATILE_i32       __declspec(align(4)) volatile LONG
-#define ATOMIC_VOLATILE_u32       __declspec(align(4)) volatile ULONG
-#define ATOMIC_VOLATILE_i64       __declspec(align(8)) volatile int64_t
-#define ATOMIC_VOLATILE_u64       __declspec(align(8)) volatile uint64_t
+
+
+#define ATOMIC_i32       __declspec(align(4)) volatile LONG
+#define ATOMIC_u32       __declspec(align(4)) volatile ULONG
+#define ATOMIC_i64       __declspec(align(8)) volatile int64_t
+#define ATOMIC_u64       __declspec(align(8)) volatile uint64_t
 
 
 #define ATOMIC_INCREMENT_i32(ptr)   InterlockedIncrement( ptr )
@@ -227,7 +238,6 @@ __inline static uint64_t InterlockedExchange_u64( uint64_t volatile * _Target, u
 #include <sched.h>
 #include <sys/resource.h>
 #include <unistd.h>
-#define cpu_yield() sched_yield()
 
 #define CXLOCK_TYPE pthread_mutex_t
 
@@ -243,15 +253,7 @@ typedef struct _CS_COND {
   char __pad[EXPECTED_SIZEOF_CS_COND-sizeof(CXCOND_TYPE)];
 } CS_COND;
 
-#define INIT_SPINNING_CRITICAL_SECTION( pcslock, SpinCount )          \
-  do {                                                                \
-    pthread_mutexattr_t mutexattr;                                    \
-    pthread_mutexattr_init( &mutexattr );                             \
-    /* match the (only) Windows behavior: same thread can re-lock */  \
-    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE ); \
-    pthread_mutex_init( (pcslock), &mutexattr );                      \
-  } WHILE_ZERO
-#define INIT_CRITICAL_SECTION( pcslock )                              \
+#define INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( pcslock, SpinCount )          \
   do {                                                                \
     pthread_mutexattr_t mutexattr;                                    \
     pthread_mutexattr_init( &mutexattr );                             \
@@ -260,13 +262,45 @@ typedef struct _CS_COND {
     pthread_mutex_init( (pcslock), &mutexattr );                      \
   } WHILE_ZERO
 
+#define INIT_RECURSIVE_CRITICAL_SECTION( pcslock )                    \
+  do {                                                                \
+    pthread_mutexattr_t mutexattr;                                    \
+    pthread_mutexattr_init( &mutexattr );                             \
+    /* match the (only) Windows behavior: same thread can re-lock */  \
+    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_RECURSIVE ); \
+    pthread_mutex_init( (pcslock), &mutexattr );                      \
+  } WHILE_ZERO
 
-#define DEL_CRITICAL_SECTION( pcslock )    pthread_mutex_destroy( (pcslock) )
-extern void __CXLOCK_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
-#define ENTER_CRITICAL_SECTION( pcslock )  __CXLOCK_MUTEX_SPINLOCK( (pcslock) )
+#if defined(CXPLAT_LINUX_ANY)
+#define INIT_CRITICAL_SECTION( pcslock )                         \
+  do {                                                                \
+    pthread_mutexattr_t mutexattr;                                    \
+    pthread_mutexattr_init( &mutexattr );                             \
+    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_ADAPTIVE_NP ); \
+    pthread_mutex_init( (pcslock), &mutexattr );                      \
+  } WHILE_ZERO
+#elif defined(CXPLAT_MAC_ARM64)
+#define INIT_CRITICAL_SECTION( pcslock )                         \
+  do {                                                                \
+    pthread_mutexattr_t mutexattr;                                    \
+    pthread_mutexattr_init( &mutexattr );                             \
+    pthread_mutexattr_settype( &mutexattr, PTHREAD_MUTEX_NORMAL );    \
+    pthread_mutexattr_setpolicy_np(&mutexattr, PTHREAD_MUTEX_POLICY_FIRSTFIT_NP); \
+    pthread_mutex_init( (pcslock), &mutexattr );                      \
+  } WHILE_ZERO
+#else
+#error "should never happen"
+#endif
+
+
+#define DEL_CRITICAL_SECTION( pcslock )             pthread_mutex_destroy( (pcslock) )
+extern void __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( pthread_mutex_t *mutex );
+#define ENTER_RECURSIVE_CRITICAL_SECTION( pcslock ) __CXLOCK_RECURSIVE_MUTEX_SPINLOCK( (pcslock) )
 extern bool __TRY_CRITICAL_SECTION( pthread_mutex_t *mutex );
-#define TRY_CRITICAL_SECTION( pcslock )    __TRY_CRITICAL_SECTION( (pcslock) )
-#define LEAVE_CRITICAL_SECTION( pcslock )  pthread_mutex_unlock( (pcslock) )
+#define TRY_CRITICAL_SECTION( pcslock )             __TRY_CRITICAL_SECTION( (pcslock) )
+#define ENTER_CRITICAL_SECTION( pcslock )           pthread_mutex_lock( (pcslock))
+#define LEAVE_CRITICAL_SECTION( pcslock )           pthread_mutex_unlock( (pcslock) )
+
 
 extern int64_t __GET_CURRENT_NANOSECOND_TICK( void );
 extern int64_t __GET_CURRENT_MICROSECOND_TICK( void );
@@ -291,18 +325,24 @@ extern uint32_t __SECONDS_SINCE_1970( void );
 #endif
 
 #define DEL_CONDITION_VARIABLE( pcscond )  pthread_cond_destroy( (pcscond) )
-#define WAIT_CONDITION( pcscond, pcslock )  pthread_cond_wait( (pcscond), (pcslock) ) 
+#define WAIT_CONDITION( pcscond, pcslock ) pthread_cond_wait( (pcscond), (pcslock) ) 
 extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t *mutex, DWORD milliseconds );
 // Return the number of nanoseconds slept
 #define TIMED_WAIT_CONDITION_CS( pcscond, pcslock, milliseconds )  __TIMED_WAIT_CONDITION_CS( (pcscond), (pcslock), milliseconds )
 #define SIGNAL_ALL_CONDITION( pcscond )    pthread_cond_broadcast( (pcscond) )
 #define SIGNAL_ONE_CONDITION( pcscond )    pthread_cond_signal( (pcscond) )
+#define SIGNAL_MANY_CONDITION( pcscond, n ) \
+  do {                                      \
+    for( int i=0; i<(n); ++i ) {            \
+      pthread_cond_signal( (pcscond) );     \
+    }                                       \
+  } WHILE_ZERO
 
 
-#define ATOMIC_VOLATILE_i32       __attribute__ ((aligned(4))) volatile int32_t
-#define ATOMIC_VOLATILE_u32       __attribute__ ((aligned(4))) volatile uint32_t
-#define ATOMIC_VOLATILE_i64       __attribute__ ((aligned(8))) volatile int64_t
-#define ATOMIC_VOLATILE_u64       __attribute__ ((aligned(8))) volatile uint64_t
+#define ATOMIC_i32       __attribute__ ((aligned(4))) int32_t
+#define ATOMIC_u32       __attribute__ ((aligned(4))) uint32_t
+#define ATOMIC_i64       __attribute__ ((aligned(8))) int64_t
+#define ATOMIC_u64       __attribute__ ((aligned(8))) uint64_t
 
 
 #define __CXATOMIC_INCREMENT(ptr)   __atomic_add_fetch(ptr, 1, __ATOMIC_SEQ_CST)
@@ -348,72 +388,43 @@ extern int64_t __TIMED_WAIT_CONDITION_CS( pthread_cond_t *cond, pthread_mutex_t 
 
 
 
-/* synchronize on specified mutex */
-#define SYNCHRONIZE_ON( CS )                \
-do {                                        \
-  CXLOCK_TYPE *__pcslock__ = &((CS).lock);  \
-  ENTER_CRITICAL_SECTION( __pcslock__ );    \
-  do                                        \
+/* synchronize on specified recursive mutex */
+#define RECURSIVE_SYNCHRONIZE_ON( CS )              \
+do {                                                \
+  CXLOCK_TYPE *__pcslock__ = &((CS).lock);          \
+  ENTER_RECURSIVE_CRITICAL_SECTION( __pcslock__ );  \
+  do                                                \
 /*
     {
       CODE GOES HERE
     }
 */
 
-/* synchronize on specified mutex pointer */
-#define SYNCHRONIZE_ON_PTR( pCS )             \
-do {                                          \
+/* synchronize on specified non-recursive mutex */
+#define SYNCHRONIZE_ON( CS )                    \
+do {                                            \
+  CXLOCK_TYPE *__pcslock__ = &((CS).lock);      \
+  ENTER_CRITICAL_SECTION( __pcslock__ );        \
+  do                                            \
+/*
+    {
+      CODE GOES HERE
+    }
+*/
+
+/* synchronize on specified recursive mutex pointer */
+#define RECURSIVE_SYNCHRONIZE_ON_PTR( pCS )                 \
+do {                                                        \
   CXLOCK_TYPE *__pcslock__ = (pCS) ? &((pCS)->lock) : NULL; \
-  if( __pcslock__ ) {                         \
-    ENTER_CRITICAL_SECTION( __pcslock__ );    \
-  }                                           \
-  do                                          \
+  if( __pcslock__ ) {                                       \
+    ENTER_RECURSIVE_CRITICAL_SECTION( __pcslock__ );        \
+  }                                                         \
+  do                                                        \
 /*
     {
       CODE GOES HERE
     }
 */
-
-
-#define FORCE_RELEASE                       \
-  LEAVE_CRITICAL_SECTION( __pcslock__ );    \
-  __pcslock__ = NULL                        \
-  /*               ^ expect ; in user code for consistency */
-  /* better know what you're doing at this point            */
-
-
-#define SUSPEND_SYNCH_ON( CS )              \
-  do {                                      \
-    CS_LOCK *__pcslock__ = &((CS).lock);    \
-    LEAVE_CRITICAL_SECTION( __pcslock__ );  \
-    do
-
-
-#define SUSPEND_SYNCH                       \
-  do {                                      \
-    LEAVE_CRITICAL_SECTION( __pcslock__ );  \
-    do
-
-
-#define RESUME_SYNCH                        \
-    WHILE_ZERO;                             \
-    ENTER_CRITICAL_SECTION( __pcslock__ );  \
-  } WHILE_ZERO
-
-
-#define SUSPEND_SLEEP( Milliseconds )       \
-  SUSPEND_SYNCH {                           \
-    sleep_milliseconds( Milliseconds );     \
-  } RESUME_SYNCH
-
-
-#define SUSPEND_ON_SLEEP( CS, Milliseconds )  \
-  SUSPEND_SYNCH_ON( CS ) {                    \
-    sleep_milliseconds( Milliseconds );       \
-  } RESUME_SYNCH
-
-
-
 
 
 #define RELEASE                             \
@@ -481,7 +492,7 @@ static int THREAD_START( cxlib_thread_t *hThread, uint32_t *thread_id, f_cxlib_t
  ******************************************************************************
  */
 static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
-  static int priority_map[] = {
+  static const int priority_map[] = {
     THREAD_PRIORITY_LOWEST,
     THREAD_PRIORITY_BELOW_NORMAL,
     THREAD_PRIORITY_NORMAL,
@@ -627,6 +638,8 @@ static int THREAD_START( cxlib_thread_t *thread, uint32_t *thread_id, f_cxlib_th
 
 #if defined(CXPLAT_LINUX_ANY)
 
+#include <sys/syscall.h>
+
 /**************************************************************************//**
  * THREAD_SET_PRIORITY
  *
@@ -639,7 +652,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   * sudo setcap cap_sys_nice=eip /usr/local/bin/python3.12
   * 
   */
-  static int nice_map[] = {
+  static const int nice_map[] = {
     10,   // LOWEST
     5,    // BELOW NORMAL
     0,    // NORMAL
@@ -647,7 +660,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
     -10,  // HIGHEST
     0     // DEFAULT
   };
-  return setpriority( PRIO_PROCESS, gettid(), nice_map[priority] );
+  return setpriority( PRIO_PROCESS, (int)syscall(SYS_gettid), nice_map[priority] );
 }
 #elif defined(CXPLAT_MAC_ARM64)
 #include <mach/thread_policy.h>
@@ -692,7 +705,7 @@ static int THREAD_SET_PRIORITY( cxlib_thread_priority priority ) {
   //       it will set priority relative to previous 
   //       setting.
 
-  static int priority_map[] = {
+  static const int priority_map[] = {
       -10,  // LOWEST
       -5,   // BELOW NORMAL
       0,    // NORMAL
@@ -862,21 +875,6 @@ typedef void* WAITABLE_TIMER;
         }                                                                             \
       }                                                                               \
     }                                                                                 \
-  } WHILE_ZERO
-
-
-#define SYNCHRONIZED_WAIT_UNTIL( ContinueCondition, TimeoutMilliseconds )         \
-  BEGIN_TIME_LIMITED_WHILE( !(ContinueCondition), TimeoutMilliseconds, NULL ) {   \
-    SUSPEND_SLEEP( 10 );                                                          \
-  } END_TIME_LIMITED_WHILE;                                                       \
-
-
-#define SYNCHRONIZED_ON_WAIT_UNTIL( CS, ContinueCondition, TimeoutMilliseconds )    \
-  do {                                                                              \
-    CS_LOCK *__pcslock__ = &((CS).lock);                                            \
-    BEGIN_TIME_LIMITED_WHILE( !(ContinueCondition), TimeoutMilliseconds, NULL ) {   \
-      SUSPEND_SLEEP( 10 );                                                          \
-    } END_TIME_LIMITED_WHILE;                                                       \
   } WHILE_ZERO
 
 

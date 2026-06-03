@@ -382,12 +382,13 @@ static PyObject * PyVGX_Similarity__rvec( PyVGX_Similarity *py_sim, PyObject *py
   BEGIN_PYVGX_THREADS {
     float *rval = malloc( sizeof(float) * sz );
     if( rval ) {
+      __lfsr63( __GET_CURRENT_NANOSECOND_TICK() + rand63() );
       float *p = rval;
       float *end = rval + sz;
       while( p < end ) {
         *p++ = (float)(2 * randfloat() - 1);
       }
-      vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, rval, sz, true, &CSTR__error );
+      vector = CALLABLE( sim )->NewInternalVectorFromExternal( sim, rval, sz, false, true, &CSTR__error );
       free( rval ); 
     }
   } END_PYVGX_THREADS;
@@ -427,27 +428,29 @@ static PyObject * PyVGX_Similarity__NewVector( PyVGX_Similarity *py_sim, PyObjec
   static const char *kwlist[] = {
     "data",
     "alpha",
+    "cosine_mode",
     NULL
   };
 
   typedef union u_vector_args {
-    PyObject *args[3];
+    PyObject *args[4];
     struct {
       PyObject *py_sim;
       PyObject *py_data;
       PyObject *py_alpha;
+      PyObject *py_cosine_mode;
     };
   } vector_args;
 
   vector_args vcargs = {0};
 
-  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 2, vcargs.args+1 ) < 0 ) {
+  if( __parse_vectorcall_args( args, nargs, kwnames, kwlist, 3, vcargs.args+1 ) < 0 ) {
     return NULL;
   }
 
   vcargs.py_sim = (PyObject*)py_sim;
 
-  PyObject *py_vector = PyObject_Vectorcall( (PyObject*)p_PyVGX_Vector__VectorType, vcargs.args+1, 2 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
+  PyObject *py_vector = PyObject_Vectorcall( (PyObject*)p_PyVGX_Vector__VectorType, vcargs.args+1, 3 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
 
   return py_vector;
 
@@ -491,20 +494,24 @@ static PyObject * PyVGX_Similarity__NewCentroid( PyVGX_Similarity *py_sim, PyObj
       THROW_ERROR( CXLIB_ERR_MEMORY, 0x601 );
     }
     // Parse and populate vector list
+    bool cosine_mode = true; // Falsify
     for( int64_t i=0; i<sz; i++ ) {
       PyObject *py_vector = PySequence_GetItem( py_vectors, i );
       if( !py_vector ) {
         THROW_ERROR( CXLIB_ERR_MEMORY, 0x602 );
       }
-      vectors[ i ] = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_vector, NULL, true );
+      vectors[ i ] = iPyVGXParser.InternalVectorFromPyObject( simcontext, py_vector, NULL, false, true );
       Py_DECREF( py_vector );
       if( vectors[ i ] == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x603 );
       }
+      if( cosine_mode && !vectors[ i ]->metas.flags.cos ) {
+        cosine_mode = false;
+      }
     }
     // Generate centroid
     BEGIN_PYVGX_THREADS {
-      centroid = CALLABLE( simcontext )->NewCentroid( simcontext, (const vgx_Vector_t**)vectors, true );
+      centroid = CALLABLE( simcontext )->NewCentroid( simcontext, (const vgx_Vector_t**)vectors, cosine_mode, true );
     } END_PYVGX_THREADS;
     // Create Python centroid
     if( centroid == NULL ) {
@@ -513,11 +520,12 @@ static PyObject * PyVGX_Similarity__NewCentroid( PyVGX_Similarity *py_sim, PyObj
     }
 
     typedef union u_vector_args {
-      PyObject *args[3];
+      PyObject *args[4];
       struct {
         PyObject *py_sim;
         PyObject *py_data;
         PyObject *py_alpha;
+        PyObject *py_cosine_mode;
       };
     } vector_args;
 
@@ -525,10 +533,11 @@ static PyObject * PyVGX_Similarity__NewCentroid( PyVGX_Similarity *py_sim, PyObj
     vector_args vcargs = {
       .py_sim = (PyObject*)py_sim,
       .py_data = py_datacapsule,
-      .py_alpha = NULL
+      .py_alpha = NULL,
+      .py_cosine_mode = NULL
     };
 
-    py_centroid = PyObject_Vectorcall( (PyObject*)p_PyVGX_Vector__VectorType, vcargs.args+1, 2 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
+    py_centroid = PyObject_Vectorcall( (PyObject*)p_PyVGX_Vector__VectorType, vcargs.args+1, 3 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL );
     Py_XDECREF( py_datacapsule );
 
   }
@@ -587,7 +596,7 @@ DLL_HIDDEN PyObject * PyVGX_Similarity__Fingerprint( PyObject *pysim, PyObject *
   }
 
   // Get vector (own ref)
-  vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( sim, py_vector, NULL, true );
+  vgx_Vector_t *vector = iPyVGXParser.InternalVectorFromPyObject( sim, py_vector, NULL, false, true );
   if( vector == NULL ) {
     return NULL;
   }
@@ -1289,11 +1298,40 @@ static PyObject * PyVGX_Similarity__repr( PyVGX_Similarity *pysim ) {
 
 
 /******************************************************************************
+ * PyVGX_Similarity__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Similarity__traverse( PyVGX_Similarity *pysim, visitproc visit, void *arg ) {
+  // LSH seeds
+  Py_VISIT( pysim->py_lsh_seeds );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Similarity__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Similarity__clear( PyVGX_Similarity *pysim ) {
+  // LSH seeds
+  Py_CLEAR( pysim->py_lsh_seeds );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_Similarity__dealloc
  *
  ******************************************************************************
  */
 static void PyVGX_Similarity__dealloc( PyVGX_Similarity *pysim ) {
+  // Remove from GC tracker
+  PyObject_GC_UnTrack( pysim );
+
   vgx_Similarity_t *sim = pysim->sim;
   if( sim && pysim->standalone == true ) {
     BEGIN_PYVGX_THREADS {
@@ -1301,7 +1339,11 @@ static void PyVGX_Similarity__dealloc( PyVGX_Similarity *pysim ) {
     } END_PYVGX_THREADS;
     pysim->sim = NULL;
   }
-  Py_XDECREF( pysim->py_lsh_seeds );
+
+  // Clear inner object references
+  PyVGX_Similarity__clear( pysim );
+  
+  // Free object
   Py_TYPE( pysim )->tp_free( pysim );
 }
 
@@ -1572,11 +1614,11 @@ static PyTypeObject PyVGX_Similarity__SimilarityType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_DEFAULT,
+    .tp_flags           = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX Similarity objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        = (traverseproc)PyVGX_Similarity__traverse,
+    .tp_clear           = (inquiry)PyVGX_Similarity__clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

@@ -120,23 +120,28 @@ static int __io__handle_exception( vgx_VGXServer_t *server, vgx_VGXServerClient_
   const char *client_uri = "";
   if( client->URI ) {
     client_uri = iURI.URI( client->URI );
-    if( err == 0 ) {
-      err = iURI.Sock.Error( client->URI, &CSTR__error, -1, 0 );
-    }
-    const char *serr = CSTR__error ? CStringValue( CSTR__error ) : "?";
-    if( pfd && pfd->revents == POLLHUP ) {
+    
+    // Clean disconnect
+    if( pfd && (pfd->revents & POLLHUP) ) {
       SERVERIO_VERBOSE( server, 0x001, "Disconnected: %s", client_uri );
     }
-    else if( (pfd && pfd->revents == POLLERR) || err == ECONNRESET ) {
-      SERVERIO_VERBOSE( server, 0x002, "Disconnected: %s", serr );
-    }
-    else if( err == 0 ) {
-      SERVERIO_INFO( server, 0x003, "%s", serr );
-    }
     else {
-      SERVERIO_REASON( server, 0x004, "I/O Exception %s", serr );
+      if( err == 0 ) {
+        err = iURI.Sock.Error( client->URI, &CSTR__error, -1, 0 );
+      }
+      const char *serr = CSTR__error ? CStringValue( CSTR__error ) : "?";
+      if( (pfd && (pfd->revents & POLLERR)) || err == ECONNRESET ) {
+        SERVERIO_VERBOSE( server, 0x002, "Disconnected: %s", serr );
+      }
+      else if( err == 0 ) {
+        SERVERIO_INFO( server, 0x003, "%s", serr );
+      }
+      else {
+        SERVERIO_REASON( server, 0x004, "I/O Exception %s", serr );
+      }
+      iString.Discard( &CSTR__error );
     }
-    iString.Discard( &CSTR__error );
+    
     return vgx_server_client__close( server, client );
   }
 
@@ -519,34 +524,19 @@ static int __io__poll_any_front_only( vgx_VGXServer_t *server, int timeout_ms ) 
  ***********************************************************************
  */
 __inline static bool __io__poll( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
 
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_front_only( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_front_only( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_front_only( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 
@@ -566,34 +556,19 @@ __inline static bool __io__poll( vgx_VGXServer_t *server ) {
  ***********************************************************************
  */
 __inline static bool __io__poll_with_dispatcher( vgx_VGXServer_t *server ) {
-  static __THREAD int count = 0;
 
-  vgx_VGXServerExecutorCompletion_t *completion = &server->dispatch.completion;
-  int nfd = 0;
-  int qsz = 0;
-  while( (nfd = __io__poll_any_with_dispatcher( server, 0 )) == 0 && (qsz = ATOMIC_READ_i32( &completion->length_atomic )) == 0 && count++ < 8 ) {
-    #if defined CXPLAT_ARCH_X64
-    _mm_pause();
-    #elif defined CXPLAT_ARCH_ARM64
-    __yield();
-    #endif
-  }
-
-  if( nfd > 0 || qsz > 0 ) {
-    count = 0;
+  if( __io__poll_any_with_dispatcher( server, 0 ) > 0 ) {
     return true;
   }
 
-  count = 8;
-
   // No sockets on poll list, prepare blocking poll if no
   // clients on the completion queue.
-  if( __io__set_blocked_if_none_completed( completion ) ) {
+  if( __io__set_blocked_if_none_completed( &server->dispatch.completion ) ) {
     // No I/O and no clients on the completion queue: Poll blocking
     __io__poll_any_with_dispatcher( server, 5 );
 
     // Clear flag after wakup
-    __io__clear_blocked( completion );
+    __io__clear_blocked( &server->dispatch.completion );
     return false;
   }
 
@@ -615,7 +590,7 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
   vgx_VGXServerClient_t *client;
 
   while( (client = ready->client) != NULL ) {
-
+    
     // -----------------------------------
     // Send client data to writable socket
     // -----------------------------------
@@ -630,13 +605,11 @@ static void __io__perform_pending_front_io( vgx_VGXServer_t *server ) {
 
     // -------------------------------------
     // Read client data from readable socket
-    // and proceed to next client
     // -------------------------------------
     if( cxpollfd_readable( ready->pfd ) ) {
       __io__recv( server, client );
-      goto next_client;
     }
-
+    
     // ---------------------------
     // Client socket has exception
     // ---------------------------
@@ -685,14 +658,6 @@ static void __io__perform_pending_dispatcher_io( vgx_VGXServer_t *server ) {
 
   while( ready->channel != NULL ) {
 
-    // ----------------------------
-    // Channel socket has exception
-    // ----------------------------
-    if( cxpollfd_exception( ready->pfd ) ) {
-      vgx_server_dispatcher_io__handle_exception( server, ready->channel, HTTP_STATUS__INTERNAL_SOCKET_ERROR, NULL );
-      goto next_channel;
-    }
-
     // ------------------------------------
     // Send channel data to writable socket
     // ------------------------------------
@@ -708,6 +673,13 @@ static void __io__perform_pending_dispatcher_io( vgx_VGXServer_t *server ) {
     // -------------------------------------
     if( cxpollfd_readable( ready->pfd ) ) {
       vgx_server_dispatcher_io__recv( server, ready->channel );
+    }
+
+    // ----------------------------
+    // Channel socket has exception
+    // ----------------------------
+    if( cxpollfd_exception( ready->pfd ) ) {
+      vgx_server_dispatcher_io__handle_exception( server, ready->channel, HTTP_STATUS__INTERNAL_SOCKET_ERROR, NULL );
     }
 
   next_channel:
@@ -760,6 +732,10 @@ DLL_HIDDEN void vgx_server_io__process_socket_events( vgx_VGXServer_t *server, i
 
   // Matrix
   if( DISPATCHER_MATRIX_ENABLED( server ) ) {
+    
+    // Dispatch next in line client if backlog exists
+    vgx_server_dispatcher_dispatch__apply_backlog( server );
+
     do {
       int loops_until_deadline_check = 1000;
 
@@ -1246,7 +1222,7 @@ __inline static void __io__process_next_request( vgx_VGXServer_t *server, vgx_VG
   if( vgx_server_request__handle( server, client ) < 0 ) {
     // Fallback in case error was not set
     if( !CLIENT_STATE__HAS_ERROR( client ) ) {
-      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error", true );
+      vgx_server_response__produce_error( server, client, HTTP_STATUS__InternalServerError, "Unknown internal error at next request", true );
     }
   }
 }

@@ -60,7 +60,7 @@ unsigned __int64 __popcnt64( unsigned __int64 value );
 #define POPCNT32(X)  __popcnt( (X) )
 #define POPCNT64(X)  __popcnt64( (X) )
 #else
-#if defined CXPLAT_LINUX_ANY
+#if defined CXPLAT_LINUX_X64
 #pragma GCC target("popcnt,lzcnt,bmi,bmi2")
 #endif
 #define POPCNT16(X)  __builtin_popcount( (X) & 0xFFFF )
@@ -215,10 +215,14 @@ double randfloat( void );
 int32_t hash32( const unsigned char * data, int32_t len );
 int32_t strhash32( const unsigned char * data );
 uint64_t ihash64( uint64_t n );
+uint64_t ihash64v2( uint64_t n );
+uint64_t ihash64v3( uint64_t n );
+double xrandom( uint64_t state );
 int64_t hash64( const unsigned char * data, int64_t len );
 objectid_t hash128( const unsigned char *data, int64_t len );
 int64_t strhash64( const unsigned char *data );
 objectid_t strhash128( const unsigned char *data );
+
 
 
 int64_t iround( double X );

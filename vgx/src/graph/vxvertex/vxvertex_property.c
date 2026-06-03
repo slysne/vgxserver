@@ -656,7 +656,7 @@ static vgx_VertexProperty_t * __get_internal_attribute_RO( const vgx_CollectorIt
     case VGX_RESPONSE_ATTR_VECTOR:
       if( vertex->vector ) {
         vgx_Graph_t *graph = vertex->graph;
-        vgx_Vector_t *V_ext = CALLABLE( graph->similarity )->TranslateVector( graph->similarity, vertex->vector, true, NULL );
+        vgx_Vector_t *V_ext = CALLABLE( graph->similarity )->TranslateVector( graph->similarity, vertex->vector, false, true, NULL );
         if( V_ext ) {
           // NOTE: We know the external vector formatter renders 42 bytes max per element, always true since last element
           //       doesn't include ", " and therefore accounts for the first "[" and last "]".
@@ -2852,7 +2852,7 @@ static vgx_VirtualPropertiesHeader_t * __virtual_properties_init_header_VPCS( vg
  *
  ***********************************************************************
  */
-static int __virtual_properties_load_header_VPCS( vgx_Graph_t *graph ) {
+static int __virtual_properties_load_header_VPCS( vgx_Graph_t *graph, bool load_counters ) {
 
   // Beginning of file
   CX_SEEK( graph->vprop.fd, 0, SEEK_SET );
@@ -2871,8 +2871,10 @@ static int __virtual_properties_load_header_VPCS( vgx_Graph_t *graph ) {
 
   // Restore commit point and metas
   graph->vprop.commit = header.commit;
-  graph->vprop.bytes = header.bytes;
-  graph->vprop.count = header.count;
+  if( load_counters ) {
+    graph->vprop.bytes = header.bytes;
+    graph->vprop.count = header.count;
+  }
 
   return 0;
 }
@@ -3212,7 +3214,7 @@ static int64_t _vxvertex_property__write_virtual_property_CS( vgx_Graph_t *graph
   GRAPH_SUSPEND_LOCK( graph ) {
 
 
-    SYNCHRONIZE_ON( graph->vprop.lock ) {
+    SYNCHRONIZE_ON( graph->vprop.fastlock ) {
       int fd = graph->vprop.fd;
       XTRY {
         // File must be open
@@ -3262,7 +3264,7 @@ static int64_t _vxvertex_property__write_virtual_property_CS( vgx_Graph_t *graph
 DLL_HIDDEN CString_t * _vxvertex_property__read_virtual_property( vgx_Graph_t *graph, int64_t offset, CString_t *CSTR__buffer, int64_t *rsz ) {
   CString_t *CSTR__data = NULL;
 
-  SYNCHRONIZE_ON( graph->vprop.lock ) {
+  SYNCHRONIZE_ON( graph->vprop.fastlock ) {
     int fd = graph->vprop.fd;
     XTRY {
       // File must be open
@@ -3359,7 +3361,7 @@ static int _vxvertex_property__erase_virtual_property_CS( vgx_Graph_t *graph, in
   int ret = 0;
   GRAPH_SUSPEND_LOCK( graph ) {
 
-    SYNCHRONIZE_ON( graph->vprop.lock ) {
+    SYNCHRONIZE_ON( graph->vprop.fastlock ) {
       int fd = graph->vprop.fd;
       XTRY {
         // File must be open
@@ -3404,7 +3406,7 @@ static int _vxvertex_property__erase_virtual_property_CS( vgx_Graph_t *graph, in
 DLL_HIDDEN void _vxvertex_property__virtual_properties_close( vgx_Graph_t *graph ) {
   GRAPH_LOCK( graph ) {
     if( graph->vprop.ready ) {
-      SYNCHRONIZE_ON( graph->vprop.lock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
         // Close file
         if( graph->vprop.fd > 0 ) {
           CX_CLOSE( graph->vprop.fd );
@@ -3432,7 +3434,7 @@ DLL_HIDDEN void _vxvertex_property__virtual_properties_destroy( vgx_Graph_t *gra
       _vxvertex_property__virtual_properties_close( graph );
 
       // Delete lock
-      DEL_CRITICAL_SECTION( &graph->vprop.lock.lock );
+      DEL_CRITICAL_SECTION( &graph->vprop.fastlock.lock );
 
       // Clear
       graph->vprop.ready = false;
@@ -3567,7 +3569,7 @@ static const char * __virtual_properties_fullpath( vgx_Graph_t *graph, char *buf
  *
  ***********************************************************************
  */
-DLL_HIDDEN int _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase ) {
+DLL_HIDDEN int _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, const char *tmpbase, bool load_counters ) {
 
   int ret = 0;
 
@@ -3575,7 +3577,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, 
 
     if( graph->vprop.ready ) {
 
-      SYNCHRONIZE_ON( graph->vprop.lock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
 
         if( graph->vprop.fd <= 0 ) {
 
@@ -3597,7 +3599,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_open( vgx_Graph_t *graph, 
             }
 
             // Restore metas from header
-            __virtual_properties_load_header_VPCS( graph );
+            __virtual_properties_load_header_VPCS( graph, load_counters );
 
             // Position at end
             CX_SEEK( graph->vprop.fd, 0, SEEK_END );
@@ -3635,7 +3637,7 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_move( vgx_Graph_t *graph, 
 
     if( graph->vprop.ready ) {
 
-      SYNCHRONIZE_ON( graph->vprop.lock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
 
         XTRY {
           // Full path to source file
@@ -3704,28 +3706,45 @@ DLL_HIDDEN int64_t _vxvertex_property__virtual_properties_commit( vgx_Graph_t *g
 
   GRAPH_LOCK( graph ) {
     if( graph->vprop.ready ) {
-      SYNCHRONIZE_ON( graph->vprop.lock ) {
+      SYNCHRONIZE_ON( graph->vprop.fastlock ) {
         int fd = graph->vprop.fd;
         // File is open
         if( fd > 0 ) {
           XTRY {
-            // Determine commit point
-            int64_t szdelim = sizeof(objectid_t);
-            // Commit point is end of last property
-            if( (commit_point = CX_SEEK( fd, -szdelim, SEEK_END )) < 0 ) {
-              THROW_ERROR( CXLIB_ERR_FILESYSTEM, 0x001 );
+            // Properties exist
+            if( graph->vprop.count > 0 ) {
+              // Determine commit point
+              int64_t szdelim = sizeof(objectid_t);
+              // Commit point is end of last property
+              if( (commit_point = CX_SEEK( fd, -szdelim, SEEK_END )) < 0 ) {
+                THROW_ERROR( CXLIB_ERR_FILESYSTEM, 0x001 );
+              }
+              // Bad commit point
+              if( commit_point < graph->vprop.commit ) {
+                THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x002 );
+              }
+              // Persist updated header to file
+              if( __virtual_properties_store_header_VPCS( graph, commit_point ) < 0 ) {
+                THROW_ERROR( CXLIB_ERR_FILESYSTEM, 0x003 );
+              }
+              // Success: Update commit point
+              graph->vprop.commit = commit_point;
             }
-            // Bad commit point
-            if( commit_point < graph->vprop.commit ) {
-              THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x002 );
-            }
-            // Persist updated header to file
-            if( __virtual_properties_store_header_VPCS( graph, commit_point ) < 0 ) {
-              THROW_ERROR( CXLIB_ERR_FILESYSTEM, 0x003 );
+            // No virtual properties, truncate file
+            else {
+              // Initialize the header
+              if( __write_new_virtual_properties_header_VPCS( graph ) < 0 ) {
+                THROW_ERROR( CXLIB_ERR_CORRUPTION, 0x004 );
+              }
+              // Initial commit point
+              commit_point = graph->vprop.commit;
+              // Truncate after initial property delimiter
+              int64_t end = commit_point + sizeof( objectid_t );
+              if( CX_TRUNCATE( graph->vprop.fd, end ) !=0 ) {
+                THROW_ERROR_MESSAGE( CXLIB_ERR_FILESYSTEM, 0x005, "Failed to truncate virtual properties: %s", strerror( errno ) );
+              }
             }
 
-            // Success: Update commit point
-            graph->vprop.commit = commit_point;
           }
           XCATCH( errcode ) {
             commit_point = -1;
@@ -3752,7 +3771,7 @@ DLL_HIDDEN int64_t _vxvertex_property__virtual_properties_commit( vgx_Graph_t *g
  *
  ***********************************************************************
  */
-DLL_HIDDEN int _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph ) {
+DLL_HIDDEN int _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph, bool load_counters ) {
 
   int ret = 0;
 
@@ -3763,11 +3782,11 @@ DLL_HIDDEN int _vxvertex_property__virtual_properties_init( vgx_Graph_t *graph )
       XTRY {
 
         // Virtual properties lock
-        INIT_SPINNING_CRITICAL_SECTION( &graph->vprop.lock.lock, 4000 );
+        INIT_CRITICAL_SECTION( &graph->vprop.fastlock.lock );
         graph->vprop.ready = true;
 
         // Open the file
-        if( (ret = _vxvertex_property__virtual_properties_open( graph, NULL )) < 0 ) {
+        if( (ret = _vxvertex_property__virtual_properties_open( graph, NULL, load_counters )) < 0 ) {
           _vxvertex_property__virtual_properties_destroy( graph );
           THROW_ERROR( CXLIB_ERR_GENERAL, 0x001 );
         }

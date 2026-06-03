@@ -26,6 +26,8 @@
 import sys
 import os
 import pprint
+import textwrap
+import shutil
 
 os.environ["PYVGX_NOBANNER"] = "1"
 
@@ -58,13 +60,31 @@ def main():
     arguments = sys.argv[optidx:]
 
     try:
+        termwidth = shutil.get_terminal_size(fallback=(80, 24)).columns
+        wrapper = textwrap.TextWrapper(
+            width = termwidth,
+            break_long_words = False,
+            replace_whitespace = False,
+            drop_whitespace = False
+        )
+
+    except:
+        wrapper = None
+
+    try:
         R = VGXAdmin.Run( arguments=arguments, address=address, program=program, default_descriptor_filename="vgx.cf" )
         if R:
             print()
             print( "Result:" )
             if type(R) is list:
                 for ret in R:
-                    if ret is not None:
+                    if type(ret) is str:
+                        for line in ret.splitlines():
+                            if wrapper is not None:
+                                print( wrapper.fill(line) )
+                            else:
+                                print( line )
+                    elif ret is not None:
                         pprint.pprint( ret )
             else:
                 pprint.pprint( R )

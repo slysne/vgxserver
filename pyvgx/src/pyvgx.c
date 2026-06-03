@@ -67,6 +67,8 @@ DLL_HIDDEN __THREAD uint64_t _pyvertex_generation_guard = 0;
 
 DLL_HIDDEN bool _pyvgx_api_enabled = true;
 
+DLL_HIDDEN ATOMIC_i32 g_exit_run_server = false;
+
 
 DLL_HIDDEN PyObject *g_py_plugins = NULL;
 
@@ -1565,7 +1567,7 @@ DLL_HIDDEN int __pyvgx_set_output_stream( const char *filepath, CString_t **CSTR
 
   cxlib_exc_context_t *context = COMLIB_GetExceptionContext();
   int ret = 0;
-  SYNCHRONIZE_ON( context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( context->lock ) {
 
     // Close previous file if any
     if( g_output_stream != stderr ) {
@@ -2002,7 +2004,7 @@ RESUME_WARNINGS
  */
 static int compat_check( void ) {
 #if defined CXPLAT_ARCH_X64
-    static int build_avx = 
+    static const int build_avx = 
 #ifdef __cxlib_AVX512_MINIMUM__
       512;
 #elif defined __AVX2__
@@ -2759,6 +2761,7 @@ int init_PyVGX( PyObject *module ) {
   PyModule_AddIntConstant( module,  "S_DESC",         VGX_SORT_DIRECTION_DESCENDING );
   PyModule_AddIntConstant( module,  "S_VAL",          VGX_SORTBY_PREDICATOR );
   PyModule_AddIntConstant( module,  "S_ADDR",         VGX_SORTBY_MEMADDRESS );
+  PyModule_AddIntConstant( module,  "S_RVAL",         VGX_SORTBY_REAL_PREDICATOR );
   PyModule_AddIntConstant( module,  "S_OBID",         VGX_SORTBY_INTERNALID );
   PyModule_AddIntConstant( module,  "S_ID",           VGX_SORTBY_IDSTRING );
   PyModule_AddIntConstant( module,  "S_ANCHOR",       VGX_SORTBY_ANCHOR_ID );
@@ -2826,6 +2829,7 @@ int init_PyVGX( PyObject *module ) {
   PyModule_AddIntConstant( module,  "F_RANK",     VGX_RESPONSE_ATTR_RANKSCORE );
   PyModule_AddIntConstant( module,  "F_SIM",      VGX_RESPONSE_ATTR_SIMILARITY );
   PyModule_AddIntConstant( module,  "F_HAM",      VGX_RESPONSE_ATTR_HAMDIST );
+  PyModule_AddIntConstant( module,  "F_DEPTH",    VGX_RESPONSE_ATTR_RECURSION );
   PyModule_AddIntConstant( module,  "F_RLV",      VGX_RESPONSE_ATTRS_RELEVANCE );
   // Timestamps
   PyModule_AddIntConstant( module,  "F_TMC",      VGX_RESPONSE_ATTR_TMC );

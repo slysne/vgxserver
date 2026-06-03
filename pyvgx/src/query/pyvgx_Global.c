@@ -228,7 +228,7 @@ static __global_query_args * _pyvgx_Global__parse_params( PyObject *args, PyObje
     // rank
     // ----
     // Disallow certain sortby
-    if( param->implied.collector_mode == VGX_COLLECTOR_MODE_COLLECT_VERTICES && param->sortspec == VGX_SORTBY_PREDICATOR ) {
+    if( param->implied.collector_mode == VGX_COLLECTOR_MODE_COLLECT_VERTICES && (param->sortspec == VGX_SORTBY_PREDICATOR || param->sortspec == VGX_SORTBY_REAL_PREDICATOR) ) {
       PyVGXError_SetString( PyVGX_QueryError, "Invalid sortby specified: predicator value not available in this context" );
       THROW_SILENT( CXLIB_ERR_API, 0x003 );
     }

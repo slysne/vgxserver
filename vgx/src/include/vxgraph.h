@@ -76,7 +76,9 @@ typedef struct s_vgx_Fingerprinter_vtable_t {
   /* Fingerprinter methods */
   int (*Distance)( const struct s_vgx_Fingerprinter_t *self, FP_t fp1, FP_t fp2 );
   FP_t (*Compute)( const struct s_vgx_Fingerprinter_t *self, struct s_vgx_Vector_t *vector, int64_t seed, FP_t *rlcm );
+  uint32_t (*Compute32)( const struct s_vgx_Fingerprinter_t *self, struct s_vgx_Vector_t *vector, int64_t seed );
   FP_t (*ComputeBytearray)( const struct s_vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed, FP_t *rlcm );
+  uint32_t (*Compute32Bytearray)( const struct s_vgx_Fingerprinter_t *self, const BYTE *bytes, int sz, int64_t seed );
   char * (*Projections)( const struct s_vgx_Fingerprinter_t *self, char buffer321[], const struct s_vgx_Vector_t *vector, FP_t lsh, FP_t lcm, WORD seed, int ksize, bool reduce, bool expand );
   int (*SegmValid)( const struct s_vgx_Fingerprinter_t *self, int nsegm, int nsign );
   int (*PnoValid)( const struct s_vgx_Fingerprinter_t *self, int pno, int nsegm, int nsign );
@@ -133,11 +135,13 @@ typedef union u_vgx_VectorContext_t {
 typedef union s_vgx_VectorFlags_t {
   uint8_t bits;
   struct {
+    /* compat region */
     uint8_t nul  : 1; /* null vector */
     uint8_t pop  : 1; /* populated */
     uint8_t ext  : 1; /* external */
     uint8_t ecl  : 1; /* euclidean */
-    uint8_t _r5  : 1; /* */
+    /* other */
+    uint8_t cos  : 1; /* cosine-compatible only */
     uint8_t _r6  : 1; /* */
     uint8_t _r7  : 1; /* */
     uint8_t eph  : 1; /* ephemeral */
@@ -147,7 +151,7 @@ typedef union s_vgx_VectorFlags_t {
     uint8_t _5678 : 4;
   } compat;
   struct {
-    uint8_t ____1 : 1;
+    uint8_t ___1  : 1;
     uint8_t bits  : 3;
     uint8_t _5678 : 4;
   } compat_nul;
@@ -168,10 +172,10 @@ typedef union u_vgx_VectorMetas_t {
       // Vector magnitude used with feature vectors
       float norm;
       // Element scaling factor used with Euclidean vectors
-      float factor;
-
-      float XXX_TODO_SCALAR;
-
+      float alpha;
+      // Internal cosine-compatible only vector's inverse norm,
+      // i.e. 1/sqrt(ssq)
+      float invnorm;
       // Bits used for (de)serialization
       DWORD bits;
     } scalar;
@@ -253,7 +257,8 @@ typedef struct s_vgx_Vector_constructor_args_t {
   bool ephemeral;
   vector_type_t type;
   const void *elements;
-  float scale;
+  float alpha;
+  bool cosmode;
   struct s_vgx_Similarity_t *simcontext;
 } vgx_Vector_constructor_args_t;
 
@@ -846,8 +851,7 @@ typedef struct s_vgx_VertexRef_t {
   struct {
     int8_t locked;
     int8_t state;
-    int8_t __rsv1;
-    int8_t __rsv2;
+    uint16_t depth;
   } slot;
 } vgx_VertexRef_t;
 
@@ -1634,12 +1638,15 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
   __vgx_AdjacencyQuery_members                      \
   __vgx_ResultSetQuery_members                      \
   vgx_ArcConditionSet_t *collect_arc_condition_set; \
-  vgx_collector_mode_t collector_mode; 
+  vgx_collector_mode_t collector_mode;              \
+  vgx_recursion_config_t recursion_config;          \
+  vgx_recursion_config_t effective_recursion_config;
 
 #define __vgx_NeighborhoodQuery_args                  \
   __vgx_AdjacencyQuery_args                           \
   vgx_ArcConditionSet_t **collect_arc_condition_set;  \
-  vgx_collector_mode_t collector_mode; 
+  vgx_collector_mode_t collector_mode;                \
+  vgx_recursion_config_t recursion;
 
 
 // vtable
@@ -2173,21 +2180,21 @@ typedef struct s_vgx_Similarity_vtable_t {
   COMLIB_VTABLE_HEAD
   /* Similarity methods */
   struct s_vgx_Similarity_t * (*Clone)( struct s_vgx_Similarity_t *self );
-  struct s_vgx_Vector_t * (*NewInternalVector)( struct s_vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool ephemeral );
+  struct s_vgx_Vector_t * (*NewInternalVector)( struct s_vgx_Similarity_t *self, const void *elements, float scale, uint16_t sz, bool cosine_mode, bool ephemeral );
   struct s_vgx_Vector_t * (*NewExternalVector)( struct s_vgx_Similarity_t *self, const void *elements, uint16_t sz, bool ephemeral );
-  struct s_vgx_Vector_t * (*NewInternalVectorFromExternal)( struct s_vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool ephemeral, CString_t **CSTR__error );
-  struct s_vgx_Vector_t * (*NewEmptyInternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
+  struct s_vgx_Vector_t * (*NewInternalVectorFromExternal)( struct s_vgx_Similarity_t *self, const void *external_elements, uint16_t sz, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*NewEmptyInternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool cosine_mode, bool ephemeral );
   struct s_vgx_Vector_t * (*NewEmptyExternalVector)( struct s_vgx_Similarity_t *self, uint16_t vlen, bool ephemeral );
-  struct s_vgx_Vector_t * (*InternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*InternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
   struct s_vgx_Vector_t * (*ExternalizeVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral );
-  struct s_vgx_Vector_t * (*TranslateVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool ephemeral, CString_t **CSTR__error );
-  struct s_vgx_Vector_t * (*NewCentroid)( struct s_vgx_Similarity_t *self, const struct s_vgx_Vector_t *vectors[], bool ephemeral );
+  struct s_vgx_Vector_t * (*TranslateVector)( struct s_vgx_Similarity_t *self, struct s_vgx_Vector_t *src, bool cosine_mode, bool ephemeral, CString_t **CSTR__error );
+  struct s_vgx_Vector_t * (*NewCentroid)( struct s_vgx_Similarity_t *self, const struct s_vgx_Vector_t *vectors[], bool cosine_mode, bool ephemeral );
   int (*HammingDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*EuclideanDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Cosine)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Jaccard)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+  float (*EuclideanDistance)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+  float (*Cosine)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
+  float (*Jaccard)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
   int8_t (*Intersect)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
-  float (*Similarity)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B );
+  float (*Similarity)( struct s_vgx_Similarity_t *self, const vgx_Comparable_t A, const vgx_Comparable_t B, float threshold );
   bool (*Valid)( struct s_vgx_Similarity_t *self );
   void (*Clear)( struct s_vgx_Similarity_t *self );
   union u_vgx_Similarity_value_t * (*Value)( struct s_vgx_Similarity_t *self );
@@ -3027,19 +3034,19 @@ typedef struct s_vgx_GraphTimer_t {
   struct s_vgx_Graph_t *graph;
 
   // [Q1.3] Current time tick in milliseconds since 1970
-  ATOMIC_VOLATILE_i64 tms_atomic;
+  ATOMIC_i64 tms_atomic;
 
   // [Q1.4.1] Current time tick in seconds since 1970
-  ATOMIC_VOLATILE_u32 ts_atomic;
+  ATOMIC_u32 ts_atomic;
 
   // [Q1.4.2]
-  ATOMIC_VOLATILE_u32 t0_atomic;
+  ATOMIC_u32 t0_atomic;
 
   // [Q1.5.1]
-  ATOMIC_VOLATILE_i32 offset_tms_atomic;
+  ATOMIC_i32 offset_tms_atomic;
 
   // [Q1.5.2]
-  ATOMIC_VOLATILE_u32 inception_t0_atomic;
+  ATOMIC_u32 inception_t0_atomic;
 
 } vgx_GraphTimer_t;
 
@@ -3538,11 +3545,11 @@ typedef struct s_vgx_Graph_vtable_t {
   /* */
   const CString_t * (*Name)( const struct s_vgx_Graph_t *self );
 
-  void (*CountQueryNolock)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
-  void (*ResetQueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryCountNolock)( struct s_vgx_Graph_t *self );
-  int64_t (*QueryTimeNanosecAccNolock)( struct s_vgx_Graph_t *self );
-  double (*QueryTimeAverageNolock)( struct s_vgx_Graph_t *self );
+  void (*CountQueryAtomic)( struct s_vgx_Graph_t *self, int64_t q_time_nanosec );
+  void (*ResetQueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryCountAtomic)( struct s_vgx_Graph_t *self );
+  int64_t (*QueryTimeNanosecAccAtomic)( struct s_vgx_Graph_t *self );
+  double (*QueryTimeAverageAtomic)( struct s_vgx_Graph_t *self );
 
   void (*SetDestructorHook)( struct s_vgx_Graph_t *self, void *external_owner, void (*destructor_callback_hook)( struct s_vgx_Graph_t *self, void *external_owner ) );
   void (*ClearExternalOwner)( struct s_vgx_Graph_t *self );
@@ -3679,7 +3686,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
       int64_t count_vtx_RO;
 
       // [Q4.8] Graph order = number of vertices |V(G)|
-      ATOMIC_VOLATILE_i64 _order_atomic;
+      ATOMIC_i64 _order_atomic;
     };
   };
 
@@ -3706,18 +3713,18 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     cacheline_t __cl8;
     struct {
       // [Q8.1] Graph size = number of arcs |E(G)|
-      ATOMIC_VOLATILE_i64 _size_atomic;
+      ATOMIC_i64 _size_atomic;
 
       // [Q8.2]
-      ATOMIC_VOLATILE_i64 _nvectors_atomic;
+      ATOMIC_i64 _nvectors_atomic;
 
       // [Q8.3]
-      ATOMIC_VOLATILE_i64 _nproperties_atomic;
+      ATOMIC_i64 _nproperties_atomic;
 
       // Graph reverse size = number of reverse arcs |E(G)|
       // For debug arcvector consistency
       // [Q8.4]
-      ATOMIC_VOLATILE_i64 rev_size_atomic;
+      ATOMIC_i64 rev_size_atomic;
 
       // [Q8.5]
       QWORD __rsv_8_5;
@@ -3794,7 +3801,7 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     struct {
       // -------------------------
       // [Q13]
-      CS_LOCK lock;
+      CS_LOCK fastlock;
 
       // -------------------------
       // [Q14.1.1]
@@ -3871,19 +3878,20 @@ CALIGNED_TYPE(struct) s_vgx_Graph_t {
     };
     struct {
       // [Q19]
-      CS_LOCK q_lock;
+      //CS_LOCK q_lock;
+      QWORD __rsv_19[8];
 
       // [Q20.1.1]
-      int q_pri_req;
+      ATOMIC_i32 q_pri_req;
 
       // [Q20.1.2]
       int __rsv_20_1_2;
 
       // [Q20.2]
-      int64_t q_count;
+      ATOMIC_i64 q_count;
 
       // [Q20.3]
-      int64_t q_time_nanosec_acc;
+      ATOMIC_i64 q_time_nanosec_acc;
 
       // [Q20.4]
       QWORD __rsv_20_4;
@@ -4492,12 +4500,17 @@ __inline static int16_t __try_enter_CS_nonblocking( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
+  #define MAX_YIELD_PER_TRY 32
+  #define MAX_UNINTERRUPTED_SPIN_COUNT 256
+
   if( timeout_ms == 0 ) {
     return __try_enter_CS_nonblocking( graph );
   }
 
   // UNSAFE HERE
   int64_t deadline_ns = -1;
+  int y = 1;
+  int n = 0;
   while( !TRY_CRITICAL_SECTION( &graph->state_lock.lock ) ) {
     int64_t t_ns = __GET_CURRENT_NANOSECOND_TICK();
     // Initialize deadline if this is our first failed attempt
@@ -4513,15 +4526,22 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
     else if( t_ns > deadline_ns ) {
       return -1;
     }
-    // Spin
-    else {
-      int64_t z = 0;
-      int64_t a = 0;
-      // Do something that doesn't get optimized away
-      while( z < (4000 + (int64_t)(timeout_ms&0xf))  ) {
-        a += z++;
+    // Polite Spin
+    else if( ++n < MAX_UNINTERRUPTED_SPIN_COUNT ) {
+      for( int i=0; i<y; ++i ) {
+        #if defined CXPLAT_ARCH_X64
+        _mm_pause();
+        #elif defined CXPLAT_ARCH_ARM64
+        __yield();
+        #endif
       }
-      deadline_ns ^= (a & 1);
+      
+      // More yields every time we go around the loop
+      y = (y < MAX_YIELD_PER_TRY) ? y * 2 : MAX_YIELD_PER_TRY;
+    }
+    // Too much spinning, now we sleep between attempts
+    else {
+      sleep_milliseconds( 1 );
     }
   }
 
@@ -4537,7 +4557,7 @@ __inline static int16_t __try_enter_CS( vgx_Graph_t *graph, int timeout_ms ) {
  */
 __inline static int16_t __enter_CS( vgx_Graph_t *graph ) {
   // UNSAFE HERE
-  ENTER_CRITICAL_SECTION( &graph->state_lock.lock );
+  ENTER_RECURSIVE_CRITICAL_SECTION( &graph->state_lock.lock );
   // SAFE HERE
   return ++(graph->__state_lock_count);
 }
@@ -4570,20 +4590,6 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
       break;                                            \
     }                                                   \
     (AcquiredBool) = true;                              \
-    do
-
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- */
-#define GRAPH_LOCK_SPIN( Graph, SpinMillisec )              \
-  do {                                                      \
-    vgx_Graph_t *__pgraph__ = Graph;                        \
-    if( __try_enter_CS( __pgraph__, SpinMillisec ) < 0 ) {  \
-      __enter_CS( __pgraph__ ); /* probably go to sleep */  \
-    }                                                       \
     do
 
 
@@ -4713,26 +4719,16 @@ __inline static int16_t __leave_CS( vgx_Graph_t *graph ) {
  ***********************************************************************
  */
 #define WAIT_FOR_VERTEX_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->vertex_availability, TimeoutMilliseconds )
-#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define BROADCAST_VERTEX_AVAILABLE( Graph )                       SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_VERTEX_AVAILABLE( Graph )                          SIGNAL_ONE_CONDITION( &((Graph)->vertex_availability.cond) )
+#define SIGNAL_MANY_VERTEX_AVAILABLE( Graph, N )                  SIGNAL_MANY_CONDITION( &((Graph)->vertex_availability.cond), (N) )
 
 #define WAIT_FOR_INARCS_AVAILABLE( Graph, TimeoutMilliseconds )   GRAPH_WAIT_CONDITION( Graph, &(Graph)->return_inarcs, TimeoutMilliseconds )
-#define SIGNAL_INARCS_AVAILABLE( Graph )                          SIGNAL_ALL_CONDITION( &((Graph)->return_inarcs.cond) )
+#define SIGNAL_INARCS_AVAILABLE( Graph )                          SIGNAL_ONE_CONDITION( &((Graph)->return_inarcs.cond) )
 
 #define WAIT_FOR_WAKE_EVENT( Graph, TimeoutMilliseconds )         GRAPH_WAIT_CONDITION( Graph, &(Graph)->wake_event, TimeoutMilliseconds )
-#define SIGNAL_WAKE_EVENT( Graph )                                SIGNAL_ALL_CONDITION( &((Graph)->wake_event.cond) )
+#define SIGNAL_WAKE_EVENT( Graph )                                SIGNAL_ONE_CONDITION( &((Graph)->wake_event.cond) )
 
-
-
-/*******************************************************************//**
- * 
- ***********************************************************************
- */
-#define GRAPH_YIELD_AND_SIGNAL( Graph )         \
-  do {                                          \
-    SIGNAL_ALL_CONDITION( &((Graph)->vertex_availability.cond) ); \
-    GRAPH_SUSPEND_LOCK( Graph ) {               \
-    } GRAPH_RESUME_LOCK;                        \
-  } WHILE_ZERO
 
 
 
@@ -5411,7 +5407,8 @@ __inline static int __is_arcfilter_error( const vgx_ArcFilter_match m ) {
 
 typedef int (*f_vgx_ArcFilter)( struct s_vgx_virtual_ArcFilter_context_t *context, vgx_LockableArc_t *arc, vgx_ArcFilter_match *match );
 
-typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, const vgx_predicator_t target );
+typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilter_context_t *context, const vgx_predicator_t probe, const vgx_predicator_t target );
+
 
 
 
@@ -5431,6 +5428,13 @@ typedef int (*f_vgx_PredicatorMatchFunction)( const vgx_predicator_t probe, cons
   bool eval_synarc;                                           \
   /* Advanced filter */                                       \
   struct s_vgx_Evaluator_t *traversing_evaluator;             \
+  /* Recursive node visitation tracking? */                   \
+  bool track_visited;                                         \
+  /* Recursive node visitation tracker max size */            \
+  int64_t max_visited;                                        \
+  /*  */                                                      \
+  int kappa;                                                  \
+  int lambda;                                                 \
   /* Function returning true/false whether to include arc in output */ \
   f_vgx_ArcFilter filter;                                     \
   /* Timing budget */                                         \
@@ -5969,6 +5973,8 @@ typedef struct s_vgx_ExpressEvalDWordSet_t {
   vgx_ExpressEvalDWordSetSlot_t *slots;
   uint32_t mask;
   uint32_t sz;
+  int64_t hits; // count number of times item already in map when probed
+  int64_t _rsv2;
 } vgx_ExpressEvalDWordSet_t;
 
 
@@ -5989,11 +5995,47 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   CQwordList_t *cstringref;
   // Q1.8
   CQwordList_t *vectorref;
-  // Q1.7-8
+  // Q1.7
+  QWORD __rsv_1_7;
+  // Q1.8
+  QWORD __rsv_1_8;
+  // ==== CL2 ====
+  // Q2.1-4
   vgx_ExpressEvalDWordSet_t dwset;
-  // ==== CL2+3 ====
-  // Q2.1-8
+  // Q2.5
+  vgx_Vector_t *probe;
+  // Q2.6-8 
+  struct {
+    uint32_t eval;
+    uint32_t contrib;
+    uint32_t frontier;
+    uint32_t accept;
+    uint32_t depth;
+    uint32_t expand;
+  } counter;
+  // ==== CL3 ====
   // Q3.1-8
+  struct {
+    float top_1_best;                 // current result top score
+    float current_window_best;
+    float previous_1_window_best;     // top score recorded in previous window
+    float beam_1_best;                // current beam's top score
+    uint32_t window_counter;          // window counter
+    uint32_t window_top_1_unimproved; // count times in a row we're not beating running top score
+    float alpha;
+    float beta;
+    float gamma;
+    float delta;
+    float epsilon;
+    float zeta;
+    int kappa;
+    int lambda;
+    int _rsv2;
+    int _rsv3;
+  } dynamic_taper;
+  // ==== CL4+5 ====
+  // Q4.1-8
+  // Q51-8
   vgx_EvalStackItem_t __data[ 1<<VGX_EXPRESS_EVAL_MEMORY_OSTATIC ];
 
 } vgx_ExpressEvalMemory_t;
@@ -6176,7 +6218,7 @@ typedef struct s_vgx_Evaluator_t {
     vgx_Vector_t * vector;  // default reference vector
   } current;
   // Refcount
-  ATOMIC_VOLATILE_i64 _refc_atomic;
+  ATOMIC_i64 _refc_atomic;
   //
   struct {
     int64_t i64;
@@ -6229,9 +6271,11 @@ typedef struct s_vgx_IEvaluator_t {
   int64_t (*ClearCStrings)( vgx_ExpressEvalMemory_t *memory );
   int (*StoreVector)( vgx_Evaluator_t *self, const vgx_Vector_t *vector );
   int64_t (*ClearVectors)( vgx_ExpressEvalMemory_t *memory );
+  int (*SetProbeVector)( vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector );
   int (*LocalAutoScopeObject)( vgx_Evaluator_t *self, vgx_EvalStackItem_t *item, bool delete_on_fail );
   void (*ClearLocalScope)( vgx_Evaluator_t *self );
   void (*DeleteLocalScope)( vgx_Evaluator_t *self );
+  bool (*VSetAdd)( vgx_ExpressEvalMemory_t *memory, const vgx_Vertex_t *vertex );
   int64_t (*ClearDWordSet)( vgx_ExpressEvalMemory_t *memory );
   vgx_StringList_t * (*GetRpnDefinitions)( void );
 } vgx_IEvaluator_t;
@@ -6549,6 +6593,7 @@ typedef double (*f_vgx_RankScoreFromItem)( const vgx_CollectorItem_t *x );
 typedef struct s_vgx_RankScoreFromItem_t {
   f_vgx_RankScoreFromItem from_none;
   f_vgx_RankScoreFromItem from_predicator;
+  f_vgx_RankScoreFromItem from_real_predicator;
   f_vgx_RankScoreFromItem from_int32;
   f_vgx_RankScoreFromItem from_int64;
   f_vgx_RankScoreFromItem from_uint32;
@@ -6699,6 +6744,31 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
 
 /*******************************************************************//**
  *
+ ***********************************************************************
+ */
+typedef Cm256iBuffer_t vgx_FrontierQueue_t;
+
+
+
+/*******************************************************************//**
+ *
+ *
+ *
+ ***********************************************************************
+ */
+typedef struct s_vgx_ExpansionShadowTrail_t {
+  int sz;
+  float threshold;
+  float *wp;
+  float *end;
+  float *queue;
+  float zeta;
+} vgx_ExpansionShadowTrail_t;
+
+
+
+/*******************************************************************//**
+ *
  *
  *
  ***********************************************************************
@@ -6720,8 +6790,28 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
+  vgx_recursion_mode_t recursion_mode;        \
+  int64_t recursion_depth;                    \
+  vgx_ExpansionShadowTrail_t shadow_trail;    \
+  vgx_FrontierQueue_t *frontier;              \
+  int64_t max_frontier;                       \
+  bool pure_beam;                             \
+  Cm256iHeap_t *beam_heap;                    \
+  int64_t beam_width;                         \
+  int64_t max_beam_width;                     \
+  bool adaptive_recursion;                    \
+  double dynamic_taper;                       \
+  float alpha;                                \
+  float beta;                                 \
+  float gamma;                                \
+  float delta;                                \
+  float epsilon;                              \
+  float zeta;                                 \
+  int kappa;                                  \
+  int lambda;                                 \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
+  ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty, 32 ); \
   int64_t size;                               \
   int64_t n_remain;                           \
   int64_t n_collectable;                      \
@@ -6731,7 +6821,7 @@ ALIGNED_TYPE( struct, 32 ) s_vgx_CollectorStage_t {
   vgx_ExecutionTimingBudget_t *timing_budget;
 
 
-typedef struct s_vgx_BaseCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_BaseCollector_context_t {
   __vgx_BaseCollector_context_HEAD
 } vgx_BaseCollector_context_t;
 
@@ -6743,7 +6833,7 @@ typedef struct s_vgx_BaseCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_ArcCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_ArcCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectArc collect_arc;
   f_vgx_StageArc stage_arc;
@@ -6763,7 +6853,7 @@ typedef struct s_vgx_ArcCollector_context_t {
  *
  ***********************************************************************
  */
-typedef struct s_vgx_VertexCollector_context_t {
+CALIGNED_TYPE( struct ) s_vgx_VertexCollector_context_t {
   __vgx_BaseCollector_context_HEAD
   f_vgx_CollectVertex collect_vertex;
   f_vgx_StageVertex stage_vertex;
@@ -6892,6 +6982,7 @@ typedef struct s_vgx_neighborhood_search_context_t {
   //
   vgx_collector_mode_t collector_mode;    // collect on this level? if so collect arcs or vertices?
   vgx_BaseCollector_context_t *collector; // shared collector instance for all neighborhood levels
+  vgx_recursion_config_t recursion;       // control automatic recursive traversal
 } vgx_neighborhood_search_context_t;
 
 
@@ -6995,6 +7086,8 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter RelationshipFilter;
   f_vgx_ArcFilter ModifierFilter;
   f_vgx_ArcFilter ValueFilter;
+  f_vgx_ArcFilter MinIntValueFilter;
+  f_vgx_ArcFilter MinFloatValueFilter;
   f_vgx_ArcFilter HamDistFilter;
   f_vgx_ArcFilter SpecificFilter;
   f_vgx_ArcFilter RelationshipValueFilter;
@@ -7004,6 +7097,8 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter SpecificValueFilter;
   f_vgx_ArcFilter SpecificHamDistFilter;
   f_vgx_ArcFilter EvaluatorFilter;
+  f_vgx_ArcFilter ANNFilter;
+  f_vgx_ArcFilter ANNArcFilter;
   f_vgx_ArcFilter GenericArcFilter;
   f_vgx_ArcFilter GenPredLocEvalVertexArcFilter;
   f_vgx_ArcFilter GenLocEvalVertexArcFilter;
@@ -7067,13 +7162,16 @@ typedef struct s_vgx_VertexMatchFunction_t {
  ***********************************************************************
  */
 typedef struct s_vgx_IArcFilter_t {
-  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, vgx_ExecutionTimingBudget_t *timing_budget );
+  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget );
   vgx_virtual_ArcFilter_context_t * (*Clone)( const vgx_virtual_ArcFilter_context_t *other );
   void (*Delete)( vgx_virtual_ArcFilter_context_t **filter );
   vgx_boolean_logic (*LogicFromPredicators)( const vgx_predicator_t predicator1, vgx_predicator_t const predicator2 );
   int (*ConfigurePredicatorsFromArcConditionSet)( vgx_Graph_t *self, const vgx_ArcConditionSet_t *arc_condition_set, vgx_predicator_t *predicator1, vgx_predicator_t *predicator2 );
 } vgx_IArcFilter_t;
 
+
+DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
+DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
 
 
 /*******************************************************************//**
@@ -7356,7 +7454,7 @@ typedef struct s_vgx_IGraphQuery_t {
   void (*DeleteQuery)(              vgx_BaseQuery_t         **query );
 
   vgx_AdjacencyQuery_t    * (*NewAdjacencyQuery)(     vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
+  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error );
   vgx_GlobalQuery_t       * (*NewGlobalQuery)(        vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
   vgx_AggregatorQuery_t   * (*NewAggregatorQuery)(    vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 

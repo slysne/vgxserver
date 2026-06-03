@@ -189,16 +189,12 @@ static __msgtrace * __new_msgtrace( void ) {
 int cxlib_trace_reset( void ) {
   int ret = 0;
 
-  CS_LOCK *pcs = &g_context->lock;
-
-
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __delete_msgtrace( &g_context->msgtrace );
     if( (g_context->msgtrace = __new_msgtrace()) == NULL ) {
       ret = -1;
     }
   } RELEASE;
-
 
   return ret;
 }
@@ -210,7 +206,7 @@ int cxlib_trace_reset( void ) {
  ***********************************************************************
  */
 void cxlib_trace_disable( void ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __delete_msgtrace( &g_context->msgtrace );
   } RELEASE;
 }
@@ -223,7 +219,7 @@ void cxlib_trace_disable( void ) {
  */
 int cxlib_trace_add( const char *msg ) {
   int ret = -1;
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     if( g_context->msgtrace ) {
       ret = __push_msgtrace( g_context->msgtrace, msg );
     }
@@ -257,7 +253,7 @@ void cxlib_trace_delete_msglist( char ***list ) {
  */
 char ** cxlib_trace_get_msglist( void ) {
   char **list = NULL;
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     __msgtrace *trace = g_context->msgtrace;
     if( trace ) {
       if( (list = calloc( (size_t)trace->sz+1, sizeof( char* ) )) != NULL ) {
@@ -323,7 +319,7 @@ void cxlib_set_exc_context( cxlib_exc_context_t *context ) {
   cxlib_exc_context_t *prev = g_context;
   g_context = context;
   if( g_context != prev ) {
-    SYNCHRONIZE_ON( context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( context->lock ) {
     } RELEASE;
   }
 }
@@ -422,8 +418,8 @@ static void __fprintf_critical( FILE *ostream, const char *tbuf, int msg_typ, in
  */
 int cxlib_exc( int code, const char *msg, ... ) {
   static __THREAD char t_msgbuf[ SZ_MSGBUF ] = { '\0' };
-  static int64_t last_digest = 0;
-  static int64_t msg_repeat = 1;
+  static int64_t last_digest_LCK = 0;
+  static int64_t msg_repeat_LCK = 1;
   int msg_typ;
   int msg_sub;
   int msg_mod;
@@ -480,7 +476,7 @@ int cxlib_exc( int code, const char *msg, ... ) {
       sprintf( pmilli, "%03lld", milliseconds_since_epoch % 1000 ); // since system start (not epoch) but good enough for logging, we just want more resolution between seconds
     }
 
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       va_start( args, msg );
       vsnprintf( t_msgbuf, SZ_MSGBUF-1, msg, args );
       va_end( args );
@@ -502,28 +498,28 @@ int cxlib_exc( int code, const char *msg, ... ) {
 #define __LIMITED_FPRINTF( MessageType ) \
 do {                                    \
   int64_t d = strhash64( (const unsigned char*)t_msgbuf );    \
-  if( d == last_digest ) {              \
-    ++msg_repeat;                       \
+  if( d == last_digest_LCK ) {              \
+    ++msg_repeat_LCK;                       \
   }                                     \
   else {                                \
-    if( msg_repeat > MAX_MSG_REP ) {    \
+    if( msg_repeat_LCK > MAX_MSG_REP ) {    \
       char *tmp = calloc( SZ_MSGBUF, 1 ); \
       if( tmp ) {                       \
         memcpy( tmp, t_msgbuf, SZ_MSGBUF ); \
-        snprintf( t_msgbuf, SZ_MSGBUF-1, "... previous message repeated %lld times", msg_repeat ); \
+        snprintf( t_msgbuf, SZ_MSGBUF-1, "... previous message repeated %lld times", msg_repeat_LCK ); \
         __FPRINTF( MessageType );       \
         memcpy( t_msgbuf, tmp, SZ_MSGBUF ); \
         free( tmp );                    \
       }                                 \
     }                                   \
-    msg_repeat = 1;                     \
-    last_digest = d;                    \
+    msg_repeat_LCK = 1;                     \
+    last_digest_LCK = d;                    \
   }                                     \
-  if( msg_repeat == MAX_MSG_REP ) {     \
+  if( msg_repeat_LCK == MAX_MSG_REP ) {     \
     snprintf( t_msgbuf, SZ_MSGBUF-1, "..." ); \
     __FPRINTF( MessageType );           \
   }                                     \
-  else if( msg_repeat < MAX_MSG_REP ) { \
+  else if( msg_repeat_LCK < MAX_MSG_REP ) { \
     __FPRINTF( MessageType );           \
   }                                     \
 } WHILE_ZERO
@@ -598,7 +594,7 @@ do {                                    \
  ***********************************************************************
  */
 void cxlib_exception_counters( int64_t *nWarning, int64_t *nError, int64_t *nCritical ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     if( nWarning ) {
       *nWarning  = g_context->nWarning;
     }
@@ -618,7 +614,7 @@ void cxlib_exception_counters( int64_t *nWarning, int64_t *nError, int64_t *nCri
  ***********************************************************************
  */
 void cxlib_exception_counters_reset( void ) {
-  SYNCHRONIZE_ON( g_context->lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
     g_context->nWarning = 0;
     g_context->nError = 0;
     g_context->nCritical = 0;
@@ -633,7 +629,7 @@ void cxlib_exception_counters_reset( void ) {
  */
 void cxlib_ostream_lock( void ) {
   if( g_context != NULL ) {
-    ENTER_CRITICAL_SECTION( &g_context->lock.lock ); 
+    ENTER_RECURSIVE_CRITICAL_SECTION( &g_context->lock.lock ); 
     g_context->recursion++;
   }
 }
@@ -657,55 +653,12 @@ void cxlib_ostream_release( void ) {
  *
  ***********************************************************************
  */
-int XXX_cxlib_ostream( const char *msg, ... ) {
-  static char buf[1024] = {'\0'};
-  static int sz_indent = 4;
-  va_list args;
-  FILE *ostream;
-  
-  if( g_context != NULL && msg ) {
-
-    if( g_context->mute ) {
-      return 0;
-    }
-
-    ostream = g_context->ostream ? g_context->ostream : stderr;
-
-    SYNCHRONIZE_ON( g_context->lock ) {
-      int rem = 1023;
-      char *p = buf;
-      int indent = g_context->recursion - 1;
-      while( indent > 0 && rem > sz_indent ) {
-        for( int i=0; i<sz_indent; i++ ) {
-          *p++ = ' ';
-          --rem;
-        }
-        --indent;
-      }
-      va_start( args, msg );
-      vsnprintf( p, rem, msg, args );
-      va_end( args );
-      fprintf( ostream, "%s", buf );
-    } RELEASE;
-
-    fflush( ostream );
-  }
-
-  return 0;
-}
-
-
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
 int cxlib_ostream( const char *msg, ... ) {
 
   static __THREAD char _buf[512] = {'\0'};
 
   char *buf = _buf; // optimistic
-  static int sz_indent = 4;
+  static const int sz_indent = 4;
   va_list args;
   FILE *ostream;
   
@@ -718,7 +671,7 @@ int cxlib_ostream( const char *msg, ... ) {
     ostream = g_context->ostream ? g_context->ostream : stderr;
 
     int indent;
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       indent = g_context->recursion - 1;
     } RELEASE;
 
@@ -763,7 +716,7 @@ int cxlib_ostream( const char *msg, ... ) {
 
     } while( buf );
 
-    SYNCHRONIZE_ON( g_context->lock ) {
+    RECURSIVE_SYNCHRONIZE_ON( g_context->lock ) {
       fwrite( buf, 1, nw, ostream );
     } RELEASE;
 
@@ -860,7 +813,7 @@ void cxlib_print_backtrace( int nframes ) {
 
     CS_LOCK *lock = g_context ? &g_context->lock : NULL;
 
-    SYNCHRONIZE_ON_PTR( lock ) {
+    RECURSIVE_SYNCHRONIZE_ON_PTR( lock ) {
       uint64_t tid = 0;
 #if defined CXPLAT_LINUX_ANY
       tid = (uint64_t)syscall(SYS_gettid);
@@ -930,7 +883,7 @@ void cxlib_print_backtrace( int nframes ) {
 
   CS_LOCK *lock = g_context ? &g_context->lock : NULL;
 
-  SYNCHRONIZE_ON_PTR( lock ) {
+  RECURSIVE_SYNCHRONIZE_ON_PTR( lock ) {
     uint32_t tid = GetCurrentThreadId();
     printf( "-----------------------------------------------------------\n" );
     printf( "*** backtrace for thread %u ***\n", tid );

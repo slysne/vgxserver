@@ -771,7 +771,7 @@ static vgx_ResponseFieldMap_t pyobj_fieldmap_definition[] = {
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RANKSCORE,  .render=(f_ResponseValueRender)__py_float__from_real_field,         .fieldname="rankscore" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_SIMILARITY, .render=(f_ResponseValueRender)__py_float__from_real_field,         .fieldname="similarity" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_HAMDIST,    .render=(f_ResponseValueRender)__py_long__from_qword_field,         .fieldname="hamming-distance" },
-  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR__R_RSV,     .render=(f_ResponseValueRender)__py_long__from_qword_field,         .fieldname="RESERVED" },
+  { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_RECURSION,  .render=(f_ResponseValueRender)__py_long__from_i64_field,           .fieldname="depth" },
   // Timestamps
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMC,        .render=(f_ResponseValueRender)__py_long__from_i64_field,           .fieldname="created" },
   { .srcpos=-1,  .attr=VGX_RESPONSE_ATTR_TMM,        .render=(f_ResponseValueRender)__py_long__from_i64_field,           .fieldname="modified" },
@@ -826,6 +826,9 @@ static PyObject * __py_list__single_string_entries( const vgx_SearchResult_t *se
         Py_INCREF( Py_None );
       }
       PyList_SET_ITEM( py_result_list, n, py_string );
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -874,6 +877,9 @@ static PyObject * __py_list__single_object_entries( const vgx_SearchResult_t *se
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -930,6 +936,9 @@ static PyObject * __py_list__tuple_entries( const vgx_SearchResult_t *search_res
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;
@@ -1005,6 +1014,9 @@ static PyObject * __py_list__dict_entries( const vgx_SearchResult_t *search_resu
       }
       // Next entry
       entry += width;
+      if( (~n & 0xff) == 0 ) {
+        PyVGX_Yield();
+      }
     }
   }
   return py_result_list;

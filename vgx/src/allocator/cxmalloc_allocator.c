@@ -121,7 +121,7 @@ static cxmalloc_allocator_t * __cxmalloc_allocator__create_allocator_FCS( cxmall
     memset( allocator, 0, sizeof( cxmalloc_allocator_t ) );
     
     // [1] alock
-    INIT_SPINNING_CRITICAL_SECTION( &allocator->alock.lock, 4000 );
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &allocator->alock.lock, 4000 );
 
     // [2] blocks
     PALIGNED_INITIALIZED_ARRAY_THROWS( allocator->blocks, cxmalloc_block_t*, CXMALLOC_BLOCK_REGISTER_SIZE, NULL, 0x513 );

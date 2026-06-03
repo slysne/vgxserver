@@ -475,7 +475,7 @@ static PyObject * PyVGX_Graph__Evaluate( PyVGX_Graph *pygraph, PyObject *args, P
 
   vgx_Vector_t *vector = NULL;
   if( py_vector ) {
-    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, true )) == NULL ) {
+    if( (vector = iPyVGXParser.InternalVectorFromPyObject( graph->similarity, py_vector, NULL, false, true )) == NULL ) {
       return NULL;
     }
   }
@@ -1895,7 +1895,7 @@ PyDoc_STRVAR( GetVertex__doc__,
  *
  ******************************************************************************
  */
-static PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
+DLL_HIDDEN PyObject * PyVGX_Graph__GetVertex( PyVGX_Graph *pygraph, PyObject *py_id ) {
   vgx_Graph_t *graph = __PyVGX_Graph_as_vgx_Graph_t( pygraph );
   if( !graph ) {
     return NULL;
@@ -2950,6 +2950,7 @@ DLL_HIDDEN PyObject * pyvgx__enumerator_as_dict(
     int64_t refc;
   } *enum_list = NULL;
 
+  int err = 0;
   BEGIN_PYVGX_THREADS {
     XTRY {
       if( GetStrings( graph, &CSTR__list ) < 0 ) {
@@ -2987,11 +2988,16 @@ DLL_HIDDEN PyObject * pyvgx__enumerator_as_dict(
     }
     XCATCH( errcode ) {
       PyVGX_SetPyErr( errcode );
+      err = -1;
     }
     XFINALLY {
 
     }
   } END_PYVGX_THREADS;
+
+  if( err < 0 ) {
+    return NULL;
+  }
 
   PyObject *py_tuple;
   PyObject *py_val;
@@ -4947,14 +4953,8 @@ static PyObject * PyVGX_Graph__ResetCounters( PyVGX_Graph *pygraph ) {
     return NULL;
   }
 
-  BEGIN_PYVGX_THREADS {
-    GRAPH_LOCK( graph ) {
-
-      // Reset query counters
-      CALLABLE( graph )->ResetQueryCountNolock( graph );
-
-    } GRAPH_RELEASE; 
-  } END_PYVGX_THREADS;
+  // Reset query counters
+  CALLABLE( graph )->ResetQueryCountAtomic( graph );
 
   Py_RETURN_NONE;
 }
@@ -6651,6 +6651,36 @@ static PyObject * PyVGX_Graph__repr( PyVGX_Graph *pygraph ) {
 
 
 /******************************************************************************
+ * PyVGX_Graph__traverse
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Graph__traverse( PyVGX_Graph *pygraph, visitproc visit, void *arg ) {
+  // Similarity object
+  Py_VISIT( pygraph->py_sim );
+  // Graph name
+  Py_VISIT( pygraph->py_name );
+  return 0;
+}
+
+
+
+/******************************************************************************
+ * PyVGX_Graph__clear
+ *
+ ******************************************************************************
+ */
+static int PyVGX_Graph__clear( PyVGX_Graph *pygraph ) {
+  // Similarity object
+  Py_CLEAR( pygraph->py_sim );
+  // Graph name
+  Py_CLEAR( pygraph->py_name );
+  return 0;
+}
+
+
+
+/******************************************************************************
  * PyVGX_Graph__dealloc
  *
  ******************************************************************************
@@ -6668,10 +6698,12 @@ static void PyVGX_Graph__dealloc( PyVGX_Graph *pygraph ) {
     }
   }
 
-  // Discard similarity object
-  Py_XDECREF( pygraph->py_sim );
-  // Discard name
-  Py_XDECREF( pygraph->py_name );
+  // Remove from GC tracker
+  PyObject_GC_UnTrack(pygraph);
+
+  // Clear inner object references
+  PyVGX_Graph__clear( pygraph );
+
   // Free python graph
   Py_TYPE( pygraph )->tp_free( pygraph );
 }
@@ -6795,7 +6827,7 @@ static int PyVGX_Graph__init( PyVGX_Graph *pygraph, PyObject *args, PyObject *kw
     XCATCH( errcode ) {
       BEGIN_PYTHON_INTERPRETER {
         if( messages && !PyErr_Occurred() ) {
-          iPyVGXBuilder.SetErrorFromMessages( messages );
+          iPyVGXBuilder.SetErrorFromMessages( PyVGX_DataError, NULL, messages );
         }
         PyVGX_SetPyErr( errcode );
       } END_PYTHON_INTERPRETER;
@@ -7206,11 +7238,11 @@ static PyTypeObject PyVGX_Graph__GraphType = {
     .tp_getattro        = 0,
     .tp_setattro        = 0,
     .tp_as_buffer       = 0,
-    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_FINALIZE,
+    .tp_flags           = Py_TPFLAGS_BASETYPE | Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_doc             = "PyVGX Graph objects",
-    .tp_traverse        = 0,
-    .tp_clear           = 0,
-    .tp_richcompare     = 0,
+    .tp_traverse        = (traverseproc)PyVGX_Graph__traverse,
+    .tp_clear           = (inquiry)PyVGX_Graph__clear,
+    .tp_richcompare     = ptr_richcompare,
     .tp_weaklistoffset  = 0,
     .tp_iter            = 0,
     .tp_iternext        = 0,

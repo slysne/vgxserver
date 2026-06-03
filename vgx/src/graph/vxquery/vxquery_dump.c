@@ -1572,15 +1572,20 @@ static void __dump_vector( const vgx_Vector_t * const vector, int recursion ) {
   char buf[16] = {0};
   if( V ) {
     WRITELINE_FORMAT(      0, "%llp (vgx_Vector_t)", V );
-    WRITELINE_FORMAT( indent, ".metas               : 0x%08X", V->metas.qword );
-    WRITELINE_FORMAT( indent, ".metas.flags         : %s", uint8_to_bin( buf, V->metas.flags.bits ) );
-    WRITELINE_FORMAT( indent, ".metas.type          : %d", V->metas.type );
-    WRITELINE_FORMAT( indent, ".metas.vlen          : %d", V->metas.vlen );
+    WRITELINE_FORMAT( indent, ".metas                : 0x%08X", V->metas.qword );
+    WRITELINE_FORMAT( indent, ".metas.flags          : %s", uint8_to_bin( buf, V->metas.flags.bits ) );
+    WRITELINE_FORMAT( indent, ".metas.type           : %d", V->metas.type );
+    WRITELINE_FORMAT( indent, ".metas.vlen           : %d", V->metas.vlen );
     if( V->metas.flags.ecl ) {
-      WRITELINE_FORMAT( indent, ".metas.scalar.factor : %f", V->metas.scalar.factor );
+      if( V->metas.flags.cos ) {
+        WRITELINE_FORMAT( indent, ".metas.scalar.invnorm : %f", V->metas.scalar.invnorm );
+      }
+      else {
+        WRITELINE_FORMAT( indent, ".metas.scalar.alpha   : %f", V->metas.scalar.alpha );
+      }
     }
     else {
-      WRITELINE_FORMAT( indent, ".metas.scalar.norm   : %f", V->metas.scalar.norm );
+      WRITELINE_FORMAT( indent, ".metas.scalar.norm    : %f", V->metas.scalar.norm );
     }
   }
   else {

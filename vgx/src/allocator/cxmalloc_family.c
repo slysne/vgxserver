@@ -171,19 +171,19 @@ static cxmalloc_family_t * __cxmalloc_family__new_family_OPEN( const char *id, c
     // [Q1.8.2] max_length
     family->max_length = _icxmalloc_shape.GetLength_FRO( family, (uint16_t)family->size-1 );
 
-    // [Q2.7.1] min_length
+    // [Q3.2.1] min_length
     family->min_length = _icxmalloc_shape.GetLength_FRO( family, 0 );
 
-    // [Q2.7.2.1] lazy_discards
+    // [Q3.2.2.12a] lazy_discards
     family->flag.lazy_discards = 0;
 
-    // [Q2.6] allocators
+    // [Q3.1] allocators
     CALIGNED_INITIALIZED_ARRAY_THROWS( family->allocators, cxmalloc_allocator_t*, (size_t)family->size, NULL, 0x714 );
     
-    // [Q2.1/2/3/4/5] lock
-    INIT_SPINNING_CRITICAL_SECTION( &family->lock.lock, 4000 );
+    // [Q2] lock
+    INIT_SPINNING_RECURSIVE_CRITICAL_SECTION( &family->lock.lock, 4000 );
 
-    // [Q2.8.1] readonly_cnt
+    // [Q3.3.1] readonly_cnt
     family->readonly_cnt = 0;
 
     // ---------------------

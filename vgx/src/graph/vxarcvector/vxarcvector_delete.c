@@ -51,7 +51,7 @@ typedef struct __s_filtered_predicator_delete {
 static int64_t __count_predicator( framehash_processing_context_t * const processor, framehash_cell_t * const fh_cell ) {
   __filtered_predicator_delete *deleter = (__filtered_predicator_delete*)processor->processor.input;
   vgx_predicator_t stored = { .data = APTR_AS_UNSIGNED( fh_cell ) };
-  if( deleter->match_pred( deleter->probe, stored ) ) {
+  if( deleter->match_pred( NULL, deleter->probe, stored ) ) {
     return 1;
   }
   else {
@@ -71,7 +71,7 @@ static int64_t __delete_predicator( framehash_processing_context_t * const proce
 
   __filtered_predicator_delete *deleter = (__filtered_predicator_delete*)processor->processor.input;
   vgx_predicator_t stored = { .data = APTR_AS_UNSIGNED( fh_cell ) };
-  if( deleter->match_pred( deleter->probe, stored ) ) {
+  if( deleter->match_pred( NULL, deleter->probe, stored ) ) {
     // Force erase the framehash cell (NO STRUCTURE COMPACTIFICATION WILL OCCUR!)
     FRAMEHASH_PROCESSOR_DELETE_CELL( processor, fh_cell );
     deleter->n_deleted++;
@@ -271,7 +271,7 @@ static int64_t __delete_arc_CS( framehash_processing_context_t * const processor
   // Simple Arc: PREDICATOR
   else {
     vgx_predicator_t stored = { .data = APTR_AS_UNSIGNED( fh_cell ) };
-    if( deleter->match_pred( deleter->probe, stored ) ) {
+    if( deleter->match_pred( NULL, deleter->probe, stored ) ) {
       // Update arc with an exact rel_mod key force direct removal on the other side of the disconnect event
       vgx_predicator_t orig_pred = deleter->arc->head.predicator;
       deleter->arc->head.predicator.rkey = stored.rkey;
@@ -353,7 +353,7 @@ DLL_HIDDEN int _vxarcvector_delete__delete_simple_arc( framehash_dynamic_t *dyna
   // Either wildcard remove or the specified probe matches existing simple arc
   if( arc->head.vertex == NULL || arc->head.vertex == H ) {
     P.data = __arcvector_as_predicator_bits( V );
-    if( predmatchfunc.Generic( arc->head.predicator, P ) ) {
+    if( predmatchfunc.Generic( NULL, arc->head.predicator, P ) ) {
       // Arc match - simple arc, extract head
       vgx_Arc_t del_arc = {
         .tail = arc->tail,

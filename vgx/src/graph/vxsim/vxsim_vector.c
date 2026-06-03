@@ -249,16 +249,29 @@ static int __populate_euclidean_vector( vgx_Vector_t *self, vgx_Vector_construct
     }
     self->metas.scalar.norm = (float)sqrt( sum_sq_mag );
   }
-  // Internal vector from supplied internal elements data and scaling factor
+  // Internal vector from supplied internal elements data and scaling factor alpha
   else {
     char *src = (char*)args->elements;
     char *dest = (char*)elements;
     char *end = dest + args->vlen;
-    while( dest < end ) {
-      *dest++ = *src++;
+    // Cosine-compatible only, ignore alpha and store inverse norm instaed
+    if( args->cosmode ) {
+      int32_t ssq = 0;
+       while( dest < end ) {
+        int x = *src;
+        ssq += x*x;
+        *dest++ = *src++;
+      }
+      self->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
+      self->metas.flags.cos = 1;
+    }
+    else {
+      while( dest < end ) {
+        *dest++ = *src++;
+      }
+      self->metas.scalar.alpha = args->alpha;
     }
 
-    self->metas.scalar.factor = args->scale;
   }
   self->metas.flags.pop = 1;
 
@@ -302,7 +315,7 @@ static vgx_Vector_t * Vector_constructor( const void *identifier, vgx_Vector_con
 
     XTRY {
       // New, valid comlib object, but with no element data yet
-      if( (self = ivectorobject.New( simobj, args->type, args->vlen, args->ephemeral )) == NULL ) {
+      if( (self = ivectorobject.New( simobj, args->type, args->vlen, args->cosmode, args->ephemeral )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_MEMORY, 0xD12 );
       }
 
@@ -474,16 +487,35 @@ static int __set_euclidean_vector( vgx_Vector_t *self, int nelem, float scale, c
     char *src_end = src + nelem;
     char *dest = dest_elements;
     char *dest_end = src + self->metas.vlen;
-    // Copy internal source elements to destination, accumulate square sums for magnitude calculation
-    while( dest < dest_end && src < src_end ) {
-      *dest++ = *src++;
+
+    if( self->metas.flags.cos ) {
+      // Copy internal source elements to destination, accumulate square sums for magnitude calculation
+      int32_t ssq = 0;
+      while( dest < dest_end && src < src_end ) {
+        int x = *src;
+        ssq += x*x;
+        *dest++ = *src++;
+      }
+      if( ssq > 0 ) {
+        self->metas.scalar.invnorm = (float)(1.0 / sqrt( ssq ));
+      }
+      else {
+        self->metas.scalar.invnorm = FLT_MAX;
+      }
     }
+    else {
+      // Copy internal source elements to destination
+      while( dest < dest_end && src < src_end ) {
+        *dest++ = *src++;
+      }
+      self->metas.scalar.alpha = scale;
+    }
+
     // Set trailing destination elements to 0 if source data was insufficient for vector length
     while( dest < dest_end ) {
       *dest++ = 0;
     }
 
-    self->metas.scalar.factor = scale;
   }
 
   return 0;
@@ -607,7 +639,8 @@ static vgx_Vector_t * Vector_clone( const vgx_Vector_t *self, bool ephemeral ) {
       .ephemeral      = ephemeral,
       .type           = self->metas.type,
       .elements       = NULL,
-      .scale          = 1.0f,
+      .alpha          = 1.0f,
+      .cosmode        = self->metas.flags.cos,
       .simcontext     = context->simobj
     };
 
@@ -726,10 +759,21 @@ static int Vector_length( const vgx_Vector_t *self ) {
 static float Vector_magnitude( const vgx_Vector_t *self ) {
   if( self->metas.flags.ecl && (self->metas.type & __VECTOR__MASK_INTERNAL) ) {
     // Internal euclidean vectors don't have magnitude stored.
-    // We have to compute the magnitude
-    const BYTE *elem = ivectorobject.GetElements( (vgx_Vector_t*)self );
-    double magnitude = sqrt( vxeval_bytearray_sum_squares( elem, self->metas.vlen ) ) * self->metas.scalar.factor;
-    return (float)magnitude;
+    // We return the inverse of the stored inverse norm in cosine mode
+    if( self->metas.flags.cos ) {
+      if( self->metas.scalar.invnorm > 0 ) {
+        return 1.0f / self->metas.scalar.invnorm;
+      }
+      else {
+        return 0.0f;
+      }
+    }
+    // We have to compute the magnitude from data
+    else {
+      const BYTE *elem = ivectorobject.GetElements( (vgx_Vector_t*)self );
+      double magnitude = sqrt( vxeval_bytearray_sum_squares( elem, self->metas.vlen ) ) * self->metas.scalar.alpha;
+      return (float)magnitude;
+    }
   }
   return self->metas.scalar.norm;
 }
@@ -743,7 +787,12 @@ static float Vector_magnitude( const vgx_Vector_t *self ) {
  */
 static float Vector_scaler( const vgx_Vector_t *self ) {
   if( self->metas.flags.ecl ) { // && (self->metas.type & __VECTOR__MASK_INTERNAL) ) {
-    return self->metas.scalar.factor;
+    if( self->metas.flags.cos ) {
+      return 1.0f;
+    }
+    else {
+      return self->metas.scalar.alpha;
+    }
   }
   return 1.0;
 }
@@ -992,9 +1041,10 @@ static CStringQueue_t * Vector_repr( const vgx_Vector_t *self, CStringQueue_t *o
   PUT( "nul=%d ", self->metas.flags.nul );
   PUT( "ext=%d ", self->metas.flags.ext );
   PUT( "pop=%d ", self->metas.flags.pop );
+  PUT( "cos=%d ", self->metas.flags.cos );
   PUT( "fp=0x%016llx ", self->fp );
   PUT( "mag=%#g ", Vector_magnitude( self ) );
-  PUT( "scale=%#g ", self->metas.scalar.factor );
+  PUT( "scale=%#g ", self->metas.scalar.alpha );
   PUT( "vlen=%d>\n", (int)self->metas.vlen );
 
   PUT( "vector=[" );

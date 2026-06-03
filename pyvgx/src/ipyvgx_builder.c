@@ -52,7 +52,7 @@ static PyObject *     _ipyvgx_builder__pydict_from_cstring_nummap( const CString
 static int64_t        _ipyvgx_builder__map_integer_constants( PyObject *py_dict, vgx_KeyVal_char_int64_t *data );
 static PyObject *     _ipyvgx_builder__pytuple_from_cstring_map_keyval( const QWORD *item_bits );
 static PyObject *     _ipyvgx_builder__vertex_properties_as_pydict( vgx_Vertex_t *vertex_RO );
-static void           _ipyvgx_builder__set_error_from_messages( vgx_StringTupleList_t *messages );
+static void           _ipyvgx_builder__set_error_from_messages( PyObject *py_exception_type, const char *reason, vgx_StringTupleList_t *messages );
 static bool           _ipyvgx_builder__py_error_from_reason( const char *object_name, vgx_AccessReason_t reason, CString_t **CSTR__error );
 static int            _ipyvgx_builder__catch_pyexception_into_output( const char *wrap, vgx_MediaType *mediatype, CString_t **CSTR__output, vgx_StreamBuffer_t *output );
 
@@ -164,7 +164,8 @@ static PyObject * _ipyvgx_builder__build_internal_vector( vgx_Vector_t *vector )
     BEGIN_PYVGX_THREADS {
       vgx_VectorContext_t *vector_context = CALLABLE( vector )->Context( vector );
       vgx_Similarity_t *sim = vector_context->simobj;
-      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, true, &CSTR__error );
+      bool cosmode = vector->metas.flags.cos;
+      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, cosmode, true, &CSTR__error );
       if( vint ) {
         if( igraphfactory.EuclideanVectors() ) {
           py_internal = __build_internal_euclidean_vector( vint );
@@ -235,7 +236,8 @@ static PyObject * _ipyvgx_builder__build_internal_vector_array( vgx_Vector_t *ve
     BEGIN_PYVGX_THREADS {
       vgx_VectorContext_t *vector_context = CALLABLE( vector )->Context( vector );
       vgx_Similarity_t *sim = vector_context->simobj;
-      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, true, &CSTR__error );
+      bool cosmode = vector->metas.flags.cos;
+      vgx_Vector_t *vint = CALLABLE( sim )->InternalizeVector( sim, vector, cosmode, true, &CSTR__error );
       if( vint ) {
         if( igraphfactory.EuclideanVectors() ) {
           py_internal_array = __build_internal_euclidean_vector_array( vint );
@@ -796,21 +798,43 @@ static PyObject * _ipyvgx_builder__vertex_properties_as_pydict( vgx_Vertex_t *ve
  *
  ******************************************************************************
  */
-static void _ipyvgx_builder__set_error_from_messages( vgx_StringTupleList_t *messages ) {
-  if( messages ) {
-    BEGIN_PYTHON_INTERPRETER {
+static void _ipyvgx_builder__set_error_from_messages( PyObject *py_exception_type, const char *reason, vgx_StringTupleList_t *messages ) {
+  BEGIN_PYTHON_INTERPRETER {
+    if( reason || messages ) {
       PyObject *py_EQ = PyUnicode_FromString( "=" );
       PyObject *py_COMMA = PyUnicode_FromString( ", " );
-      int64_t sz = _vgx_string_tuple_list_size( messages );
+      int64_t sz = 0;
+      if( reason ) {
+        ++sz;
+      }
+      if( messages ) {
+         sz += _vgx_string_tuple_list_size( messages );
+      }
       PyObject *py_list = PyList_New( sz );
       int64_t n=0;
+      int64_t m=0;
       if( py_list && py_COMMA && py_EQ ) {
         for( int64_t i=0; i<sz; i++ ) {
           PyObject *py_tuple = PyTuple_New(2);
+          const char *key, *val;
+          vgx_StringTuple_t *tuple;
           if( py_tuple ) {
-            vgx_StringTuple_t *tuple = _vgx_string_tuple_list_get_item( messages, i );
-            PyTuple_SET_ITEM( py_tuple, 0, PyVGX_PyUnicode_FromStringNoErr( _vgx_string_tuple_key( tuple ) ) );
-            PyTuple_SET_ITEM( py_tuple, 1, PyVGX_PyUnicode_FromStringNoErr( _vgx_string_tuple_value( tuple ) ) );
+            if( reason && i==0 ) {
+              key = "reason";
+              val = reason;
+            }
+            else if( messages ) {
+              tuple = _vgx_string_tuple_list_get_item( messages, m );
+              ++m;
+              key = _vgx_string_tuple_key( tuple );
+              val = _vgx_string_tuple_value( tuple );
+            }
+            else {
+              key = "?";
+              val = "?";
+            }
+            PyTuple_SET_ITEM( py_tuple, 0, PyVGX_PyUnicode_FromStringNoErr( key ) );
+            PyTuple_SET_ITEM( py_tuple, 1, PyVGX_PyUnicode_FromStringNoErr( val ) );
             PyObject *py_item = PyUnicode_Join( py_EQ, py_tuple );
             if( py_item ) {
               PyList_SET_ITEM( py_list, n, py_item );
@@ -821,7 +845,7 @@ static void _ipyvgx_builder__set_error_from_messages( vgx_StringTupleList_t *mes
         }
         PyObject *py_error = PyUnicode_Join( py_COMMA, py_list );
         if( py_error ) {
-          PyErr_SetObject( PyVGX_DataError, py_error );
+          PyErr_SetObject( py_exception_type, py_error );
           PyVGX_DECREF( py_error );
         }
       }
@@ -833,8 +857,8 @@ static void _ipyvgx_builder__set_error_from_messages( vgx_StringTupleList_t *mes
       Py_XDECREF( py_COMMA );
       Py_XDECREF( py_EQ );
 
-    } END_PYTHON_INTERPRETER;
-  }
+    }
+  } END_PYTHON_INTERPRETER;
 }
 
 

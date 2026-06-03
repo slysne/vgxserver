@@ -50,7 +50,7 @@ def redirect_instance_output( instance_id ):
     """
     """
     os.makedirs( instance_id, exist_ok=True )
-    logpath = "{}/out.txt".format( instance_id )
+    logpath = f"{instance_id}/out.txt"
     SetOutputStream( logpath )
 
 
@@ -82,7 +82,7 @@ def EngineShutdown( host, port ):
     """
     token1 = get_authtoken( host, port )
     token2 = get_authtoken( host, port )
-    Support.send_request( "vgx/builtin/ADMIN_Shutdown?authtoken={}&authshutdown={}".format( token2, token1 ), json=True, admin=True, address=(host,port) )
+    Support.send_request( f"vgx/builtin/ADMIN_Shutdown?authtoken={token2}&authshutdown={token1}", json=True, admin=True, address=(host,port) )
 
 
 
@@ -99,7 +99,7 @@ def WaitUntilEngineReady( host, port, timeout=30.0 ):
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            R = urllib.request.Request( "http://{}:{}/vgx/hc".format(host, port) )
+            R = urllib.request.Request( f"http://{host}:{port}/vgx/hc" )
             U = urllib.request.urlopen( R )
             if U.status == 200:
                 return True
@@ -125,9 +125,9 @@ def PopulateServerData( graph ):
     """
     for i in range( N_INIT ):
         try:
-            A = graph.NewVertex( "init_{}".format( i ) )
+            A = graph.NewVertex( f"init_{i}" )
             for t in range( N_TERM ):
-                B = graph.NewVertex( "term_{}".format( t ), type="term" )
+                B = graph.NewVertex( f"term_{t}", type="term" )
                 graph.Connect( A, ("to",M_FLT,random.random()), B )
         finally:
             graph.CloseAll()
@@ -145,15 +145,15 @@ def ServerFeedPlugin( request:PluginRequest, graph, id:int, content:bytes ) -> P
         # [ i, [t1,t2,...] ]
         data = json.loads( content )
         init, terms = data
-        Expect( id == init, "init==id, got {} != {}".format(init, id) )
-        node = "init_{}".format( init )
+        Expect( id == init, f"init==id, got {init} != {id}" )
+        node = f"init_{init}"
 
         try:
             A = graph.NewVertex( node, timeout=1000 )
             for t in terms:
                 try:
                     arc = ("to",M_FLT,random.random())
-                    B = graph.NewVertex( "term_{}".format( t ), type="term" )
+                    B = graph.NewVertex( f"term_{t}", type="term" )
                     graph.Connect( A, arc, B )
                     B.Close()
                 except:
@@ -194,9 +194,9 @@ def ServerSearchPlugin( request:PluginRequest, graph, init:int, hits:int, synloa
     """
     response = PluginResponse( maxhits=hits, sortby=S_VAL|S_DESC )
     try:
-        id = "init_{}".format( init )
+        id = f"init_{init}"
         if id in graph:
-            R = graph.Neighborhood( id, hits=response.maxhits, sortby=response.sortby, fields=F_AARC, result=R_DICT|R_COUNTS, neighbor={'filter':'cpukill({})'.format(synload)} )
+            R = graph.Neighborhood( id, hits=response.maxhits, sortby=response.sortby, fields=F_AARC, result=R_DICT|R_COUNTS, neighbor={'filter':f'cpukill({synload})'} )
             response.hitcount = R['counts']['arcs']
             for r in R['neighborhood']:
                 v = r['arc']['value']
@@ -234,7 +234,7 @@ def ServerEntrypoint( port, prefill ):
     Backend server engine process entrypoint
     """
     # Engine instance name
-    instance_id = "engine_{}".format(port)
+    instance_id = f"engine_{port}"
     redirect_instance_output( instance_id )
 
     # Initialize
@@ -252,7 +252,7 @@ def ServerEntrypoint( port, prefill ):
     system.StartHTTP( port )
 
     # Run until shutdown
-    system.RunServer( "pid={} {}".format(os.getpid(), instance_id) )
+    system.RunServer( f"pid={os.getpid()} {instance_id}" )
 
 
 
@@ -266,7 +266,7 @@ def DispatcherEntrypoint( port, cf ):
     Backend dispatcher engine process entrypoint
     """
     # Engine instance name
-    instance_id = "dispatch_{}".format(port)
+    instance_id = f"dispatch_{port}"
     redirect_instance_output( instance_id )
 
     # Initialize
@@ -281,7 +281,7 @@ def DispatcherEntrypoint( port, cf ):
     system.StartHTTP( port, dispatcher=cf )
 
     # Run until shutdown
-    system.RunServer( "pid={} {}".format(os.getpid(), instance_id) )
+    system.RunServer( f"pid={os.getpid()} {instance_id}" )
 
 
 
@@ -312,8 +312,8 @@ def GetMatrixConfig( width, height, host, ports ):
     """
     R = []
     for h in range(height-1):
-       R.append( {'channels':8, 'priority':1} )
-    R.append( {'channels':8, 'priority':1, 'primary':1} )
+       R.append( {'channels':4, 'priority':1} )
+    R.append( {'channels':4, 'priority':1, 'primary':1} )
 
     P = []
     i = 0
@@ -376,10 +376,10 @@ def __execute_feed( D, host, port, init_0, init_1, total_terminals ):
             body = json.dumps( content )
 
             # Feed the data
-            url = "/vgx/plugin/feed?id={}".format( init )
+            url = f"/vgx/plugin/feed?id={init}"
             conn.request( "POST", url, body=body, headers=headers )
             data = conn.getresponse()
-            Expect( data.status == 200, "status 200, got {} {}".format(data.status, data) )
+            Expect( data.status == 200, f"status 200, got {data.status} {data}" )
 
             # Check response
             data = data.read()
@@ -390,7 +390,7 @@ def __execute_feed( D, host, port, init_0, init_1, total_terminals ):
                 try:
                     odeg, i = entries[0]
                 except:
-                    Expect( False, "tuple (odeg, i), got {}".format(entries) )
+                    Expect( False, f"tuple (odeg, i), got {entries}" )
                 Expect( i == init )
 
                 # Keep track of the outdegree of each initial
@@ -418,7 +418,7 @@ def FeedData( host, ports, nthreads=1, delay=5.0 ):
     print( f"FeedData( host={host}, ports={ports}, nthreads={nthreads}, delay={delay} )" )
 
     if delay > 0.0:
-        print( "Starting in {} seconds...".format(delay) )
+        print( f"Starting in {delay} seconds..." )
         time.sleep(5)
         print( "Go!" )
 
@@ -450,7 +450,7 @@ def FeedData( host, ports, nthreads=1, delay=5.0 ):
         t.join()
 
     for D in tdata:
-        Expect( "error" not in D,       "Worker error: {}".format( D ) )
+        Expect( "error" not in D,       f"Worker error: {D}" )
 
     # Run searches to verify
     headers = {'accept': 'application/json'}
@@ -458,8 +458,8 @@ def FeedData( host, ports, nthreads=1, delay=5.0 ):
     conn = GetNewConnection( host, port)
     total_hitcount = 0
     for i in range( 0, init_1 ):
-        query = "init={}&hits=1".format( i )
-        url = "/vgx/plugin/search?{}".format( query )
+        query = f"init={i}&hits=1"
+        url = f"/vgx/plugin/search?{query}"
         conn.request( "GET", url, headers=headers )
         # Run request
         data = conn.getresponse()
@@ -475,7 +475,7 @@ def FeedData( host, ports, nthreads=1, delay=5.0 ):
     for D in tdata:
         total_degrees += sum( D['degrees'].values() )
 
-    Expect( total_hitcount == total_degrees, "Total degree {}, got hitcount {}".format( total_degrees, total_hitcount ) )
+    Expect( total_hitcount == total_degrees, f"Total degree {total_degrees}, got hitcount {total_hitcount}" )
 
     
 
@@ -496,7 +496,7 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
     print( f"RunQueries( host={host}, port={port}, total_count={total_count}, nthreads={nthreads}, quiet={quiet}, synload={synload}, delay={delay} )" )
 
     if delay > 0.0:
-        print( "Starting in {} seconds...".format(delay) )
+        print( f"Starting in {delay} seconds..." )
         time.sleep(5)
         print( "Go!" )
 
@@ -507,13 +507,13 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
             # Send requests to local dispatcher acting as proxy for backend server engine
             for hits in [0, 1, 2, 5, N_TERM//100, N_TERM//20]:
                 if not quiet:
-                    LogInfo( "Running queries, hits={}".format(hits) )
+                    LogInfo( f"Running queries, hits={hits}" )
                 for i in range( N_INIT ):
                     if not quiet:
                         print( ".", end="", flush=True )
                     # Make request
-                    query = "init={}&hits={}&synload={}".format( i, hits, synload )
-                    url = "/vgx/plugin/search?{}".format( query )
+                    query = f"init={i}&hits={hits}&synload={synload}"
+                    url = f"/vgx/plugin/search?{query}"
                     try:
                         deadline = time.time() + 10
                         while time.time() < deadline:
@@ -527,7 +527,7 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
                             else:
                                 print( data.status, data.read() )
                                 break
-                        Expect( data.status == 200, "200, got {}".format( data.status ) )
+                        Expect( data.status == 200, f"200, got {data.status}" )
                         data = data.read()
                         # Extract response data
                         R = json.loads( data )
@@ -536,20 +536,20 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
                         entries = response['entries']
                         # Verify response
                         if total_count >= 0:
-                            Expect( hitcount == total_count, "total count {}, got {}".format( total_count, hitcount ) )
+                            Expect( hitcount == total_count, f"total count {total_count}, got {hitcount}" )
                         if len(entries) != hits:
                             pprint.pprint( R )
-                            Expect( False, "expected {} hits, got {}".format( hits, len(entries) ) )
+                            Expect( False, f"expected {hits} hits, got {len(entries)}" )
                         # Verify sort order
                         prev_score = 1.0
                         for score, entry in entries:
-                            Expect( score <= prev_score,    "descending order, got {} then {}".format( prev_score, score ) )
+                            Expect( score <= prev_score,    f"descending order, got {prev_score} then {score}" )
                             prev_score = score
                     except (http.client.NotConnected, http.client.ImproperConnectionState, socket.timeout) as cex:
                         conn.close()
                         conn = GetNewConnection( host, port )
                     except Exception as err:
-                        Expect( False, "failed to send query: {}".format(err) )
+                        Expect( False, f"failed to send query: {err}" )
                 if not quiet:
                     print()
         except Exception as err:
@@ -572,7 +572,7 @@ def RunQueries( host, port, total_count=-1, nthreads=1, quiet=False, synload=100
         t.join()
 
     for D in tdata:
-        Expect( "error" not in D,       "Worker error: {}".format( D ) )
+        Expect( "error" not in D,       f"Worker error: {D}" )
             
 
 
@@ -608,7 +608,7 @@ def StartServerEngines( host, ports, prefill=True ):
         # Wait for engines ready
         for server, host, port in SERVERS:
             ready = WaitUntilEngineReady( host, port, timeout=120 )
-            Expect( ready,      "Backend server engine failed to start ({}:{})".format(host, port) )
+            Expect( ready,      f"Backend server engine failed to start ({host}:{port})" )
 
         return SERVERS
     except:
@@ -650,7 +650,7 @@ def StartDispatcherEngines( host, ports, cf ):
         # Wait for engines ready
         for dispatcher, host, port in DISPATCHERS:
             ready = WaitUntilEngineReady( host, port )
-            Expect( ready,      "Backend dispatcher engine failed to start ({}:{})".format(host, port) )
+            Expect( ready,      f"Backend dispatcher engine failed to start ({host}:{port})" )
 
         return DISPATCHERS
     except:
@@ -688,7 +688,7 @@ def StopEngines( ENGINES ):
         # Wait for engines to exit
         for engine, host, port in ENGINES:
             engine.join( timeout=30 )
-            Expect( engine.exitcode is not None,    "Backend engine did not stop ({}:{})".format(host, port) )
+            Expect( engine.exitcode is not None,    f"Backend engine did not stop ({host}:{port})" )
     except:
         for engine, host, port in ENGINES:
             if engine.exitcode is None:

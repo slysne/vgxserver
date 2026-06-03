@@ -545,7 +545,7 @@ static vgx_VertexList_t * Graph_atomic_acquire_vertices_readonly( vgx_Graph_t *s
         }
       }
       iVertex.List.Delete( &vertices );
-      SIGNAL_VERTEX_AVAILABLE( self );
+      BROADCAST_VERTEX_AVAILABLE( self );
     }
     XFINALLY {
     }
@@ -762,7 +762,7 @@ static vgx_VertexList_t * Graph_atomic_acquire_vertices_writable( vgx_Graph_t *s
         }
       }
       iVertex.List.Delete( &vertices );
-      SIGNAL_VERTEX_AVAILABLE( self );
+      BROADCAST_VERTEX_AVAILABLE( self );
     }
     XFINALLY {
     }

@@ -227,7 +227,7 @@ __inline static int64_t __write_common_headers( vgx_VGXServerClient_t *client ) 
     "Server: " VGX_SERVER_HEADER CRLF
     "Connection: keep-Alive" CRLF
     "Access-Control-Allow-Origin: *" CRLF;
-  static int64_t sz_HEADERS_Common = sizeof( HEADERS_Common )-1;
+  static const int64_t sz_HEADERS_Common = sizeof( HEADERS_Common )-1;
   vgx_StreamBuffer_t *outstream = client->response.buffers.stream;
   return iStreamBuffer.Write( outstream, HEADERS_Common, sz_HEADERS_Common );
 }
@@ -241,7 +241,7 @@ __inline static int64_t __write_common_headers( vgx_VGXServerClient_t *client ) 
  */
 __inline static int64_t __write_header_placeholder__XVgxBacklog( vgx_VGXServerClient_t *client ) {
   static char X_VGX_BACKLOG[] = "X-Vgx-Backlog: 0000" CRLF; // <-- will be populated by main server thread!
-  static size_t sz_X_VGX_BACKLOG = sizeof( X_VGX_BACKLOG ) - 1;
+  static const size_t sz_X_VGX_BACKLOG = sizeof( X_VGX_BACKLOG ) - 1;
   vgx_StreamBuffer_t *outstream = client->response.buffers.stream;
   return iStreamBuffer.Write( outstream, X_VGX_BACKLOG, sz_X_VGX_BACKLOG ) - 6; // <-- offset of the 0000 placeholder
 }
@@ -322,7 +322,7 @@ __inline static int64_t __write_header__ContentLength( vgx_VGXServerClient_t *cl
  */
 DLL_HIDDEN int vgx_server_response__prepare_body( vgx_VGXServerResponse_t *response ) {
   static const char BODY_OK_JSON_PreWrap[] = "{\"status\": \"OK\", \"response\": ";
-  static int sz_BODY_OK_JSON_PreWrap = sizeof( BODY_OK_JSON_PreWrap ) - 1;
+  static const int sz_BODY_OK_JSON_PreWrap = sizeof( BODY_OK_JSON_PreWrap ) - 1;
 
   switch( response->mediatype ) {
   case MEDIA_TYPE__application_json:
@@ -350,7 +350,7 @@ DLL_HIDDEN int vgx_server_response__prepare_body( vgx_VGXServerResponse_t *respo
  */
 DLL_HIDDEN int vgx_server_response__complete_body( vgx_VGXServer_t *server, vgx_VGXServerClient_t *client ) {
   static const char BODY_PostWrap[] = "}";
-  static int sz_BODY_PostWrap = sizeof( BODY_PostWrap ) - 1;
+  static const int sz_BODY_PostWrap = sizeof( BODY_PostWrap ) - 1;
 
   if( !client->response.info.execution.nometas ) {
     // Port information
@@ -391,7 +391,7 @@ DLL_HIDDEN int vgx_server_response__complete_body( vgx_VGXServer_t *server, vgx_
  */
 DLL_HIDDEN int vgx_server_response__prepare_body_error( vgx_VGXServerResponse_t *response, CString_t *CSTR__error ) {
   static const char BODY_ERROR_PreWrap[] = "{\"status\": \"ERROR\", \"message\": ";
-  static int sz_BODY_ERROR_PreWrap = sizeof( BODY_ERROR_PreWrap ) - 1;
+  static const int sz_BODY_ERROR_PreWrap = sizeof( BODY_ERROR_PreWrap ) - 1;
   // Discard any previously prepared body
   iStreamBuffer.Clear( response->buffers.content );
   // Write error wrapper with message

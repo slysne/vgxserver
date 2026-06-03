@@ -1244,9 +1244,13 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
       }
     }
 
-    // Expected end state is infix, error if other state
+    // Expected end state is infix, error if other state unless program is empty
     if( STATE == EXPECT_INFIX || STATE == EXPECT_OPERAND_OR_END || ( STATE == EXPECT_IGNORE_LINE && PREV_STATE == EXPECT_INFIX ) ) {
       /* ok */
+    }
+    // Empty program
+    else if( program->length == 0 ) {
+      
     }
     else {
       // Capture last non-null token 
@@ -1338,7 +1342,7 @@ DLL_HIDDEN int _vxeval_parser__create_rpn_from_infix( vgx_ExpressEvalProgram_t *
     }
 
     // Verify correctness of RPN output (NOTE: there may be multiple items on the stack)
-    if( program->stack.eval_depth.run < 1 ) {
+    if( program->length > 0 &&  program->stack.eval_depth.run < 1 ) {
       __synerr__syntax_error( tokenizer, "invalid expression" );
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x14A );
     }

@@ -471,14 +471,39 @@ static double __avx512_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   int N = len >> 6;
   const BYTE *a_cur = A;
   const BYTE *b_cur = B;
-  for( int i=0; i<N; i++, a_cur += sizeof(__m512i), b_cur += sizeof(__m512i) ) {
-    __dp_avx512( a_cur, b_cur, &sum );
+
+  int N_minus_2 = N - 2;
+  int i = 0;
+  while( i <= N_minus_2 ) {
+    i += 2;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+  }
+  while( i++ < N ) {
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
   }
 
   return __extract_float_avx512( __hadd_ps_avx512( &sum ) );
 #else
   return __avx2_dp_pi8( A, B, len );
 #endif
+}
+
+
+
+/*******************************************************************//**
+ * Cosine( A, B, invnorm_prod )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product
+ *
+ ***********************************************************************
+ */
+static double __avx512_dp_cos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) {
+  double cosine = __avx512_dp_pi8(A, B, len) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
 }
 
 
@@ -512,12 +537,62 @@ static double __avx512_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   double rnorm_b = __rsqrt_hadd_ps_avx512( &ssq_b );
   // Cosine
   double cosine = dp * rnorm_a * rnorm_b;
-  if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-    cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-  }
-  return cosine;
+  return __scalar_cosine_clamp( cosine );
 #else
   return __avx2_cos_pi8( A, B, len );
+#endif
+}
+
+
+
+/*******************************************************************//**
+ * Cosine( A, B, threshold )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length. Length must be a multiple of 32.
+ *
+ * Returns -1.0 if during computation we give up hope of exceeding threshold
+ *
+ ***********************************************************************
+ */
+static double __avx512_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) {
+#ifdef __cxlib_AVX512_MINIMUM__
+  // Sixteen bins of running (float) sums of products
+  __m512 sum = _mm512_setzero_ps();
+  // Process chunks of 64 bytes, any trailing non-multiple of 64 is ignored!!
+  int N = len >> 6;
+  const BYTE *a_cur = A;
+  const BYTE *b_cur = B;
+
+  double Nscaled_invnorm_prod_margin = N * 1.5 * invnorm_prod;
+
+  int i = 0;
+  int N_minus_2 = N - 2;
+  while( i <= N_minus_2 ) {
+    i += 2;
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+    __dp_avx512( a_cur, b_cur, &sum );
+
+    // As i approaches N, i ~= N, which makes the below comparison fair
+    __m512 tempsum = sum; // <- protect sum against destructive horizontal reduction below
+    double partial_dp = __extract_float_avx512( __hadd_ps_avx512( &tempsum ) );
+    double scaled_partial_cos = Nscaled_invnorm_prod_margin * partial_dp;
+    double scaled_min_cos = i * min_cos; 
+    if( scaled_partial_cos < scaled_min_cos ) {
+      return -1.0;
+    }
+
+    a_cur += 64; b_cur += 64;
+  }
+  while( i++ < N ) {
+    __dp_avx512( a_cur, b_cur, &sum ); a_cur += 64; b_cur += 64;
+  }
+
+  double dp = __extract_float_avx512( __hadd_ps_avx512( &sum ) );
+  double cosine = dp * invnorm_prod;
+  return __scalar_cosine_clamp( cosine );
+#else
+  return __avx2_dp_mincos_pi8( A, B, len, invnorm_prod, min_cos );
 #endif
 }
 
@@ -536,8 +611,9 @@ static void __eval_avx512_ecld_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
   float a_scale, b_scale;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
-  if( px ) {
+  bool invnorm; // If this gets set below then one or both vectors in cosine_mode, can't compute Euclidean distance
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len, &invnorm );
+  if( px && !invnorm ) {
     px->real = __avx512_ecld_pi8( a_data, b_data, a_scale, b_scale, len );
   }
   else {
@@ -610,11 +686,19 @@ static void __eval_avx512_rsqrtssq_pi8( vgx_Evaluator_t *self ) {
 static void __eval_avx512_dp_pi8( vgx_Evaluator_t *self ) {
 #ifdef CXPLAT_ARCH_HASFMA
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __avx512_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    if( invnorm ) {
+      px->real = __avx512_dp_pi8( a_data, b_data, len ); // dp of raw bytes for cosine_mode vectors
+    }
+    else {
+      double a_scale = a_meta;
+      double b_scale = b_meta;
+      px->real = __avx512_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    }
   }
 #else
   __eval_scalar_dp_pi8( self );
@@ -635,11 +719,19 @@ static void __eval_avx512_dp_pi8( vgx_Evaluator_t *self ) {
 static void __eval_avx512_cos_pi8( vgx_Evaluator_t *self ) {
 #ifdef CXPLAT_ARCH_HASFMA
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __avx512_cos_pi8( a_data, b_data, len );
+    if( invnorm ) {
+      double a_invnorm = a_meta;
+      double b_invnorm = b_meta;
+      px->real = __avx512_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+    }
+    else {
+      px->real = __avx512_cos_pi8( a_data, b_data, len );
+    }
   }
 #else
   __eval_scalar_cos_pi8( self );

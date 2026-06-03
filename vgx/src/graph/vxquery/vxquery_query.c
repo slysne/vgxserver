@@ -83,7 +83,7 @@ static void _vxquery_query__delete_query( vgx_BaseQuery_t **query );
 
 //
 static vgx_AdjacencyQuery_t *    _vxquery_query__new_adjacency_query( vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error );
 static vgx_GlobalQuery_t *       _vxquery_query__new_global_query( vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
 static vgx_AggregatorQuery_t *   _vxquery_query__new_aggregator_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 
@@ -1161,7 +1161,10 @@ static vgx_NeighborhoodQuery_t * NeighborhoodQuery_constructor( const void *iden
     // 7. Set the collector mode
     self->collector_mode = args->collector_mode;
 
-    // 8. Set (steal) the collect condition
+    // 8. Set the recursion mode
+    self->recursion_config = args->recursion;
+
+    // 9. Set (steal) the collect condition
     if( args->collect_arc_condition_set && *args->collect_arc_condition_set ) {
       self->collect_arc_condition_set = *args->collect_arc_condition_set;
       *args->collect_arc_condition_set = NULL;
@@ -2858,6 +2861,9 @@ static vgx_RankingCondition_t * _vxquery_query__new_ranking_condition( vgx_Graph
     case VGX_SORTBY_PREDICATOR:
       ranking_condition->modifier.bits = modifier;
       break;
+    case VGX_SORTBY_REAL_PREDICATOR:
+      ranking_condition->modifier.bits = VGX_PREDICATOR_MOD_FLOAT; // special (TODO: verify correct)
+      break;
     case VGX_SORTBY_RANKING:
       if( expression == NULL ) {
         __set_error_string( CSTR__error, "rank sorting requires ranking formula" );
@@ -3998,13 +4004,55 @@ static void _vxquery_query__delete_neighborhood_query( vgx_NeighborhoodQuery_t *
  *
  ***********************************************************************
  */
-static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, CString_t **CSTR__error ) {
+static vgx_NeighborhoodQuery_t * _vxquery_query__new_neighborhood_query( vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error ) {
   vgx_NeighborhoodQuery_constructor_args_t args = {
     .graph                      = graph,
     .anchor_id                  = vertex_id,
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = collect_arc_condition_set,
-    .collector_mode             = collector_mode
+    .collector_mode             = collector_mode,
+    .recursion = {
+      .mode                     = recursion_config->mode,
+      .bias                     = recursion_config->bias,
+      .heap = {
+        .size                   = recursion_config->heap.size,
+      },
+      .shadow = {
+        .size                   = recursion_config->shadow.size
+      },
+      .limit = {
+        .frontier               = recursion_config->limit.frontier,
+        .expansion              = recursion_config->limit.expansion,
+        .depth                  = recursion_config->limit.depth,
+        .exec_ms                = recursion_config->limit.exec_ms,
+        .visit                  = recursion_config->limit.visit
+      },
+      .visit = {
+        .reset_metrics          = recursion_config->visit.reset_metrics,
+        .reset_map              = recursion_config->visit.reset_map
+      },
+      .beam = {
+        .width                  = recursion_config->beam.width,
+        .min_width              = recursion_config->beam.min_width,
+        .max_width              = recursion_config->beam.max_width,
+        .curve                  = recursion_config->beam.curve,
+        .adaptive_taper         = recursion_config->beam.adaptive_taper
+      },
+      .tune = {
+        .alpha                  = recursion_config->tune.alpha,
+        .beta                   = recursion_config->tune.beta,
+        .gamma                  = recursion_config->tune.gamma,
+        .delta                  = recursion_config->tune.delta,
+        .epsilon                = recursion_config->tune.epsilon,
+        .zeta                   = recursion_config->tune.zeta,
+        .kappa                  = recursion_config->tune.kappa,
+        .lambda                 = recursion_config->tune.lambda,
+        .omega                  = recursion_config->tune.omega
+      },
+      .init = {
+        .select                 = recursion_config->init.select
+      }
+    }
   };
   return COMLIB_OBJECT_NEW( vgx_NeighborhoodQuery_t, NULL, &args );
 }
@@ -4022,7 +4070,10 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__new_default_neighborhood_query(
     .anchor_id                  = vertex_id,
     .CSTR__error                = CSTR__error,
     .collect_arc_condition_set  = NULL,
-    .collector_mode             = VGX_COLLECTOR_MODE_COLLECT_ARCS
+    .collector_mode             = VGX_COLLECTOR_MODE_COLLECT_ARCS,
+    .recursion = {
+      .mode                     = VGX_RECURSION_MODE_NONE
+    }
   };
 
   // TODO: Add the default behavior
@@ -4262,7 +4313,7 @@ static vgx_NeighborhoodQuery_t * _vxquery_query__clone_neighborhood_query( const
   }
 
   // Create query clone without anchor. It will be set when we copy adjacency query.
-  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, CSTR__error );
+  vgx_NeighborhoodQuery_t *self = iGraphQuery.NewNeighborhoodQuery( other->graph, NULL, &collect_condition, other->collector_mode, &other->recursion_config, CSTR__error );
   if( self ) {
 
     // 1. copy adjacency part

@@ -33,6 +33,7 @@ from . import Artifacts
 from . import Metrics
 from . import Plugin
 from . import Dispatch
+from . import System
 from . import Performance
 
 
@@ -41,6 +42,7 @@ modules = [
     Metrics,
     Plugin,
     Dispatch,
+    System,
     Performance
 ]
 

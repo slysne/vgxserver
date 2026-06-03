@@ -45,21 +45,8 @@ static void __eval_neon_cos_pi8( vgx_Evaluator_t *self );
  *
  ***********************************************************************
  */
-__inline static float __horizontal_sum( float32x4_t f32x4 ) {
-  // Horizontal sum of final float32x4_t accumulator
-  float32x2_t sum2 = vadd_f32( vget_low_f32(f32x4), vget_high_f32(f32x4) );
-  float result = vget_lane_f32(sum2, 0) + vget_lane_f32(sum2, 1);
-  return result;
-}
-
-
-
-/*******************************************************************//**
- *
- ***********************************************************************
- */
 __inline static float __sqrt_horizontal_sum( float32x4_t f32x4 ) {
-  float32x2_t vhsum = vdup_n_f32( __horizontal_sum( f32x4 ) );
+  float32x2_t vhsum = vdup_n_f32( vaddvq_f32( f32x4 ) );
   float32x2_t vsqrt = vsqrt_f32( vhsum );
   return vget_lane_f32(vsqrt, 0); 
 }
@@ -73,7 +60,7 @@ __inline static float __sqrt_horizontal_sum( float32x4_t f32x4 ) {
 __inline static float __rsqrt_horizontal_sum( float32x4_t f32x4 ) {
   // Use one round of Newton-Raphson refinement since the baseline neon precision is poor
   // y1 = y0 * (3 - x * y0^2) / 2
-  float32x2_t x = vdup_n_f32( __horizontal_sum( f32x4 ) );
+  float32x2_t x = vdup_n_f32( vaddvq_f32( f32x4 ) );
   float32x2_t y0 = vrsqrte_f32( x ); // Initial approx
 
   // One Newton-Raphson refinement:
@@ -225,7 +212,7 @@ static double __neon_ssq_pi8( const BYTE *A, int len ) {
   }
 
   // Horizontal sum of final float32x4_t accumulator
-  return __horizontal_sum( acc );
+  return vaddvq_f32( acc );
 }
 
 
@@ -274,17 +261,48 @@ static double __neon_dp_pi8( const BYTE *A, const BYTE *B, int len ) {
   int N = len >> 4;
   const int8_t *a_cur = (const int8_t*)A;
   const int8_t *b_cur = (const int8_t*)B;
-  for( int i=0; i<N; i++, a_cur += sizeof(int8x16_t), b_cur += sizeof(int8x16_t) ) {
-    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) );
+
+  int i=0;
+  int N_minus_8 = N - 8;
+  while( i <= N_minus_8 ) {
+    i += 8;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+  }
+  while( i++ < N ) {
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
   }
 
   // Convert to float
   float32x4_t float_acc = vcvtq_f32_s32(acc);
 
   // Horizontal sum of final float32x4_t accumulator
-  return __horizontal_sum( float_acc );
+  return vaddvq_f32( float_acc );
 }
 
+
+
+/*******************************************************************//**
+ * Cosine( A, B, invnorm_prod )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product
+ *
+ ***********************************************************************
+ */
+static double __neon_dp_cos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod ) {
+  double cosine = __neon_dp_pi8(A, B, len) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
+}
+ 
 
 
 /*******************************************************************//**
@@ -318,7 +336,7 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   float32x4_t float_dpacc = vcvtq_f32_s32(dp_acc);
 
   // Horizontal sum of final float32x4_t accumulator
-  double dp = __horizontal_sum( float_dpacc );
+  double dp = vaddvq_f32( float_dpacc );
 
   // Reciprocal norms
   double rnorm_a = __rsqrt_horizontal_sum( ssq_a );
@@ -326,11 +344,62 @@ static double __neon_cos_pi8( const BYTE *A, const BYTE *B, int len ) {
   
   // Cosine
   double cosine = dp * rnorm_a * rnorm_b;
-  if( fabs( cosine ) > 1.0 || isnan( cosine ) ) {
-    cosine = (double)((cosine > 0.0) - (cosine < 0.0));
-  }
-  return cosine;
+  return __scalar_cosine_clamp( cosine );
 }
+
+
+
+/*******************************************************************//**
+ * Cosine( A, B, threshold )
+ *
+ * Both A and B are packed bytes arrays (i.e. strings interpreted as bytes)
+ * and must have equal length.
+ *
+ * Compute cosine as dot product multiplied by supplied invers norms product,
+ * and return -1.0 if the cosine computation cannot exceeed min_cos.
+ *
+ ***********************************************************************
+ */
+static double __neon_dp_mincos_pi8( const BYTE *A, const BYTE *B, int len, double invnorm_prod, double min_cos ) {
+  // Four bins of running (float) sums of products
+  int32x4_t acc = vdupq_n_s32(0); // running sum
+
+  // Process chunks of 16 bytes, any trailing non-multiple of 16 is ignored!!
+  int N = len >> 4;
+  const int8_t *a_cur = (const int8_t*)A;
+  const int8_t *b_cur = (const int8_t*)B;
+  
+  double Nscaled_invnorm_prod_margin = N * 1.5 * invnorm_prod;
+
+  int i=0;
+  int N_minus_4 = N - 4;
+  while( i <= N_minus_4 ) {
+    i += 4;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) );
+
+    // As i approaches N, i ~= N, which makes the below comparison fair
+    double partial_dp = vaddvq_f32( vcvtq_f32_s32(acc) );
+    double scaled_partial_cos = Nscaled_invnorm_prod_margin * partial_dp;
+    double scaled_min_cos = i * min_cos; 
+    if( scaled_partial_cos < scaled_min_cos ) {
+      return -1.0;
+    }
+
+    a_cur += 16; b_cur += 16;
+  }
+  while( i++ < N ) {
+    acc = vdotq_s32( acc, vld1q_s8( a_cur ), vld1q_s8( b_cur ) ); a_cur += 16; b_cur += 16;
+  }
+
+  // Compute cosine
+  double cosine = vaddvq_f32( vcvtq_f32_s32(acc) ) * invnorm_prod;
+  return __scalar_cosine_clamp( cosine ); // avoid range/codomain violations due to noise
+
+}
+
 
 
 
@@ -346,8 +415,9 @@ static void __eval_neon_ecld_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
   float a_scale, b_scale;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
-  if( px ) {
+  bool invnorm; // If this gets set below then one or both vectors in cosine_mode, can't compute Euclidean distance
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len, &invnorm );
+  if( px && !invnorm ) {
     px->real = __neon_ecld_pi8( a_data, b_data, a_scale, b_scale, len );
   }
   else {
@@ -408,11 +478,19 @@ static void __eval_neon_rsqrtssq_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_neon_dp_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __neon_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    if( invnorm ) {
+      px->real = __neon_dp_pi8( a_data, b_data, len ); // dp of raw bytes for cosine_mode vectors
+    }
+    else {
+      double a_scale = a_meta;
+      double b_scale = b_meta;
+      px->real = __neon_dp_pi8( a_data, b_data, len ) * a_scale * b_scale;
+    }
   }
 }
 
@@ -429,11 +507,19 @@ static void __eval_neon_dp_pi8( vgx_Evaluator_t *self ) {
  */
 static void __eval_neon_cos_pi8( vgx_Evaluator_t *self ) {
   const BYTE *a_data, *b_data;
-  float a_scale, b_scale;
+  float a_meta, b_meta;
   int len;
-  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_scale, &b_scale, &len );
+  bool invnorm;
+  vgx_EvalStackItem_t *px = __eval_prepare_two( self, &a_data, &b_data, &a_meta, &b_meta, &len, &invnorm );
   if( px ) {
-    px->real = __neon_cos_pi8( a_data, b_data, len );
+    if( invnorm ) {
+      double a_invnorm = a_meta;
+      double b_invnorm = b_meta;
+      px->real = __neon_dp_pi8( a_data, b_data, len ) * a_invnorm * b_invnorm;
+    }
+    else {
+      px->real = __neon_cos_pi8( a_data, b_data, len );
+    }
   }
 }
 

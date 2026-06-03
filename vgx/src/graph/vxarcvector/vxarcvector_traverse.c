@@ -117,13 +117,19 @@ __inline static int64_t __match_arc_no_collect( framehash_processing_context_t *
  * 
  ***********************************************************************
  */
-__inline static void __update_output( __arcvector_traversal_output_context_t *output, int64_t n_traversed ) {
+__inline static void __update_output( __arcvector_virtual_input_context_t *context, __arcvector_traversal_output_context_t *output, int64_t n_traversed ) {
   if( n_traversed == 0 ) {
     return;
   }
   if( n_traversed > 0 ) {
     // Inc neighbor vertex count if any arc was followed
     output->n_vertices++;
+    /*
+    // Update running cosine difficulty for as applicable for recursive queries special case
+    if( output->collector ) {
+      context->traverse_filter->lsh_cos = output->collector->current_cos_difficulty;
+    }
+    */
     // Neighborhood match yet?
     if( output->neighborhood_match == VGX_ARC_FILTER_MATCH_MISS ) {
       output->neighborhood_match = output->arc_match;
@@ -144,7 +150,6 @@ __inline static int64_t __traverse_arcarray_no_collect( framehash_processing_con
   int64_t n_traversed_here = 0;
   __arcvector_virtual_input_context_t *context = processor->processor.input;
   __arcvector_traversal_output_context_t *output = processor->processor.output;
-
   __begin_safe_traversal_context( context, fh_cell ) {
     __begin_traverse {
       // Multiple Arc: SECONDARY FRAMEHASH
@@ -157,7 +162,7 @@ __inline static int64_t __traverse_arcarray_no_collect( framehash_processing_con
       }
     } __traverse_final_synthetic( true, __match_arc_no_collect, &n_traversed_here, processor );
 
-    __update_output( output, n_traversed_here );
+    __update_output( context, output, n_traversed_here );
 
   } __end_safe_traversal_context;
 
@@ -381,7 +386,7 @@ static int64_t __traverse_arcarray_collect_all( framehash_processing_context_t *
       }
     } __traverse_final_synthetic( true, __traverse_arc_and_collect, &n_traversed_here, processor );
 
-    __update_output( output, n_traversed_here );
+    __update_output( context, output, n_traversed_here );
 
   } __end_safe_traversal_context;
 
@@ -514,7 +519,7 @@ static int64_t __traverse_arcarray_collect_conditional( framehash_processing_con
       }
     } __traverse_final_synthetic( true, __traverse_arc_collect_conditional, &n_traversed_here, processor );
 
-    __update_output( output, n_traversed_here );
+    __update_output( context, output, n_traversed_here );
 
   } __end_safe_traversal_context;
 
@@ -635,7 +640,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_traverse__traverse_arcarray( const v
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current->timing_budget, &output.neighborhood_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current, &output.neighborhood_match ) {
     vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
     __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &output.neighborhood_match ) {
       __arcvector_traversal_input_context_t input = {
@@ -819,7 +824,7 @@ static int64_t __traverse_bidirectional_arcarray_collect_all( framehash_processi
       }
     } __traverse_final_synthetic( true, __traverse_bidirectional_arc_and_collect, &n_traversed_here, processor );
 
-    __update_output( output, n_traversed_here );
+    __update_output( vcontext, output, n_traversed_here );
 
   } __end_safe_traversal_context;
 
@@ -874,7 +879,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_traverse__traverse_arcarray_bidirect
   // Readonly ?
   bool readonly = neighborhood_probe->readonly_graph;
 
-  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current->timing_budget, &output.neighborhood_match ) {
+  __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, current, &output.neighborhood_match ) {
     vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
     __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &output.neighborhood_match ) {
       __arcvector_bidirectional_traversal_input_context_t input = {

@@ -31,21 +31,23 @@ set "SENTINEL=_tmp-pyvgx-build-dir"
 
 echo Build directory: %BUILD_DIR%
 
+REM === Make sure build dir exists, if not create w/sentinel
+if not exist "%BUILD_DIR%" (
+    mkdir "%BUILD_DIR%"
+    type nul > "%BUILD_DIR%\%SENTINEL%"
+)
+
 REM === Call directory cleaner ===
 call :safe_clear_dir %BUILD_DIR% %SENTINEL%
 if errorlevel 1 exit /b 1
 
-REM === Make sure build dir exists
-if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
-
-REM === Create sentinel ===
-type nul > "%BUILD_DIR%\%SENTINEL%"
-
 REM === Copy source code ===
-robocopy . "%BUILD_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD "%BUILD_DIR%" >nul
+echo Copying source to: %BUILD_DIR%
+robocopy . "%BUILD_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD "%BUILD_DIR%" "build" "VS\build" "wheelhouse" >nul
 
 REM === Enter build dir ===
 pushd "%BUILD_DIR%"
+type nul > "%SENTINEL%"
 
 REM === Build extension ===
 REM python setup.py build_ext
@@ -133,6 +135,7 @@ if "%is_safe%"=="1" (
     )
     goto :eof
 )
+echo. dir is not safe to delete
 
 :safeclear_fail
 echo. ERROR: Failed to delete directory: %dir%

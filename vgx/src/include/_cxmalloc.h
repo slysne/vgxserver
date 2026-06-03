@@ -381,7 +381,7 @@ CALIGNED_TYPE(struct) s_cxmalloc_allocator_t {
     cacheline_t _CL3;
     struct {
       // [Q3.1.1]
-      ATOMIC_VOLATILE_i32( readonly_atomic ); /* [10] */
+      ATOMIC_i32 readonly_atomic;             /* [10] */
       // [Q3.1.2]
       int ready;                              /* [11] allocator construction complete if 1 */
       // [Q3.2]
@@ -485,7 +485,7 @@ do {                                        \
 #define BEGIN_CXMALLOC_FAMILY_READONLY( Family )    \
   do {                                              \
     cxmalloc_family_t *__family__ = Family;         \
-    SYNCHRONIZE_ON( __family__->lock ) {            \
+    RECURSIVE_SYNCHRONIZE_ON( __family__->lock ) {            \
       __family__->readonly_cnt++;                   \
     } RELEASE;                                      \
     cxmalloc_family_t *Family##_RO = __family__;    \
@@ -494,7 +494,7 @@ do {                                        \
 
 #define END_CXMALLOC_FAMILY_READONLY                \
     END_CXMALLOC_HIDE_POINTER;                      \
-    SYNCHRONIZE_ON( __family__->lock ) {            \
+    RECURSIVE_SYNCHRONIZE_ON( __family__->lock ) {            \
       __family__->readonly_cnt--;                   \
       CXMALLOC_ASSERT( __family__->readonly_cnt >= 0 ); \
     } RELEASE;                                      \
@@ -521,7 +521,7 @@ do {                                        \
 
 
 #define SYNCHRONIZE_CXMALLOC_ALLOCATOR( Allocator )     \
-  SYNCHRONIZE_ON( (Allocator)->alock ) {                \
+  RECURSIVE_SYNCHRONIZE_ON( (Allocator)->alock ) {                \
     cxmalloc_allocator_t *Allocator##_CS = Allocator;   \
     do {                                                \
       BEGIN_CXMALLOC_HIDE_POINTER( Allocator, CONCAT_NAME( Allocator, _CS ) )
@@ -534,7 +534,7 @@ do {                                        \
 
 
 #define SYNCHRONIZE_CXMALLOC_FAMILY( Family )             \
-  SYNCHRONIZE_ON( (Family)->lock ) {                      \
+  RECURSIVE_SYNCHRONIZE_ON( (Family)->lock ) {                      \
     cxmalloc_family_t *Family##_CS = Family;              \
     do {                                                  \
       BEGIN_CXMALLOC_HIDE_POINTER( Family, CONCAT_NAME( Family, _CS ) )

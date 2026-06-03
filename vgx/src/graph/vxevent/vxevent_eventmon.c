@@ -1139,7 +1139,7 @@ __inline static int __is_event_earlier_than( vgx_EventValue_t *new_ev, vgx_Event
  */
 __inline static int64_t __swap_inputs_WL( vgx_EventProcessor_t *processor_WL ) {
   int64_t n_events;
-  SYNCHRONIZE_ON( processor_WL->PublicAPI.Lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( processor_WL->PublicAPI.Lock ) {
     // Swap the API and MON inputs
     vgx_VertexEventQueue_t *Qapi = processor_WL->PublicAPI.Queue;
     if( (n_events = LENGTH_QUEUE_VERTEX_EVENTS( Qapi )) > 0 ) {
@@ -1377,7 +1377,7 @@ static int __transfer_imminent_events_to_execution_job_WL( vgx_EventProcessor_t 
  */
 int64_t __length_Qapi( vgx_Graph_t *self ) {
   int64_t n_events;
-  SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
+  RECURSIVE_SYNCHRONIZE_ON( self->EVP.PublicAPI.Lock ) {
     n_events = LENGTH_QUEUE_VERTEX_EVENTS( self->EVP.PublicAPI.Queue );
   } RELEASE;
   return n_events;

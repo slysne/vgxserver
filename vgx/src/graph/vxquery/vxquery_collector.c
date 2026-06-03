@@ -32,6 +32,7 @@ static void __delete_search_ranker_context( vgx_Ranker_t **ranker );
 static vgx_Ranker_t * __new_search_ranker_context( const vgx_ranking_context_t *ranking_context );
 
 static vgx_VertexRef_t * __new_vertex_reference_map( int64_t collector_size, int64_t *mapsz );
+static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t *refmap, int64_t mapsz );
 static int64_t __destroy_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t **refmap, int64_t mapsz );
 
 static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query );
@@ -42,6 +43,7 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
 static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query );
 static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t *graph, vgx_BaseQuery_t *query );
 
+static void _vxquery_collector__clear_collector_references( vgx_BaseCollector_context_t *collector );
 static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector );
 static vgx_ArcCollector_context_t * _vxquery_collector__new_arc_collector( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
 static vgx_VertexCollector_context_t * _vxquery_collector__new_vertex_collector( vgx_Graph_t *graph, vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query, vgx_collect_counts_t *counts );
@@ -57,6 +59,7 @@ static int64_t _vxquery_collector__transfer_base_list( vgx_ranking_context_t *ra
  ***********************************************************************
  */
 DLL_HIDDEN IGraphCollector_t iGraphCollector = {
+  .ClearCollectorReferences           = _vxquery_collector__clear_collector_references,
   .DeleteCollector                    = _vxquery_collector__delete_collector,
   .NewArcCollector                    = _vxquery_collector__new_arc_collector,
   .NewVertexCollector                 = _vxquery_collector__new_vertex_collector,
@@ -126,9 +129,9 @@ static vgx_VertexRef_t * __new_vertex_reference_map( int64_t collector_size, int
   // Size must be able to accommodate all unique tails and heads (worst case) plus two
   // additional tail + head in case of heaps with a discarded collector item that
   // needs processing. However, we go higher than this too to avoid fill rate close to 100%
-  // worst case. We add 50% to minimum size and then use the nearest higher power of 2 for size.
+  // worst case. We make it 300% of its minimum required size and then use the nearest higher power of 2 for size.
   int64_t min_sz = 2 * collector_size + 2;
-  int64_t sz = 1LL << imag2( (int64_t)(1.5 * min_sz) );
+  int64_t sz = 1LL << imag2( (int64_t)(3.0 * min_sz) );
   if( (refmap = calloc( sz, sizeof( vgx_VertexRef_t ) )) == NULL ) {
     return NULL;
   }
@@ -143,34 +146,58 @@ static vgx_VertexRef_t * __new_vertex_reference_map( int64_t collector_size, int
  *
  ***********************************************************************
  */
-static int64_t __destroy_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t **refmap, int64_t mapsz ) {
+static int64_t __clear_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t *refmap, int64_t mapsz ) {
+  if( refmap == NULL ) {
+    return 0;
+  }
   int64_t n_released = 0;
-  if( refmap && *refmap ) {
-    vgx_VertexRef_t *cursor = *refmap;
-    vgx_VertexRef_t *end = *refmap + mapsz;
-    // Make sure any still-acquired vertices are released now
+  vgx_VertexRef_t *cursor = refmap;
+  vgx_VertexRef_t *end = refmap + mapsz;
+
+  // Make sure any still-acquired vertices are released now
+  // Start optimistically by hoping we have no lingering references
+  while( cursor < end ) {
+    if( cursor->slot.locked > 0 ) {
+      goto continue_locked;
+    }
+    ++cursor;
+  }
+
+  // Clean exit, we had no locked vertices
+  return 0;
+
+continue_locked:
+  GRAPH_LOCK( graph ) {
     while( cursor < end ) {
+      // Last chance to release vertex lock
       if( cursor->slot.locked > 0 ) {
-        goto continue_locked;
+        // Vertex needs to be unlocked, graph lock required for remainder of loop
+        // Release core vertex lock
+        _vxgraph_state__unlock_vertex_CS_LCK( graph, &cursor->vertex, VGX_VERTEX_RECORD_OPERATION );
+        ++n_released;
+        // Reset slot
+        cursor->refcnt = 0;
+        cursor->slot.locked = 0;
+        cursor->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
       }
       ++cursor;
     }
-    goto completed;
+  } GRAPH_RELEASE;
+  
+  return n_released;
+}
 
-continue_locked:
-    // Only here if any locked slots were found in the map.
-    // Now we have to lock the graph and release locks.
-    GRAPH_LOCK( graph ) {
-      while( cursor < end ) {
-        if( cursor->slot.locked > 0 ) {
-          _vxgraph_state__unlock_vertex_CS_LCK( graph, &cursor->vertex, VGX_VERTEX_RECORD_OPERATION );
-          ++n_released;
-        }
-        ++cursor;
-      }
-    } GRAPH_RELEASE;
 
-completed:
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int64_t __destroy_vertex_reference_map( vgx_Graph_t *graph, vgx_VertexRef_t **refmap, int64_t mapsz ) {
+  int64_t n_released = 0;
+  if( refmap && *refmap ) {
+    n_released = __clear_vertex_reference_map( graph, *refmap, mapsz );
     free( *refmap );
     *refmap = NULL;
   }
@@ -350,7 +377,7 @@ NEXT_SLOT:
  */
 DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref, vgx_Graph_t **locked_graph ) {
   // Negative refcount: no action
-  if( vertexref == NULL || vertexref->refcnt < 0 ) {
+  if( vertexref == NULL || vertexref->refcnt <= 0 ) {
     return -1;
   }
 
@@ -376,6 +403,34 @@ DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_ACQUIRE_CS( vgx_Base
 }
 
 
+
+/*******************************************************************//**
+ *
+ * 
+ ***********************************************************************
+ */
+DLL_HIDDEN int64_t _vxquery_collector__del_vertex_reference_OPEN( vgx_BaseCollector_context_t *collector, vgx_VertexRef_t *vertexref ) {
+  vgx_Graph_t *graph = NULL;
+  int64_t refcnt =  _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, vertexref, &graph );
+  GRAPH_LEAVE_CRITICAL_SECTION( &graph );
+  return refcnt;
+}
+
+
+
+/*******************************************************************//**
+ *
+ * 
+ ***********************************************************************
+ */
+DLL_HIDDEN void _vxquery_collector__del_collector_item_headref_OPEN( vgx_BaseCollector_context_t *collector, vgx_CollectorItem_t *item ) {
+  vgx_Graph_t *graph = NULL;
+  //_vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, item->tailref, &graph );
+  _vxquery_collector__del_vertex_reference_ACQUIRE_CS( collector, item->headref, &graph );
+  GRAPH_LEAVE_CRITICAL_SECTION( &graph );
+}
+
+ 
 
 /*******************************************************************//**
  *
@@ -459,6 +514,36 @@ DLL_HIDDEN vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_B
  *
  ***********************************************************************
  */
+DLL_HIDDEN float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score ) {
+  #define min_score 0.7071067811865475f // -> 1/sqrt(2) -> cos=-0.29289321881345254 since score in [0.0, 2.0]
+  // Never negative cosine (score is [0.0, 2.0] )
+  score = fmaxf( min_score, score );
+
+  // No queue, just moving average
+  if( shadow_trail->queue == NULL ) {
+    return shadow_trail->threshold = shadow_trail->zeta * score + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
+  }
+
+  // Write latest score
+  *shadow_trail->wp++ = score;
+
+  // Ring buffer wp wrap
+  if( shadow_trail->wp >= shadow_trail->end ) {
+    shadow_trail->wp = shadow_trail->queue;
+  }
+  
+  float oldest = *shadow_trail->wp;
+
+  return shadow_trail->threshold = shadow_trail->zeta * oldest + (1.0f - shadow_trail->zeta) * shadow_trail->threshold;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, bool *locked_tail, bool *locked_head ) {
   //
   // TODO: REPLACE WITH A TRUSTED PARAMETER TO THIS FUNCTION 
@@ -468,8 +553,14 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
   //
   int locked = 0;
   vgx_ResponseAttrFastMask fieldmask = vgx_query_response_attr_fastmask( query );
-  // Vertices will be dereferenced
-  if( fieldmask & VGX_RESPONSE_ATTRS_DEREF ) {
+
+  bool recursive = false;
+  if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD && __is_recursion_enabled( &((vgx_NeighborhoodQuery_t*)query)->effective_recursion_config ) ) {
+    recursive = true;
+  }
+
+  // Vertices will be dereferenced or used as anchors in recursive traversal
+  if( (fieldmask & VGX_RESPONSE_ATTRS_DEREF) || recursive ) {
     // TODO:  Don't lock unnecessarily if property selector includes no-deref items only!
     // Graph is not readonly - we have to lock head
     if( readonly_graph == false ) {
@@ -477,8 +568,8 @@ static int __locked_arc_access( bool readonly_graph, vgx_BaseQuery_t *query, boo
       if( fieldmask & VGX_RESPONSE_ATTRS_TAIL_DEREF ) {
         *locked_tail = true;
       }
-      // Heads must be locked if fields other than properties or property fields require head deref
-      if( vgx_query_response_head_deref( query ) ) {
+      // Heads must be locked if fields other than properties or property fields require head deref, or used as anchors in recursive traversal
+      if( vgx_query_response_head_deref( query ) || recursive ) {
         *locked_head = true;
       }
       locked = 1;
@@ -522,6 +613,352 @@ static vgx_CollectorStage_t * __new_collector_stage( void ) {
  *
  ***********************************************************************
  */
+static void __clear_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
+  if( shadow_trail == NULL ) {
+    return;
+  }
+
+  if( shadow_trail->queue ) {
+    shadow_trail->sz = (int)(shadow_trail->end - shadow_trail->queue);
+    memset( shadow_trail->queue, 0, sizeof(float) * shadow_trail->sz );
+  }
+  else {
+    shadow_trail->sz = 0;
+  }
+  shadow_trail->threshold = 0.0f;
+  shadow_trail->wp = shadow_trail->queue;
+  shadow_trail->zeta = 0.0f;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __clear_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t *frontier_queue ) {
+  if( frontier_queue == NULL ) {
+    return;
+  }
+    
+  vgx_CollectorItem_t frontier = {0};
+  Cm256iBuffer_vtable_t *iBuffer = CALLABLE( frontier_queue );
+  // Start optimistically by hoping we have no lingering references
+  while( iBuffer->Next( frontier_queue, &frontier.item ) ) {
+    // No ref, or ref still positive after giving up ref, or vertex never locked
+    if( frontier.headref->refcnt == 0 ||      // no reference
+        --(frontier.headref->refcnt) > 0 ||   // still references
+        frontier.headref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+    {
+      continue;
+    }
+    // Vertex needs to be unlocked, graph lock required for remainder of loop
+    goto continue_locked;
+  }
+
+  // Clean exit, we had no locked vertices
+  return;
+
+continue_locked:
+  GRAPH_LOCK( graph ) {
+    if( frontier.headref ) {
+      goto unlock_vertex_and_reset;
+    }
+    while( iBuffer->Next( frontier_queue, &frontier.item ) ) {
+      // No ref, or ref still positive after giving up ref, or vertex never locked
+      if( frontier.headref->refcnt == 0 ||      // no reference
+          --(frontier.headref->refcnt) > 0 ||   // still references
+          frontier.headref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+      {
+        continue;
+      }
+    unlock_vertex_and_reset:
+      // Vertex needs to be unlocked, graph lock required for remainder of loop
+      // Release core vertex lock
+      _vxgraph_state__unlock_vertex_CS_LCK( graph, &frontier.headref->vertex, VGX_VERTEX_RECORD_OPERATION );
+      // Reset slot
+      frontier.headref->slot.locked = 0;
+      frontier.headref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+    }
+  } GRAPH_RELEASE;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __delete_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail ) {
+  if( shadow_trail ) {
+    __clear_shadow_trail( shadow_trail );
+    free( shadow_trail->queue );
+    shadow_trail->queue = NULL;
+    shadow_trail->end = NULL;
+    shadow_trail->wp = NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static int __init_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, int64_t heap_shadow, double zeta ) {
+  shadow_trail->sz = (int)maximum_value( heap_shadow, 0 );
+  if( shadow_trail->sz > 0 ) {
+    if( (shadow_trail->queue = calloc( heap_shadow, sizeof(float) )) == NULL ) {
+      return -1;
+    }
+    shadow_trail->threshold = 0.0f;
+    shadow_trail->wp = shadow_trail->queue;
+    shadow_trail->end = shadow_trail->queue + heap_shadow;
+  }
+  else {
+    shadow_trail->threshold = -FLT_MAX;;
+  }
+  shadow_trail->zeta = (float)zeta;
+  return 0;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __delete_frontier_queue( vgx_Graph_t *graph, vgx_FrontierQueue_t **queue ) {
+  if( queue && *queue ) {
+    Cm256iBuffer_t *FQ = *queue;
+    __clear_frontier_queue( graph, FQ );
+    COMLIB_OBJECT_DESTROY( FQ );
+    *queue = NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static vgx_FrontierQueue_t * __new_frontier_queue( int64_t size ) {
+  Cm256iBuffer_constructor_args_t queue_args = {
+    .element_capacity = size
+  };
+  return COMLIB_OBJECT_NEW( Cm256iBuffer_t, NULL, &queue_args );
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __clear_beam_heap( vgx_Graph_t *graph, Cm256iHeap_t *beam_heap ) {
+  if( beam_heap == NULL ) {
+    return;
+  }
+
+  // NOTE: we have to enhance the heap api to get this information properly
+  vgx_CollectorItem_t *cursor = (vgx_CollectorItem_t*)beam_heap->_buffer;
+  vgx_CollectorItem_t *end = cursor + beam_heap->_size;
+  vgx_CollectorItem_t *item;
+  vgx_VertexRef_t *ref;
+
+  // Start optimistically by hoping we have no lingering references
+  while( (item=cursor++) < end ) {
+    ref = item->headref;
+    // End of heap data
+    if( ref == NULL || ref->slot.state == VGX_VERTEXREF_STATE_INVALID ) {
+      break;
+    }
+    // No ref, or ref still positive after giving up ref, or vertex never locked
+    if( ref->refcnt == 0 ||      // no reference
+        --(ref->refcnt) > 0 ||   // still references
+        ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+    {
+      continue;
+    }
+    // Vertex needs to be unlocked, graph lock required for remainder of loop
+    goto continue_locked;
+  }
+
+  // Clean exit, we had no locked vertices
+  return;
+
+continue_locked:
+  GRAPH_LOCK( graph ) {
+    goto unlock_vertex_and_reset;
+    while( (item=cursor++) < end ) {
+      ref = item->headref;
+      // End of heap data
+      if( ref == NULL || ref->slot.state == VGX_VERTEXREF_STATE_INVALID ) {
+        break;
+      }
+      // No ref, or ref still positive after giving up ref, or vertex never locked
+      if( ref->refcnt == 0 ||      // no reference
+          --(ref->refcnt) > 0 ||   // still references
+          ref->slot.locked == 0 )  // graph was readonly, i.e. lock was never needed
+      {
+        continue;
+      }
+    unlock_vertex_and_reset:
+      // Vertex needs to be unlocked, graph lock required for remainder of loop
+      // Release core vertex lock
+      _vxgraph_state__unlock_vertex_CS_LCK( graph, &ref->vertex, VGX_VERTEX_RECORD_OPERATION );
+      // Reset slot
+      ref->slot.locked = 0;
+      ref->slot.state = VGX_VERTEXREF_STATE_AVAILABLE;
+    }
+  } GRAPH_RELEASE;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void __delete_beam_heap( vgx_Graph_t *graph, Cm256iHeap_t **beam_heap ) {
+  if( beam_heap && *beam_heap ) {
+    Cm256iHeap_t *BH = *beam_heap;
+    __clear_beam_heap( graph, BH );
+    COMLIB_OBJECT_DESTROY( BH );
+    *beam_heap = NULL;
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static Cm256iHeap_t * __new_beam_heap( int64_t max_beam_width, f_Cm256iHeap_comparator_t comparator ) {
+  Cm256iHeap_constructor_args_t beam_heap_args = {
+    .element_capacity = max_beam_width,
+    .comparator = comparator
+  };
+  return COMLIB_OBJECT_NEW( Cm256iHeap_t, NULL, &beam_heap_args );
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int64_t __get_recursion_heap_size( const vgx_recursion_config_t *recursion, int64_t hits ) {
+  int64_t heap_size;
+
+  // Heap size already provided
+  if( recursion->heap.size > 0 ) {
+    heap_size = maximum_value( recursion->heap.size, hits ); // <- never less than hits
+  }
+  // Auto select heap size based on requested hit count
+  else {
+    if( hits < 0 ) {
+      heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+    }
+    else if( hits <= 64 ) {
+      heap_size = 60 + hits*4; // 60 - 316
+    }
+    else if( hits <= 512 ) {
+      heap_size = 125 + hits*3; // 320 - 1661
+    }
+    else if( hits <= 523970 ) {
+      heap_size = 636 + hits*2; // 1662 - 1048576
+    }
+    else {
+      heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+    }
+  }
+
+  // Clamp at max
+  if( heap_size > VGX_RECURSION_HEAP_SIZE_MAX ) {
+    heap_size = VGX_RECURSION_HEAP_SIZE_MAX;
+  } 
+
+  return heap_size;
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int64_t __get_recursion_heap_shadow( const vgx_recursion_config_t *recursion, int64_t heap_size ) {
+  int64_t heap_shadow;
+
+  // Heap shadow already provided
+  if( recursion->shadow.size >= 0 ) {
+    heap_shadow = recursion->shadow.size;
+  }
+  // Auto select heap shadow based on heap size
+  else {
+    // Roughly 1/8 of heap size as default
+    heap_shadow = heap_size >> 3;
+  }
+
+  // Clamp at max
+  if( heap_shadow > VGX_RECURSION_HEAP_SHADOW_MAX ) {
+    heap_shadow = VGX_RECURSION_HEAP_SHADOW_MAX;
+  } 
+
+  return heap_shadow;
+}
+
+
+
+/******************************************************************************
+ *
+ *
+ ******************************************************************************
+ */
+static int64_t __get_recursion_frontier_limit( const vgx_recursion_config_t *recursion, int64_t heap_size ) {
+  int64_t frontier_limit;
+
+  // Frontier limit already provided
+  if( recursion->limit.frontier > 0 ) {
+    frontier_limit = recursion->limit.frontier;
+  }
+  // Auto: Frontier limit to max beam if beam is used
+  else if( recursion->beam.max_width > 0 ) {
+    frontier_limit = recursion->beam.max_width;
+  }
+  // Auto: Frontier limit to 32x heap if no beam
+  else {
+    frontier_limit = 32 * heap_size;
+  }
+
+  // Clamp at max
+  if( frontier_limit > VGX_RECURSION_FRONTIER_SIZE_MAX ) {
+    frontier_limit = VGX_RECURSION_FRONTIER_SIZE_MAX;
+  } 
+
+  return frontier_limit;
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
 static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t *graph, const int64_t size, const vgx_ranking_context_t *ranking_context, vgx_BaseQuery_t *query ) {
   // The heap will be initialized values of lowest possible rank (last in sorted result)
 
@@ -531,18 +968,45 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
   vgx_VertexRef_t *refmap = NULL;
   vgx_Ranker_t *ranker = NULL;
   vgx_CollectorStage_t *stage = NULL;
+  vgx_FrontierQueue_t *frontier = NULL;
+  int64_t heap_size = size; // i.e. hits requested
+  Cm256iHeap_t *beam_heap = NULL;
 
   XTRY {
     vgx_CollectorItem_t empty = {0};
+    f_Cm256iHeap_comparator_t comparator = (f_Cm256iHeap_comparator_t)__get_arc_comparator( ranking_context, &empty );
+    vgx_recursion_config_t *recursion = NULL;
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x321 );
+    // Recursive query?
+    if( query->type == VGX_QUERY_TYPE_NEIGHBORHOOD ) {
+      vgx_NeighborhoodQuery_t *neighborhood_query = (vgx_NeighborhoodQuery_t*)query;
+      recursion = &neighborhood_query->effective_recursion_config;
+      if( __is_recursion_enabled( recursion) ) {
+        // Get appropriate heap size from recursion config
+        heap_size = recursion->heap.size = __get_recursion_heap_size( recursion, size );
+
+        // Size of heap shadow queue, only applicable for float-sorted descending
+        if( comparator == (f_Cm256iHeap_comparator_t)_iArcMinComparator.cmp_archead_double_rank ) {
+          recursion->shadow.size = __get_recursion_heap_shadow( recursion, heap_size );
+        }
+      
+        // Auto-set max beam to beam width if needed
+        if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE && recursion->beam.max_width < recursion->beam.width ) {
+          recursion->beam.max_width = recursion->beam.width;
+        }
+        
+        // Size of frontier
+        recursion->limit.frontier = __get_recursion_frontier_limit( recursion, heap_size );
+      }
     }
+
+    // Alloocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_ArcCollector_context_t, 0x321 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
-      .element_capacity = size,
-      .comparator = (f_Cm256iHeap_comparator_t)__get_arc_comparator( ranking_context, &empty )
+      .element_capacity = heap_size,
+      .comparator = comparator
     };
 
     // Create the new heap
@@ -551,7 +1015,12 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     }
 
     // Create vertex reference map
-    if( (refmap = __new_vertex_reference_map( size, &top_k_collector->sz_refmap )) == NULL ) {
+    int64_t sz_refmap = heap_size; // at least this
+    if( __is_recursion_enabled( recursion ) ) {
+      int64_t max_front = maximum_value( recursion->beam.max_width, recursion->limit.frontier );
+      sz_refmap = maximum_value( heap_size, max_front );
+    }
+    if( (refmap = __new_vertex_reference_map( sz_refmap, &top_k_collector->sz_refmap )) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x323 );
     }
 
@@ -565,6 +1034,24 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x325 );
     }
 
+    // Recursive search
+    if( __is_recursion_enabled( recursion ) ) {
+      // Heap shadow queue
+      if( __init_shadow_trail( &top_k_collector->shadow_trail, recursion->shadow.size, recursion->tune.zeta ) < 0 ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x326 );
+      }
+      // Beam if enabled
+      if( recursion->mode == VGX_RECURSION_MODE_BEAM_PROGRESSIVE ) {
+        if( (beam_heap = __new_beam_heap( recursion->beam.max_width, comparator )) == NULL ) {
+          THROW_ERROR( CXLIB_ERR_GENERAL, 0x327 );
+        }
+      }
+      // Frontier queue
+      if( (frontier = __new_frontier_queue( recursion->limit.frontier ) ) == NULL ) {
+        THROW_ERROR( CXLIB_ERR_GENERAL, 0x328 );
+      }
+    }
+
     bool locked_tail = false;
     bool locked_head = false;
     __locked_arc_access( ranking_context->readonly_graph, query, &locked_tail, &locked_head );
@@ -576,9 +1063,28 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_mode           = recursion ? recursion->mode : VGX_RECURSION_MODE_NONE;
+    top_k_collector->recursion_depth          = 0;
+    top_k_collector->frontier                 = frontier;
+    top_k_collector->max_frontier             = recursion ? recursion->limit.frontier : 0;
+    top_k_collector->pure_beam                = recursion ? (beam_heap && (recursion->limit.frontier == recursion->beam.max_width)) : false;
+    top_k_collector->beam_heap                = beam_heap;
+    top_k_collector->beam_width               = recursion ? recursion->beam.width : 0;
+    top_k_collector->max_beam_width           = recursion ? recursion->beam.max_width : 0;
+    top_k_collector->adaptive_recursion       = recursion ? recursion->beam.adaptive_taper : false;
+    top_k_collector->dynamic_taper            = 1.0;
+    top_k_collector->alpha                    = recursion ? (float)recursion->tune.alpha : 0.0f;
+    top_k_collector->beta                     = recursion ? (float)recursion->tune.beta : 0.0f;
+    top_k_collector->gamma                    = recursion ? (float)recursion->tune.gamma : 0.0f;
+    top_k_collector->delta                    = recursion ? (float)recursion->tune.delta : 0.0f;
+    top_k_collector->epsilon                  = recursion ? (float)recursion->tune.epsilon : 0.0f;
+    top_k_collector->zeta                     = recursion ? (float)recursion->tune.zeta : 0.0f;
+    top_k_collector->kappa                    = recursion ? (int)recursion->tune.kappa : 0;
+    top_k_collector->lambda                   = recursion ? (int)recursion->tune.lambda : 0;
     top_k_collector->stage                    = stage;
-    top_k_collector->postheap                 = NULL,
-    top_k_collector->size                     = size;
+    top_k_collector->postheap                 = NULL;
+    top_k_collector->empty.item               = empty.item;
+    top_k_collector->size                     = heap_size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
     top_k_collector->locked_tail_access       = locked_tail;
@@ -593,8 +1099,12 @@ static vgx_ArcCollector_context_t * __new_sorted_list_arc_collector( vgx_Graph_t
     top_k_collector->n_neighbors              = 0;
     top_k_collector->counts_are_deep          = true;
     
-    // Initialize the heap with "lowest" values
-    CALLABLE(heap)->Initialize( heap, &empty.item, size );
+    // Initialize heaps with "lowest" values
+    CALLABLE(heap)->Initialize( heap, &empty.item, heap_size );
+    if(beam_heap) {
+      CALLABLE(beam_heap)->Initialize( beam_heap, &empty.item, recursion->beam.max_width );
+    }
+
   }
   XCATCH( errcode ) {
     iGraphCollector.DeleteCollector( (vgx_BaseCollector_context_t**)&top_k_collector );
@@ -624,9 +1134,9 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x331 );
-    }
+
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x331 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -658,6 +1168,7 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     bool locked_head = false;
     __locked_arc_access( ranking_context->readonly_graph, query, &locked_tail, &locked_head );
 
+    vgx_CollectorItem_t empty = {0};
 
     // Initialize the collector context
     collector->type                     = VGX_COLLECTOR_TYPE_UNSORTED_ARC_LIST;
@@ -665,8 +1176,30 @@ static vgx_ArcCollector_context_t * __new_unsorted_list_arc_collector( vgx_Graph
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth          = 0;
+    collector->shadow_trail.queue       = NULL;
+    collector->shadow_trail.end         = NULL;
+    collector->shadow_trail.wp          = NULL;
+    collector->frontier                 = NULL;
+    collector->max_frontier             = 0;
+    collector->pure_beam                = false;
+    collector->beam_heap                = NULL;
+    collector->beam_width               = 0;
+    collector->max_beam_width           = 0;
+    collector->adaptive_recursion       = false;
+    collector->dynamic_taper            = 1.0;
+    collector->alpha                    = 0.0f;
+    collector->beta                     = 0.0f;
+    collector->gamma                    = 0.0f;
+    collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
-    collector->postheap                 = NULL,
+    collector->postheap                 = NULL;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -712,9 +1245,8 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (map_collector = calloc( 1, sizeof( vgx_ArcCollector_context_t ) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x341 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( map_collector, vgx_ArcCollector_context_t, 0x341 );
 
     // Create the aggregation map
     framehash_constructor_args_t args = FRAMEHASH_DEFAULT_ARGS;
@@ -765,14 +1297,38 @@ static vgx_ArcCollector_context_t * __new_aggregation_arc_collector( vgx_Graph_t
     bool locked_head = false;
     __locked_arc_access( ranking_context->readonly_graph, query, &locked_tail, &locked_head );
 
+    vgx_CollectorItem_t empty = {0};
+
     // Initialize the collector context
     map_collector->type                         = type;
     map_collector->graph                        = graph;
     map_collector->ranker                       = ranker;
     map_collector->container.mapping.aggregator = fhmap;
     map_collector->refmap                       = refmap;
+    map_collector->recursion_mode               = VGX_RECURSION_MODE_NONE;
+    map_collector->recursion_depth              = 0;
+    map_collector->shadow_trail.queue           = NULL;
+    map_collector->shadow_trail.end             = NULL;
+    map_collector->shadow_trail.wp              = NULL;
+    map_collector->frontier                     = NULL;
+    map_collector->max_frontier                 = 0;
+    map_collector->pure_beam                    = false;
+    map_collector->beam_heap                    = NULL;
+    map_collector->beam_width                   = 0;
+    map_collector->max_beam_width               = 0;
+    map_collector->adaptive_recursion           = false;
+    map_collector->dynamic_taper                = 1.0;
+    map_collector->alpha                        = 0.0f;
+    map_collector->beta                         = 0.0f;
+    map_collector->gamma                        = 0.0f;
+    map_collector->delta                        = 0.0f;
+    map_collector->epsilon                      = 0.0f;
+    map_collector->zeta                         = 0.0f;
+    map_collector->kappa                        = 0;
+    map_collector->lambda                       = 0;
     map_collector->stage                        = stage;
     map_collector->postheap                     = postheap;
+    map_collector->empty.item                   = empty.item;
     map_collector->size                         = size;
     map_collector->n_remain                     = LLONG_MAX;
     map_collector->n_collectable                = 0;
@@ -813,14 +1369,15 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
   vgx_CollectorStage_t *stage = NULL;
   
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_ArcCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x351 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_ArcCollector_context_t, 0x351 );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x352 );
     }
+
+    vgx_CollectorItem_t empty = {0};
 
     // Initialize the collector context
     collector->type               = VGX_COLLECTOR_TYPE_NONE;
@@ -828,9 +1385,31 @@ static vgx_ArcCollector_context_t * __new_null_arc_collector( vgx_Graph_t *graph
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
+    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth    = 0;
+    collector->shadow_trail.queue = NULL;
+    collector->shadow_trail.end   = NULL;
+    collector->shadow_trail.wp    = NULL;
+    collector->frontier           = NULL;
+    collector->max_frontier       = 0;
+    collector->pure_beam          = false;
+    collector->beam_heap          = NULL;
+    collector->beam_width         = 0;
+    collector->max_beam_width     = 0;
+    collector->adaptive_recursion = false;
+    collector->dynamic_taper      = 1.0;
+    collector->alpha              = 0.0f;
+    collector->beta               = 0.0f;
+    collector->gamma              = 0.0f;
+    collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
     collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
@@ -884,9 +1463,8 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
 
     vgx_CollectorItem_t empty = {0};
 
-    if( (top_k_collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x362 );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( top_k_collector, vgx_VertexCollector_context_t, 0x362 );
 
     // We will collect using a heap
     Cm256iHeap_constructor_args_t heap_args = {
@@ -924,8 +1502,30 @@ static vgx_VertexCollector_context_t * __new_sorted_list_vertex_collector( vgx_G
     top_k_collector->ranker                   = ranker;
     top_k_collector->container.sequence.heap  = heap;
     top_k_collector->refmap                   = refmap;
+    top_k_collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    top_k_collector->recursion_depth          = 0;
+    top_k_collector->shadow_trail.queue       = NULL;
+    top_k_collector->shadow_trail.end         = NULL;
+    top_k_collector->shadow_trail.wp          = NULL;
+    top_k_collector->frontier                 = NULL;
+    top_k_collector->max_frontier             = 0;
+    top_k_collector->pure_beam                = false;
+    top_k_collector->beam_heap                = NULL;
+    top_k_collector->beam_width               = 0;
+    top_k_collector->max_beam_width           = 0;
+    top_k_collector->adaptive_recursion       = false;
+    top_k_collector->dynamic_taper            = 1.0;
+    top_k_collector->alpha                    = 0.0f;
+    top_k_collector->beta                     = 0.0f;
+    top_k_collector->gamma                    = 0.0f;
+    top_k_collector->delta                    = 0.0f;
+    top_k_collector->epsilon                  = 0.0f;
+    top_k_collector->zeta                     = 0.0f;
+    top_k_collector->kappa                    = 0;
+    top_k_collector->lambda                   = 0;
     top_k_collector->stage                    = stage;
     top_k_collector->postheap                 = NULL;
+    top_k_collector->empty.item               = empty.item;
     top_k_collector->size                     = size;
     top_k_collector->n_remain                 = LLONG_MAX;
     top_k_collector->n_collectable            = 0;
@@ -974,9 +1574,7 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     }
 
     // Allocate the context
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x372 );
-    }
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x372 );
 
     // We will collect using a list (no sort order defined)
     Cm256iList_constructor_args_t list_args = {
@@ -1008,14 +1606,38 @@ static vgx_VertexCollector_context_t * __new_unsorted_list_vertex_collector( vgx
     bool locked_head = false;
     __locked_arc_access( ranking_context->readonly_graph, query, &locked_tail, &locked_head );
 
+    vgx_CollectorItem_t empty = {0};
+
     // Initialize the collector context
     collector->type                     = VGX_COLLECTOR_TYPE_UNSORTED_VERTEX_LIST;
     collector->graph                    = graph;
     collector->ranker                   = ranker;
     collector->container.sequence.list  = list;
     collector->refmap                   = refmap;
+    collector->recursion_mode           = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth          = 0;
+    collector->shadow_trail.queue       = NULL;
+    collector->shadow_trail.end         = NULL;
+    collector->shadow_trail.wp          = NULL;
+    collector->frontier                 = NULL;
+    collector->max_frontier             = 0;
+    collector->pure_beam                = false;
+    collector->beam_heap                = NULL;
+    collector->beam_width               = 0;
+    collector->max_beam_width           = 0;
+    collector->adaptive_recursion       = false;
+    collector->dynamic_taper            = 1.0;
+    collector->alpha                    = 0.0f;
+    collector->beta                     = 0.0f;
+    collector->gamma                    = 0.0f;
+    collector->delta                    = 0.0f;
+    collector->epsilon                  = 0.0f;
+    collector->zeta                     = 0.0f;
+    collector->kappa                    = 0;
+    collector->lambda                   = 0;
     collector->stage                    = stage;
     collector->postheap                 = NULL;
+    collector->empty.item               = empty.item;
     collector->size                     = size;
     collector->n_remain                 = size;
     collector->n_collectable            = 0;
@@ -1052,14 +1674,15 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
   vgx_CollectorStage_t *stage = NULL;
 
   XTRY {
-    if( (collector = calloc( 1, sizeof(vgx_VertexCollector_context_t) )) == NULL ) {
-      THROW_ERROR( CXLIB_ERR_MEMORY, 0x37A );
-    }
+    // Allocate
+    CALIGNED_CALLOC_THROWS( collector, vgx_VertexCollector_context_t, 0x37A );
 
     // Create the stage
     if( (stage = __new_collector_stage()) == NULL ) {
       THROW_ERROR( CXLIB_ERR_GENERAL, 0x37B );
     }
+
+    vgx_CollectorItem_t empty = {0};
 
     // Initialize the collector context
     collector->type               = VGX_COLLECTOR_TYPE_NONE;
@@ -1067,9 +1690,31 @@ static vgx_VertexCollector_context_t * __new_null_vertex_collector( vgx_Graph_t 
     collector->ranker             = NULL;
     collector->container.object   = NULL;
     collector->refmap             = NULL;
-    collector->sz_refmap        = 0;
+    collector->recursion_mode     = VGX_RECURSION_MODE_NONE;
+    collector->recursion_depth    = 0;
+    collector->shadow_trail.queue = NULL;
+    collector->shadow_trail.end   = NULL;
+    collector->shadow_trail.wp    = NULL;
+    collector->frontier           = NULL;
+    collector->max_frontier       = 0;
+    collector->pure_beam          = false;
+    collector->beam_heap          = NULL;
+    collector->beam_width         = 0;
+    collector->max_beam_width     = 0;
+    collector->adaptive_recursion = false;
+    collector->dynamic_taper      = 1.0;
+    collector->alpha              = 0.0f;
+    collector->beta               = 0.0f;
+    collector->gamma              = 0.0f;
+    collector->delta              = 0.0f;
+    collector->epsilon            = 0.0f;
+    collector->zeta               = 0.0f;
+    collector->kappa              = 0;
+    collector->lambda             = 0;
+    collector->sz_refmap          = 0;
     collector->stage              = stage;
     collector->postheap           = NULL;
+    collector->empty.item         = empty.item;
     collector->size               = 0;
     collector->n_remain           = LLONG_MAX;
     collector->n_collectable      = 0;
@@ -1114,34 +1759,81 @@ static void __set_collect_counts( const int64_t hits, const int offset, vgx_coll
  *
  ***********************************************************************
  */
-static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector ) {
-  if( *collector ) {
+static void _vxquery_collector__clear_collector_references( vgx_BaseCollector_context_t *collector ) {
+  if( collector ) {
+    // Reset shadow trail
+    if( collector->shadow_trail.queue ) {
+      __clear_shadow_trail( &collector->shadow_trail );
+    }
 
-    if( (*collector)->ranker ) {
-      // Delete the ranker
-      __delete_search_ranker_context( &(*collector)->ranker );
+    // Clear any lingering references in the recursive frontier queue
+    if( collector->frontier ) {
+      __clear_frontier_queue( collector->graph, collector->frontier );
+    }
+    
+    // Clear any lingering references in the beam heap
+    if( collector->beam_heap ) {
+      __clear_beam_heap( collector->graph, collector->beam_heap );
+    }
+
+    // Clear any lingering references in the vertex reference map
+    if( collector->refmap ) {
+      __clear_vertex_reference_map( collector->graph, collector->refmap, collector->sz_refmap );
+    }
+  }
+}
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static void _vxquery_collector__delete_collector( vgx_BaseCollector_context_t **collector ) {
+  if( collector && *collector ) {
+    vgx_BaseCollector_context_t *ctx = *collector;
+
+    // Delete the ranker
+    if( ctx->ranker ) {
+      __delete_search_ranker_context( &ctx->ranker );
+    }
+    
+    // Delete the heap shadow trail
+    if( ctx->shadow_trail.queue ) {
+      __delete_shadow_trail( &ctx->shadow_trail );
+    }
+
+    // Delete the recursive frontier queue
+    if( ctx->frontier ) {
+      __delete_frontier_queue( ctx->graph, &ctx->frontier );
+    }
+
+    // Delete the recursive beam heap
+    if( ctx->beam_heap ) {
+      __delete_beam_heap( ctx->graph, &ctx->beam_heap );
     }
 
     // Delete the container
-    if( (*collector)->container.object ) {
-      COMLIB_OBJECT_DESTROY( (*collector)->container.object );
+    if( ctx->container.object ) {
+      COMLIB_OBJECT_DESTROY( ctx->container.object );
     }
 
     // Delete the stage
-    __delete_collector_stage( &(*collector)->stage );
+    __delete_collector_stage( &ctx->stage );
 
     // Delete any vertex reference map
-    if( (*collector)->refmap ) {
-      __destroy_vertex_reference_map( (*collector)->graph, &(*collector)->refmap, (*collector)->sz_refmap );
+    if( ctx->refmap ) {
+      __destroy_vertex_reference_map( ctx->graph, &ctx->refmap, ctx->sz_refmap );
     }
 
     // Delete any postheap
-    if( (*collector)->postheap ) {
-      COMLIB_OBJECT_DESTROY( (*collector)->postheap );
+    if( ctx->postheap ) {
+      COMLIB_OBJECT_DESTROY( ctx->postheap );
     }
 
     // Delete the collector
-    free( *collector );
+    ALIGNED_FREE( ctx );
     *collector = NULL;
   }
 }

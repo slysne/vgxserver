@@ -171,6 +171,7 @@ DLL_HIDDEN vgx_VertexComparator_t _iVertexMinComparator = {
  */
 static double __rank_score_from_none(        const vgx_CollectorItem_t *x );
 static double __rank_score_from_predicator(  const vgx_CollectorItem_t *x );
+static double __rank_score_from_real_predicator(  const vgx_CollectorItem_t *x );
 static double __rank_score_from_int32(       const vgx_CollectorItem_t *x );
 static double __rank_score_from_int64(       const vgx_CollectorItem_t *x );
 static double __rank_score_from_uint32(      const vgx_CollectorItem_t *x );
@@ -183,6 +184,7 @@ static double __rank_score_from_qword(       const vgx_CollectorItem_t *x );
 DLL_HIDDEN vgx_RankScoreFromItem_t _iRankScoreFromItem = {
   .from_none        = __rank_score_from_none,
   .from_predicator  = __rank_score_from_predicator,
+  .from_real_predicator  = __rank_score_from_real_predicator,
   .from_int32       = __rank_score_from_int32,
   .from_int64       = __rank_score_from_int64,
   .from_uint32      = __rank_score_from_uint32,
@@ -414,15 +416,14 @@ DLL_HIDDEN vgx_VertexStager_t _iStageVertex = {
 };
 
 
-
-
+ 
 /*******************************************************************//**
  *
  ***********************************************************************
  */
 static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_CollectorItem_t *discarded, vgx_LockableArc_t *larc, vgx_predicator_t *pred_ovr ) {
   vgx_Graph_t *locked_graph = NULL;
-  int updated = -1;
+  int updated = 0;
 
   // Insert references
   if( inserted ) {
@@ -433,6 +434,7 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
         if( (inserted->tailref = _vxquery_collector__add_vertex_reference( base, larc->tail, &larc->acquired.tail_lock )) != NULL ) {
           if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
             if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
+              inserted->headref->slot.depth = (uint16_t)(base->recursion_depth & 0xFFFF);
               inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
               // SUCCESS
               updated = 1;
@@ -444,6 +446,7 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
       // ERROR
       _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, inserted->tailref, &locked_graph );
       _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, inserted->headref, &locked_graph );
+      updated = -1;
     } WHILE_ZERO;
   }
 
@@ -454,7 +457,46 @@ static int __update_refmap_head_tail( vgx_BaseCollector_context_t *base, vgx_Col
   }
 
   GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  
+  return updated;
+}
 
+
+
+/*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static int __update_refmap_head( vgx_BaseCollector_context_t *base, vgx_CollectorItem_t *inserted, vgx_CollectorItem_t *discarded, vgx_LockableArc_t *larc, vgx_predicator_t *pred_ovr ) {
+  vgx_Graph_t *locked_graph = NULL;
+  int updated = 0;
+
+  // Insert references
+  if( inserted ) {
+    do {
+      inserted->headref = NULL;
+      if( _vxquery_collector__safe_head_access_ACQUIRE_CS( base, larc, &locked_graph ) ) {
+        if( (inserted->headref = _vxquery_collector__add_vertex_reference( base, larc->head.vertex, &larc->acquired.head_lock )) != NULL ) {
+          inserted->headref->slot.depth = (uint16_t)(base->recursion_depth & 0xFFFF);
+          inserted->predicator = pred_ovr ? *pred_ovr : larc->head.predicator;
+          // SUCCESS
+          updated = 1;
+          break;
+        }
+      }
+      // ERROR
+      _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, inserted->headref, &locked_graph );
+      updated = -1;
+    } WHILE_ZERO;
+  }
+
+  // Discard references
+  if( discarded ) {
+    _vxquery_collector__del_vertex_reference_ACQUIRE_CS( base, discarded->headref, &locked_graph );
+  }
+
+  GRAPH_LEAVE_CRITICAL_SECTION( &locked_graph );
+  
   return updated;
 }
 
@@ -919,31 +961,165 @@ __inline static int __arc_collect_into_aggregating_product_map( vgx_ArcCollector
 
 
 /*******************************************************************//**
+ *
+ ***********************************************************************
+ */
+static vgx_VertexRef_t dummy_ref = {
+  .vertex = NULL,
+  .refcnt = -1,
+  .slot = {
+   .locked = 0,
+   .state = 0,
+   .depth = 0 
+  }
+};
+
+
+
+/*******************************************************************//**
  * __push_arc
  ***********************************************************************
  */
 __inline static int __push_arc( vgx_ArcCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_VertexSortValue_t sort ) {
   Cm256iHeap_t *heap = collector->container.sequence.heap;
+  vgx_BaseCollector_context_t *base = (vgx_BaseCollector_context_t*)collector;
+  Cm256iBuffer_t *F = base->frontier;
+  Cm256iHeap_t *B = base->beam_heap;
   
-  vgx_VertexRef_t sort_tailref = { .vertex = larc->tail };
-  vgx_VertexRef_t sort_headref = { .vertex = larc->head.vertex };
+  vgx_VertexRef_t sort_tailref = {
+    .vertex = larc->tail,
+    .refcnt = -1,
+    .slot = {0}
+  };
+  vgx_VertexRef_t sort_headref = {
+    .vertex = larc->head.vertex,
+    .refcnt = -1,
+    .slot = {0}
+  };
   vgx_CollectorItem_t collected = {
     .tailref    = &sort_tailref, // overwrite with managed reference from refmap if collected
     .headref    = &sort_headref, // overwrite with managed reference from refmap if collected
     .predicator = larc->head.predicator,
     .sort       = sort
   };
-  vgx_CollectorItem_t discarded;
-  vgx_CollectorItem_t *push_location;
+  vgx_CollectorItem_t result_heap_discarded;
+  vgx_CollectorItem_t *result_heap_location;
+  int refmap_updated;
+  float recursion_score = larc->head.predicator.val.real;
+  
+  
+  // Try to collect item into result heap
+  result_heap_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &result_heap_discarded.item );
+    
+  // ------------------------------------------------------------
+  // Normal non-recursive (or sort not good enough for recursion)
+  // ------------------------------------------------------------
 
-  // Collect item into heap
-  if( (push_location = (vgx_CollectorItem_t*)CALLABLE(heap)->HeapPushTopK( heap, &collected.item, &discarded.item )) == NULL ) {
-    // Item not sorted high enough, nothing collected
-    return 0;
+  if( F == NULL || recursion_score <= _vxquery_collector__get_current_threshold( base ) ) {
+    // Nothing collected
+    if( result_heap_location == NULL ) {
+      return 0;
+    }
+    // Collected item's actual heap location must be updated with new refmap slot references which we now add
+    return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, result_heap_location, &result_heap_discarded, larc, NULL );
+  }
+  
+  // ------------------------------------------
+  // Recursive search
+  // ------------------------------------------
+
+  // ------------------------------------------
+  // Pure beam mode
+  // ------------------------------------------
+  if( base->pure_beam || (B && base->beam_width <= 16) ) {
+    vgx_CollectorItem_t *beam_heap_location;
+    vgx_CollectorItem_t beam_heap_discarded;
+    // Try to push item to beam heap
+    beam_heap_location = (vgx_CollectorItem_t*)CALLABLE(B)->HeapPushTopK(B, &collected.item, &beam_heap_discarded.item);
+
+    // Item not good enough for result
+    if( result_heap_location == NULL ) {
+      // Not good enough for beam either
+      if( beam_heap_location == NULL ) {
+        return 0;
+      }
+      // Item was pushed to beam only
+      return __update_refmap_head( (vgx_BaseCollector_context_t*)collector, beam_heap_location, &beam_heap_discarded, larc, NULL );
+    }
+
+    // Item was pushed to result only
+    if( beam_heap_location == NULL ) {
+      return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, result_heap_location, &result_heap_discarded, larc, NULL );
+    }
+    
+    // Item was pushed to both result and beam
+
+    // Remove references to discarded beam item
+    _vxquery_collector__del_collector_item_headref_OPEN( base, &beam_heap_discarded );
+
+    // Populate the collected item with refmap slots, then we manually update the two heap locations
+    if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, &collected, &result_heap_discarded, larc, NULL )) > 0 ) {
+      // Add one more headref ownership sice the call above only handles single owner
+      collected.headref->refcnt++; //
+      // Update result heap's item location with the allocated refmap slots
+      result_heap_location->tailref = collected.tailref;
+      result_heap_location->headref = collected.headref;
+      // Update beam heap's item location with the allocated refmap slot for headref only
+      beam_heap_location->headref = collected.headref;
+    }
+    return refmap_updated;
   }
 
-  // New item pushed, lower sorting item discarded
-  return __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, push_location, &discarded, larc, NULL );
+  // ------------------------------------------
+  // Frontier queue mode
+  // ------------------------------------------
+
+  // Item will be pushed on frontier  
+  // First evict oldest frontier item when frontier is already full
+  while( ComlibSequenceLength(F) >= base->max_frontier && ComlibSequenceLength(F) > 0 ) {
+    vgx_CollectorItem_t frontier_entry;
+    CALLABLE(F)->Next(F, &frontier_entry.item);
+    _vxquery_collector__del_collector_item_headref_OPEN( base, &frontier_entry );
+  }
+
+  // Crucial: We need to update the refmap so that we populate the collected item with slot refs BEFORE we append to frontier
+  //          and at the same time ensure we track anything discarded from the main heap
+  // We also inserted into main heap, track both frontier refmap additions AND main heap discarad
+  vgx_CollectorItem_t *frontier_collectable = &collected; // prepare to add to frontier
+
+  // Item to frontier only (was not pushed to result)
+  if( result_heap_location == NULL ) {
+    // Update shadow with current item's score
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
+    refmap_updated = __update_refmap_head( (vgx_BaseCollector_context_t*)collector, frontier_collectable, NULL, larc, NULL ); // no discards made here
+  }
+  // Item to frontier and was also pushed to result
+  else {
+    // Update shadow with the new worst result score (2x for extra weight)
+    recursion_score = _vxquery_collector__worst_heap_recursion_score( heap );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
+    _vxquery_collector__push_shadow_trail( &base->shadow_trail, recursion_score );
+    // Populate the frontier-collectable item with refmap slot, and manage result discard
+    if( (refmap_updated = __update_refmap_head_tail( (vgx_BaseCollector_context_t*)collector, frontier_collectable, &result_heap_discarded, larc, NULL )) > 0 ) {
+      // Add one more ownership sice the call above only handles single owner
+      //frontier_collectable->tailref->refcnt++;
+      frontier_collectable->headref->refcnt++;
+      // Update result heap's item location with the allocated refmap slots
+      result_heap_location->tailref = frontier_collectable->tailref;
+      result_heap_location->headref = frontier_collectable->headref;
+      // Fronter tailref back to dummy
+      frontier_collectable->tailref = &dummy_ref;
+    }
+  }
+
+  // Refmap updates went well, push to frontier
+  if( refmap_updated > 0 ) {
+    // Append to fronter, item already populated with refmap slot references
+    CALLABLE(F)->Append(F, &frontier_collectable->item);
+    //  ^^^ Should never fail, but if it does collector cleanup is expected to clear all refmap entries
+  }
+
+  return refmap_updated;
 }
 
 
@@ -1940,6 +2116,7 @@ __inline static int __cmp_vertex_double_rank_min(  const vgx_CollectorItem_t *v1
 SUPPRESS_WARNING_UNREFERENCED_FORMAL_PARAMETER
 __inline static double __rank_score_from_none(        const vgx_CollectorItem_t *x ) { return 0.0; }
 __inline static double __rank_score_from_predicator(  const vgx_CollectorItem_t *x ) { return _vgx_predicator_get_value_as_float( x->predicator ); }
+__inline static double __rank_score_from_real_predicator(  const vgx_CollectorItem_t *x ) { return x->predicator.val.real; }
 __inline static double __rank_score_from_int32(       const vgx_CollectorItem_t *x ) { return (double)x->sort.int32.value; }
 __inline static double __rank_score_from_int64(       const vgx_CollectorItem_t *x ) { return (double)x->sort.int64.value; }
 __inline static double __rank_score_from_uint32(      const vgx_CollectorItem_t *x ) { return (double)x->sort.uint32.value; }
