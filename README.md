@@ -60,11 +60,11 @@ These numbers represent single-threaded query performance as measured on Apple M
 
 The single _bias_ parameter gives you smooth, predictable control over the entire recall/speed spectrum.
 
-# <img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Single Thread Performance" width="768"/>
+# <img src="docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Single Thread Performance" width="768"/>
 
 Parallel workloads scale almost linearly:
 
-# <img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Multi Thread Scaling" width="768"/>
+# <img src="docs/src/pyvgx/images/vgx_ann_perf.png" alt="VGX/ANN Multi Thread Scaling" width="768"/>
 
 ## About This Project
 
@@ -201,7 +201,7 @@ vgxdemosystem multi
 
 This will start many server instances (using ~16GB RAM) and open a system dashboard in your web browser:
 
-# <img src="https://github.com/slysne/vgxserver/blob/main/docs/src/pyvgx/images/ui_system.png" alt="SystemDashboard" width="768"/>
+# <img src="docs/src/pyvgx/images/ui_system.png" alt="SystemDashboard" width="768"/>
 
 Allow startup to finish and then try to send a query to the dispatcher running on port 9990:
 
