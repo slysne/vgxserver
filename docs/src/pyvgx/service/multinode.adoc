@@ -198,6 +198,11 @@ Instance identifiers can appear at most once in the transaction topology, thus p
 
 Referencing an undefined instance identifier is not allowed.
 
+[IMPORTANT]
+====
+An instance without subscribers will be marked as <<../reference.adoc#isgraphlocal_func, local only>>. This flag is persistent and is _not_ automatically cleared if the topology is later changed to include subscribers for an instance. See <<local_only_caution, how to reset local only>> for more details.
+====
+
 [[descriptor_topology_transaction_default]]
 ===== Default Value
 All instances defined in <<descriptor_instances, `instances` section>> must be part of the topology. Any instance not explicitly referenced in `topology.transaction` or `topology.dispatch` is automatically added to `topology.transaction` as an isolated instance.
@@ -562,6 +567,21 @@ Two static methods of pyvgx.VGXInstance are available:
 *_basedir_*: Directory path where _vgxroot_ will be located. Default is current directory.
 +
 *_plugins_*: <<vgxinstance_plugin_definitions, Plugin definitions>> list, specifying names and function references for all plugins to be automatically registered.
+
+[[local_only_caution]]
+[CAUTION]
+====
+Sometimes graph(s) in a VGX instance may be marked as <<../reference.adoc#isgraphlocal_func, local only>>, preventing graph data from being replicated to attached subscribers. This is almost always caused by re-using saved instances that were originally created with a different <<system_descriptor, descriptor>>. For example, a `builder` instance may originally have had no subscribers defined in its <<descriptor_topology_transaction, transaction topology>>, marking it local only. Even if one or more `search` instances are later added to the descriptor, the `builder` still remembers its original local-only role.
+
+The easiest way to reset the local only state is to remove the following file from the affected instance's data directory. (Stop instance before removing file, then restart.)
+
+----
+vgxroot/
+├─ graphname/
+    ├─ vxgraph_[graphname].dat   ( <- remove to reset state )
+----
+
+====
 
 === pyvgx.VGXInstance Example
 
