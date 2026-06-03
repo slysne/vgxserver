@@ -691,7 +691,7 @@ Start components from a terminal
 [.copyable]
 [source, shell]
 ----
-vgxadmin --status "*"
+vgxadmin --status @
 ----
 
 <<service_example_feed_request>>::
@@ -715,7 +715,7 @@ curl "http://127.0.0.1:9990/vgx/plugin/search?name=12345"
 [.copyable]
 [source, shell]
 ----
-vgxadmin --stop "*" --confirm
+vgxadmin --stop @ --confirm
 ----
 
 [[service_example_topology]]
@@ -1138,7 +1138,7 @@ You can also run the following command in a terminal to show status of each comp
 [.copyable]
 [source, shell]
 ----
-vgxadmin --status "*"
+vgxadmin --status @
 ----
 
 [[service_example_feed_request]]
@@ -1182,7 +1182,7 @@ Run the command below to stop all service instances.
 [.copyable]
 [source, shell]
 ----
-vgxadmin --stop "*" --confirm
+vgxadmin --stop @ --confirm
 ----
 
 ___

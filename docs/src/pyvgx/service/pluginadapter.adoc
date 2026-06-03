@@ -15,7 +15,7 @@ Python plugins can be installed and invoked via HTTP requests. A plugin is a reg
 
 [TIP]
 ====
-Install `orjson` for better performance with JSON-heavy payloads
+Install `orjson` for better performance with JSON-heavy payloads.
 
 [source, bash]
 ----
