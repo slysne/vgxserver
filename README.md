@@ -64,7 +64,7 @@ The single _bias_ parameter gives you smooth, predictable control over the entir
 
 Parallel workloads scale almost linearly:
 
-# <img src="docs/src/pyvgx/images/vgx_ann_scale.png" alt="VGX/ANN Multi-Thread Scaling" width="768"/>
+# <img src="docs/src/pyvgx/images/vgx_ann_scale_mt.png" alt="VGX/ANN Multi-Thread Scaling" width="768"/>
 
 ## About This Project
 
