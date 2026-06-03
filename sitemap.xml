@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://slysne.github.io/vgxserver/</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/service/service.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/build.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/overview.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/tutorial.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/reference.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/shortref.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/service/pluginadapter.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/service/multinode.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/service/sysadmin.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graph.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertex.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/similarity/vector.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphQuery.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexFilter.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/constants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/limits.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/evaluator/evaluator.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/evaluator/selectEvaluator.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/io/vgxopxfer.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/VGXCoreConcepts.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/index.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/buildPython.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphVertex.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphArc.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/arcModifierConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/specification/arcSpecificationSyntax.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/arcDirectionConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/sortSpecificationConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexProperty.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexTTL.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/opcodeConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/valueConditionConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/collectConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/resultFieldConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/resultListEntryConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/constants/timestampConstants.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/exceptions/exceptions.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphMembers.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphManagement.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphMiscellaneous.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphEnum.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/graph/graphEvent.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexMembers.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexVector.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexMiscellaneous.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexAccess.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/vertex/vertexRank.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/similarity/similarity.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/similarity/similarityMembers.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/similarity/similarityMethods.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+<url>
+  <loc>https://slysne.github.io/vgxserver/pyvgx/specification/timeout.html</loc>
+  <lastmod>2026-06-03T21:40:54+00:00</lastmod>
+  <priority>0.64</priority>
+</url>
+
+
+</urlset>
