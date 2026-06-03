@@ -167,12 +167,21 @@ static __global_query_args * _pyvgx_Global__parse_params( PyObject *args, PyObje
   }
 
   XTRY {
+    
+    // ------
+    // memory
+    // ------
+    if( py_evalmem || py_vertex_condition ) {
+      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
+        THROW_SILENT( CXLIB_ERR_GENERAL, 0x005 );
+      }
+    }
 
     // ---------
     // condition
     // ---------
     if( py_vertex_condition || param->implied.collector_mode == VGX_COLLECTOR_MODE_COLLECT_ARCS ) {
-      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->implied.collector_mode )) == NULL ) {
+      if( (param->vertex_condition = iPyVGXParser.NewVertexCondition( param->implied.graph, py_vertex_condition, param->evalmem, param->implied.collector_mode )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x001 );
       }
       // Global arc search
@@ -237,14 +246,6 @@ static __global_query_args * _pyvgx_Global__parse_params( PyObject *args, PyObje
       THROW_SILENT( CXLIB_ERR_GENERAL, 0x004 );
     }
 
-    // ------
-    // memory
-    // ------
-    if( py_evalmem && py_evalmem != Py_None ) {
-      if( (param->evalmem = iPyVGXParser.NewExpressEvalMemory( param->implied.graph, py_evalmem )) == NULL ) {
-        THROW_SILENT( CXLIB_ERR_GENERAL, 0x005 );
-      }
-    }
   }
   XCATCH( errcode ) {
     param = NULL;
@@ -423,7 +424,7 @@ static vgx_GlobalQuery_t * _pyvgx_Global__get_global_query( __global_query_args 
 
     // Select statement
     if( param->select_statement ) {
-      if( CALLABLE( query )->SelectStatement( query, param->implied.graph, param->select_statement, &param->implied.CSTR__error ) < 0 ) {
+      if( CALLABLE( query )->SelectStatement( query, param->implied.graph, param->select_statement, param->evalmem, &param->implied.CSTR__error ) < 0 ) {
         THROW_SILENT( CXLIB_ERR_API, 0x002 );
       }
     }

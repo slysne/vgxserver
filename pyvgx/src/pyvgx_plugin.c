@@ -330,7 +330,7 @@ json:
   {
     PyObject *py_json_string = PyUnicode_FromString( kv->val.data.simple.string );
     if( py_json_string ) {
-      PyObject *py_object = iPyVGXCodec.NewPyObjectFromJsonPyString( py_json_string );
+      PyObject *py_object = iPyVGXCodec.NewPyObjectFromJsonPyObject( py_json_string );
       Py_DECREF( py_json_string );
       if( py_object ) {
         // LEAK WARNING: Must decref this

@@ -345,6 +345,10 @@ The dashboard's upper segment shows a summary of information aggregated across a
 |_i_ (_h_ hosts)
 |Total number of instances _i_ running on _h_ separate hosts
 
+|*Domain*
+|_name_
+|Network _domain_ name
+
 |*Partitions*
 |_p_
 |Number of partitions (Builder instances)
@@ -406,15 +410,11 @@ The dashboard's lower segment shows details for each system instance.
 |`*Generic*`
 |Default, unspecified node type
 
-.18+|*Status*
+.9+|*Status*
 |`*OK*`
 |Instance is running normally
 |`*Busy*`
 |Transaction input processing is lagging more than 30 seconds behind provider
-|`*S/N*`
-|Serial number difference between this instance and its provider
-|`*No Input*`
-|Instance with VGX Transaction Service running (bound txport) has no provider attached
 |`*S-OUT*`
 |Service Out: HTTP Server plugin execution is paused
 |`*Sync*`
@@ -422,27 +422,13 @@ The dashboard's lower segment shows details for each system instance.
 |`*Snapshot*`
 |Instance is persisting data to disk
 |`*Down*`
-|Instance does not respond to status requests and is either not running or not reachable
-|`*Partial*`
-|Dispatcher's back-end matrix is incomplete due to one or more partitions without any replicas
-|`*OK/Delta*`
-|Dispatcher's back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is our of sync with its provider
-|`*Degraded*`
-|Dispatcher's back-end matrix has one or more unavailable replicas (reduced capacity)
-|`*Memory*`
-|Memory warning, instance's physical host memory usage is 80% - 83%
-|`*Mem _x_%*`
-|Memory warning, instance's physical host memory usage is 83% - 93%
-|`*! MEM _x_%*`
-|Memory critical, instance's physical host memory usage is above 93%
+|Instance does not respond to status requests and is either not running or not reachable. Intermittent occurrences of this status may appear under heavy load.
 |`*Readonly*`
 |Instance is in readonly mode
 |`*Starting*`
 |Instance is initializing after startup
 |`*Waiting*`
 |Instance is running but did not provide node status information
-|`*---*`
-|State unknown due to incomplete status information
 
 |*Uptime*
 |`D:H:M:S`
@@ -450,19 +436,43 @@ The dashboard's lower segment shows details for each system instance.
 
 |<<multinode.adoc#descriptor_instance_host, *Address*>>
 |`host:port`
-|Hostname/IP and admin port of instance
+|Hostname (or IP) and *admin* port of instance. Subtract 1 from admin port to get main service/plugin port.
+
+.10+|*Notice*
+|<empty>
+|No warnings
+|`*S/N*`
+|Serial number difference between this instance and its provider
+|`*No Input*`
+|Instance with VGX Transaction Service running (bound txport) has no provider attached
+|`*Partial*`
+|Dispatcher's back-end matrix is incomplete due to one or more partitions without any replicas
+|`*Delta*`
+|Dispatcher's back-end matrix has one or more partitions with inconsistent replicas, or back end subscriber instance is out of sync with its provider
+|`*Degraded*`
+|Dispatcher's back-end matrix has one or more unavailable replicas (reduced query capacity)
+|`*Memory*`
+|Memory warning: Physical host memory usage is 81% - 88%
+|`*Mem _x_%*`
+|High memory warning: Physical host memory usage is 88% - 94%
+|`*! MEM _x_%*`
+|Critically high memory: Physical host memory usage is above 94%
+|`*NoEngine*`
+|All engine partition(s) unavailable in dispatcher back-end matrix (or <<multinode.adoc#descriptor_topology_dispatch_partial_results, partial matrix>> not allowed)
 
 3+|
 3+|*[Server Load]*
 
-.4+|*Matrix*
+.5+|*Matrix*
 |`S-IN`
 |Service In: Back end engine instance operating normally
 |`S-OUT`
 |Service Out: Back end or dispatcher instance not accepting plugin requests
+|`**__m__**R`
+|Proxy Dispatcher's back-end replica count _m_
 |`**__m__**R x **__n__**P`
-|Dispatcher's back-end matrix dimensions (_m_ replicas, _n_ partitions)
-|Empty
+|Matrix Dispatcher's back-end dimensions (_m_ replicas, _n_ partitions)
+|<empty>
 |N/A
 
 |*In*
@@ -663,7 +673,7 @@ http://127.0.0.1:9000/vgx/builtin/ADMIN_GetAuthToken
 [[admin_service_plugins]]
 === ADMIN Plugins
 
-Call these endpoints to perform administrative tasks. Obtain a unique <<admin_service_authtoken, _authtoken_>> for each new request.
+Call these endpoints to perform administrative tasks. Obtain a new, unique <<admin_service_authtoken, _authtoken_>> before making a request.
 
 ==== ADMIN Plugin Parameters
 Use endpoint `/vgx/builtin/argspec?plugin=*_name_*` to see a description of parameters for each service.
@@ -716,11 +726,23 @@ http://127.0.0.1:9000/vgx/builtin/argspec?plugin=ADMIN_Throttle
 |===
 |URI Path |Description
 
+|`/vgx/builtin/ADMIN_GetAuthToken`
+|Generate a new, unique authtoken to be submitted with the next admin request
+
 |`/vgx/builtin/ADMIN_Console`
 |View or edit graph information, as in <<admin_ui_console>>
 
 |`/vgx/builtin/ADMIN_Shutdown`
-|Initiate instance shutdown. This requires two authtokens. Obtain the first token and pass in `authshutdown` parameter. Then obtain the second token and pass in `authtoken` parameter.
+|Initiate instance shutdown. This requires *two* authtokens. Obtain the first token and pass in `authshutdown` parameter. Then obtain the second token and pass in `authtoken` parameter.
+ +
+ +
+ Optionally pass `persist=1` to save graphs on shutdown.
+ +
+ +
+ Optionally pass `restartable=1` to cause shutdown to internally invoke <<../reference.adoc#system_exitrunserver_func, pyvgx.system.ExitRunServer()>> instead of process-wide exit signal SIGTERM.
+ +
+ +
+ Optionally pass a copy of the first admin token (the one passed to `authshutdown`) in `authfullreset` parameter to fully erase all graph data before shutdown. (`persist=1` is implied in this case.)
 
 |`/vgx/builtin/ADMIN_SystemDescriptor`
 |Update the <<multinode.adoc#system_descriptor, system descriptor>>
@@ -879,7 +901,9 @@ usage: vgxadmin [<address|id>] <options>
     -W, --persist <id>              Write instance data to disk
     -g, --readonly <id>             Make graph(s) readonly
     -N, --reloadplugins <id>[,<pd>] Reload or add plugins in <pd> json file
+    -A, --reset <id>                Reset and restart service (if application supports it)
     -m, --resetmetrics <id>         Clear performance and error counters
+    -e, --restart <id>              Restart service (if application supports it)
     -D, --restarthttp <id>          Restart HTTP server with refreshed config
     -r, --resumein <id>             Resume transaction input
     -R, --resumeout <id>            Resume transaction output
@@ -906,7 +930,9 @@ usage: vgxadmin [<address|id>] <options>
 
 Many options require an argument `<id>`, which is a reference to <<multinode.adoc#descriptor_instance_id, instance identifiers>> in the system descriptor. `<id>` can be a single instance identifier, multiple identifiers separated by commas, or a wildcard pattern using `+++*+++`. (Some options do not accept multiple identifiers.)
 
-The same option can occur multiple times. Actions are performed sequentially, i.e. one action has to complete before the next action starts.
+TIP: Use the special identifier `@` to mean all instances. (Often more convenient than `*` in case you forget to add quotes, causing trouble with shell expansion.)
+
+The same option can occur multiple times. Actions are performed sequentially and synchronously, i.e. one action has to complete before the next action starts.
 
 If `<address>` is specified, it can either be a valid instance identifier or the `<host>:<port>` of a running VGX Server instance. In this case the `<id>` argument for all specified options defaults to that instance's identifier and can be omitted.
 
@@ -1242,6 +1268,19 @@ curl http://127.0.0.1:9990/vgx/plugin/sqrt?x=123
 }
 ----
 
+[[vgxadmin_option_reset]]
+==== `--reset <id>` (`-A`)
+Reset and restart service, if application supports this action. Resetting a service means erasing all graph data and persisting the empty system, before attempting restart.
+
+For restart to work the application must be implemented as explained for <<vgxadmin_option_restart, vgxadmin --restart>>.
+
+.Fully reset instance "B1" to an empty state
+[.copyable]
+[source, shell]
+----
+vgxadmin --reset "B1"
+----
+
 [[vgxadmin_option_resetmetrics]]
 ==== `--resetmetrics <id>` (`-m`)
 Clear errors and performance counters for instance(s).
@@ -1252,6 +1291,35 @@ Clear errors and performance counters for instance(s).
 ----
 vgxadmin --resetmetrics "S*"
 ----
+
+[[vgxadmin_option_restart]]
+==== `--restart <id>` (`-e`)
+Restart service, if application supports this action. 
+
+Supporting restart requires the application to re-enter <<../reference.adoc#system_runserver_func, pyvgx.system.RunServer()>> in a loop after exit caused by the restart request.
+Before calling RunServer() again the application must also start the HTTP server, since it automatically shuts down by this request.
+
+If not implemented this way the restart request will terminate the service.
+
+.Restart instance "B1"
+[.copyable]
+[source, shell]
+----
+vgxadmin --restart "B1"
+----
+
+===== Example: Minimal restartable application
+
+[source, python]
+----
+def run():
+    while True:
+        system.StartHTTP( 9000 )
+        system.RunServer()
+
+run()
+----
+
 
 [[vgxadmin_option_restarthttp]]
 ==== `--restarthttp <id>` (`-D`)

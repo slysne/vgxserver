@@ -1023,7 +1023,41 @@ DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_tail_access_ACQUIRE_CS
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_OPEN( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc );
 DLL_HIDDEN extern vgx_Vertex_t * _vxquery_collector__safe_head_access_ACQUIRE_CS( vgx_BaseCollector_context_t *collector, vgx_LockableArc_t *larc, vgx_Graph_t **locked_graph );
 
-DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShadowTrail_t *shadow_trail, float score );
+DLL_HIDDEN extern float _vxquery_collector__push_frontier_observation( vgx_FrontierObservationHistory_t *observation_history, float score );
+
+
+
+/*******************************************************************//**
+ *
+ *
+ ***********************************************************************
+ */
+static vgx_Evaluator_t * _vxquery_new_evaluator( vgx_Graph_t *self, vgx_BaseQuery_t *query, const CString_t *CSTR__expression ) {
+  vgx_Evaluator_t *evaluator = NULL;
+  vgx_Vector_t *vector = NULL;
+  // Use vector from ranking condition if supplied
+  if( query->ranking_condition && query->ranking_condition->vector ) {
+    vector = query->ranking_condition->vector;
+  }
+  // Fallback to vertex similarity probe vector
+  else if( query->vertex_condition && query->vertex_condition->advanced.similarity_condition ) {
+    vector = query->vertex_condition->advanced.similarity_condition->probevector;
+  }
+  const char *expression = CStringValue( CSTR__expression );
+  if( (evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, vector, &query->CSTR__error )) == NULL ) {
+    return NULL;
+  }
+  /*
+  if( query->evaluator_memory == NULL ) {
+    if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
+      iEvaluator.DiscardEvaluator( &evaluator );
+      return NULL;
+    }
+  }
+  CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+  */
+  return evaluator;
+}
 
 
 
@@ -1031,7 +1065,7 @@ DLL_HIDDEN extern float _vxquery_collector__push_shadow_trail( vgx_ExpansionShad
  *
  ***********************************************************************
  */
-__inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap_t *heap ) {
+__inline static float _vxquery_collector__worst_heap_navigation_score( Cm256iHeap_t *heap ) {
   return ((vgx_CollectorItem_t*)heap->_buffer)->predicator.val.real;
 }
 
@@ -1043,7 +1077,7 @@ __inline static float _vxquery_collector__worst_heap_recursion_score( Cm256iHeap
  ***********************************************************************
  */
 __inline static float _vxquery_collector__get_current_threshold( vgx_BaseCollector_context_t *collector ) {
-  return collector->shadow_trail.threshold;
+  return collector->observation_history.estimate;
 }
 
 

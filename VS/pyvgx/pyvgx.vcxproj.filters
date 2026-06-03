@@ -157,9 +157,6 @@
     <Filter Include="resources\plugins">
       <UniqueIdentifier>{01f2c2c5-b2a2-440d-ae62-d004120251c9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resources\plugins\tools">
-      <UniqueIdentifier>{a24ea917-23a6-4420-91a0-4decd3d1e8a8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="resources\plugins\py">
       <UniqueIdentifier>{625eccb2-25b9-4d86-8864-426cab36b715}</UniqueIdentifier>
     </Filter>
@@ -171,6 +168,9 @@
     </Filter>
     <Filter Include="test\test_pyvgx_HTTPServer\System">
       <UniqueIdentifier>{74b56fe0-c428-42be-9b28-a374643d46d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources\plugins\tools">
+      <UniqueIdentifier>{a24ea917-23a6-4420-91a0-4decd3d1e8a8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1079,6 +1079,12 @@
     </None>
     <None Include="..\..\pyvgx\test\test_pyvgx_HTTPServer\System\service.py">
       <Filter>test\test_pyvgx_HTTPServer\System</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_Graph\Query\Navigation.py">
+      <Filter>test\test_pyvgx_Graph\Query</Filter>
+    </None>
+    <None Include="..\..\pyvgx\test\test_pyvgx_Vector\EuclideanVector\Navigation.py">
+      <Filter>test\test_pyvgx_Vector\EuclideanVector</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -334,6 +334,7 @@ DLL_HIDDEN CStringQueue_t * _vxquery_dump__query( const vgx_BaseQuery_t *base, C
   WRITELINE_KEYCSTR(    0, ".pre_filter         : ", base->CSTR__pre_filter );
   WRITELINE_KEYCSTR(    0, ".vertex_filter      : ", base->CSTR__vertex_filter );
   WRITELINE_KEYCSTR(    0, ".post_filter        : ", base->CSTR__post_filter );
+  WRITELINE_KEYCSTR(    0, ".navigation_filter  : ", base->CSTR__navigation_filter );
   WRITE_CHARS(          0, ".vertex_condition   : " );
   __dump_vertex_condition( base->vertex_condition, 1 );
   WRITE_CHARS(          0, ".ranking_condition  : " );

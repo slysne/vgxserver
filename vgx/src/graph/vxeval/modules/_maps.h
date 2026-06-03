@@ -470,7 +470,7 @@ __inline static void __maps_vsetadd( vgx_Evaluator_t *self, const vgx_Vertex_t *
  * __maps__vertex_unvisited( evalmem, vertex )
  * 
  * Special use case, call to check if a vertex is unvisited
- * during recursive traversal. If unvisted we add vertex to
+ * during navigation traversal. If unvisted we add vertex to
  * set and return true. When called on a vertex that was
  * previously added we return false. If we somehow can't add
  * vertex to map we also return true to be conservative.
@@ -494,17 +494,19 @@ __inline static bool __maps_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, 
     // Try to add object to set (1:Added, 0:Already Exists, -1:Out of room)
     n = __maps__dwset_add( dwset, key, item );
     
-    // Already exists (or ignore due to missing vector)
-    if( n == 0 || vertex->vector == NULL ) {
+    // Already exists
+    if( n == 0 ) {
       dwset->hits++;
       return false; // Visited
     }
     // Added
     if( n > 0 ) {
       // Demand-load vector since we'll need it soon
-      __prefetch_L1( (char*)vertex->vector );
-      __prefetch_L2( (char*)vertex->vector + 32 ); // start of first data cacheline
-      __prefetch_L2( (char*)vertex->vector + 96 ); // start of second data cacheline
+      if( vertex->vector ) {
+        __prefetch_L1( (char*)vertex->vector );
+        __prefetch_L2( (char*)vertex->vector + 32 ); // start of first data cacheline
+        __prefetch_L2( (char*)vertex->vector + 96 ); // start of second data cacheline
+      }
       dwset->sz++;
       return true; // Unvisited
     }

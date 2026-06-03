@@ -2264,6 +2264,10 @@ static void __banner_cpu( unsigned indent ) {
     }
     iString.Discard( &CSTR__cpuext );
   }
+  // ACC-LIB
+  const char *use_lz4 = "LZ4"; // Always used now
+  const char *json_codec_name = iPyVGXCodec.JsonCodecName();
+  __print_banner_entry( indent, "ACC-LIB", "%s %s", use_lz4, json_codec_name );
   // UTEST
 #ifdef INCLUDE_UNIT_TESTS
   __print_banner_entry( indent, "UTEST", "Enabled" );
@@ -2420,6 +2424,7 @@ ______________________________________________________________________________
 /*
   CPU     : Intel(R) Xeon(R) W-2255 CPU @ 3.70GHz (10 cores / 20 threads)
   CPU-EXT : FMA AVX F16C AVX2 AVX512F AVX512DQ AVX512CD AVX512BW AVX512VL AVX512_VNNI
+  ACC-LIB : LZ4 orjson
   UTEST   : Enabled
   HSCORE  : 10/10
 ______________________________________________________________________________
@@ -2829,7 +2834,7 @@ int init_PyVGX( PyObject *module ) {
   PyModule_AddIntConstant( module,  "F_RANK",     VGX_RESPONSE_ATTR_RANKSCORE );
   PyModule_AddIntConstant( module,  "F_SIM",      VGX_RESPONSE_ATTR_SIMILARITY );
   PyModule_AddIntConstant( module,  "F_HAM",      VGX_RESPONSE_ATTR_HAMDIST );
-  PyModule_AddIntConstant( module,  "F_DEPTH",    VGX_RESPONSE_ATTR_RECURSION );
+  PyModule_AddIntConstant( module,  "F_DEPTH",    VGX_RESPONSE_ATTR_DEPTH );
   PyModule_AddIntConstant( module,  "F_RLV",      VGX_RESPONSE_ATTRS_RELEVANCE );
   // Timestamps
   PyModule_AddIntConstant( module,  "F_TMC",      VGX_RESPONSE_ATTR_TMC );

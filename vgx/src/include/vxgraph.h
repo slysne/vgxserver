@@ -982,9 +982,12 @@ typedef struct s_vgx_LockableArc_t {
     vgx_VertexRefLock_t tail_lock;
     vgx_VertexRefLock_t head_lock;
   } acquired;
-  struct {
-    int8_t __rsv1;
-    int8_t __rsv2;
+  union {
+    uint16_t bits;
+    struct {
+      int8_t navigation_skip_heap_collect;
+      int8_t __rsv2;
+    };
   } flag;
 #ifdef VGX_CONSISTENCY_CHECK
 #endif
@@ -1001,6 +1004,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                                   \
     .tail_lock = TailLocked,                                      \
     .head_lock = HeadLocked                                       \
+  },                                                              \
+  .flag = {                                                       \
+    .bits = 0                                                     \
   }                                                               \
 }
 
@@ -1015,6 +1021,9 @@ typedef struct s_vgx_LockableArc_t {
   .acquired = {                                           \
     .tail_lock = 0,                                       \
     .head_lock = 0                                        \
+  },                                                      \
+  .flag = {                                               \
+    .bits = 0                                             \
   }                                                       \
 }
 
@@ -1512,6 +1521,69 @@ do {                                                              \
 
 
 /*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+typedef struct s_vgx_navigation_config_t {
+  vgx_navigation_mode_t mode;
+  double bias;
+  vgx_Vector_t *probe;
+  struct {
+    int64_t size;
+  } heap;
+  struct {
+    int64_t size;
+  } inertia;
+  struct {
+    int64_t frontier;
+    int64_t expansion;
+    int64_t depth;
+    int64_t exec_ms;
+    int64_t visit;
+  } limit;
+  struct {
+    bool reset_metrics;
+    bool reset_map;
+    CString_t *CSTR__filter;
+  } visit;
+  struct {
+    int64_t width;
+    int64_t min_width;
+    int64_t max_width;
+    double decay;
+    bool adaptive;
+  } beam;
+  struct {
+    double alpha;
+    double beta;
+    double gamma;
+    double delta;
+    double epsilon;
+    double zeta;
+    int64_t kappa;
+    int64_t lambda;
+    double omega;
+  } tune;
+  struct {
+    int64_t width;
+  } entry;
+  
+} vgx_navigation_config_t;
+
+
+#define VGX_NAVIGATION_HEAP_SIZE_MAX (1<<20)
+#define VGX_NAVIGATION_INERTIA_MAX (1<<20)
+#define VGX_NAVIGATION_FRONTIER_QUEUE_SIZE_MAX (1<<20)
+#define VGX_NAVIGATION_BEAM_SIZE_MAX (1<<16)
+
+__inline static bool __is_navigation_enabled( const vgx_navigation_config_t *navigation ) {
+  return navigation && navigation->mode != VGX_NAVIGATION_MODE_NONE;
+}
+
+
+
+
+/*******************************************************************//**
  * vgx_BaseQuery_t
  * 
  ***********************************************************************
@@ -1524,6 +1596,7 @@ do {                                                              \
   const char * (*AddPreFilter)( Struct *self, const char *filter_expression );                                  \
   const char * (*AddFilter)( Struct *self, const char *filter_expression );                                     \
   const char * (*AddPostFilter)( Struct *self, const char *filter_expression );                                 \
+  const char * (*AddNavigationFilter)( Struct *self, const char *filter_expression );                            \
   vgx_VertexCondition_t * (*AddVertexCondition)( Struct *self, vgx_VertexCondition_t **vertex_condition );      \
   vgx_RankingCondition_t * (*AddRankingCondition)( Struct *self, vgx_RankingCondition_t **ranking_condition );  \
   const CString_t * (*SetErrorString)( Struct *self, CString_t **CSTR__error );                                 \
@@ -1542,6 +1615,7 @@ do {                                                              \
   CString_t *CSTR__pre_filter;                        \
   CString_t *CSTR__vertex_filter;                     \
   CString_t *CSTR__post_filter;                       \
+  CString_t *CSTR__navigation_filter;                 \
   vgx_VertexCondition_t *vertex_condition;            \
   vgx_RankingCondition_t *ranking_condition;          \
   struct s_vgx_ExpressEvalMemory_t *evaluator_memory; \
@@ -1632,21 +1706,21 @@ DLL_HIDDEN extern void vgx_AdjacencyQuery_UnregisterClass( void );
 #define __vgx_NeighborhoodQuery_vtable( Struct )  \
   __vgx_AdjacencyQuery_vtable( Struct )           \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory, CString_t **CSTR__error );
 
 #define __vgx_NeighborhoodQuery_members             \
   __vgx_AdjacencyQuery_members                      \
   __vgx_ResultSetQuery_members                      \
   vgx_ArcConditionSet_t *collect_arc_condition_set; \
   vgx_collector_mode_t collector_mode;              \
-  vgx_recursion_config_t recursion_config;          \
-  vgx_recursion_config_t effective_recursion_config;
+  vgx_navigation_config_t navigation_config;        \
+  vgx_navigation_config_t effective_navigation_config;
 
 #define __vgx_NeighborhoodQuery_args                  \
   __vgx_AdjacencyQuery_args                           \
   vgx_ArcConditionSet_t **collect_arc_condition_set;  \
   vgx_collector_mode_t collector_mode;                \
-  vgx_recursion_config_t recursion;
+  vgx_navigation_config_t navigation;
 
 
 // vtable
@@ -1694,7 +1768,7 @@ DLL_HIDDEN extern void vgx_NeighborhoodQuery_UnregisterClass( void );
 #define __vgx_GlobalQuery_vtable( Struct )    \
   __vgx_BaseQuery_vtable( Struct )            \
   int (*SetResponseFormat)( Struct *self, vgx_ResponseAttrFastMask format );  \
-  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, CString_t **CSTR__error );
+  int (*SelectStatement)( Struct *self, struct s_vgx_Graph_t *graph, const char *select_statement, struct s_vgx_ExpressEvalMemory_t *memory,CString_t **CSTR__error );
 
 
 #define __vgx_GlobalQuery_args              \
@@ -2449,7 +2523,9 @@ typedef struct s_vgx_IGraphSimple_t {
 
   struct s_vgx_Evaluator_t * (*DefineEvaluator)( struct s_vgx_Graph_t *self, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
   struct s_vgx_Evaluator_t * (*GetEvaluator)( struct s_vgx_Graph_t *self, const char *name );
+  bool (*HasEvaluator)( struct s_vgx_Graph_t *self, const char *name );
   struct s_vgx_Evaluator_t ** (*GetEvaluators)( struct s_vgx_Graph_t *self, int64_t *sz );
+  int64_t (*CountEvaluators)( struct s_vgx_Graph_t *self );
 
 } vgx_IGraphSimple_t;
 
@@ -5428,9 +5504,9 @@ typedef int (*f_vgx_PredicatorMatchFunction)( const struct s_vgx_virtual_ArcFilt
   bool eval_synarc;                                           \
   /* Advanced filter */                                       \
   struct s_vgx_Evaluator_t *traversing_evaluator;             \
-  /* Recursive node visitation tracking? */                   \
+  /* Navigation search node visitation tracking? */           \
   bool track_visited;                                         \
-  /* Recursive node visitation tracker max size */            \
+  /* Navigation node visitation tracker max size */           \
   int64_t max_visited;                                        \
   /*  */                                                      \
   int kappa;                                                  \
@@ -5935,6 +6011,7 @@ typedef struct s_vgx_ExpressEvalProgram_t {
   
   // Literal strings
   vgx_ExpressEvalString_t *strings;
+  vgx_ExpressEvalString_t *end_strings;
   // Expression name
   CString_t *CSTR__assigned;
   // Expression
@@ -5995,8 +6072,10 @@ typedef struct s_vgx_ExpressEvalMemory_t {
   CQwordList_t *cstringref;
   // Q1.8
   CQwordList_t *vectorref;
-  // Q1.7
-  QWORD __rsv_1_7;
+  // Q1.7.1
+  uint32_t owner_thread;
+  // Q1.7.2
+  DWORD __rsv_1_7_2;
   // Q1.8
   QWORD __rsv_1_8;
   // ==== CL2 ====
@@ -6162,7 +6241,7 @@ typedef struct s_vgx_Evaluator_vtable_t {
   /* base methods */
   COMLIB_VTABLE_HEAD
   /* Evaluator methods */
-  int (*Reset)( struct s_vgx_Evaluator_t *self );
+  int (*Reset)( struct s_vgx_Evaluator_t *self, struct s_vgx_ExpressEvalMemory_t *memory );
   void (*SetContext)( struct s_vgx_Evaluator_t *self, const vgx_Vertex_t *tail, const vgx_ArcHead_t *arc, vgx_Vector_t *vector, double rankscore );
   void (*SetDefaultProp)( struct s_vgx_Evaluator_t *self, vgx_EvalStackItem_t *default_prop );
   void (*OwnMemory)( struct s_vgx_Evaluator_t *self, vgx_ExpressEvalMemory_t *memory );
@@ -6233,6 +6312,7 @@ typedef struct s_vgx_Evaluator_t {
 typedef struct s_vgx_Evaluator_constructor_args_t {
   vgx_Graph_t *parent;
   const char *expression;
+  vgx_ExpressEvalMemory_t *memory;
   vgx_Vector_t *vector;
   CString_t **CSTR__error;
 } vgx_Evaluator_constructor_args_t;
@@ -6253,7 +6333,7 @@ typedef struct s_vgx_IEvaluator_t {
   int (*Destroy)( void );
   int (*CreateEvaluators)( vgx_Graph_t *graph );
   void (*DestroyEvaluators)( vgx_Graph_t *graph );
-  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*NewEvaluator)( vgx_Graph_t *graph, const char *expression, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
   void (*DiscardEvaluator)( vgx_Evaluator_t **evaluator );
   int (*IsPositive)( const vgx_EvalStackItem_t *item );
   int64_t (*GetInteger)( const vgx_EvalStackItem_t *item );
@@ -6756,14 +6836,14 @@ typedef Cm256iBuffer_t vgx_FrontierQueue_t;
  *
  ***********************************************************************
  */
-typedef struct s_vgx_ExpansionShadowTrail_t {
+typedef struct s_vgx_FrontierObservationHistory_t {
   int sz;
-  float threshold;
+  float estimate;
   float *wp;
   float *end;
   float *queue;
   float zeta;
-} vgx_ExpansionShadowTrail_t;
+} vgx_FrontierObservationHistory_t;
 
 
 
@@ -6790,16 +6870,16 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   } container;                                \
   vgx_VertexRef_t *refmap;                    \
   int64_t sz_refmap;                          \
-  vgx_recursion_mode_t recursion_mode;        \
-  int64_t recursion_depth;                    \
-  vgx_ExpansionShadowTrail_t shadow_trail;    \
+  vgx_navigation_mode_t navigation_mode;      \
+  int64_t navigation_depth;                   \
+  vgx_FrontierObservationHistory_t observation_history; \
   vgx_FrontierQueue_t *frontier;              \
   int64_t max_frontier;                       \
   bool pure_beam;                             \
   Cm256iHeap_t *beam_heap;                    \
   int64_t beam_width;                         \
   int64_t max_beam_width;                     \
-  bool adaptive_recursion;                    \
+  bool adaptive_beam;                         \
   double dynamic_taper;                       \
   float alpha;                                \
   float beta;                                 \
@@ -6809,6 +6889,7 @@ typedef struct s_vgx_ExpansionShadowTrail_t {
   float zeta;                                 \
   int kappa;                                  \
   int lambda;                                 \
+  struct s_vgx_Evaluator_t *navigation_filter; \
   vgx_CollectorStage_t *stage;                \
   Cm256iHeap_t *postheap;                     \
   ALIGNED_STRUCT_MEMBER( vgx_CollectorItem_t, empty, 32 ); \
@@ -6982,7 +7063,7 @@ typedef struct s_vgx_neighborhood_search_context_t {
   //
   vgx_collector_mode_t collector_mode;    // collect on this level? if so collect arcs or vertices?
   vgx_BaseCollector_context_t *collector; // shared collector instance for all neighborhood levels
-  vgx_recursion_config_t recursion;       // control automatic recursive traversal
+  vgx_navigation_config_t navigation;     // control automatic exploration traversal
 } vgx_neighborhood_search_context_t;
 
 
@@ -7097,8 +7178,8 @@ typedef struct s_vgx_ArcFilterFunction_t {
   f_vgx_ArcFilter SpecificValueFilter;
   f_vgx_ArcFilter SpecificHamDistFilter;
   f_vgx_ArcFilter EvaluatorFilter;
-  f_vgx_ArcFilter ANNFilter;
-  f_vgx_ArcFilter ANNArcFilter;
+  f_vgx_ArcFilter NavigationFilter;
+  f_vgx_ArcFilter NavigationArcFilter;
   f_vgx_ArcFilter GenericArcFilter;
   f_vgx_ArcFilter GenPredLocEvalVertexArcFilter;
   f_vgx_ArcFilter GenLocEvalVertexArcFilter;
@@ -7162,7 +7243,7 @@ typedef struct s_vgx_VertexMatchFunction_t {
  ***********************************************************************
  */
 typedef struct s_vgx_IArcFilter_t {
-  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_recursion_config_t *recursion, vgx_ExecutionTimingBudget_t *timing_budget );
+  vgx_virtual_ArcFilter_context_t * (*New)( vgx_Graph_t *graph, bool readonly_graph, const vgx_ArcConditionSet_t *arc_condition_set, const vgx_vertex_probe_t *vertex_probe, vgx_Evaluator_t *traversing_evaluator, const vgx_navigation_config_t *navigation, vgx_ExecutionTimingBudget_t *timing_budget );
   vgx_virtual_ArcFilter_context_t * (*Clone)( const vgx_virtual_ArcFilter_context_t *other );
   void (*Delete)( vgx_virtual_ArcFilter_context_t **filter );
   vgx_boolean_logic (*LogicFromPredicators)( const vgx_predicator_t predicator1, vgx_predicator_t const predicator2 );
@@ -7171,7 +7252,7 @@ typedef struct s_vgx_IArcFilter_t {
 
 
 DLL_HIDDEN bool vxeval_vertex_unvisited( vgx_ExpressEvalDWordSet_t *dwset, const vgx_Vertex_t *vertex );
-DLL_HIDDEN float vxeval_fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target );
+DLL_HIDDEN int vxeval_fast_nav_collect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore );
 
 
 /*******************************************************************//**
@@ -7454,7 +7535,7 @@ typedef struct s_vgx_IGraphQuery_t {
   void (*DeleteQuery)(              vgx_BaseQuery_t         **query );
 
   vgx_AdjacencyQuery_t    * (*NewAdjacencyQuery)(     vgx_Graph_t *graph, const char *vertex_id, CString_t **CSTR__error );
-  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_recursion_config_t *recursion_config, CString_t **CSTR__error );
+  vgx_NeighborhoodQuery_t * (*NewNeighborhoodQuery)(  vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode, const vgx_navigation_config_t *recursion_config, CString_t **CSTR__error );
   vgx_GlobalQuery_t       * (*NewGlobalQuery)(        vgx_Graph_t *graph, vgx_collector_mode_t collector_mode, CString_t **CSTR__error );
   vgx_AggregatorQuery_t   * (*NewAggregatorQuery)(    vgx_Graph_t *graph, const char *vertex_id, vgx_ArcConditionSet_t **collect_arc_condition_set, CString_t **CSTR__error );
 
@@ -7488,8 +7569,8 @@ typedef struct s_vgx_IVertexCondition_t {
   void (*RequireManifestation)(       vgx_VertexCondition_t *vertex_condition, vgx_VertexStateContext_man_t manifestation );
   int (*RequireType)(                 vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const vgx_value_comparison vcomp, const char *type );
   vgx_VertexTypeEnumeration_t (*GetTypeEnumeration)( vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph );
-  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression );
-  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression );
+  int (*RequireLocalFilter)(          vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *local_filter_expression, vgx_ExpressEvalMemory_t *memory );
+  int (*RequirePostFilter)(           vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *post_filter_expression, vgx_ExpressEvalMemory_t *memory );
   int (*RequireDegree)(               vgx_VertexCondition_t *vertex_condition, const vgx_value_comparison vcomp, const vgx_arc_direction direction, const int64_t degree );
   int (*RequireConditionalDegree)(    vgx_VertexCondition_t *vertex_condition, vgx_DegreeCondition_t **degree_condition );
   int (*RequireSimilarity)(           vgx_VertexCondition_t *vertex_condition, vgx_SimilarityCondition_t **similarity_condition );
@@ -7504,12 +7585,12 @@ typedef struct s_vgx_IVertexCondition_t {
 
   void (*RequireRecursiveCondition)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcCondition)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireConditionFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertCondition)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*RequireRecursiveTraversal)(  vgx_VertexCondition_t *vertex_condition, vgx_VertexCondition_t **neighbor_condition );
   void (*RequireArcTraversal)(        vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **arc_condition_set );
-  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression );
+  int (*RequireTraversalFilter)(      vgx_VertexCondition_t *vertex_condition, vgx_Graph_t *graph, const char *filter_expression, vgx_ExpressEvalMemory_t *memory );
   void (*SetAssertTraversal)(          vgx_VertexCondition_t *vertex_condition, vgx_ArcFilter_match assert_match );
 
   void (*CollectNeighbors)(           vgx_VertexCondition_t *vertex_condition, vgx_ArcConditionSet_t **collect_arc_condition_set, vgx_collector_mode_t collector_mode );
@@ -7800,7 +7881,7 @@ typedef struct s_vgx_IGraphResponse_t {
   void (*DeleteProperties)( vgx_Graph_t *self, vgx_SelectProperties_t **selected_properties );
   void (*FormatResultsToStream)( vgx_Graph_t *self, vgx_BaseQuery_t *query, FILE *output );
   vgx_VertexProperty_t * (*SelectProperty)( vgx_Graph_t *graph, const char *name, vgx_VertexProperty_t *prop );
-  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_Vector_t *vector, CString_t **CSTR__error );
+  vgx_Evaluator_t * (*ParseSelectProperties)( vgx_Graph_t *graph, const char *select_statement, vgx_ExpressEvalMemory_t *memory, vgx_Vector_t *vector, CString_t **CSTR__error );
 } vgx_IGraphResponse_t;
 
 

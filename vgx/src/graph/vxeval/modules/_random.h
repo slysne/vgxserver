@@ -26,6 +26,8 @@
 #ifndef _VGX_VXEVAL_MODULES_RANDOM_H
 #define _VGX_VXEVAL_MODULES_RANDOM_H
 
+#include "_string.h"
+
 
 /*******************************************************************//**
  *
@@ -34,6 +36,7 @@
 static void __eval_nullary_random_real( vgx_Evaluator_t *self );
 static void __eval_nullary_random_bits( vgx_Evaluator_t *self );
 static void __eval_binary_random_int( vgx_Evaluator_t *self );
+static void __eval_unary_rstr( vgx_Evaluator_t *self );
 static void __eval_unary_hash( vgx_Evaluator_t *self );
 
 
@@ -94,6 +97,57 @@ static void __eval_binary_random_int( vgx_Evaluator_t *self ) {
 
   int64_t r =  L + (H > L ? rand63() % (H - L) : 0);
   SET_INTEGER_PITEM_VALUE( px, r );
+}
+
+
+
+/*******************************************************************//**
+ * rstr( n )
+ ***********************************************************************
+ */
+static void __eval_unary_rstr( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = GET_PITEM( self );
+
+  if( px->type != STACK_ITEM_TYPE_INTEGER ) {
+    SET_NONE(px);
+    return;
+  }
+
+  CString_constructor_args_t args = {
+    .string      = NULL,
+    .len         = (int)px->integer,
+    .ucsz        = 0,
+    .format      = NULL,
+    .format_args = NULL,
+    .alloc       = self->graph->ephemeral_string_allocator_context
+  };
+    
+  CString_t *CSTR__rstr = COMLIB_OBJECT_NEW( CString_t, NULL, &args );
+  
+  if( CSTR__rstr == NULL ) {
+    SET_NONE(px);
+    return;
+  }
+  
+  char *data = (char*)CALLABLE( CSTR__rstr )->ModifiableQwords( CSTR__rstr );
+  char *wp = data;
+  const char *end = wp + args.len;
+  while( wp < end ) {
+    *wp++ = 'a' + (rand63() % 26);
+  }
+
+  vgx_EvalStackItem_t scoped = {
+    .type = STACK_ITEM_TYPE_CSTRING,
+    .CSTR__str = CSTR__rstr
+  };
+
+  if( iEvaluator.LocalAutoScopeObject( self, &scoped, true ) > 0 ) {
+    *px = scoped;
+  }
+  else {
+    SET_NONE(px);
+  }
+
 }
 
 

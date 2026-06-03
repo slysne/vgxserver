@@ -227,7 +227,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_exists__has_arc( const vgx_ArcVector
         // Terminal exists
         __begin_lockable_arc_context( KEY_LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, keyhead.predicator, keyhead.vertex, arcfilter_context, &filter_match ) {
           vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-          __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &KEY_LARC, &filter_match ) {
+          __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &KEY_LARC, &filter_match ) {
             switch( arc_type ) {
             // BLUE: Simple arc found, now apply predicator filter
             case VGX_ARCVECTOR_SIMPLE_ARC:
@@ -285,7 +285,7 @@ DLL_HIDDEN vgx_ArcFilter_match _vxarcvector_exists__has_arc( const vgx_ArcVector
 
     __begin_lockable_arc_context( LARC, VGX_ARCVECTOR_ARRAY_OF_ARCS, readonly, neighborhood_probe->current_tail_RO, VGX_PREDICATOR_NONE, neighborhood_probe->current_tail_RO, arcfilter_context, &filter_match ) {
       vgx_Vector_t *vector = __simprobe_vector( recursive->vertex_probe );
-      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, vector, &LARC, &filter_match ) {
+      __begin_arc_evaluator_context( previous, neighborhood_probe->pre_evaluator, recursive->evaluator, neighborhood_probe->post_evaluator, NULL, vector, &LARC, &filter_match ) {
         __arcvector_existence_input_context_t input = {
           .traverse_filter          = arcfilter_context,
           .larc                     = &LARC,

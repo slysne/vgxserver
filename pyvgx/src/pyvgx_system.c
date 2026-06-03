@@ -3211,7 +3211,8 @@ static PyObject * PyVGX_System__StartHTTP( PyVGX_System *py_system, PyObject *ar
     }
     
     if( py_dispatcher ) {
-      if( (py_cfdispatcher_json = iPyVGXCodec.NewJsonPyStringFromPyObject( py_dispatcher )) == NULL ) {
+      // json is PyBytes or PyUnicode
+      if( (py_cfdispatcher_json = iPyVGXCodec.NewJsonFromPyObject( py_dispatcher )) == NULL ) {
         THROW_ERROR( CXLIB_ERR_API, 0x002 );
       }
     }
@@ -3429,7 +3430,7 @@ static PyObject * PyVGX_System__DispatcherConfig( PyVGX_System *py_system ) {
     Py_RETURN_NONE;
   }
 
-  return iPyVGXCodec.NewPyObjectFromJsonPyString( g_py_cfdispatcher );
+  return iPyVGXCodec.NewPyObjectFromJsonPyObject( g_py_cfdispatcher );
 }
 
 

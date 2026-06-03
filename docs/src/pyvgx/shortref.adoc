@@ -132,6 +132,10 @@ g.Neighborhood(
 |Check if one or more graphs have TTL suspended
 
 |{counter:ps}
+|<<reference.adoc#system_exitrunserver_func, ExitRunServer()>>
+|Exit any currently blocking RunServer() call
+
+|{counter:ps}
 |<<reference.adoc#system_fingerprint_func, Fingerprint()>>
 |Return a digest string representing the state of all loaded graph data
 
@@ -221,7 +225,7 @@ g.Neighborhood(
 
 |{counter:ps}
 |<<reference.adoc#system_runserver_func, RunServer()>>
-|Enter infinite loop until SIGINT
+|Enter infinite loop until SIGINT, or ExitRunServer() called
 
 |{counter:ps}
 |<<service/service.adoc#system_serveradminip_func, ServerAdminIP()>>
@@ -640,6 +644,10 @@ g.Neighborhood(
 |Float aggregation
 
 |{counter:cm}
+|<<constants/arcModifierConstants.adoc#M_FWDONLY, M_FWDONLY>>
+|Forward arc only (bitmask)
+
+|{counter:cm}
 |<<constants/arcModifierConstants.adoc#M_INT, M_INT>>
 |Signed 32-bit integer
 
@@ -800,6 +808,10 @@ g.Neighborhood(
 |{counter:cf}
 |<<constants/resultFieldConstants.adoc#F_DEGREES, F_DEGREES>>
 |All degree fields
+
+|{counter:cf}
+|<<constants/resultFieldConstants.adoc#F_DEPTH, F_DEPTH>>
+|Navigation depth
 
 |{counter:cf}
 |<<constants/resultFieldConstants.adoc#F_DESCR, F_DESCR>>
@@ -1690,6 +1702,10 @@ g.Neighborhood(
 |N |Graph Evaluator Method |Description
 
 |{counter:cgev}
+|<<reference.adoc#countdefinitions_func, __g__.CountDefinitions()>>
+|Return the number of defined evaluator expressions
+
+|{counter:cgev}
 |<<evaluator/evaluator.adoc#evaluatordefine, __g__.Define()>>
 |Define and store an evaluator expression to be invoked later
 
@@ -1704,6 +1720,10 @@ g.Neighborhood(
 |{counter:cgev}
 |<<referece.adoc#getdefinitions_func, __g__.GetDefinitions()>>
 |Return all previously defined evaluator expressions
+
+|{counter:cgev}
+|<<reference.adoc#isdefined_func, __g__.IsDefined()>>
+|Check if named expression is defined
 
 |{counter:cgev}
 |<<reference.adoc#memory_func, __g__.Memory()>>
@@ -1732,6 +1752,10 @@ g.Neighborhood(
 |{counter:cgmgm}
 |<<graph/graphManagement.adoc#graphgetmemoryusage, __g__.GetMemoryUsage()>>
 |Return graph memory usage information
+
+|{counter:cgmgm}
+|<<reference.adoc#isgraphlocal_func, __g__.IsGraphLocal()>>
+|Check if graph is local only
 
 |{counter:cgmgm}
 |<<graph/graphManagement.adoc#graphisgraphreadonly, __g__.IsGraphReadonly()>>
@@ -2352,6 +2376,10 @@ g.Neighborhood(
 |Memory register R4
 
 |{counter:cma}
+|<<reference.adoc#memory_counters_attr, pyvgx.Memory.counters>>
+|Navigation counters
+
+|{counter:cma}
 |<<reference.adoc#memory_order_attr, pyvgx.Memory.order>>
 |Log~2~ of memory size
 
@@ -2368,7 +2396,11 @@ g.Neighborhood(
 |Return a list representing memory object data
 
 |{counter:cmm}
-|<<reference.adoc#memory_object_clearset, pyvgx.Memory.ClearSet()>>
+|<<reference.adoc#memory_object_vsetadd, pyvgx.Memory.VSetAdd()>>
+|Add vertex address to vset
+
+|{counter:cmm}
+|<<reference.adoc#memory_object_vsetclear, pyvgx.Memory.VSetClear()>>
 |Clear contents of iset or vset
 
 |{counter:cmm}
@@ -3291,6 +3323,11 @@ g.Neighborhood(
 |(enum) D_OUT
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_m_vector, `M.vector`>>
+|SYMBOLIC
+|(vector) M.vector
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_m_acc, `M_ACC`>>
 |SYMBOLIC
 |(enum) M_ACC
@@ -3538,6 +3575,17 @@ g.Neighborhood(
 |commitif( a[, b] )
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_contains, `contains`>>
+|FUNCTION
+|contains( a, b )
+
+// cspell:ignore containsi
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_containsi, `containsi`>>
+|FUNCTION
+|containsi( a, b )
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_context_rank, `context.rank`>>
 |SYMBOLIC
 |(real) context.rank
@@ -3678,6 +3726,12 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_endswith, `endswith`>>
 |FUNCTION
 |endswith( a, b )
+
+// cspell:ignore endswithi
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_endswithi, `endswithi`>>
+|FUNCTION
+|endswithi( a, b )
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_equ, `equ`>>
@@ -3853,6 +3907,18 @@ g.Neighborhood(
 |FUNCTION
 |indexed( a )
 
+// cspell:ignore indexof
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_indexof, `indexof`>>
+|FUNCTION
+|indexof( a, b )
+
+// cspell:ignore indexofi
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_indexofi, `indexofi`>>
+|FUNCTION
+|indexofi( a, b )
+
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_inf, `inf`>>
 |LITERAL
@@ -3901,6 +3967,12 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_isbytes, `isbytes`>>
 |FUNCTION
 |isbytes( a )
+
+// cspell:ignore iscompressed
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_iscompressed, `iscompressed`>>
+|FUNCTION
+|iscompressed( a )
 
 // cspell:ignore iset
 |{counter:celor}
@@ -3957,6 +4029,12 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_isnan, `isnan`>>
 |FUNCTION
 |isnan( a )
+
+// cspell:ignore ispickled
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_ispickled, `ispickled`>>
+|FUNCTION
+|ispickled( a )
 
 // cspell:ignore isreal
 |{counter:celor}
@@ -4027,6 +4105,11 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_log2, `log2`>>
 |FUNCTION
 |log2( a )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_lower, `lower`>>
+|FUNCTION
+|lower( a )
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_lt, `lt`>>
@@ -5026,6 +5109,36 @@ g.Neighborhood(
 |nan
 
 |{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_depth, `nav.depth`>>
+|SYMBOLIC
+|(integer) nav.depth
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_eval, `nav.eval`>>
+|SYMBOLIC
+|(integer) nav.eval
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_expand, `nav.expand`>>
+|SYMBOLIC
+|(integer) nav.expand
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_frontier, `nav.frontier`>>
+|SYMBOLIC
+|(integer) nav.frontier
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_result, `nav.result`>>
+|SYMBOLIC
+|(integer) nav.result
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_nav_threshold, `nav.threshold`>>
+|SYMBOLIC
+|(integer) nav.threshold
+
+|{counter:celor}
 |<<evaluator/evaluator.adoc#_neg, `neg`>>
 |FUNCTION
 |neg( a )
@@ -5770,6 +5883,12 @@ g.Neighborhood(
 |FUNCTION
 |startswith( a, b )
 
+// cspell:ignore startswithi
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_startswithi, `startswithi`>>
+|FUNCTION
+|startswithi( a, b )
+
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_store, `store`>>
 |FUNCTION
@@ -5785,6 +5904,18 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_str, `str`>>
 |FUNCTION
 |str( a )
+
+// cspell:ignore strall
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_strall, `strall`>>
+|FUNCTION
+|strall( a[, b1[, b2[, ...]]] )
+
+// cspell:ignore strany
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_strany, `strany`>>
+|FUNCTION
+|strany( a[, b1[, b2[, ...]]] )
 
 // cspell:ignore strcasecmp
 |{counter:celor}
@@ -5802,6 +5933,18 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_strftime, `strftime`>>
 |FUNCTION
 |strftime( a )
+
+// cspell:ignore striall
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_striall, `striall`>>
+|FUNCTION
+|striall( a[, b1[, b2[, ...]]] )
+
+// cspell:ignore striany
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_striany, `striany`>>
+|FUNCTION
+|striany( a[, b1[, b2[, ...]]] )
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_sub, `sub`>>
@@ -5917,6 +6060,11 @@ g.Neighborhood(
 |<<evaluator/evaluator.adoc#_unstageif, `unstageif`>>
 |FUNCTION
 |unstageif( a[, b] )
+
+|{counter:celor}
+|<<evaluator/evaluator.adoc#_upper, `upper`>>
+|FUNCTION
+|upper( a )
 
 |{counter:celor}
 |<<evaluator/evaluator.adoc#_vector, `vector`>>

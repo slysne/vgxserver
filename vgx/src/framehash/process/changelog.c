@@ -186,7 +186,7 @@ static CString_t * __new_changelog_name( const char *dirname, const char *basena
  ***********************************************************************
  */
 static char * __get_permanent_name( CString_t *CSTR__delta_name, char *buffer ) {
-  if( CALLABLE( CSTR__delta_name )->EndsWith( CSTR__delta_name, changelog_open_suffix ) ) {
+  if( CALLABLE( CSTR__delta_name )->EndsWith( CSTR__delta_name, changelog_open_suffix, false ) ) {
     // The full temporary path with suffix
     const char *str = CStringValue( CSTR__delta_name );
     char *p = buffer;

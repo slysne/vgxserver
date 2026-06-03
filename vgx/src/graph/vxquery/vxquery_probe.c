@@ -76,7 +76,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
-                                                const vgx_recursion_config_t *recursion,
+                                                const vgx_navigation_config_t *navigation,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -244,17 +244,19 @@ static int __configure_new_ranking_context_from_condition( vgx_Graph_t *self, bo
   if( ranking_condition->CSTR__expression ) {
     const char *expression = CStringValue( ranking_condition->CSTR__expression );
     vgx_Evaluator_t *evaluator;
-    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, ranking_condition->vector, CSTR__error )) == NULL ) {
+    if( (evaluator = (*ranking_context)->evaluator = iEvaluator.NewEvaluator( self, expression, query->evaluator_memory, ranking_condition->vector, CSTR__error )) == NULL ) {
       // error
       __delete_ranking_context( ranking_context );
       return -1;
     }
+    /*
     if( query->evaluator_memory == NULL ) {
       if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
         return -1;
       }
     }
     CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
+    */
   }
 
   // 8. Ranker timing budget
@@ -306,37 +308,6 @@ static void __clear_base_search_context( vgx_base_search_context_t *search ) {
     // Delete the ranking context
     __delete_ranking_context( &search->ranking_context );
   }
-}
-
-
-
-/*******************************************************************//**
- *
- *
- ***********************************************************************
- */
-static vgx_Evaluator_t * __new_evaluator( vgx_Graph_t *self, vgx_BaseQuery_t *query, const char *expression ) {
-  vgx_Evaluator_t *evaluator = NULL;
-  vgx_Vector_t *vector = NULL;
-  // Use vector from ranking condition if supplied
-  if( query->ranking_condition && query->ranking_condition->vector ) {
-    vector = query->ranking_condition->vector;
-  }
-  // Fallback to vertex similarity probe vector
-  else if( query->vertex_condition && query->vertex_condition->advanced.similarity_condition ) {
-    vector = query->vertex_condition->advanced.similarity_condition->probevector;
-  }
-  if( (evaluator = iEvaluator.NewEvaluator( self, expression, vector, &query->CSTR__error )) == NULL ) {
-    return NULL;
-  }
-  if( query->evaluator_memory == NULL ) {
-    if( (query->evaluator_memory = iEvaluator.NewMemory( -1 )) == NULL ) {
-      iEvaluator.DiscardEvaluator( &evaluator );
-      return NULL;
-    }
-  }
-  CALLABLE( evaluator )->OwnMemory( evaluator, query->evaluator_memory );
-  return evaluator;
 }
 
 
@@ -411,7 +382,7 @@ static int __configure_base_search_context( vgx_Graph_t *self, bool readonly_gra
     // PRE
     vgx_Evaluator_t *E;
     if( query->CSTR__pre_filter ) {
-      if( (E = search->pre_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__pre_filter ))) == NULL ) {
+      if( (E = search->pre_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__pre_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x601 );
       }
       if( CALLABLE( E )->Traversals( E ) ) {
@@ -425,13 +396,13 @@ static int __configure_base_search_context( vgx_Graph_t *self, bool readonly_gra
     }
     // MAIN
     if( query->CSTR__vertex_filter ) {
-      if( (search->vertex_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__vertex_filter ))) == NULL ) {
+      if( (search->vertex_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__vertex_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x604 );
       }
     }
     // POST
     if( query->CSTR__post_filter ) {
-      if( (E = search->post_evaluator = __new_evaluator( self, query, CStringValue( query->CSTR__post_filter ))) == NULL ) {
+      if( (E = search->post_evaluator = _vxquery_new_evaluator( self, query, query->CSTR__post_filter )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x607 );
       }
       if( CALLABLE( E )->Traversals( E ) ) {
@@ -1085,7 +1056,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
                                                 vgx_Evaluator_t *post_evaluator,
                                                 const vgx_RecursiveCondition_t *conditional,
                                                 const vgx_RecursiveCondition_t *traversing,
-                                                const vgx_recursion_config_t *recursion,
+                                                const vgx_navigation_config_t *navigation,
                                                 vgx_collector_mode_t collector_mode,
                                                 const vgx_ArcConditionSet_t *collect_arc_condition_set,
                                                 vgx_BaseCollector_context_t *collector,
@@ -1202,7 +1173,7 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
     // C * T = C + T
     //
     if( has_cfilter || !has_tfilter ) {
-      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, recursion, timing_budget )) == NULL ) {
+      if( (probe->conditional.arcfilter = iArcFilter.New( self, readonly_graph, conditional->arc_condition_set, probe->conditional.vertex_probe, probe->conditional.evaluator, navigation, timing_budget )) == NULL ) {
         THROW_SILENT( CXLIB_ERR_GENERAL, 0x645 );
       }
       // Set the filter's current tail vertex (will be NULL for all but the first neighborhood, i.e. recursive traversal MUST UPDATE THIS FOR EACH RECURSIVE NEIGHBORHOOD!
@@ -1229,6 +1200,15 @@ static int __configure_new_neighborhood_probe(  vgx_Graph_t *self,
       probe->traversing.arcfilter = probe->conditional.arcfilter;
       probe->traversing.arcdir = probe->conditional.arcdir;
       probe->traversing.override = probe->conditional.override;
+    }
+
+    // Special case: navigation filter's vertex access must be flagged in traversing filter for proper locking
+    if( collector && collector->navigation_filter ) {
+      if( CALLABLE( collector->navigation_filter )->ThisNextAccess( collector->navigation_filter ) ) {
+        if( probe->traversing.arcfilter ) {
+          probe->traversing.arcfilter->arcfilter_locked_head_access = true;
+        }
+      }
     }
 
     // 5. Create collector filter for this neighborhood level
@@ -1449,11 +1429,11 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
   int retcode = 1;
   XTRY {
 
-    // Recursion enabled
-    if( __is_recursion_enabled( &query->recursion_config ) ) {
+    // Navigation search enabled
+    if( __is_navigation_enabled( &query->navigation_config ) ) {
       // Copy config to effective config which may be modified
-      query->effective_recursion_config = query->recursion_config;
-      // Recursion requires evaluator memory to track visited nodes
+      query->effective_navigation_config = query->navigation_config;
+      // Navigation requires evaluator memory to track visited nodes
       // We'll need a dummy evaluator if we don't have one
       if( query->CSTR__vertex_filter == NULL ) {
         query->CSTR__vertex_filter = CStringNew("");
@@ -1506,7 +1486,7 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     case VGX_COLLECTOR_MODE_COLLECT_ARCS:
       if( (search->collector = (vgx_BaseCollector_context_t*)iGraphCollector.NewArcCollector( self, search->ranking_context, (vgx_BaseQuery_t*)query, &counts )) == NULL ) {
         __set_error_string( &query->CSTR__error, "failed to create arc collector" );
-        THROW_ERROR( CXLIB_ERR_GENERAL, 0x673 );
+        THROW_SILENT( CXLIB_ERR_GENERAL, 0x673 );
       }
       break;
     // VERTICES
@@ -1521,9 +1501,9 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
       THROW_ERROR( CXLIB_ERR_API, 0x675 );
     }
 
-    // Effective recursion config after collector creation
-    if( __is_recursion_enabled( &query->effective_recursion_config ) ) {
-      search->recursion = query->effective_recursion_config;
+    // Effective navigation config after collector creation
+    if( __is_navigation_enabled( &query->effective_navigation_config ) ) {
+      search->navigation = query->effective_navigation_config;
     }
 
     // 3.
@@ -1565,7 +1545,7 @@ static int __configure_neighborhood_search_context( vgx_Graph_t *self, bool read
     const vgx_RecursiveCondition_t *traversing = &recursive_condition;
 
     if( (retcode = __configure_new_neighborhood_probe( self, readonly_graph, search->anchor, (vgx_BaseQuery_t*)query, 
-                                    search->pre_evaluator, search->post_evaluator, conditional, traversing, &search->recursion,
+                                    search->pre_evaluator, search->post_evaluator, conditional, traversing, &search->navigation,
                                     immediate_collector_mode, query->collect_arc_condition_set, search->collector,
                                     search->simcontext, &query->CSTR__error, 1, probe ) ) < 0 )
     {

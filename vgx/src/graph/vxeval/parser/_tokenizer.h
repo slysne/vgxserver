@@ -37,6 +37,7 @@ static __tokenizer_context *    __tokenizer__new_context( CTokenizer_t *engine, 
 static void                     __tokenizer__delete_context( __tokenizer_context **tokenizer );
 static int32_t                  __tokenizer__back_token( __tokenizer_context *tokenizer );
 static const char *             __tokenizer__next_token( __tokenizer_context *tokenizer );
+static const char *             __tokenizer__peek_next_token( __tokenizer_context *tokenizer );
 static CString_t *              __tokenizer__get_tokenized_cstring( vgx_Graph_t *graph, __tokenizer_context *tokenizer, const char quote );
 static BYTE *                   __tokenizer__get_string_bytes( __tokenizer_context *tokenizer, const char *raw, size_t sz_raw, size_t *n_bytes, char term );
 static const char *             __tokenizer__skip_ignorable( const char *p );
@@ -249,17 +250,21 @@ static int32_t __tokenizer__back_token( __tokenizer_context *tokenizer ) {
  * 
  * 
  ***********************************************************************
- */ 
-static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str ) {
+ */ /*
+static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str, bool not_flow_split ) {
   tokinfo_t nextinfo;
   const char *peek = (char*)CALLABLE( tokenizer->engine )->PeekTokenAndInfo( tokenizer->engine, tokenizer->tokmap, &nextinfo );
+  // Next token has disallowed flow SPLIT
+  if( not_flow_split && nextinfo.flw == TOKEN_FLOW_SPLIT ) {
+    return false;
+  }
   // No next token or not expected length or no match
   if( peek == NULL || nextinfo.len != strlen(str) || memcmp(str, peek, nextinfo.len) ) {
     return false;
   }
   // Match
   return true;
-}
+}*/
 
 
 
@@ -398,6 +403,42 @@ static const char * __tokenizer__next_token( __tokenizer_context *tokenizer ) {
   }
 
   return NULL;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */ 
+static const char * __tokenizer__peek_next_token( __tokenizer_context *tokenizer ) {
+  tokenizer->op.data = 0;
+  const char *token = __tokenizer__next_token( tokenizer );
+
+  if( token ) {
+    if( tokenizer->op.data ) {
+      CALLABLE(tokenizer->engine)->UngetN(tokenizer->engine, tokenizer->tokmap, (int)tokenizer->oplen);
+    }
+    else {
+      CALLABLE(tokenizer->engine)->Unget(tokenizer->engine, tokenizer->tokmap);
+    }
+    tokenizer->hasnext = true;
+  }
+
+  return token;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ * 
+ ***********************************************************************
+ */ 
+static bool __tokenizer__is_next_token( __tokenizer_context *tokenizer, const char *str ) {
+  const char *peek = __tokenizer__peek_next_token(tokenizer);
+  return peek != NULL && CharsEqualsConst(peek, str);
 }
 
 

@@ -30,10 +30,12 @@ from pyvgxtest.pyvgxtest import ListTestSets, RunTestSets
 import pyvgx
 
 from . import EuclideanVector
+from . import Navigation
 
 
 modules = [
-  EuclideanVector
+  EuclideanVector,
+  Navigation
 ]
 
 
@@ -58,4 +60,8 @@ def List():
 def Run():
     """
     """
-    RunTestSets( modules, __name__ )
+    pyvgx.system.Initialize( __name__, euclidean=True )
+    try:
+        RunTestSets( modules, __name__ )
+    finally:
+        pyvgx.system.Unload()

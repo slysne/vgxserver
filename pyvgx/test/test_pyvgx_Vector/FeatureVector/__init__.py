@@ -58,4 +58,8 @@ def List():
 def Run():
     """
     """
-    RunTestSets( modules, __name__ )
+    pyvgx.system.Initialize( __name__, euclidean=False )
+    try:
+        RunTestSets( modules, __name__ )
+    finally:
+        pyvgx.system.Unload()

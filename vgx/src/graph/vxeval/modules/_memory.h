@@ -38,6 +38,13 @@ static void __eval_memory_load_reg2( vgx_Evaluator_t *self );
 static void __eval_memory_load_reg3( vgx_Evaluator_t *self );
 static void __eval_memory_load_reg4( vgx_Evaluator_t *self );
 
+static void __eval_memory_navigation_evals( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_threshold( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_frontier( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_result( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_depth( vgx_Evaluator_t *self );
+static void __eval_memory_navigation_expansions( vgx_Evaluator_t *self );
+
 static void __eval_memory_count( vgx_Evaluator_t *self );
 static void __eval_memory_countif( vgx_Evaluator_t *self );
 static void __eval_memory_store( vgx_Evaluator_t *self );
@@ -566,13 +573,23 @@ static int64_t __contiguous( vgx_Evaluator_t *self, vgx_EvalStackItem_t **A, vgx
 
 
 /*******************************************************************//**
+ * rX
+ ***********************************************************************
+ */
+__inline static void __memory_load_regX( vgx_Evaluator_t *self, int idx ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  *px = mem->data[ mem->mask - idx ];
+}
+
+
+
+/*******************************************************************//**
  * r1
  ***********************************************************************
  */
 static void __eval_memory_load_reg1( vgx_Evaluator_t *self ) {
-  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
-  vgx_ExpressEvalMemory_t *mem = self->context.memory;
-  *px = mem->data[ mem->mask ];
+  __memory_load_regX( self, 0 );
 }
 
 
@@ -582,9 +599,7 @@ static void __eval_memory_load_reg1( vgx_Evaluator_t *self ) {
  ***********************************************************************
  */
 static void __eval_memory_load_reg2( vgx_Evaluator_t *self ) {
-  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
-  vgx_ExpressEvalMemory_t *mem = self->context.memory;
-  *px = mem->data[ mem->mask-1 ];
+  __memory_load_regX( self, 1 );
 }
 
 
@@ -594,9 +609,7 @@ static void __eval_memory_load_reg2( vgx_Evaluator_t *self ) {
  ***********************************************************************
  */
 static void __eval_memory_load_reg3( vgx_Evaluator_t *self ) {
-  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
-  vgx_ExpressEvalMemory_t *mem = self->context.memory;
-  *px = mem->data[ mem->mask-2 ];
+  __memory_load_regX( self, 2 );
 }
 
 
@@ -606,9 +619,85 @@ static void __eval_memory_load_reg3( vgx_Evaluator_t *self ) {
  ***********************************************************************
  */
 static void __eval_memory_load_reg4( vgx_Evaluator_t *self ) {
+  __memory_load_regX( self, 3 );
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_evals( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = NEXT_PITEM( self );
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
-  *px = mem->data[ mem->mask-3 ];
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.eval;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_threshold( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.contrib;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_frontier( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.frontier;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_result( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.accept;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_depth( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.depth;
+}
+
+
+
+/*******************************************************************//**
+ * 
+ ***********************************************************************
+ */
+static void __eval_memory_navigation_expansions( vgx_Evaluator_t *self ) {
+  vgx_EvalStackItem_t *px = NEXT_PITEM( self );
+  vgx_ExpressEvalMemory_t *mem = self->context.memory;
+  px->type = STACK_ITEM_TYPE_INTEGER;
+  px->integer = mem->counter.expand;
 }
 
 

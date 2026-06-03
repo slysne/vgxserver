@@ -75,36 +75,51 @@ For multi-node systems the <<service/multinode.adoc#pyvgx_vgxinstance, pyvgx.VGX
 
 === Summary of Features
 
-==== Basic Structure
-Graphs are built from two basic object types: _vertices_ (nodes) and _arcs_ (directed edges). Vertices are connected _explicitly_ via arcs or _implicitly_ via their similarity to other vertices. Explicit connections (i.e. arcs) are expressed by special vertex attributes called _adjacency vectors_, thus implementing index-free adjacency. Implicit connections (i.e. similarity) are based on special vertex attributes called _similarity vectors_ and expressed via a global similarity index.footnote:simindexfootnote[The global similarity index is currently under development and will be included in a future release. Implicit connections can be emulated by manually building arc-based indices and using vector similarity query filters.]
 
-Two vertices may be explicitly connected by a _simple arc_ (one connection) or a _multiple arc_ (many connections). A vertex may have explicit connections to any number of other vertices. Two explicitly connected vertices are _neighbors_. The set of arcs between a vertex and all its neighbors is the vertex _neighborhood_.
+==== Graph Structure
+Graphs are built from two basic object types: <<vertexobject, _vertices_>> (nodes) and _arcs_ (directed edges). Vertices are <<connect_func, connected _explicitly_ via arcs>> or _implicitly_ via their similarity (represented by a vector metric) to other vertices.
 
-The number of explicit connections a vertex has is the vertex _degree_, while _outdegree_ and _indegree_ refer to the number of outbound and inbound connections, respectively. The graph _size_ is the sum of all degrees for all vertices in the graph, i.e. the total number of explicit connections in the graph. The total number of vertices in a graph is the graph _order_.
+* _Explicit connections_ are realized internally as _adjacency vectors_ directly associating vertex pairs. Index-free adjacency allows efficient movement from node to node by following direct links. This network of vertices connected by arcs is the graph.
+* _Implicit connections_ are expressed via <<vectorobject, _similarity vectors_>>. Vertices with such vectors assigned to them become indirectly associated by a chosen vector metric such as <<_euclideandistance, Euclidean distance>> or <<_cosine, Cosine similarity>>. A proximity graph can be constructed to facilitate efficient vector search, using the explicit network to form navigable paths between implicitly connected items.
 
-Both vertices and arcs may be assigned _properties_ that can be used by graph traversal queries for filtering, sorting and display of search results. Vertices can hold any number of freely assignable key-value properties. Arcs may be assigned a _relationship_ type, _modifier_ (value type), and a _numeric value_.
+Two vertices may be <<connect_func, connected>> by a _simple arc_ (one connection) or a _multiple arc_ (many connections). A vertex may be connected to any number of other vertices.
 
+Two explicitly connected vertices are _neighbors_. The set of arcs between a vertex and all its neighbors is the vertex _neighborhood_.
+
+The total number of explicit connections a vertex has is the vertex _degree_. Outbound arcs and inbound arcs are counted as _outdegree_ and _indegree_, respectively.
+
+The graph's _size_ is the sum of all degrees for all vertices in the graph, i.e. the total number of explicit connections. The total number of vertices in a graph is the graph _order_.
+
+
+Both vertices and arcs may have _properties_. <<_setproperty_2, Vertices properties>> are freely assignable key-value pairs. xref:specification/arcSpecificationSyntax.adoc#arcelements[Arc properties] include a _relationship_ type, _modifier_ (value type), and a _numeric value_. Queries use these properties for filtering, scoring, sorting and display of search results. 
+ 
 ==== Graph Search
-Graph search can be _global_ or _local_. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex. Neighborhood queries can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.
+Graph search can be _global_ or _local_. Global queries scan the entire graph to return any matching vertices or arcs. Local queries scan the neighborhood around a selected anchor vertex.
+
+<<graph/graphQuery.adoc#graphneighborhood, Neighborhood queries>> can be nested to extend several levels beyond the immediate neighbors of the anchor. Independent filters and collection parameters can be specified for each level. Results can be sorted by any attribute or property, or according to a user-definable rank score. Traversal filters, ranking formulas, and result field selectors all use a common expression language which allows mathematical formulas of any complexity to be executed.
+
+<<graph/graphNavigationQuery.adoc#, Neighborhood navigation queries>> can be used to automatically explore the entire graph from any starting vertex. This is especially useful for traversing proximity graphs where nodes have been connected based on their mutual vector similarity. Traversal of such graphs form the basis of highly efficient vector search, and can be combined with any other filtering to implement hybrid semantic search. 
 
 ==== Implicit Connections
-A vertex becomes implicitly connected to other vertices by setting the vertex _vector_.footnote:simindexfootnote[] <<vectorobject, Vectors>> are numeric arrays or lists of weighted features.
+A vertex becomes implicitly connected to other vertices by setting the vertex _vector_. <<vectorobject, Vectors>> are numeric arrays or lists of weighted features.
 
-The implicit connection strength between two vertices with vectors is determined by their vector similarity. When configured in Euclidean Vector mode similarity is computed either as the _Euclidean distance_ or as the _Cosine similarity_ between vectors. When configured in Feature Vector mode similarity is computed as the _Cosine similarity_ or the _Jaccard index_, or a combination of the two.
+The implicit connection strength between two vertices with vectors is determined by their vector similarity. When configured in <<system_initialize_func, Euclidean Vector>> mode similarity can be computed either as the _Euclidean distance_ or the _Cosine similarity_ between vectors. When configured in <<system_initialize_func, Feature Vector>> mode similarity can be computed as the _Cosine similarity_ or the _Jaccard index_, or a combination of the two.
 
 A global similarity query will return all vertices implicitly connected to a probe vertex using a globally configured similarity threshold to determine whether a sufficiently strong connection exists. Vector similarity can also be combined with explicit connection filters in neighborhood queries.
 
+For efficient discovery of implicit connections (i.e. vector search) a proximity graph can be built and searched using neighborhood navigation queries.
+
 ==== Capacity
-All graph data is held in memory, ensuring low latency and predictable performance (soft realtime) for all operations. The system may hold any number of independent graphs of any size and order at the same time, limited only by the available memory on your machine. Graphs may be persisted from memory to disk and restored from disk to memory later.
+All graph data is held in memory, ensuring low latency and predictable performance (soft realtime) for all operations. The system may hold any number of independent graphs of any size and order at the same time, limited only by the available memory on your machine. Graphs may be <<save_func, saved>> to disk and restored later.
 
 ==== Object Expiration
-Vertices and arcs may be assigned expiration timestamps (time-to-live or TTL) for automatic deletion at a future point in time. Expiration times are independently assignable for all objects. TTL has a resolution of one second for any expiration timestamp ranging from imminent to infinity.
+Vertices and arcs may be assigned <<_setexpiration, expiration timestamps>> (time-to-live or TTL) for automatic deletion at a future point in time. Expiration times are independently assignable for all objects. TTL has a resolution of one second for any expiration timestamp ranging from imminent to infinity.
 
 ==== Concurrency
 Graphs may be accessed simultaneously by multiple threads. Safe, concurrent access is governed by various internal locking mechanisms that appear seamless at the API level. Optional timeouts may be specified for most operations. Python's global interpreter lock (GIL) is released during execution of graph operations, thus allowing parallel execution across multiple CPU-cores within the same Python process.
 
 ==== Plugins and VGX Server
-A plugin framework allows remote execution of Python functions that you define and register with the system. Plugins are invoked by sending HTTP requests to VGX Server, a fully asynchronous, multithreaded request engine running within the VGX core. This server is independent from the Python interpreter. 
+A <<service/pluginadapter.adoc#, plugin framework>> allows remote execution of Python functions that you define and <<service/pluginadapter.adoc#system_addplugin_func, register>> with the system. Plugins are invoked by sending HTTP requests to <<service/service.adoc#, VGX Server>>, a fully asynchronous, multithreaded request engine running within the VGX core. This server is independent from the Python interpreter. 
 
 === API Components
 
@@ -120,6 +135,9 @@ Create graph structure, run graph traversal queries, and manage graph lifecycle.
 +
 * <<graphobject_attributes>>
 * <<graphobject_methods>>
+** <<createvertex_func, CreateVertex()>>
+** <<connect_func, Connect()>>
+** <<graph/graphQuery.adoc#graphneighborhood, Neighborhood()>>
 
 <<vertexobject, pyvgx.Vertex Objects>>::
 Inspect and modify vertices.
@@ -162,35 +180,6 @@ The pyvgx module API provides functions for initializing the system, managing gr
 
 [[system_namespace]]
 ==== `pyvgx.*system*` Namespace
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ===== AddPlugin
@@ -252,6 +241,15 @@ ___
 
 [[system_events_resumable_func]]`pyvgx.*system.EventsResumable*()`::
 Return `True` if any loaded graph has its TTL event processor suspended, otherwise return `False`.
+
+___
+
+===== ExitRunServer
+
+[[system_exitrunserver_func]]`pyvgx.*system.ExitRunServer*()`::
+Causes <<system_runserver_func, RunServer()>> to exit.
++
+Calling this function has no effect unless RunServer() is currently blocking.
 
 ___
 
@@ -451,7 +449,7 @@ ___
 ===== RunServer
 
 [[system_runserver_func]]`pyvgx.*system.RunServer*( **[** _name_**[**, _watchdog_**[**, _interval_**[**, _logpath_ **]]]]** )`::
-Block forever until interrupted by `signal.SIGINT`.
+Block forever until interrupted by `signal.SIGINT` or by another thread calling <<system_exitrunserver_func, ExitRunServer()>>.
 +
 An optional _name_ string may be used to identify a VGX instance when accessed via the <<system_starthttp_func, HTTP Service>>.
 +
@@ -1521,6 +1519,14 @@ Increment the integer value for <<constants/arcModifierConstants.adoc#M_CNT, M_C
 
 ___
 
+==== CountDefinitions
+
+[[countdefinitions_func]]`*CountDefinitions*()`::
+Return the number of pre-defined expressions (See <<evaluator/evaluator.adoc#evaluatordefine, Define()>>.)
+
+___
+
+
 ==== CreateVertex
 
 [[createvertex_func]]`<<graph/graphVertex.adoc#graphcreatevertex, *CreateVertex*>>( _id_**[**, _type_**[**, _lifespan_**[**, properties **]]]** )`::
@@ -1757,10 +1763,17 @@ Return a list of vertex names of all vertices with explicit connection(s) *to* t
 
 ___
 
+==== IsDefined
+
+[[isdefined_func]]`*IsDefined*( _name_ )`::
+Return True if the named expression has been defined with <<evaluator/evaluator.adoc#evaluatordefine, Define( "_name_ := ..." )>>, otherwise return False.
+
+___
+
 
 ==== IsGraphLocal
 
-[[isgraphlocal_func]]`*IsGraphLocal*( _id_ )`::
+[[isgraphlocal_func]]`*IsGraphLocal*()`::
 Return True if the graph is <<graphobject_type, local only>>, otherwise False. 
 
 ___
@@ -1788,7 +1801,7 @@ ___
 
 ==== Memory
 
-[[memory_func]]`<<evaluator/evaluator.adoc#evaluatormemory, *Memory*>>( _initializer_ )`::
+[[memory_func]]`<<evaluator/evaluator.adoc#evaluatormemory, *Memory*>>( [_initializer_] )`::
 Return a new <<memoryobject, pyvgx.Memory>> object associated with this graph. See <<evaluator/evaluator.adoc#evaluatormemory, Evaluator Memory>> for usage details.
 
 ___
@@ -2533,10 +2546,10 @@ ___
 
 The <<evaluator/evaluator.adoc#evaluatormemory, pyvgx.Memory>> type represents arrays of numeric data which can be used with expression evaluators in queries.
 
-`_class_ pyvgx.*Memory*( _graph_instance_, _initializer_ )`::
-Create a memory object associated with _graph_instance_, initialized according to _initializer_. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <<AccessError_exc, AccessError>>.
+`_class_ pyvgx.*Memory*( _graph_instance_[, _initializer_] )`::
+Create a memory object associated with _graph_instance_, optionally initialized according to _initializer_. The memory object can only be used in queries against the associated graph instance, and only by the same thread which constructed the object. Attempting to use the memory object with another graph instance or from another thread will raise <<AccessError_exc, AccessError>>.
 +
-The memory object _initializer_ can be an integer specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.
+The memory object _initializer_ can be an integer (default=8) specifying the memory capacity (number of elements), or a list of numbers used to initialize the memory array. In both cases the element capacity will be a power of two, large enough to accommodate the number of elements in the initializer. The size of the memory object is therefore greater than or equal to the initializer. If an integer is specified all elements will be initialized to zero. If a list is specified all elements will be set accordingly, and if the length of the list is not a power of two any remaining elements will be set to zero. Any non-numeric elements in a list initializer will be ignored and receive a default value of zero.
 +
 Memory objects can be passed as arguments to queries, which may read or write the elements as part of executing filters and ranking formulas. The same memory object can be used multiple times with queries, making it possible to pass information from one query to the next.
 +
@@ -2545,11 +2558,17 @@ Memory objects support sequence lookup, assignment and length methods, i.e. `mem
 [[memoryobject_attributes]]
 === Memory Attributes
 
+[[memory_counters_attr]]`<<evaluator/evaluator.adoc#evaluatormemory, *counters*>>`::
+Navigation progress counters, returns tuple: (_score_evaluations_, _threshold_contributions_, _accepted_into_frontier_, _accepted_into_result_, _recursion_depth_, _node_expansions_, _node_visits_, _node_revisits_avoided_).
+
 [[memory_order_attr]]`<<evaluator/evaluator.adoc#evaluatormemory, *order*>>`::
-The memory order is the log2 of its size. The memory object size is always a power of two and will be returned by `len( memobj )`.
+The memory order (readonly) is the log2 of its size. The memory object size is always a power of two and will be returned by `len( memobj )`.
 
 [[memory_Rn_attr]]`<<evaluator/evaluator.adoc#evaluatormemoryregisters, *R__n__*>>`::
 Memory register R__n__ (read and write), where _n_ is 1, 2, 3, or 4.
+
+[[memory_order_vector]]`<<evaluator/evaluator.adoc#evaluatormemory, *vector*>>`::
+Memory probe vector (read and write). Must be a `pyvgx.Vector`. Accessible as `M.vector` in the expression language.
 
 [[memoryobject_methods]]
 
@@ -2562,13 +2581,19 @@ Return a new list object from the memory object's data. Other ways to achieve th
 
 ___
 
-==== ClearSet
+==== VSetAdd
 
-[[memory_object_clearset]]`<<evaluator/evaluator.adoc#evaluatormemory, *ClearSet*>>()`::
-Clear the contents of any <<evaluator/evaluator.adoc#evaluator_mappingsets, vset or iset>> in the memory object.
+[[memory_object_vsetadd]]`<<evaluator/evaluator.adoc#evaluatormemory, *VSetAdd*>>()`::
+Add a vertex (address) to <<evaluator/evaluator.adoc#evaluator_mappingsets, vset>> in the memory object.
 
 ___
 
+==== VSetClear
+
+[[memory_object_vsetclear]]`<<evaluator/evaluator.adoc#evaluatormemory, *VSetClear*>>()`::
+Clear the contents of any <<evaluator/evaluator.adoc#evaluator_mappingsets, vset or iset>> in the memory object.
+
+___
 
 ==== DualInt
 

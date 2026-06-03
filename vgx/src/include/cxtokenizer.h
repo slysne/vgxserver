@@ -230,6 +230,7 @@ typedef struct s_CTokenizer_vtable_t {
   const BYTE * (*GetTokenAndInfo)( const struct s_CTokenizer_t *self, tokenmap_t *tokmap, tokinfo_t *tokinfo );
   int32_t (*Rewind)( const struct s_CTokenizer_t *self, tokenmap_t *tokmap );
   int32_t (*Unget)( const struct s_CTokenizer_t *self, tokenmap_t *tokmap );
+  int32_t (*UngetN)( const struct s_CTokenizer_t *self, tokenmap_t *tokmap, int n );
 } CTokenizer_vtable_t;
 
 

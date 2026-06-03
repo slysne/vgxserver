@@ -2545,6 +2545,42 @@ graph.Neighborhood(
 )
 ----
 
+[[navigation_query_context]]
+==== Navigation Query Context
+
+These readonly values are available during execution of a <<../graph/graphNavigationQuery.adoc#, Navigation Query>>. They can be accessed in a <<../graph/graphNavigationQuery.adoc#nav_filter, navigation filter expression>>.
+
+[cols="2,1,6"]
+|===
+|Name |Type |Description
+
+|`nav.depth` [[_nav_depth]]
+|_int_
+|Query's current distance (hops) from search entry point
+
+|`nav.eval` [[_nav_eval]]
+|_int_
+|Number of evaluated nodes so far during navigation query
+
+|`nav.expand` [[_nav_expand]]
+|_int_
+|Number of frontier expansions so far during navigation query
+
+|`nav.frontier` [[_nav_frontier]]
+|_int_
+|Number of nodes with good enough scores to enter the frontier
+
+|`nav.result` [[_nav_result]]
+|_int_
+|Number of nodes with good enough scores to enter the result heap 
+
+|`nav.threshold` [[_nav_threshold]]
+|_int_
+|Number of nodes with good enough scores to contribute to frontier observation history
+
+|===
+
+
 [[evaluatorfunctions]]
 === Functions
 
@@ -2821,6 +2857,12 @@ graph.Evaluate( "hash( 'helloworld!' )" ) # -> 7982852363355633418
 |`isbytes( _x_ )` [[_isbytes]]
 |Return 1 if _x_ is an array of bytes (0-255), otherwise return 0. See <<../vertex/vertexProperty.adoc#vertex_property_type_bytes, Vertex Property Types: _bytes_>> for how to assign a property for which `isbytes()` is true.
 
+|`ispickled( _x_ )` [[_ispickled]]
+|Return 1 if _x_ is a Python-layer object which has been serialized using the pickle protocol. This object cannot be interpreted by the expression language.
+
+|`iscompressed( _x_ )` [[_iscompressed]]
+|Return 1 if _x_ is a large object which is internally compressed, such as very large string properties.
+
 |`len( _x_ )` [[_len]]
 |Return the length of object _x_. Definition of length depends on object type.
  +
@@ -2875,15 +2917,55 @@ graph.Evaluate( "len( 'hello' )" )          # -> 5
 |
 |Return the number of bytes in string _x_. If _x_ is not _string_ or _vertexid_ 0 is returned.
 
+|`contains( _s_, _p_ )` [[_contains]]
+|0 or 1
+|
+|Return 1 if string _s_ contains string _p_, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
+
+|`containsi( _s_, _p_ )` [[_containsi]]
+|0 or 1
+|
+|Return 1 if string _s_ contains string _p_ ignoring case, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
+
 |`startswith( _s_, _p_ )` [[_startswith]]
 |0 or 1
 |
-|Return 1 if string _s_ starts with string _p_, otherwise return 0. If either _a_ or _b_ is not a string, `null` is returned.
+|Return 1 if string _s_ starts with string _p_, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
 
-|`endswith( _string_, _probe_ )` [[_endswith]]
+|`startswithi( _s_, _p_ )` [[_startswithi]]
 |0 or 1
 |
-|Return 1 if string _s_ ends with string _p_, otherwise return 0. If either _a_ or _b_ is not a string, `null` is returned.
+|Return 1 if string _s_ starts with string _p_ ignoring case, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
+
+|`endswith( _s_, _p_ )` [[_endswith]]
+|0 or 1
+|
+|Return 1 if string _s_ ends with string _p_, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
+
+|`endswithi( _s_, _p_ )` [[_endswithi]]
+|0 or 1
+|
+|Return 1 if string _s_ ends with string _p_ ignoring case, otherwise return 0. If either _s_ or _p_ is not a string, `null` is returned.
+
+|`strall( _s_[, _p1_[, _p2_[, ...]]] )` [[_strall]]
+|0 or 1
+|
+|Return 1 if string _s_ contains all probe strings _p~n~_, otherwise return 0.
+
+|`striall( _s_[, _p1_[, _p2_[, ...]]] )` [[_striall]]
+|0 or 1
+|
+|Return 1 if string _s_ contains all probe strings _p~n~_ ignoring case, otherwise return 0.
+
+|`strany( _s_[, _p1_[, _p2_[, ...]]] )` [[_strany]]
+|0 or 1
+|
+|Return 1 if string _s_ contains at least one probe string _p~n~_, otherwise return 0.
+
+|`striany( _s_[, _p1_[, _p2_[, ...]]] )` [[_striany]]
+|0 or 1
+|
+|Return 1 if string _s_ contains at least one probe string _p~n~_ ignoring case, otherwise return 0.
 
 |`join( _sep_, _s~1~_, _s~2~_, ..., _s~n~_ )` [[_join]]
 |_s~1~_ _sep_ _s~2~_ _sep_ ... _sep_ _s~n~_
@@ -2895,10 +2977,30 @@ graph.Evaluate( "len( 'hello' )" )          # -> 5
 |y
 |Return a new string object copied from _str_ with all occurrences of _probe_ replaced with _repl_. All non-string arguments are implicitly cast using <<_str,`str()`>>.
 
+|`lower( _x_ )` [[_lower]]
+|Modified copy of _x_ 
+|y
+|Return a new, lower case copy of string _x_
+
+|`upper( _x_ )` [[_upper]]
+|Modified copy of _x_ 
+|y
+|Return a new, upper case copy of string _x_
+
 |`idx( _s_, _i_ )` [[_idx]]
 |Integer or real
 |
 |Return the value at index _i_ of string _s_. For normal strings this is the byte value at offset _i_. For a vertex property numeric array this is the numeric value at offset _i_.
+
+|`indexof( _s_, _p_ )` [[_indexof]]
+|Integer
+|
+|Return the position where _p_ first occurs in _s_, or -1 if _p_ not found
+
+|`indexofi( _s_, _p_ )` [[_indexofi]]
+|Integer
+|
+|Return the position where _p_ first occurs in _s_ ignoring case, or -1 if _p_ not found
 
 |`slice( _str_, _a_, _b_ )` [[_slice]]
 |Substring of _str_

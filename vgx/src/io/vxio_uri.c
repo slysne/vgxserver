@@ -659,7 +659,7 @@ static int __parse_URI_scheme( vgx_URI_t *URI, int *a, int *b, CString_t **CSTR_
 
   // scheme : [ // [ userinfo @ ] host [ : port ] ] path [ ? query ] [ # fragment ]
   // a
-  if( (*b = iStr->Find( URI->CSTR__uri, ":", *a )) < *a ) {
+  if( (*b = iStr->Find( URI->CSTR__uri, ":", *a, false )) < *a ) {
     __set_error_string( CSTR__error, "invalid URI: scheme required" );
     return -1;
   }

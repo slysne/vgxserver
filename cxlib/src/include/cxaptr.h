@@ -37,6 +37,23 @@
  ***********************************************************************
  */
 
+
+/* =====================================================================
+ * WARNING (29 May 2026):
+ *
+ * BACKGROUND:
+ * Packed pointers assume slab addresses fit within 45 VA bits.
+ * x86-64 canonical addresses made this mostly safe via sign extension,
+ * but AArch64/Linux may use non-canonical high bits (TBI/PAC/52-bit VA).
+ * 
+ * TODO:
+ * Slab arenas must therefore be mmap()'d into a constrained low VA range.
+ * 
+ * ===================================================================== 
+ */
+
+
+
 /* The number of address bits used by the target CPU */
 #define __ARCH_ADDRESS_BITS 48
 
@@ -139,6 +156,9 @@ typedef struct s_tptr_ncptr_t {
     uintptr_t ___0__2     : 3;  /* (don't touch) */
 #if defined __ARCH_MEMORY_48
     uintptr_t qwo         : 45; /* non-canonical 48-bit address's QWORD offset - must sign extend before dereference */
+                                /* WARNING: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  We have to change this to arena-based offsets */
+                                /*                                              since virtual address upper bits are not */
+                                /*                                              guaranteed to be all 0s or 1s on modern architectures */
     uintptr_t ___48__51   : 4;  /* (don't touch) */
 #elif defined __ARCH_MEMORY_52
     uintptr_t qwo         : 49; /* non-canonical 52-bit address's QWORD offset - must sign extend before dereference */
@@ -352,7 +372,20 @@ typedef union u_float_bits_t {
 } float_bits_t;
 
 
+/* !!! WARNING !!!
 
+Pointer packing makes assumptions around virtual address space
+that do not hold for all architectures. We assume the upper bits
+of the address are all 0 or 1. This assumption no longer holds
+in general, as seen on aarch64.
+
+TODO: We need to move away from storing the virtual address
+(qword offset) and instead use mmap() to define an arena,
+then store the offset within that areana.
+
+*/
+
+// TODO(arm64): packed ptrs require low/canonical VA bits; use constrained mmap() slab arenas, not arbitrary malloc() addresses.
 #define __TPTR_PACK( Ptr )                                (((intptr_t)(Ptr) >> 3) & __TPTR_PACK_MASK)
 #define __TPTR_UNPACK( Bits )                             (((intptr_t)(Bits) << (3 + __TPTR_SIGN_EXTEND_SHIFT)) >> __TPTR_SIGN_EXTEND_SHIFT)
 

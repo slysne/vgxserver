@@ -104,7 +104,7 @@ order when using `R_STR` or `R_LIST` result entry formats.
 
 |<<F_DEPTH>>
 |18
-| Recursion depth (for recursive/ANN search)
+| Navigation depth
 
 |<<F_TMC>>
 |19
@@ -306,7 +306,7 @@ Vertex vector fingerprint hamming distance the the probe vector fingerprint.
 
 `pyvgx.F_DEPTH = 524288`
 
-Vertex found at this depth when search is recursive. For normal queries this is 0.
+Vertex found at this depth (hops from starting point.) Applicable for <<../graph/graphNavigationQuery.adoc#, navigation queries>> only. For normal queries this is 0.
 
 [[F_TMC]]
 === pyvgx.F_TMC

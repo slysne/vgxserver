@@ -50,6 +50,7 @@ from . import Terminals
 from . import Search
 from . import Geo
 from . import Cull
+from . import Navigation
 
 
 modules = [
@@ -73,7 +74,8 @@ modules = [
   Terminals,
   Search,
   Geo,
-  Cull
+  Cull,
+  Navigation
 ]
 
 

@@ -71,6 +71,7 @@ static void * __cxmalloc_line__new_oversized_OPEN( cxmalloc_family_t *family, ui
 
   // 3: Allocate in terms of linechunks (page aligned)
   cxmalloc_linechunk_t *linechunk;
+  // TODO(arm64): packed ptrs require low/canonical VA bits; use constrained mmap() slab arenas, not arbitrary malloc() addresses.
   if( PALIGNED_ARRAY( linechunk, cxmalloc_linechunk_t, bytes/sizeof(cxmalloc_linechunk_t) ) != NULL ) {
     cxmalloc_linehead_t *linehead = (cxmalloc_linehead_t*) linechunk;
 

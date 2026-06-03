@@ -1,5 +1,5 @@
 [[graphquerymethods]]
-= Graph Query Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphManagement.adoc#, icon:arrow-circle-right[title="Graph Management Methods"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
+= Graph Query Methods <<graph.adoc#, icon:arrow-circle-up[title="pyvgx.Graph"]>> <<graphNavigationQuery.adoc#, icon:arrow-circle-right[title="Navigation Query"]>> <<theend, icon:chevron-circle-down[title="Bottom of page"]>>
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -425,7 +425,7 @@ Perform a graph neighborhood search around a specific vertex _id_.
 === Syntax
 [source, python]
 ----
-pyvgx.Graph.Neighborhood( id[, arc[, pre[, filter[, post[, neighbor[, vector[, collect[, result[, fields[, select[, rank[, sortby[, aggregate[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] )
+pyvgx.Graph.Neighborhood( id[, arc[, pre[, filter[, post[, neighbor[, vector[, collect[, navigation[, result[, fields[, select[, rank[, sortby[, aggregate[, memory[, offset[, hits[, timeout[, limexec ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] ] )
 ----
 
 Arguments can be supplied positionally or as keywords.
@@ -476,6 +476,12 @@ Arguments can be supplied positionally or as keywords.
 |<bool> or <<../specification/arcSpecificationSyntax.adoc#arcfilter, &#60;arc_filter&#62;>>
 |<<../constants/collectConstants.adoc#collectconstants, pyvgx.C_COLLECT>>
 |Control how neighborhood arcs are collected and returned in the result.
+
+|_navigation_
+|<bool> or <dict> +
+ See <<neighborhood_navigation>>
+|False
+|Enable navigation search mode and specify navigation behavior
 
 |_result_
 |<<../constants/resultListEntryConstants.adoc#resultlistentryconstants, &#60;result_format&#62;>>
@@ -572,13 +578,23 @@ The Neighborhood() method is a powerful graph search tool, allowing arbitrary an
 
 ==== Overview
 
-A neighborhood search starts at the specified vertex _id_ and processes the arcs incident on that vertex according to the query parameters. Arcs are matched against any filters supplied, and they may be traversed to reach the terminal vertices on the other side to continue processing there. Arc matching is a depth-first process. In order for an arc to match, it first has to match its own filter criteria and then any recursive criteria by traversal. Neighborhood queries may traverse arcs to other vertices and then continue traversal recursively from those vertices as specified by the query parameters.
+A neighborhood search starts at the specified vertex _id_ (anchor) and radiates outwards via its arcs to its immediate neighbors. If requested, the search may continue from all neighbors along _their_ arcs to reach farther into the graph. Separate conditions for vertices and arcs are specified at each level (distance) from the anchor. A simple neighborhood query only traverses the anchor's arcs to its immediate neighbors.
 
-Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Recursive queries may be configured to collect at some levels of the recursion and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.
+Filters can be used to control which arcs are traversed. Filters can apply to arcs and the neighbors pointed to by those arcs. By default traversal is greedy. Arc filters restrict traversal based on relationship types, arc values, etc. Neighbor vertex filters restrict traversal based on vertex attributes, properties, and possibly nested traversal to their neighbors, which again may have separate arc and vertex filters, and so on.
 
-Collecting an arc means to collect that arc's attributes (i.e. relationship and value) and the arc head vertex attributes and properties. The _fields_ and _select_ parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a recursive query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item's distance from the anchor vertex.
+For an arc to be traversed it must first satisfy any filter applied directly to the arc, then any filter applied to the neighbor pointed to (the terminal). If filters are nested, then the terminal's own arcs and neighbors will have to match their filters. This is a depth-first process, in the sense that for any arc to be traversed its entire chain of filters must be matched. However, the matching process is executed shallow-to-deep, such that a miss may be declared sooner rather than later. This means, for instance, that if an arc filter declares a miss on the relationship type it will not proceed to the neighbor vertex to evaluate its filters. But it also means an arc cannot be declared a match until all cascading filters have been satisfied.
 
-Result lists can be order by any attribute or vertex property, or according to user-defined ranking formulas.
+Arc filters are specified using the <<../specification/arcSpecificationSyntax.adoc#arcfilter, _arc_>> parameter. Neighbor vertex filters are specified using the <<../vertex/vertexFilter.adoc#vertexfilter, _neighbor_>> parameter. The latter has a rich set of constraints for matching and controlling nested traversal.
+
+Navigation search is enabled with the <<.., _navigation_>> parameter. This special traversal mode performs automatic discovery of the anchor's extended neighborhood, and can potentially be configured to explore the entire graph via a few simple controls. This mode is primarily used for vector search, where an underlying proximity graph connects mutually similar vertices to form a traversable landscape. Such a network of vector-endowed vertices allows the search to discover paths to graph regions containing items most closely resembling a probe condition (vector.)
+
+Once an arc has been declared a match it may be collected into the result set according to the collection rules at the neighborhood level at which the arc is being evaluated. Normally collection is controlled by the _collect_ parameter, which by default is `True` (pyvgx.C_COLLECT) at the anchor's level, and `False` (pyvgx.C_NONE) at nested levels. Queries with nested conditions may be configured to collect at some levels (distance from anchor) and not at others. The levels that do not require collection act as hit/miss filters only. Beyond the last level that requires collection filters will only execute until a hit is declared. For levels that require collection all arcs are visited (and possibly traversed) since all arcs are candidates for collection at this level.
+
+Collecting an arc means to collect that arc's attributes (i.e. relationship and value) and the terminal's attributes and properties. The _fields_ and _select_ parameters control which elements are gathered into the result list. If collection occurs at more than one level (in a nested query) the collected items are entered into the same flat output list. It is possible to include a result field indicating the item's distance from the anchor vertex.
+
+The _result_ parameter controls the data type returned by the neighborhood query. The outer container for collected items is always a list. Items can be formatted as strings, tuples, dicts, or numbers. If meta information is requested (with pyvgx.R_COUNTS or pyvgx.R_TIMING) the item container list is wrapped in a dict along with the requested metas.
+
+Result lists can be ordered by any attribute or vertex property, or according to user-defined ranking formulas.
 
 A _timeout_ can be specified for neighborhood queries. It represents an upper limit for how long the query is allowed to run before terminating the query and raising an exception.
 
@@ -586,10 +602,127 @@ When _limexec_ is False (the default) the timeout deadline is considered only wh
 
 In contrast, when _limexec_ is True the timeout deadline is continually monitored, terminating the query after the timeout deadline has been reached even if progress is being made without blocking. A timeout in this case raises `pyvgx.SearchError`.
 
+[[neighborhood_basic]]
+==== Basic Neighborhood Query
+
+Simple neighborhood queries start at an anchor vertex and returns the anchor's neighbors with optional filters applied and optional fields collected.
+
+.Collect the names of all neighbors of anchor vertex
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name  # Start search here
+)
+----
+
+.Restrict search by arc's relationship type
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    arc = ("likes", D_OUT) # Require specific relationship
+)
+----
+
+.Further restrict search by terminal condition
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    arc = ("likes", D_OUT),  # Require specific relationship
+    neighbor = {"id": "A*"}  # and some neighbor restriction
+)
+----
+
+.Control what fields are returned and their format
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    arc = ("likes", D_OUT),
+    neighbor = {
+        'id': "A*"
+    },
+    fields = F_VAL|F_ID,  # Return arc value and terminal id
+    result = R_LIST       # as tuples
+)
+----
+
+[[neighborhood_nested]]
+==== Nested Neighborhood Query
+
+Nested neighborhood queries restrict their matches based on conditions reaching deeper into the graph. Nesting up to the 15th extended neighborhood is supported. Collection may be configured to occur at any level.
+
+.Return names of anchor's terminals which are themselves connected to vertices meeting a certain condition
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    neighbor = {  # terminal must be 
+        'traverse': { # connected to another
+            'neighbor': { # neighbor satisfying
+                'id': "B*" # a specific condition
+            }
+        }
+    }
+)
+----
+
+.Further restrict the returned items to those who like someone who knows someone who visited some country
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    arc = ("likes", D_OUT), # Restrict immediate neighborhood by relationship type
+    neighbor = {
+        'traverse': {
+            'arc': ("knows", D_OUT), # Restrict next neighborhood by another relationship type
+            'neighbor': {
+                'id': "B*",
+                'adjacent' : { # 3rd extended neighborhood
+                    'arc': ("visited", D_OUT), # must have visited
+                    'neighbor': {
+                        'type': "country", # a country of
+                        'id': "Elbonia" # this specific name
+                    }
+                }
+            }
+        }
+    }
+)
+----
+
+.Perform item collection at another level of nesting
+[source, python]
+----
+g.Neighborhood(
+    id = anchor_name,
+    collect = C_NONE, # Don't collect immediate neighbors
+    arc = ("likes", D_OUT),
+    neighbor = {
+        'traverse': {
+            'arc': ("knows", D_OUT),
+            'neighbor': {
+                'id': "B*",
+                'collect': C_COLLECT, # Collect these neighbors
+                'adjacent' : {
+                    'arc': ("visited", D_OUT),
+                    'neighbor': {
+                        'type': "country",
+                        'id': "Elbonia"
+                    }
+                }
+            }
+        }
+    }
+)
+----
+
+
 [[neighborhood_aggregate]]
 ==== Aggregation
 
-It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an _aggregated arc_ with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a recursive traversal scenario, so long as their heads terminate at the same vertex.
+It is possible to perform value aggregation of collected arcs, rather than returning individual arcs. Arcs matching the arc filter criteria and sharing the same head vertex (i.e. have the same terminal) are collapsed into an _aggregated arc_ with a value representing some aggregation of the individual arc values. Arcs will be aggregated even if they are collected from different neighborhoods in a nested traversal scenario, so long as their heads terminate at the same vertex.
 
 To enable aggregation use the _aggregate_ parameter:
 
@@ -662,6 +795,25 @@ Aggregated arc values lose the modifier types of their collected source arcs. In
 |M_SIM, M_DIST, M_FLT, M_ACC
 
 |===
+
+[[neighborhood_navigation]]
+==== Navigation
+
+Navigation search is a powerful feature for automatically exploring a graph to collect top matching items ranked by some scoring formula. A common use case is approximate nearest neighbor (ANN) search. Given a sufficiently connected proximity graph the built-in navigation algorithm can traverse its way towards the best matches using only a probe vector as search condition.
+
+.Approximate nearest neighbors (ANN) search 
+[source, python]
+----
+g.Neighborhood(
+    id = start_node,
+    hits = 10,
+    navigation = {
+        'vector': probe_vector
+    }
+)
+----
+
+See separate <<graphNavigationQuery.adoc#, Neighborhood Navigation Query>> section for more details.
 
 [[graphopenneighbor]]
 == pyvgx.Graph.OpenNeighbor()
@@ -1563,7 +1715,7 @@ ___
 //icon:arrow-circle-up[size=2x, link=graph.adoc#, title="pyvgx Graph"]
 <<graph.adoc#, icon:arrow-circle-up[size=2x, title="pyvgx Graph"]>>
 //icon:arrow-circle-right[size=2x, link=graphManagement.adoc#, title="Graph Management Methods"]
-<<graphManagement.adoc#, icon:arrow-circle-right[size=2x, title="Graph Management Methods"]>>
+<<graphNavigationQuery.adoc#, icon:arrow-circle-right[size=2x, title="Navigation Query"]>>
 // cspell:ignore backtotop
 include::../common/_backtotop.adoc[]
 --

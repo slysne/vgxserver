@@ -752,7 +752,7 @@ __inline static int __cstring_contains( const CString_t *CSTR__str, vgx_EvalStac
   }
   // string
   else if( item->type == STACK_ITEM_TYPE_CSTRING ) {
-    return CALLABLE( CSTR__str )->Contains( CSTR__str, CStringValue( item->CSTR__str ) );
+    return CALLABLE( CSTR__str )->Contains( CSTR__str, CStringValue( item->CSTR__str ), false );
   }
   return 0;
 }
@@ -795,7 +795,7 @@ __inline static int __vertexid_has_substring( const vgx_VertexIdentifier_t *vid,
     if( vid ) {
       // Long vertex ID
       if( vid->CSTR__idstr ) {
-        return CALLABLE( vid->CSTR__idstr )->Contains( vid->CSTR__idstr, probe );
+        return CALLABLE( vid->CSTR__idstr )->Contains( vid->CSTR__idstr, probe, false );
       }
       // Short vertex ID
       else {

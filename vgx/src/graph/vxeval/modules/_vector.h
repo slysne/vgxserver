@@ -172,17 +172,17 @@ ham(-1.0) -> 64
 */
 
 
-__inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
+__inline static void __modulate_beam_width( vgx_BaseCollector_context_t *collector, vgx_ExpressEvalMemory_t *mem, float score ) {
 
 #define VISIT_WINDOW_CHECKPOINT 100               //
 #define VISIT_WINDOW_UNIMPROVED_MAX 88            // 88% of checkpoint window
 #define VISIT_WINDOW_UNIMPROVED_MIN 64            // 64% of checkpoint window
-#define DYNAMIC_TAPER_MAX_LOOSEN_FACTOR 1.05      //
-#define DYNAMIC_TAPER_MIN_LOOSEN_FACTOR 1.02      //
-#define DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR 0.98     //
-#define DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR 0.95     //
-#define DYNAMIC_TAPER_UPPER_BOUND 3.0             //
-#define DYNAMIC_TAPER_LOWER_BOUND (1.0/3)         //
+#define ADAPTIVE_WIDTH_MAX_LOOSEN_FACTOR 1.05     //
+#define ADAPTIVE_WIDTH_MIN_LOOSEN_FACTOR 1.02     //
+#define ADAPTIVE_WIDTH_MIN_TIGHTEN_FACTOR 0.98    //
+#define ADAPTIVE_WIDTH_MAX_TIGHTEN_FACTOR 0.95    //
+#define ADAPTIVE_WIDTH_UPPER_BOUND 3.0            //
+#define ADAPTIVE_WIDTH_LOWER_BOUND (1.0/3)        //
 #define HIGH_SCORE_GAIN 0.040f                    //
 #define LOW_SCORE_GAIN 0.020f                     //
 
@@ -208,22 +208,22 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
   // -- LOOSEN --
   // We're decidedly not improving the running top score, loosen taper
   if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MAX ) {
-      factor = DYNAMIC_TAPER_MAX_LOOSEN_FACTOR;
+      factor = ADAPTIVE_WIDTH_MAX_LOOSEN_FACTOR;
   }
   // We're mostly not improving the top score, loosen taper a bit
   else if( mem->dynamic_taper.window_top_1_unimproved > VISIT_WINDOW_UNIMPROVED_MIN ) {
-    factor = DYNAMIC_TAPER_MIN_LOOSEN_FACTOR;
+    factor = ADAPTIVE_WIDTH_MIN_LOOSEN_FACTOR;
   }
   // -- TIGHTEN --
   // We are improving at a decent rate, tighten taper a bit
   else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + LOW_SCORE_GAIN ) {
-    factor = DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR;
-    factor = clamp_value( factor, DYNAMIC_TAPER_MIN_TIGHTEN_FACTOR, 1.0f );
+    factor = ADAPTIVE_WIDTH_MIN_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, ADAPTIVE_WIDTH_MIN_TIGHTEN_FACTOR, 1.0f );
   }
   // We are improving at a very good rate, tighten taper
   else if( mem->dynamic_taper.top_1_best > mem->dynamic_taper.previous_1_window_best + HIGH_SCORE_GAIN ) {
-    factor = DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR;
-    factor = clamp_value( factor, DYNAMIC_TAPER_MAX_TIGHTEN_FACTOR, 1.0f );
+    factor = ADAPTIVE_WIDTH_MAX_TIGHTEN_FACTOR;
+    factor = clamp_value( factor, ADAPTIVE_WIDTH_MAX_TIGHTEN_FACTOR, 1.0f );
   }
   
   // -- STEADY --
@@ -236,7 +236,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
 
   // New taper
   double taper = factor * collector->dynamic_taper;
-  collector->dynamic_taper = clamp_value( taper, DYNAMIC_TAPER_LOWER_BOUND, DYNAMIC_TAPER_UPPER_BOUND );
+  collector->dynamic_taper = clamp_value( taper, ADAPTIVE_WIDTH_LOWER_BOUND, ADAPTIVE_WIDTH_UPPER_BOUND );
 
   // Update score at checkpoint
   mem->dynamic_taper.previous_1_window_best = mem->dynamic_taper.top_1_best;
@@ -255,7 +255,7 @@ __inline static void __dynamic_taper( vgx_BaseCollector_context_t *collector, vg
  *
  * 
  ***********************************************************************
- */
+ *//*
 static BYTE cos_to_hamdist_1_5_sigma[] = {
   38, 38, 38, 37, 37, 37, 37, 37, 37, 36, 36, 36, 36, 36, 36, 35,
   35, 35, 35, 35, 35, 34, 34, 34, 34, 34, 34, 33, 33, 33, 33, 33,
@@ -265,7 +265,7 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
   23, 23, 23, 23, 23, 22, 22, 22, 22, 21, 21, 21, 21, 20, 20, 20,
   20, 19, 19, 19, 18, 18, 18, 17, 17, 17, 16, 16, 16, 15, 15, 15,
   14, 14, 13, 13, 13, 12, 12, 11, 10, 10,  9,  8,  7,  6,  5,  0
-};
+};*/
 
 
 
@@ -273,62 +273,76 @@ static BYTE cos_to_hamdist_1_5_sigma[] = {
  * anncollect( )
  ***********************************************************************
  */
-static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vector_t *target ) {
-  if( probe == NULL || target == NULL ) {
-    return 0.0f;
-  }
+static int __fast_navcollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe, const vgx_Vertex_t *vertex, const vgx_Vector_t *target, float *rscore ) {
 
   vgx_ExpressEvalMemory_t *mem = self->context.memory;
 
   // Eval counter
   mem->counter.eval++;
 
-  // Extract probe vector bytes
-  BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
-  int32_t lenA = probe->metas.vlen;
-
-  // Extract target vector bytes
-  int32_t lenB = target->metas.vlen;
-  BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
-
-  // Safeguard
-  int32_t len = minimum_value( lenA, lenB );
-
-  /*
-  // Hamming distance filter enabled when > 1.0
-  if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
-    FP_t lshA = mem->probe->fp;
-    FP_t lshB = target->fp;
-    double min_cos = mem->threshold - 1.0;
-    int idx = (int)(min_cos * 127) & 0x7F;
-    int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
-    // LSH Hamming distance filter progressively stricter with higher thresholds
-    if( hamdist64( lshA, lshB ) > max_ham ) {
-      STACK_RETURN_REAL( self, 0.0 );
-    }
-  }
-  */  
-
-  // -------------------
-  // COMPUTE COSINE(A,B)
-  // -------------------
-  // Faster when both vectors are cosine_mode
-  double cosine;
-  if( mem->probe->metas.flags.cos && target->metas.flags.cos ) {
-    double invnormprod = mem->probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
-    cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
-  }
-  else {
-    cosine = vxeval_bytearray_cosine(A, B, len);
-  }
-
   vgx_BaseCollector_context_t *base = self->context.collector;
+  vgx_Evaluator_t *RF = base->navigation_filter;
 
-  float score = (float)cosine + 1.0f; // [0.0 - 2.0]
+  float score = 1.0f;
 
-  // Adaptive search enabled
-  if( base->adaptive_recursion ) {
-    __dynamic_taper( base, mem, score );
+  if( probe && target ) {
+    // Extract probe vector bytes
+    BYTE *A = (BYTE*)CALLABLE( probe )->Elements( probe );
+    int32_t lenA = probe->metas.vlen;
+
+    // Extract target vector bytes
+    int32_t lenB = target->metas.vlen;
+    BYTE *B = (BYTE*)CALLABLE( target )->Elements( target );
+
+    // Safeguard
+    int32_t len = minimum_value( lenA, lenB );
+
+    /*
+    // Hamming distance filter enabled when > 1.0
+    if( hamfilter_above_score > 1.0 && mem->threshold > hamfilter_above_score && mem->threshold <= 2.0 ) {
+      FP_t lshA = probe->fp;
+      FP_t lshB = target->fp;
+      double min_cos = mem->threshold - 1.0;
+      int idx = (int)(min_cos * 127) & 0x7F;
+      int max_ham = cos_to_hamdist_1_5_sigma[ idx ];
+      // LSH Hamming distance filter progressively stricter with higher thresholds
+      if( hamdist64( lshA, lshB ) > max_ham ) {
+        STACK_RETURN_REAL( self, 0.0 );
+      }
+    }
+    */  
+
+    // -------------------
+    // COMPUTE COSINE(A,B)
+    // -------------------
+    // Faster when both vectors are cosine_mode
+    double cosine;
+    if( probe->metas.flags.cos && target->metas.flags.cos ) {
+      double invnormprod = probe->metas.scalar.invnorm * target->metas.scalar.invnorm;
+      cosine = vxeval_bytearray_dp_cosine( A, B, len, invnormprod );
+    }
+    else {
+      cosine = vxeval_bytearray_cosine(A, B, len);
+    }
+    score += (float)cosine; // range is [0.0 - 2.0], so 1.0 represents "zero" middle ground
+  }
+  else if( RF ) {
+    // Execute custom navigation filter
+    vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+    // Filter not satisfied
+    if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+      self->context.larc->flag.navigation_skip_heap_collect = true;
+    }
+    // Filter returned a positive real value, interpret this as item's score
+    else if( result->type == STACK_ITEM_TYPE_REAL ) {
+      RF->context.rankscore = score = clamp_value( (float)result->real, 0.0f, 2.0f );
+    }
+    RF = NULL; // forget the filter so we don't execute it again below
+  }
+
+  // Adaptive beam width enabled
+  if( base->adaptive_beam ) {
+    __modulate_beam_width( base, mem, score );
   }
 
   float threshold = _vxquery_collector__get_current_threshold( base ) + base->epsilon;
@@ -337,18 +351,21 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   // Ignore everything below the running threshold
   if( score < threshold ) {
     // Inject running threshold to keep delay line ticking
-    _vxquery_collector__push_shadow_trail( &base->shadow_trail, threshold );
-    return 0.0f;
+    _vxquery_collector__push_frontier_observation( &base->observation_history, threshold );
+    *rscore = score;
+    return 0;
   }
   
   // Score is good enough to help refine the baseline threshold
   mem->counter.contrib++;
   
   // Extract worst score on the heaps
-  float top_k_th = fmaxf( _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap ), threshold );
-  float beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_recursion_score( base->beam_heap ), threshold ) : threshold;
+  float top_k_th = fmaxf( _vxquery_collector__worst_heap_navigation_score( base->container.sequence.heap ), threshold );
+  float beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_navigation_score( base->beam_heap ), threshold ) : threshold;
   float collectable_threshold = fminf( top_k_th, beam_j_th ); // <- worst of either beam or heap
   
+  int collected = 0;
+
   // Score good enough for at least one of the heaps
   if( score > collectable_threshold ) {
     // Frontier contribution 
@@ -359,6 +376,18 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
     // Result contribution
     if( score > top_k_th ) {
       mem->counter.accept++;
+      if( RF ) {
+        RF->context.rankscore = score;
+        // Execute custom navigation filter
+        vgx_EvalStackItem_t *result = CALLABLE( RF )->EvalVertex( RF, vertex );
+        if( result == NULL || !iEvaluator.IsPositive( result ) ) {
+          self->context.larc->flag.navigation_skip_heap_collect = true;
+        }
+        // Special case: navigation filter returned a float, interpret as score override
+        if( result->type == STACK_ITEM_TYPE_REAL ) {
+          RF->context.rankscore = score = clamp_value( (float)result->real, 0.0f, 2.0f );
+        }
+      }
     }
 
     // Collect
@@ -368,11 +397,14 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
       .type = STACK_ITEM_TYPE_REAL,
       .real = score,
     };
-    __collect( self, &score_arc );
+    collected = __collect( self, &score_arc );
+    
+    // Clear any temporary flags
+    self->context.larc->flag.bits = 0;
 
     // Refresh
-    top_k_th = fmaxf( _vxquery_collector__worst_heap_recursion_score( base->container.sequence.heap ), threshold );
-    beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_recursion_score( base->beam_heap ), threshold ) : threshold;
+    top_k_th = fmaxf( _vxquery_collector__worst_heap_navigation_score( base->container.sequence.heap ), threshold );
+    beam_j_th = base->beam_heap != NULL ? fmaxf( _vxquery_collector__worst_heap_navigation_score( base->beam_heap ), threshold ) : threshold;
     collectable_threshold = fminf( top_k_th, beam_j_th );
 
     // Update current beam's best score
@@ -382,7 +414,6 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   // Inject value into the delay line derived from current score and the current state of search progress
   float top_1 = fmaxf( mem->dynamic_taper.top_1_best, threshold );
   float beam_1 = fmaxf( mem->dynamic_taper.beam_1_best, threshold );
-  //float short_threshold = _vxquery_collector__get_current_short_threshold( base ); // + base->epsilon;
   float heap_signal = (top_k_th + beam_j_th) / 2; 
   
   // good beam quality -> 0.0 (ignore negative)
@@ -393,9 +424,10 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
   float beta = clamp_value( beam_deficit, 0.6f, 0.9f );
   injection = beta * score + (1.0f - beta) * heap_signal;
 
-  _vxquery_collector__push_shadow_trail( &base->shadow_trail, injection );
+  _vxquery_collector__push_frontier_observation( &base->observation_history, injection );
   
-  return score;
+  *rscore = score;
+  return collected;
   
 }
 
@@ -407,11 +439,12 @@ static float __fast_anncollect( vgx_Evaluator_t *self, const vgx_Vector_t *probe
  */
 static void __eval_unary_anncollect( vgx_Evaluator_t *self ) {
   vgx_EvalStackItem_t *px = GET_PITEM( self );
-  double score = 0.0;
+  float score = 0.0f;
   if( px->type == STACK_ITEM_TYPE_VECTOR ) {
     const vgx_Vector_t *probe = px->vector;
-    const vgx_Vector_t *target = self->context.HEAD->vector;
-    score = __fast_anncollect( self, probe, target );
+    const vgx_Vertex_t *vertex = self->context.HEAD;
+    const vgx_Vector_t *target = vertex->vector;
+    __fast_navcollect( self, probe, vertex, target, &score );
   }
   SET_REAL_PITEM_VALUE( px, score );
 }

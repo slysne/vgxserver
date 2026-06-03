@@ -3883,9 +3883,11 @@ DLL_HIDDEN PyObject * __pyvgx_PluginResponse_ToJSON( PyVGX_PluginResponse *py_pl
     // entries
     PyDict_SetItem( py_obj, g_py_key_entries, py_plugres->py_entries );
     // to json
-    py_json = iPyVGXCodec.NewJsonPyStringFromPyObject( py_obj );
+    py_json = iPyVGXCodec.NewJsonFromPyObject( py_obj );
     Py_DECREF( py_obj );
   }
+  // PyBytes or PyUnicode
+  // Caller has to handle both
   return py_json;
 }
 
