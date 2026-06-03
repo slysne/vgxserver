@@ -151,7 +151,15 @@ Supported value types and ranges are summarized below. Note that the primitive n
 
 |===
 
-TIP: Use a serialization protocol such as JSON or Python's own Pickle module to store complex objects.
+[TIP]
+====
+Use a serialization protocol such as JSON or Python's own Pickle module to store complex objects.
+For large JSON payloads the `orjson` module is recommended for better performance:
+[source, bash]
+----
+pip install orjson
+----
+====
 
 WARNING: Data types with special restrictions (such as numeric lists or integer-to-float maps) will only be stored as expected when those restrictions are met. In the case of numeric lists, non-conforming values are silently stored as serialized Python objects rather than native arrays. Dictionary properties require integer keys and numeric values, and will raise an exception if other types are used.
 

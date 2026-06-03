@@ -29,6 +29,16 @@ This package includes native C extensions and has the following platform require
 Ensure your environment meets these requirements before installing.
 ====
 
+[TIP]
+====
+Install `orjson` for better performance with JSON-heavy payloads in <<pyvgx/service/service.adoc#, VGX Server>>:
+
+[source, bash]
+----
+pip install orjson
+----
+====
+
 === Build Instructions
 
 You can build the package yourself if needed: <<pyvgx/build.adoc#, Instructions here>>.
