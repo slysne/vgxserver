@@ -41,7 +41,7 @@ This feature combines most of VGX’s internal capabilities (graph traversal, ve
 
 [Navigation Query Documentation](https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html)
 
-### Performance
+### ANN Performance
 
 These numbers represent single-threaded query performance as measured on Apple M4 Max, using 1.4 million 128-D vectors, Cosine similarity:
 
@@ -160,7 +160,7 @@ g.Neighborhood(
 ) # -> ['Charlie']
 ```
 
-### Example 2: Build a vector graph and find most similar match
+### Example 2: Build a simple vector graph and find most similar match
 
 ```python
 from pyvgx import *
@@ -187,6 +187,8 @@ g.Neighborhood(
     rank="cosine(vector, next.vector)"
 ) # -> ['{"id": "v7357", "rankscore": 0.97...}', ...]
 ```
+
+**Note**: For production-grade vector search, use the full `navigation={...}` API instead. See [Navigation Query Documentation](https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html) for much better control and performance.
 
 ## VGX Demo System
 
