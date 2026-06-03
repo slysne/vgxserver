@@ -13,6 +13,17 @@ include::../common/_copyable.adoc[]
 
 Python plugins can be installed and invoked via HTTP requests. A plugin is a regular Python function registered via <<system_addplugin_func, pyvgx.system.AddPlugin()>>. A unique service URI is automatically created for the registered function. It is executed by sending a HTTP request to that URI.
 
+[TIP]
+====
+Install `orjson` for better performance with JSON-heavy payloads
+
+[source, bash]
+----
+pip install orjson
+----
+====
+
+
 == Hello World
 It is easy to create a new service as illustrated by this minimal implementation example.
 
@@ -66,6 +77,13 @@ A request is generally processed as shown below. When a dispatcher is used both 
 
 [[pre_post_engine]]
 image::pre_post_engine.png[pre_post_engine, title="Plugin Functions"]
+
+IMPORTANT: Any engine or dispatcher (other than the <<response_attr_toplevel, topmost dispatcher>>) must return a <<pyvgx_pluginresponse, PluginResponse>> object. Partition merge requires PluginResponse objects to function, since merging arbitrary object types is generally undefined.
+
+TIP: A *pre*-processor may terminate a request early (e.g. a cache-hit) by returning a PluginResponse object.
+
+TIP: A *post*-processor may re-submit a request by returning a (special) PluginRequest object obtained from <<pluginresponse_resubmittable, PluginResponse.Resubmittable()>>.
+
 
 [[plugin_function_arguments]]
 === Plugin Function Arguments
@@ -849,9 +867,13 @@ Use this to determine the object type to <<post_return_value, return in a post-p
 [[pluginresponse_json_serializer]]
 === PluginResponse Serialized as JSON
 
-A topmost dispatcher or engine returning a PluginResponse object will automatically render the object as JSON by default.
+Transmission of PluginResponse objects between back-end engines and dispatchers is using an internal, binary protocol. However, a topmost dispatcher or engine returning a PluginResponse object automatically renders the response as JSON. A top dispatcher plugin may choose to return an object of a different type, such as a simple dict or list, or any other Python object.
 
+TIP: Plugin code can check <<response_attr_toplevel, response.toplevel>> to determine if it is the topmost dispatcher for a request, and then return an object of any type if needed.
 
+IMPORTANT: Responses returned from any engine or dispatcher other than the topmost dispatcher *must* be PluginResponse objects, since dispatchers cannot merge or processes arbitrary Python objects.
+
+.PluginResponse as JSON
 [source, JSON]
 ----
 {
@@ -861,25 +883,12 @@ A topmost dispatcher or engine returning a PluginResponse object will automatica
     "levelparts": 1,
     "partials": 1,
     "hitcount": 3,
-    "aggregator": [
-      0,
-      0,
-      0,
-      0
-    ],
+    "aggregator": [ 0, 0, 0.0, 0.0 ],
+    "meta": {"some_value": 123},
     "entries": [
-      [
-        1,
-        "First"
-      ],
-      [
-        2,
-        "Second"
-      ],
-      [
-        3,
-        "Third"
-      ]
+      [ 1, "First" ],
+      [ 2, "Second" ],
+      [ 3, "Third" ]
     ]
   },
   "level": 0,
