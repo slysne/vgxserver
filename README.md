@@ -97,6 +97,14 @@ call vgxenv\Scripts\activate.bat
 pip install pyvgx
 ```
 
+**Optional: orjson**
+For improved JSON serialization performance, install the optional dependency
+[`orjson`](https://github.com/ijl/orjson):
+
+```bash
+pip install orjson
+```
+
 ## Hello VGX
 
 Now let's define and expose a service using VGX:
