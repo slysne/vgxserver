@@ -6,6 +6,8 @@
 :linkattrs:
 :source-highlighter: highlightjs
 
+image:https://img.shields.io/badge/View%20on-GitHub-181717?logo=github&logoColor=white[View on GitHub, link=https://github.com/slysne/vgxserver]
+
 Distributed engine for plugin-based graph and vector search
 
 *Vector Graph indeX* is a high-performance, distributed engine for building custom search and recommendation services using Python plugins. Developers can implement service logic using the *PyVGX* C-extensions, expose it as HTTP endpoints, and automatically scale across a sharded, replicated back-end. 
