@@ -39,7 +39,7 @@ graph.Neighborhood(
 
 This feature combines most of VGX’s internal capabilities (graph traversal, vector math, memory management, evaluator engine, adaptive algorithms) into one clear, high-value use case: low-latency semantic search, GraphRAG, recommendations, and entity resolution.
 
-[Navigation Query Documentation](https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html)
+[Navigation Query Documentation](https://slysne.github.io/pyvgx/graph/graphNavigationQuery.html)
 
 ### ANN Performance
 
@@ -197,7 +197,7 @@ g.Neighborhood(
 ) # -> ['{"id": "v7357", "rankscore": 0.97...}', ...]
 ```
 
-**Note**: For production-grade vector search, use the full `navigation={...}` API instead. See [Navigation Query Documentation](https://slysne.github.io/vgxserver/pyvgx/graph/graphNavigationQuery.html) for much better control and performance.
+**Note**: For production-grade vector search, use the full `navigation={...}` API instead. See [Navigation Query Documentation](https://slysne.github.io/pyvgx/graph/graphNavigationQuery.html) for much better control and performance.
 
 ## VGX Demo System
 
@@ -233,17 +233,17 @@ vgxdemoservice stop
 
 Comprehensive API documentation is available. 
 
-- [VGX Documentation Home](https://slysne.github.io/vgxserver)
+- [VGX Documentation Home](https://slysne.github.io)
 
 A few quick links:
 
-- [PyVGX Tutorial](https://slysne.github.io/vgxserver/pyvgx/tutorial.html)
-- [PyVGX Reference](https://slysne.github.io/vgxserver/pyvgx/reference.html)
-- [PyVGX Compact Reference](https://slysne.github.io/vgxserver/pyvgx/shortref.html)
-- [VGX Expression Language](https://slysne.github.io/vgxserver/pyvgx/evaluator/evaluator.html)
-- [VGX Server](https://slysne.github.io/vgxserver/pyvgx/service/service.html)
+- [PyVGX Tutorial](https://slysne.github.io/pyvgx/tutorial.html)
+- [PyVGX Reference](https://slysne.github.io/pyvgx/reference.html)
+- [PyVGX Compact Reference](https://slysne.github.io/pyvgx/shortref.html)
+- [VGX Expression Language](https://slysne.github.io/pyvgx/evaluator/evaluator.html)
+- [VGX Server](https://slysne.github.io/pyvgx/service/service.html)
 
-Recommendation: Read the [Tutorial](https://slysne.github.io/vgxserver/pyvgx/tutorial.html) first. It covers some of the graph basics without going too deep.
+Recommendation: Read the [Tutorial](https://slysne.github.io/pyvgx/tutorial.html) first. It covers some of the graph basics without going too deep.
 
 ## Building from Source
 
