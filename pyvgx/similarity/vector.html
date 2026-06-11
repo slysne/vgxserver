@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="sect2">
 <h3 id="featurevector">1.1. Feature Vector</h3>
 <div class="paragraph">
-<p>Feature vectors are lists of <code>(&lt;dimension&gt;, &lt;weight&gt;)</code> key-value pairs, where <code>&lt;dimension&gt;</code> is a string and <code>&lt;weight&gt;</code> is a number. The <a href="limits.html#featurevector">maximum length</a> of <code>&lt;dimension&gt;</code> is <a href="limits.html#limits">27</a> bytes. The range of <code>&lt;weight&gt;</code> is [0.0078125, 1.875], internally quantized into 64 discrete buckets. The maximum number of vector features is <a href="limits.html#limits">48</a>.</p>
+<p>Feature vectors are lists of <code>(&lt;dimension&gt;, &lt;weight&gt;)</code> key-value pairs, where <code>&lt;dimension&gt;</code> is a string and <code>&lt;weight&gt;</code> is a number. The <a href="../limits.html#featurevector">maximum length</a> of <code>&lt;dimension&gt;</code> is <a href="../limits.html#limits">27</a> bytes. The range of <code>&lt;weight&gt;</code> is [0.0078125, 1.875], internally quantized into 64 discrete buckets. The maximum number of vector features is <a href="../limits.html#limits">48</a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <p>Euclidean vectors are lists of numeric vector components \(A = \lbrace c_1, c_2, ..., c_n \rbrace\) where  <em>n</em> is a multiple of 32 or 64. The required multiple for your system can be found by inspecting the value returned by <a href="../reference.html#avxbuild_func">pyvgx.avxbuild()</a>. If 512 is returned the multiple is 64, otherwise 32.</p>
 </div>
 <div class="paragraph">
-<p>The maximum number of vector components is <a href="limits.html#limits">65472</a>.</p>
+<p>The maximum number of vector components is <a href="../limits.html#limits">65472</a>.</p>
 </div>
 <div class="paragraph">
 <p>Euclidean vectors are internally normalized by a scaling factor. This is done because the internal representation uses 8-bit integers to store each component and must ensure maximum use of the 8-bit resolution. The scaling factor \(a\) is determined from <em>|c|<sub>max</sub></em>, the component with the largest absolute value:</p>
@@ -1014,7 +1014,7 @@ For Euclidean vectors the magnitude of the original vector is not preserved, sin
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2025-10-13 15:16:16 -0400
+Last updated 2026-06-11 09:27:34 -0400
 </div>
 </div>
 <script type="text/x-mathjax-config">
